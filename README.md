@@ -2,6 +2,13 @@
 
 [中文](讀我.md)
 
+## Author
+
+| 學號 | GitHub 帳號 | 姓名 | Email |
+| --- | ----------- | --- | --- |
+|`0756049`| `ierosodin` | `許耕福` | ierosodin@gmail.com |
+
+
 This repository is homework submission for students
 
 ## How to submit homework
