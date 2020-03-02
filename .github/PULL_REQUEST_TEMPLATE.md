@@ -1,14 +1,25 @@
-**Notice**
-1. Check your base repository and branch are belong to you.
-2. The PR name rule is included student ID and which lab e.g. `0756110 lab0`
+↓↓↓ **Notice** ↓↓↓ 
 
-Following section is optional, depend on you.
+- [ ] Check your base repository and branch are belong to you.
+- [ ] The PR name need to include student ID and which lab assignment
+    - template: `${student id} ${which lab}`
+    - e.g. `0756110 lab0`
 
-# Description
+↑↑↑ **Notice** ↑↑↑
+
+> If you ensure the notice items is done, you can remove them.
+
+---
+
+> Following section is optional, depend on you.
+
+## Description
 a few message for overall goals of this pull request
 
-# Todos
-- [ ] what feature need to do ?
+## Todos
+- [ ] what feature to do ?
+- [ ] what bug to fix ?
+- [ ] what enhancement to improve ?
 
 ---
 @GrassLab/ta 
