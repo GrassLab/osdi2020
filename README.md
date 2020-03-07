@@ -4,7 +4,7 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756140`| `eric810lin` | `林彥伯` | 0756140@gmail.com |
+|`0756140`| `eric810lin` | `林彥伯` | eric810lin@gmail.com |
 
 ## How to build
 
