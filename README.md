@@ -8,15 +8,15 @@
 
 ## Lab 0 question
 
-What's the RAM size of Raspberry Pi 3B+?
-1GB SRAM
+What's the RAM size of Raspberry Pi 3B+?  
+1GB SRAM  
 
-What's the cache size and level of Raspberry Pi 3B+?
-CPU: ARM Cortex-A53
-Cache:
-    L1 Cache: 32kB
-    L2 Cache: 512kB
-Reference: https://www.terraelectronica.ru/pdf/show?pdf_file=%252Fds%252Fpdf%252FT%252FTechicRP3.pdf
+What's the cache size and level of Raspberry Pi 3B+?  
+CPU: ARM Cortex-A53  
+Cache:  
+    L1 Cache: 32kB  
+    L2 Cache: 512kB  
+Reference: https://www.terraelectronica.ru/pdf/show?pdf_file=%252Fds%252Fpdf%252FT%252FTechicRP3.pdf  
 
 ## How to build
 
