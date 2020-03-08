@@ -6,23 +6,3 @@
 | --- | ----------- | --- | --- |
 |`A081568`| `feveral` | `楊宗翰` | feveraly@@gmail.com |
 
-## How to build
-
-**WIP**
-
-## How to run
-
-**WIP**
-
-## How to burn it into pi3
-
-**WIP**
-
-## Architecture
-
-![architecture figure]()
-
-## Directory structure
-
-**WIP**
-
