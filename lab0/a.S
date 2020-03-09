@@ -1,4 +1,4 @@
-.section ".text"                ; Indicate the following code in placed in .text section
+.section ".text"  // Indicate the following code in placed in .text section
 _start:
   /* wfe: wait-for-event,
    *   let cpu enter the low-power standby state,
