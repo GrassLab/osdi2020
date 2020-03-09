@@ -8,21 +8,37 @@
 
 ## How to build
 
-**WIP**
+```Shell
+make
+```
 
 ## How to run
 
-**WIP**
+For assembly output:
+```Shell
+make asmrun
+```
+
+For gdb debug:
+```Shell
+make debugrun
+```
 
 ## How to burn it into pi3
 
-**WIP**
+**TODO**
 
 ## Architecture
 
-![architecture figure]()
+**TODO**
 
 ## Directory structure
 
-**WIP**
-
+```Shell
+.
+├── boot.S
+├── LICENSE
+├── link.ld
+├── Makefile
+└── README.md
+```
