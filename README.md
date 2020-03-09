@@ -8,13 +8,13 @@
 
 ## How to build
 
-cd lab${num}
-aarch64-linux-gnu-ld -T linker.ld -o kernel8.elf a.o
-aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+cd lab${num}  
+aarch64-linux-gnu-ld -T linker.ld -o kernel8.elf a.o  
+aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img  
 
 ## How to run
 
-qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
+qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm  
 
 ## How to burn it into pi3
 
