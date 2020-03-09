@@ -4,7 +4,7 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0856539`| `briansp8210` | `李健瑀` | briantaipei8210@gmail.com |
 
 ## How to build
 
@@ -20,7 +20,7 @@
 
 ## Architecture
 
-![architecture figure]()
+**WIP**
 
 ## Directory structure
 
