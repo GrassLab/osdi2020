@@ -69,3 +69,25 @@ $ sudo apt-get install libpixman-1-dev
 ```
 make
 ```
+```
+make clean
+```
+
+## How to burn it into pi3
+Use [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/) to burn the kernel8.img onto SD card.
+
+#### List of hardware:
+1. Laptop (or PC)
+2. USB to TTL serial converter
+3. Female to Female jumper wire
+4. Raspberry Pi
+
+#### Connections
+| Converter | Raspberry PI | 
+| :--------: | :--------: |
+| GND     | GND    |
+| RX     | TX    |
+| TX     |  RX   |
+
+#### Result
+![](images/test_USB_to_TTL.png)
