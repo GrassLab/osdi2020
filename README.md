@@ -4,25 +4,13 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0856563`| `ycchan5566` | `詹曜嘉` | josh0408tw@gmail.com |
 
 ## How to build
 
-**WIP**
+just run `make`
 
 ## How to run
 
-**WIP**
-
-## How to burn it into pi3
-
-**WIP**
-
-## Architecture
-
-![architecture figure]()
-
-## Directory structure
-
-**WIP**
+`qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm`
 
