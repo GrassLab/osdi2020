@@ -31,10 +31,7 @@ osdi2020/
 ├── LICENSE
 ├── README.md
 └── src
-    ├── a.o
     ├── a.S
-    ├── kernel8.elf
-    ├── kernel8.img
     ├── linker.ld
     └── Makefile
 ```
