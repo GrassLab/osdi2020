@@ -1,31 +1,40 @@
-# Operation System Design and Implementation Course 2020
+# OSDI Lab
 
-[中文](讀我.md)
+* This repo is for OSDI 2020 lab0
 
-This repository is homework submission for students
+## Requirements
 
-## How to submit homework
+* aarch64-toolchains
+* qemu-system-aarch64
 
-1. Fork [this repository](https://github.com/GrassLab/osdi2020) on GitHub 
-    ![](images/fork_button.png)
-2. Write down following info in your `README.md`
-    - GitHub account name
-    - Student ID
-    - Your name
-3. Design and implement your kernel in forked repository
-4. Create a GitHub pull request
-    - Choose `GrassLab/osdi2020` as base repository and `{your student ID}` as base branch
-    - Choose branch in your forked repository as compare branch
-    ![](images/PR_branch.png)
-    - Name it with student ID and which lab e.g. `0756110 lab0`
-    ![](images/PR_name.png)
-5. We will accept pull request when lab due date
+## Build Instruction
 
-repeat 3-5 to submit later homework/lab.
+```Bash
+$ make -Csrc clean
+$ make -Csrc kernel8.img
+```
 
-## Example
+## Run on qemu
 
-- forked repository: https://github.com/csielee/osdi2020
-- pull request: https://github.com/GrassLab/osdi2020/pull/2
+```Bash
+$ make -Csrc test
+```
 
-## Happy Coding ~
+## Run on rpi3
+
+To be continue ...
+
+## Code Structure
+
+```Bash
+osdi2020/
+├── LICENSE
+├── README.md
+└── src
+    ├── a.o
+    ├── a.S
+    ├── kernel8.elf
+    ├── kernel8.img
+    ├── linker.ld
+    └── Makefile
+```
