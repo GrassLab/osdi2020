@@ -40,7 +40,8 @@ make debug
 ├── LICENSE
 ├── linker.ld	# linker script
 ├── Makefile
-└── README.md
+├── README.md
+└── labX.md	# some notes for labX
 ```
 
 
