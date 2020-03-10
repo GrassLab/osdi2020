@@ -30,12 +30,12 @@ make run
 
 I don't have pi3 now.
 
+
 ## Architecture
 
-![architecture figure]()
+**WIP**
 
 ## Directory structure
 
 **WIP**
-
 
