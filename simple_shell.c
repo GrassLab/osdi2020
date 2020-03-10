@@ -2,20 +2,36 @@
 
 #include "mini_uart.h"
 
+
 char* promptStr="simple shell> ";
-char* commandStr[CommandNumber]=
+
+// enum CommandType
+// {
+// 	HelpType, HelloType, RebootType, TimestampType//, ExitType
+// };
+
+char* commandStr[NUM_COMMAND]=
 {
-	"help", "hello", "reboot", "timestamp"//, "exit"
+	"help", "hello", "timestamp", "reboot"//, "exit"
+};
+
+char* commandDesc[NUM_COMMAND]={
+	"Show commands available.", "Show \"Hello World!\"", "Get current timestamp.", "Reboot device."
+};
+
+void (*commandArray[NUM_COMMAND])()=
+{
+	show_help, show_hello, show_timestamp, reboot_rpi3
 };
 
 // TODO: formated string
 void run_shell()
 {
-	char buf[MaxCommandLine];
+	char buf[MAX_COMMAND_LENGTH];
 	int n, cmd_type;
 
 	print_prompt();
-	while ((n=read_command(buf, MaxCommandLine)) >= 0){
+	while ((n=read_command(buf, MAX_COMMAND_LENGTH)) >= 0){
 		buf[n]='\0';
 		cmd_type = parse_command(buf);
 		if (cmd_type==-1){
@@ -23,9 +39,9 @@ void run_shell()
 			uart_puts(buf);
 			uart_puts("' not found, try <help>\n");
 		} else {
-			uart_puts(buf);
-			uart_send('\n');
+			commandArray[cmd_type]();
 		}
+    	uart_send('\n');
 		print_prompt();
 	}
 }
@@ -59,11 +75,37 @@ int _strcmp(const char* s1, const char* s2){
 int parse_command(char* buf)
 {
 	int i;
-	for (i=CommandNumber-1; i>=0; i--){
+	for (i=NUM_COMMAND-1; i>=0; i--){
 		if (_strcmp(buf, commandStr[i])==0)
 			break;
 	}
 	return i;
+}
+
+// TODO: formate string
+void show_help()
+{
+	for(int i=0; i<NUM_COMMAND; i++){
+		uart_puts(commandStr[i]);
+		uart_puts(": ");
+		uart_puts(commandDesc[i]);
+		uart_puts("\n");
+	}
+}
+
+void show_hello()
+{
+    uart_puts("Hello world!\n");
+}
+
+void show_timestamp()
+{
+    uart_puts("timestamp");
+}
+
+void reboot_rpi3()
+{
+    uart_puts("reboot");
 }
 
 void print_prompt()
