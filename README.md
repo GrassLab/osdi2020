@@ -1,6 +1,6 @@
 # OSDI Lab
 
-* This repo is for OSDI 2020 lab0
+This repo is for OSDI 2020 lab0
 
 ## Requirements
 
