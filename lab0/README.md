@@ -90,4 +90,4 @@ Use [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/) to bu
 | TX     |  RX   |
 
 #### Result
-![](images/test_USB_to_TTL.png)
+<img src="images/test_USB_to_TTL.png" width="600px;">
