@@ -30,13 +30,13 @@ cd qemu-4.2.0
 ```
 - 編譯及安裝
 ```
-$ make -j$(nproc)
-$ make install
+make -j$(nproc)
+make install
 ```
 - 設定路徑
 ```
-$ echo "export PATH=$(pwd)/aarch64-softmmu:\$PATH" >> ~/.bashrc
-$ source ~/.bashrc
+echo "export PATH=$(pwd)/aarch64-softmmu:\$PATH" >> ~/.bashrc
+source ~/.bashrc
 ```
 
 ### 編譯過程中遇到的 Error
