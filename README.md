@@ -4,25 +4,32 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0856113`| `rniczh` | `鄭弘昇` | hszheng@cs.nctu.edu.tw |
 
 ## How to build
 
-**WIP**
+```shell
+$ cd lab0
+$ make
+```
 
 ## How to run
 
-**WIP**
-
-## How to burn it into pi3
-
-**WIP**
-
-## Architecture
-
-![architecture figure]()
+```shell
+$ cd lab0
+$ make qemu
+```
 
 ## Directory structure
 
-**WIP**
+```
+.
+├── lab0
+│   ├── a.S
+│   ├── linker.ld
+│   └── Makefile
+├── LICENSE
+└── README.md
 
+1 directory, 5 files
+```
