@@ -4,25 +4,16 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0856126`| `ljs7619480` | `李家森` | jiasen[dot]cs08g[at]nctu[dot]edu[dot]tw |
 
 ## How to build
 
-**WIP**
+```
+$ make
+```
 
 ## How to run
 
-**WIP**
-
-## How to burn it into pi3
-
-**WIP**
-
-## Architecture
-
-![architecture figure]()
-
-## Directory structure
-
-**WIP**
-
+```
+$ make run
+```
