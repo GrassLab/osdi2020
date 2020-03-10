@@ -5,11 +5,6 @@
 
 char* promptStr="simple shell> ";
 
-// enum CommandType
-// {
-// 	HelpType, HelloType, RebootType, TimestampType//, ExitType
-// };
-
 char* commandStr[NUM_COMMAND]=
 {
 	"help", "hello", "timestamp", "reboot"//, "exit"
@@ -51,14 +46,20 @@ int read_command(char* buffer, unsigned int max_len)
 {
 	int count = 0;
 	char char_recv;
-	while (count < max_len)
-	{
+	while (count < max_len){
 		char_recv = uart_getc();
 		uart_send(char_recv);
 		if (char_recv == '\n')
 			return count;
-		buffer[count] = char_recv;
-		count ++;
+		else if (char_recv == '\177'){// backspace
+			if (count >= 1){
+				uart_puts("\b \b");
+				count --;
+			}
+		} else {
+			buffer[count] = char_recv;
+			count ++;
+		}
 	}
 	return -1; // out of buff	
 }
