@@ -1,31 +1,35 @@
-# Operation System Design and Implementation Course 2020
+# My OSDI 2020
 
-[中文](讀我.md)
+## Author
 
-This repository is homework submission for students
+| 學號 | GitHub 帳號 | 姓名 | Email |
+| --- | ----------- | --- | --- |
+|`0510507`| `zhengwei6` | `吳政緯` | wzhengwei6@gmail.com |
 
-## How to submit homework
+## How to build
 
-1. Fork [this repository](https://github.com/GrassLab/osdi2020) on GitHub 
-    ![](images/fork_button.png)
-2. Write down following info in your `README.md`
-    - GitHub account name
-    - Student ID
-    - Your name
-3. Design and implement your kernel in forked repository
-4. Create a GitHub pull request
-    - Choose `GrassLab/osdi2020` as base repository and `{your student ID}` as base branch
-    - Choose branch in your forked repository as compare branch
-    ![](images/PR_branch.png)
-    - Name it with student ID and which lab e.g. `0756110 lab0`
-    ![](images/PR_name.png)
-5. We will accept pull request when lab due date
+`make`
 
-repeat 3-5 to submit later homework/lab.
+## How to run
 
-## Example
+`make run`
 
-- forked repository: https://github.com/csielee/osdi2020
-- pull request: https://github.com/GrassLab/osdi2020/pull/2
+## How to burn it into pi3
 
-## Happy Coding ~
+
+ - 下載 bootable image
+ - 先查看 SD 卡掛在 dev 下的名字
+  `df -h`
+ - 反掛載 /dev/sdf，避免再運行過程中有其他的寫入
+  `umount /dev/sdb1` 
+ - 格式化 SD Card 成 FAT32
+  `sudo umount /dev/sdb1`
+  `sudo mkdosfs -F 32 -v /dev/sdb1`
+ - 利用dd: 意為 data description， 能夠將輸入寫到標準輸出中
+  `dd if=nctuos.img of=/dev/sdb`
+
+
+## Architecture
+
+## Directory structure
+
