@@ -19,7 +19,3 @@
 ```
  qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
 ```
-## How to burn it into pi3
-
-**WIP**
-
