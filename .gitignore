@@ -1,0 +1,5 @@
+tools/*
+*.o
+copy_kernel_to_sd.sh 
+burn.sh
+lab?/kernel8.*
