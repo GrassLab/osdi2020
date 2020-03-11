@@ -72,7 +72,7 @@ int _strcmp(const char* s1, const char* s2){
 	return *s1 - *s2;
 }
 
-// TODO: empty input, parameter parse
+// TODO:  parameter parse
 int parse_command(char* buf)
 {
 	int i;
@@ -99,9 +99,32 @@ void show_hello()
     uart_puts("Hello world!\n");
 }
 
+// TODO: need implement malloc for dynamic length array
+// TODO: uding while version to eliminate leading zeros
+void _unitoa(unsigned num, char* buf, unsigned num_dig){
+	unsigned int ASCII_BIAS = 48;
+	buf[num_dig] = '\0';
+	for(int i=num_dig-1; i>=0; i--){
+		buf[i] = (char)(num%10 + ASCII_BIAS);
+		num = num / 10;
+	}
+}
+
+// TODO: hard-coding num_digit
 void show_timestamp()
 {
-    uart_puts("timestamp");
+	unsigned int time, time_count, time_freq;
+	char buf[10];
+	asm volatile("mrs %0, cntpct_el0": "=r"(time_count)::); // read counts of core timer
+	asm volatile("mrs %0, cntfrq_el0": "=r"(time_freq)::); // read frequency of core timer
+	time = time_count / (time_freq / 100000U);
+	
+	_unitoa((time/100000U), buf, 3);
+	uart_puts(buf); // natural part
+	uart_send('.');
+	_unitoa(time%100000U, buf, 5);
+	uart_puts(buf); // decimal part
+	uart_send('\n');
 }
 
 void reboot_rpi3()
