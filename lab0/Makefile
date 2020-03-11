@@ -4,7 +4,7 @@ CC = $(TOOLCHAIN_PREFIX)gcc
 OBJCP = $(TOOLCHAIN_PREFIX)objcopy
 QEMU = qemu-system-aarch64
 LDSCRIPT = linker.ld
-CFLAGS = -nostdlib -Wl,-T,$(LDSCRIPT)
+CFLAGS = -nostdlib -Wl,--build-id=none,-T,$(LDSCRIPT)
 
 SRC = $(wildcard *.S)
 TARGET = kernel8.img
