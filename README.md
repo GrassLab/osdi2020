@@ -4,7 +4,7 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0516088`| `chiyuyu` | `邱麒羽` | chess881220@gmail.com |
 
 ## How to build
 
