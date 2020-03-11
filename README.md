@@ -4,25 +4,32 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0856539`| `briansp8210` | `李健瑀` | briantaipei8210@gmail.com |
 
 ## How to build
 
-**WIP**
+`make`
 
 ## How to run
 
-**WIP**
+`qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm`
 
 ## How to burn it into pi3
 
-**WIP**
+* Use `dd` to burn the image to pi3
 
 ## Architecture
 
-![architecture figure]()
+**WIP**
 
 ## Directory structure
 
-**WIP**
-
+```
+.
+├── LICENSE
+├── linker.ld
+├── Makefile
+├── nctuos.img
+├── README.md
+└── start.S
+```
