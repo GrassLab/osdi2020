@@ -4,15 +4,19 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0856064`| `nobodyzxc` | `陳子軒` | nobodyzxc.tw@gmail.com |
 
 ## How to build
 
-**WIP**
+```bash
+make
+```
 
 ## How to run
 
-**WIP**
+```
+make test
+```
 
 ## How to burn it into pi3
 
@@ -20,9 +24,17 @@
 
 ## Architecture
 
-![architecture figure]()
+WIP
 
 ## Directory structure
 
-**WIP**
+```
+.
+├── kernel8.s
+├── LICENSE
+├── linker.ld
+├── Makefile
+└── README.md
 
+0 directories, 5 files
+```
