@@ -4,23 +4,36 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0856168`| `ex7763` | `許博鈞` | hpc.cs08g@nctu.edu.tw |
+
+## Lab 0 question
+
+What's the RAM size of Raspberry Pi 3B+?  
+1GB SRAM  
+
+What's the cache size and level of Raspberry Pi 3B+?  
+CPU: ARM Cortex-A53  
+Cache:  
+    L1 Cache: 32kB  
+    L2 Cache: 512kB  
+Reference: https://www.terraelectronica.ru/pdf/show?pdf_file=%252Fds%252Fpdf%252FT%252FTechicRP3.pdf  
 
 ## How to build
 
-**WIP**
+make
 
 ## How to run
 
-**WIP**
+make run
 
 ## How to burn it into pi3
 
-**WIP**
+I don't have pi3 now.
+
 
 ## Architecture
 
-![architecture figure]()
+**WIP**
 
 ## Directory structure
 
