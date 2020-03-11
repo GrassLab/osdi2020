@@ -4,15 +4,19 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0616330`| `kaiiiz` | `鄭又愷` | at881005@gmail.com |
 
 ## How to build
 
-**WIP**
+```
+make
+```
 
 ## How to run
 
-**WIP**
+```
+make run
+```
 
 ## How to burn it into pi3
 
@@ -25,4 +29,3 @@
 ## Directory structure
 
 **WIP**
-
