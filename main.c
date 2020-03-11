@@ -1,4 +1,5 @@
 #include "uart.h"
+#include "pcsh.h"
 
 int main(){
 
@@ -7,7 +8,8 @@ int main(){
     
     uart_puts("0856168 Hsu, Po-Chun\n");
     uart_puts("Hello World!\n");
-    
+
+    pcsh();
 
     // echo
     while(1) {
