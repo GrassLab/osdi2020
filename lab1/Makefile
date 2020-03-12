@@ -4,6 +4,6 @@ all: a.o kernel8.elf
 kernel8.elf: a.o
 	aarch64-linux-gnu-ld -T linker.ld -o kernel8.elf a.o
 
-a.o: a.s
+a.o: a.S
 	aarch64-linux-gnu-gcc -c a.S
 
