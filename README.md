@@ -1,28 +1,42 @@
-# My OSDI 2020
+# OSDI Lab
+
+This repo is for OSDI 2020 lab0
 
 ## Author
 
-| 學號 | GitHub 帳號 | 姓名 | Email |
-| --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+| Student ID | GitHub Account | Name | Email |
+| ------- | ----------- | ------- | ------------------- |
+|`A082647`| `zlsh80826` | 王宇正 | zlsh80826@gmail.com |
 
-## How to build
+## Requirements
 
-**WIP**
+* aarch64-toolchains
+* qemu-system-aarch64
 
-## How to run
+## Build Instruction
 
-**WIP**
+```Bash
+$ make -Csrc clean
+$ make -Csrc kernel8.img
+```
 
-## How to burn it into pi3
+## Run on qemu
 
-**WIP**
+```Bash
+$ make -Csrc test
+```
 
-## Architecture
+## Run on rpi3
+To be continued ...
 
-![architecture figure]()
+## Code Structure
 
-## Directory structure
-
-**WIP**
-
+```Bash
+osdi2020/
+├── LICENSE
+├── README.md
+└── src
+    ├── a.S
+    ├── linker.ld
+    └── Makefile
+```
