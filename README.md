@@ -1,8 +1,13 @@
 #Operation System Design and Implementation Course 2020
 
-2. Write down following info in your `README.md`
-    - GitHub account name :Dada870423
-    - Student ID:0516326
-    - Your name:陳廷達
 
 ## Happy Coding ~
+=======
+# My OSDI 2020
+
+## Author
+
+| 學號 | GitHub 帳號 | 姓名 | Email |
+| --- | ----------- | --- | --- |
+|`0516326`| `Dada870423` | `陳廷達` |daniel211920@gmail.com |
+
