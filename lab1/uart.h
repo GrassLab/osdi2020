@@ -27,6 +27,5 @@ void uart_init();
 void uart_send(unsigned int c);
 char uart_getc();
 void uart_puts(char *s);
-void uart_hex(unsigned int d);
-void printf(char *fmt, ...);
-int strcmp(const char *cs, const char *ct);
+char uart_i2c(unsigned int d);
+int uart_strcmp(const char *cs, const char *ct);

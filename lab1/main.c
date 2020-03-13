@@ -27,6 +27,7 @@
 #include "power.h"
 #include "delays.h"
 
+
 void main()
 {
     char c;
@@ -34,46 +35,58 @@ void main()
     unsigned long counter;
     const char *help = "help";
     const char *hello = "hello";
-    const char *timestamp = "hello";
-    printf("strcmp = %d", strcmp(timestamp, hello));
+    const char *time = "time";
+    const char *reboot = "reboot";
 
     // set up serial console
     uart_init();
 
     while(1) {
-        uart_puts("\n 1 - power off\n 2 - reset\n 3 - timestamp\n 4 - help\nChoose one: ");
-        c = uart_getc();
-	uart_send(c);
-	uart_puts("\n\n");
 	
-	/*
 	char tmp;
-	while ((tmp = uart_getc()) != "\n") {
-            uart_send(tmp);
-	    *c++ = tmp;
+	char user_input[10];
+	int i = 0;
+	uart_send('>');
+	while (i < 10) {
+            tmp = uart_getc();
+            if (tmp == '\n') break;
+	    uart_send(tmp);
+            user_input[i++] = tmp;
+        }
+	uart_send('\n');
+	if (i == 0) {
+	    uart_puts("wrong input\n");
 	}
-	*/
 
-        if (c=='1') power_off();
-	else if (c=='2') reset();
-	else if (c=='3') {
-	    freq = get_timer_freq();
-	    counter = get_timer_counter();
-	    
-	    printf("time: [%d.", counter / freq);
-	    int remain = counter % freq;
-	    int precision = 10;
-	    while (precision > 0) {
-		remain *= 10;
-	    	printf("%d", remain/freq);
-		remain %= freq;
-		if (remain == 0) break;
-		precision -= 1;
-	    }
-	    printf("]\n");
+	if (uart_strcmp(user_input, hello) == 0) {
+	    uart_puts("hello world\n");
 	}
-	else {
-	    uart_puts("invalid choice\n");
+	if (uart_strcmp(user_input, reboot) == 0) {
+	    uart_puts("alloha\n");
 	}
+	
+	if (uart_strcmp(user_input, time) == 0) {
+            freq = get_timer_freq();
+            counter = get_timer_counter();
+            
+	    uart_puts("[");
+	    uart_send(uart_i2c(counter/freq));
+	    uart_puts(".");
+            int remain = counter % freq;
+            int precision = 10;
+            while (precision > 0) {
+                remain *= 10;
+                uart_send(uart_i2c(remain/freq));
+                remain %= freq;
+                if (remain == 0) break;
+                precision -= 1;
+            }
+            uart_puts("]\n");
+        }
+	
+	if (uart_strcmp(user_input, help) == 0) {
+	    uart_puts("help me\n");
+        }
+
     }
 }

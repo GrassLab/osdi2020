@@ -26,7 +26,6 @@
 #include "gpio.h"
 #include "mbox.h"
 #include "delays.h"
-#include "sprintf.h"
 
 /* PL011 UART registers */
 #define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
@@ -116,42 +115,20 @@ void uart_puts(char *s) {
     }
 }
 
-/**
- * Display a binary value in hexadecimal
+/*
+ * Transfer int to char
  */
-void uart_hex(unsigned int d) {
-    unsigned int n;
-    int c;
-    for(c=28;c>=0;c-=4) {
-        // get highest tetrad
-        n=(d>>c)&0xF;
-        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
-        n+=n>9?0x37:0x30;
-        uart_send(n);
-    }
+char uart_i2c(unsigned int d) {
+    if (d < 10) 
+        return (char) d+48;
+    else 
+        return 0;
 }
 
 /**
- * Display a string
- */
-void printf(char *fmt, ...) {
-    __builtin_va_list args;
-    __builtin_va_start(args, fmt);
-    // we don't have memory allocation yet, so we
-    // simply place our string after our code
-    char *s = (char*)&_end;
-    // use sprintf to format our string
-    vsprintf(s,fmt,args);
-    // print out as usual
-    while(*s) {
-        /* convert newline to carrige return + newline */
-        if(*s=='\n')
-            uart_send('\r');
-        uart_send(*s++);
-    }
-}
-
-int strcmp(const char *cs, const char *ct)
+ * Compare two string and return 0 if they are identical
+ */ 
+int uart_strcmp(const char *cs, const char *ct)
 {
     unsigned char c1, c2;
     while (1) {
