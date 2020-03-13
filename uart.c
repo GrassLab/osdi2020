@@ -1,5 +1,6 @@
 #include "gpio.h"
 #include "common.h"
+#include "string.h"
 
 /* Auxilary mini UART registers */
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
@@ -43,9 +44,6 @@ void uart_init()
     *AUX_MU_CNTL = 3;      // enable Tx, Rx
 }
 
-/**
- * Send a character
- */
 void uart_send(unsigned int c) {
     // Check AUX_MU_LSR_REG’s Transmitter empty field.
     while(!(*AUX_MU_LSR&0x20)){
@@ -56,9 +54,6 @@ void uart_send(unsigned int c) {
     *AUX_MU_IO=c;
 }
 
-/**
- * Receive a character
- */
 char uart_getc() {
     char c;
 
@@ -76,14 +71,25 @@ char uart_getc() {
     return c;
 }
 
-/**
- * Display a string
- */
 void uart_puts(char *s) {
-    while(*s != NULL) {
+    while(*s != '\0') {
         /* convert newline to carrige return + newline */
         if(*s=='\n')
             uart_send('\r');
         uart_send(*s++);
     }
+}
+
+void uart_send_int(int n){
+    char s[1024];
+    itoa(n, s, 10);
+
+    uart_puts(s);
+}
+
+void uart_send_float(float f, int n)
+{
+    char s[1024];
+    ftoa(f, s, n);
+    uart_puts(s);
 }

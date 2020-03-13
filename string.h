@@ -1,42 +1,16 @@
+#ifndef _STRING_H_
+#define _STRING_H_
 #include "common.h"
 
-int my_strcmp(const char* s1, const char* s2)
-{
-	if (*s1 == '\0' && *s2 != 0)//考慮其中一個字串為null的狀況
-	{
-		return (*s1 - *s2);
-	}
+int my_strcmp(const char* s1, const char* s2);
 
-	if (*s2 == '\0' && *s1 != 0)//考慮其中一個字串為null的狀況
-	{
-		return (*s1 - *s2);
-	}
+void *my_memset(void *str, int c, size_t n);
 
-	for (; *s1 != '\0' && *s2 != '\0'; s1++, s2++)//兩兩字串中的字元比較
-	{
-		if ((*s1 - *s2) > 0)
-		{
-			return (*s1 - *s2);
-		}
+void reverse(char str[], int length);
+  
+// Implementation of itoa() 
+char* itoa(int num, char* str, int base);
 
-		else if ((*s1 - *s2) <0)
-		{
-			return (*s1 - *s2);
-		}
-	}
+void ftoa(float n, char* res, int afterpoint);
 
-	return 0;
-}
-
-void *my_memset(void *str, int c, size_t n)
-{
-
-    size_t i = 0;
-    while (i < n)
-    {
-        *(char *)str = c;
-        str += 1;
-        ++i;
-    }
-    return str;
-}
+#endif

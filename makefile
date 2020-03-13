@@ -27,4 +27,4 @@ connect:
 	sudo screen /dev/ttyUSB0 115200
 
 clean:
-	rm *.o kernel8.*
+	rm -rf *.o kernel8.*

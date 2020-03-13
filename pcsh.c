@@ -24,12 +24,14 @@ int cmd_exit(int);
 int cmd_help(int);
 int cmd_hello(int);
 int cmd_reboot(int);
+int cmd_timestamp(int);
 int cmd_not_find(int);
 cmd_t default_cmd_arr[] = {
     {"exit", cmd_exit},
     {"help", cmd_help},
     {"hello", cmd_hello},
     {"reboot", cmd_reboot},
+    {"timestamp", cmd_timestamp},
     {NULL, cmd_not_find}};
 
 int cmd_exit(int i)
@@ -58,7 +60,14 @@ int cmd_hello(int i)
 
 int cmd_reboot(int i)
 {
-    reset(100);
+    reset(10);
+}
+
+int cmd_timestamp(int i)
+{
+    float t = gettime();
+    uart_send_float(t, 4);
+    uart_send('\n');
 }
 
 int cmd_not_find(int i)

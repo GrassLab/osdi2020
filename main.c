@@ -6,7 +6,6 @@ int main(){
     // set uart
     uart_init();
 
-
     // call simple shell
     pcsh();
 
