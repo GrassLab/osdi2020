@@ -71,8 +71,9 @@ char uart_getc() {
 void uart_puts(char *s) {
     while(*s) {
         /* convert newline to carrige return + newline */
-        if(*s=='\n')
-            uart_send('\r');
-        uart_send(*s++);
+	if(*s=='\n')
+	    uart_send('\r');
+	uart_send(*s++);	    
     }
+
 }

@@ -10,6 +10,9 @@ void main()
     
     // echo everything back
     while(1) {
-        uart_send(uart_getc());
+	char g = uart_getc();
+	if(g == '\n')
+	    uart_send('\r');
+	uart_send(g);
     }
 }
