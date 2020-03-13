@@ -5,15 +5,9 @@ int main(){
 
     // set uart
     uart_init();
-    
-    uart_puts("0856168 Hsu, Po-Chun\n");
-    uart_puts("Hello World!\n");
 
+
+    // call simple shell
     pcsh();
-
-    // echo
-    while(1) {
-        uart_send(uart_getc());
-    }
 
 }

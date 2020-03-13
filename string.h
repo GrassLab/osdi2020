@@ -1,29 +1,37 @@
 #include "common.h"
 
-int my_strcmp(const char *str1, const char *str2)
+int my_strcmp(const char* s1, const char* s2)
 {
+	if (*s1 == '\0' && *s2 != 0)//考慮其中一個字串為null的狀況
+	{
+		return (*s1 - *s2);
+	}
 
-    if (*str1 == NULL || *str2 == NULL)
-    {
-        return *str1 - *str2;
-    }
+	if (*s2 == '\0' && *s1 != 0)//考慮其中一個字串為null的狀況
+	{
+		return (*s1 - *s2);
+	}
 
-    while (*str1 != NULL || *str2 != NULL)
-    {
-        if (*str1 == NULL || *str2 == NULL)
-            return *str1 - *str2;
+	for (; *s1 != '\0' && *s2 != '\0'; s1++, s2++)//兩兩字串中的字元比較
+	{
+		if ((*s1 - *s2) > 0)
+		{
+			return (*s1 - *s2);
+		}
 
-        if (*str1 != *str2)
-            return *str1 - *str2;
-    }
+		else if ((*s1 - *s2) <0)
+		{
+			return (*s1 - *s2);
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 void *my_memset(void *str, int c, size_t n)
 {
 
-    int i = 0;
+    size_t i = 0;
     while (i < n)
     {
         *(char *)str = c;

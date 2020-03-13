@@ -7,8 +7,12 @@ pc means Po-Chun, NOT personal computer
 #include "uart.h"
 #include "common.h"
 #include "string.h"
+#include "system.h"
 
 #define INPUT_BUFFER_SIZE 2048
+
+
+int print(char *);
 
 typedef struct cmd_t
 {
@@ -17,13 +21,49 @@ typedef struct cmd_t
 } cmd_t;
 
 int cmd_exit(int);
+int cmd_help(int);
+int cmd_hello(int);
+int cmd_reboot(int);
+int cmd_not_find(int);
 cmd_t default_cmd_arr[] = {
     {"exit", cmd_exit},
-    {NULL, NULL}};
+    {"help", cmd_help},
+    {"hello", cmd_hello},
+    {"reboot", cmd_reboot},
+    {NULL, cmd_not_find}};
 
 int cmd_exit(int i)
 {
     return 0;
+}
+
+int cmd_help(int i)
+{
+    cmd_t *ptr = default_cmd_arr;
+        
+    print("Author: Hsu, Po-Chun(0856168)\n");
+    print("Available command list:\n");
+    while(ptr->name != NULL){
+        print(ptr->name);
+        print("\n");
+        ++ptr;
+    }
+    return 0;
+}
+
+int cmd_hello(int i)
+{
+    print("Hello World!\n");
+}
+
+int cmd_reboot(int i)
+{
+    reset(100);
+}
+
+int cmd_not_find(int i)
+{
+    print("Command not find, Try 'help'\n");
 }
 
 int gets(char *buf, int buf_size)
@@ -41,7 +81,8 @@ int gets(char *buf, int buf_size)
         uart_send(c);
     } while (c != '\n' && i < buf_size - 1);
 
-    buf[i] == NULL;
+    // replace '\n' with NULL
+    buf[--i] == NULL;
 
     if (i == buf_size)
         return -1;
@@ -59,9 +100,13 @@ int sh_default_command(char *cmd)
     cmd_t *ptr = default_cmd_arr;
     while (ptr->name != NULL)
     {
-        if (my_strcmp(ptr->name, cmd) == 0)
+        if (my_strcmp(ptr->name, cmd) == 0){
             ptr->func(0);
+            return 0;
+        }
+	ptr++;
     }
+    ptr->func(0);
 
     return -1;
 }
@@ -75,8 +120,6 @@ int pcsh()
 {
 
     // main loop
-    // input, output
-
     while (1)
     {
         // get command
@@ -85,8 +128,6 @@ int pcsh()
 
         symbol();
         gets(cmd, INPUT_BUFFER_SIZE);
-
-        print(cmd);
 
         // default command
         sh_default_command(cmd);
