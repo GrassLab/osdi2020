@@ -38,4 +38,3 @@ I don't have pi3 now.
 ## Directory structure
 
 **WIP**
-
