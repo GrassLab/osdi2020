@@ -17,7 +17,7 @@ kernel8.img: main.o
 	$(OBJCPY) -O binary kernel8.elf kernel8.img
 
 clean:
-	rm -f kernel8.elf *.o
+	rm -f *.o
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm

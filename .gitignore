@@ -1,1 +1,2 @@
-kernel8.img
+kernel8.*
+.gdb_history
