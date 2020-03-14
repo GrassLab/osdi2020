@@ -131,7 +131,7 @@ void main()
             unsigned long clock_cnt;
             asm volatile("mrs %0, cntfrq_el0" : "=r" (clock_freq));
             asm volatile("mrs %0, cntpct_el0" : "=r" (clock_cnt));
-            printf("! %d / %d\n", clock_cnt, clock_freq);
+            printf("%d / %d\n", clock_cnt, clock_freq);
         }
         else {
             printf("[Error]Command %s not found, try <help>\n", cmd);
