@@ -67,7 +67,7 @@ char uart_getc() {
     
     // '\r' => '\n'
     c = (c=='\r')?'\n':c;
-    
+
     return c;
 }
 
@@ -91,5 +91,10 @@ void uart_send_float(float f, int n)
 {
     char s[1024];
     ftoa(f, s, n);
+    uart_puts(s);
+}
+
+int print(char *s)
+{
     uart_puts(s);
 }

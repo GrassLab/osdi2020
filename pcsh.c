@@ -11,12 +11,10 @@ pc means Po-Chun, NOT personal computer
 
 #define INPUT_BUFFER_SIZE 2048
 
-
-int print(char *);
-
 typedef struct cmd_t
 {
     char *name;
+    char *detail;
     int (*func)(int);
 } cmd_t;
 
@@ -27,12 +25,12 @@ int cmd_reboot(int);
 int cmd_timestamp(int);
 int cmd_not_find(int);
 cmd_t default_cmd_arr[] = {
-    {"exit", cmd_exit},
-    {"help", cmd_help},
-    {"hello", cmd_hello},
-    {"reboot", cmd_reboot},
-    {"timestamp", cmd_timestamp},
-    {NULL, cmd_not_find}};
+    {"exit", "exit shell", cmd_exit},
+    {"help", "show all command", cmd_help},
+    {"hello", "print Hello World!", cmd_hello},
+    {"reboot", "reboot system", cmd_reboot},
+    {"timestamp", "system running time", cmd_timestamp},
+    {NULL, NULL, cmd_not_find}};
 
 int cmd_exit(int i)
 {
@@ -47,6 +45,8 @@ int cmd_help(int i)
     print("Available command list:\n");
     while(ptr->name != NULL){
         print(ptr->name);
+	print(": ");
+	print(ptr->detail);
         print("\n");
         ++ptr;
     }
@@ -83,25 +83,31 @@ int gets(char *buf, int buf_size)
     do
     {
         c = uart_getc();
-        c = c == '\r' ? '\n' : c;
-        buf[i++] = c;
 
-        // ensure users can see what they type
-        uart_send(c);
+        c = c == '\r' ? '\n' : c;
+
+        if(c == 8 || c == 127){
+            if(i > 0){
+                buf[i--] = '\0';
+                uart_send(8);
+                uart_send(' ');
+                uart_send(8);
+            }
+        }
+        else{
+            buf[i++] = c;
+	    // ensure users can see what they type
+            uart_send(c);
+        }
     } while (c != '\n' && i < buf_size - 1);
 
     // replace '\n' with NULL
-    buf[--i] == NULL;
+    buf[--i] == '\0';
 
     if (i == buf_size)
         return -1;
 
     return i;
-}
-
-int print(char *s)
-{
-    uart_puts(s);
 }
 
 int sh_default_command(char *cmd)
@@ -137,6 +143,10 @@ int pcsh()
 
         symbol();
         gets(cmd, INPUT_BUFFER_SIZE);
+
+
+        if(my_strcmp(cmd, "\n") == 0)
+            continue;
 
         // default command
         sh_default_command(cmd);
