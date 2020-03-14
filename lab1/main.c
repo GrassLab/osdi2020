@@ -7,7 +7,7 @@
 #define	CMD_TIME	"timestamp"
 #define	CMD_REBOOT	"reboot"
 
-long get_timestamp();
+void get_timestamp();
 void uart_read_line(char *line);
 
 void
@@ -47,17 +47,15 @@ main()
 	}
 }
 
-long
+void
 get_timestamp()
 {
 	register unsigned long f, c;
-	// get the current counter frequency
 	asm volatile ("mrs %0, cntfrq_el0" : "=r"(f));
 	asm volatile ("mrs %0, cntpct_el0" : "=r"(c));
 	char res[30];
 	ftoa(((float)c/(float)f), res, 10);
 	uart_puts(res);
-	return c/f;
 }
 
 void
