@@ -38,3 +38,6 @@ In this lab, you’ll get your hand dirty by implementing a basic shell. You nee
 - [x] [question]Point out the difference between bare-metal programming and programming on top of operating system.
   - Bare-metal programming does not exist OS, which means everything needs to be written by yourself. 
 For example, you can not use the `printf` function, you need to implement the function by ourself. In addition, this stage does not have the memory manager, so we need to init the memory section(for example, the bss section, which stores the uninitialized global variable) first and put the variable into the assigned address, to make sure we get the initialized the variable.
+
+## Demo
+![](../images/osdi_lab1.gif)
