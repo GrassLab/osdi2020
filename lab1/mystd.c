@@ -22,3 +22,86 @@ int strcmp(char *s1, char *s2){
 
 	return 1;
 }
+
+void strReverse(char *buf, int size){
+	int front = 0;
+	int last = size;
+
+	while(last > front){
+		char temp;
+		temp = buf[front];
+		buf[front] = buf[last];
+		buf[last] = temp;
+
+		front++;
+		last--;
+	}
+}
+
+void ullToStr(unsigned long long num, char *buf){
+	if(num==0){
+		buf[0] = '0';
+		buf[1] = '\0';
+
+		return;
+	}
+
+	int size=0;
+	while(num){
+		buf[size] = '0' + num%10;
+
+		size++;
+		num = num / 10;
+	}
+
+	buf[size] = '\0';
+	strReverse(buf, size-1);
+
+	return;
+}
+
+void cntTimeStamp(unsigned long long cntfrq, unsigned long long cntpct, char *timeStr){
+	unsigned long long quote = cntpct / cntfrq;
+
+	unsigned remainder = cntpct - cntfrq*quote;
+
+	int iteration = 10;
+	int decimalPoint = 0;
+	while(remainder && iteration){
+		remainder = remainder * 10;
+		int q = remainder / cntfrq;
+		decimalPoint = decimalPoint*10 + q;
+		remainder = remainder - cntfrq*q;
+
+		iteration--;
+	}
+
+	char quoteStr[65];
+	char decimalPointStr[65];
+
+	ullToStr(quote, quoteStr);
+	ullToStr(decimalPoint, decimalPointStr);
+
+	int quoteLen = strlen(quoteStr);
+	int decimalPointLen = strlen(decimalPointStr);
+
+	int pos=0;
+	for(int i=0; i<quoteLen; i++){
+		timeStr[pos] = quoteStr[i];
+		pos++;
+	}
+	timeStr[pos] = '.';
+	pos++;
+	for(int i=0; i<decimalPointLen; i++){
+		timeStr[pos] = decimalPointStr[i];
+		pos++;	
+	}
+	timeStr[pos] = '\0';
+	pos++;
+
+	// uart_puts("quote \n");
+	// uart_puts(quoteStr);
+	// uart_puts("\ndecimal \n");
+	// uart_puts(decimalPointStr);
+	// uart_puts("\n");
+}
