@@ -10,6 +10,9 @@ void main()
     // echo everything back
     for(;;)
     {
-        uart_send(uart_getc());
+        char double;
+        double_output = uart_getc();
+        uart_send(double_output);
+        uart_send(double_output);
     }
 }
