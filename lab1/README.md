@@ -1,4 +1,4 @@
-# Lab0: Environment Setup
+# Lab1: Hello World
 ## Introduction
 In Lab 0, you already set up the working environment for bare metal programming.
 
