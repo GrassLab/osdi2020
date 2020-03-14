@@ -1,5 +1,5 @@
 #include "gpio.h"
-
+#include "sprintf.h"
 /* Auxiliary mini UART regs*/
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
 #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
@@ -13,6 +13,9 @@
 #define AUX_MU_CNTL     ((volatile unsigned int*)(MMIO_BASE+0x00215060))
 #define AUX_MU_STAT     ((volatile unsigned int*)(MMIO_BASE+0x00215064))
 #define AUX_MU_BAUD     ((volatile unsigned int*)(MMIO_BASE+0x00215068))
+
+/* get addr from linker */
+extern volatile unsigned char _end;
 
 /**
  * Set baud rate, characteristics and map to GPIO
@@ -85,3 +88,23 @@ void uart_puts(char *s)
         uart_sendc(*s++);
     }
 }
+
+/**
+ * Display a string with libc printf-like format
+ */
+void printf(char *fmt, ...) {
+    __builtin_va_list args;
+    __builtin_va_start(args, fmt);
+    
+    /* s don't allocate memory, just place string after code */
+    char *s = (char*)&_end;
+    /* format string */
+    vsprintf(s, fmt, args);
+    /* print string */
+    while(*s) {
+        if(*s == '\n') uart_sendc('\r');
+        uart_sendc(*s++);
+    }
+
+}
+
