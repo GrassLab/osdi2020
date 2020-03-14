@@ -55,16 +55,12 @@ int read_pi_return(simshell *sim)
     else if (rx_length == 0) {
         return -1;
     }
-    else if (sim->rx_buffer[rx_length-1] == '\r') {
-        sim->rx_buffer[rx_length-1] = '\n';
-        return 0;
-    } 
-    else if (sim->rx_buffer[rx_length-1] != '\n') {
-        return 0;
-    }
-    else if (sim->rx_buffer[rx_length-1] == '\n'){
-        sim->rx_buffer[rx_length] = '\0';
+    else if (sim->rx_buffer[rx_length - 1] == '\n') {
+        sim->rx_buffer[rx_length - 1] = '\0';
         return 1;
+    }
+    else {
+        return 0;
     }
     return 0;
 }
