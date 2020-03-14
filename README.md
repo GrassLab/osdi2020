@@ -6,3 +6,26 @@
 | --- | ----------- | --- | --- |
 |`A073708`| `rum2mojito` | `石育瑋` | yuwei.shih.tw@gmail.com |
 
+## How to build	
+
+```
+make
+```	
+
+## How to run	
+
+```
+make run
+```	
+
+## How to burn it into pi3	
+
+**WIP**	
+
+## Architecture	
+
+![architecture figure]()	
+
+## Directory structure	
+
+**WIP**
