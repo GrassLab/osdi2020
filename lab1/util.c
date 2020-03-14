@@ -11,7 +11,8 @@ reverse(char* str, int len)
 	}
 }
 
-int intToStr(int x, char str[], int d)
+int
+intToStr(int x, char str[], int d)
 {
 	int i=0;
 	while(x) {
@@ -27,7 +28,8 @@ int intToStr(int x, char str[], int d)
 	return i;
 }
 
-int pow(int a, int b)
+int
+pow(int a, int b)
 {
 	int res = 1;
 	for(int i=0; i<b; i++) {
