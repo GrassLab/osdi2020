@@ -3,26 +3,30 @@ CC = $(TOOLCHAIN_PREFIX)gcc
 LD = $(TOOLCHAIN_PREFIX)ld
 OBJCPY = $(TOOLCHAIN_PREFIX)objcopy
 
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
-CFLAGS = -Wall
+SRC_DIR = src
+OUT_DIR = out
 
-.PHONY: all clean asm run debug
+LINKER_FILE = $(SRC_DIR)/linker.ld
+ENTRY = $(SRC_DIR)/start.s
+ENTRY_OBJS = $(OUT_DIR)/start.o
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OUT_DIR)/%.o)
 
-all: kernel8.img clean
+CFLAGS = -Wall -I include -c
 
-start.o: start.s
-	$(CC) $(CFLAGS) -c start.s -o start.o
+.PHONY: all clean asm run debug directories
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+all: directories kernel8.img
 
-kernel8.img: start.o $(OBJS)
-	$(LD) start.o $(OBJS) -T linker.ld -o kernel8.elf
+$(ENTRY_OBJS): $(ENTRY)
+	$(CC) $(CFLAGS) $< -o $@
+
+$(OUT_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) $< -o $@
+
+kernel8.img: $(OBJS) $(ENTRY_OBJS)
+	$(LD) $(ENTRY_OBJS) $(OBJS) -T $(LINKER_FILE) -o kernel8.elf
 	$(OBJCPY) -O binary kernel8.elf kernel8.img
-
-clean:
-	rm -f *.o
 
 asm:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
@@ -32,3 +36,11 @@ run:
 
 debug: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s
+
+directories: $(OUT_DIR)
+
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
+
+clean:
+	rm -f out/* kernel8.*
