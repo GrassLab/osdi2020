@@ -1,4 +1,4 @@
-#include "../Include/uart.h"
+#include "../include/uart.h"
 void main()
 {
     // set up serial console
@@ -10,7 +10,7 @@ void main()
     // echo everything back
     for(;;)
     {
-        char double;
+        char double_output;
         double_output = uart_getc();
         uart_send(double_output);
         uart_send(double_output);
