@@ -40,18 +40,13 @@ In this lab, you’ll get your hand dirty by implementing a basic shell. You nee
   - Bare-metal programming does not exist OS, which means everything needs to be written by yourself. 
 For example, you can not use the `printf` function, you need to implement the function by ourself. In addition, this stage does not have the memory manager, so we need to init the memory section(for example, the bss section, which stores the uninitialized global variable) first and put the variable into the assigned address, to make sure we get the initialized the variable.
 
-## Environment
+## Autotesting
 For autotesting, we need pexpect module and python2. type the follow command to install pexpect
 
 ```text
 pip install pexpect
 ```
-
-
-## How to run
-- `make` to build all files we need
-- `make run` to start the shell
-- `make autotest` to start autotesting
+and you can use `make autotest` to start autotesting
 
 ## Demo
 ### Mini-bash
