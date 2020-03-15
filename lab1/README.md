@@ -49,7 +49,7 @@ pip install pexpect
 
 
 ## How to run
-- `make` to build all files we need.
+- `make` to build all files we need
 - `make run` to start the shell
 - `make autotest` to start autotesting
 
