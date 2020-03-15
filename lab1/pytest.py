@@ -14,17 +14,13 @@ cmd += "-serial null -serial stdio"
 child = pexpect.spawnu(cmd)
 child.logfile_read = sys.stdout
 
-child.expect("# ") 
-child.sendline("help")
-
-child.expect("# ")
-child.sendline("hello")
-
-child.expect("# ")
-child.sendline("timestamp")
-
-child.expect("# ")
-child.sendline("reboot")
+with open("pytest_cmd", "r") as f:
+    line = f.readline().strip('\n')
+    while line:
+        print(line)
+        child.expect("# ")
+        child.sendline(line)
+        line = f.readline().strip('\n')
 
 child.expect("# ")
 # interact mode
