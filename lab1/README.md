@@ -46,7 +46,7 @@ For autotesting, we need pexpect module and python2. type the follow command to 
 ```text
 pip install pexpect
 ```
-and you can use `make autotest` to start autotesting
+and you can use `make autotest` to start autotesting, which will read all commands under the `pytest_cmd` file and execute them. After execution finish, it will enter interactive mode.
 
 ## Demo
 ### Mini-bash
