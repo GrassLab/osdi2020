@@ -1,5 +1,5 @@
 #include "uart.h"
-#define NULL ((void*)0)
+#include "string.h"
 /* command line */
 char cmd[256];
 
@@ -107,26 +107,20 @@ void main()
 
     while(1) {
         getline();
-        if(cmd[0] == 'h' && cmd[1] == 'e' && cmd[2] == 'l' &&
-                cmd[3] =='p') {
+        if(!strcmp(cmd, "help")) {
             printf("Mini shell commands:\n"
                     "<help> show all commands\n"
                     "<hello> let me say hello to you\n"
                     "<reboot> reboot the device\n"
                     "<timestamp> show the current timestamp\n");
         }
-        else if(cmd[0] == 'h' && cmd[1] == 'e' && cmd[2] == 'l' &&
-                cmd[3] == 'l' && cmd[4] == 'o') {
+        else if(!strcmp(cmd, "hello")) {
             printf("hello\n");
         }
-        else if(cmd[0] == 'r' && cmd[1] == 'e' && cmd[2] == 'b' &&
-                cmd[3] == 'o' && cmd[4] == 'o' && cmd[5] == 't') {
+        else if(!strcmp(cmd, "reboot")) {
             printf("reboot\n");
         }
-        else if(cmd[0] == 't' && cmd[1] == 'i' && cmd[2] == 'm' &&
-                cmd[3] == 'e' && cmd[4] == 's' && cmd[5] == 't' &&
-                cmd[6] == 'a' && cmd[7] == 'm' && cmd[8] == 'p') {
-        
+        else if(!strcmp(cmd, "timestamp")) {
             unsigned long clock_freq;
             unsigned long clock_cnt;
             asm volatile("mrs %0, cntfrq_el0" : "=r" (clock_freq));
