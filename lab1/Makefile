@@ -1,12 +1,26 @@
+CC = aarch64-linux-gnu-gcc
+LD = aarch64-linux-gnu-ld
+OBJCOPY = aarch64-linux-gnu-objcopy
+
 GENERAL_FLAGS =
-OBJECT_FILES = start.o
+C_FLAGS = -Wall -Wextra -Wshadow -Wconversion
 
-all: ${OBJECT_FILES}
-	aarch64-linux-gnu-ld -T linker.ld start.o -o kernel8.elf
-	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+KERNEL_C_SOURCE_FILES = main.c shell.c miniuart.c
+KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
 
-%.o: %.s
-	aarch64-linux-gnu-gcc -c ${GENERAL_FLAGS} $^ -o $@
+all: kernel8.img
+
+kernel8.img: kernel8.elf
+	${OBJCOPY} -O binary kernel8.elf kernel8.img
+
+kernel8.elf: start.o ${KERNEL_C_OBJECT_FILES}
+	${LD} -T linker.ld start.o ${KERNEL_C_OBJECT_FILES} -o kernel8.elf
+
+start.o: start.s
+	${CC} -c ${GENERAL_FLAGS} start.s -o start.o
+
+%.o: %.c
+	${CC} -c ${GENERAL_FLAGS} ${C_FLAGS} $^ -o $@
 
 debug: GENERAL_FLAGS += -DDEBUG -g3
 debug: all
@@ -20,3 +34,4 @@ qemu_dbg:
 .PHONY: clean
 clean:
 	rm -rf *.o *.elf *img
+
