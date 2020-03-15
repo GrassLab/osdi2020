@@ -1,3 +1,9 @@
+#include "uart.h"
+
 int main() {
-    while(1);
+    uart_init();
+
+    while (1) {
+        uart_write(uart_read());
+    }
 }
