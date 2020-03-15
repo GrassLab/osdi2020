@@ -64,3 +64,13 @@ unsigned int sprintf(char *dst, char *fmt, ...) {
     __builtin_va_start(args, fmt);
     return vsprintf(dst, fmt, args);
 }
+
+int strcmp(const char *X, const char *Y) {
+    while (*X) {
+        if (*X != *Y)
+            break;
+        X++;
+        Y++;
+    }
+    return *(const unsigned char *)X - *(const unsigned char *)Y;
+}

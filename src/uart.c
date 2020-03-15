@@ -1,6 +1,6 @@
 #include "aux.h"
 #include "gpio.h"
-#include "string.h"
+#include "my_string.h"
 
 void uart_init() {
     /* Initialize UART */

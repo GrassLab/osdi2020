@@ -1,4 +1,5 @@
 #include "uart.h"
+#include "my_string.h"
 
 void shell_init() {
     uart_init();
@@ -29,5 +30,14 @@ void shell_input(char* cmd) {
 }
 
 void shell_controller(char* cmd) {
-    uart_printf("%s\n", cmd);
+    if (!strcmp(cmd, "help")) {
+        uart_printf("help: print all available commands\n");
+        uart_printf("hello: print Hello World!\n");
+    }
+    else if (!strcmp(cmd, "hello")) {
+        uart_printf("Hello World!\n");
+    }
+    else {
+        uart_printf("shell: command not found: %s\n", cmd);
+    }
 }
