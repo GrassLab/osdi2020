@@ -1,9 +1,28 @@
-#include "uart.h"
+#include "shell.h"
+
+#define CMD_LEN 128
+
+enum shell_status {
+    Read,
+    Parse
+};
 
 int main() {
-    uart_init();
+    shell_init();
 
+    enum shell_status status = Read;
     while (1) {
-        uart_write(uart_read());
+        char cmd[CMD_LEN];
+        switch (status) {
+            case Read:
+                shell_input(cmd);
+                status = Parse;
+                break;
+
+            case Parse:
+                shell_controller(cmd);
+                status = Read;
+                break;
+        }
     }
 }

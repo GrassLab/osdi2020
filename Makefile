@@ -31,7 +31,7 @@ kernel8.img: $(OBJS) $(ENTRY_OBJS)
 asm:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
 
-run:
+run: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio
 
 debug: all

@@ -1,5 +1,6 @@
 #include "aux.h"
 #include "gpio.h"
+#include "string.h"
 
 void uart_init() {
     /* Initialize UART */
@@ -59,4 +60,18 @@ void uart_write(unsigned int c) {
     } while (!(*AUX_MU_LSR & 0x20));
     // Write
     *AUX_MU_IO = c;
+}
+
+void uart_printf(char* fmt, ...) {
+    __builtin_va_list args;
+    __builtin_va_start(args, fmt);
+
+    extern volatile unsigned char _end;  // defined in linker
+    char* s = (char*)&_end;              // put temporary string after code
+    vsprintf(s, fmt, args);
+
+    while (*s) {
+        if (*s == '\n') uart_write('\r');
+        uart_write(*s++);
+    }
 }
