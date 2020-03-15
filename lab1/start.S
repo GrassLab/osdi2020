@@ -21,8 +21,3 @@ _start:
 
 4:  bl     main
     b      1b
-
-.globl PUT32
-PUT32:
-    str x1,[x0]
-    ret
