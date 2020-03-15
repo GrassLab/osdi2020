@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "string.h"
+#include "power.h"
 /* command line */
 char cmd[256];
 
@@ -14,15 +15,15 @@ void getline()
     int i, cmdidx = 0, cmdlast = 0;
     char c;
     cmd[0] = 0;
-    printf("\r(๑•̀ㅂ•́)و✧ ");
+    printf("\r# ");
     while((c = uart_getc()) != '\n') {
         /* redefine CSI key sequence */
         if(c == 27) {
             c = uart_getc();
             if(c == '[') {
                 c = uart_getc();
-                if(c == 'C') c = 3;      // left
-                else if(c == 'D') c = 2; // right
+                if(c == 'C') c = 3;      // right
+                else if(c == 'D') c = 2; // left
                 else if(c == '3') {
                     c = uart_getc();
                     if(c == '~') c = 1;  // delete
@@ -64,7 +65,7 @@ void getline()
         }
         cmd[cmdlast] = 0;
         /* show command lines, and move cursor after prefix string */
-        printf("\r(๑•̀ㅂ•́)و✧ %s \r\e[%dC", cmd, cmdidx+10);
+        printf("\r# %s \r\e[%dC", cmd, cmdidx+2);
     }
     printf("\n");
 
@@ -118,7 +119,8 @@ void main()
             printf("hello\n");
         }
         else if(!strcmp(cmd, "reboot")) {
-            printf("reboot\n");
+            printf("rebooting..\n");
+            reset();
         }
         else if(!strcmp(cmd, "timestamp")) {
             unsigned long clock_freq;
