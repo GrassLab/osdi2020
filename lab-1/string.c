@@ -42,23 +42,24 @@ void intToStr(int num, char *str) {
 
 void doubleToStr(double num, char *str) {
     int intPart = (int)num;
-    char intPartStr[128];
-    memset(intPartStr, 0, sizeof(intPartStr));
+    char intPartStr[128] = {0};
     intToStr(intPart, intPartStr);
-    for (int i = 0; i< strlen(intPartStr); i++) {
+    int intPartStrSize = strlen(intPartStr);
+    for (int i = 0; i < intPartStrSize; i++) {
         str[i] = intPartStr[i];
     }
-    str[strlen(intPartStr)] = '.';
+    str[intPartStrSize] = '.';
     
-    char floatPartStr[128];
-    memset(floatPartStr, 0, sizeof(floatPartStr));
+    char floatPartStr[128] = {0};
     double floatPart = num - (double) intPart;
 
     floatPart *= 100000000;
+    while((int)floatPart % 10 == 0 ) floatPart /= 10;
     intToStr((int)floatPart, floatPartStr);
-    
-    for (int i = strlen(intPartStr) + 1; i < strlen(intPartStr) + 1 + strlen(floatPartStr); i++) {
-        str[i] = floatPartStr[i];
+    int floatPartStrSize = strlen(floatPartStr);
+
+    for (int i = intPartStrSize + 1; i < intPartStrSize + floatPartStrSize + 1; i++) {
+        str[i] = floatPartStr[i - intPartStrSize - 1];
     }
-    str[strlen(intPartStr) + 1 + strlen(floatPartStr)] = '\0';
+    str[intPartStrSize + 1 + floatPartStrSize] = '\0';
 }

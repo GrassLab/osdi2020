@@ -33,6 +33,7 @@ int main()
     uart_init();
     printPowerOnMessage();
     uart_puts("# ");
+
     char command[1024] = {0};
     int commandIndex = 0;
     int isbooting = 1;
