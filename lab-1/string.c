@@ -32,15 +32,15 @@ int strEqual(char *str1, char *str2)
 void intToStr(int num, char *str) {
     int index = 0;
     while(num > 0) {
-        str[index] = (num % 10) + 48;
-        index ++;
+        str[index++] = (num % 10) + 48;
         num /= 10;
     }
+    if (num == 0 && index ==0) str[index++] = '0';
     str[index] = '\0';
     strInvert(str);
 }
 
-void floatToStr(double num, char *str) {
+void doubleToStr(double num, char *str) {
     int intPart = (int)num;
     char intPartStr[128];
     memset(intPartStr, 0, sizeof(intPartStr));
