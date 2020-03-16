@@ -1,5 +1,34 @@
 #include "uart.h"
 
+#define MMIO_BASE 0x3F000000
+#define PM_RSTC ((volatile unsigned int *)(MMIO_BASE + 0x0010001c))
+#define PM_RSTS ((volatile unsigned int *)(MMIO_BASE + 0x00100020))
+#define PM_WDOG ((volatile unsigned int *)(MMIO_BASE + 0x00100024))
+#define PM_WDOG_MAGIC 0x5a000000
+#define PM_RSTC_FULLRST 0x00000020
+
+char *welcome = " \
+░░░░░░░░░░░░░░░░▄░█▄░█▄▄▄░░\n \
+█▀▀█░░█▀▀█░█▀▀█▄█▄█▄░█▄▄▄█░\n \
+█▀▀█░░█▀▀█░█░░█░░▄█▄▄▄░░░░░\n \
+█▀▀▀░░▀▀▀█░█░░█░▀▄▄▄█▄▄▄░░░\n \
+█░▄▄▄▄█▄░█░▀▀▀▀░░█▄▄█▄▄█░░░\n \
+█░░░▄▀█░░█░░░░░░░█▄▄█▄▄█░░░\n \
+█░▄▀░▄█░▄█░░░░░░▄▀░░░░▄█░░░\n \
+";
+void reboot() {
+  unsigned int r;
+  // trigger a restart by instructing the GPU to boot from partition 0
+  r = *PM_RSTS;
+  r &= ~0xfffffaaa;
+  *PM_RSTS = PM_WDOG_MAGIC | r; // boot from partition 0
+  *PM_WDOG = PM_WDOG_MAGIC | 10;
+  *PM_RSTC = PM_WDOG_MAGIC | PM_RSTC_FULLRST;
+
+  while (1)
+    ;
+}
+
 int my_strcpy(char *buf1, char *buf2) {
   int i;
   for (i = 0; *(buf1 + i) != '\x00'; i++) {
@@ -60,6 +89,8 @@ void compair(char *buf) {
     countertimer = countertimer * 1000;
     long result = countertimer / frequency;
     my_itoa(result);
+  } else if (my_strcpy(buf, "reboot")) {
+    reboot();
   } else {
     uart_puts("unknow command ");
     uart_puts(buf);
@@ -69,6 +100,7 @@ void compair(char *buf) {
 
 void main() {
   uart_init();
+  uart_puts(welcome);
   uart_puts("# ");
 
   char commandbuf[100];
