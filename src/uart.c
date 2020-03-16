@@ -75,3 +75,9 @@ void uart_printf(char* fmt, ...) {
         uart_write(*s++);
     }
 }
+
+void uart_flush() {
+    while (*AUX_MU_LSR & 0x01) {
+        *AUX_MU_IO;
+    }
+}
