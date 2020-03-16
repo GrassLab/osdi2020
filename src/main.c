@@ -18,11 +18,10 @@ void main()
     // set up serial console
     uart_init();
     
+
+    uart_getc();
     // welcome
-    uart_puts("\rThis is Lab1\n");
-    uart_puts("\rThis is Lab1\n");
-    uart_puts("\rThis is Lab1\n");
-    uart_puts("\rThis is Lab1\n");
+    uart_puts("\r\nWelcome to Lab1\n");
     
     // echo everything back
     for(;;)
@@ -91,7 +90,7 @@ void main()
 			    for(i=0;i<30;i++) fre[i] = '0';
 			    char num;
 			    i = 29;
-			    while(time_counter > 0)
+			    while(time_counter > 0 && i>0)
 			    {
 				    num = (time_counter % 10) + '0';
 				    time_counter = time_counter / 10;
@@ -99,7 +98,7 @@ void main()
 
 			    }
 			    i = 29;
-			    while(time_fre > 0)
+			    while(time_fre > 0 && i>0)
 			    {
 				    num = (time_fre % 10) + '0';
 				    time_fre = time_fre / 10;
