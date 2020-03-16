@@ -1,7 +1,7 @@
 ARMGNU ?= aarch64-linux-gnu
 
-ASMOPS = -Iinclude 
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11
+ASMOPS = -Iinclude -g
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g
 
 QEMU     = qemu-system-aarch64
 
@@ -39,6 +39,9 @@ test: $(IMG)
 
 gdb: $(IMG)
 	$(QEMU) -M raspi3 -kernel $(IMG) -display none -S -s
+
+update: $(IMG)
+	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt && sudo umount /mnt
 
 clean :
 	rm -rf $(BUILD_DIR) *.img 

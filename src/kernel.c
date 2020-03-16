@@ -3,16 +3,17 @@
 #include "mini_uart.h"
 
 char *welcome = \
-   "              _                          \n"
-   "__      _____| | ___ ___  _ __ ___   ___ \n"
-"\\ \\ /\\ / / _ \\ |/ __/ _ \\| '_ ` _ \\ / _ \\\n"
-" \\ V  V /  __/ | (_| (_) | | | | | |  __/\n"
-"  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|\n";
+   "              _                          " NEWLINE
+   "__      _____| | ___ ___  _ __ ___   ___ " NEWLINE
+"\\ \\ /\\ / / _ \\ |/ __/ _ \\| '_ ` _ \\ / _ \\" NEWLINE
+" \\ V  V /  __/ | (_| (_) | | | | | |  __/" NEWLINE
+"  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|" NEWLINE;
 
 int main(void){
     uart_init();
     while(1){
-        println(welcome);
+        println(NEWLINE, welcome);
+        flush();
         shell_loop(); 
     }
     return 0;

@@ -12,8 +12,13 @@ void wait_msec(unsigned int n)
 
 void timestamp()
 {
-    register unsigned long f, t;
+    register unsigned long f;
+    register unsigned long long t;
     __asm__ volatile ("mrs %0, cntfrq_el0" : "=r"(f));
     __asm__ volatile ("mrs %0, cntpct_el0" : "=r"(t));
-    println("[", t / f, ".", t * dps / f % dps, "]");
+    unsigned long long count = t,
+                       freq = (unsigned long long)f,
+                       intp = count / freq, 
+                       frap = count * dps / freq % dps;
+    println("[", intp, ".", frap, "]");
 }

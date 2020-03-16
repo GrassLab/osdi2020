@@ -14,7 +14,7 @@ char *shell_read_line(char *ptr){
         switch(*ptr){
             case 4:
                 ptr = buffer + 1;
-                *ptr = '\n';
+                *ptr = '\r';
                 *buffer = 4;
                 break;
             case 8:
@@ -24,7 +24,6 @@ char *shell_read_line(char *ptr){
                     ptr--;
                     print("\b \b");
                 }
-                //println("\n", (int)ptr, ", ", (int)buffer);
                 break;
             case 12:
                 *ptr = 0;
@@ -46,9 +45,10 @@ char *shell_read_line(char *ptr){
                 putchar(*ptr);
         }
         
-    } while(ptr < buffer || (!strchr("\n\r", *ptr)));
-    while(ptr >= buffer && strchr(" \n\r\t", *ptr)) ptr--;
+    } while(ptr < buffer || (!strchr("\r", *ptr)));
+    while(ptr >= buffer && strchr(" \r\t", *ptr)) ptr--;
     *(++ptr) = 0; puts("");
+    while(beg < ptr && strchr(" \r\t\n", *beg)) beg++;
     return beg;
 }
 
@@ -71,7 +71,8 @@ int shell_execute(char *cmd){
         sleep(6);
     }
     else if(EQS("reboot", cmd)){
-        cancel_reset();
+        puts("rebooting...");
+        reboot();
     }
     else if(EQS("exit", cmd) || cmd[0] == 4){
         return -1;
@@ -80,13 +81,14 @@ int shell_execute(char *cmd){
         print("\e[1;1H\e[2J");
     }
     else if(strlen(cmd)){
-        print("command not found: ", cmd, "\n");
+        print("command not found: ", cmd, NEWLINE);
         return 1;
     }
     return 0;
 }
 
 int shell_loop(){
+    //while(1) shell_read_line(buffer);
     while(shell_execute(shell_read_line(buffer)) >= 0);
     return 0;
 }

@@ -14,7 +14,7 @@ continue:
     adr x0, bss_beg
     adr x1, bss_end
     bl  memzero
-	mov	sp, #LOW_MEMORY 
+    mov	sp, #LOW_MEMORY 
     //ldr x0, =_stack_top
     //mov sp, x0
     bl main

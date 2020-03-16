@@ -11,6 +11,11 @@ char uart_recv(void){
 	return get32(AUX_MU_IO_REG) & 0xFF;
 }
 
+void uart_flush(void){
+    while(get32(AUX_MU_LSR_REG) & 0x01) 
+        get32(AUX_MU_IO_REG);
+}
+
 void uart_send_string(char* str){
     while(*str) uart_send((char)*str), str++;
 }

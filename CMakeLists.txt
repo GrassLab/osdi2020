@@ -1,3 +1,4 @@
+# for lsp only, linker problem not solved yet
 cmake_minimum_required(VERSION 3.16)
 PROJECT (OSDI2020)
 
