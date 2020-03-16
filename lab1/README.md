@@ -1,0 +1,31 @@
+# Lab 1 : Hello World+
+
+
+## todo
+
+### Basic initialization
+
+- [] [required]Implement the 3 basic steps.
+  - Let only one core proceed, and let others enter a busy loop.
+  - Initialize the BSS segment.
+  - Set the stack pointer to an appropriate position.
+- [] [question]Is it reasonable to accelerate booting speed by parallel programming during the initialization stage?
+
+### Mini UART
+- [] [required]Following UART to set up mini UART.
+
+### Simple Shell
+
+- [] [required]Implement a simple shell, it should support the following commands.
+- [] [elective]Write a program or script on your host computer which can read a text file and write the content to rpi3.
+
+###　Get time
+
+- [] [elective]Add <timestamp> command, it print current timestamp.
+
+### Reboot
+
+- [] [elective]Add <reboot> command.
+
+### Result
+- [] [question]Point out the difference between bare-metal programming and programming on top of operating system.
