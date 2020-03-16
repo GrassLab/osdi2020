@@ -1,11 +1,55 @@
 #include "miniuart.h"
 #include "aux.h"
+#include "gpio.h"
 
 void miniuart_init(void)
 {
   /* Setup GPIO */
   /* TODO: Diverge */
-  /* TODO */
+  /* Configure GPFSELn register to change alternate function */
+  /* GPIO 14 [14:12], 15 [17:15] belongs to GPFSEL1 */
+  /* miniuart is ALT5 for GPIO 14, 15 */
+  /* ALT5 = 010 = 2*/
+  *GPFSEL1 &= (uint32_t)~(7 << 12); /* clear GPIO14 [14:12] */
+  *GPFSEL1 &= (uint32_t)~(7 << 15); /* clear GPIO15 [17:15] */
+  *GPFSEL1 |= (2 << 12); /* set GPIO14 to ALT5 */
+  *GPFSEL1 |= (2 << 15); /* set GPIO14 to ALT5 */
+
+  /* disable GPIO pull up/down */
+  /* If you use a particular pin as input and don't connect anything to this pin,
+   * you will not be able to identify whether the value of the pin is 1 or 0.
+   * In fact, the device will report random values. The pull-up/pull-down mechanism
+   * allows you to overcome this issue. If you set the pin to the pull-up state and
+   * nothing is connected to it, it will report 1 all the time (for the pull-down state,
+   * the value will always be 0). The pin state is preserved even after a reboot, so
+   * before using any pin, we always have to initialize its state. */
+
+  /* 1. Write to GPPUD to set the required control signal */
+  *GPPUD = 0; /* 00 = Off – disable pull-up/down */
+
+  /* 2. Wait 150 cycles – this provides the required set-up time for the control signal */
+  for(int delay_count = 0; delay_count < 150; ++delay_count)
+  {
+    /* ++delay_count cost 1 cycle */
+    /* technical speaking it may not be exact 150 cycles */
+  }
+
+  /* 3. Write to GPPUDCLK0/1 to clock the control signal into the GPIO pads you wish to
+   * modify – NOTE only the pads which receive a clock will be modified, all others will
+   * retain their previous state. */
+  *GPPUDCLK0 = (1 << 14) | (1 << 15);
+
+  /* 4. Wait 150 cycles – this provides the required hold time for the control signal */
+  for(int delay_count = 0; delay_count < 150; ++delay_count)
+  {
+    /* Same as above */
+  }
+
+  /* 5. Write to GPPUD to remove the control signal */
+  /* We don't need to modify it here */
+
+  /* 6. Write to GPPUDCLK0/1 to remove the clock */
+  *GPPUDCLK0 = 0;
 
 
   /* Setup miniuart */
@@ -35,6 +79,6 @@ void miniuart_init(void)
   /* 8. Set AUX_MU_CNTL_REG to 3. Enable the transmitter and receiver. */
   *AUX_MU_CNTL_REG = 3;
 
-
+  return;
 }
 
