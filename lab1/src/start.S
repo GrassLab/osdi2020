@@ -13,7 +13,3 @@ _start:
       bl main
 1:
       b 1b
-
-main:
-    wfe
-    b _start
