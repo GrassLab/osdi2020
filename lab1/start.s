@@ -44,9 +44,10 @@ bss_reset_loop:
   cbnz x3, bss_reset_loop
 
   // Jump to main
+  // main should not return or the stack will be smashed
   bl main
 
-  // After main return
-  wfe
+  // If main return, enter low power mode
+  b other_core
 
 
