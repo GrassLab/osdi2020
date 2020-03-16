@@ -17,7 +17,7 @@
 
 ### Simple Shell
 
-- [] [required]Implement a simple shell, it should support the following commands.
+- [x] [required]Implement a simple shell, it should support the following commands.
 - [] [elective]Write a program or script on your host computer which can read a text file and write the content to rpi3.
 
 ###　Get time
