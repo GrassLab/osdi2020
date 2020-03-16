@@ -36,6 +36,8 @@ enum ANSI_ESC decode_ansi_escape() {
 
 void shell_init() {
     uart_init();
+    uart_flush();
+    uart_printf("\n\nHello From RPI3\n");
 }
 
 void shell_input(char* cmd) {
@@ -105,12 +107,18 @@ void shell_controller(char* cmd) {
         uart_printf("help: print all available commands\n");
         uart_printf("hello: print Hello World!\n");
         uart_printf("timestamp: get current timestamp\n");
+        uart_printf("reboot: reboot pi\n");
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");
     }
     else if (!strcmp(cmd, "timestamp")) {
         uart_printf("%f\n", get_timestamp());
+    }
+    else if (!strcmp(cmd, "reboot")) {
+        uart_printf("Rebooting...");
+        reset();
+        while (1); // hang until reboot
     }
     else {
         uart_printf("shell: command not found: %s\n", cmd);
