@@ -8,4 +8,4 @@ if ! [ -f /dev/ttyUSB0 ];then
     exit 1
 fi
 
-cat $1 > /dev/ttyUSB0
+sudo cat $1 > /dev/ttyUSB0
