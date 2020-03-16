@@ -20,6 +20,9 @@ void main()
     
     // welcome
     uart_puts("\rThis is Lab1\n");
+    uart_puts("\rThis is Lab1\n");
+    uart_puts("\rThis is Lab1\n");
+    uart_puts("\rThis is Lab1\n");
     
     // echo everything back
     for(;;)
