@@ -13,7 +13,7 @@
 - Answer: In my opinion, it will cost more when dealing with parallel programming. So it won't be a good idea.
 
 ### Mini UART
-- [] [required]Following UART to set up mini UART.
+- [x] [required]Following UART to set up mini UART.
 
 ### Simple Shell
 

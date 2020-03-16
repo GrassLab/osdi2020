@@ -3,7 +3,7 @@ OBJS = $(SRCS:.c=.o)
 CFALG = -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles
 
 
-all: kernel8.img
+all: clean kernel8.img
 
 kernel8.img: kernel8.elf
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img

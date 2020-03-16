@@ -1,12 +1,12 @@
 
 SECTIONS
 {
-  . = 0x80000;         /* "." is location counter. This line means move location counter to 0x80000. */
+  . = 0x80000;
   .text : 
   {
       KEEP(*(.text.boot)) 
       *(.text) 
-  } /* put .text section of all input files in the .text section. */
+  } 
   .rodata :{ *(.rodata) }
   .data : { *(.data) }
   .bss :
