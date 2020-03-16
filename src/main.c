@@ -1,4 +1,5 @@
 #include "../include/uart.h"
+#include "../include/reboot.h"
 void main()
 {
     int length = 0;
@@ -78,7 +79,7 @@ void main()
 			asm volatile("mrs %0, CNTFRQ_EL0" : "=r" (time_fre));
 			if(HELLO == 1) uart_puts("\rHello World!\n");
 			else if(HELP) uart_puts("\rhello : print Hello World!\nhelp : help\nreboot : reboot rpi3\ntimestamp : get current timestamp\n");
-			else if(REBOOT) uart_puts("\rLet's Reboot!?\n");
+			else if(REBOOT) reset(10) 
 			else if(TIMESTAMP)
 			{
 			    uart_puts("\r[ ");
