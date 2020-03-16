@@ -20,3 +20,7 @@ master:
     adr x1, bss_end
     sub x1, x1, x0
     bl memzero
+
+    mov sp, #0x400000
+    bl kernel_main
+    b hang
