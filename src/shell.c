@@ -56,7 +56,7 @@ void shell_input(char* cmd) {
                 case CursorBackward:
                     if (idx > 0) idx--;
                     break;
-                
+
                 case Delete:
                     // left shift command
                     for (i = idx; i < end; i++) {
@@ -64,7 +64,7 @@ void shell_input(char* cmd) {
                     }
                     cmd[--end] = '\0';
                     break;
-                
+
                 case Unknown:
                     uart_flush();
                     break;
@@ -98,15 +98,21 @@ void shell_input(char* cmd) {
 }
 
 void shell_controller(char* cmd) {
-    if (!strcmp(cmd, "help")) {
+    if (!strcmp(cmd, "")) {
+        return;
+    }
+    else if (!strcmp(cmd, "help")) {
         uart_printf("help: print all available commands\n");
         uart_printf("hello: print Hello World!\n");
         uart_printf("timestamp: get current timestamp\n");
-    } else if (!strcmp(cmd, "hello")) {
+    }
+    else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");
-    } else if (!strcmp(cmd, "timestamp")) {
+    }
+    else if (!strcmp(cmd, "timestamp")) {
         uart_printf("%f\n", get_timestamp());
-    } else {
+    }
+    else {
         uart_printf("shell: command not found: %s\n", cmd);
     }
 }
