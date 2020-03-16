@@ -14,7 +14,7 @@ start.o:
 %.o: %.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
-.PHONY: clean run
+.PHONY: clean run runasm
 
 clean:
 	rm -rf  *.o
@@ -22,4 +22,7 @@ clean:
 	rm -rf  *.img
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio
+
+runasm:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial null -serial stdio
