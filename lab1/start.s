@@ -33,7 +33,6 @@ core_0:
 
   // jump to main if .bss length is 0
   sub x3, x2, x0
-debug_a:
   cbz x3, main
 
 bss_reset_loop:
