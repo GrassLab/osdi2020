@@ -1,0 +1,6 @@
+*.json
+Debug/*
+.ccls-cache/*
+.clangd/*
+build/*
+*.img
