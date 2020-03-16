@@ -21,7 +21,7 @@ void main()
 
     uart_getc();
     // welcome
-    uart_puts("\r\nWelcome to Lab1\n");
+    uart_puts("\r\nWelcome to Lab1\n# ");
     
     // echo everything back
     for(;;)
@@ -81,7 +81,11 @@ void main()
 			asm volatile("mrs %0, CNTFRQ_EL0" : "=r" (time_fre));
 			if(HELLO == 1) uart_puts("\rHello World!\n");
 			else if(HELP) uart_puts("\rhello : print Hello World!\nhelp : help\nreboot : reboot rpi3\ntimestamp : get current timestamp\n");
-			else if(REBOOT) reset(10); 
+			else if(REBOOT)
+			{ 
+				reset(10); 
+				cancel_reset();
+			}
 			else if(TIMESTAMP)
 			{
 			    uart_puts("\r[ ");
@@ -137,7 +141,7 @@ void main()
 			else if(length != 1)uart_puts("\rcommand not found, use help!!!\n");
 			
 			length = 0;
-			
+			uart_puts("\r# ");
 			//FLAG
 			FLAG_hello = 0;
 			FLAG_help = 0;
