@@ -83,13 +83,24 @@ void miniuart_init(void)
 }
 
 /* get a character from miniuart, blocking io */
-char miniuart_getc(void)
+char miniuart_getc(int echo)
 {
   while(1)
   {
     if(CHECK_BIT(*AUX_MU_LSR_REG, 0)) /* If data ready [0] bit is set */
     {
-      return (char)(*AUX_MU_IO_REG & 0xff);
+      char c = (char)(*AUX_MU_IO_REG & 0xff);
+
+      /* Replace \r with \n */
+      if(c == '\r')
+        c = '\n';
+
+      if(echo)
+      {
+        return miniuart_putc(c);
+      }
+
+      return c;
     }
   }
 }
@@ -107,4 +118,31 @@ char miniuart_putc(char c)
   }
 }
 
+/* Write string to miniuart, blocking */
+void miniuart_puts(char * string)
+{
+  for(unsigned idx = 0; string[idx] != '\0'; ++idx)
+  {
+    miniuart_putc(string[idx]);
+  }
+}
+
+/* Write string from miniuart, blocking, beware size */
+void miniuart_gets(char * string, char delimiter, unsigned length)
+{
+  unsigned idx = 0;
+  for(; ; ++idx)
+  {
+    if(idx >= length)
+    {
+      break;
+    }
+    string[idx] = miniuart_getc(1);
+    if(string[idx] == delimiter)
+    {
+      break;
+    }
+  }
+  string[idx + 1] = '\0';
+}
 
