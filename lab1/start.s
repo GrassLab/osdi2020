@@ -1,4 +1,7 @@
-.section ".text"
+.section ".text.boot"
+
+.global _start
+
 _start:
     // load additional PE id in GPR x0
     mrs x0, mpidr_el1
@@ -13,6 +16,7 @@ hang:
     b hang
 
 master:
-    # TODO
-    wfe
-    b master
+    adr x0, bss_begin
+    adr x1, bss_end
+    sub x1, x1, x0
+    bl memzero
