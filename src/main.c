@@ -70,11 +70,14 @@ void main()
         length++;
         if(key_in == '\n') 
 		{
+			//int time_counter, time_fre;
+			//asm volatile("mrs %0, CNTPCT_EL0" , "=r" (time_counter));
+			//asm volatile("mrs %0, CNTFRQ_EL0" ,  "=r" (time_fre));
 			if(HELLO == 1) uart_puts("Hello World!\n");
 			else if(HELP) uart_puts("hello : print Hello World!\nhelp : help\nreboot : reboot rpi3\ntimestamp : get current timestamp\n");
 			else if(REBOOT) uart_puts("Let's Reboot!?\n");
-			else if(TIMESTAMP) uart_puts("[206.XXXXXXX]?\n");
-			else uart_puts("command not found, use help!!!\n");
+			else if(TIMESTAMP) uart_puts("what is time stamp\n");//uart_send(time_counter);
+			else if(length != 1)uart_puts("command not found, use help!!!\n");
 			
 			length = 0;
 			

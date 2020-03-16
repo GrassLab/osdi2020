@@ -1,7 +1,7 @@
 #OSDI LAB 1
 
 CC = aarch64-linux-gnu
-
+CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
 all: kernel8.img
 
 kernel8.img:  obj/main.o obj/uart.o obj/start.o
@@ -9,13 +9,13 @@ kernel8.img:  obj/main.o obj/uart.o obj/start.o
 	${CC}-objcopy -O binary kernel8.elf kernel8.img
 
 obj/start.o: src/start.S
-	${CC}-gcc -c src/start.S -o obj/start.o
+	${CC}-gcc ${CFLAGS} -c src/start.S -o obj/start.o
 
 obj/main.o: src/main.c
-	${CC}-gcc -c src/main.c -o obj/main.o
+	${CC}-gcc ${CFLAGS} -c src/main.c -o obj/main.o
 
 obj/uart.o: src/uart.c
-	${CC}-gcc -c src/uart.c -o obj/uart.o
+	${CC}-gcc ${CFLAGS} -c src/uart.c -o obj/uart.o
 
 clean:
 	rm -f kernel8.elf
