@@ -70,7 +70,8 @@ void main()
         if(key_in == '\n') 
 		{
 			char count[30];
-			int FLAG_count = 0;
+			char fre[30];
+			int FLAG_count = 0, FLAG_fre = 0;
 			int time_counter, time_fre;
 			int i;
 			asm volatile("mrs %0, CNTPCT_EL0" : "=r" (time_counter));
@@ -82,6 +83,7 @@ void main()
 			{
 			    //init
 			    for(i=0;i<30;i++) count[i] = '0';
+			    for(i=0;i<30;i++) fre[i] = '0';
 			    char num;
 			    i = 29;
 			    while(time_counter > 0)
@@ -90,6 +92,13 @@ void main()
 				    time_counter = time_counter / 10;
 				    count[i--] = num;
 
+			    }
+			    i = 29;
+			    while(time_fre > 0)
+			    {
+				    num = (time_fre % 10) + '0';
+				    time_fre = time_fre / 10;
+				    fre[i--] = num;
 			    }
 			    for(i=0;i<30;i++)
 			    {
@@ -105,6 +114,21 @@ void main()
 				    else uart_send(count[i]);
 			    }
 			    uart_puts(" / ");
+			    for(i=0;i<30;i++)
+			    {
+				    if(FLAG_fre == 0)
+				    {
+					    if(fre[i] == '0') continue;
+					    else
+					    {
+						    FLAG_fre = 1;
+						    uart_send(count[i]);
+					    }
+				    }
+				    else uart_send(count[i]);
+			    }
+			    uart_puts("\n");
+
 			}
 			else if(length != 1)uart_puts("command not found, use help!!!\n");
 			
