@@ -1,6 +1,6 @@
-# OSDI Lab
+# Setup
 
-This repo is for OSDI 2020 lab0
+This directory contains the basic procedure of running code on qemu
 
 ## Requirements
 
@@ -27,11 +27,8 @@ To be continue ...
 ## Code Structure
 
 ```Bash
-osdi2020/
-├── LICENSE
-├── README.md
-└── src
-    ├── a.S
-    ├── linker.ld
-    └── Makefile
+src
+├── a.S
+├── linker.ld
+└── Makefile
 ```
