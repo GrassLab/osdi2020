@@ -13,17 +13,21 @@ int my_strcpy(char *buf1, char *buf2) {
   return 1;
 }
 
-void compair(char *buf) {
-  if (my_strcpy(buf, "hello")) {
-    uart_puts("Hello World!\n");
-  } else if (my_strcpy(buf, "help")) {
-    uart_puts("help : print all available commands.\n");
-    uart_puts("hello : print Hello World \n");
-  } else {
-    uart_puts("unknow command ");
-    uart_puts(buf);
-    uart_puts(". \n");
+void my_itoa(long result) {
+  long m = result;
+  char ms[20] = {0};
+  int count;
+  for (count = 0; m; count++) {
+    ms[count] = (m % 10) + '0';
+    m = m / 10;
   }
+  int i;
+  char rms[20] = {0};
+  for (i = count; i > 0; i--) {
+    rms[count - i] = ms[i - 1];
+  }
+  uart_puts(rms);
+  uart_puts(" ms\n");
 }
 
 void clearbuf(char *buf) {
@@ -31,6 +35,38 @@ void clearbuf(char *buf) {
     *(buf + i) = 0;
   }
 }
+
+unsigned int get_system_frequency() {
+  unsigned int res = 0;
+  asm volatile("MRS %[result], CNTFRQ_EL0" : [result] "=r"(res));
+  return res;
+}
+
+unsigned int get_system_count() {
+  unsigned int res = 0;
+  asm volatile("MRS %[result],  CNTPCT_EL0" : [result] "=r"(res));
+  return res;
+}
+
+void compair(char *buf) {
+  if (my_strcpy(buf, "hello")) {
+    uart_puts("Hello World!\n");
+  } else if (my_strcpy(buf, "help")) {
+    uart_puts("help : print all available commands.\n");
+    uart_puts("hello : print Hello World \n");
+  } else if (my_strcpy(buf, "timestamp")) {
+    long countertimer = get_system_count();
+    long frequency = get_system_frequency();
+    countertimer = countertimer * 1000;
+    long result = countertimer / frequency;
+    my_itoa(result);
+  } else {
+    uart_puts("unknow command ");
+    uart_puts(buf);
+    uart_puts(". \n");
+  }
+}
+
 void main() {
   uart_init();
   uart_puts("# ");
