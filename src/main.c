@@ -23,7 +23,6 @@ void main()
     // echo everything back
     for(;;)
     {
-		//	char command[30];
         char key_in;
         key_in = uart_getc();
         uart_send(key_in);
@@ -70,13 +69,43 @@ void main()
         length++;
         if(key_in == '\n') 
 		{
-			//int time_counter, time_fre;
-			//asm volatile("mrs %0, CNTPCT_EL0" , "=r" (time_counter));
-			//asm volatile("mrs %0, CNTFRQ_EL0" ,  "=r" (time_fre));
+			char count[30];
+			int FLAG_count = 0;
+			int time_counter, time_fre;
+			int i;
+			asm volatile("mrs %0, CNTPCT_EL0" : "=r" (time_counter));
+			asm volatile("mrs %0, CNTFRQ_EL0" : "=r" (time_fre));
 			if(HELLO == 1) uart_puts("Hello World!\n");
 			else if(HELP) uart_puts("hello : print Hello World!\nhelp : help\nreboot : reboot rpi3\ntimestamp : get current timestamp\n");
 			else if(REBOOT) uart_puts("Let's Reboot!?\n");
-			else if(TIMESTAMP) uart_puts("what is time stamp\n");//uart_send(time_counter);
+			else if(TIMESTAMP)
+			{
+			    //init
+			    for(i=0;i<30;i++) count[i] = '0';
+			    char num;
+			    i = 29;
+			    while(time_counter > 0)
+			    {
+				    num = (time_counter % 10) + '0';
+				    time_counter = time_counter / 10;
+				    count[i--] = num;
+
+			    }
+			    for(i=0;i<30;i++)
+			    {
+				    if(FLAG_count == 0)
+				    {
+					    if(count[i] == '0') continue;
+					    else 
+					    {
+						    FLAG_count = 1;
+						    uart_send(count[i]);
+					    }
+				    }
+				    else uart_send(count[i]);
+			    }
+			    uart_puts(" / ");
+			}
 			else if(length != 1)uart_puts("command not found, use help!!!\n");
 			
 			length = 0;
