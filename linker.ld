@@ -18,3 +18,9 @@ SECTIONS
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;
+
+/*
+在採用段式內存管理的架構中，BSS段（bss segment）通常是指用來存放程序中未初始化的全局變量的一塊內存區域。
+BSS是英文Block Started by Symbol的簡稱。
+BSS段屬於靜態內存分配。.bss section 的空間結構類似於 stack
+*/

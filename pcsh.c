@@ -128,6 +128,7 @@ int sh_default_command(char *cmd)
 
 int symbol()
 {
+    uart_send('\r');
     uart_send('>');
 }
 
@@ -143,6 +144,8 @@ int pcsh()
 
         symbol();
         gets(cmd, INPUT_BUFFER_SIZE);
+
+        uart_send('\r');
 
 
         if(my_strcmp(cmd, "\n") == 0)

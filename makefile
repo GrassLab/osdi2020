@@ -23,6 +23,9 @@ run-detail:
 run-uart0:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial null -serial stdio
 
+run-script:
+	sudo python script.py
+
 connect:
 	sudo screen /dev/ttyUSB0 115200
 
