@@ -9,13 +9,13 @@
 #include "watchdog.h"
 
 #define BUFFER_SIZE 1024
-#define INT_STR_SIZE 11
 #define SHELL_CHAR "# "
 
 void shell_start() 
 {
     char line[BUFFER_SIZE];
-    char int_buffer[INT_STR_SIZE];
+    char int_buffer[11];
+    
     //char *cmd;
     //char **args;
 
@@ -30,7 +30,7 @@ void shell_start()
     while(true) {
         uart_puts("\r\n");
         uart_puts(SHELL_CHAR);
-        uart_read_line(line);
+        uart_read_line(line, BUFFER_SIZE);
         if (!strcmp(line, shell_cmds[0][0])) {
             uart_puts("world");
         } else if (!strcmp(line, shell_cmds[1][0])) {
@@ -50,7 +50,7 @@ void shell_start()
         } else {
             uart_puts("ERROR: ");
             uart_puts(line);
-            uart_puts(" unknown command, see <help>");
+            uart_puts(" unknown command, seek <help>");
         }
     }
 }

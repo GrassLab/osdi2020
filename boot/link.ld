@@ -1,11 +1,15 @@
-SECTIONS                    /* defines where the code is going to be stored in memory */
+SECTIONS                        /* defines where the code is going to be stored in memory */
 {
-    . = 0x80000;            /* the kernel must be stored at 0x80000 in ram, because lower addresses are reserved */
-    .text : { *(.text) }    /* maps the text segment from the assembly files */
+    . = 0x80000;                /* the kernel must be stored at 0x80000 in ram, because lower addresses are reserved */
+    .text : { *(.text) }        /* maps the text segment from the assembly files */
     .rodata : { *(.rodata) }
     .data : { *(.data) }
-    . = ALIGN(0x8);
-    bss_begin = .;
-    .bss : { *(.bss*) }
-    bss_end = .;
+    .bss : {
+        __bss_start = .;
+        *(.bss*)
+        __bss_end = .;
+    }
+    _end =.;
 }
+
+__bss_size = (__bss_end - __bss_start) >> 3;

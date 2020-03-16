@@ -35,44 +35,34 @@ void uart_setup()
 
 void uart_putc(uint8_t c)
 {
-    while(1)
-        if(mm_read(AUX_MU_LSR_REG)&0x20) 
-            break;
+    while(!(mm_read(AUX_MU_LSR_REG)&0x20));
     mm_write(AUX_MU_IO_REG,c);
 }
 
-uint8_t uart_getc()
-{
-    while(1)
-        if(mm_read(AUX_MU_LSR_REG)&0x01) 
-            break;
+uint8_t uart_getc() {
+    while(!(mm_read(AUX_MU_LSR_REG)&0x01));
     return(mm_read(AUX_MU_IO_REG)&0xFF);
 }
 
-void uart_puts(const char *str)
-{
+void uart_puts(const char *str) {
     for (size_t i = 0; str[i] != '\0'; i++)
         uart_putc((uint8_t)str[i]);
 }
 
-void uart_read_line(char *buffer)
-{
+void uart_read_line(char *buffer, size_t size) {
     size_t position = 0;
     uint8_t c;
 
-    while(true) {
+    while(position < size) {
         c = uart_getc();
-        uart_putc(c);
 
-        if (c == '\r') {
-            buffer[position] = '\0';
-            uart_putc('\n');
+        if (c == '\r' || c == '\n') {
+            buffer[position++] = '\0';
+            uart_puts("\r\n");
             return;
-        } else {
-            buffer[position] = c;
+        } else if (c > 39 && c < 127) {
+            buffer[position++] = c;
+            uart_putc(c);
         }
-        position++;
     }
 }
-
-
