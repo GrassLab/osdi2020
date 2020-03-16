@@ -7,5 +7,14 @@
 #define PERIPHERAL_TO_PHYSICAL(x) (x & 0x00FFFFFF)  | (PERIPHERAL_PHYSICAL_BASE & 0xFF000000)
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
+#define ANSI_RED       "\x1b[31m"
+#define ANSI_GREEN     "\x1b[32m"
+#define ANSI_YELLOW    "\x1b[33m"
+#define ANSI_BG_RED    "\x1b[41;1m"
+#define ANSI_BG_GREEN  "\x1b[42;1m"
+#define ANSI_BG_YELLOW "\x1b[43;1m"
+#define ANSI_BG_WHITE  "\x1b[47;1m"
+#define ANSI_RESET     "\x1b[0m"
+
 #endif
 
