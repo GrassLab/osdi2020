@@ -83,8 +83,7 @@ void main()
 			else if(HELP) uart_puts("\rhello : print Hello World!\nhelp : help\nreboot : reboot rpi3\ntimestamp : get current timestamp\n");
 			else if(REBOOT)
 			{ 
-				reset(10); 
-				cancel_reset();
+				reset(3); 
 			}
 			else if(TIMESTAMP)
 			{
