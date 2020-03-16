@@ -19,7 +19,7 @@ void main()
     uart_init();
     
     // welcome
-    uart_puts("This is Lab1\n");
+    uart_puts("\rThis is Lab1\n");
     
     // echo everything back
     for(;;)
