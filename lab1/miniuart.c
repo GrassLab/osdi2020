@@ -82,3 +82,29 @@ void miniuart_init(void)
   return;
 }
 
+/* get a character from miniuart, blocking io */
+char miniuart_getc(void)
+{
+  while(1)
+  {
+    if(CHECK_BIT(*AUX_MU_LSR_REG, 0)) /* If data ready [0] bit is set */
+    {
+      return (char)(*AUX_MU_IO_REG & 0xff);
+    }
+  }
+}
+
+/* put a character to miniuart, blocking io */
+char miniuart_putc(char c)
+{
+  while(1)
+  {
+    if(CHECK_BIT(*AUX_MU_LSR_REG, 5)) /* If transmitter empty [5] bit is set */
+    {
+      *AUX_MU_IO_REG = (uint32_t)c;
+      return c;
+    }
+  }
+}
+
+

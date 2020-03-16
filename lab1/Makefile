@@ -3,7 +3,7 @@ LD = aarch64-linux-gnu-ld
 OBJCOPY = aarch64-linux-gnu-objcopy
 
 GENERAL_FLAGS =
-C_FLAGS = -Wall -Wextra -Wshadow -Wconversion
+C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles
 
 KERNEL_C_SOURCE_FILES = main.c shell.c miniuart.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
@@ -25,10 +25,10 @@ start.o: start.s
 debug: GENERAL_FLAGS += -DDEBUG -g3
 debug: all
 
-qemu:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
+qemu: kernel8.img
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio
 
-qemu_dbg:
+qemu_dbg: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -s -S
 
 .PHONY: clean
