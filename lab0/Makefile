@@ -6,4 +6,5 @@ kernel8.elf: a.o
 
 a.o: a.S
 	aarch64-linux-gnu-gcc -c a.S
-
+clean: 
+	rm *.o *.elf *.img
