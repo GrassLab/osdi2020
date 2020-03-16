@@ -72,6 +72,11 @@ void shell_input(char* cmd) {
                     break;
             }
         }
+        // CTRL-C
+        else if (c == 3) {
+            cmd[0] = '\0';
+            break;
+        }
         // Backspace
         else if (c == 8 || c == 127) {
             if (idx > 0) {
