@@ -36,14 +36,14 @@ void main()
 		else if(key_in == 'l' && length == 2 && FLAG_hello == 2) FLAG_hello++;
 		else if(key_in == 'l' && length == 3 && FLAG_hello == 3) FLAG_hello++;
 		else if(key_in == 'o' && length == 4 && FLAG_hello == 4) HELLO = 1;
-		else HELLO = 0;
+		else if(key_in != '\n') HELLO = 0;
 
 		//help
 		if(key_in == 'h' && length == 0 && FLAG_help == 0) FLAG_help++;
 		else if(key_in == 'e' && length == 1 && FLAG_help == 1) FLAG_help++;
 		else if(key_in == 'l' && length == 2 && FLAG_help == 2) FLAG_help++;
 		else if(key_in == 'p' && length == 3 && FLAG_help == 3) HELP = 1;
-		else HELP = 0;
+		else if(key_in != '\n') HELP = 0;
 		
 		//reboot
 		if(key_in == 'r' && length == 0 && FLAG_reboot == 0) FLAG_reboot++;
@@ -52,7 +52,7 @@ void main()
 		else if(key_in == 'o' && length == 3 && FLAG_reboot == 3) FLAG_reboot++;
 		else if(key_in == 'o' && length == 4 && FLAG_reboot == 4) FLAG_reboot++;
 		else if(key_in == 't' && length == 5 && FLAG_reboot == 5) REBOOT = 1;
-		else REBOOT = 0;
+		else if(key_in != '\n') REBOOT = 0;
 		
 		//timestamp
 		if(key_in == 't' && length == 0 && FLAG_timestamp == 0) FLAG_timestamp++;
@@ -64,14 +64,14 @@ void main()
 		else if(key_in == 'a' && length == 6 && FLAG_timestamp == 6) FLAG_timestamp++;
 		else if(key_in == 'm' && length == 7 && FLAG_timestamp == 7) FLAG_timestamp++;
 		else if(key_in == 'p' && length == 8 && FLAG_timestamp == 8) TIMESTAMP = 1;
-		else TIMESTAMP = 0;
+		else if(key_in != '\n') TIMESTAMP = 0;
 		
 		
         length++;
         if(key_in == '\n') 
 		{
-			if(HELLO) uart_puts("Hello World!\n");
-			else if(HELP) uart_puts("hello : print Hello World!\nhelp : help\n reboot : reboot rpi3\ntimestamp : get current timestamp\n");
+			if(HELLO == 1) uart_puts("Hello World!\n");
+			else if(HELP) uart_puts("hello : print Hello World!\nhelp : help\nreboot : reboot rpi3\ntimestamp : get current timestamp\n");
 			else if(REBOOT) uart_puts("Let's Reboot!?\n");
 			else if(TIMESTAMP) uart_puts("[206.XXXXXXX]?\n");
 			else uart_puts("command not found, use help!!!\n");
