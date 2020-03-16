@@ -140,7 +140,7 @@ void main()
 			else if(length != 1)uart_puts("\rcommand not found, use help!!!\n");
 			
 			length = 0;
-			uart_puts("\r# ");
+			if(REBOOT == 0) uart_puts("\r# ");
 			//FLAG
 			FLAG_hello = 0;
 			FLAG_help = 0;
