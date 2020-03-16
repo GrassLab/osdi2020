@@ -76,11 +76,12 @@ void main()
 			int i;
 			asm volatile("mrs %0, CNTPCT_EL0" : "=r" (time_counter));
 			asm volatile("mrs %0, CNTFRQ_EL0" : "=r" (time_fre));
-			if(HELLO == 1) uart_puts("Hello World!\n");
-			else if(HELP) uart_puts("hello : print Hello World!\nhelp : help\nreboot : reboot rpi3\ntimestamp : get current timestamp\n");
-			else if(REBOOT) uart_puts("Let's Reboot!?\n");
+			if(HELLO == 1) uart_puts("\rHello World!\n");
+			else if(HELP) uart_puts("\rhello : print Hello World!\nhelp : help\nreboot : reboot rpi3\ntimestamp : get current timestamp\n");
+			else if(REBOOT) uart_puts("\rLet's Reboot!?\n");
 			else if(TIMESTAMP)
 			{
+			    uart_puts("\r[ ");
 			    //init
 			    for(i=0;i<30;i++) count[i] = '0';
 			    for(i=0;i<30;i++) fre[i] = '0';
@@ -127,10 +128,10 @@ void main()
 				    }
 				    else uart_send(count[i]);
 			    }
-			    uart_puts("\n");
+			    uart_puts(" ]\n");
 
 			}
-			else if(length != 1)uart_puts("command not found, use help!!!\n");
+			else if(length != 1)uart_puts("\rcommand not found, use help!!!\n");
 			
 			length = 0;
 			
