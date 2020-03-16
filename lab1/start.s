@@ -31,6 +31,11 @@ core_0:
   eor x1, x1, x1 // x1 = 0
   ldr x2, =__bss_end__
 
+  // jump to main if .bss length is 0
+  sub x3, x2, x0
+debug_a:
+  cbz x3, main
+
 bss_reset_loop:
   str x1, [x0], #0x8
 

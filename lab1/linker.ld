@@ -11,11 +11,13 @@ SECTIONS
   {
     *(.data)
   }
+  . = ALIGN(0x8);
   __bss_start__ = .;
   .bss :
   {
     *(.bss)
   }
+  . = ALIGN(0x8);
   __bss_end__ = .;
 }
 
