@@ -22,7 +22,7 @@ clear_bss:
 	cbz 	w2, c_entry				//if .bss size is zero, jump to c_entry, else clear bss
 	str 	xzr, [x1], #8			//store register. xzr is zero register. *x1 = 0; x1 += 8;
 	sub 	w2, w2, #1				//w2 = w2 - 1;
-	cbnz 	w2, clear_bss			//if w2>0 jump clear_bss.[ LOOP EXECUTE ]
+	cbnz 	w2, clear_bss			//if w2>0 jump clear_bss. [ LOOP EXECUTE ]
 
 c_entry:
 	bl		main

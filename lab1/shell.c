@@ -6,6 +6,7 @@ char cmd[CMDSIZE] = {0};
 int cmdSize = 0;
 
 void cmd_process(){
+	uart_puts("\r");
 
 	if(strcmp(cmd, "hello")){
 		uart_puts("Hello World! \n");
@@ -30,8 +31,11 @@ void cmd_process(){
 		uart_puts("[");
 		uart_puts(timeStr);
 		uart_puts("]\n");
+	}else if(strcmp(cmd, "restart")){
+		*((volatile unsigned int*)(0x3F10001C)) = 0x5A000020;
+		*((volatile unsigned int*)(0x3F100024)) = 1;
 	}
-	else{
+	else if(strlen(cmd) != 0){
 		uart_puts("command \"");
 		uart_puts(cmd);
 		uart_puts("\" doesn't exist \n");	
@@ -46,7 +50,7 @@ void cmd_push(char c){
 			case 8:		//backspace
 				if(cmdSize>0) cmdSize--;
 				break;
-			case 10:	//enter
+			case 10:	// 0X0A '\n' newline,  0X0D '\r' carriage return
 				cmd[cmdSize] = '\0';
 				cmdSize++;
 				cmd_process();
@@ -60,6 +64,7 @@ void cmd_push(char c){
 	}
 }
 
+
 void main()
 {
 	uart_init();
@@ -69,8 +74,11 @@ void main()
 	while(1){
 		char c = uart_getc();
 
-		uart_send(c);		//show character user typed on uart terminal
-		cmd_push(c);
+		if(c < 127){
+			uart_send(c);		//show character user typed on uart terminal
+			// printASCII(c);
+			cmd_push(c);
+		}
 
 	}
 

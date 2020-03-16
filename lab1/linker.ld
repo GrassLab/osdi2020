@@ -34,12 +34,14 @@ SECTIONS
         __bss_start = .;
         *(.bss .bss.*)
         *(COMMON)
+        . = ALIGN(16);
         __bss_end = .;
     }
     _end = .;
 
 
-	. = 0x70000;
+	. += 512;
+    . = ALIGN(16);
 	stack_top = .;
 
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }

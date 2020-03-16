@@ -1,5 +1,16 @@
 #include "uart.h"
 
+void printASCII(char c){
+	int asc = c;
+	uart_send('\n');
+	uart_send('0'+asc/100);
+	asc = asc%100;
+	uart_send('0'+asc/10);
+	asc = asc % 10;
+	uart_send('0'+asc);
+	uart_send('\n');
+}
+
 int strlen(char *s){
 	int size = 0;
 
@@ -16,8 +27,10 @@ int strcmp(char *s1, char *s2){
 	int len2 = strlen(s2);
 
 	if(len1 != len2) return 0;
-	for(int i=0; i<len1; i++){
+	for(int i=0; i<=len1; i++){
 		if(*s1 != *s2) return 0;
+		s1++;
+		s2++;
 	}
 
 	return 1;
@@ -98,10 +111,4 @@ void cntTimeStamp(unsigned long long cntfrq, unsigned long long cntpct, char *ti
 	}
 	timeStr[pos] = '\0';
 	pos++;
-
-	// uart_puts("quote \n");
-	// uart_puts(quoteStr);
-	// uart_puts("\ndecimal \n");
-	// uart_puts(decimalPointStr);
-	// uart_puts("\n");
 }
