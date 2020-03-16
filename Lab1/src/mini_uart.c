@@ -34,7 +34,7 @@ int uart_check_string(char * str){
 	char* cmd_help = "help";
 	char* cmd_hello = "hello";
 	char* cmd_time = "timestamp";
-	char* cmd_reboot = "r";
+	char* cmd_reboot = "reboot";
 
 	if(strcmp(str,cmd_help)==0){
 	// print all available commands
