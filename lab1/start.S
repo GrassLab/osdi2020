@@ -43,11 +43,11 @@ _start:
 
     // clear bss
     ldr     x1, =__bss_start
-    ldr     w2, =__bss_size
+    ldr     w2, =__bss_size //how many words need to be set to zero
 3:  cbz     w2, 4f
-    str     xzr, [x1], #8
-    sub     w2, w2, #1
-    cbnz    w2, 3b
+    str     xzr, [x1], #8   // x1[0] = xzr then x1 = x1 + 8, value in x1 is a address of memory
+    sub     w2, w2, #1      // w2 = w2 - 1
+    cbnz    w2, 3b        // if w2[0] != 0,then jump to 3:b
 
     // jump to C code, should not return
 4:  bl      main

@@ -30,10 +30,10 @@ CFLAGS = -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles
 all: clean kernel8.img
 
 start.o: start.S
-	aarch64-linux-gnu-gcc $(CFLAGS) -c start.S -o start.o
+	aarch64-linux-gnu-gcc $(CFLAGS) -c start.S -o start.o -g
 
 %.o: %.c
-	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@ -g -O0
+	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@ -g -Og
 
 kernel8.img: start.o $(OBJS)
 	aarch64-linux-gnu-ld -nostdlib -nostartfiles start.o $(OBJS) -T link.ld -o kernel8.elf
