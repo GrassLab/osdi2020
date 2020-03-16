@@ -72,10 +72,10 @@ void main()
         length++;
         if(key_in == '\n') 
 		{
-			char count[30];
-			char fre[30];
+			char count[100];
+			char fre[100];
 			int FLAG_count = 0, FLAG_fre = 0;
-			int time_counter, time_fre;
+			unsigned long long int time_counter, time_fre;
 			int i;
 			asm volatile("mrs %0, CNTPCT_EL0" : "=r" (time_counter));
 			asm volatile("mrs %0, CNTFRQ_EL0" : "=r" (time_fre));
@@ -86,10 +86,10 @@ void main()
 			{
 			    uart_puts("\r[ ");
 			    //init
-			    for(i=0;i<30;i++) count[i] = '0';
-			    for(i=0;i<30;i++) fre[i] = '0';
+			    for(i=0;i<100;i++) count[i] = '0';
+			    for(i=0;i<100;i++) fre[i] = '0';
 			    char num;
-			    i = 29;
+			    i = 99;
 			    while(time_counter > 0 && i>0)
 			    {
 				    num = (time_counter % 10) + '0';
@@ -97,14 +97,14 @@ void main()
 				    count[i--] = num;
 
 			    }
-			    i = 29;
+			    i = 99;
 			    while(time_fre > 0 && i>0)
 			    {
 				    num = (time_fre % 10) + '0';
 				    time_fre = time_fre / 10;
 				    fre[i--] = num;
 			    }
-			    for(i=0;i<30;i++)
+			    for(i=0;i<100;i++)
 			    {
 				    if(FLAG_count == 0)
 				    {
@@ -118,7 +118,7 @@ void main()
 				    else uart_send(count[i]);
 			    }
 			    uart_puts(" / ");
-			    for(i=0;i<30;i++)
+			    for(i=0;i<100;i++)
 			    {
 				    if(FLAG_fre == 0)
 				    {
