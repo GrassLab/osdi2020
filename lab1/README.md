@@ -5,11 +5,12 @@
 
 ### Basic initialization
 
-- [] [required]Implement the 3 basic steps.
+- [x] [required]Implement the 3 basic steps.
   - Let only one core proceed, and let others enter a busy loop.
   - Initialize the BSS segment.
   - Set the stack pointer to an appropriate position.
-- [] [question]Is it reasonable to accelerate booting speed by parallel programming during the initialization stage?
+- [x] [question]Is it reasonable to accelerate booting speed by parallel programming during the initialization stage?
+- Answer: In my opinion, it will cost more when dealing with parallel programming. So it won't be a good idea.
 
 ### Mini UART
 - [] [required]Following UART to set up mini UART.
