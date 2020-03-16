@@ -1,3 +1,5 @@
+#include "my_math.h"
+
 char *itoa(int value, char *s) {
     int idx = 0;
     if (value < 0) {
@@ -17,6 +19,37 @@ char *itoa(int value, char *s) {
     for (i = tidx - 1; i >= 0; i--) {
         s[idx++] = tmp[i];
     }
+    s[idx] = '\0';
+
+    return s;
+}
+
+char *ftoa(float value, char *s) {
+    int idx = 0;
+    if (value < 0) {
+        value = -value;
+        s[idx++] = '-';
+    }
+
+    int ipart = (int)value;
+    float fpart = value - (float)ipart;
+
+    // convert ipart
+    char istr[11];  // 10 digit
+    itoa(ipart, istr);
+
+    // convert fpart
+    char fstr[7];  // 6 digit
+    fpart *= (int)pow(10, 6);
+    itoa((int)fpart, fstr);
+
+    // copy int part
+    char *ptr = istr;
+    while (*ptr) s[idx++] = *ptr++;
+    s[idx++] = '.';
+    // copy float part
+    ptr = fstr;
+    while (*ptr) s[idx++] = *ptr++;
     s[idx] = '\0';
 
     return s;
@@ -44,6 +77,15 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
                 int arg = __builtin_va_arg(args, int);
                 char buf[11];
                 char *p = itoa(arg, buf);
+                while (*p) {
+                    *dst++ = *p++;
+                }
+            }
+            // float
+            if (*fmt == 'f') {
+                float arg = (float) __builtin_va_arg(args, double);
+                char buf[19];  // sign + 10 int + dot + 6 float
+                char *p = ftoa(arg, buf);
                 while (*p) {
                     *dst++ = *p++;
                 }

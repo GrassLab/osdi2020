@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "my_string.h"
+#include "utli.h"
 
 void shell_init() {
     uart_init();
@@ -33,9 +34,13 @@ void shell_controller(char* cmd) {
     if (!strcmp(cmd, "help")) {
         uart_printf("help: print all available commands\n");
         uart_printf("hello: print Hello World!\n");
+        uart_printf("timestamp: get current timestamp\n");
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");
+    }
+    else if (!strcmp(cmd, "timestamp")) {
+        uart_printf("%f\n", get_timestamp()); 
     }
     else {
         uart_printf("shell: command not found: %s\n", cmd);
