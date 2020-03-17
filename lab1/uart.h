@@ -20,4 +20,5 @@ void uart_init ();
 void uart_send (unsigned int c);
 void uart_puts (char *s);
 unsigned char uart_getc ();
+int uart_readline (int size, char *buf);
 #endif /* ifndef UART */
