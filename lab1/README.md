@@ -18,15 +18,15 @@
 ### Simple Shell
 
 - [x] [required]Implement a simple shell, it should support the following commands.
-- [] [elective]Write a program or script on your host computer which can read a text file and write the content to rpi3.
+- [ ] [elective]Write a program or script on your host computer which can read a text file and write the content to rpi3.
 
 ###　Get time
 
-- [] [elective]Add <timestamp> command, it print current timestamp.
+- [ ] [elective]Add <timestamp> command, it print current timestamp.
 
 ### Reboot
 
-- [] [elective]Add <reboot> command.
+- [x] [elective]Add <reboot> command.
 
 ### Result
-- [] [question]Point out the difference between bare-metal programming and programming on top of operating system.
+- [ ] [question]Point out the difference between bare-metal programming and programming on top of operating system.
