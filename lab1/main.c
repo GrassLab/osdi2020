@@ -1,5 +1,5 @@
 #include "uart.h"
-//#include "power.h"
+#include "power.h"
 #include "time.h"
 
 void main()
@@ -22,20 +22,18 @@ void main()
         user_input[i] = '\0';
         uart_send('\n');
         //uart_send(uart_i2c(i));
-        //uart_puts(user_input);
         if (i == 0) {
-            uart_puts("wrong input\n");
             goto loop_start;
         }
 
         if (uart_strcmp(user_input, "hello") == 0) {
-            uart_puts("hello world\n");
+            uart_puts("Hello World!\n");
             goto loop_start;
         }
         
         if (uart_strcmp(user_input, "reboot") == 0) {
             get_time();
-            reset(3);
+            reset(1);
             get_time();
             goto loop_start;
         }
@@ -45,9 +43,14 @@ void main()
             goto loop_start;    
         }
         if (uart_strcmp(user_input, "help") == 0) {
-            uart_puts("help me\n");
+            uart_puts("hello: print hello world.\n");
+            uart_puts("help: help.\n");
+            uart_puts("reboot: restart.\n");
+            uart_puts("time: show timestamp.\n");
             goto loop_start;
         }
-        uart_puts("invalid input\n");
+        uart_puts("Error: command ");
+        uart_puts(user_input);
+        uart_puts(" not found, try <help>.\n");
     } while (1);
 }
