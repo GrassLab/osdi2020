@@ -14,6 +14,8 @@ void
 main()
 {
 	uart_init();
+	char *welcome = " _ _ _   _   __  ___   __  _ _  _  _ _ \n| | | | / \\ |  \\| __| / _|| U || || U |\n| V V || o || o ) _|  \\_ \\|   || ||   |\n \\_n_/ |_n_||__/|___| |__/|_n_||_||_n_|\n\n";
+	uart_puts(welcome);
 
 	while(1) {
 		uart_puts("#");
