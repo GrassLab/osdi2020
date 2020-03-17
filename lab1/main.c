@@ -1,11 +1,14 @@
 #include "uart.h"
+#include "shell.h"
+
+// It should be random, but I'm lazy.
+void *__stack_chk_guard = (void *) 0xdeadbeef;
 
 int
 main (void)
 {
   uart_init ();
   uart_puts ("hello\n");
-  while (1)
-    uart_send (uart_getc ());
+  shell_interactive ();
   return 0;
 }
