@@ -8,7 +8,7 @@
 
 #define __print_as_number(type) \
     void __print_ ## type ## _as_number(type); \
-    void _print_ ## type ## _as_number(type, int); \
+    void _print_ ## type ## _as_number(type); \
 
 #define UL unsigned long
 #define ULL unsigned long long
