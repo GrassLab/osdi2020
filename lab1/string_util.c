@@ -60,6 +60,17 @@ void string_concat(char * a, const char * b)
   return;
 }
 
+int string_length(const char * s)
+{
+  /* excluding null byte */
+  int length = 0;
+  while(s[length] != '\0')
+  {
+    ++length;
+  }
+  return length;
+}
+
 void string_reverse_sequence(const char * src, char * dst, int size)
 {
   /* Including null byte */

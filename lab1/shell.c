@@ -103,6 +103,10 @@ void _shell_parser(char * string_buffer)
   /* remove newline */
   string_strip(string_buffer, '\n');
 
+  if(string_length(string_buffer) == 0)
+  {
+    return;
+  }
 
   /* Check commands */
   int command_idx = 0;
