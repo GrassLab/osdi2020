@@ -1,2 +1,5 @@
 *.swp
 peda-*
+*.*~
+compile_commands.json
+*.img
