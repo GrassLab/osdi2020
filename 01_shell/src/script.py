@@ -4,7 +4,7 @@ import time
 if __name__ == '__main__':
 
     if len(sys.argv) != 2:
-        print('usage: script.py <script>')
+        print('usage: script.py <command file>')
         sys.exit(1)
 
     try:
