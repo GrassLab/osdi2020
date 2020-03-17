@@ -1,5 +1,7 @@
 #include "uart.h"
 #include "mystd.h"
+#include "bcm2835_wdt.h"
+
 
 #define CMDSIZE 64
 char cmd[CMDSIZE] = {0};
@@ -14,6 +16,7 @@ void cmd_process(){
 		uart_puts("command: \"help\" Description: \"print all available commands\"  \n");
 		uart_puts("command: \"hello\" Description: \"print Hello World!\"  \n");
 		uart_puts("command: \"timestamp\" Description: \"print current timestamp\"  \n");
+		uart_puts("command: \"reboot\" Description: \"reset raspi3\"  \n");
 	}else if(strcmp(cmd, "timestamp")){
 		unsigned long long cntfrq;
 		unsigned long long cntpct;
@@ -31,14 +34,14 @@ void cmd_process(){
 		uart_puts("[");
 		uart_puts(timeStr);
 		uart_puts("]\n");
-	}else if(strcmp(cmd, "restart")){
-		*((volatile unsigned int*)(0x3F10001C)) = 0x5A000020;
-		*((volatile unsigned int*)(0x3F100024)) = 1;
+	}else if(strcmp(cmd, "reboot")){
+		bcm2835_reboot(1000);
+		uart_puts("\rreboot .... \n");
 	}
 	else if(strlen(cmd) != 0){
 		uart_puts("command \"");
 		uart_puts(cmd);
-		uart_puts("\" doesn't exist \n");	
+		uart_puts("\" not found, try <help> \n");	
 	}
 
 	uart_puts("# ");
@@ -49,6 +52,8 @@ void cmd_push(char c){
 		switch(c){
 			case 8:		//backspace
 				if(cmdSize>0) cmdSize--;
+				uart_send(32);
+				uart_send(8);
 				break;
 			case 10:	// 0X0A '\n' newline,  0X0D '\r' carriage return
 				cmd[cmdSize] = '\0';
@@ -69,7 +74,7 @@ void main()
 {
 	uart_init();
 
-	uart_puts("My Simple Shell:\n# ");
+	uart_puts("\rMy Simple Shell:\n# ");
 
 	while(1){
 		char c = uart_getc();

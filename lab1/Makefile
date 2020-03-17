@@ -14,8 +14,8 @@ startup.o: startup.s
 %.o : %.c
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
-kernel8.img: shell.o mystd.o startup.o uart.o linker.ld
-	$(LD) $(LD_FLAGS) -o kernel8.elf startup.o shell.o uart.o mystd.o
+kernel8.img: shell.o mystd.o startup.o uart.o bcm2835_wdt.o linker.ld
+	$(LD) $(LD_FLAGS) -o kernel8.elf startup.o shell.o uart.o mystd.o bcm2835_wdt.o
 	$(OBJCOPY) -O binary kernel8.elf $@
 
 clean:
