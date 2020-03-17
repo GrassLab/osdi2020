@@ -20,7 +20,7 @@
 - [x] [required]Implement a simple shell, it should support the following commands.
 - [ ] [elective]Write a program or script on your host computer which can read a text file and write the content to rpi3.
 
-###　Get time
+### Get time
 
 - [ ] [elective]Add <timestamp> command, it print current timestamp.
 
@@ -29,4 +29,5 @@
 - [x] [elective]Add <reboot> command.
 
 ### Result
-- [ ] [question]Point out the difference between bare-metal programming and programming on top of operating system.
+- [x] [question]Point out the difference between bare-metal programming and programming on top of operating system.
+- Answer: We need to construct our own tools, such as strcmp, simple shell. We don't have an OS, some jobs like I/O, scheduling should be done by directly operate the registers or writing the assembly code.
