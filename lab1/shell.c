@@ -3,6 +3,24 @@
 #include "meta_macro.h"
 #include "string_util.h"
 
+const char * shell_command_list[] = {
+  "hello",
+  "help",
+  0x0
+};
+
+const char * shell_command_descriptions[] = {
+  "Print Hello World!",
+  "Help",
+  0x0
+};
+
+int (*shell_command_function_ptr[])(const char *) = {
+  shell_hello,
+  shell_help,
+  0x0
+};
+
 
 char pikachu0[] =
   ""ANSI_BG_GREEN".......***.................................................."ANSI_RESET"\n"
@@ -78,15 +96,6 @@ void _shell_parser(char * string_buffer)
   /* remove newline */
   string_strip_newline(string_buffer);
 
-  const char * shell_command_list[] = {
-    "hello",
-    0x0
-  };
-
-  int (*shell_command_function_ptr[])(const char *) = {
-    shell_hello,
-    0x0
-  };
 
 
   /* Check commands */
@@ -111,6 +120,19 @@ int shell_hello(const char * string_buffer)
 {
   UNUSED(string_buffer);
   miniuart_puts("Hello World!\n");
+  return 0;
+}
+
+int shell_help(const char * string_buffer)
+{
+  UNUSED(string_buffer);
+  for(int command_idx = 0; shell_command_list[command_idx] != 0x0; ++command_idx)
+  {
+    miniuart_puts(shell_command_list[command_idx]);
+    miniuart_puts(": ");
+    miniuart_puts(shell_command_descriptions[command_idx]);
+    miniuart_putc('\n');
+  }
   return 0;
 }
 

@@ -4,6 +4,7 @@
 void shell(void);
 void _shell_parser();
 int shell_hello(const char * string_buffer);
+int shell_help(const char * string_buffer);
 
 #endif
 
