@@ -137,7 +137,6 @@ int process_cmd(char *command)
 }
 
 
-
 void main()
 {
     // set up serial console
@@ -145,7 +144,7 @@ void main()
     
     // say hello
     uart_puts("Hello World!\n");
-    
+    uart_getc();
     char command_buffer[51];
     char *ptr_cmd = command_buffer;
     // echo everything back
