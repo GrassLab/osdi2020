@@ -129,16 +129,9 @@ void string_float_to_char(char * string, const float f)
   string_longlong_to_char(longlong_buffer, f_longlong);
 
   float f_float = f - (float)f_longlong;
-  long long f_float_long = (long long)(f_float * 100000000);
+  long long f_float_long = (long long)(f_float * 10000000);
   string_longlong_to_char(float_buffer, f_float_long);
   string_strip(float_buffer, '0');
-#ifdef DEBUG
-  miniuart_puts(longlong_buffer);
-  miniuart_putc('.');
-  miniuart_puts(float_buffer);
-  miniuart_putc('\n');
-
-#endif
 
   if(f < 0)
   {

@@ -148,9 +148,9 @@ int shell_help(char * string_buffer)
 
 int shell_timestamp(char * string_buffer)
 {
-  int time_frequency = get_cntfrq_el0();
-  int time_counter = get_cntpct_el0();
-  float current_time = (float)time_counter / (float)time_frequency;
+  unsigned long long time_frequency = get_cntfrq_el0();
+  unsigned long long time_counter = get_cntpct_el0();
+  float current_time = (float)((double)time_counter / (double)time_frequency);
   string_float_to_char(string_buffer, current_time);
   miniuart_putc('[');
   miniuart_puts(string_buffer);

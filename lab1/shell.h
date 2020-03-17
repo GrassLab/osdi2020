@@ -8,8 +8,8 @@ int shell_help(char * string_buffer);
 int shell_timestamp(char * string_buffer);
 int shell_reboot(char * string_buffer);
 
-extern int get_cntfrq_el0(void);
-extern int get_cntpct_el0(void);
+extern unsigned long long  get_cntfrq_el0(void);
+extern unsigned long long get_cntpct_el0(void);
 
 #endif
 
