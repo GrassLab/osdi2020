@@ -2,12 +2,6 @@
 
 This directory contains the basic procedure of running code on qemu
 
-## Author
-
-| Student ID | GitHub Account | Name | Email |
-| ------- | ----------- | ------- | ------------------- |
-|`A082647`| `zlsh80826` | 王宇正 | zlsh80826@gmail.com |
-
 ## Requirements
 
 * aarch64-toolchains
