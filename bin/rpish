@@ -1,0 +1,51 @@
+#!/bin/bash
+
+NAME=$0
+
+if [ ! -e /dev/ttyUSB0 ];then
+    echo "ttyUSB0 not found. Did you connect your device?" >&2
+    exit 1
+fi
+
+if [ "$#" -eq 0 ];then
+    sudo screen /dev/ttyUSB0 115200
+    exit
+fi
+
+INTERATIVE=0
+
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -c)
+    CMD="$2"
+    sudo sh -c "echo '$CMD' | tr -s '\n' '\r' > /dev/ttyUSB0;"
+    shift # past argument
+    shift # past value
+    ;;
+    -i)
+    INTERATIVE=1
+    shift
+    ;;
+    -h|--help)
+        echo "$NAME [-hi] [--help] [-c command_string | file]"
+        echo "-c [command]  execute shell command"
+        echo "-i            interact after exec cmd or file"
+        echo "-h, --help    Display a usage message on standard output and exit"
+        exit
+    ;;
+    *)    # unknown option
+    for l in `cat $1`;do
+        sudo sh -c "echo $l | tr -s '\n' '\r' > /dev/ttyUSB0;"
+        sleep 0.1;
+    done
+    shift # past argument
+    ;;
+esac
+done
+
+if [[ $INTERATIVE -eq 1 ]]; then
+    sudo screen /dev/ttyUSB0 115200
+fi
