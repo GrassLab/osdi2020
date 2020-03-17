@@ -7,12 +7,14 @@
 |`0850734`| `Abekabe` | `李加樂` | ms0229643@gmail.com |
 
 ## How to build
-
-**WIP**
+```
+make
+```
 
 ## How to run
-
-**WIP**
+```
+make run
+```
 
 ## How to burn it into pi3
 
@@ -25,4 +27,3 @@
 ## Directory structure
 
 **WIP**
-
