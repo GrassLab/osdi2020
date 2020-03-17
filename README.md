@@ -7,15 +7,24 @@
 
 ## How to build
 
-**WIP**
+make 
 
 ## How to run
 
-**WIP**
+make run
+
+## How to burn it for the first time?
+
+dd if ./lab0/provided/nctuos.img /dev/sdb
 
 ## How to burn it into pi3
 
-**WIP**
+cp ./${LAB}/kernel8.img ${YOUR SD CARD} 
+
+## How to screen it by UART?
+
+* After setup the setting of your usb port to your vm
+sudo screen /dev/ttyUSB0 115200 
 
 ## Architecture
 
@@ -23,4 +32,4 @@
 
 ## Directory structure
 
-**WIP**
+
