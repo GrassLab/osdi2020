@@ -81,8 +81,10 @@ void compair(char *buf) {
   if (my_strcpy(buf, "hello")) {
     uart_puts("Hello World!\n");
   } else if (my_strcpy(buf, "help")) {
-    uart_puts("help : print all available commands.\n");
-    uart_puts("hello : print Hello World \n");
+    uart_puts("help : print all  command\n");
+    uart_puts("hello : say hello\n");
+    uart_puts("timestamp : get time\n");
+    uart_puts("reboot : reboot rpi3 \n");
   } else if (my_strcpy(buf, "timestamp")) {
     long countertimer = get_system_count();
     long frequency = get_system_frequency();
