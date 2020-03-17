@@ -1,13 +1,15 @@
 from __future__ import print_function
 import serial
 import time
+import sys
 
 def resetSerialIO(s):
     s.flush()
     s.flushInput()
     s.flushOutput()
 
-file = open('./script')
+filePath = (sys.argv[1])
+file = open(filePath)
 commands = file.readlines()
 file.close()
 
