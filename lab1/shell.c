@@ -2,18 +2,21 @@
 #include "miniuart.h"
 #include "meta_macro.h"
 #include "string_util.h"
+#include "pm.h"
 
 const char * shell_command_list[] = {
   "hello",
   "help",
   "timestamp",
+  "reboot",
   0x0
 };
 
 const char * shell_command_descriptions[] = {
   "Print Hello World!",
   "Help",
-  "get current timestamp",
+  "Get current timestamp",
+  "Reboot rpi3",
   0x0
 };
 
@@ -21,6 +24,7 @@ int (*shell_command_function_ptr[])(char *) = {
   shell_hello,
   shell_help,
   shell_timestamp,
+  shell_reboot,
   0x0
 };
 
@@ -147,6 +151,20 @@ int shell_timestamp(char * string_buffer)
   miniuart_putc('[');
   miniuart_puts(string_buffer);
   miniuart_puts("]\n");
+  return 0;
+}
+
+int shell_reboot(char * string_buffer)
+{
+  UNUSED(string_buffer);
+
+  miniuart_puts("Reboot...");
+  /* Full reset */
+  *PM_RSTC = PM_PASSWORD | 0x20;
+  /* Reset in 10 tick */
+  *PM_WDOG = PM_PASSWORD | 10;
+  /* Stuck */
+  while(1);
   return 0;
 }
 
