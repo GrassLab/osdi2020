@@ -1,6 +1,6 @@
 #include "my_string.h"
 
-int strcmp(char *x, char *y){
+int strcmp(const char *x, const char *y){
     while(*x == *y){
         x++;
         y++;
@@ -11,6 +11,24 @@ int strcmp(char *x, char *y){
     }
 
     else return 1;
+}
+
+char* strtok(char *x, const char *delim){
+    // Work In Process
+    static char *last;
+
+    if (x == 0)
+        x = last;
+
+    for (int i=0; delim[i] != '\0'; i++){
+        while (*x != '\0'){
+            if (*x == delim[i])
+                *x = '\0';
+            x++;
+        }
+    }
+
+    return x;
 }
 
 void reverse(char *x, char *y){
@@ -27,7 +45,20 @@ void reverse(char *x, char *y){
     y[j] = '\0';
 }
 
-void itoa(int x, char *res){
+void itoa(long long x, char *res){
+    char buf[30];
+    int i=0, j=0;
+
+    while (x != 0){
+        buf[i++] = (x % 10) + '0';
+        x /= 10;
+    }
+    buf[i] = '\0';
+
+    reverse(buf, res);
+}
+
+void unsign_itoa(unsigned long long x, char *res){
     char buf[30];
     int i=0, j=0;
 
@@ -43,8 +74,8 @@ void itoa(int x, char *res){
 void ftoa(float x, char *i_res, char *f_res){
     int i_part = (int)x;
     float f_part = x - i_part;
-    itoa(i_part, i_res);
-    f_part *= 100000;
+    unsign_itoa(i_part, i_res);
+    f_part *= 1000000;
     i_part = (int)f_part;
-    itoa(i_part, f_res);
+    unsign_itoa(i_part, f_res);
 }

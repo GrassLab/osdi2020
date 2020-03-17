@@ -2,6 +2,30 @@
 #include "my_string.h"
 #include "uart.h"
 
+void welcome_msg(){
+    uart_puts("-----------------------------------------\n");
+    uart_puts("|               welcome!!!              |\n");
+    uart_puts("-----------------------------------------\n");
+    uart_puts("\n");
+    uart_puts("⣿⣿⣟⣽⣿⣿⣿⣿⣟⣵⣿⣿⣿⡿⣳⣫⣾⣿⣿⠟⠻⣿⣿⣿⢻⣿⣿⣿⣿⣷⡽⣿\n");
+    uart_puts("⣿⣟⣾⡿⣿⣿⢟⣽⣿⣿⣿⣿⣫⡾⣵⣿⣿⣿⠃⠄⠄⠘⢿⣿⣾⣿⣿⣿⢿⣿⣿⡜\n");
+    uart_puts("⡿⣼⡟⣾⣿⢫⣿⣿⣿⣿⡿⣳⣿⣱⣿⣿⣿⡋⠄⠄⠄⠄⠄⠛⠛⠋⠁⠄⠄⣿⢸⣿\n");
+    uart_puts("⢳⣟⣼⡿⣳⣿⣿⣿⣿⡿⣹⡿⣃⣿⣿⣿⢳⠁⠄⠄⠄⢀⣀⠄⠄⠄⠄⠄⢀⣿⢿⣿\n");
+    uart_puts("⡟⣼⣿⣱⣿⡿⣿⣿⣿⢡⣫⣾⢸⢿⣿⡟⣿⣶⡶⢰⣿⣿⣿⢷⠄⠄⠄⠄⢼⣿⣸⣿\n");
+    uart_puts("⣽⣿⢣⣿⡟⣽⣿⣿⠃⣲⣿⣿⣸⣷⡻⡇⣿⣿⢇⣿⣿⣿⣏⣎⣸⣦⣠⡞⣾⢧⣿⣿\n");
+    uart_puts("⣿⡏⣿⡿⢰⣿⣿⡏⣼⣿⣿⡏⠙⣿⣿⣤⡿⣿⢸⣿⣿⢟⡞⣰⣿⣿⡟⣹⢯⣿⣿⣿\n");
+    uart_puts("⡿⢹⣿⠇⣿⣿⣿⣸⣿⣿⣿⣿⣦⡈⠻⣿⣿⣮⣿⣿⣯⣏⣼⣿⠿⠏⣰⡅⢸⣿⣿⣿\n");
+    uart_puts("⡀⣼⣿⢰⣿⣿⣇⣿⣿⡿⠛⠛⠛⠛⠄⣘⣿⣿⣿⣿⣿⣿⣶⣿⠿⠛⢾⡇⢸⣿⣿⣿\n");
+    uart_puts("⠄⣿⡟⢸⣿⣿⢻⣿⣿⣷⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⡋⠉⣠⣴⣾⣿⡇⣸⣿⣿⡏\n");
+    uart_puts("⠄⣿⡇⢸⣿⣿⢸⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣄⠘⢿⣿⠏⠄⣿⣿⣿⣹\n");
+    uart_puts("⠄⢻⡇⢸⣿⣿⠸⣿⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣦⣼⠃⠄⢰⣿⣿⢯⣿\n");
+    uart_puts("⠄⢸⣿⢸⣿⣿⡄⠙⢿⣿⣿⡿⠁⠄⠄⠄⠄⠉⣿⣿⣿⣿⣿⣿⡏⠄⢀⣾⣿⢯⣿⣿\n");
+    uart_puts("⣾⣸⣿⠄⣿⣿⡇⠄⠄⠙⢿⣀⠄⠄⠄⠄⠄⣰⣿⣿⣿⣿⣿⠟⠄⠄⣼⡿⢫⣻⣿⣿\n");
+    uart_puts("⣿⣿⣿⠄⢸⣿⣿⠄⠄⠄⠄⠙⠿⣷⣶⣤⣴⣿⠿⠿⠛⠉⠄⠄ ⢸⣿⣿⣿⣿⠃⠄\n");
+    uart_puts("\n");
+    uart_puts("# ");
+}
+
 void run(char *command){
     if (!strcmp(command, "hello")){
         hello();
@@ -22,6 +46,8 @@ void help(){
     uart_puts("---\n");
     uart_puts("<timestamp>: print current timestamp.\n");
     uart_puts("---\n");
+    uart_puts("<reboot>: reboot rpi3.\n");
+    uart_puts("---\n");
     uart_puts("<help>: print all available commands.\n");
 }
 
@@ -30,13 +56,12 @@ void hello(){
 }
 
 void timestamp(){
-    int counter, freq;
+    unsigned long long counter, freq;
     char res[30];
     char f_res[10];
-    asm("mrs %0, cntpct_el0" : "=r"(counter));
-    asm("mrs %0, cntfrq_el0" : "=r"(freq));
+    asm volatile("mrs %0, cntpct_el0" : "=r"(counter));
+    asm volatile("mrs %0, cntfrq_el0" : "=r"(freq));
 
-    //itoa((int)(counter/freq), res);
     ftoa((float)counter/freq, res, f_res);
     uart_send('[');
     uart_puts(res);
