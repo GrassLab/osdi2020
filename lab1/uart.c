@@ -72,6 +72,7 @@ uart_readline (int size, char *buf)
   for (cnt = 0; cnt < size; ++cnt)
     {
       buf[cnt] = uart_getc ();
+      uart_send (buf[cnt]);
       if (buf[cnt] == '\n')
 	{
 	  ++cnt;
