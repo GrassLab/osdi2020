@@ -22,3 +22,7 @@ run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
 gdb:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio -S -s
+objdump:
+	aarch64-linux-gnu-objdump -d kernel8.elf
+readelf:
+	aarch64-linux-gnu-readelf -a kernel8.elf
