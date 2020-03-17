@@ -7,20 +7,22 @@ C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles
 
 KERNEL_C_SOURCE_FILES = main.c shell.c miniuart.c string_util.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
+KERNEL_ASSEMBLY_SOURCE_FILES = start.s get_time.s
+KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.s=.o)
 
 all: kernel8.img
 
 kernel8.img: kernel8.elf
 	${OBJCOPY} -O binary kernel8.elf kernel8.img
 
-kernel8.elf: start.o ${KERNEL_C_OBJECT_FILES}
-	${LD} -T linker.ld start.o ${KERNEL_C_OBJECT_FILES} -o kernel8.elf
-
-start.o: start.s
-	${CC} -c ${GENERAL_FLAGS} start.s -o start.o
+kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES}
+	${LD} -T linker.ld ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} -o kernel8.elf
 
 %.o: %.c
 	${CC} -c ${GENERAL_FLAGS} ${C_FLAGS} $^ -o $@
+
+%.o: %.s
+	${CC} -c ${GENERAL_FLAGS} $^ -o $@
 
 debug: GENERAL_FLAGS += -DDEBUG -g3
 debug: all

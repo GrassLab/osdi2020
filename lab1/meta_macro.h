@@ -16,5 +16,7 @@
 #define ANSI_BG_WHITE  "\x1b[47;1m"
 #define ANSI_RESET     "\x1b[0m"
 
+#define NUM_TO_CHAR(x) (char)(x + '0')
+
 #endif
 

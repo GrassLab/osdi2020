@@ -6,18 +6,21 @@
 const char * shell_command_list[] = {
   "hello",
   "help",
+  "timestamp",
   0x0
 };
 
 const char * shell_command_descriptions[] = {
   "Print Hello World!",
   "Help",
+  "get current timestamp",
   0x0
 };
 
-int (*shell_command_function_ptr[])(const char *) = {
+int (*shell_command_function_ptr[])(char *) = {
   shell_hello,
   shell_help,
+  shell_timestamp,
   0x0
 };
 
@@ -94,8 +97,7 @@ void shell(void)
 void _shell_parser(char * string_buffer)
 {
   /* remove newline */
-  string_strip_newline(string_buffer);
-
+  string_strip(string_buffer, '\n');
 
 
   /* Check commands */
@@ -116,14 +118,14 @@ void _shell_parser(char * string_buffer)
   }
 }
 
-int shell_hello(const char * string_buffer)
+int shell_hello(char * string_buffer)
 {
   UNUSED(string_buffer);
   miniuart_puts("Hello World!\n");
   return 0;
 }
 
-int shell_help(const char * string_buffer)
+int shell_help(char * string_buffer)
 {
   UNUSED(string_buffer);
   for(int command_idx = 0; shell_command_list[command_idx] != 0x0; ++command_idx)
@@ -133,6 +135,18 @@ int shell_help(const char * string_buffer)
     miniuart_puts(shell_command_descriptions[command_idx]);
     miniuart_putc('\n');
   }
+  return 0;
+}
+
+int shell_timestamp(char * string_buffer)
+{
+  int time_frequency = get_cntfrq_el0();
+  int time_counter = get_cntpct_el0();
+  float current_time = (float)time_counter / (float)time_frequency;
+  string_float_to_char(string_buffer, current_time);
+  miniuart_putc('[');
+  miniuart_puts(string_buffer);
+  miniuart_puts("]\n");
   return 0;
 }
 
