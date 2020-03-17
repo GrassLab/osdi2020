@@ -2,27 +2,34 @@
 
 ## Author
 
-| 學號 | GitHub 帳號 | 姓名 | Email |
-| --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+| Student ID | GitHub Account | Name | Email                      |
+| -----------| -------------- | ---- | -------------------------- |
+| 0856009    | JingWangTW     | 王靖  | jingwang.cs08g@nctu.edu.tw |
+
+## Files
+| File          | Content      | 
+| --------------| ------------ | 
+| lab0.ld       | linker script|
+| lab0.s        | source code  |
 
 ## How to build
 
-**WIP**
+### Get object file from source code
+```bash
+aarch64-linux-gnu-gcc -c lab0.s -o lab0.o
+```
 
-## How to run
+### Get elf from object file
+```bash
+aarch64-linux-gnu-ld -T lab0.ld -o kernel8.elf lab0.o
+```
 
-**WIP**
+### Get image file form elf
+```bash
+aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+```
 
-## How to burn it into pi3
-
-**WIP**
-
-## Architecture
-
-![architecture figure]()
-
-## Directory structure
-
-**WIP**
-
+## Run on QEMU
+```bash
+qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
+```
