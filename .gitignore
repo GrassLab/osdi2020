@@ -3,3 +3,5 @@ peda-*
 *.*~
 compile_commands.json
 *.img
+*.o
+boot
