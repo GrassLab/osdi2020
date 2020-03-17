@@ -8,6 +8,9 @@
 #define PM_WDOG_MAGIC   0x5a000000
 #define PM_RSTC_FULLRST 0x00000020
 
+void hello() {
+  uart_puts("Hello World!\r\n");
+}
 
 void help() {
   uart_puts("Shell Usage:\r\n"

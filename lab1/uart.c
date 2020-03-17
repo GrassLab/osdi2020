@@ -24,7 +24,7 @@
  */
 
 #include "gpio.h"
-#include "shell.h"
+#include "string.h"
 #include <stdarg.h>
 
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
