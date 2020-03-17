@@ -14,11 +14,11 @@ void reset()
     *PM_WDOG = PM_WDOG_MAGIC | 10;
     *PM_RSTC = PM_WDOG_MAGIC | PM_RSTC_FULLRST;
 }
+//https://github.com/torvalds/linux/blob/master/drivers/watchdog/bcm2835_wdt.c
 
-
-unsigned int get_system_frequency() 
+unsigned long long get_system_frequency() 
 {
-    unsigned int res = 0;
+    unsigned long long res = 0;
     __asm volatile
     (
         "MRS %[result], CNTFRQ_EL0": [result] "=r" (res)
@@ -26,9 +26,9 @@ unsigned int get_system_frequency()
     return res;
 }
 
-unsigned int get_system_count() 
+unsigned long long get_system_count() 
 {
-    unsigned int res = 0;
+    unsigned long long res = 0;
     __asm volatile
     (
         "MRS %[result],  CNTPCT_EL0": [result] "=r" (res)
@@ -79,11 +79,11 @@ int do_time_cmd(void)
 {
     char inte_buf[50];
     char flot_buf[50];
-    double system_frq = get_system_frequency() ;
-    double system_count = get_system_count() ;
-    double result =  system_count / system_frq;
+    unsigned long long system_frq = get_system_frequency() ;
+    unsigned long long system_count = get_system_count() ;
+    double result =  (double)((double)system_count / (double)system_frq);
     int inte = (int)result;
-    int flot = (int)((result - inte) * 1000);
+    int flot = (int)((result - inte) * 100000);
     intToStr(inte, inte_buf);
     intToStr(flot, flot_buf);
 
