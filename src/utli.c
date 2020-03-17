@@ -3,7 +3,7 @@
 #define PM_WDOG         ((volatile unsigned int*)0x3F100024)
 
 float get_timestamp() {
-    register unsigned long f, c;
+    register unsigned long long f, c;
     asm volatile ("mrs %0, cntfrq_el0" : "=r"(f)); // get current counter frequency
     asm volatile ("mrs %0, cntpct_el0" : "=r"(c)); // read current counter
     return (float) c / f;
