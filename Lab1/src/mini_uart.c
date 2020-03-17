@@ -40,6 +40,8 @@ int uart_check_string(char * str){
 	// print all available commands
 		uart_send_string("\r\nhello : print Hello World!\r\n");
 		uart_send_string("help : help\r\n");
+		uart_send_string("timestamp: get current timestamp\r\n");
+		uart_send_string("reboot: reboot rpi3\r\n");
 	}
 	else if(strcmp(str,cmd_hello)==0){
 	// print hello
