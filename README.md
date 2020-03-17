@@ -33,8 +33,7 @@ WIP
 ```
 .
 ├── bin
-│   ├── alias.sh
-│   ├── pish.sh
+│   ├── rpish
 │   └── test.sh
 ├── CMakeLists.txt
 ├── include
@@ -64,5 +63,5 @@ WIP
     ├── time.c
     └── util.S
 
-3 directories, 29 files
+3 directories, 28 files
 ```
