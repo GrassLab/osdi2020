@@ -32,9 +32,9 @@ void main()
         }
         
         if (uart_strcmp(user_input, "reboot") == 0) {
+            reset(3);
             get_time();
-            reset(1);
-            get_time();
+            uart_puts("reboot in 3 cpu-cycles.\n");
             goto loop_start;
         }
         
