@@ -106,7 +106,7 @@ char miniuart_getc(int echo)
 }
 
 /* put a character to miniuart, blocking io */
-char miniuart_putc(char c)
+char miniuart_putc(const char c)
 {
   while(1)
   {
@@ -119,7 +119,7 @@ char miniuart_putc(char c)
 }
 
 /* Write string to miniuart, blocking */
-void miniuart_puts(char * string)
+void miniuart_puts(const char * string)
 {
   for(unsigned idx = 0; string[idx] != '\0'; ++idx)
   {

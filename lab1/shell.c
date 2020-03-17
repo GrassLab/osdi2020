@@ -1,6 +1,8 @@
 #include "shell.h"
 #include "miniuart.h"
 #include "meta_macro.h"
+#include "string_util.h"
+
 
 char pikachu0[] =
   ""ANSI_BG_GREEN".......***.................................................."ANSI_RESET"\n"
@@ -65,8 +67,50 @@ void shell(void)
   {
     miniuart_puts(ANSI_RED "# " ANSI_RESET);
     miniuart_gets(string_buffer, '\n', 0x1000 - 1);
+    _shell_parser(string_buffer);
   }
 
   return;
+}
+
+void _shell_parser(char * string_buffer)
+{
+  /* remove newline */
+  string_strip_newline(string_buffer);
+
+  const char * shell_command_list[] = {
+    "hello",
+    0x0
+  };
+
+  int (*shell_command_function_ptr[])(const char *) = {
+    shell_hello,
+    0x0
+  };
+
+
+  /* Check commands */
+  int command_idx = 0;
+  for(; shell_command_list[command_idx] != 0x0; ++command_idx)
+  {
+    if(string_cmp(string_buffer, shell_command_list[command_idx]))
+    {
+      (*shell_command_function_ptr[command_idx])(string_buffer);
+      break;
+    }
+  }
+  if(shell_command_list[command_idx] == 0x0)
+  {
+    miniuart_puts("Err: command ");
+    miniuart_puts(string_buffer);
+    miniuart_puts(" not found, try <help>\n");
+  }
+}
+
+int shell_hello(const char * string_buffer)
+{
+  UNUSED(string_buffer);
+  miniuart_puts("Hello World!\n");
+  return 0;
 }
 
