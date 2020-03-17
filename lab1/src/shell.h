@@ -7,4 +7,6 @@ void help();
 
 void hello();
 
+void timestamp();
+
 #endif

@@ -98,6 +98,7 @@ void uart_puts(char *s) {
     while(*s) {
         /* convert newline to carrige return + newline */
         if(*s=='\n' || *s=='\r'){
+            uart_send('\r');
             uart_send('\n');
             return;
         }
