@@ -16,12 +16,17 @@ int getcmd(char *buf, int nbuf) {
   char c;
   while ((c = uart_getc()) != '\r') {
     if (c == 127 || c == 8) { /* backspace or delete */
-      uart_puts("\b \b");
+      /* display */
+      if (p_buf != buf) {
+        /* display */
+        uart_puts("\b \b");
+        /* modified the buffer */
+        *buf-- = 0;
+      }
     } else {
       uart_send(c);
+      *buf++ = c;
     }
-
-    *buf++ = c;
   }
   uart_puts("\r\n");
   *buf = 0;
