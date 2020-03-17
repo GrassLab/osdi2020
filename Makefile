@@ -5,7 +5,7 @@ QEMU = qemu-system-aarch64
 
 SRC_DIR = src
 BOOT_DIR = boot
-LIB_DIR = lib
+LIB_DIR = include
 OBJ_DIR = obj
 OUT_DIR = output
 
