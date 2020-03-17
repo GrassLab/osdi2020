@@ -10,7 +10,8 @@ void main()
     char *buff_ptr = buff;
 
     uart_puts("Welcome! osdi\n#");
-    char c = '\0';
+    char c = uart_getc();;
+    
     while(1) {
         c = uart_getc();
         if(c=='\n'){

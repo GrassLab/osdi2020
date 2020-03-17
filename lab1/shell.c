@@ -3,7 +3,7 @@
 struct cmd
 {
     char name[10];
-    char description[25];
+    char description[30];
     void(*callback)(void);
 };
 
