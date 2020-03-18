@@ -18,7 +18,7 @@ kernel8.img: boot
 	$(ARMGNU)objcopy -O binary boot kernel8.img
 
 clean:
-	rm boot kernel8.img *.o
+	rm boot kernel8.img *.o *.*~
 
 qemu: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
