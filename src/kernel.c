@@ -4,4 +4,5 @@
 int main(void) {
   gpio_init();
   mini_uart_init();
+  shell();
 }
