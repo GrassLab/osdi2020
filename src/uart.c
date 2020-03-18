@@ -5,6 +5,7 @@
 
 #include "mm.h"
 #include "uart.h"
+#include "string.h"
 
 void uart_setup()
 {
@@ -51,7 +52,7 @@ void uart_puts(const char *str) {
 
 void uart_read_line(char *buffer, size_t size) {
     size_t position = 0;
-    uint8_t c;
+    uint8_t c, e;
 
     while(position < size) {
         c = uart_getc();
@@ -64,6 +65,15 @@ void uart_read_line(char *buffer, size_t size) {
             if (position > 0) {
                 buffer[--position] = 0;
                 uart_puts("\b \b");
+            }
+        } else if (c == '[') {
+            e = uart_getc();
+            if (e == 'C' && position < strlen(buffer)) {
+                uart_puts("\033[C");
+                position++;
+            } else if (e == 'D' && position > 0) {
+                uart_puts("\033[D");
+                position--;
             }
         } else if (c > 39 && c < 127) {
             buffer[position++] = c;
