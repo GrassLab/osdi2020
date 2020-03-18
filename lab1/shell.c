@@ -1,6 +1,11 @@
 #include "shell.h"
 #include "uart.h"
 #include "string.h"
+#include "mm.h"
+
+#define PM_PASSWORD   0x5a000000
+#define PM_RSTC       ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
+#define PM_WDOG       ((volatile unsigned int*)(MMIO_BASE+0x00100024))
 
 void
 shell_interactive ()
@@ -16,6 +21,7 @@ shell_interactive ()
 	  uart_puts ("help - show command list\n");
 	  uart_puts ("hello - say hello\n");
 	  uart_puts ("timestamp - get current timestamp\n");
+	  uart_puts ("reboot - reboot\n");
 	}
       else if (!strcmp ("hello", buf))
 	{
@@ -24,6 +30,10 @@ shell_interactive ()
       else if (!strcmp ("timestamp", buf))
 	{
 	  print_time ();
+	}
+      else if (!strcmp ("reboot", buf))
+	{
+	  reset (10);
 	}
       else
 	{
@@ -71,4 +81,19 @@ print_time ()
   uart_puts ("[");
   uart_puts (buf);
   uart_puts ("]\n");
+}
+
+void
+reset (int tick)
+{
+  // reboot after watchdog timer expire
+  *PM_RSTC = PM_PASSWORD | 0x20;	// full reset
+  *PM_WDOG = PM_PASSWORD | tick;	// number of watchdog tick
+}
+
+void
+cancel_reset ()
+{
+  *PM_RSTC = PM_PASSWORD | 0;	// full reset
+  *PM_WDOG = PM_PASSWORD | 0;	// number of watchdog tick
 }

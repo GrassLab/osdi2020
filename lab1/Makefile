@@ -28,7 +28,7 @@ debug: kernel8.img
 
 sd: kernel8.img
 	sudo mount -t vfat $(SDCARD)1 rootfs/
-	cp kernel8.img rootfs/kernel8.img
+	sudo cp kernel8.img rootfs/kernel8.img
 	sudo umount rootfs
 
 indent:

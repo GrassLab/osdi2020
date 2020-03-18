@@ -6,5 +6,7 @@
 void shell_interactive ();
 void print_time ();
 void ftoa (double f, int size, char *buf);
+void reset (int tick);
+void cancel_reset ();
 
 #endif /* ifndef SHELL */
