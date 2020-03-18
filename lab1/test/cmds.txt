@@ -1,0 +1,6 @@
+help
+hello
+info
+timestamp
+reset
+cancel_reset
