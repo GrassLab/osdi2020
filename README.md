@@ -36,12 +36,11 @@ make debug
 
 ```
 .
-├── boot.S	# source code for boot
+├── labX		# labX (X = 0 ~ 8)
+│   ├── boot.S		# source code for boot
+│   ├── README.md	# some notes for labX
+│   ├── linker.ld	# linker script
+│   └── Makefile
 ├── LICENSE
-├── linker.ld	# linker script
-├── Makefile
-├── README.md
-└── labX.md	# some notes for labX
+└── README.md		# this file
 ```
-
-
