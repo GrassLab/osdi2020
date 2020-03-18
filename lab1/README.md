@@ -1,4 +1,4 @@
-# My OSDI 2020
+# My OSDI 2020 Lab1
 
 ## Author
 
@@ -6,16 +6,39 @@
 | --- | ----------- | --- | --- |
 |`A082533`| `chichenyang` | `楊季蓁` | chichensmile@gmail.com |
 
+## Goals:
+1.  set up mini UART and let the host computer and rpi3 communicate through it.
+2.  implement a simple shell to let rpi3 interact with the host computer. 
+
+## Simple Shell
+Support the following commands:
+
+| Command | Description|
+|---------|------------|
+|help|print all available commands|
+|hello|print Hello World|
+|timestamp|print current timestamp (timer counter / timer frequency)|
+|reboot| reset on real rpi3, not on QEMU.|
+
+## Script
+We provide a script which can read a text file on host machine and write the content to rpi3.
+Note: You have installed "serial" python package and have root permission. 
+```
+    python script.py
+```
+
 ## How to build
 ```
- sudo pacman -S aarch64-linux-gnu-gcc
- sudo pacman -S qemu-arch-extra
+    make
+```
 
- aarch64-linux-gnu-gcc -c a.S
- aarch64-linux-gnu-ld -T linker.ld -o kernel8.elf a.o
- aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+## How to run on qemu
 ```
-## How to run
+    make run
 ```
- qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
+
+## How to interact with rpi3
 ```
+    screen /dev/ttyUSB0 115200
+```
+
