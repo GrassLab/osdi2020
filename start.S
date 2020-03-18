@@ -25,13 +25,13 @@ main_cpu:
 
 clear_bss_loop:
     cbz     w2, run // if all clear, run our program
-    str     xzr, [x1], #8  // ???
-    sub     w2, w2, #1  // next addreadd
+    str     xzr, [x1], #8  // data xzr store to z1, and then address x1 = x1 + 8
+    sub     w2, w2, #1  // w2 -= 1, check how many block we need to clear
     cbnz    w2, clear_bss_loop  // if value not zero, clear bss
 
-
-    // goto main.o
+    // goto main.o main()
 run:
     bl main
 
+    // if any problem, let cpu idel
     b idel_cpu

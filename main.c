@@ -1,17 +1,20 @@
 #include "uart.h"
+#include "pcsh.h"
+
+void system_start(){
+    print("-------------------------\n");
+    print("Raspberry Pi 3B+ is start\n");
+    print("-------------------------\n");
+}
 
 int main(){
 
     // set uart
     uart_init();
-    
-    uart_puts("0856168 Hsu, Po-Chun\n");
-    uart_puts("Hello World!\n");
-    
 
-    // echo
-    while(1) {
-        uart_send(uart_getc());
-    }
+    system_start();
+
+    // call simple shell
+    pcsh();
 
 }
