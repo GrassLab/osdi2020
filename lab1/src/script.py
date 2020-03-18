@@ -7,7 +7,7 @@ ser = serial.Serial(
    )
 
 try:
-    with open('cmd.txt') as f:
+    with open('../cmd.txt') as f:
         line = f.readline()
         while line:
             ser.write(line.encode())
