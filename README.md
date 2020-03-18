@@ -4,25 +4,5 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
-
-## How to build
-
-**WIP**
-
-## How to run
-
-**WIP**
-
-## How to burn it into pi3
-
-**WIP**
-
-## Architecture
-
-![architecture figure]()
-
-## Directory structure
-
-**WIP**
+|`A082614`| `lesliefan0531` | `范綵均` | lesliefan0531@gmail.com |
 
