@@ -20,7 +20,9 @@ make test
 
 ## How to burn it into pi3
 
-**WIP**
+```
+make update
+```
 
 ## Architecture
 
@@ -30,11 +32,36 @@ WIP
 
 ```
 .
-├── kernel8.s
+├── bin
+│   ├── rpish
+│   └── test.sh
+├── CMakeLists.txt
+├── include
+│   ├── io.h
+│   ├── map.h
+│   ├── mini_uart.h
+│   ├── mm.h
+│   ├── power.h
+│   ├── shell.h
+│   ├── string.h
+│   ├── time.h
+│   └── util.h
 ├── LICENSE
-├── linker.ld
 ├── Makefile
-└── README.md
+├── README.md
+└── src
+    ├── boot.S
+    ├── CMakeLists.txt
+    ├── io.c
+    ├── kernel.c
+    ├── linker.ld
+    ├── mini_uart.c
+    ├── mm.S
+    ├── power.c
+    ├── shell.c
+    ├── string.c
+    ├── time.c
+    └── util.S
 
-0 directories, 5 files
+3 directories, 28 files
 ```
