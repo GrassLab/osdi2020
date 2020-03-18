@@ -65,7 +65,7 @@ void uart_read_line(char *buffer, size_t size) {
                 buffer[--position] = 0;
                 uart_puts("\b \b");
             }
-        }else if (c > 39 && c < 127) {
+        } else if (c > 39 && c < 127) {
             buffer[position++] = c;
             uart_putc(c);
         }

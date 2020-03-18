@@ -39,8 +39,8 @@ static inline uint32_t mm_freq() {
     return cntfrq_el0;
 }
 
-static inline uint32_t mm_ticks() {
-    uint32_t cntpct_el0;
+static inline uint64_t mm_ticks() {
+    uint64_t cntpct_el0;
 
     asm volatile("mrs %0, cntpct_el0\n" : "=r" (cntpct_el0) : : "memory");
     return cntpct_el0;
