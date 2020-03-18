@@ -1,5 +1,3 @@
-#include "time.h"
-
 unsigned int getFrequency() {
     unsigned int freq = 0;
     asm volatile ("mrs %0, cntfrq_el0" : "=r"(freq));
@@ -16,4 +14,3 @@ double getTime() {
     double time = (double)getCount() / (double)getFrequency();
     return time;
 }
-

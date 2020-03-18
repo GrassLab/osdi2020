@@ -24,10 +24,7 @@
  */
 
 #include "uart.h"
-#include "cmd.h"
-#include "type.h"
-
-const int MAX_BUFFER_SIZE = 512;
+#include "shell.h"
 
 void main()
 {
@@ -35,28 +32,10 @@ void main()
     uart_init();
     
     // say hello
-    uart_puts("Welcome to OSDI shell!\n");
+    uart_puts("\n|------------------------|\n");
+    uart_puts("| Welcome to OSDI shell! |\n");
+    uart_puts("|------------------------|\n");
     uart_puts("> ");
     
-    char buf[MAX_BUFFER_SIZE];
-    int buf_ptr = 0; 
-
-    // echo everything back
-    while(1) {
-        char in_c = uart_getc();
-        uart_send(in_c);
-
-        if (in_c == '\n') {
-            buf[buf_ptr] = '\0';
-
-            processCmd(buf);
-            uart_puts("> ");
-            
-            buf_ptr = 0;
-            buf[buf_ptr] = '\0';
-        }
-        else {
-            buf[buf_ptr++] = in_c;
-        }
-    }
+    runShell();
 }

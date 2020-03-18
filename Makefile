@@ -34,4 +34,4 @@ clean:
 	$(RM) *.o $(KERNEL).elf $(KERNEL).img
 
 test: $(KERNEL).img
-	$(EMULATOR) -M raspi3 -kernel $< -serial null -serial stdio
+	$(EMULATOR) -M raspi3 -kernel $< -display none -serial null -serial stdio
