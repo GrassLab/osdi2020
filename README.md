@@ -12,24 +12,8 @@
 
 ## How to run
 
-`qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm`
-
-## How to burn it into pi3
-
-* Use `dd` to burn the image to pi3
+`make run`
 
 ## Architecture
 
 **WIP**
-
-## Directory structure
-
-```
-.
-├── LICENSE
-├── linker.ld
-├── Makefile
-├── nctuos.img
-├── README.md
-└── start.S
-```
