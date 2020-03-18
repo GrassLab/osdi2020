@@ -42,14 +42,14 @@ ftoa (double f, int size, char *buf)
   while (f / probe < 1)
     {
       if (probe == 1)
-        break;
+	break;
       probe /= 10;
     }
   while (cnt < size - 1)
     {
       buf[cnt++] = ((char) (f / probe) % 10) + '0';
       if (probe == 1)
-        buf[cnt++] = '.';
+	buf[cnt++] = '.';
       probe /= 10;
     }
   buf[size - 1] = '\0';
@@ -65,8 +65,7 @@ print_time ()
   int len = 0;
 
   asm volatile ("mrs %0, CNTFRQ_EL0\n"
-		"mrs %1, CNTPCT_EL0\n"
-		: "=r" (freq), "=r" (cnt));
+		"mrs %1, CNTPCT_EL0\n":"=r" (freq), "=r" (cnt));
   result = (double) cnt / (double) freq;
   ftoa (result, 0x20, buf);
   uart_puts ("[");
