@@ -21,7 +21,20 @@ void help() {
             "  reboot     Reboot.\r\n");
 }
 
-void get_system_timer() {
+void wait_msec(unsigned int n)
+{
+    register unsigned long f, t, r;
+    // get the current counter frequency
+    asm volatile ("mrs %0, cntfrq_el0" : "=r"(f));
+    // read the current counter
+    asm volatile ("mrs %0, cntpct_el0" : "=r"(t));
+    // calculate expire value for counter
+    t+=((f/1000)*n)/1000;
+    do{asm volatile ("mrs %0, cntpct_el0" : "=r"(r));}while(r<t);
+}
+
+
+float get_system_timer() {
   register unsigned long long f, t;
 
   /* get the current counter frequency */
@@ -34,47 +47,8 @@ void get_system_timer() {
   unsigned long long f_part = t * 100000000 / f % 100000000;
 
   uart_println("[%d.%d]", i_part, f_part);
+  return t / f;
 }
-
-
-int bss_test() {
-  register unsigned long *beg, *end;
-  asm volatile("ldr %0, =__bss_start" : "=r"(beg));
-  asm volatile("ldr %0, =__bss_end" : "=r"(end));
-
-  for (unsigned long *p = beg; p != end; ++p) {
-    if (*p != 0) {
-      return -1;
-    }
-  }
-  return 0;
-}
-
-/* int unittest() { */
-/*   TEST1(bss_test, "bss_test", */
-/*         "the .bss segment should not have non zero value after initialize"); */
-
-/*   char *test[20][2] = { */
-/*       {"hello", "Hello World!"}, */
-/*       {"h", "h2"}, */
-/*   }; */
-
-/*   /\* uart_println("start from: %d to %d", beg, end); *\/ */
-
-/*   /\* char *test[20][2] = *\/ */
-/*   /\*   { *\/ */
-/*   /\*    {"hello", "Hello World!"}, *\/ */
-/*   /\*    {"h", "h2"}, *\/ */
-
-/*   /\*   }; *\/ */
-
-/*   /\* uart_println("%s", test[0][0]); *\/ */
-/*   /\* uart_println("%s", test[0][1]); *\/ */
-/*   /\* uart_println("%s", test[1][0]); *\/ */
-/*   /\* uart_println("%s", test[1][1]); *\/ */
-/*   return 0; */
-/* } */
-
 
 
 void reset()
@@ -98,6 +72,37 @@ void reset()
     }                                           \
   }
 
+
+int bss_test() {
+  register unsigned long *beg, *end;
+  asm volatile("ldr %0, =__bss_start" : "=r"(beg));
+  asm volatile("ldr %0, =__bss_end" : "=r"(end));
+
+  for (unsigned long *p = beg; p != end; ++p) {
+    if (*p != 0) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+
+int stack_test() {
+  extern char __stack_top;
+  unsigned long *stack_top = (unsigned long *)&__stack_top;
+
+  unsigned long sp;
+  asm volatile("mov %0, sp" : "=r"(sp));
+  return (unsigned long *)sp < stack_top ? 0 : -1;
+}
+
+int timestamp_test() {
+  float a = get_system_timer();
+  wait_msec(1000000);
+  float b = get_system_timer();
+  return (b > a && b - a < 2) ? 0 : 1;
+}
+
 int main() {
   // set up serial console
   uart_init();
@@ -106,8 +111,10 @@ int main() {
   /* testing the bss is only zero inside */
   unittest(bss_test, "bss_test",
            "the .bss segment should not have non zero value after initialize");
-
-
+  unittest(stack_test, "stack_test",
+           "the stack pointer should set properly");
+  unittest(timestamp_test, "timestamp_test",
+           "the time is work well if it continuely increase");
 
   uart_puts("----------------\r\n"
             "    OSDI2020    \r\n"
