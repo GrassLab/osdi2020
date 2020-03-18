@@ -4,25 +4,8 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`B052042`| `a207052002` | `盧奕松` | a207052002@gmail.com |
 
-## How to build
-
-**WIP**
-
-## How to run
-
-**WIP**
-
-## How to burn it into pi3
-
-**WIP**
-
-## Architecture
-
-![architecture figure]()
-
-## Directory structure
-
-**WIP**
+all done include elective
+the script need to be executed on root.
 
