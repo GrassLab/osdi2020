@@ -21,7 +21,7 @@ Support the following commands:
 |reboot| reset on real rpi3, not on QEMU.|
 
 ## Script
-We provide a script which can read a text file on host machine and write the content to rpi3.
+We provide a script which can read a text file (cmd.txt) on host machine and write the content to rpi3.
 Note: You have installed "serial" python package and have root permission. 
 ```
     python script.py
