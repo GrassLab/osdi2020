@@ -14,6 +14,12 @@ The following command install the prerequisites on archlinux, but the package na
 pacman -S aarch64-linux-gnu-gcc qemu-arch-extra
 ```
 
+You also need screen to interact with uart and python with pyserial to use the testing script. 
+```bash
+pacman -S screen python python-pip 
+pip install pyserial
+```
+
 ## How to build
 
 ```bash
@@ -34,19 +40,36 @@ make debugrun
 
 ## How to burn it into pi3
 
-**TODO**
-
-## Architecture
-
-**TODO**
+- Format the sdcard in FAT32
+- Copy the files 
+- Start the pi3
+- ```bash sh utils/screen.sh```
 
 ## Directory structure
 
 ```bash
 .
-├── boot.S
+├── boot
+│   ├── boot.S
+│   └── link.ld
+├── lib
+│   ├── mm.h
+│   ├── shell.h
+│   ├── string.h
+│   ├── types.h
+│   ├── uart.h
+│   └── watchdog.h
 ├── LICENSE
-├── link.ld
 ├── Makefile
-└── README.md
+├── README.md
+├── src
+│   ├── kernel.c
+│   ├── shell.c
+│   ├── string.c
+│   ├── uart.c
+│   └── watchdog.c
+└── utils
+    ├── cmds
+    ├── screen.sh
+    └── send_to_rpi.py
 ```

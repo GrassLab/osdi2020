@@ -1,29 +1,45 @@
 CC = aarch64-linux-gnu-gcc
 LD = aarch64-linux-gnu-ld
-OBJDUMP = aarch64-linux-gnu-objcopy
+OBJCOPY = aarch64-linux-gnu-objcopy
 QEMU = qemu-system-aarch64
 
-CFLAGS = -Wall -g -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
+SRC_DIR = src
+BOOT_DIR = boot
+LIB_DIR = include
+OBJ_DIR = obj
+OUT_DIR = output
+
+CFLAGS = -I$(LIB_DIR) -Wall -g -O2 -march=armv8-a -mtune=cortex-a53 -ffreestanding -nostdinc -nostdlib -nostartfiles
 LDFLAGS = -nostdlib -nostartfiles
 
-LINKER_SRC = link.ld
-ELF_TARGET = kernel8.elf
-TARGET = kernel8.img
+OBJ = $(notdir $(patsubst %.S, %.o, $(wildcard $(BOOT_DIR)/*.S)))
+OBJ += $(notdir $(patsubst %.c, %.o, $(wildcard $(SRC_DIR)/*.c)))
+LINKER_SRC = $(addprefix $(BOOT_DIR)/, link.ld)
+ELF_TARGET = $(addprefix $(OUT_DIR)/, kernel8.elf)
+TARGET = $(addprefix $(OUT_DIR)/, kernel8.img)
 
-all: clean $(TARGET)
+all: $(TARGET)
 
-boot.o: boot.S
+$(OBJ_DIR)/%.o : $(addprefix $(BOOT_DIR)/, %.S)
 	$(CC) $(CFLAGS) -c $^ -o $@
 
-$(TARGET): boot.o
-	$(LD) $(LDFLAGS) $< -T $(LINKER_SRC) -o $(ELF_TARGET)
-	$(OBJDUMP) -O binary $(ELF_TARGET) $(TARGET)
+$(OBJ_DIR)/%.o: $(addprefix $(SRC_DIR)/, %.c)
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+$(TARGET): $(addprefix $(OBJ_DIR)/, $(OBJ))
+	$(LD) $(LDFLAGS) $^ -T $(LINKER_SRC) -o $(ELF_TARGET)
+	$(OBJCOPY) -O binary $(ELF_TARGET) $(TARGET)
 
 clean:
-	$(RM) $(TARGET) $(ELF_TARGET) *.o >/dev/null 2>& 1 || true
+	$(RM) -r $(OBJ_DIR) $(OUT_DIR)
+
+run: $(TARGET)
+	$(QEMU) -M raspi3 -kernel $< -serial null -serial mon:stdio -nographic
 
 asmrun: $(TARGET)
 	$(QEMU) -M raspi3 -kernel $< -display none -d in_asm
 
 debugrun: $(TARGET)
 	$(QEMU) -M raspi3 -kernel $< -display none -S -s &
+
+$(shell mkdir -p $(OBJ_DIR) $(OUT_DIR))
