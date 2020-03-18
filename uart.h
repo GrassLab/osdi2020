@@ -1,7 +1,6 @@
 #ifndef UART_H
 #define UART_H
 
-
 /* Auxilary mini UART registers */
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
 #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
@@ -16,6 +15,9 @@
 #define AUX_MU_STAT     ((volatile unsigned int*)(MMIO_BASE+0x00215064))
 #define AUX_MU_BAUD     ((volatile unsigned int*)(MMIO_BASE+0x00215068))
 
+#define PM_RSTC         ((volatile unsigned int*)0x3F10001C)
+#define PM_WDOG         ((volatile unsigned int*)0x3F100024)
+#define PM_PASSWORD     (0x5a000000)
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
