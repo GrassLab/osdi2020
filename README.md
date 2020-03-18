@@ -1,4 +1,5 @@
-# My OSDI 2020
+# Operation System Design and Implementation Course 2020
+
 This is a lab implementation of NCTU OSDI(Operation System Design and Implementation).
 - [lab website](https://grasslab.github.io/osdi/en/index.html)
 
