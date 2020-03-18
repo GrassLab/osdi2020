@@ -14,7 +14,8 @@ void
 main()
 {
 	uart_init();
-	char *welcome = " _ _ _   _   __  ___   __  _ _  _  _ _ \n| | | | / \\ |  \\| __| / _|| U || || U |\n| V V || o || o ) _|  \\_ \\|   || ||   |\n \\_n_/ |_n_||__/|___| |__/|_n_||_||_n_|\n\n";
+	// char *welcome = " _ _ _   _   __  ___   __  _ _  _  _ _ \n| | | | / \\ |  \\| __| / _|| U || || U |\n| V V || o || o ) _|  \\_ \\|   || ||   |\n \\_n_/ |_n_||__/|___| |__/|_n_||_||_n_|\n\n";
+	char *welcome = "\n                        ___                  _ _ _        \n                       |__ \\                (_|_) |       \n   _ __ _   _ _ __ ___    ) |_ __ ___   ___  _ _| |_ ___  \n  | '__| | | | '_ ` _ \\  / /| '_ ` _ \\ / _ \\| | | __/ _ \\ \n  | |  | |_| | | | | | |/ /_| | | | | | (_) | | | || (_) |\n  |_|   \\__,_|_| |_| |_|____|_| |_| |_|\\___/| |_|\\__\\___/ \n                                           _/ |           \n                                          |__/            \n";
 	uart_puts(welcome);
 
 	while(1) {
@@ -22,10 +23,10 @@ main()
 		char command[20];
 		uart_read_line(command);
 		if(strcmp(command, CMD_HELP)) {
-			char help[] = "help:\t\t help";
-			char hello[] = "hello:\t\t print Hello World!";
-			char timestamp[] = "timestamp:\t get current timestamp";
-			char reboot[] = "reboot:\t\t reboot rpi3";
+			char *help = "help:\t\t help";
+			char *hello = "hello:\t\t print Hello World!";
+			char *timestamp = "timestamp:\t get current timestamp";
+			char *reboot = "reboot:\t\t reboot rpi3";
 			uart_puts(help);
 			uart_send('\n');
 			uart_puts(hello);
