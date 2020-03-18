@@ -15,12 +15,13 @@ char *welcome =
 
 int main(void){
 
+    uart_init();
+
 #ifdef TEST
+    puts("");
     ASSERT(bss_all_be() == 0);
     ASSERT((unsigned long long)stack_pointer() < (unsigned long long)0x80000);
 #endif
-
-    uart_init();
     while(1){
         println(NEWLINE, welcome);
         flush();
