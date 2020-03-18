@@ -3,9 +3,10 @@
 
 void kernel_main(void) {
     initUART();
-    sendStringUART("Hello World!\r\n");
+    sendStringUART("Hello World!\n");
 
     while (1) {
-        sendUART(recvUART());
+        // sendUART(recvUART());
+        shell();
     }
 }
