@@ -49,14 +49,15 @@ void uart_init()
 
     /* initialize UART */
     /*
-      1. Set AUXENB register to enable mini UART. Then mini UART register can be accessed.
-      2. Set AUX_MU_CNTL_REG to 0. Disable transmitter and receiver during configuration.
-      3. Set AUX_MU_IER_REG to 0. Disable interrupt because currently you don’t need interrupt.
-      4. Set AUX_MU_LCR_REG to 3. Set the data size to 8 bit.
-      5. Set AUX_MU_MCR_REG to 0. Don’t need auto flow control.
-      6. Set AUX_MU_BAUD to 270. Set baud rate to 115200
-      7. Set AUX_MU_IIR_REG to 6. No FIFO.
-      8. Set AUX_MU_CNTL_REG to 3. Enable the transmitter and receiver. */
+     * 1. Set AUXENB register to enable mini UART. Then mini UART register can be accessed.
+     * 2. Set AUX_MU_CNTL_REG to 0. Disable transmitter and receiver during configuration.
+     * 3. Set AUX_MU_IER_REG to 0. Disable interrupt because currently you don’t need interrupt.
+     * 4. Set AUX_MU_LCR_REG to 3. Set the data size to 8 bit.
+     * 5. Set AUX_MU_MCR_REG to 0. Don’t need auto flow control.
+     * 6. Set AUX_MU_BAUD to 270. Set baud rate to 115200
+     * 7. Set AUX_MU_IIR_REG to 6. No FIFO.
+     * 8. Set AUX_MU_CNTL_REG to 3. Enable the transmitter and receiver.
+     */
 
     *AUX_ENABLE |=1;      // enable UART1, AUX mini uart
     *AUX_MU_CNTL = 0;
@@ -71,11 +72,12 @@ void uart_init()
     /*   GPIO14: ALT5->TX0 */
     /*   GPIO15: ALT5->RX0 */
     /* GPIO 14, 15 can be both used for mini UART and PL011 UART.
-       However, mini UART should set ALT5 and PL011 UART should set ALT0.
-       You need to configure GPFSELn register to change alternate function.
-       Next, you need to configure pull up/down register to disable GPIO pull up/down.
-       It’s because these GPIO pins use alternate functions, not basic input-output.
-       Please refer to the description of GPPUD and GPPUDCLKn registers for a detailed setup. */
+     * However, mini UART should set ALT5 and PL011 UART should set ALT0.
+     * You need to configure GPFSELn register to change alternate function.
+     * Next, you need to configure pull up/down register to disable GPIO pull up/down.
+     * It’s because these GPIO pins use alternate functions, not basic input-output.
+     * Please refer to the description of GPPUD and GPPUDCLKn registers for a detailed setup.
+     */
     r=*GPFSEL1;
     r&=~((7<<12)|(7<<15)); // gpio14, gpio15
     r|=(2<<12)|(2<<15);    // alt5
@@ -173,6 +175,8 @@ void uart_println(char *format, ...) {
       break;
     }
   }
+
+  uart_puts("\r\n");
 
   va_end(arg);
 }

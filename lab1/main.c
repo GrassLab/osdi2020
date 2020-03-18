@@ -22,16 +22,17 @@ void help() {
 
 void get_system_timer() {
   register unsigned long long f, t;
+
   /* get the current counter frequency */
   asm volatile ("mrs %0, cntfrq_el0" : "=r"(f));
   /* read the current counter */
   asm volatile ("mrs %0, cntpct_el0" : "=r"(t));
-  /* time = timer counter / timer frequency */
 
+  /* time = timer counter / timer frequency */
   unsigned long long i_part = t / f;
   unsigned long long f_part = t * 100000000 / f % 100000000;
 
-  uart_println("[%d.%d]\r\n", i_part, f_part);
+  uart_println("[%d.%d]", i_part, f_part);
 }
 
 
@@ -68,15 +69,15 @@ int main() {
   /* shell */
   static char buf[100];
   while (1) {
-    if (getcmd(buf, sizeof(buf)) == -1) {
+    if (getcmd(buf, sizeof(buf)) == -1)
       continue;
-    }
+
     SWITCH_CONTINUE(buf, "hello", hello);
     SWITCH_CONTINUE(buf, "help", help);
     SWITCH_CONTINUE(buf, "reboot", reset);
     SWITCH_CONTINUE(buf, "timestamp", get_system_timer);
 
-    uart_println("[ERR] command `%s` not found\r\n", buf);
+    uart_println("[ERR] command `%s` not found", buf);
   }
   return 0;
 }
