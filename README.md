@@ -9,15 +9,13 @@
 ## How to build
 
 ```shell
-$ cd lab0
 $ make
 ```
 
 ## How to run
 
 ```shell
-$ cd lab0
-$ make qemu
+$ make run
 ```
 
 ## Directory structure
@@ -28,8 +26,23 @@ $ make qemu
 │   ├── a.S
 │   ├── linker.ld
 │   └── Makefile
+├── lab1
+│   ├── gpio.h
+│   ├── linker.ld
+│   ├── main.c
+│   ├── Makefile
+│   ├── memset.h
+│   ├── shell.c
+│   ├── shell.h
+│   ├── start.S
+│   ├── string.c
+│   ├── string.h
+│   ├── test.sh
+│   ├── test.txt
+│   ├── uart.c
+│   └── uart.h
 ├── LICENSE
 └── README.md
 
-1 directory, 5 files
+2 directories, 19 files
 ```
