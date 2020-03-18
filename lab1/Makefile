@@ -1,9 +1,15 @@
 EXEC = kernel8
-ASM_SRC = memzero
-C_SRC = kernel
+INCLUDE = -Iinclude
 
-SRC := $(ASM_SRC) \
-       $(C_SRC)
+KERNEL = kernel
+
+LIBDIR = lib/
+LIB_C := $(shell find $(LIBDIR) -name '*.c')
+LIB_ASM := $(shell find $(LIBDIR) -name '*.s')
+
+OBJS := $(LIB_C:%.c=%.o) \
+        $(LIB_ASM:%.s=%.o) \
+        $(KERNEL:=.o)
 
 all: $(EXEC).img
 
@@ -14,11 +20,11 @@ start.o: start.s
 	aarch64-linux-gnu-gcc -o $@ -c $<
 
 %.o: %.c
-	aarch64-linux-gnu-gcc -o $@ -c $<
+	aarch64-linux-gnu-gcc -o $@ $(INCLUDE) -c $<
 
-$(EXEC).img: start.o $(SRC:=.o)
+$(EXEC).img: start.o $(OBJS)
 	aarch64-linux-gnu-ld -o $(EXEC).elf -T linker.ld $^
 	aarch64-linux-gnu-objcopy -O binary $(EXEC).elf $@ 
 
 clean:
-	$(RM) $(EXEC:=.elf) *.o
+	$(RM) $(EXEC:=.elf) $(OBJS)
