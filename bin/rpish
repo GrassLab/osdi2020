@@ -11,7 +11,8 @@ while [[ $# -gt 0 ]];do
     key="$1"
     case $key in
         -c)
-            POSITIONAL+=("-c $2")
+            POSITIONAL+=("-c")
+            POSITIONAL+=("$2")
             shift
             shift
             ;;

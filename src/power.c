@@ -16,7 +16,7 @@ void reset(int tick){
     // trigger a restart by instructing the GPU to boot from partition 0
     r = *PM_RSTS; r &= ~0xfffffaaa;
     *PM_RSTS = PM_WDOG_MAGIC | r;
-    *PM_WDOG = PM_WDOG_MAGIC | 100;
+    *PM_WDOG = PM_WDOG_MAGIC | tick;
     *PM_RSTC = PM_WDOG_MAGIC | PM_RSTC_FULLRST;
 }
 
