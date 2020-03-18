@@ -1,6 +1,8 @@
 .section ".text.boot"
 
 .global _start
+.global gtime_frq
+.global gtime_ct
 
 _start:
     // read cpu id, stop slave cores
@@ -28,3 +30,10 @@ _start:
 4:  bl      main
     // for failsafe, halt this core too
     b       1b
+
+gtime_frq:
+	mrs x0, cntfrq_el0
+	ret 
+gtime_ct:
+	mrs x0, cntpct_el0
+	ret 

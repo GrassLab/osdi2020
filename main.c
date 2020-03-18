@@ -1,5 +1,10 @@
 #include "uart.h"
+
 #define input_buffer_Max 64
+
+extern int gtime_frq(void);
+extern int gtime_ct(void);
+
 int strcmp(char *a, char *b)
 {
 	while(*a != '\0' || *b != '\n'){
@@ -13,6 +18,37 @@ void help_cmd(void)
 {
 	uart_puts(" help  - print all available commands\n");
 	uart_puts(" hello - print Hello World!\n");
+	uart_puts(" timestamp - print current timestamp\n");
+}
+
+void timestamp(void)
+{
+	float time=0.0,fpart;
+	int i=0,tmp=0,f_n=7,ipart;
+	char c[32];
+
+	time = (float)gtime_ct() / (float)gtime_frq();
+	ipart = (int)time;
+	fpart =  time - (float)ipart;
+
+
+	//uart_puts("[");
+	while(ipart){
+		c[i++]=(ipart%10) + '0';
+		//uart_puts(&c);
+		ipart/=10;
+	}
+	c[i++]='.';
+	while(f_n-- > 0){
+		c[i++]=(tmp=fpart*10) + '0';
+		//uart_puts(&c);
+		fpart=(fpart*10-(float)tmp);
+	}
+	c[i]='\0';
+
+	uart_puts("[");
+	uart_puts(c);
+	uart_puts("]\n");
 }
 
 void main()
@@ -31,6 +67,8 @@ void main()
 				help_cmd();
 			else if(strcmp("hello", s) == 0)
 				uart_puts(" Hello World! \n");
+			else if(strcmp("timestamp", s) == 0)
+				timestamp();
 			else{
 				s[i-1]='\0';
 				uart_puts(" Error:command '");
