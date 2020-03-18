@@ -6,6 +6,11 @@
 | --- | ----------- | --- | --- |
 |`A082533`| `chichenyang` | `楊季蓁` | chichensmile@gmail.com |
 
+## Goals: Environment Setup
+    
+    
+
+
 ## How to build
 ```
  sudo pacman -S aarch64-linux-gnu-gcc
