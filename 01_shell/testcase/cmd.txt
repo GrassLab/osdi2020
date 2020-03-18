@@ -1,0 +1,11 @@
+help
+hello
+uptime
+timestamp
+reboot
+timestamp
+zz
+XD
+help
+uptime
+hello

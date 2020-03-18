@@ -1,6 +1,8 @@
-# OSDI Lab
+# NCTU OSDI 2020 Assignment
 
-This repo is for OSDI 2020 lab0
+This repo contains the assignment of NCTU OSDI 2020 assignment
+
+Please read the detailed README.md in each directory
 
 ## Author
 
@@ -8,35 +10,6 @@ This repo is for OSDI 2020 lab0
 | ------- | ----------- | ------- | ------------------- |
 |`A082647`| `zlsh80826` | 王宇正 | zlsh80826@gmail.com |
 
-## Requirements
+## Disclaimer
 
-* aarch64-toolchains
-* qemu-system-aarch64
-
-## Build Instruction
-
-```Bash
-$ make -Csrc clean
-$ make -Csrc kernel8.img
-```
-
-## Run on qemu
-
-```Bash
-$ make -Csrc test
-```
-
-## Run on rpi3
-To be continued ...
-
-## Code Structure
-
-```Bash
-osdi2020/
-├── LICENSE
-├── README.md
-└── src
-    ├── a.S
-    ├── linker.ld
-    └── Makefile
-```
+This repo is for academic use
