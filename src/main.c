@@ -31,11 +31,5 @@ void main()
     // set up serial console
     uart_init();
     
-    // say hello
-    uart_puts("\n|------------------------|\n");
-    uart_puts("| Welcome to OSDI shell! |\n");
-    uart_puts("|------------------------|\n");
-    uart_puts("> ");
-    
     runShell();
 }

@@ -29,7 +29,7 @@ void itoaAndPrint(int i) {
         i = i / 10;
     }
     buf[buf_ptr] = '\0';
-    for (int s = buf_ptr-1, e = 0, half = (buf_ptr-1)/2; s > half; --s, ++e) {
+    for (int e = buf_ptr-1, s = 0, half = (buf_ptr-1)/2; e > half; --e, ++s) {
         char tmp = buf[s];
         buf[s] = buf[e];
         buf[e] = tmp;
@@ -46,7 +46,7 @@ void ftoaAndPrint(double f) {
     itoaAndPrint(frac);
 }
 
-void inline helpCmd() {
+static inline void helpCmd() {
     uart_puts("Commands:\n");
     uart_puts("    help               print all available commands\n");
     uart_puts("    hello              print Hello World!\n");
@@ -54,11 +54,11 @@ void inline helpCmd() {
     uart_puts("    reboot             reboot rpi3\n");
 }
 
-void inline helloCmd() {
+static inline void helloCmd() {
     uart_puts("Hello World!\n");
 }
 
-void inline timestampCmd() {
+static inline void timestampCmd() {
     double t = getTime();
 
     uart_puts("[");
@@ -66,13 +66,13 @@ void inline timestampCmd() {
     uart_puts("]\n");
 }
 
-void inline rebootCmd() {
+static inline void rebootCmd() {
     uart_puts("-------Rebooting--------\n\n");
 
     reset(10);
 }
 
-void inline noneCmd(const char* input) {
+static inline void noneCmd(const char* input) {
     uart_puts("Unknown command: ");
     uart_puts(input);
     uart_puts("\n");
@@ -114,9 +114,18 @@ void processCmd(const char* input) {
     }
 }
 
+static inline void helloMessage() {
+    uart_puts("\n|------------------------|\n");
+    uart_puts("| Welcome to OSDI shell! |\n");
+    uart_puts("|------------------------|\n\n");
+    uart_puts("> "); 
+}
+
 void runShell() {
     char buf[MAX_BUFFER_SIZE];
     int buf_ptr = 0; 
+
+    helloMessage();
 
     // echo everything back
     while(1) {
