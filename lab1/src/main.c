@@ -8,12 +8,17 @@ void read_string(char *buf){
 	char single;   // Important that this in an int to distinguish EOF from input.
 
 	while((single = uart_getc()) != '\n'){
-	  uart_send(single);
-	  if (i >= (S_MAX-1)){
-		;           // Too many, do not save or maybe indicate error
-	  }else{
-		buf[i++] = single;
-	  }
+		if(single == '\b'){
+			if(i>=1){
+				uart_puts("\b \b");
+				i--;
+			}
+		}else if(i >= (S_MAX-1)){
+			;           // Too many, do not save or maybe indicate error
+		}else{
+			uart_send(single);
+			buf[i++] = single;
+		}
 	}
 	buf[i] = '\0';  // Add termination
 	printf("\n");
