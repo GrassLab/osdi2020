@@ -45,12 +45,32 @@ make run
 
 ## How to burn it into pi3
 
-I don't have pi3 now.
+`make`
+You can get kernel8.img, then copy to your sd card.
 
 
 ## Architecture
 
-**WIP**
+### OS
+#### Standard Library
+system.h
+math.h
+string.h
+
+#### Driver
+gpio.h
+uart.h
+
+#### Shell
+pcsh.h
+
+#### Main
+main.c
+
+### Script
+script.py
+test_cmd.txt
+
 
 ## Directory structure
 
