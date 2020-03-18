@@ -36,6 +36,9 @@ void run(char *command){
     else if (!strcmp(command, "timestamp")){
         timestamp();
     }
+    else if (!strcmp(command, "reboot")){
+        reboot(0);
+    }
     else {
         uart_puts("Error: command not found, try <help>.\n");
     }
@@ -68,4 +71,10 @@ void timestamp(){
     uart_send('.');
     uart_puts(f_res);
     uart_puts("]\n");
+}
+
+void reboot(int tick){
+    *PM_RSTC = PM_PASSWORD | 0x20;
+    *PM_WDOG = PM_PASSWORD | tick;
+    while(1);
 }
