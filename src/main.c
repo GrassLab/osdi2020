@@ -47,6 +47,7 @@ void main() {
   for(;;) {
     int p = 0;
     char chr;
+    uart_puts("# ");
     while((chr = uart_getc()) != '\n') {
       str[p] = chr;
       uart_send(str[p]);
@@ -55,7 +56,7 @@ void main() {
     str[p] = '\0';
     uart_puts("\n");
     if (strcmp(str, help) == 0)
-      uart_puts("Help!\n");
+      uart_puts("help : print all available commands\nhello : print Hello World!\nreboot : reboot rpi3\ntimestamp : print current timestamp\n");
     else if (strcmp(str, hello) == 0)
       uart_puts("Hello World!\n");
     else if (strcmp(str, time) == 0) {
@@ -68,14 +69,16 @@ void main() {
       asm volatile ("mrs %0, cntpct_el0" : "=r"(c));
       // calculate expire value for counter
       t = c / (double)f;
+      uart_puts("[");
       uart_puts(ftoa(t, buf, 5));
+      uart_puts("]\n");
+    }
+    else if (strcmp(str, reboot) == 0)
+      reset(0);
+    else {
+      uart_puts("command not found: ");
+      uart_puts(str);
       uart_puts("\n");
     }
-    else if (strcmp(str, reboot) == 0) {
-      uart_puts("Reboot!\n");
-      reset(0);
-    }
-    else
-      uart_puts("Error!\n");
   }
 }

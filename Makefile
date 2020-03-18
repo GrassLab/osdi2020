@@ -1,21 +1,40 @@
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
+TOOLCHAIN_PREFIX = aarch64-linux-gnu-
+GCC = $(TOOLCHAIN_PREFIX)gcc
+LD = $(TOOLCHAIN_PREFIX)ld
+OBJCPY = $(TOOLCHAIN_PREFIX)objcopy
+QEMU = qemu-system-aarch64
 
-all: clean kernel8.img
+SRC_DIR = src
+OUTPUT_DIR = output
+LIB_DIR = include
 
-start.o: start.S
-	aarch64-linux-gnu-gcc $(CFLAGS) -c start.S -o start.o
+LINKER_FILE = $(SRC_DIR)/linker.ld
+ENTRY = $(SRC_DIR)/start.s
+ENTRY_OBJS = $(OUTPUT_DIR)/start.o
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OUTPUT_DIR)/%.o)
+CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -I$(LIB_DIR)
 
-%.o: %.c
+ELF = kernel8.elf
+IMG = kernel8.img
+
+all: clean makedir $(IMG)
+
+$(ENTRY_OBJS): $(ENTRY)
+	aarch64-linux-gnu-gcc $(CFLAGS) -c $(ENTRY) -o $(ENTRY_OBJS) 
+
+$(OUTPUT_DIR)/%.o: $(SRC_DIR)/%.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
-kernel8.img: start.o $(OBJS)
-	aarch64-linux-gnu-ld -nostdlib -nostartfiles start.o $(OBJS) -T linker.ld -o kernel8.elf
-	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+$(IMG): $(ENTRY_OBJS) $(OBJS)
+	$(LD) $(ENTRY_OBJS) $(OBJS) -T $(LINKER_FILE) -o $(ELF)
+	$(OBJCPY) -O binary $(ELF) $(IMG)
 
 clean:
-	rm kernel8.elf *.o >/dev/null 2>/dev/null || true
+	rm -f $(ELF) $(IMG) $(OUTPUT_DIR)/* 
+
+makedir:
+	mkdir -p $(OUTPUT_DIR)
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
+	$(QEMU) -M raspi3 -kernel $(IMG) -serial null -serial stdio
