@@ -21,7 +21,7 @@ start.o: start.S
 	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(TESTFLAGS) $(CFLAGS) -c $< -o $@
 
 # create image file from elf by using objcopy
 $(TARGET): $(ELF_TARGET)
@@ -36,6 +36,10 @@ run: $(TARGET)
 
 run-asm: $(TARGET)
 	$(QEMU) -M raspi3 -kernel $(TARGET) -d in_asm
+
+test:
+	make clean
+	make "TESTFLAGS+=-DTEST -DSHOW"
 
 clean:
 	$(RM) *.o $(TARGET) $(ELF_TARGET) $(OBJS)

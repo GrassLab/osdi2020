@@ -1,5 +1,6 @@
 #include "shell.h"
 #include "uart.h"
+#include "unittest.h"
 
 #define MMIO_BASE       0x3F000000
 #define PM_RSTC         ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
@@ -36,6 +37,46 @@ void get_system_timer() {
 }
 
 
+int bss_test() {
+  register unsigned long *beg, *end;
+  asm volatile("ldr %0, =__bss_start" : "=r"(beg));
+  asm volatile("ldr %0, =__bss_end" : "=r"(end));
+
+  for (unsigned long *p = beg; p != end; ++p) {
+    if (*p != 0) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+/* int unittest() { */
+/*   TEST1(bss_test, "bss_test", */
+/*         "the .bss segment should not have non zero value after initialize"); */
+
+/*   char *test[20][2] = { */
+/*       {"hello", "Hello World!"}, */
+/*       {"h", "h2"}, */
+/*   }; */
+
+/*   /\* uart_println("start from: %d to %d", beg, end); *\/ */
+
+/*   /\* char *test[20][2] = *\/ */
+/*   /\*   { *\/ */
+/*   /\*    {"hello", "Hello World!"}, *\/ */
+/*   /\*    {"h", "h2"}, *\/ */
+
+/*   /\*   }; *\/ */
+
+/*   /\* uart_println("%s", test[0][0]); *\/ */
+/*   /\* uart_println("%s", test[0][1]); *\/ */
+/*   /\* uart_println("%s", test[1][0]); *\/ */
+/*   /\* uart_println("%s", test[1][1]); *\/ */
+/*   return 0; */
+/* } */
+
+
+
 void reset()
 {
   unsigned int r;
@@ -62,16 +103,21 @@ int main() {
   uart_init();
   uart_flush();
 
+  /* testing the bss is only zero inside */
+  unittest(bss_test, "bss_test",
+           "the .bss segment should not have non zero value after initialize");
+
+
+
   uart_puts("----------------\r\n"
             "    OSDI2020    \r\n"
             "----------------\r\n");
 
   /* shell */
-  static char buf[100];
+  static char buf[1024];
   while (1) {
     if (getcmd(buf, sizeof(buf)) == -1)
       continue;
-
     SWITCH_CONTINUE(buf, "hello", hello);
     SWITCH_CONTINUE(buf, "help", help);
     SWITCH_CONTINUE(buf, "reboot", reset);

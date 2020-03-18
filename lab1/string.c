@@ -1,5 +1,6 @@
 /* itoa impl reference: */
 /* https://stackoverflow.com/questions/3982320/convert-integer-to-string-without-access-to-libraries */
+#include "uart.h"
 char* itoa(int val, int base) {
   static char buf[32] = {0};
   int i = 30;
