@@ -1,28 +1,9 @@
-# My OSDI 2020
+#Operation System Design and Implementation Course 2020
 
 ## Author
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0516326`| `Dada870423` | `陳廷達` |daniel211920@gmail.com |
 
-## How to build
-
-**WIP**
-
-## How to run
-
-**WIP**
-
-## How to burn it into pi3
-
-**WIP**
-
-## Architecture
-
-![architecture figure]()
-
-## Directory structure
-
-**WIP**
-
+## Happy Coding ~
