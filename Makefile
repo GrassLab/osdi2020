@@ -15,9 +15,13 @@ OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
 
 all : $(IMG)
 
+test:
+	make clean
+	make CFLAGS+=-DTEST
+
 $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 	mkdir -p $(@D)
-	$(ARMGNU)-gcc $(COPS) -MMD -c $< -o $@
+	$(ARMGNU)-gcc $(CFLAGS) $(COPS) -MMD -c $< -o $@
 
 $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
 	mkdir -p $(@D)
@@ -34,7 +38,7 @@ $(IMG): $(SRC_DIR)/linker.ld $(OBJ_FILES)
 run: $(IMG)
 	$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
 
-test: $(IMG)
+runasm: $(IMG)
 	$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -d in_asm
 
 gdb: $(IMG)

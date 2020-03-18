@@ -44,7 +44,7 @@ char *shell_read_line(char *ptr){
             default:
                 putchar(*ptr);
         }
-        
+
     } while(ptr < buffer || (!strchr("\r", *ptr)));
     while(ptr >= buffer && strchr(" \r\t", *ptr)) ptr--;
     *(++ptr) = 0; puts("");
@@ -80,6 +80,18 @@ int shell_execute(char *cmd){
     else if(EQS("clear", cmd)){
         print("\e[1;1H\e[2J");
     }
+#ifdef TEST
+    else if(EQS("bss", cmd)){
+        char *beg, *end;
+        __asm__ volatile ("adr %0, __bss_beg" : "=r"(beg));
+        __asm__ volatile ("adr %0, __bss_end" : "=r"(end));
+        for(char *p = beg; p != end; p++){
+            print("0x");
+            _print_ULL_as_number((unsigned long long)p, 16);
+            println(": ", (int)*p);
+        }
+    }
+#endif
     else if(strlen(cmd)){
         print("command not found: ", cmd, NEWLINE);
         return 1;
