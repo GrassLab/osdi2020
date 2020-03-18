@@ -4,6 +4,7 @@ LDFLAGS = -T linker.ld -nostdlib
 SDCARD ?= /dev/sdb
 SRC := $(wildcard *.c)
 OBJECTS := $(patsubst %.c,%.o,$(SRC))
+CFLAGS = -include stackguard.h
 
 .PHONY: all clean qemu debug indent
 
