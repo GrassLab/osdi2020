@@ -19,6 +19,10 @@ test:
 	make clean
 	make CFLAGS+=-DTEST
 
+showtest:
+	make clean
+	make "CFLAGS+=-DTEST -DSHOW"
+
 $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 	mkdir -p $(@D)
 	$(ARMGNU)-gcc $(CFLAGS) $(COPS) -MMD -c $< -o $@
@@ -36,10 +40,10 @@ $(IMG): $(SRC_DIR)/linker.ld $(OBJ_FILES)
 
 
 run: $(IMG)
-	$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
+	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
 
 runasm: $(IMG)
-	$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -d in_asm
+	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -d in_asm
 
 gdb: $(IMG)
 	$(QEMU) -M raspi3 -kernel $(IMG) -display none -S -s

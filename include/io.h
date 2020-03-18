@@ -37,12 +37,12 @@ define__print_as_number_types();
 #define __print(x) \
     _Generic((x), char: uart_send, char*: uart_send_string, \
             long: __print_long_as_number, int: __print_int_as_number, \
-            extra_number_printing \
+            extra_number_printing, default: __print_ULL_as_number \
             )(x);
 
-#define print(...) do{MAP(__print, __VA_ARGS__)}while(0)
+#define print(...) do{ MAP(__print, __VA_ARGS__) }while(0)
 
-#define println(...) print(__VA_ARGS__, NEWLINE);
+#define println(...) print(__VA_ARGS__, NEWLINE)
 #define puts println
 
 #endif
