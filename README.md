@@ -1,4 +1,4 @@
-# My OSDI 2020
+# My OSDI 2020 - LAB 01
 
 ## Author
 
@@ -7,29 +7,33 @@
 | 0856009    | JingWangTW     | 王靖  | jingwang.cs08g@nctu.edu.tw |
 
 ## Files
-| File          | Content      | 
-| --------------| ------------ | 
-| lab0.ld       | linker script|
-| lab0.s        | source code  |
+| File          | Content                                               | 
+| --------------| ----------------------------------------------------- | 
+| command.c(.h) | code for action to deal with different shell command  |
+| gpio.c        | some gpio config                                      |
+| main.c        | main program                                          |
+| math.c(.h)    | code for replace standard math.h                      |
+| shell.c(.h)   | code for control the shell behave                     |
+| string.c(.h)  | code for replace standard math.h                      |
+| uart.c(.h)    | code for uart opertaion                               |
+| link.ld       | linker script                                         |
+
 
 ## How to build
 
-### Get object file from source code
 ```bash
-aarch64-linux-gnu-gcc -c lab0.s -o lab0.o
-```
-
-### Get elf from object file
-```bash
-aarch64-linux-gnu-ld -T lab0.ld -o kernel8.elf lab0.o
-```
-
-### Get image file form elf
-```bash
-aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+make
 ```
 
 ## Run on QEMU
 ```bash
-qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
+make run
 ```
+
+## Simple Shell
+| command   | description                   | 
+| ----------| ----------------------------- | 
+| hello     | print Hello World!            |
+| help      | print all available commands  |
+| timestamp | print current timestamp       |
+| reboot    | reset rpi3                    |
