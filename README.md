@@ -1,4 +1,6 @@
 # My OSDI 2020
+- [Lab Description](https://grasslab.github.io/osdi/en/index.html)
+- [Course Gitter](https://gitter.im/GrassLab)
 
 ## Author
 
