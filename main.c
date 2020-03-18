@@ -52,7 +52,7 @@ void main () {
 
 	uart_init();
 
-	uart_puts("\r\nWelcome to raspberry pi3!\n\r#");
+	uart_puts("\r\nWelcome\n# ");
 
 	while (1) {
 		cur_input = uart_getc();
@@ -88,11 +88,11 @@ void main () {
 
 			}
 			else if (str_cmp(buf, "reboot") == 0) {
-				uart_puts("reboot TO BE CONTINUE...\n");
+				uart_puts("reboot...\n");
 				uart_puts("\n\r");	
 
 				*PM_RSTC = ((PM_PASSWORD) | 0x20); // full reset
-  				*PM_WDOG = ((PM_PASSWORD) | 10); // number of watchdog tick
+  				*PM_WDOG = ((PM_PASSWORD) | 5); // number of watchdog tick
 			}
 			else { // not one of the commands above
 				if (cur_len > 1) { // and not pure '\n'
@@ -104,7 +104,7 @@ void main () {
 				}
 			}
 
-			uart_puts("\r#");
+			uart_puts("\r# ");
 
 			// reset buffer and cur_len
 			cur_len = 0;
