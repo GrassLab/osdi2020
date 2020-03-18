@@ -75,6 +75,7 @@ uart_readline (int size, char *buf)
       uart_send (buf[cnt]);
       if (buf[cnt] == '\n')
 	{
+	  uart_send ('\r');
 	  ++cnt;
 	  break;
 	}
