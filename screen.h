@@ -65,6 +65,58 @@ void get_vc_memory(){
 
 }
 
+void get_frame_buffer(){
+
+    mailbox[0] = 8 * 4;
+    mailbox[1] = REQUEST_CODE;
+
+    mailbox[2] = 0x48003;  //set phy wh
+    mailbox[3] = 8;
+    mailbox[4] = 8;
+    mailbox[5] = 800;         //FrameBufferInfo.width
+    mailbox[6] = 600;          //FrameBufferInfo.height
+
+    mailbox[7] = 0x48004;  //set virt wh
+    mailbox[8] = 8;
+    mailbox[9] = 8;
+    mailbox[10] = 800;        //FrameBufferInfo.virtual_width
+    mailbox[11] = 600;         //FrameBufferInfo.virtual_height
+
+    mailbox[12] = 0x48009; //set virt offset
+    mailbox[13] = 8;
+    mailbox[14] = 8;
+    mailbox[15] = 0;           //FrameBufferInfo.x_offset
+    mailbox[16] = 0;           //FrameBufferInfo.y.offset
+
+    mailbox[17] = 0x48005; //set depth
+    mailbox[18] = 4;
+    mailbox[19] = 4;
+    mailbox[20] = 32;          //FrameBufferInfo.depth
+
+    mailbox[21] = 0x48006; //set pixel order
+    mailbox[22] = 4;
+    mailbox[23] = 4;
+    mailbox[24] = 1;           //RGB, not BGR preferably
+
+    mailbox[25] = 0x40001;     //get framebuffer, gets alignment on request
+    mailbox[26] = 8;
+    mailbox[27] = 8;
+    mailbox[28] = 4096;        //FrameBufferInfo.pointer
+    mailbox[29] = 0;           //FrameBufferInfo.size
+    
+    mailbox[30] = END_TAG;
+
+
+    if(mailbox_call(MBOX_CH_PROP) && mailbox[28] != 0){
+        //convert GPU address to ARM address
+        unsigned char *lfb = (void*)((unsigned long)(mailbox[28] & 0x3FFFFFFF));;
+    }
+    else{
+        uart_puts("get frame buffer fail\n");
+    }
+
+}
+
 
 
 #endif

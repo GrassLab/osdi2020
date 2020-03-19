@@ -17,6 +17,8 @@ int main(){
 
     get_board_revision();
     get_vc_memory();
+    
+    get_frame_buffer();
 
 
     // call simple shell
