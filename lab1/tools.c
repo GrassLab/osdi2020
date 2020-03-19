@@ -65,7 +65,7 @@ void print_hello(){
     uart_puts("    \\/__/         \\/__/         \\/__/     \\/__/     \\/__/       \n");
 
 }
-char * int2char(unsigned long input){
+char * int2char(int input){
     char * s = "";
     unsigned long bit=1, tmp=input, in=input;
     int ind=0;
@@ -82,30 +82,30 @@ char * int2char(unsigned long input){
     s[ind] = '\0';
     return s;
 }
-unsigned long get_cpu_time(){
-    unsigned long t=0;
+int get_cpu_time(){
+    int t=0;
     asm volatile("mrs %0, cntpct_el0" : "=r"(t)); // get cpu count
     return t;
 }
-unsigned long get_cpu_clock(){
-    unsigned long t=0;
+int get_cpu_clock(){
+    int t=0;
     asm volatile("mrs %0, cntfrq_el0" : "=r"(t)); // get cpu clock frequence
     return t;
 }
 void get_timestamp(){       
-    /*unsigned long cpu_time = get_cpu_time();
-    unsigned long cpu_clock = get_cpu_clock();*/
-    /*unsigned long cpu_time, cpu_clock;
+    //unsigned long cpu_time = get_cpu_time();
+    //unsigned long cpu_clock = get_cpu_clock();
+    int cpu_time, cpu_clock;
     asm volatile("mrs %0, cntpct_el0" : "=r"(cpu_time)); 
     asm volatile("mrs %0, cntfrq_el0" : "=r"(cpu_clock));
     uart_puts("\ncpu_time:\n");
     uart_puts(int2char(cpu_time));
     uart_puts("\ncpu_clock:\n");
     uart_puts(int2char(cpu_clock));
-    unsigned long time_int = cpu_time/cpu_clock;
+    int time_int = cpu_time/cpu_clock;
     uart_puts("\ntime_int:\n");
     uart_puts(int2char(time_int));
-    unsigned long time_dec = (cpu_time*1000/cpu_clock) - time_int*1000;
+    int time_dec = (cpu_time*1000/cpu_clock) - time_int*1000;
     uart_puts("\ntime_dec:\n");
     uart_puts(int2char(time_dec));
     char * time_int_char = int2char(time_int);
@@ -114,5 +114,5 @@ void get_timestamp(){
     uart_puts("\n");
     uart_puts(time_int_char);
     uart_puts(".");
-    uart_puts(time_dec_char);*/
+    uart_puts(time_dec_char);
 }

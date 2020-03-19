@@ -20,8 +20,10 @@ _start:
 
 3:  //if w1 == 0,
     cbz    w1, 4f
-    // move xzr to x0 addr and shift x0 by 8
+    // move xzr to x0 addr and add x0 by 8
+    // set x0 to xzr(zero) and add by 9
     str    xzr, [x0], #8
+    //sub bss_size until bss_size = 0
     sub    w1, w1, #1
     cbnz   w1, 3b
 
