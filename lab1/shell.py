@@ -10,5 +10,5 @@ with open('cmd') as f:
     line = f.readline()
     while line:
         s.write(line.encode())
-        time.sleep(0.1)
+        time.sleep(1.5)
         line = f.readline()
