@@ -87,6 +87,14 @@ void uart_send_int(int n){
     uart_puts(s);
 }
 
+void uart_send_hex(int n){
+    char s[1024];
+    itoa(n, s, 16);
+
+    uart_puts("0x");
+    uart_puts(s);
+}
+
 void uart_send_float(float f, int n)
 {
     char s[1024];

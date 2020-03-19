@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "pcsh.h"
+#include "screen.h"
 
 void system_start(){
     print("-------------------------\n");
@@ -13,6 +14,10 @@ int main(){
     uart_init();
 
     system_start();
+
+    get_board_revision();
+    get_vc_memory();
+
 
     // call simple shell
     pcsh();

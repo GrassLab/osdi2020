@@ -9,10 +9,12 @@ with open('./test_cmd.txt') as f:
     print(content)
 
 
-COM_PORT = '/dev/ttyUSB0'
+PORT = '/dev/ttyUSB0'
+PORT = '/dev/pts/7'
+
 BAUD_RATES = 115200
 
-ser = serial.Serial(COM_PORT, BAUD_RATES)
+ser = serial.Serial(PORT, BAUD_RATES)
  
 ser.flush()
 ser.flushInput()
@@ -28,7 +30,7 @@ try:
         ser.flushOutput()
 
         print(line)
-        ser.write(line)
+        ser.write(line.encode())
 
         time.sleep(delay_time)
 

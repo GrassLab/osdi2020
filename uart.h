@@ -6,6 +6,7 @@ char uart_getc();
 void uart_puts(char *s);
 
 void uart_send_int(int);
+void uart_send_hex(int);
 void uart_send_float(float,int);
 
 int print(char *s);

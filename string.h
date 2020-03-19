@@ -4,11 +4,12 @@
 
 int my_strcmp(const char* s1, const char* s2);
 
+char *my_strcat(char *dest, const char *src);
+
 void *my_memset(void *str, int c, size_t n);
 
 void reverse(char str[], int length);
   
-// Implementation of itoa() 
 char* itoa(int num, char* str, int base);
 
 void ftoa(float n, char* res, int afterpoint);

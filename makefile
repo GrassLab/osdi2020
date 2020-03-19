@@ -21,7 +21,7 @@ run-detail:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
 
 run-uart0:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial null -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial null -serial pty
 
 run-script:
 	sudo python script.py
