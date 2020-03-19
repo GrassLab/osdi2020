@@ -21,8 +21,8 @@ other_core:
 // core 0 will jump here
 core_0:
 
-  // set stack pointer to __bss_start__ + 0x40000
-  ldr x0, =__bss_start__
+  // set stack pointer to __bss_end__ + 0x40000
+  ldr x0, =__bss_end__
   add x0, x0, #0x40000
   mov sp, x0
 
