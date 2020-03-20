@@ -88,9 +88,8 @@ void shell(void)
 
   miniuart_puts(pikachu0);
   miniuart_puts(pikachu1);
-  miniuart_puts("Board revision: ");
-  string_longlong_to_char(string_buffer, mailbox_get_board_revision());
-  miniuart_puts(string_buffer);
+  shell_show_board_revision(string_buffer);
+  shell_show_vc_memory(string_buffer);
 
   while(1)
   {
@@ -174,5 +173,37 @@ int shell_reboot(char * string_buffer)
   /* Stuck */
   while(1);
   return 0;
+}
+
+void shell_show_board_revision(char * string_buffer)
+{
+  miniuart_puts("Board revision: ");
+  string_longlong_to_char(string_buffer, mailbox_get_board_revision());
+  miniuart_puts(string_buffer);
+  miniuart_putc('\n');
+  return;
+}
+
+void shell_show_vc_memory(char * string_buffer)
+{
+  uint32_t vc_memory_base;
+  uint32_t vc_memory_size;
+
+  if(!mailbox_get_vc_memory())
+  {
+    miniuart_puts("Unable to get vc memory\n");
+    return;
+  }
+
+  vc_memory_base = __mailbox_buffer[5];
+  vc_memory_size = __mailbox_buffer[6];
+
+  miniuart_puts("VC core base address: ");
+  string_longlong_to_char(string_buffer, vc_memory_base);
+  miniuart_puts(string_buffer);
+  miniuart_puts(" size: ");
+  string_longlong_to_char(string_buffer, vc_memory_size);
+  miniuart_puts(string_buffer);
+  miniuart_putc('\n');
 }
 

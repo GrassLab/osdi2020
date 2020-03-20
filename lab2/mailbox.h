@@ -24,13 +24,18 @@
 #define MAILBOX_GET_BOARD_REVISION      0x00010002
 #define MAILBOX_GET_BOARD_REVISION_REQ  0x0
 #define MAILBOX_GET_BOARD_REVISION_RESP 0x4
+#define MAILBOX_GET_VC_MEMORY           0x00010006
+#define MAILBOX_GET_VC_MEMORY_REQ       0x0
+#define MAILBOX_GET_VC_MEMORY_RESP      0x8
 
 /* calculate mailbox buffer size with single tag, tag buffer in bytes */
 #define MAILBOX_SINGLE_BUFFER_SIZE(req,resp) (24 + req + resp)
 
+extern volatile uint32_t __attribute__((aligned(16))) __mailbox_buffer[0x40];
 
-int send_buffer_to_mailbox(uint32_t * mailbox_buffer);
+int send_buffer_to_mailbox(void);
 uint32_t mailbox_get_board_revision(void);
+int mailbox_get_vc_memory(void);
 
 #endif
 

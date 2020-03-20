@@ -27,10 +27,10 @@ kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES}
 debug: GENERAL_FLAGS += -DDEBUG -g3
 debug: all
 
-qemu: kernel8.img
+qemu: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio
 
-qemu_dbg: kernel8.img
+qemu_dbg: debug
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -s -S
 
 .PHONY: clean
