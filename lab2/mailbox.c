@@ -62,7 +62,7 @@ uint32_t mailbox_get_board_revision(void)
   __mailbox_buffer[0] = MAILBOX_SINGLE_BUFFER_SIZE(MAILBOX_GET_BOARD_REVISION_REQ, MAILBOX_GET_BOARD_REVISION_RESP);
   __mailbox_buffer[1] = MAILBOX_BUFFER_REQUEST_CODE;
   __mailbox_buffer[2] = MAILBOX_GET_BOARD_REVISION;
-  __mailbox_buffer[3] = MAILBOX_GET_BOARD_REVISION_REQ + MAILBOX_GET_BOARD_REVISION_RESP;
+  __mailbox_buffer[3] = MAX(MAILBOX_GET_BOARD_REVISION_REQ, MAILBOX_GET_BOARD_REVISION_RESP);
   __mailbox_buffer[4] = MAILBOX_TAG_REQUEST_CODE;
   __mailbox_buffer[5] = 0x0;
   __mailbox_buffer[6] = MAILBOX_TAG_END;
@@ -84,7 +84,7 @@ int mailbox_get_vc_memory(void)
   __mailbox_buffer[0] = MAILBOX_SINGLE_BUFFER_SIZE(MAILBOX_GET_VC_MEMORY_REQ, MAILBOX_GET_VC_MEMORY_RESP);
   __mailbox_buffer[1] = MAILBOX_BUFFER_REQUEST_CODE;
   __mailbox_buffer[2] = MAILBOX_GET_VC_MEMORY;
-  __mailbox_buffer[3] = MAILBOX_GET_VC_MEMORY_REQ + MAILBOX_GET_VC_MEMORY_RESP;
+  __mailbox_buffer[3] = MAX(MAILBOX_GET_VC_MEMORY_REQ, MAILBOX_GET_VC_MEMORY_RESP);
   __mailbox_buffer[4] = MAILBOX_TAG_REQUEST_CODE;
   __mailbox_buffer[5] = 0x0;
   __mailbox_buffer[6] = 0x0;

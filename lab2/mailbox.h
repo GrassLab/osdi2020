@@ -29,7 +29,8 @@
 #define MAILBOX_GET_VC_MEMORY_RESP      0x8
 
 /* calculate mailbox buffer size with single tag, tag buffer in bytes */
-#define MAILBOX_SINGLE_BUFFER_SIZE(req,resp) (24 + req + resp)
+#define MAX(a, b) (((a)>(b))?(a):(b))
+#define MAILBOX_SINGLE_BUFFER_SIZE(req,resp) (24 + MAX(req, resp))
 
 extern volatile uint32_t __attribute__((aligned(16))) __mailbox_buffer[0x40];
 
