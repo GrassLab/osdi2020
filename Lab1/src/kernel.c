@@ -15,6 +15,7 @@ void kernel_main(void)
 
     *(str) = '\0';
     uart_send_string(">>");
+    
     while (1) {
 	recv_char = uart_recv();
     	uart_send(recv_char);

@@ -15,7 +15,7 @@ try:
     while line:
         print('Send cmd:',line)
         ser.write(line[:-1]+str('\r'))
-        sleep(0.5)
+        
 
         while ser.in_waiting:
             feedback = ser.readline().decode()
