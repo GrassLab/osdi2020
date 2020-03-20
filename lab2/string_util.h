@@ -13,6 +13,7 @@ void string_strip(char * string, char c);
 void string_concat(char * a, const char * b);
 int string_length(const char * s);
 void string_longlong_to_char(char * string, const long long i);
+void string_longlong_to_hex_char(char * string, const long long i);
 void string_float_to_char(char * string, const float f);
 
 #endif

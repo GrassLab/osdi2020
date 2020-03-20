@@ -120,6 +120,29 @@ void string_longlong_to_char(char * string, const long long i)
   return;
 }
 
+void string_longlong_to_hex_char(char * string, const long long i)
+{
+  char output_buffer[36];
+  long long process_integer = i;
+  int string_idx = 0;
+  while(process_integer != 0)
+  {
+    int hex = (int)(process_integer % 16);
+    if(hex >= 10)
+    {
+      output_buffer[string_idx++] = (char)(hex - 10 + (int)'A');
+    }
+    else
+    {
+      output_buffer[string_idx++] = NUM_TO_CHAR(hex);
+    }
+    process_integer = process_integer >> 4;
+  }
+  output_buffer[string_idx++] = 'x';
+  output_buffer[string_idx++] = '0';
+  output_buffer[string_idx++] = '\0';
+  string_reverse_sequence(output_buffer, string, string_idx);
+}
 void string_float_to_char(char * string, const float f)
 {
   char longlong_buffer[64];

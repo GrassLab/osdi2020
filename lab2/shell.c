@@ -178,7 +178,7 @@ int shell_reboot(char * string_buffer)
 void shell_show_board_revision(char * string_buffer)
 {
   miniuart_puts("Board revision: ");
-  string_longlong_to_char(string_buffer, mailbox_get_board_revision());
+  string_longlong_to_hex_char(string_buffer, mailbox_get_board_revision());
   miniuart_puts(string_buffer);
   miniuart_putc('\n');
   return;
@@ -199,10 +199,10 @@ void shell_show_vc_memory(char * string_buffer)
   vc_memory_size = __mailbox_buffer[6];
 
   miniuart_puts("VC core base address: ");
-  string_longlong_to_char(string_buffer, vc_memory_base);
+  string_longlong_to_hex_char(string_buffer, vc_memory_base);
   miniuart_puts(string_buffer);
   miniuart_puts(" size: ");
-  string_longlong_to_char(string_buffer, vc_memory_size);
+  string_longlong_to_hex_char(string_buffer, vc_memory_size);
   miniuart_puts(string_buffer);
   miniuart_putc('\n');
 }
