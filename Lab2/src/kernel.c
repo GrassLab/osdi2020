@@ -2,6 +2,7 @@
 #include "include/utils.h"
 #include "include/reboot.h"
 #include "include/string.h"
+#include "include/mbox.h"
 
 int check_string(char * str){
 	char* cmd_help = "help";
@@ -62,11 +63,35 @@ int check_string(char * str){
 	return 0;
 }
 
+extern unsigned int mbox[7];
+
+void get_hardware_info(){
+  mbox[0] = 7 * 4; // buffer size in bytes
+  mbox[1] = REQUEST_CODE;
+  // tags begin
+  mbox[2] = GET_BOARD_REVISION; // tag identifier
+  mbox[3] = 4; // maximum of request and response value buffer's length.
+  mbox[4] = TAG_REQUEST_CODE;
+  mbox[5] = 0; // value buffer
+  // tags end
+  mbox[6] = END_TAG;
+
+  if(mbox_call(8)){
+ 	 uart_hex(mbox[5]); // it should be 0xa020d3 for rpi3 b+
+  }
+  else{
+  	uart_send_string("Unable to query\n");
+  }
+}
+
 
 void kernel_main(void)
 {
     uart_init();
     uart_send_string("Hello, world!\r\n");
+
+    //get hardware information by mailbox
+    get_hardware_info();
 
     // simple shell implement
     char str[128];
