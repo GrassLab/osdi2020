@@ -90,14 +90,22 @@ int mailbox_get_vc_memory(void)
   __mailbox_buffer[6] = 0x0;
   __mailbox_buffer[7] = MAILBOX_TAG_END;
 
-  if(mailbox_send_buffer())
-  {
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
-
+  return mailbox_send_buffer();
 }
+
+int mailbox_set_clock_rate(uint32_t device_id, uint32_t clock_rate)
+{
+  __mailbox_buffer[0] = MAILBOX_SINGLE_BUFFER_SIZE(MAILBOX_SET_CLOCK_RATE_REQ, MAILBOX_SET_CLOCK_RATE_RESP);
+  __mailbox_buffer[1] = MAILBOX_BUFFER_REQUEST_CODE;
+  __mailbox_buffer[2] = MAILBOX_SET_CLOCK_RATE;
+  __mailbox_buffer[3] = MAX(MAILBOX_SET_CLOCK_RATE_REQ, MAILBOX_SET_CLOCK_RATE_RESP);
+  __mailbox_buffer[4] = MAILBOX_TAG_REQUEST_CODE; /* TODO: Diverge */
+  __mailbox_buffer[5] = device_id;
+  __mailbox_buffer[6] = clock_rate;
+  __mailbox_buffer[7] = 0; /* Skip setting turbo */
+  __mailbox_buffer[8] = MAILBOX_TAG_END;
+
+  return mailbox_send_buffer();
+}
+
 

@@ -28,6 +28,12 @@
 #define MAILBOX_GET_VC_MEMORY_REQ       0x0
 #define MAILBOX_GET_VC_MEMORY_RESP      0x8
 
+#define MAILBOX_SET_CLOCK_RATE          0x00038002
+#define MAILBOX_SET_CLOCK_RATE_REQ      12
+#define MAILBOX_SET_CLOCK_RATE_RESP     8
+
+#define MAILBOX_UART_ID                 0x2
+
 /* calculate mailbox buffer size with single tag, tag buffer in bytes */
 #define MAX(a, b) (((a)>(b))?(a):(b))
 #define MAILBOX_SINGLE_BUFFER_SIZE(req,resp) (24 + MAX(req, resp))
@@ -37,6 +43,7 @@ extern volatile uint32_t __attribute__((aligned(16))) __mailbox_buffer[0x40];
 int send_buffer_to_mailbox(void);
 uint32_t mailbox_get_board_revision(void);
 int mailbox_get_vc_memory(void);
+int mailbox_set_clock_rate(uint32_t device_id, uint32_t clock_rate);
 
 #endif
 
