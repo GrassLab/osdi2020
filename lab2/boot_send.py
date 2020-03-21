@@ -4,6 +4,7 @@ import serial
 import sys
 import time
 import tty
+import sys
 
 class UartConnection:
 
@@ -108,15 +109,14 @@ def send_kernel(path, uart_connection):
         return True
 
 def main():
-    import sys
     uart_connection = UartConnection(
         # Change these to match your setup
-        file_path='/dev/cu.SLAB_USBtoUART',
+        file_path='/dev/ttyUSB0',
         baud_rate=115200
     )
     time.sleep(1)
     result = send_kernel(
-        path="kernel8.img",
+        path="./kernel8.img",
         uart_connection=uart_connection
     )
     if result:

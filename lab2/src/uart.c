@@ -92,3 +92,20 @@ void uart_send_string(char *str) {
         uart_send(c);
     }
 }
+
+int uart_read_int() {
+    int num = 0;
+    for (int i = 0; i < 4; i++) {
+        char c = uart_recv();
+        num = num << 8;
+        num += (int)c;
+    }
+    return num;
+}
+
+void uart_send_int(int number) {
+    uart_send((char)((number >> 24) & 0xFF));
+    uart_send((char)((number >> 16) & 0xFF));
+    uart_send((char)((number >> 8) & 0xFF));
+    uart_send((char)(number & 0xFF));
+}

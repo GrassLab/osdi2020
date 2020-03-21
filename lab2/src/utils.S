@@ -13,3 +13,7 @@ delay:
     subs x0, x0, #1
     bne delay
     ret
+
+.global branch_to_address
+branch_to_address:
+    br x0
