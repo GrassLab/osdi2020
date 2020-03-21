@@ -1,6 +1,6 @@
-#include "uart.h"
-#include "power.h"
-#include "time.h"
+#include "include/uart.h"
+#include "include/power.h"
+#include "include/time.h"
 
 void main()
 {
@@ -32,9 +32,9 @@ void main()
         }
         
         if (uart_strcmp(user_input, "reboot") == 0) {
-            reset(3);
             get_time();
-            uart_puts("reboot in 3 cpu-cycles.\n");
+            uart_puts("reboot in 10 ticks.\n");
+            reset(10);
             goto loop_start;
         }
         

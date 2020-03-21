@@ -1,4 +1,4 @@
-#include "gpio.h"
+#include "include/gpio.h"
 
 /* Auxilary mini UART registers */
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
@@ -27,7 +27,7 @@ void uart_init()
     *AUX_MU_LCR = 3;       // 8 bits
     *AUX_MU_MCR = 0;
     *AUX_MU_IER = 0;
-    *AUX_MU_IIR = 0xc6;    // disable interrupts
+    *AUX_MU_IIR = 0x6; //no FIFO //0xc6    
     *AUX_MU_BAUD = 270;    // 115200 baud
     /* map UART1 to GPIO pins */
     r=*GPFSEL1;

@@ -1,5 +1,5 @@
-#include "gpio.h"
-#include "uart.h"
+#include "include/gpio.h"
+#include "include/uart.h"
 
 #define SYSTMR_LO        ((volatile unsigned int*)(MMIO_BASE+0x00003004))
 #define SYSTMR_HI        ((volatile unsigned int*)(MMIO_BASE+0x00003008))
