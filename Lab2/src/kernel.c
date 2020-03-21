@@ -1,4 +1,4 @@
-#include "include/mini_uart.h"
+#include "include/uart.h"
 #include "include/utils.h"
 #include "include/reboot.h"
 #include "include/string.h"
@@ -9,6 +9,7 @@ int check_string(char * str){
 	char* cmd_hello = "hello";
 	char* cmd_time = "timestamp";
 	char* cmd_reboot = "reboot";
+	char* cmd_loadimg = "loadimg";
 
 	if(strcmp(str,cmd_help)==0){
 	// print all available commands
@@ -55,6 +56,9 @@ int check_string(char * str){
 		reset(10000);
 		return 1;	
 	}
+	else if(strcmp(str,cmd_loadimg)==0){
+	
+	}
 	else{
 		uart_send_string("\r\nErr:command ");
 		uart_send_string(str);
@@ -63,9 +67,7 @@ int check_string(char * str){
 	return 0;
 }
 
-extern unsigned int mbox[7];
-
-void get_hardware_info(){
+void get_board_revision_info(){
   mbox[0] = 7 * 4; // buffer size in bytes
   mbox[1] = REQUEST_CODE;
   // tags begin
@@ -77,21 +79,45 @@ void get_hardware_info(){
   mbox[6] = END_TAG;
 
   if(mbox_call(8)){
+	 uart_send_string("Board Revision:"); 
  	 uart_hex(mbox[5]); // it should be 0xa020d3 for rpi3 b+
+  	 uart_send_string("\r\n");
+  }
+  else{
+  	uart_send_string("Unable to query\r\n");
+  }
+}
+
+
+void get_VC_core_base_addr(){
+  mbox[0] = 7 * 4; // buffer size in bytes
+  mbox[1] = REQUEST_CODE;
+  // tags begin
+  mbox[2] = GET_VC_MEMORY; // tag identifier
+  mbox[3] = 8; // maximum of request and response value buffer's length.
+  mbox[4] = TAG_REQUEST_CODE;
+  mbox[5] = 0; // value buffer
+  // tags end
+  mbox[6] = END_TAG;
+
+  if(mbox_call(8)){
+	 uart_send_string("VC core base address:"); 
+	 uart_hex(mbox[5]); //base addess in bytes
+	 uart_send_string("\r\n");
   }
   else{
   	uart_send_string("Unable to query\n");
   }
 }
 
-
 void kernel_main(void)
-{
+{	
     uart_init();
     uart_send_string("Hello, world!\r\n");
-
+    
     //get hardware information by mailbox
-    get_hardware_info();
+    get_board_revision_info();
+    get_VC_core_base_addr();
 
     // simple shell implement
     char str[128];

@@ -1,11 +1,11 @@
 #include "include/mbox.h"
 #include "include/peripherals/mbox.h"
 #include "include/utils.h"
-#include "include/mini_uart.h"
 #include "include/string.h"
 
+
 // make sure buffer is properly aligned !!
-unsigned int __attribute__((aligned(16))) mbox[7];
+unsigned int __attribute__((aligned(16))) mbox[36];
 
 int mbox_call(unsigned char ch){
 	//Combine the message address(upper 28bits) 
@@ -27,7 +27,7 @@ int mbox_call(unsigned char ch){
 		int mailbox_read = get32(MAILBOX_READ);
 		// if not, read from mailbox0 read_write reg
 		if(addr == mailbox_read){
-			return mbox[1]==MBOX_RESPONSE;
+			return mbox[1]==REQUEST_SUCCEED;
 		}
 	}
 	
