@@ -3,7 +3,7 @@
 #include "include/time.h"
 #include "include/mailbox.h"
 
-
+#define GET_VCCORE_ADDR     0x00010006
 #define GET_BOARD_REVISION  0x00010002
 #define REQUEST_CODE        0x00000000
 #define REQUEST_SUCCEED     0x80000000
@@ -13,17 +13,12 @@
 
 void get_vccore_addr()
 {
-    return;
-}
-
-void get_board_revision()
-{
     //unsigned int mailbox[7];
     mbox[0] = 8 * 4; // buffer size in bytes
     mbox[1] = REQUEST_CODE;
     // tags begin
-    mbox[2] = GET_BOARD_REVISION; // tag identifier
-    mbox[3] = 4; // maximum of request and response value buffer's length.
+    mbox[2] = GET_VCCORE_ADDR; // tag identifier
+    mbox[3] = 8; // maximum of request and response value buffer's length.
     mbox[4] = TAG_REQUEST_CODE;
     mbox[5] = 0; // value buffer
     mbox[6] = 0;
@@ -34,8 +29,31 @@ void get_board_revision()
     //printf("0x%x\n", mailbox[5]); // it should be 0xa020d3 for rpi3 b+
     
     mbox_call(MBOX_CH_PROP);
-    uart_puts("My board revision is: ");
+    uart_puts("My vc core based addr is ");
+    uart_hex(mbox[5]);
+    uart_puts(" and size is ");
     uart_hex(mbox[6]);
+    uart_puts("\n");
+}
+
+void get_board_revision()
+{
+    //unsigned int mailbox[7];
+    mbox[0] = 7 * 4; // buffer size in bytes
+    mbox[1] = REQUEST_CODE;
+    // tags begin
+    mbox[2] = GET_BOARD_REVISION; // tag identifier
+    mbox[3] = 4; // maximum of request and response value buffer's length.
+    mbox[4] = TAG_REQUEST_CODE;
+    mbox[5] = 0; // value buffer
+    // tags end
+    mbox[6] = END_TAG;
+
+    //mailbox_call(mailbox); // message passing procedure call, you should implement it following the 6 steps provided above.
+    //printf("0x%x\n", mailbox[5]); // it should be 0xa020d3 for rpi3 b+
+    
+    mbox_call(MBOX_CH_PROP);
+    uart_puts("My board revision is: ");
     uart_hex(mbox[5]);
     uart_puts("\n");
 }
@@ -72,6 +90,7 @@ void main()
 
     get_serial();
     get_board_revision();
+    get_vccore_addr();
 
     loop_start:do {
 	
