@@ -45,7 +45,8 @@ void uart_init()
 /**
  * Send a character
  */
-void uart_send(unsigned int c) {
+void uart_send(unsigned int c) 
+{
     /* wait until we can send */
     do{asm volatile("nop");}while(!(*AUX_MU_LSR&0x20));
     /* write the character to the buffer */
@@ -55,20 +56,22 @@ void uart_send(unsigned int c) {
 /**
  * Receive a character
  */
-char uart_getc() {
+char uart_getc() 
+{
     char r;
     /* wait until something is in the buffer */
     do{asm volatile("nop");}while(!(*AUX_MU_LSR&0x01));
     /* read it and return */
     r=(char)(*AUX_MU_IO);
     /* convert carrige return to newline */
-    return r=='\r'?'\n':r;
+    return (r=='\r')?'\n':r;
 }
 
 /**
  * Display a string
  */
-void uart_puts(char *s) {
+void uart_puts(char *s) 
+{
     while(*s) {
         /* convert newline to carrige return + newline */
         if(*s=='\n')
@@ -80,12 +83,27 @@ void uart_puts(char *s) {
 /*
  * Transfer int to char
  */
-char uart_i2c(unsigned int d) {
-    if (d < 10) 
-        return (char) d+48;
-    else 
-        return 0;
+char uart_i2c(unsigned int d) 
+{
+    return (d<10) ? d+48 :0;
 }
+
+/**
+ * Display a binary value in hexadecimal
+ */
+void uart_hex(unsigned int d) 
+{
+    unsigned int n;
+    int c;
+    for(c=28;c>=0;c-=4) {
+        // get highest tetrad
+        n=(d>>c)&0xF;
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n+=n>9?0x37:0x30;
+        uart_send(n);
+    }
+}
+
 
 /**
  * Compare two string and return 0 if they are identical
@@ -95,9 +113,9 @@ int uart_strcmp(const char *cs, const char *ct)
     unsigned char c1, c2;
     while (1) {
         c1 = *cs++;
-	c2 = *ct++;
-	if (c1 != c2) return c1 < c2 ? -1 : 1;
-	if (!c1) break;
+        c2 = *ct++;
+        if (c1 != c2) return c1 < c2 ? -1 : 1;
+        if (!c1) break;
     }
     return 0;
 }
