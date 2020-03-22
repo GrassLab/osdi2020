@@ -15,6 +15,7 @@ int string_length(const char * s);
 void string_longlong_to_char(char * string, const long long i);
 void string_longlong_to_hex_char(char * string, const long long i);
 void string_float_to_char(char * string, const float f);
+unsigned long long string_hex_char_to_longlong(char * string);
 
 #endif
 
