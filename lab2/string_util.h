@@ -7,7 +7,7 @@
 
 #include "meta_macro.h"
 
-int string_cmp(const char * string_a, const char * string_b);
+int string_cmp(const char * string_a, const char * string_b, const int length);
 void string_reverse_sequence(const char * src, char * dst, int size);
 void string_strip(char * string, char c);
 void string_concat(char * a, const char * b);

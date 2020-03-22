@@ -1,9 +1,9 @@
 #include "string_util.h"
 
-int string_cmp(const char * string_a, const char * string_b)
+int string_cmp(const char * string_a, const char * string_b, const int length)
 {
   /* Return 0 if not the same, idx if the same */
-  for(int idx = 0; ; ++idx)
+  for(int idx = 0; idx < length; ++idx)
   {
     if(string_a[idx] != string_b[idx])
     {
@@ -14,6 +14,7 @@ int string_cmp(const char * string_a, const char * string_b)
       return idx;
     }
   }
+  return 0;
 }
 
 void string_strip(char * string, char c)
