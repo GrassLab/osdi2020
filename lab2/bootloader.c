@@ -12,16 +12,19 @@ int main(int argc, char ** argv)
 
 const char * bootloader_shell_command_list[] = {
   "help",
+  "loadimg",
   0x0
 };
 
 const char * bootloader_shell_command_descriptions[] = {
   "Help",
+  "Load kernel image via UART",
   0x0
 };
 
 int (*bootloader_shell_command_function_ptr[])(char *) = {
   bootloader_shell_help,
+  bootloader_shell_loadimg,
   0x0
 };
 
@@ -105,5 +108,43 @@ int bootloader_shell_help(char * string_buffer)
     uart_putc('\n');
   }
   return 0;
+}
+
+int bootloader_shell_loadimg(char * string_buffer)
+{
+  unsigned long long text_offset;
+  uart_puts("Start loading os kernel image\n");
+  uart_puts("Kernel .text offset (default 0x80000): ");
+  uart_gets(string_buffer, '\n', 0x1000 - 1);
+  string_strip(string_buffer, '\n');
+  string_strip(string_buffer, ' ');
+  if(string_length(string_buffer) == 0)
+  {
+    text_offset = 0x80000;
+  }
+  else
+  {
+    text_offset = string_hex_char_to_longlong(string_buffer);
+  }
+
+  if(text_offset == (unsigned long long)-1)
+  {
+    uart_puts("Cannot parse offset\n");
+    return 0;
+  }
+
+  uart_puts("Send image now using sendimg.py\n");
+
+  /* TODO: Load image using uart */
+
+  /* TODO: Copy shellcode to another location*/
+
+  /* TODO: Jump to shellcode */
+
+  /* TODO: Shellcode copy the file to its designate */
+
+  /* TODO: Execute _start of kernel */
+
+  return 1;
 }
 
