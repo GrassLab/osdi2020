@@ -14,7 +14,7 @@ int string_cmp(const char * string_a, const char * string_b, const int length)
       return idx;
     }
   }
-  return 0;
+  return length - 1;
 }
 
 void string_strip(char * string, char c)
