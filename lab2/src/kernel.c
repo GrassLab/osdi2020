@@ -93,5 +93,9 @@ void kernel_main(void) {
         if (strcmp(buffer, "address") == 0) {
             get_vc_base_address();
         }
+        if (strcmp(buffer, "initframe") == 0) {
+            framebuffer_init();
+            write_buf();
+        }
     } 
 }
