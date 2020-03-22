@@ -21,9 +21,9 @@ other_core:
 // core 0 will jump here
 core_0:
 
-  // set stack pointer to __bss_end__ + 0x40000
+  // set stack pointer to __bss_end__ + 0x4000
   ldr x0, =__bss_end__
-  add x0, x0, #0x40000
+  add x0, x0, #0x4000
   mov sp, x0
 
   // initialize .bss section
