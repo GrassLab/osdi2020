@@ -171,3 +171,38 @@ void string_float_to_char(char * string, const float f)
   string_concat(string, float_buffer);
 }
 
+unsigned long long string_hex_char_to_longlong(char * string)
+{
+  unsigned long long value = 0;
+  /* string does not have preceeding 0x */
+  if(string_cmp(string, "0x", 2) == 0)
+  {
+    return (unsigned long long)-1;
+  }
+  for(int string_idx = 2; string[string_idx] != '\0'; ++string_idx)
+  {
+    if(value != 0)
+    {
+      value = value << 4;
+    }
+
+    if(string[string_idx] >= '0' && string[string_idx] <= '9')
+    {
+      value |= (unsigned long long )string[string_idx] - '0';
+    }
+    else if(string[string_idx] >= 'a' && string[string_idx] <= 'f')
+    {
+      value |= (unsigned long long )string[string_idx] - 'a' + 10;
+    }
+    else if(string[string_idx] >= 'A' && string[string_idx] <= 'F')
+    {
+      value |= (unsigned long long )string[string_idx] - 'A' + 10;
+    }
+    else
+    {
+      return (unsigned long long)-1;
+    }
+  }
+  return value;
+}
+
