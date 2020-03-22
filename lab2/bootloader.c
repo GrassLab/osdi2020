@@ -80,7 +80,7 @@ void bootloader_shell_parser(char * string_buffer)
   int command_idx = 0;
   for(; bootloader_shell_command_list[command_idx] != 0x0; ++command_idx)
   {
-    if(string_cmp(string_buffer, bootloader_shell_command_list[command_idx]))
+    if(string_cmp(string_buffer, bootloader_shell_command_list[command_idx], 999999))
     {
       (*bootloader_shell_command_function_ptr[command_idx])(string_buffer);
       break;

@@ -115,7 +115,7 @@ void _shell_parser(char * string_buffer)
   int command_idx = 0;
   for(; shell_command_list[command_idx] != 0x0; ++command_idx)
   {
-    if(string_cmp(string_buffer, shell_command_list[command_idx]))
+    if(string_cmp(string_buffer, shell_command_list[command_idx], 999999))
     {
       (*shell_command_function_ptr[command_idx])(string_buffer);
       break;
