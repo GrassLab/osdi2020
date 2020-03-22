@@ -7,8 +7,7 @@ int strcmp(const char* s1, const char* s2){
 
 char *strchr(const char *s, int c){
     while (*s != (char)c)
-        if (!*s++)
-            return 0;
+        if (!*s++) return 0;
     return (char *)s;
 }
 

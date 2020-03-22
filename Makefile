@@ -1,7 +1,7 @@
 ARMGNU ?= aarch64-linux-gnu
 
 ASMOPS = -Iinclude -g
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g -DMINIUART
 
 QEMU     = qemu-system-aarch64
 
@@ -41,6 +41,7 @@ $(IMG): $(SRC_DIR)/linker.ld $(OBJ_FILES)
 
 run: $(IMG)
 	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
+	#$(QEMU) -serial null -serial pty -M raspi3 -kernel $(IMG) -display none
 
 runasm: $(IMG)
 	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -d in_asm

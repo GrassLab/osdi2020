@@ -2,7 +2,8 @@
 #define __IO_H__
 
 #include "map.h"
-#include "mini_uart.h"
+#include "uart.h"
+#include "sprintf.h"
 
 #define NEWLINE "\r\n"
 

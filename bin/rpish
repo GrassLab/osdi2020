@@ -1,6 +1,7 @@
 #!/bin/bash
 
 NAME=$0
+DEVICE=/dev/ttyUSB0
 
 INTERATIVE=0
 POSITIONAL=()
@@ -38,8 +39,8 @@ done
 
 set -- "${POSITIONAL[@]}" 
 
-if [ ! -e /dev/ttyUSB0 ];then
-    echo "ttyUSB0 not found. Did you connect your device?" >&2
+if [ ! -e $DEVICE ];then
+    echo "$DEVICE not found. Did you connect your device?" >&2
     exit 1
 fi
 
@@ -47,13 +48,13 @@ while [[ $# -gt 0 ]];do
     key="$1"
     case $key in
         -c)
-            sudo sh -c "echo '$2' | tr -s '\n' '\r' > /dev/ttyUSB0;"
+            sudo sh -c "echo '$2' | tr -s '\n' '\r' > $DEVICE;"
             shift
             shift
             ;;
         *)
             for l in `cat $1`;do
-                sudo sh -c "echo $l | tr -s '\n' '\r' > /dev/ttyUSB0;"
+                sudo sh -c "echo $l | tr -s '\n' '\r' > $DEVICE;"
                 sleep 0.1;
             done
             shift
@@ -62,5 +63,5 @@ while [[ $# -gt 0 ]];do
 done
 
 if [[ $INTERATIVE -eq 1 ]]; then
-    sudo screen /dev/ttyUSB0 115200
+    sudo screen $DEVICE 115200
 fi

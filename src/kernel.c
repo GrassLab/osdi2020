@@ -1,6 +1,6 @@
 #include "io.h"
 #include "shell.h"
-#include "mini_uart.h"
+#include "uart.h"
 
 #ifdef TEST
 #include "test.h"
@@ -16,7 +16,7 @@ char *welcome =
 int main(void){
 
     uart_init();
-
+    println("UART TYPE: ", UART_TYPE);
 #ifdef TEST
     puts("");
     ASSERT(bss_all_be() == 0);

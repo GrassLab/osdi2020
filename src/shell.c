@@ -3,6 +3,7 @@
 #include "time.h"
 #include "power.h"
 #include "string.h"
+#include "mbox.h"
 
 char buffer[1024];
 
@@ -80,6 +81,16 @@ int shell_execute(char *cmd){
     else if(EQS("clear", cmd)){
         print("\e[1;1H\e[2J");
     }
+    else if(EQS("loadimg", cmd)){
+        println("please input image now...");
+        loadimg();
+    }
+    else if(EQS("board", cmd)){
+        get_board_revision(); 
+    }
+    else if(EQS("vcaddr", cmd)){
+        get_vc_memaddr(); 
+    }
 #ifdef TEST
     else if(EQS("bss", cmd)){
         char *beg, *end;
@@ -100,7 +111,6 @@ int shell_execute(char *cmd){
 }
 
 int shell_loop(){
-    //while(1) shell_read_line(buffer);
     while(shell_execute(shell_read_line(buffer)) >= 0);
     return 0;
 }
