@@ -1,2 +1,4 @@
 *.o
 kernel8.*
+
+.vscode
