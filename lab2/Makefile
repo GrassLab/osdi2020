@@ -1,8 +1,8 @@
 ARMGNU ?= aarch64-linux-gnu
 
 # -Iinclude tells it to look for header files in the include folder
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
-ASMOPS = -Iinclude 
+COPS = -fPIC -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
+ASMOPS = -fPIC -Iinclude
 
 BUILD_DIR = build
 SRC_DIR = src
@@ -30,3 +30,6 @@ DEP_FILES = $(OBJ_FILES:%.o=%.d)
 kernel8.img: $(SRC_DIR)/linker.ld $(OBJ_FILES)
 	$(ARMGNU)-ld -T $(SRC_DIR)/linker.ld -o $(BUILD_DIR)/kernel8.elf  $(OBJ_FILES)
 	$(ARMGNU)-objcopy $(BUILD_DIR)/kernel8.elf -O binary kernel8.img
+
+run:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio

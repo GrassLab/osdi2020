@@ -85,6 +85,7 @@ def send_kernel(path, uart_connection):
         print("Sending kernel with size", size, "and checksum", checksum)
         uart_connection.send_int(size)
         time.sleep(1)
+        print("666666")
         size_confirmation = uart_connection.read_int()
         if size_confirmation != size:
             print("Expected size to be", size, "but got", size_confirmation)
@@ -115,15 +116,7 @@ def main():
         baud_rate=115200
     )
     time.sleep(1)
-    result = send_kernel(
-        path="./kernel8.img",
-        uart_connection=uart_connection
-    )
-    if result:
-        print("Done!")
-        uart_connection.start_interactive(sys.stdin, sys.stdout)
-    else:
-        print("Error sending kernel :(")
+    uart_connection.start_interactive(sys.stdin, sys.stdout)
 
 if __name__ == '__main__':
     main()

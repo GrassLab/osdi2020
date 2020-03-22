@@ -7,5 +7,5 @@ void uart_send(char c);
 char uart_recv();
 void uart_send_int(int number);
 int uart_read_int();
-
+void uart_send_hex(unsigned long number);
 #endif  /*_UART_H */
