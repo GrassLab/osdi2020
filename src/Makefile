@@ -23,7 +23,7 @@
 #
 #
 
-SRCS = $(wildcard *.c)
+SRCS = $(wildcard *.c lib/*c)
 OBJS = $(SRCS:.c=.o)
 CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
 
