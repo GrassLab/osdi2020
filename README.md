@@ -1,31 +1,28 @@
-# Operation System Design and Implementation Course 2020
+# My OSDI 2020
 
-[中文](讀我.md)
+## Author
 
-This repository is homework submission for students
+| 學號 | GitHub 帳號 | 姓名 | Email |
+| --- | ----------- | --- | --- |
+|`0516013`| `maxam2017` | `吳泓寬` | whk0313@gmail.com |
 
-## How to submit homework
+## How to build
 
-1. Fork [this repository](https://github.com/GrassLab/osdi2020) on GitHub 
-    ![](images/fork_button.png)
-2. Write down following info in your `README.md`
-    - GitHub account name
-    - Student ID
-    - Your name
-3. Design and implement your kernel in forked repository
-4. Create a GitHub pull request
-    - Choose `GrassLab/osdi2020` as base repository and `{your student ID}` as base branch
-    - Choose branch in your forked repository as compare branch
-    ![](images/PR_branch.png)
-    - Name it with student ID and which lab e.g. `0756110 lab0`
-    ![](images/PR_name.png)
-5. We will accept pull request when lab due date
+**WIP**
 
-repeat 3-5 to submit later homework/lab.
+## How to run
 
-## Example
+**WIP**
 
-- forked repository: https://github.com/csielee/osdi2020
-- pull request: https://github.com/GrassLab/osdi2020/pull/2
+## How to burn it into pi3
 
-## Happy Coding ~
+**WIP**
+
+## Architecture
+
+![architecture figure]()
+
+## Directory structure
+
+**WIP**
+
