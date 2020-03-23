@@ -1,6 +1,8 @@
 #include "peripheral/MiniUart.h"
 #include "peripheral/gpio.h"
 
+#include <stddef.h>
+
 void delay(unsigned int clock) {
     while (clock--) {
         asm volatile("nop");
@@ -52,4 +54,22 @@ void sendStringUART(const char *str) {
     while (*str) {
         sendUART(*str++);
     }
+}
+
+static char getHexChar(char c) {
+    return (c > 9) ? c - 0xa + 'a' : c + '0';
+}
+
+void sendHexUART(unsigned int hex) {
+    sendStringUART("0x");
+    for (size_t i = 1; i <= sizeof(unsigned int); ++i) {
+        char c = (hex >> ((sizeof(unsigned int) - i) * 8)) & 0xFF;
+
+        // send upper 4-bit
+        sendUART(getHexChar(c >> 4));
+
+        // send lower 4-bit
+        sendUART(getHexChar(c & 0xf));
+    }
+    sendUART('\n');
 }
