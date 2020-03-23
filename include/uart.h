@@ -17,14 +17,14 @@
 #define AUX_MU_LSR_REG  (MMIO_BASE + 0x00215054)
 #else
 #define UART_TYPE "PL011"
-#define UART0_DR        (MMIO_BASE+0x00201000)
-#define UART0_FR        (MMIO_BASE+0x00201018)
-#define UART0_IBRD      (MMIO_BASE+0x00201024)
-#define UART0_FBRD      (MMIO_BASE+0x00201028)
-#define UART0_LCRH      (MMIO_BASE+0x0020102C)
-#define UART0_CR        (MMIO_BASE+0x00201030)
-#define UART0_IMSC      (MMIO_BASE+0x00201038)
-#define UART0_ICR       (MMIO_BASE+0x00201044)
+#define UART_DR        (MMIO_BASE+0x00201000)
+#define UART_FR        (MMIO_BASE+0x00201018)
+#define UART_IBRD      (MMIO_BASE+0x00201024)
+#define UART_FBRD      (MMIO_BASE+0x00201028)
+#define UART_LCRH      (MMIO_BASE+0x0020102C)
+#define UART_CR        (MMIO_BASE+0x00201030)
+#define UART_IMSC      (MMIO_BASE+0x00201038)
+#define UART_ICR       (MMIO_BASE+0x00201044)
 #endif
 
 void uart_send(char c);

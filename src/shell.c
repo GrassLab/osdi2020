@@ -4,6 +4,7 @@
 #include "power.h"
 #include "string.h"
 #include "mbox.h"
+#include "loadimg.h"
 
 char buffer[1024];
 
@@ -83,7 +84,21 @@ int shell_execute(char *cmd){
     }
     else if(EQS("loadimg", cmd)){
         println("please input image now...");
-        loadimg();
+        if(expect("LOADIMG|")){
+            puts("IMG PREFIX VERIFIED!!");
+            int size = get_int(0);
+            char *load_addr = (char*)0x80000;
+            println("recving ", size, " of bytes...");
+            while(size--){
+                *load_addr++ = getchar();
+                println(size, " bytes remain...");
+            }
+            if(expect("|GMIDAOL"))
+                puts("LOAD IMG DONE!!");
+            else{ puts("IMG POSTFIX FAILED"); }
+        }
+        else{ puts("IMG PREFIX FAILED"); }
+        reboot();
     }
     else if(EQS("board", cmd)){
         get_board_revision(); 

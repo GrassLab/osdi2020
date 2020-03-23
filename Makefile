@@ -1,7 +1,8 @@
 ARMGNU ?= aarch64-linux-gnu
 
 ASMOPS = -Iinclude -g
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g -DMINIUART
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g
+#COPS += -DMINIUART
 
 QEMU     = qemu-system-aarch64
 
@@ -39,12 +40,25 @@ $(IMG): $(SRC_DIR)/linker.ld $(OBJ_FILES)
 	$(ARMGNU)-objcopy $(BUILD_DIR)/kernel8.elf -O binary $(IMG)
 
 
-run: $(IMG)
+runpl: $(IMG)
+	@$(QEMU) -M raspi3 -ke nel $(IMG) -display none
+	#$(QEMU) -serial null -serial pty -M raspi3 -kernel $(IMG) -display none
+
+runmini: $(IMG)
 	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
 	#$(QEMU) -serial null -serial pty -M raspi3 -kernel $(IMG) -display none
 
+run: $(IMG)
+	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
+
 runasm: $(IMG)
 	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -d in_asm
+
+minitty: $(IMG)
+	@$(QEMU) -serial null -serial pty -M raspi3 -kernel $(IMG) -display none
+
+tty: $(IMG)
+	@$(QEMU) -serial pty -M raspi3 -kernel $(IMG) -display none
 
 gdb: $(IMG)
 	$(QEMU) -M raspi3 -kernel $(IMG) -display none -S -s

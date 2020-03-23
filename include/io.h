@@ -31,7 +31,7 @@ define__print_as_number_types();
         extra_number_printing \
         )(x)
 
-#define getchar(x) uart_recv()
+#define getchar() uart_recv()
 #define putchar(x) uart_send(x)
 #define flush()    uart_flush()
 
@@ -45,5 +45,8 @@ define__print_as_number_types();
 
 #define println(...) print(__VA_ARGS__, NEWLINE)
 #define puts println
+
+int expect(char* s);
+int get_int();
 
 #endif

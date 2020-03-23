@@ -11,16 +11,27 @@ if [ "$#" -eq 0 ];then INTERATIVE=1; fi
 while [[ $# -gt 0 ]];do
     key="$1"
     case $key in
-        -c)
+        -c|--command)
             POSITIONAL+=("-c")
             POSITIONAL+=("$2")
             shift
             shift
             ;;
-        -i)
+        -d|--device)
+            DEVICE=$2
+            shift
+            shift
+            ;;
+        -i|--interative)
             INTERATIVE=1
             shift
             ;;
+        -img|--image|-k|--kernel)
+            POSITIONAL+=("-img")
+            POSITIONAL+=("$2")
+            shift
+            shift
+        ;;
         -h|--help)
             echo -e ""
             echo -e "$NAME [-hi] [--help] [-c command_string | file ...]"
@@ -44,15 +55,28 @@ if [ ! -e $DEVICE ];then
     exit 1
 fi
 
+FILEoCMD=0
 while [[ $# -gt 0 ]];do
     key="$1"
     case $key in
         -c)
+            FILEoCMD=1
             sudo sh -c "echo '$2' | tr -s '\n' '\r' > $DEVICE;"
             shift
             shift
             ;;
+        -img)
+            FILEoCMD=1
+            BYTES=512
+            IMG_SIZE=`wc -c kernel8.img | awk '{print $1}'`
+            sudo sh -c "echo -ne 'LOADIMG|$IMG_SIZE|' > $DEVICE;"
+            sudo sh -c "dd if=$2 bs=$BYTES of=$DEVICE;"
+            sudo sh -c "echo -ne '|GMIDAOL' > $DEVICE;"
+            shift
+            shift
+            ;;
         *)
+            FILEoCMD=1
             for l in `cat $1`;do
                 sudo sh -c "echo $l | tr -s '\n' '\r' > $DEVICE;"
                 sleep 0.1;
@@ -62,6 +86,6 @@ while [[ $# -gt 0 ]];do
     esac
 done
 
-if [[ $INTERATIVE -eq 1 ]]; then
+if [ $INTERATIVE -eq 1 -o $FILEoCMD -eq 0 ]; then
     sudo screen $DEVICE 115200
 fi
