@@ -76,6 +76,29 @@ void main(){
     // set up serial console
     uart_init();
     
+    // get the board's unique serial number with a mailbox call
+    unsigned int mailbox[8];
+    mailbox[0] = 8*4;                  // length of the message
+    mailbox[1] = MAILBOX_REQUEST;         // this is a request message
+    
+    mailbox[2] = MAILBOX_TAG_GETSERIAL;   // get serial number command
+    mailbox[3] = 8;                    // buffer size
+    mailbox[4] = 8;
+    mailbox[5] = 0;                    // clear output buffer
+    mailbox[6] = 0;
+
+    mailbox[7] = MAILBOX_TAG_LAST;
+
+    // uart_puts("Hello World! ttt\n");
+
+    // send the message to the GPU and receive answer
+    if (mailbox_call(mailbox, MAILBOX_CH_PROP)) {
+        uart_puts("My serial number is: ");
+        printf("0x%x%x\n", mailbox[5], mailbox[6]);
+    } else {
+        uart_puts("Unable to query serial!\n");
+    }
+
     // say hello
     uart_puts("Hello World!\n");
     
