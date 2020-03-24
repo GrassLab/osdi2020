@@ -9,9 +9,12 @@ int shell_timestamp(char * string_buffer);
 int shell_reboot(char * string_buffer);
 void shell_show_board_revision(char * string_buffer);
 void shell_show_vc_memory(char * string_buffer);
+void shell_show_text_location(char * string_buffer);
 
 extern unsigned long long get_cntfrq_el0(void);
 extern unsigned long long get_cntpct_el0(void);
+extern char __executable_start;
+extern char __etext;
 
 #endif
 

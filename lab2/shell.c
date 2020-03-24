@@ -90,6 +90,7 @@ void shell(void)
   uart_puts(pikachu1);
   shell_show_board_revision(string_buffer);
   shell_show_vc_memory(string_buffer);
+  shell_show_text_location(string_buffer);
 
   while(1)
   {
@@ -203,6 +204,17 @@ void shell_show_vc_memory(char * string_buffer)
   uart_puts(string_buffer);
   uart_puts(" size: ");
   string_longlong_to_hex_char(string_buffer, vc_memory_size);
+  uart_puts(string_buffer);
+  uart_putc('\n');
+}
+
+void shell_show_text_location(char * string_buffer)
+{
+  uart_puts("Start of .text: ");
+  string_longlong_to_hex_char(string_buffer, (long long)&__executable_start);
+  uart_puts(string_buffer);
+  uart_puts(" end of .text: ");
+  string_longlong_to_hex_char(string_buffer, (long long)&__etext);
   uart_puts(string_buffer);
   uart_putc('\n');
 }
