@@ -18,17 +18,6 @@ volatile unsigned int  __attribute__((aligned(16))) mbox[36];
 #define MBOX_FULL       0x80000000
 #define MBOX_EMPTY      0x40000000
 
-
-#define GET_BOARD_MODEL     0x00010001
-#define GET_BOARD_REVISION  0x00010002
-#define GET_VC_MEMORY       0x00010006
-
-#define REQUEST_CODE        0x00000000
-#define REQUEST_SUCCEED     0x80000000
-#define REQUEST_FAILED      0x80000001
-#define TAG_REQUEST_CODE    0x00000000
-#define END_TAG             0x00000000
-
 /**
  * Make a mailbox call. Returns 0 on failure, non-zero on success
  */

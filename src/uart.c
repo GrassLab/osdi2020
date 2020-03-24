@@ -6,17 +6,22 @@
 #include "mm.h"
 #include "uart.h"
 #include "string.h"
+#include "mailbox.h"
 
+#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
+#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
+#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024))
+#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028))
+#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
+#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
+#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
+#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
+
+
+// https://wiki.osdev.org/Raspberry_Pi_Bare_Bones
 void uart_setup()
 {
-    unsigned int selector;
-
-    selector = mm_read(GPFSEL1);
-    selector &= ~(7<<12);                   // clean gpio14
-    selector |= 2<<12;                      // set alt5 for gpio14
-    selector &= ~(7<<15);                   // clean gpio15
-    selector |= 2<<15;                      // set alt5 for gpio15
-    mm_write(GPFSEL1,selector);
+    mm_write(UART0_CR, 0);
 
     mm_write(GPPUD,0);
     delay(150);
@@ -24,25 +29,45 @@ void uart_setup()
     delay(150);
     mm_write(GPPUDCLK0,0);
 
-    mm_write(AUX_ENABLE,1);                   //Enable mini uart (this also enables access to it registers)
-    mm_write(AUX_MU_CNTL_REG,0);               //Disable auto flow control and disable receiver and transmitter (for now)
-    mm_write(AUX_MU_IER_REG,0);                //Disable receive and transmit interrupts
-    mm_write(AUX_MU_LCR_REG,3);                //Enable 8 bit mode
-    mm_write(AUX_MU_MCR_REG,0);                //Set RTS line to be always high
-    mm_write(AUX_MU_BAUD_REG,270);             //Set baud rate to 115200
+    mm_write(UART0_ICR, 0x7FF);    // clear interrupts
 
-    mm_write(AUX_MU_CNTL_REG,3);               //Finally, enable transmitter and receiver
+    mbox[0] = 9*4;
+    mbox[1] = REQUEST_CODE;
+    mbox[2] = SET_CLK_RATE; // set clock rate
+    mbox[3] = 12;
+    mbox[4] = 8;
+    mbox[5] = 2;           // UART clock
+    mbox[6] = 3000000;     // 4Mhz
+    mbox[7] = 0;           // skip turbo
+    mbox[8] = END_TAG;
+    mbox_call(MBOX_CH_PROP);
+
+    // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
+	mm_write(UART0_IBRD, 1);
+	// Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
+	mm_write(UART0_FBRD, 40);
+ 
+	// Enable FIFO & 8 bit data transmission (1 stop bit, no parity).
+	mm_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
+ 
+	// Mask all interrupts.
+	mm_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
+	                       (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
+ 
+	// Enable UART0, receive & transfer part of UART.
+	mm_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9)); 
+
 }
 
 void uart_putc(uint8_t c)
 {
-    while(!(mm_read(AUX_MU_LSR_REG)&0x20));
-    mm_write(AUX_MU_IO_REG,c);
+    while(mm_read(UART0_FR)& (1 << 5));
+    mm_write(UART0_DR, c);
 }
 
 uint8_t uart_getc() {
-    while(!(mm_read(AUX_MU_LSR_REG)&0x01));
-    return(mm_read(AUX_MU_IO_REG)&0xFF);
+    while(mm_read(UART0_FR)& (1 << 4));
+    return(mm_read(UART0_DR)&0xFF);
 }
 
 void uart_puts(const char *str) {
