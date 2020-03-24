@@ -5,6 +5,7 @@
 
 #include "uart.h"
 #include "shell.h"
+#include "mailbox.h"
 
 void ker_main() {
 
@@ -17,6 +18,6 @@ void ker_main() {
     uart_puts("  \\ V  V /  __/ | (_| (_) | | | | | |  __/ | | | | (_) | | | | | |  __/          \r\n");
     uart_puts("   \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___| |_| |_|\\___/|_| |_| |_|\\___|   \r\n");
 
-    shell_start();
-
+    //shell_start();
+    get_board_revision();
 }

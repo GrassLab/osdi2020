@@ -24,6 +24,8 @@ void uart_putc(uint8_t c);
 
 void uart_puts(const char* str);
 
+void uart_hex(unsigned int d);
+
 void uart_read_line(char* buffer, size_t size);
 
 #endif

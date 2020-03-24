@@ -9,6 +9,15 @@
 #define __MM_H_
 
 #define MMIO_BASE        0x3F000000
+#define MAILBOX_BASE     ((volatile unsigned int*)(MMIO_BASE + 0xb880))
+
+#define MAILBOX_READ     MAILBOX_BASE
+#define MAILBOX_STATUS   ((volatile unsigned int*)(MAILBOX_BASE + 0x18))
+#define MAILBOX_1_STATUS  ((volatile unsigned int*)(MAILBOX_BASE + 0x38))
+#define MAILBOX_WRITE    ((volatile unsigned int*)(MAILBOX_BASE + 0x20))
+
+#define MAILBOX_EMPTY    0x40000000
+#define MAILBOX_FULL     0x80000000
 
 #define GPFSEL1          ((volatile unsigned int*)(MMIO_BASE+0x00200004))
 #define GPSET0           ((volatile unsigned int*)(MMIO_BASE+0x0020001C))
