@@ -41,7 +41,7 @@ $(IMG): $(SRC_DIR)/linker.ld $(OBJ_FILES)
 
 
 runpl: $(IMG)
-	@$(QEMU) -M raspi3 -ke nel $(IMG) -display none
+	@$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none
 	#$(QEMU) -serial null -serial pty -M raspi3 -kernel $(IMG) -display none
 
 runmini: $(IMG)
@@ -61,7 +61,7 @@ tty: $(IMG)
 	@$(QEMU) -serial pty -M raspi3 -kernel $(IMG) -display none
 
 gdb: $(IMG)
-	$(QEMU) -M raspi3 -kernel $(IMG) -display none -S -s
+	$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none -S -s
 
 update: $(IMG)
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt && sudo umount /mnt

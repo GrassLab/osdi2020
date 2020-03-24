@@ -83,21 +83,7 @@ int shell_execute(char *cmd){
         print("\e[1;1H\e[2J");
     }
     else if(EQS("loadimg", cmd)){
-        println("please input image now...");
-        if(expect("LOADIMG|")){
-            puts("IMG PREFIX VERIFIED!!");
-            int size = get_int(0);
-            char *load_addr = (char*)0x80000;
-            println("recving ", size, " of bytes...");
-            while(size--){
-                *load_addr++ = getchar();
-                println(size, " bytes remain...");
-            }
-            if(expect("|GMIDAOL"))
-                puts("LOAD IMG DONE!!");
-            else{ puts("IMG POSTFIX FAILED"); }
-        }
-        else{ puts("IMG PREFIX FAILED"); }
+        loadimg();
         reboot();
     }
     else if(EQS("board", cmd)){
