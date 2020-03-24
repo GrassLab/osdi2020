@@ -11,6 +11,7 @@
 static const unsigned int kAlignmentSizeOfMailbox = 16u;
 static const unsigned int kRequestCode = 0x00000000u;
 static const unsigned int kGetBoardRevision = 0x00010002;
+static const unsigned int kGetVCMemory = 0x00010006;
 static const unsigned int kTagRequestCode = 0x00000000u;
 static const unsigned int kEndTag = 0x00000000u;
 
@@ -74,5 +75,35 @@ unsigned int getBoardRevision(void) {
         sendStringUART("[LOG][ERROR] fail to send message\n");
     }
 
+    return mailbox[5];
+}
+
+unsigned int getVCBaseAddress(void) {
+    volatile unsigned int __attribute__((aligned(16u)))
+    mailbox[MAILBOX_SIZE] = {
+        MAILBOX_SIZE * sizeof(unsigned int), // buffer size in bytes
+        kRequestCode,
+
+        /* tags structure
+         *   0: tag identifier
+         *   1: value buffer size in bytes
+         *   2: zero
+         *   3~: optional value buffer
+         */
+        // tags begin
+        kGetVCMemory, (MAILBOX_SIZE - (3u + 3u)), kTagRequestCode, 0,
+        // tags end
+
+        kEndTag};
+
+    if (!sendMessage(mailbox)) {
+        sendStringUART("[LOG][ERROR] fail to send message\n");
+    }
+
+    /* Response (started at 5-th element)
+     *   Value:
+     *     - u32: base address
+     *     - u32: size in bytes
+     */
     return mailbox[5];
 }

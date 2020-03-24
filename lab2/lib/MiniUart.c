@@ -71,5 +71,4 @@ void sendHexUART(unsigned int hex) {
         // send lower 4-bit
         sendUART(getHexChar(c & 0xf));
     }
-    sendUART('\n');
 }
