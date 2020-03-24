@@ -1,6 +1,8 @@
 #include "uart.h"
 #include "utils.h"
 #include "mbox.h"
+extern char bss_end[];
+
 int strcmp(char *str1, char *str2) {
     while (1) {
         if (*str1 != *str2) {
@@ -15,22 +17,6 @@ int strcmp(char *str1, char *str2) {
         str2++;
     }
 }
-
-int readline(char *buf, int maxlen) {
-    int num = 0;
-    while (num < maxlen - 1) {
-        char c = uart_recv();
-        uart_send(c);
-        if (c == '\n' || c == '\0' || c == '\r') {
-            break;
-        }
-        buf[num] = c;
-        num++;
-    }
-    buf[num] = '\0';
-    return num;
-}
-
 
 void copy_and_jump_to_kernel() {
     int kernel_size = uart_read_int();
@@ -49,10 +35,12 @@ void copy_and_jump_to_kernel() {
     branch_to_address((void *)0x00);
 }
 
-void copy_current_kernel_and_jump(char *new_address) {
-    char *kernel = (char *)0x00;
-    char *end = bss_end;
 
+void copy_current_kernel_and_jump(char *new_address) {
+    char *kernel = (char *)0x80000;
+    char *end = bss_end;
+    int checksum = 0;
+    int kernel_size;
     char *copy = new_address;
 
     while (kernel <= end) {
@@ -61,31 +49,30 @@ void copy_current_kernel_and_jump(char *new_address) {
         copy++;
     }
 
-    // Cast the function pointer to char* to deal with bytes.
-    char *original_function_address = (char *)&copy_and_jump_to_kernel;
+    kernel_size = uart_read_int();
+    uart_send_int(kernel_size);
 
-    // Add the new address (we're assuming that the original kernel resides in
-    // address 0). copied_function_address should now contain the address of the
-    // original function but in the new location.
-    char *copied_function_address =
-        original_function_address + (long)new_address;
+    for (int i = 0; i < kernel_size; i++) {
+        unsigned char c = uart_recv();
+        checksum += (int)c;
+        // kernel[i] = c;
+    }
+    
+    uart_send_int(checksum);
 
-    // Cast the address back to a function and call it.
-    void (*call_function)() = (void (*)())copied_function_address;
-    call_function();
+    // uart_send_string("Done copying kernel\r\n");
+    // branch_to_address((void *)0x80000);
 }
 
 
 void kernel_main(void) {
     int buff_size = 100;
     uart_init();
-    uart_recv();
     char buffer[buff_size];
     while (1) {
-        uart_send_string("# ");
         readline(buffer, buff_size);
         if (strcmp(buffer, "hello") == 0) {
-            uart_send_string("Hello!!!\r\n");
+            uart_send_string("Hello!!!\n");
         } 
         if (strcmp(buffer, "revision") == 0) {
             get_board_revision();
@@ -94,8 +81,11 @@ void kernel_main(void) {
             get_vc_base_address();
         }
         if (strcmp(buffer, "initframe") == 0) {
-            framebuffer_init();
-            write_buf();
+            write_buf(framebuffer_init());
+        }
+        if (strcmp(buffer, "kernel") == 0) {
+            uart_send_string("kernel\n");
+            copy_current_kernel_and_jump((char *)0x80000);
         }
     } 
 }

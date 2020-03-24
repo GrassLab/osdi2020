@@ -13,6 +13,18 @@
 #define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
+void reserve(char *str,int index)
+{
+    int i = 0, j = index - 1, temp;
+    while (i < j) {
+        temp = str[i]; 
+        str[i] = str[j]; 
+        str[j] = temp;
+        i++;
+        j--;
+    }
+}
+
 void uart_init()
 {
     register unsigned int r;
@@ -68,21 +80,45 @@ void uart_send_string(char *str) {
     }
 }
 
-int uart_read_int() {
+int readline(char *buf, int maxlen) {
     int num = 0;
-    for (int i = 0; i < 4; i++) {
+    while (num < maxlen - 1) {
         char c = uart_recv();
-        num = num << 8;
-        num += (int)c;
+        if (c == '\n' || c == '\0' || c == '\r') {
+            break;
+        }
+        buf[num] = c;
+        num++;
+    }
+    buf[num] = '\0';
+    return num;
+}
+
+int uart_read_int() {
+    int num = 0, index, i;
+    char buff[100];
+    index = readline(buff, 100);
+    for (i = 0 ; i < index; i++) {
+        num = num * 10;
+        num += buff[i] - '0';
     }
     return num;
 }
 
+
 void uart_send_int(int number) {
-    uart_send((char)((number >> 24) & 0xFF));
-    uart_send((char)((number >> 16) & 0xFF));
-    uart_send((char)((number >> 8) & 0xFF));
-    uart_send((char)(number & 0xFF));
+    int i = 0, j; 
+    char str[100];
+    while (number) { 
+        str[i++] = (number % 10) + '0'; 
+        number = number / 10; 
+    } 
+    reserve(str, i);
+    for ( j = 0 ; j < i ; j++) {
+        uart_send(str[j]);
+    }
+    uart_send('\n');
+    return ; 
 }
 
 void uart_send_hex(unsigned long number) {

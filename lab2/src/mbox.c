@@ -2,27 +2,32 @@
 #include "uart.h"
 #include "mbox.h"
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
-unsigned char *lfb;                         /* raw frame buffer address */
 int mbox_call(unsigned char ch);
 
-void write_buf() {
+void write_buf(unsigned long loc) {
     int x,y;
-    unsigned char *location = (unsigned char *)lfb;
+    int value = 255;
+    unsigned char *location = (unsigned char *)loc;
     for (y = 0 ; y < FB_HEIGHT ; y++) {
         for (x = 0 ; x < FB_WIDTH ; x++) {
-            //uart_send_hex((long)location);
-            location[0] = 100;
-            location[1] = 0;
-            location[2] = 0;
-            location[3] = 0;
+            location[0] = value;
+            location[1] = value;
+            location[2] = value;
+            location[3] = value;
+            if ((x%20) == 0) {
+                value = (value == 255 ? 0 : 255);
+            }
             location += 4;
+        }
+        if ((y%20) == 0) {
+            value = (value == 255 ? 0 : 255);
         }
     }
     uart_send_string("done\r\n");
     return;
 }
 
-void framebuffer_init()
+unsigned long framebuffer_init()
 {
     //set the screen size
     mbox[0] = 35 * 4; //align 16 bytes
@@ -75,13 +80,10 @@ void framebuffer_init()
         height=mbox[6];         //get actual physical height
         pitch=mbox[33];         //get number of bytes per line
         isrgb=mbox[24];         //get the actual channel order
-        lfb=(void*)((unsigned long)mbox[28]);
-        
     } else {
         uart_send_string("Unable to set screen resolution to 680 * 480 * 24\n");
     }
-    uart_send_string("OK\r\n");
-    return;
+    return (unsigned long)mbox[28];
 }
 
 
