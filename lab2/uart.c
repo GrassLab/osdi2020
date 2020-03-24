@@ -160,3 +160,19 @@ void uart_gets(char * string, char delimiter, unsigned length)
   string[idx + 1] = '\0';
 }
 
+void uart_getn(char * buffer, unsigned length)
+{
+  for(unsigned idx = 0; idx < length; ++idx)
+  {
+    while(1)
+    {
+      if(CHECK_BIT(*UART_FR, 6)) /* If rxff [6] bit is set */
+      {
+        buffer[idx] = (char)(*UART_DR);
+        break;
+      }
+    }
+  }
+  return;
+}
+

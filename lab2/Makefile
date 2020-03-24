@@ -5,7 +5,7 @@ OBJCOPY = aarch64-linux-gnu-objcopy
 GENERAL_FLAGS =
 C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles
 
-BOOTLOADER_C_SOURCE_FILES = bootloader.c uart.c string_util.c mailbox.c
+BOOTLOADER_C_SOURCE_FILES = bootloader.c uart.c string_util.c mailbox.c loadimg.c sumhash.c
 BOOTLOADER_C_OBJECT_FILES = $(BOOTLOADER_C_SOURCE_FILES:.c=.o)
 BOOTLOADER_ASSEMBLY_SOURCE_FILES = start.s
 BOOTLOADER_ASSEMBLY_OBJECT_FILES = $(BOOTLOADER_ASSEMBLY_SOURCE_FILES:.s=.o)
@@ -37,17 +37,20 @@ kernel8.elf: ${BOOTLOADER_ASSEMBLY_OBJECT_FILES} ${BOOTLOADER_C_OBJECT_FILES}
 debug: GENERAL_FLAGS += -DDEBUG -g3
 debug: all
 
-qemu: all
+qemu_bl: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
 
-qemu_dbg: debug
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -s -S
+qemu_bl_pty: all
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial pty
+
+qemu_bl_dbg: debug
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -s -S -serial pty
 
 qemu_os: all
 	qemu-system-aarch64 -M raspi3 -kernel os.img -display none -serial stdio
 
 qemu_os_dbg: debug
-	qemu-system-aarch64 -M raspi3 -kernel os.img -display none -s -S
+	qemu-system-aarch64 -M raspi3 -kernel os.img -display none -s -S -serial pty
 
 .PHONY: clean
 clean:

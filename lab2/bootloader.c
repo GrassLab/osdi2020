@@ -2,6 +2,7 @@
 #include "uart.h"
 #include "meta_macro.h"
 #include "string_util.h"
+#include "loadimg.h"
 
 int main(int argc, char ** argv)
 {
@@ -61,7 +62,7 @@ void bootloader_shell(void)
 
   while(1)
   {
-    uart_puts(ANSI_RED "# " ANSI_RESET);
+    uart_puts("# ");
     uart_gets(string_buffer, '\n', 0x1000 - 1);
     bootloader_shell_parser(string_buffer);
   }
@@ -135,7 +136,11 @@ int bootloader_shell_loadimg(char * string_buffer)
 
   uart_puts("Send image now using sendimg.py\n");
 
-  /* TODO: Load image using uart */
+  if(!loadimg(LOADIMG_TEMP_LOCATION, 0))
+  {
+    uart_puts("Failed to receive image\n");
+    return 0;
+  }
 
   /* TODO: Copy shellcode to another location*/
 

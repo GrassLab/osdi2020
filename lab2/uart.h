@@ -30,6 +30,7 @@ char uart_getc(int echo);
 char uart_putc(const char c);
 void uart_puts(const char * string);
 void uart_gets(char * string, char delimiter, unsigned length);
+void uart_getn(char * buffer, unsigned length);
 
 #endif
 
