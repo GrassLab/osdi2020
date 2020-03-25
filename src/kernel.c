@@ -19,9 +19,6 @@ void ker_main() {
     uart_puts("   \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___| |_| |_|\\___/|_| |_| |_|\\___|   \r\n");
     uart_puts("\r\n");
     uart_puts("+-----------------------+-----------------------+\r\n");
-    uart_puts("|\tModel\t\t|\t");
-    uart_hex(get_board_model());
-    uart_puts("\t|\r\n");
     uart_puts("|\tRevision\t|\t");
     uart_hex(get_board_revision());
     uart_puts("\t|\r\n");

@@ -2,9 +2,6 @@
 #define _MAILBOX_H_
 #include "mm.h"
 
-/* a properly aligned buffer */
-extern volatile unsigned int mbox[36];
-
 /* channels */
 #define MBOX_CH_FB      1
 #define MBOX_CH_PROP    8
@@ -21,11 +18,9 @@ extern volatile unsigned int mbox[36];
 #define TAG_REQUEST_CODE    0x00000000
 #define END_TAG             0x00000000
 
-int mbox_call(unsigned char ch);
+int mbox_call(volatile uint32_t *message, uint8_t channel);
 
 uint32_t get_board_revision();
-
-uint32_t get_board_model();
 
 uint32_t get_vc_memory();
 

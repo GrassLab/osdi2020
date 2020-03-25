@@ -18,34 +18,38 @@
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
 
-// https://wiki.osdev.org/Raspberry_Pi_Bare_Bones
+/**
+ * https://wiki.osdev.org/Raspberry_Pi_Bare_Bones
+ */
 void uart_setup()
 {
+    unsigned int r;
+
     mm_write(UART0_CR, 0);
 
-    mm_write(GPPUD,0);
-    delay(150);
-    mm_write(GPPUDCLK0,(1<<14)|(1<<15));
-    delay(150);
-    mm_write(GPPUDCLK0,0);
+    /* map UART0 to GPIO pins */
+    r=*GPFSEL1;
+    r&=~((7<<12)|(7<<15)); // gpio14, gpio15
+    r|=(4<<12)|(4<<15);    // alt0
+    *GPFSEL1 = r;
+    *GPPUD = 0;            // enable pins 14 and 15
+    r=150; while(r--) { asm volatile("nop"); }
+    *GPPUDCLK0 = (1<<14)|(1<<15);
+    r=150; while(r--) { asm volatile("nop"); }
+    *GPPUDCLK0 = 0;        // flush GPIO setup 
 
     mm_write(UART0_ICR, 0x7FF);    // clear interrupts
+   
+    volatile unsigned int  __attribute__((aligned(16))) mbox[9] = {
+        9*4, REQUEST_CODE, SET_CLK_RATE, 12, 8, 2, 4000000, 0 ,END_TAG
+    };
 
-    mbox[0] = 9*4;
-    mbox[1] = REQUEST_CODE;
-    mbox[2] = SET_CLK_RATE; // set clock rate
-    mbox[3] = 12;
-    mbox[4] = 8;
-    mbox[5] = 2;           // UART clock
-    mbox[6] = 3000000;     // 4Mhz
-    mbox[7] = 0;           // skip turbo
-    mbox[8] = END_TAG;
-    mbox_call(MBOX_CH_PROP);
+    mbox_call(mbox, MBOX_CH_PROP);
 
-    // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
-	mm_write(UART0_IBRD, 1);
-	// Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
-	mm_write(UART0_FBRD, 40);
+    // Divider = 4000000 / (16 * 115200) = 2.170 = ~2.
+	mm_write(UART0_IBRD, 2);
+	// Fractional part register = (.170 * 64) + 0.5 = 11.38 = ~11.
+	mm_write(UART0_FBRD, 11);
  
 	// Enable FIFO & 8 bit data transmission (1 stop bit, no parity).
 	mm_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
