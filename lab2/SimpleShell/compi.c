@@ -35,6 +35,7 @@ int main(void)
         }while(1);
         if (strcmp(rx_buffer, "kernel") == 0) {
             send_kernel(&simsl);
+            printf("%s", "# ");
         }
         else if (value == 1){
             printf("%s\n", rx_buffer);

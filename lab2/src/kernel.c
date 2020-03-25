@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "utils.h"
 #include "mbox.h"
+#include "uart.h"
 extern char bss_end[];
 
 int strcmp(char *str1, char *str2) {
@@ -19,49 +20,37 @@ int strcmp(char *str1, char *str2) {
 }
 
 void copy_and_jump_to_kernel() {
+    char *kernel = (char *)0x80000;
     int kernel_size = uart_read_int();
     uart_send_int(kernel_size);
 
-    char *kernel = (char *)0;
     int checksum = 0;
     for (int i = 0; i < kernel_size; i++) {
-        char c = uart_recv();
+        unsigned char c = uart_recv();
         checksum += c;
         kernel[i] = c;
     }
     uart_send_int(checksum);
 
     uart_send_string("Done copying kernel\r\n");
-    branch_to_address((void *)0x00);
+    branch_to_address((void *)0x80000);
 }
-
 
 void copy_current_kernel_and_jump(char *new_address) {
     char *kernel = (char *)0x80000;
     char *end = bss_end;
-    int checksum = 0;
-    int kernel_size;
-    char *copy = new_address;
+    char *copy = (char *)new_address;
 
     while (kernel <= end) {
         *copy = *kernel;
         kernel++;
         copy++;
     }
-
-    kernel_size = uart_read_int();
-    uart_send_int(kernel_size);
-
-    for (int i = 0; i < kernel_size; i++) {
-        unsigned char c = uart_recv();
-        checksum += (int)c;
-        // kernel[i] = c;
-    }
     
-    uart_send_int(checksum);
-
-    // uart_send_string("Done copying kernel\r\n");
-    // branch_to_address((void *)0x80000);
+    void (*func_ptr)() = copy_and_jump_to_kernel;
+    long long int original_function_address = (long long int)func_ptr;
+    void (*call_function)() = (void (*)())(original_function_address + 0x8000);
+    call_function();
 }
 
 
@@ -85,7 +74,7 @@ void kernel_main(void) {
         }
         if (strcmp(buffer, "kernel") == 0) {
             uart_send_string("kernel\n");
-            copy_current_kernel_and_jump((char *)0x80000);
+            copy_current_kernel_and_jump((char *)0x88000);
         }
     } 
 }
