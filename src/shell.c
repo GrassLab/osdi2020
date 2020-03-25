@@ -95,7 +95,7 @@ void reboot(void) {
   // full reset
   *PM_RSTC = PM_PASSWORD | 0x20;
   mini_uart_puts("Reboot..." CRLF);
-  while (1);
+  while (true);
 }
 
 void shell(void) {
@@ -106,7 +106,7 @@ void shell(void) {
   mini_uart_puts(" \\___/|___/\\__,_|_| |___/_| |_|\\___|_|_|" CRLF);
   mini_uart_puts(CRLF);
 
-  while (1) {
+  while (true) {
     mini_uart_puts("# ");
     char buf[MAX_CMD_LEN];
     mini_uart_gets(buf);

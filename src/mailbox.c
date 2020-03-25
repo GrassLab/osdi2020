@@ -51,7 +51,7 @@ void mailbox_call(uint32_t *mailbox) {
   uint32_t msg = ((uint32_t)mailbox & (~0xf)) | 0x8;
   while (*MAILBOX_STATUS & MAILBOX_FULL);
   *MAILBOX_WRITE = msg;
-  while (1) {
+  while (true) {
     while (*MAILBOX_STATUS & MAILBOX_EMPTY);
     if (*MAILBOX_READ == msg) {
       return;
