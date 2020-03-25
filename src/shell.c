@@ -1,3 +1,4 @@
+#include "mailbox.h"
 #include "mini_uart.h"
 #include "shell.h"
 
@@ -25,13 +26,14 @@ char *strtrim(char *s) {
   return begin;
 }
 
-char *uitos(uint64_t num, char *buf) {
+char *uitos_generic(uint64_t num, int base, char *buf) {
+  const char *alphabet = "0123456789abcdef";
   char *cur = buf;
   uint8_t len = 0;
 
   do {
-    *cur = '0' + (num % 10);
-    num /= 10;
+    *cur = alphabet[num % base];
+    num /= base;
     ++cur;
     ++len;
   } while (num > 0);
@@ -46,6 +48,10 @@ char *uitos(uint64_t num, char *buf) {
   return buf;
 }
 
+char *uitos(uint64_t num, char *buf) {
+  uitos_generic(num, 10, buf);
+}
+
 void help(void) {
   mini_uart_puts("hello: print Hello World!" CRLF);
   mini_uart_puts("help: help" CRLF);
@@ -55,6 +61,19 @@ void help(void) {
 
 void hello(void) {
   mini_uart_puts("Hello World!" CRLF);
+}
+
+void lshw(void) {
+  char buf[32];
+  mini_uart_puts("Board revision: ");
+  mini_uart_puts("0x");
+  mini_uart_puts(uitos_generic(get_board_revision(), 16, buf));
+  mini_uart_puts(CRLF);
+
+  mini_uart_puts("VC core address: ");
+  mini_uart_puts("0x");
+  mini_uart_puts(uitos_generic(get_vc_memory(), 16, buf));
+  mini_uart_puts(CRLF);
 }
 
 void timestamp(void) {
@@ -99,6 +118,8 @@ void shell(void) {
         help();
       } else if (!strcmp(cmd, "hello")) {
         hello();
+      } else if (!strcmp(cmd, "lshw")) {
+        lshw();
       } else if (!strcmp(cmd, "reboot")) {
         reboot();
       } else if (!strcmp(cmd, "timestamp")) {
