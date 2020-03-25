@@ -11,6 +11,9 @@ const char * shell_command_list[] = {
   "help",
   "timestamp",
   "reboot",
+  "bd",
+  "vcmem",
+  "txt",
   0x0
 };
 
@@ -19,6 +22,9 @@ const char * shell_command_descriptions[] = {
   "Help",
   "Get current timestamp",
   "Reboot rpi3",
+  "Show board revision",
+  "Show vc memory address",
+  "Show .text location",
   0x0
 };
 
@@ -27,6 +33,9 @@ int (*shell_command_function_ptr[])(char *) = {
   shell_help,
   shell_timestamp,
   shell_reboot,
+  shell_show_board_revision,
+  shell_show_vc_memory,
+  shell_show_text_location,
   0x0
 };
 
@@ -178,16 +187,16 @@ int shell_reboot(char * string_buffer)
   return 0;
 }
 
-void shell_show_board_revision(char * string_buffer)
+int shell_show_board_revision(char * string_buffer)
 {
   uart_puts("Board revision: ");
   string_longlong_to_hex_char(string_buffer, mailbox_get_board_revision());
   uart_puts(string_buffer);
   uart_putc('\n');
-  return;
+  return 1;
 }
 
-void shell_show_vc_memory(char * string_buffer)
+int shell_show_vc_memory(char * string_buffer)
 {
   uint32_t vc_memory_base;
   uint32_t vc_memory_size;
@@ -195,7 +204,7 @@ void shell_show_vc_memory(char * string_buffer)
   if(!mailbox_get_vc_memory())
   {
     uart_puts("Unable to get vc memory\n");
-    return;
+    return 0;
   }
 
   vc_memory_base = __mailbox_buffer[5];
@@ -208,9 +217,10 @@ void shell_show_vc_memory(char * string_buffer)
   string_longlong_to_hex_char(string_buffer, vc_memory_size);
   uart_puts(string_buffer);
   uart_putc('\n');
+  return 1;
 }
 
-void shell_show_text_location(char * string_buffer)
+int shell_show_text_location(char * string_buffer)
 {
   uart_puts("Start of .text: ");
   string_longlong_to_hex_char(string_buffer, (long long)&__executable_start);
@@ -219,5 +229,6 @@ void shell_show_text_location(char * string_buffer)
   string_longlong_to_hex_char(string_buffer, (long long)&__etext);
   uart_puts(string_buffer);
   uart_putc('\n');
+  return 1;
 }
 
