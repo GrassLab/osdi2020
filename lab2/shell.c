@@ -4,6 +4,7 @@
 #include "string_util.h"
 #include "mailbox.h"
 #include "pm.h"
+#include "framebuffer.h"
 
 const char * shell_command_list[] = {
   "hello",
@@ -83,9 +84,10 @@ void shell(void)
   char string_buffer[0x1000];
 
   uart_init();
+  framebuffer_init();
 
 	/* Show boot message */
-
+  framebuffer_show_splash();
   uart_puts(pikachu0);
   uart_puts(pikachu1);
   shell_show_board_revision(string_buffer);

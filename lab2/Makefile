@@ -9,7 +9,7 @@ BOOTLOADER_C_SOURCE_FILES = bootloader.c uart.c string_util.c mailbox.c loadimg.
 BOOTLOADER_C_OBJECT_FILES = $(BOOTLOADER_C_SOURCE_FILES:.c=.o)
 BOOTLOADER_ASSEMBLY_SOURCE_FILES = start.s
 BOOTLOADER_ASSEMBLY_OBJECT_FILES = $(BOOTLOADER_ASSEMBLY_SOURCE_FILES:.s=.o)
-KERNEL_C_SOURCE_FILES = main.c shell.c string_util.c mailbox.c uart.c
+KERNEL_C_SOURCE_FILES = main.c shell.c string_util.c mailbox.c uart.c framebuffer.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
 KERNEL_ASSEMBLY_SOURCE_FILES = start.s get_time.s
 KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.s=.o)
@@ -47,10 +47,10 @@ qemu_bl_dbg: debug
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -s -S -serial pty
 
 qemu_os: all
-	qemu-system-aarch64 -M raspi3 -kernel os.img -display none -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel os.img -vnc :0 -serial stdio
 
 qemu_os_dbg: debug
-	qemu-system-aarch64 -M raspi3 -kernel os.img -display none -s -S -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel os.img -vnc :0 -s -S -serial pty
 
 .PHONY: clean
 clean:

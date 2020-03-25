@@ -108,4 +108,62 @@ int mailbox_set_clock_rate(uint32_t device_id, uint32_t clock_rate)
   return mailbox_send_buffer();
 }
 
+int mailbox_framebuffer_init(uint32_t width, uint32_t height, uint32_t depth)
+{
+  /* Set then get according to manual */
+
+  __mailbox_buffer[0]  = 35 * 4;
+  __mailbox_buffer[1]  = MAILBOX_BUFFER_REQUEST_CODE;
+
+  /* Set physical width, height */
+  __mailbox_buffer[2]  = MAILBOX_SET_PHYSICAL_WH;
+  __mailbox_buffer[3]  = MAX(MAILBOX_SET_PHYSICAL_WH_REQ, MAILBOX_SET_PHYSICAL_WH_RESP);
+  __mailbox_buffer[4]  = MAILBOX_TAG_REQUEST_CODE;
+  __mailbox_buffer[5]  = width; /* width */
+  __mailbox_buffer[6]  = height; /* height */
+
+  /* Set virtual width, height */
+  __mailbox_buffer[7]  = MAILBOX_SET_VIRTUAL_WH;
+  __mailbox_buffer[8]  = MAX(MAILBOX_SET_VIRTUAL_WH_REQ, MAILBOX_SET_VIRTUAL_WH_RESP);
+  __mailbox_buffer[9]  = MAILBOX_TAG_REQUEST_CODE;
+  __mailbox_buffer[10] = width; /* width */
+  __mailbox_buffer[11] = height; /* height */
+
+  /* Set virtual offset to 0, since physical == virtual */
+  __mailbox_buffer[12] = MAILBOX_SET_VIRTUAL_OFFSET;
+  __mailbox_buffer[13] = MAX(MAILBOX_SET_VIRTUAL_OFFSET_REQ, MAILBOX_SET_VIRTUAL_OFFSET_RESP);
+  __mailbox_buffer[14] = MAILBOX_TAG_REQUEST_CODE;
+  __mailbox_buffer[15] = 0; /* x offset is 0 */
+  __mailbox_buffer[16] = 0; /* y offset is 0 */
+
+  /* Set color bit depth */
+  __mailbox_buffer[17] = MAILBOX_SET_DEPTH;
+  __mailbox_buffer[18] = MAX(MAILBOX_SET_DEPTH_REQ, MAILBOX_SET_DEPTH_RESP);
+  __mailbox_buffer[19] = MAILBOX_TAG_REQUEST_CODE;
+  __mailbox_buffer[20] = depth; /* Full color and no alpha */ /* TODO: Diverge */
+
+  /* Set pixel order */
+  __mailbox_buffer[21] = MAILBOX_SET_PIXEL_ORDER;
+  __mailbox_buffer[22] = MAX(MAILBOX_SET_PIXEL_ORDER_REQ, MAILBOX_SET_PIXEL_ORDER_RESP);
+  __mailbox_buffer[23] = MAILBOX_TAG_REQUEST_CODE;
+  __mailbox_buffer[24] = 1; /* RGB */
+
+  /* Get framebuffer */
+  __mailbox_buffer[25] = MAILBOX_GET_FRAMEBUFFER;
+  __mailbox_buffer[26] = MAX(MAILBOX_GET_FRAMEBUFFER_REQ, MAILBOX_GET_FRAMEBUFFER_RESP);
+  __mailbox_buffer[27] = MAILBOX_TAG_REQUEST_CODE;
+  __mailbox_buffer[28] = width * (depth / 8); /* buffer_width * bytes_per_pixel */ /* will return pointer to framebuffer */
+  __mailbox_buffer[29] = 0; /* will return size of framebuffer */
+
+  /* Get pitch */
+  __mailbox_buffer[30] = MAILBOX_GET_PITCH;
+  __mailbox_buffer[31] = MAX(MAILBOX_GET_PITCH_REQ, MAILBOX_GET_PITCH_RESP);
+  __mailbox_buffer[32] = MAILBOX_TAG_REQUEST_CODE;
+  __mailbox_buffer[33] = 0; /* will get pitch */
+
+  /* End of mailbox */
+  __mailbox_buffer[34] = MAILBOX_TAG_END;
+
+  return mailbox_send_buffer();
+}
 

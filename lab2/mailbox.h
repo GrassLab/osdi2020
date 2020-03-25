@@ -32,6 +32,29 @@
 #define MAILBOX_SET_CLOCK_RATE_REQ      12
 #define MAILBOX_SET_CLOCK_RATE_RESP     8
 
+#define MAILBOX_SET_PHYSICAL_WH         0x00048003
+#define MAILBOX_SET_PHYSICAL_WH_REQ     0x8
+#define MAILBOX_SET_PHYSICAL_WH_RESP    0x8
+#define MAILBOX_SET_VIRTUAL_WH          0x00048004
+#define MAILBOX_SET_VIRTUAL_WH_REQ      0x8
+#define MAILBOX_SET_VIRTUAL_WH_RESP     0x8
+#define MAILBOX_SET_VIRTUAL_OFFSET      0x00048009
+#define MAILBOX_SET_VIRTUAL_OFFSET_REQ  0x8
+#define MAILBOX_SET_VIRTUAL_OFFSET_RESP 0x8
+#define MAILBOX_SET_DEPTH               0x00048005
+#define MAILBOX_SET_DEPTH_REQ           0x4
+#define MAILBOX_SET_DEPTH_RESP          0x4
+#define MAILBOX_SET_PIXEL_ORDER         0x00048006
+#define MAILBOX_SET_PIXEL_ORDER_REQ     0x4
+#define MAILBOX_SET_PIXEL_ORDER_RESP    0x4
+#define MAILBOX_GET_FRAMEBUFFER         0x00040001
+#define MAILBOX_GET_FRAMEBUFFER_REQ     0x4
+#define MAILBOX_GET_FRAMEBUFFER_RESP    0x8
+#define MAILBOX_GET_PITCH               0x00040008
+#define MAILBOX_GET_PITCH_REQ           0x0
+#define MAILBOX_GET_PITCH_RESP          0x4
+
+
 #define MAILBOX_UART_ID                 0x2
 
 /* calculate mailbox buffer size with single tag, tag buffer in bytes */
@@ -44,6 +67,7 @@ int send_buffer_to_mailbox(void);
 uint32_t mailbox_get_board_revision(void);
 int mailbox_get_vc_memory(void);
 int mailbox_set_clock_rate(uint32_t device_id, uint32_t clock_rate);
+int mailbox_framebuffer_init(uint32_t width, uint32_t height, uint32_t depth);
 
 #endif
 
