@@ -7,12 +7,69 @@
 #include "uart.h"
 #include "string.h"
 #include "watchdog.h"
+#include "mailbox.h"
+#include "time.h"
 
 #define BUFFER_SIZE 1024
-#define SHELL_CHAR "# "
+#define SHELL_CHAR "# " 
+
+void shell_splash()
+{
+    uart_puts("               _                            _                                     \r\n");
+    uart_puts("              | |                          | |                                    \r\n");
+    uart_puts(" __      _____| | ___ ___  _ __ ___   ___  | |__   ___  _ __ ___   ___            \r\n");
+    uart_puts(" \\ \\ /\\ / / _ \\ |/ __/ _ \\| '_ ` _ \\ / _ \\ | '_ \\ / _ \\| '_ ` _ \\ / _ \\\r\n");
+    uart_puts("  \\ V  V /  __/ | (_| (_) | | | | | |  __/ | | | | (_) | | | | | |  __/          \r\n");
+    uart_puts("   \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___| |_| |_|\\___/|_| |_| |_|\\___|   \r\n");
+    uart_puts("\r\n");
+    uart_puts("+-----------------------+-----------------------+\r\n");
+    uart_puts("|\tRevision\t|\t");
+    uart_hex(get_board_revision());
+    uart_puts("\t|\r\n");
+    uart_puts("|\tVC start\t|\t");
+    uart_hex(get_vc_memory());
+    uart_puts("\t|\r\n");
+    uart_puts("+-----------------------+-----------------------+\r\n");
+}
+
+
+void uart_read_line(char *buffer, size_t size)
+{
+    size_t position = 0;
+    uint8_t c, e;
+
+    while(position < size) {
+        c = uart_getc();
+
+        if (c == '\r' || c == '\n') {
+            buffer[position++] = '\0';
+            uart_puts("\r\n");
+            return;
+        } else if (c == 127) {
+            if (position > 0) {
+                buffer[--position] = 0;
+                uart_puts("\b \b");
+            }
+        } else if (c == '[') {
+            e = uart_getc();
+            if (e == 'C' && position < strlen(buffer)) {
+                uart_puts("\033[C");
+                position++;
+            } else if (e == 'D' && position > 0) {
+                uart_puts("\033[D");
+                position--;
+            }
+        } else if (c > 39 && c < 127) {
+            buffer[position++] = c;
+            uart_putc(c);
+        }
+    }
+}
 
 void shell_start() 
 {
+    uart_log(LOG_INFO, "Starting shell...");
+
     char line[BUFFER_SIZE];
     char int_buffer[11];
     
@@ -28,14 +85,17 @@ void shell_start()
         {"help", "print this screen"}
     };
 
+    shell_splash();
+
     while(true) {
         uart_puts("\r\n");
         uart_puts(SHELL_CHAR);
         uart_read_line(line, BUFFER_SIZE);
+
         if (!strcmp(line, shell_cmds[0][0])) {
             uart_puts("world");
         } else if (!strcmp(line, shell_cmds[1][0])) {
-            ftoa(mm_ticks()/(float)mm_freq(), int_buffer);
+            get_timestamp(int_buffer);
             uart_puts(int_buffer);
         } else if (!strcmp(line, shell_cmds[2][0])) {
             reboot();

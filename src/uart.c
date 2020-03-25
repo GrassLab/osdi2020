@@ -7,6 +7,7 @@
 #include "uart.h"
 #include "string.h"
 #include "mailbox.h"
+#include "time.h"
 
 #define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
 #define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
@@ -16,7 +17,6 @@
 #define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
 #define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
-
 
 /**
  * https://wiki.osdev.org/Raspberry_Pi_Bare_Bones
@@ -60,11 +60,11 @@ void uart_setup()
  
 	// Enable UART0, receive & transfer part of UART.
 	mm_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9)); 
-
+    
+    uart_log(LOG_INFO, "UART initialized");
 }
 
-void uart_putc(uint8_t c)
-{
+void uart_putc(const uint8_t c) {
     while(mm_read(UART0_FR)& (1 << 5));
     mm_write(UART0_DR, c);
 }
@@ -79,7 +79,7 @@ void uart_puts(const char *str) {
         uart_putc((uint8_t)str[i]);
 }
 
-void uart_hex(unsigned int d) {
+void uart_hex(const unsigned int d) {
     unsigned int n;
     int c;
     for(c=28;c>=0;c-=4) {
@@ -91,34 +91,27 @@ void uart_hex(unsigned int d) {
     }
 }
 
-void uart_read_line(char *buffer, size_t size) {
-    size_t position = 0;
-    uint8_t c, e;
-
-    while(position < size) {
-        c = uart_getc();
-
-        if (c == '\r' || c == '\n') {
-            buffer[position++] = '\0';
-            uart_puts("\r\n");
-            return;
-        } else if (c == 127) {
-            if (position > 0) {
-                buffer[--position] = 0;
-                uart_puts("\b \b");
-            }
-        } else if (c == '[') {
-            e = uart_getc();
-            if (e == 'C' && position < strlen(buffer)) {
-                uart_puts("\033[C");
-                position++;
-            } else if (e == 'D' && position > 0) {
-                uart_puts("\033[D");
-                position--;
-            }
-        } else if (c > 39 && c < 127) {
-            buffer[position++] = c;
-            uart_putc(c);
-        }
+void uart_log(log_level_t level, const char *message) {
+    char time_buffer[11];
+    get_timestamp(time_buffer);
+    uart_putc('[');
+    uart_puts(time_buffer);
+    uart_putc(']');
+    uart_putc('[');
+    switch (level) {
+        case LOG_INFO:
+            uart_puts("INFO");
+            break;
+        case LOG_WARNING:
+            uart_puts("WARNING");
+            break;
+        case LOG_ERROR:
+            uart_puts("ERROR");
+            break;
+        default:
+            uart_puts("WTF");
     }
+    uart_putc(']');
+    uart_puts(message);
+    uart_puts("\r\n");
 }

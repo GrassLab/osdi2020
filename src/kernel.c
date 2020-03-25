@@ -5,27 +5,10 @@
 
 #include "uart.h"
 #include "shell.h"
-#include "mailbox.h"
 
 void ker_main() {
 
     uart_setup();
-
-    uart_puts("               _                            _                                     \r\n");
-    uart_puts("              | |                          | |                                    \r\n");
-    uart_puts(" __      _____| | ___ ___  _ __ ___   ___  | |__   ___  _ __ ___   ___            \r\n");
-    uart_puts(" \\ \\ /\\ / / _ \\ |/ __/ _ \\| '_ ` _ \\ / _ \\ | '_ \\ / _ \\| '_ ` _ \\ / _ \\\r\n");
-    uart_puts("  \\ V  V /  __/ | (_| (_) | | | | | |  __/ | | | | (_) | | | | | |  __/          \r\n");
-    uart_puts("   \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___| |_| |_|\\___/|_| |_| |_|\\___|   \r\n");
-    uart_puts("\r\n");
-    uart_puts("+-----------------------+-----------------------+\r\n");
-    uart_puts("|\tRevision\t|\t");
-    uart_hex(get_board_revision());
-    uart_puts("\t|\r\n");
-    uart_puts("|\tVC start\t|\t");
-    uart_hex(get_vc_memory());
-    uart_puts("\t|\r\n");
-    uart_puts("+-----------------------+-----------------------+\r\n");
-
+    
     shell_start();
 }

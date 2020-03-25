@@ -16,6 +16,12 @@
 #define AUX_MU_STAT_REG     ((volatile unsigned int*)(MMIO_BASE+0x00215064))
 #define AUX_MU_BAUD_REG     ((volatile unsigned int*)(MMIO_BASE+0x00215068))
 
+typedef enum {
+    LOG_INFO,
+    LOG_WARNING,
+    LOG_ERROR
+} log_level_t;
+
 void uart_setup();
 
 uint8_t uart_getc();
@@ -26,6 +32,6 @@ void uart_puts(const char* str);
 
 void uart_hex(unsigned int d);
 
-void uart_read_line(char* buffer, size_t size);
+void uart_log(log_level_t level, const char *message);
 
 #endif
