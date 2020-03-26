@@ -5,7 +5,7 @@
 
 #define MAX_CMD_LEN 1024
 #define MAX_TIMER_FRACTION_LEN 6
-#define CRLF "\r\n"
+#define EOL "\n"
 
 int strcmp(const char *s1, const char *s2);
 uint32_t strlen(const char *s);

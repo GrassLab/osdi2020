@@ -53,14 +53,14 @@ char *uitos(uint64_t num, char *buf) {
 }
 
 void help(void) {
-  mini_uart_puts("hello: print Hello World!" CRLF);
-  mini_uart_puts("help: help" CRLF);
-  mini_uart_puts("reboot: reboot rpi3" CRLF);
-  mini_uart_puts("timestamp: get current timestamp" CRLF);
+  mini_uart_puts("hello: print Hello World!" EOL);
+  mini_uart_puts("help: help" EOL);
+  mini_uart_puts("reboot: reboot rpi3" EOL);
+  mini_uart_puts("timestamp: get current timestamp" EOL);
 }
 
 void hello(void) {
-  mini_uart_puts("Hello World!" CRLF);
+  mini_uart_puts("Hello World!" EOL);
 }
 
 void lshw(void) {
@@ -68,12 +68,12 @@ void lshw(void) {
   mini_uart_puts("Board revision: ");
   mini_uart_puts("0x");
   mini_uart_puts(uitos_generic(get_board_revision(), 16, buf));
-  mini_uart_puts(CRLF);
+  mini_uart_puts(EOL);
 
   mini_uart_puts("VC core address: ");
   mini_uart_puts("0x");
   mini_uart_puts(uitos_generic(get_vc_memory(), 16, buf));
-  mini_uart_puts(CRLF);
+  mini_uart_puts(EOL);
 }
 
 void timestamp(void) {
@@ -88,29 +88,28 @@ void timestamp(void) {
   mini_uart_puts(uitos(time_int, buf));
   mini_uart_puts(".");
   mini_uart_puts(uitos(time_fra, buf));
-  mini_uart_puts("]" CRLF);
+  mini_uart_puts("]" EOL);
 }
 
 void reboot(void) {
   // full reset
   *PM_RSTC = PM_PASSWORD | 0x20;
-  mini_uart_puts("Reboot..." CRLF);
+  mini_uart_puts("Reboot..." EOL);
   while (true);
 }
 
 void shell(void) {
-  mini_uart_puts("               _ _       _          _ _ " CRLF);
-  mini_uart_puts("  ___  ___  __| (_)  ___| |__   ___| | |" CRLF);
-  mini_uart_puts(" / _ \\/ __|/ _` | | / __| '_ \\ / _ \\ | |" CRLF);
-  mini_uart_puts("| (_) \\__ \\ (_| | | \\__ \\ | | |  __/ | |" CRLF);
-  mini_uart_puts(" \\___/|___/\\__,_|_| |___/_| |_|\\___|_|_|" CRLF);
-  mini_uart_puts(CRLF);
+  mini_uart_puts("               _ _       _          _ _ " EOL);
+  mini_uart_puts("  ___  ___  __| (_)  ___| |__   ___| | |" EOL);
+  mini_uart_puts(" / _ \\/ __|/ _` | | / __| '_ \\ / _ \\ | |" EOL);
+  mini_uart_puts("| (_) \\__ \\ (_| | | \\__ \\ | | |  __/ | |" EOL);
+  mini_uart_puts(" \\___/|___/\\__,_|_| |___/_| |_|\\___|_|_|" EOL);
+  mini_uart_puts(EOL);
 
   while (true) {
     mini_uart_puts("# ");
     char buf[MAX_CMD_LEN];
     mini_uart_gets(buf);
-    mini_uart_puts(CRLF);
 
     char *cmd = strtrim(buf);
     if (strlen(cmd) != 0) {
@@ -127,7 +126,7 @@ void shell(void) {
       } else {
         mini_uart_puts("Error: command ");
         mini_uart_puts(cmd);
-        mini_uart_puts(" not found, try <help>" CRLF);
+        mini_uart_puts(" not found, try <help>" EOL);
       }
     }
   }
