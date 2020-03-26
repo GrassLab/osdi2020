@@ -25,6 +25,7 @@ struct command buildin_cmds[] = {
 void tty(int argc, char **argv)
 {
 }
+
 void cmd(char *line)
 {
 	struct command *tmp = buildin_cmds;

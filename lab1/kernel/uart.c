@@ -16,8 +16,15 @@ void uart_init()
 	r &= ~((7 << 12) | (7 << 15));
 	r |= (2 << 12) | (2 << 15);
 	*GPFSEL1 = r;
+
 	*GPPUD = 0;
+	r = 150;
+	while (r-- > 0)
+		;
 	*GPPUDCLK0 = (1 << 14) | (1 << 15);
+	r = 150;
+	while (r-- > 0)
+		;
 	*GPPUDCLK0 = 0;
 	*AUX_MU_CNTL = 3;
 }
@@ -26,8 +33,8 @@ void uart_init()
  */
 void send(unsigned int c)
 {
-	if (c > 127)
-		return;
+	// if (c > 126)
+	// 	return;
 	while (!(*AUX_MU_LSR & 0x20))
 		;
 	*AUX_MU_IO = c;
@@ -41,8 +48,8 @@ char uart_getc()
 	while (!(*AUX_MU_LSR & 0x01))
 		;
 	r = (char)(*AUX_MU_IO);
-	if (r > 127)
-		return 0x0;
+	// if (r > 126)
+	// 	return 0x0;
 	return r == '\r' ? '\n' : r;
 }
 

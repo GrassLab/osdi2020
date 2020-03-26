@@ -3,6 +3,7 @@
 
 void timmer_init();
 float getCurrentTime();
+unsigned long long getCurrentCount();
 int getFrequency();
 
 #endif

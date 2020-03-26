@@ -15,8 +15,8 @@ int do_div(int n, int base)
 	return n % base;
 }
 
-char *int_to_str(char *str, int num, int base, int size, int precision,
-		 int type)
+char *int_to_str(char *str, unsigned long long int num, int base, int size,
+		 int precision, int type)
 {
 	const char *digits = "0123456789abcdef";
 	char tmp[36]; // max lengh of int
@@ -150,7 +150,7 @@ char *vsprintf(char *buf, const char *fmt, __builtin_va_list args)
 			break;
 		case 'p': // print pointer in hex
 			if (field_width == -1) {
-				field_width = 8;
+				field_width = 16;
 				flags |= ZEROPAD;
 			}
 			ptr = __builtin_va_arg(args, void *);
@@ -158,7 +158,7 @@ char *vsprintf(char *buf, const char *fmt, __builtin_va_list args)
 					 field_width, precision, flags);
 			break;
 		case 'd': // get integer
-			num = __builtin_va_arg(args, int);
+			num = __builtin_va_arg(args, unsigned long long int);
 			str = int_to_str(str, num, 10, field_width, precision,
 					 flags);
 			break;

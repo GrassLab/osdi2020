@@ -30,8 +30,7 @@ int main()
 
 	char buf[1024];
 	while (1) {
-		printk("[%.2f]", getCurrentTime());
-		printk("njt@osdi2020#");
+		printk("njt@osdi2020# ");
 		readline(buf);
 		if (*buf) {
 			printk("\n");
