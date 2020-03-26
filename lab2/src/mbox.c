@@ -23,7 +23,7 @@ void write_buf(unsigned long loc) {
             value = (value == 255 ? 0 : 255);
         }
     }
-    uart_send_string("done\r\n");
+    uart_send_string("done\n");
     return;
 }
 
@@ -86,7 +86,6 @@ unsigned long framebuffer_init()
     return (unsigned long)mbox[28];
 }
 
-
 void get_vc_base_address()
 {
     mbox[0] = 8 * 4;
@@ -98,9 +97,9 @@ void get_vc_base_address()
     mbox[6] = 0; // value buffer
     mbox[7] = END_TAG;
     mbox_call(8);
-    uart_send_string("base address in bytes\r\n");
+    uart_send_string("VC base address : ");
     uart_send_hex(mbox[5]);
-    uart_send_string("size in bytes\r\n");
+    uart_send_string("VC size : ");
     uart_send_hex(mbox[6]);
 }
 
@@ -117,7 +116,7 @@ void get_board_revision()
     mbox[6] = END_TAG;
 
     mbox_call(8); // message passing procedure call, you should implement it following the 6 steps provided above.
-    uart_send_string("board revision\r\n");
+    uart_send_string("board revision : ");
     uart_send_hex(mbox[5]);
 }
 

@@ -142,8 +142,21 @@ void uart_send_hex(unsigned long number) {
             buffer[i] += 55;
         }
     }
-    buffer[10] = '\0';
+    buffer[10] = '\n';
+    buffer[11] = '\0';
     uart_send_string(buffer);
-    uart_send_string("\r\n");
     return;
+}
+
+long long int read_kernel_address() 
+{
+    char buff[10];
+    int index, i;
+    long long int kernel_address = 0;
+    index = readline(buff, 10);
+    for (i = 0 ; i < index; i++) {
+        kernel_address = kernel_address * 10;
+        kernel_address += buff[i] - '0';
+    }
+    return kernel_address;
 }
