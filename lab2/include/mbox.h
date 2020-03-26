@@ -1,12 +1,12 @@
 /* channels */
+#ifndef	_MBOX_H
+#define	_MBOX_H
 #define MBOX_CH_POWER   0
 #define MBOX_CH_FB      1
 #define MBOX_CH_VUART   2
 #define MBOX_CH_VCHIQ   3
 #define MBOX_CH_LEDS    4
 #define MBOX_CH_BTNS    5
-#ifndef	_MBOX_H
-#define	_MBOX_H
 
 #define MBOX_CH_TOUCH   6
 #define MBOX_CH_COUNT   7
@@ -30,13 +30,25 @@
 #define TAG_REQUEST_CODE    0x00000000
 #define END_TAG             0x00000000
 #define MBOX_TAG_SETCLKRATE 0x00038002
+
+/* screen related */
+#define SET_PHYSICAL_DISPLAY 0x00048003
+#define SET_VIRTUAL_DISPLAY  0x00048004
+#define SET_DEPTH            0x00048005
+#define ALLOCATE_BUFFER      0x00040001
+#define VIRTUAL_OFFSET       0x00048009
+#define SET_PIXEL_ORDER      0x00048009
+#define FB_WIDTH             640
+#define FB_HEIGHT            480
+#define BITS_PER_PIXEL       32
 /* tags */
 #define MBOX_TAG_GETSERIAL      0x10004
 #define MBOX_TAG_LAST           0
 void get_board_revision();
 int mbox_call(unsigned char ch);
 void get_vc_base_address();
-
+unsigned long framebuffer_init();
+void write_buf(unsigned long location);
 volatile unsigned int  __attribute__((aligned(16))) mbox[36];
 
 #endif  /*_MBOX_H */

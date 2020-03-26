@@ -8,4 +8,6 @@ char uart_recv();
 void uart_send_int(int number);
 int uart_read_int();
 void uart_send_hex(unsigned long number);
+int readline(char *buf, int maxlen);
+long long int read_kernel_address();
 #endif  /*_UART_H */
