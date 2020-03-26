@@ -33,23 +33,23 @@ void copy_and_jump_to_kernel(char *new_address) {
         kernel[i] = c;
     }
     uart_send_int(checksum);
-    branch_to_address((unsigned long long *)new_address);
+    branch_to_address((unsigned long int *)new_address);
 }
 
 void copy_current_kernel_and_jump(char *new_address) {
     char *kernel = start_begin;
     char *end = bss_end;
     char *copy = (char *)(TMP_KERNEL_ADDR);
-    uart_send_string("revision\n");
+    uart_send_string("begin of copy kernel\n");
     while (kernel <= end) {
         *copy = *kernel;
         kernel++;
         copy++;
     }
-    uart_send_string("revision\n");
+    uart_send_string("end of copy kernel\n");
     void (*func_ptr)() = copy_and_jump_to_kernel;
-    long long int original_function_address = (long long int)func_ptr;
-    void (*call_function)(char *) = (void (*)(char *))(original_function_address - (long long int)start_begin + TMP_KERNEL_ADDR);
+    unsigned long int original_function_address = (unsigned long int)func_ptr;
+    void (*call_function)(char *) = (void (*)(char *))(original_function_address - (unsigned long int)start_begin + TMP_KERNEL_ADDR);
     call_function(new_address);
 }
 

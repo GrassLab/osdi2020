@@ -50,6 +50,7 @@ bool send_kernel(simshell *sim)
     fpos_t pos;
     char send_size[100];
     char address_array[10];
+    char rx_buffer[20];
     unsigned char buff;
     int file_size;
     int return_size;
@@ -60,6 +61,10 @@ bool send_kernel(simshell *sim)
     scanf("%lx", &input_address);
     sprintf(address_array, "%lu\n", input_address);
     write(sim->utf, address_array, strlen(address_array));
+    read_line(sim, rx_buffer);
+    printf("%s\n", rx_buffer);
+    read_line(sim, rx_buffer);
+    printf("%s\n", rx_buffer);
 
     fp = fopen("../kernel8.img", "rb");
     fseek(fp, 0, SEEK_END);
@@ -67,7 +72,6 @@ bool send_kernel(simshell *sim)
     fseek(fp, 0, SEEK_SET);
     sprintf(send_size, "%d\n", file_size);
     printf("send file size %s", send_size);
-
     write(sim->utf, send_size, strlen(send_size));
     return_size = read_int(sim);
     printf("get %d bytes\n", return_size);
@@ -101,7 +105,7 @@ bool send_kernel(simshell *sim)
 bool set_up_options(simshell *sim)
 {
     sim->utf = -1;
-    sim->utf = open("/dev/pts/3", O_RDWR | O_NOCTTY );
+    sim->utf = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY );
     if(sim->utf == -1) {
         printf("Fail to set_up_options\n");
         return false;
