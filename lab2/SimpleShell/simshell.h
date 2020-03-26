@@ -18,7 +18,11 @@ bool set_up_options(simshell *sim);
 
 bool read_write_user_input(simshell *sim);
 
-int read_pi_return(simshell *sim);
-
 bool send_kernel(simshell *sim);
+
+bool read_vc_address(simshell *sim);
+
+int read_line(simshell *sim, char *buffer);
+
+bool read_revision(simshell *sim);
 #endif 

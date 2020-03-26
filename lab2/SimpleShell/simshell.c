@@ -20,15 +20,14 @@ int read_line(simshell *sim, char *buffer)
 {
     char input = 'c';
     int  i = 0;
-
     memset(buffer, '\0', 100);
-    while(input != '\n' && input != '\0') {
+    while(input != '\n') {
         if(read(sim->utf, &input, 1) > 0) {
             buffer[i] = input;
             i = i + 1;
         }
     }
-    buffer[i] = '\0';
+    buffer[i - 1] = '\0';
     return i;
 }
 
@@ -46,14 +45,21 @@ bool send_kernel(simshell *sim)
         printf("Fail to read user input\n");
 	    return false;
     }
+    
     FILE *fp;
     fpos_t pos;
     char send_size[100];
+    char address_array[10];
     unsigned char buff;
     int file_size;
     int return_size;
     int check_sum = 0;
     int return_checksum;
+    unsigned long int input_address;
+    printf("input kernel address :");
+    scanf("%lx", &input_address);
+    sprintf(address_array, "%lu\n", input_address);
+    write(sim->utf, address_array, strlen(address_array));
 
     fp = fopen("../kernel8.img", "rb");
     fseek(fp, 0, SEEK_END);
@@ -80,9 +86,9 @@ bool send_kernel(simshell *sim)
         check_sum += buff;
         write(sim->utf, &buff, 1);
     }
-    printf("Validating checksum %d...\n", check_sum);
+    printf("validating checksum %d...\n", check_sum);
     return_checksum = read_int(sim);
-    printf("return_checksum %d\n", return_checksum);
+    printf("return checksum %d\n", return_checksum);
     if (check_sum == return_checksum) {
         printf("kernel rewrited\n");
     }
@@ -95,7 +101,7 @@ bool send_kernel(simshell *sim)
 bool set_up_options(simshell *sim)
 {
     sim->utf = -1;
-    sim->utf = open("/dev/pts/2", O_RDWR | O_NOCTTY );
+    sim->utf = open("/dev/pts/3", O_RDWR | O_NOCTTY );
     if(sim->utf == -1) {
         printf("Fail to set_up_options\n");
         return false;
@@ -127,27 +133,26 @@ bool read_write_user_input(simshell *sim)
     return true;
 }
 
-int read_pi_return(simshell *sim)
+bool read_vc_address(simshell *sim) 
 {
-    if (sim->utf == -1) {
-        printf("Fail to read pi output\n");
-        return false;
-    }
-    memset(sim->rx_buffer,'\0' ,51);
-    int rx_length = read(sim->utf, (void*)sim->rx_buffer, 50);
-    if (rx_length < 0) {
-        printf("Fail to read pi output\n");
-        return -1;
-    }
-    else if (rx_length == 0) {
-        return -1;
-    }
-    else if (sim->rx_buffer[rx_length - 1] == '\n') {
-        sim->rx_buffer[rx_length - 1] = '\0';
-        return 1;
-    }
-    else {
-        return 0;
-    }
-    return 0;
+    char rx_buffer[100];
+    /*
+    uart_send_string("base address in bytes\n");
+    uart_send_hex(mbox[5]);
+    uart_send_string("size in bytes\n");
+    uart_send_hex(mbox[6]);
+    */
+    read_line(sim, rx_buffer);
+    printf("%s\n", rx_buffer);
+    read_line(sim, rx_buffer);
+    printf("%s\n", rx_buffer);
+    return 1;
+}
+
+bool read_revision(simshell *sim)
+{
+    char rx_buffer[100];
+    read_line(sim, rx_buffer);
+    printf("%s\n", rx_buffer);
+    return 1;
 }

@@ -17,30 +17,20 @@ int main(void)
     printf("%s","# ");
     while (read_write_user_input(&simsl)) {
         memset(rx_buffer,'\0' ,500);
-        do{
-            value = read_pi_return(&simsl);
-            if (value == -1) {
-                continue;
-            }
-            else if(value == 1) {
-                strcat(rx_buffer, simsl.rx_buffer);
-                int i;
-                for (i = 0 ; i < 499; i++) {
-                    if(rx_buffer[i] == '#')
-                        rx_buffer[i] = '\n';
-                }
-                break;
-            }
-            strcat(rx_buffer, simsl.rx_buffer);
-        }while(1);
+        read_line(&simsl, rx_buffer);
         if (strcmp(rx_buffer, "kernel") == 0) {
             send_kernel(&simsl);
-            printf("%s", "# ");
         }
-        else if (value == 1){
+        else if (strcmp(rx_buffer, "address") == 0) {
+            read_vc_address(&simsl);
+        } 
+        else if (strcmp(rx_buffer, "revision") == 0) {
+            read_revision(&simsl);
+        }
+        else{
             printf("%s\n", rx_buffer);
-            printf("%s", "# ");
         }
+        printf("%s", "# ");
     }
     return -1;
 }
