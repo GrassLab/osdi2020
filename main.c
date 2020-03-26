@@ -20,6 +20,8 @@ int main(){
     
     get_frame_buffer();
 
+    showpicture();
+
 
     // call simple shell
     pcsh();
