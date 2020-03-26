@@ -1,8 +1,12 @@
 #include "tools.h"
+#include "mailbox.h"
 
 void main(){
     // set up serial console
     uart_init();
+    
+    get_board_revision();
+    get_serial();
     print_hello();    
     uart_puts("# ");
     char *command = "";
@@ -14,6 +18,10 @@ void main(){
             if((unsigned int)in>=32 && (unsigned int)in<=126)
             command[command_index++] = in;
             uart_send(in);
+        }
+        else if(in == 8 || in ==46){
+            uart_send('\b');
+            command_index--;
         }
         else{
             command[command_index] = '\0';            
