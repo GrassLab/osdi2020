@@ -60,7 +60,7 @@ void uart_hex(unsigned int d) {
     int c;
     uart_send('0');
     uart_send('x');
-    for(c=4;c>=0;c-=4) {
+    for(c=28;c>=0;c-=4) {
         // get highest tetrad
         n=(d>>c)&0xF;
         // 0-9 => '0'-'9', 10-15 => 'A'-'F'
@@ -68,4 +68,11 @@ void uart_hex(unsigned int d) {
         uart_send(n);
     }
     uart_send(' ');
+}
+
+void uart_send_int(int number) {
+    uart_send((char)((number >> 24) & 0xFF));
+    uart_send((char)((number >> 16) & 0xFF));
+    uart_send((char)((number >> 8) & 0xFF));
+    uart_send((char)(number & 0xFF));
 }

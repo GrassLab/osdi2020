@@ -20,5 +20,5 @@ SECTIONS
 
 }
 
-__bss_size = (_bss_end - _bss_begin)>>3;
-__loader_size = (_end - _code )>>3;
+__bss_size = (_bss_end - _bss_begin)>>3; /* >>3: bit to byte */
+__loader_size = (_end - _code )>>3;    

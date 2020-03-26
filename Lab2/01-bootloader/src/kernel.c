@@ -1,22 +1,25 @@
 #include "include/uart.h"
 
 
+
 void kernel_main(void){	 
-    int size,size_2=0;
+    int size=0;
     char *kernel=(char*)0x80000;
 
-    uart_init();    
+    uart_init();   
+    
+    char keyword;
+    keyword = uart_getc();
+    while(keyword!='c'){
+	 uart_send(keyword);
+    	 uart_send('E');
+	 uart_send('R');
+	 uart_send('R');
+	 uart_send('\r');
+	 uart_send('\n');
+	 keyword = uart_getc();
+    } 
 again:
-    uart_send('R');
-    uart_send('B');
-    uart_send('I');
-    uart_send('N');
-    uart_send('6');
-    uart_send('4');
-    uart_send('\r');
-    uart_send('\n');
-
-    // notify raspbootcom to send the kernel
     uart_send(3);
     uart_send(3);
     uart_send(3);
@@ -26,29 +29,30 @@ again:
     size|=uart_getc()<<8;
     size|=uart_getc()<<16;
     size|=uart_getc()<<24;
-
-    // send negative or positive acknowledge
-    if(size<64||size>2048*1024) {
-        // size error
-        uart_send('S');
+     
+    // >1M is not allow
+    if(size<64 || size>1024*1024){ 
+    	uart_send('S');
 	uart_send('E');
 	goto again;
     }
+
     uart_send('O');
     uart_send('K');
 
-    size_2 = size;
     // read the kernel
     while(size--) {
 	    *kernel++ = uart_getc();
     }
 
+    /*
     //Dump Memory
     kernel=(char*)0x80000;
     while(size_2 > 0){
           uart_hex(*kernel++);
           size_2--;
     }
+    */
 
     // restore arguments and jump to the new kernel.
     asm volatile (
