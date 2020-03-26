@@ -1,6 +1,7 @@
 #include "system.h"
 #include "util.h"
 #include "uart.h"
+#include "mbox.h"
 
 #define	CMD_HELP	"help"
 #define	CMD_HELLO	"hello"
@@ -10,13 +11,16 @@
 void get_timestamp();
 void uart_read_line(char *line);
 
-void
-main()
+void main()
 {
 	uart_init();
+	uart_puts("hi");
 	// char *welcome = " _ _ _   _   __  ___   __  _ _  _  _ _ \n| | | | / \\ |  \\| __| / _|| U || || U |\n| V V || o || o ) _|  \\_ \\|   || ||   |\n \\_n_/ |_n_||__/|___| |__/|_n_||_||_n_|\n\n";
 	char *welcome = "\n                        ___                  _ _ _        \n                       |__ \\                (_|_) |       \n   _ __ _   _ _ __ ___    ) |_ __ ___   ___  _ _| |_ ___  \n  | '__| | | | '_ ` _ \\  / /| '_ ` _ \\ / _ \\| | | __/ _ \\ \n  | |  | |_| | | | | | |/ /_| | | | | | (_) | | | || (_) |\n  |_|   \\__,_|_| |_| |_|____|_| |_| |_|\\___/| |_|\\__\\___/ \n                                           _/ |           \n                                          |__/            \n";
 	uart_puts(welcome);
+
+	get_board_revision();
+	get_vc_core_base_addr();
 
 	while(1) {
 		uart_puts("#");
