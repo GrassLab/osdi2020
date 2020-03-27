@@ -1,5 +1,3 @@
-#include "include/mm.h"
-
 // very thing defined in boot.S should go in the .text.boot section
 .section ".text.boot"
 
@@ -15,13 +13,19 @@ proc_hang:
     b proc_hang
 
 master:
-    adr    x0, bss_begin
-    adr    x1, bss_end
-    sub    x1, x1, x0
-    bl     memzero             //branch to 'memzero' 
-			       //(next instr's addr will be copy in to lr reg)
+    //set stack before out code    
+    ldr x1, =_start
+    mov sp,x1
 
-    mov    sp, #LOW_MEMORY     //mov stack pointer to position LOW_MEMORY
+    // clear bss
+    ldr    x1, =_bss_begin
+    ldr    w2, =__bss_size
+clean:    
+    cbz    w2, main 
+    str    xzr, [x1], #8
+    sub    w2, w2, #1
+    cbnz   w2, clean
+main:    
     bl    kernel_main
 	
-    b proc_hang    // for failsafe, halt this core too         
+b proc_hang    // for failsafe, halt this core too         

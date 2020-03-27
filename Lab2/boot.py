@@ -41,6 +41,8 @@ def open_Kernel(kernel_file):
     data = fid.read()
 
     # Get file size
+    ## (After read, the cursor will point to the end of file, 
+    ##  which means the size of the file)
     f_size = fid.tell()
     print("### Kernel image size: %d bytes" % f_size)
 
@@ -50,13 +52,18 @@ def open_Kernel(kernel_file):
 
 def send_Kernel_size(ser_i, size):
     print("\n### Sending Kernel size to RPI")
+    
+    # send size with little endian
     data = struct.pack('<i',size)
 
     for i in data:
         ser_i.write(i)
 
     print("### Waiting for size check on Rasberry Pi......")
+    
+    # read 2 bytes
     recv = ser_i.read(2)
+    
     if recv == "OK":
         print("### Received Acknowledgment!")
     else:
@@ -76,15 +83,11 @@ def send_Kernel(ser_i, kernel_data):
 		
     print("### Finished sending!")
 
-	# check if Raspberry Pi is sending a charakter after the while-loop
-    #test = ser_i.read(1)
-    #print(": %s" % test.encode("hex"))
-    #print("Successfull")
-
     return True
 
 def start_interactive(ser,input_file,output_file):
         try:
+            # set tty to cbreak mode
             tty.setcbreak(input_file.fileno())
             while True:
                 rfd, _, _ = select.select([ser, input_file], [], [])
@@ -105,17 +108,21 @@ def start_interactive(ser,input_file,output_file):
             os.system("stty sane")
 
 def main():
-    if (len(sys.argv) == 2): 
-        kernel_img = sys.argv[1]
+    if (len(sys.argv) == 3): 
+        serial_port = sys.argv[1]
+        kernel_img = sys.argv[2]
+
     else:
         print("Arguments wrong! Please check it again!")
         sys.exit()
 
-
-    ser_i = init_Serial('/dev/ttyUSB0')
+     
+    # Build connectino to target serial port 
+    ser_i = init_Serial(serial_port)
     print("### Serial init success!!")
-    a = raw_input("### Power on Raspberry Pi and press 'ENTER' to load kernel img!")
 
+    a = raw_input("### Power on Raspberry Pi and press 'ENTER' to load kernel img!")
+    ## send 'c' to Pi and wait for '\x03\x03\x03' send back
     wait_for_Pi(ser_i)
 
     

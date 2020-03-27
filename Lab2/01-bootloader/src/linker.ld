@@ -9,7 +9,7 @@ SECTIONS
     PROVIDE(_data = .);
     .data : { *(.data) }
     
-    .bss (NOLOAD) : {
+    .bss (NOLOAD): {
         . = ALIGN(16);
         _bss_begin = .;
         *(.bss*)

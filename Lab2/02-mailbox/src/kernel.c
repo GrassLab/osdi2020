@@ -3,6 +3,7 @@
 #include "include/reboot.h"
 #include "include/string.h"
 #include "include/mbox.h"
+#include "include/framebuffer.h"
 
 int check_string(char * str){
 	char* cmd_help = "help";
@@ -72,8 +73,8 @@ void get_board_revision_info(){
   mbox[1] = REQUEST_CODE;
   // tags begin
   mbox[2] = GET_BOARD_REVISION; // tag identifier
-  mbox[3] = 4; // maximum of request and response value buffer's length.
-  mbox[4] = TAG_REQUEST_CODE;
+  mbox[3] = 4; // response value buffer's length.
+  mbox[4] = 0; // request value buffer's length
   mbox[5] = 0; // value buffer
   // tags end
   mbox[6] = END_TAG;
@@ -94,8 +95,8 @@ void get_VC_core_base_addr(){
   mbox[1] = REQUEST_CODE;
   // tags begin
   mbox[2] = GET_VC_MEMORY; // tag identifier
-  mbox[3] = 8; // maximum of request and response value buffer's length.
-  mbox[4] = TAG_REQUEST_CODE;
+  mbox[3] = 8; // response value buffer's length.
+  mbox[4] = 0; // request value buffer's length
   mbox[5] = 0; // value buffer
   // tags end
   mbox[6] = END_TAG;
@@ -113,11 +114,15 @@ void get_VC_core_base_addr(){
 void kernel_main(void)
 {	
     uart_init();
+    fb_init();
+    fb_show();
+    
     uart_send_string("Hello, world!\r\n");
     
+
     //get hardware information by mailbox
-    get_board_revision_info();
-    get_VC_core_base_addr();
+    //get_board_revision_info();
+    //get_VC_core_base_addr();
 
     // simple shell implement
     char str[128];
