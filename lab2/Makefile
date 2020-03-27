@@ -26,3 +26,7 @@ run:
 
 runasm:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial null -serial stdio
+
+
+rundis:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio

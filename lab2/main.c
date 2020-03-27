@@ -6,6 +6,7 @@ void main(){
     uart_init();
     
     get_vc_information();
+    get_arm_information();
     get_serial();
     get_board_revision();
     

@@ -68,12 +68,24 @@ void get_serial(void)
 
 void get_vc_information(void)
 {
-	set_mbox(MBOX_TAG_GET_VC_MEMORY);
+	set_mbox(MBOX_TAG_GET_VC);
 	mbox_call(MBOX_CH_PROP);
 	uart_puts("My VC base address is\n");	
 	uart_hex(mbox[5]);
     uart_puts("\n");
     uart_puts("My VC memory size is\n");	
+    uart_hex(mbox[6]);
+    uart_puts("\n");
+}
+
+void get_arm_information(void)
+{
+	set_mbox(MBOX_TAG_GET_ARM);
+	mbox_call(MBOX_CH_PROP);
+	uart_puts("My ARM base address is\n");	
+	uart_hex(mbox[5]);
+    uart_puts("\n");
+    uart_puts("My ARM memory size is\n");	
     uart_hex(mbox[6]);
     uart_puts("\n");
 }

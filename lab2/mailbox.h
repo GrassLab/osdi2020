@@ -19,12 +19,13 @@ extern volatile unsigned int mbox[36];
 
 /* tags */
 #define MBOX_TAG_LAST                       0
-#define MBOX_TAG_GETSERIAL                  0x10004
 #define MBOX_TAG_GET_BOARD_REVISION         0x00010002
-#define MBOX_TAG_GET_VC_CORE_ADDRESS        0x0
-#define MBOX_TAG_GET_VC_MEMORY              0x00010006
+#define MBOX_TAG_GETSERIAL                  0x00010004
+#define MBOX_TAG_GET_ARM                    0x00010005
+#define MBOX_TAG_GET_VC                     0x00010006
 
 int mbox_call(unsigned char ch);
 void get_serial(void);
 void get_board_revision(void);
 void get_vc_information(void);
+void get_arm_information(void);
