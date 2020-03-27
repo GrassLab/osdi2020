@@ -10,7 +10,7 @@ with open('./test_cmd.txt') as f:
 
 
 PORT = '/dev/ttyUSB0'
-PORT = '/dev/pts/10'
+PORT = '/dev/pts/25'
 
 BAUD_RATES = 115200
 
@@ -37,7 +37,7 @@ try:
         count = ser.in_waiting
         if count != 0:
             data_raw = ser.read(count)
-            print(data_raw)
+            print(data_raw.decode())
 
             ser.flushInput()
         print("========")

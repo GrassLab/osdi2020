@@ -6,8 +6,8 @@ from array import array
 
 
 
-PORT = '/dev/ttyUSB0'
-PORT = '/dev/pts/10'
+#PORT = '/dev/ttyUSB0'
+PORT = '/dev/pts/25'
 
 BAUD_RATES = 115200
 
@@ -18,7 +18,8 @@ ser.flushInput()
 ser.flushOutput()
 
 kernel_size = os.path.getsize("kernel8.img")
-content = ["load_images\n", str(kernel_size)+"\n"]
+# 0x80000 = 524288
+content = ["load_images\n", str(kernel_size)+"\n", "524288\n"]
 try:
     for line in content:
         delay_time = 0.5
@@ -34,7 +35,7 @@ try:
         count = ser.in_waiting
         if count != 0:
             data_raw = ser.read(count)
-            print(data_raw)
+            print(data_raw.decode())
 
             ser.flushInput()
         print("========")
@@ -48,20 +49,22 @@ try:
     ser.flushOutput()
 
     index = 1
+    checksum = 0
     with open("kernel8.img", "rb") as f:
         byte = f.read(1)
         while byte:
+            checksum += int.from_bytes(byte, byteorder='big')
             print(str(index))
             index += 1
             ser.write(byte)
             byte = f.read(1)
 
-            time.sleep(0.005)
+            time.sleep(0.0001)
             # check recv
             count = ser.in_waiting
             if count != 0:
                 data_raw = ser.read(count)
-                print(data_raw)
+                print(data_raw.decode())
 
     
     time.sleep(3)
@@ -69,7 +72,7 @@ try:
     count = ser.in_waiting
     if count != 0:
         data_raw = ser.read(count)
-        print(data_raw)
+        print(data_raw.decode())
     
     ser.flush()
     ser.flushInput()

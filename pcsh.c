@@ -84,13 +84,20 @@ int cmd_load_images(int i)
 
     gets(cmd, INPUT_BUFFER_SIZE);
     int image_size = atoi(cmd);
-    uart_puts("Kernel size is ");
+    uart_puts("Kernel size is: ");
     uart_send_int(image_size);
+    uart_send('\n');
+
+    uart_puts("Input Kernel load address: ");
+    gets(cmd, INPUT_BUFFER_SIZE);
+    int address = atoi(cmd);
+    uart_puts("Kernel load address is: ");
+    uart_send_hex(address);
     uart_send('\n');
 
     // load_images(image_size);
     uart_puts("Start Copy Kernel\n");
-    copy_kernel_and_load_images(image_size);
+    copy_kernel_and_load_images((char *)address, image_size);
 }
 
 int cmd_not_find(int i)

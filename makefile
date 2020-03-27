@@ -1,6 +1,7 @@
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFLAGS = -fno-stack-protector -nostdlib -nostartfiles -ffreestanding
+CFLAGS = -fno-stack-protector
+# -nostdlib -nostartfiles -ffreestanding
 
 all: kernel8.img
 
