@@ -37,16 +37,21 @@ int mbox_call(unsigned char ch)
     return 0;
 }
 
+void set_mbox(unsigned int a)
+{
+    mbox[0] = 8 * 4;
+	mbox[1] = MBOX_REQUEST;
+	mbox[2] = a; // tag identifier
+	mbox[3] = 8; // buffer size
+	mbox[4] = MBOX_REQUEST; 
+	mbox[5] = 0; // clear buffer data
+	mbox[6] = 0; 
+    mbox[7] = MBOX_TAG_LAST; 
+}
+
 void get_board_revision(void)
 {
-	mbox[0] = 7 * 4;
-	mbox[1] = MBOX_REQUEST;
-	mbox[2] = GET_BOARD_REVISION; // tag identifier
-	mbox[3] = 4; // buffer size
-	mbox[4] = 0; // buffer size
-	mbox[5] = 0; // clear buffer data
-	mbox[6] = 0; // clear buffer data
-    mbox[7] = MBOX_TAG_LAST;
+	set_mbox(MBOX_TAG_GET_BOARD_REVISION);
 	mbox_call(MBOX_CH_PROP);
 	uart_puts("My board_revision number is\n");	
 	uart_hex(mbox[5]);
@@ -54,18 +59,21 @@ void get_board_revision(void)
 }
 void get_serial(void)
 {
-	mbox[0] = 8 * 4;
-	mbox[1] = MBOX_REQUEST;
-	mbox[2] = MBOX_TAG_GETSERIAL; // tag identifier
-	mbox[3] = 8; // buffer size
-	mbox[4] = 8; // buffer size
-	mbox[5] = 0; // clear buffer data
-	mbox[6] = 0; // clear buffer data
-    mbox[7] = MBOX_TAG_LAST;
+	set_mbox(MBOX_TAG_GETSERIAL);
 	mbox_call(MBOX_CH_PROP);
-	uart_puts("My serial number is\n");
-	uart_hex(mbox[6]);
-    uart_puts("\n");
+	uart_puts("My serial number is\n");	
 	uart_hex(mbox[5]);
+    uart_puts("\n");
+}
+
+void get_vc_information(void)
+{
+	set_mbox(MBOX_TAG_GET_VC_MEMORY);
+	mbox_call(MBOX_CH_PROP);
+	uart_puts("My VC base address is\n");	
+	uart_hex(mbox[5]);
+    uart_puts("\n");
+    uart_puts("My VC memory size is\n");	
+    uart_hex(mbox[6]);
     uart_puts("\n");
 }

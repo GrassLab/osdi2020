@@ -5,8 +5,10 @@ void main(){
     // set up serial console
     uart_init();
     
-    get_board_revision();
+    get_vc_information();
     get_serial();
+    get_board_revision();
+    
     print_hello();    
     uart_puts("# ");
     char *command = "";

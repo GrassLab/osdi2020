@@ -6,7 +6,7 @@
 ## Mailbox
 
 ### Get the hardware’s information
-- [ ] [required] Get the hardware’s information by mailbox and print them, you should at least print board revision and VC Core base address.
+- [x] [required] Get the hardware’s information by mailbox and print them, you should at least print board revision and VC Core base address.
 
 ### PL011 UART
 - [ ] [elective] Get or set UART clock by mailbox and replace mini UART by PL011 UART.
