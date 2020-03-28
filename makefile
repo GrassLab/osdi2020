@@ -1,7 +1,6 @@
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFLAGS = -fno-stack-protector
-# -nostdlib -nostartfiles -ffreestanding
+CFLAGS = -fPIC -fno-stack-protector -nostdlib -nostartfiles -ffreestanding
 
 all: kernel8.img
 
@@ -25,7 +24,7 @@ run-mini-uart:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial pty
 
 run-uart0:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial null -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
 
 run-script:
 	sudo python script.py

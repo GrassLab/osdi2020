@@ -5,5 +5,6 @@
 #define size_t unsigned int
 
 extern char __bss_end[];
+extern char __end[];
 
 #endif

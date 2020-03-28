@@ -15,19 +15,13 @@ idel_cpu:
   
 // cpu id == 0
 main_cpu:
-    // set stack before our code
-    ldr     x1, =_start
-    mov     sp, x1
-
-    // clear bss
-    ldr     x1, =__bss_start
-    ldr     w2, =__bss_size
 
 clear_bss_loop:
-    cbz     w2, run // if all clear, run our program
-    str     xzr, [x1], #8  // data xzr store to z1, and then address x1 = x1 + 8
-    sub     w2, w2, #1  // w2 -= 1, check how many block we need to clear
-    cbnz    w2, clear_bss_loop  // if value not zero, clear bss
+    adr x0, __bss_begin
+    adr x1, __bss_end
+    sub x1, x1, x0
+    bl  memzero // Branch with a link (when the function call is done, it should come back here)
+    mov sp, #4194304
 
     // goto main.o main()
 run:
@@ -35,3 +29,9 @@ run:
 
     // if any problem, let cpu idel
     b idel_cpu
+
+memzero:
+    str xzr, [x0], #8
+    subs x1, x1, #8
+    b.gt memzero
+    ret

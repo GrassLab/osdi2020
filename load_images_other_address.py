@@ -17,10 +17,11 @@ ser.flush()
 ser.flushInput()
 ser.flushOutput()
 
-kernel_path = './other_kernels/kernel8.img'
+kernel_path = "./other_kernels/kernel8_2.img"
+kernel_path = "./other_kernels/kernel8.img"
 kernel_size = os.path.getsize(kernel_path)
 # 0x80000 = 524288
-content = ["load_images\n", str(kernel_size)+"\n", "524288\n"]
+content = ["load_images\n", str(kernel_size)+"\n", "525000\n"]
 try:
     for line in content:
         delay_time = 1.

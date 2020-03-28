@@ -9,6 +9,6 @@ void uart_send_int(int);
 void uart_send_hex(int);
 void uart_send_float(float, int);
 
-int print(char *s);
-int gets(char *buf, int buf_size);
+int uart_print(char *s);
+int uart_gets(char *buf, int buf_size);
 #endif

@@ -2,32 +2,23 @@
 #include "math.h"
 #include "string.h"
 
-int my_strcmp(const char *s1, const char *s2)
+int strcmp(const char *s1, const char *s2)
 {
-    if (*s1 == '\0' && *s2 != 0)
+    while(*s1 && (*s1 == *s2))
     {
-        return (*s1 - *s2);
+        s1++;
+        s2++;
     }
+    return *(const unsigned char*)s1 - *(const unsigned char*)s2;
+}
 
-    if (*s2 == '\0' && *s1 != 0)
-    {
-        return (*s1 - *s2);
-    }
+void memcpy(void *dest, void *src, size_t n)
+{
+    char *csrc = (char *)src;
+    char *cdest = (char *)dest;
 
-    for (; *s1 != '\0' && *s2 != '\0'; s1++, s2++)
-    {
-        if ((*s1 - *s2) > 0)
-        {
-            return (*s1 - *s2);
-        }
-
-        else if ((*s1 - *s2) < 0)
-        {
-            return (*s1 - *s2);
-        }
-    }
-
-    return 0;
+    for (int i=0; i<n; i++)
+        cdest[i] = csrc[i];
 }
 
 char *my_strcat(char *dest, const char *src)
@@ -41,7 +32,7 @@ char *my_strcat(char *dest, const char *src)
     return dest;
 }
 
-void *my_memset(void *str, int c, size_t n)
+void *memset(void *str, int c, size_t n)
 {
 
     size_t i = 0;

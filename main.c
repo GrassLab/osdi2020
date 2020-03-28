@@ -1,11 +1,13 @@
 #include "uart.h"
 #include "pcsh.h"
 #include "screen.h"
+#include "string.h"
+
 
 void system_start(){
-    print("-------------------------\n");
-    print("Raspberry Pi 3B+ is start\n");
-    print("-------------------------\n");
+    uart_print("-------------------------\n");
+    uart_print("Raspberry Pi 3B+ is start\n");
+    uart_print("-------------------------\n");
 }
 
 int main(){
@@ -23,7 +25,9 @@ int main(){
     showpicture();
 
 
+
     // call simple shell
     pcsh();
 
+    return 0;
 }

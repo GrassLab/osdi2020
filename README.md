@@ -34,6 +34,18 @@ Point out the difference between bare-metal programming and programming on top o
 A:  
 需要系統幫忙的library就不能使用，像是malloc等分配記憶體空間的函數，或是fork等 
 
+### Lab 2
+Q1:  
+In x86 machine, how the above 4 steps are implemented? Roughly describe it.  
+A1:  
+  
+
+Q2:  
+Calculate how long will it take for loading a 10MB kernel image by UART if baud rate is 115200?  
+A2: 7281.77s  
+baud rate 115200 = 115200 bit/s = 14400 byte/s  
+10 MB = 10 * 1024 * 1024 byte  
+10 MB / 1440 byte = 10 * 1024 * 1024 / 1440 = 7281.777  
 
 ## How to build
 
