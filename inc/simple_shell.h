@@ -16,4 +16,4 @@ void reboot_rpi3();
 void print_prompt(void);
 
 
-#endif /*_SIMPLE_SHELL_H*/
+#endif//_SIMPLE_SHELL_H

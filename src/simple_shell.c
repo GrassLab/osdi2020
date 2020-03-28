@@ -56,18 +56,16 @@ int read_command(char* buffer, unsigned int max_len)
 	char char_recv;
 	while (count < max_len){
 		char_recv = uart_getc();
-		uart_send(char_recv);
+		uart_putc(char_recv);
+		buffer[count] = char_recv;
+		count ++;
 		if (char_recv == '\n'){
-			uart_send('\r');
-			return count;
+			return --count;
 		} else if (char_recv == '\177'){// backspace
 			if (count >= 1){
 				uart_puts("\b \b");
 				count --;
 			}
-		} else {
-			buffer[count] = char_recv;
-			count ++;
 		}
 	}
 	return -1; // out of buff	
