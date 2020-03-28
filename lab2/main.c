@@ -48,19 +48,20 @@ void main()
 	
 	// UART0 initialization
     uart_init();
-	uart_puts("\n");
+	uart_puts("\r\n");
 	// Print the peripheral information
 	get_serial_number();
 	get_board_revision();
 	get_VC_memory();
-
     // Set up serial console
-    uart_getc();
     // Welcome message
-	uart_puts("\r\nWelcome to raspberry pi 3!\n# "); 
+	uart_puts("\r\nWelcome to raspberry pi 3!\n# ");
 
 	while(1){
-		sizeof_current_line = uart_get_string_with_echo(buffer);
+		/* for pyserial interface */
+		sizeof_current_line = uart_get_string(buffer);
+		/* for qemu */
+		//sizeof_current_line = uart_get_string_with_echo(buffer);
 		command_not_found = 1;
 		if(!strcmp(buffer, "hello")) {
 			// Print Hello World!
@@ -73,6 +74,8 @@ void main()
 			uart_puts("help: help\n");
 			uart_puts("reboot: reboot rpi3\n");
 			uart_puts("timestamp: get current timestamp\n");
+			uart_puts("framebuffer: show the framebuffer\n");
+			uart_puts("loadimg: load kernel at specified address\n");
 			command_not_found = 0;
 		}
 		else if(!strcmp(buffer, "timestamp")) {
@@ -102,7 +105,9 @@ void main()
 
 			*PM_RSTC = ((PM_PASSWORD) | 0x20); // full reset
   			*PM_WDOG = ((PM_PASSWORD) | 10); // number of watchdog tick
-				
+			
+			// while(1);
+	
 			sizeof_current_line = 0;
 			command_not_found = 0;
 			continue;
