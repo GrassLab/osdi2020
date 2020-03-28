@@ -25,12 +25,15 @@ void (*commandArray[NUM_COMMAND])()=
 };
 
 // TODO: formated string
+/* 
+* An infinity loop keep reading, parse, execute command
+*/
 void run_shell()
 {
 	char buf[MAX_COMMAND_LENGTH];
 	int n, cmd_type;
 
-	print_prompt();
+	uart_puts(promptStr);
 	while ((n=read_command(buf, MAX_COMMAND_LENGTH)) >= 0){
 		buf[n]='\0';
 		cmd_type = parse_command(buf);
@@ -42,7 +45,7 @@ void run_shell()
 			commandArray[cmd_type]();
 		}
     	uart_puts("\n");
-		print_prompt();
+		uart_puts(promptStr);
 	}
 }
 
@@ -133,7 +136,6 @@ void show_timestamp()
 	uart_puts("\n");
 }
 
-
 void _reboot(int tick){ // reboot after watchdog timer expire
 	*PM_RSTC = PM_PASSWORD | PM_RSTC_WRCFG_FULL_RESET;// full reset
 	*PM_WDOG = PM_PASSWORD | tick;// number of watchdog tick
@@ -147,11 +149,6 @@ void _cancel_reboot() {
 void reboot_rpi3()
 {
     uart_puts("rebooting ...");
-	_reboot(1);// timeout = 1/16th of a second? (whatever)
+	_reboot(50);// timeout = 1/16th of a second? (whatever)
 	while(1);
-}
-
-void print_prompt()
-{
-	uart_puts(promptStr);
 }

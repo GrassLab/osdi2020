@@ -9,9 +9,8 @@ char* info ="\n\
 
 int main()
 {
-    // set up serial console
     uart_init();
-    //show some info
     uart_puts(info);
     run_shell();
+    return -1;
 }
