@@ -21,10 +21,10 @@ clean:
 	rm boot kernel8.img *.o *.*~
 
 qemu: kernel8.img
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 
 debug: kernel8.img
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio -s -S
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -s -S
 
 sd: kernel8.img
 	sudo mount -t vfat $(SDCARD)1 rootfs/

@@ -28,8 +28,8 @@
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
 void uart_init ();
-void uart_send (unsigned int c);
+void uart_send (char c);
 void uart_puts (char *s);
-unsigned char uart_getc ();
+char uart_getc ();
 int uart_readline (int size, char *buf);
 #endif /* ifndef UART */
