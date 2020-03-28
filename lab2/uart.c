@@ -25,6 +25,7 @@
 
 #include "gpio.h"
 #include "mbox.h"
+#include "util.h"
 
 /* PL011 UART registers */
 #define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
@@ -124,4 +125,28 @@ void uart_hex(unsigned int d) {
         n+=n>9?0x37:0x30;
         uart_send(n);
     }
+}
+
+void uart_read_line(char *line)
+{
+	char c;
+	int index = 0;
+
+	while(c != '\n') {
+		c = uart_getc();
+		uart_send(c);
+		if(c == '\n') {
+			line[index] = '\0';
+		} else {
+			line[index] = c;
+		}
+		index++;
+	}
+}
+
+int uart_read_int()
+{
+    char *line;
+    uart_read_line(line);
+    return atoi(line);
 }

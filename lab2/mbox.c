@@ -24,6 +24,7 @@
  */
 
 #include "gpio.h"
+#include "mbox.h"
 
 /* mailbox message buffer */
 volatile unsigned int  __attribute__((aligned(16))) mbox[36];
@@ -59,4 +60,45 @@ int mbox_call(unsigned char ch)
             return mbox[1]==MBOX_RESPONSE;
     }
     return 0;
+}
+
+void get_board_revision() {
+    // unsigned int mailbox[7];
+    mbox[0] = 7 * 4; // buffer size in bytes
+    mbox[1] = MBOX_REQUEST;
+    // tags begin
+    mbox[2] = GET_BOARD_REVISION; // tag identifier
+    mbox[3] = 4; // maximum of request and response value buffer's length.
+    mbox[4] = 0;
+    mbox[5] = 0; // value buffer
+    // tags end
+    mbox[6] = MBOX_TAG_LAST;
+
+    mbox_call(MBOX_CH_PROP); // message passing procedure call, you should implement it following the 6 steps provided above.
+
+	uart_puts("Board Revision: ");
+    uart_hex(mbox[5]);
+	uart_puts("\r\n");
+    // printf("0x%x\n", mailbox[5]); // it should be 0xa020d3 for rpi3 b+
+}
+
+void get_vc_core_base_addr() {
+    // unsigned int mailbox[7];
+    mbox[0] = 8 * 4; // buffer size in bytes
+    mbox[1] = MBOX_REQUEST;
+    // tags begin
+    mbox[2] = GET_VC_MEMORY; // tag identifier
+    mbox[3] = 8; // maximum of request and response value buffer's length.
+    mbox[4] = 0;
+    mbox[5] = 0; // value buffer
+    // tags end
+    mbox[6] = MBOX_TAG_LAST;
+
+    mbox_call(MBOX_CH_PROP); // message passing procedure call, you should implement it following the 6 steps provided above.
+
+	uart_puts("VC Core Base Address: ");
+    uart_hex(mbox[5]);
+    uart_puts(" Size: ");
+    uart_hex(mbox[6]);
+	uart_puts("\r\n");
 }
