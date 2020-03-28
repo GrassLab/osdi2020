@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # set the serial to blocking mode
     ser.timeout=None
     tdata = ser.read()
-    # wait for the device to waiting data to bus
+    # wait for the device to writing data to bus
     time.sleep(1)
     # calculate the current size of input data on the bus
     data_left = ser.inWaiting()
