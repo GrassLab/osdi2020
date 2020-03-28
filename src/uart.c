@@ -1,5 +1,5 @@
-#include "aux.h"
-#include "gpio.h"
+#include "constant/aux.h"
+#include "constant/gpio.h"
 #include "my_string.h"
 
 void uart_init() {
@@ -78,6 +78,6 @@ void uart_printf(char* fmt, ...) {
 
 void uart_flush() {
     while (*AUX_MU_LSR & 0x01) {
-        *AUX_MU_IO;
+        (void) *AUX_MU_IO; // unused variable
     }
 }

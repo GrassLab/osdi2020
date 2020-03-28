@@ -1,5 +1,31 @@
 #include "my_math.h"
 
+char *itox(int value, char *s) {
+    int idx = 0;
+
+    char tmp[8 + 1];
+    int tidx = 0;
+    while (value) {
+        int r = value % 16;
+        if (r < 10) {
+            tmp[tidx++] = '0' + r;
+        }
+        else {
+            tmp[tidx++] = 'a' + r - 10;
+        }
+        value /= 16;
+    }
+
+    // reverse tmp
+    int i;
+    for (i = tidx - 1; i >= 0; i--) {
+        s[idx++] = tmp[i];
+    }
+    s[idx] = '\0';
+
+    return s;
+}
+
 char *itoa(int value, char *s) {
     int idx = 0;
     if (value < 0) {
@@ -77,6 +103,15 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
                 int arg = __builtin_va_arg(args, int);
                 char buf[11];
                 char *p = itoa(arg, buf);
+                while (*p) {
+                    *dst++ = *p++;
+                }
+            }
+            // hex
+            if (*fmt == 'x') {
+                int arg = __builtin_va_arg(args, int);
+                char buf[8 + 1];
+                char *p = itox(arg, buf);
                 while (*p) {
                     *dst++ = *p++;
                 }

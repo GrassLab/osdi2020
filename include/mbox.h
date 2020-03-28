@@ -1,0 +1,1 @@
+unsigned int get_board_revision();

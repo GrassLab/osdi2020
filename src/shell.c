@@ -1,6 +1,7 @@
 #include "my_string.h"
 #include "uart.h"
 #include "utli.h"
+#include "mbox.h"
 
 enum ANSI_ESC {
     Unknown,
@@ -38,6 +39,8 @@ void shell_init() {
     uart_init();
     uart_flush();
     uart_printf("\n\nHello From RPI3\n");
+    unsigned int board_revision = get_board_revision();
+    uart_printf("Board Revision: %x\n", board_revision);
 }
 
 void shell_input(char* cmd) {
