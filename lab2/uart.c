@@ -110,3 +110,9 @@ uart_hex (unsigned int d)
       uart_send (n);
     }
 }
+
+void
+_putchar (char character)
+{
+  uart_send (character);
+}

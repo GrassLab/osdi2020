@@ -2,6 +2,7 @@
 #include "uart.h"
 #include "string.h"
 #include "mm.h"
+#include "printf.h"
 
 #define PM_PASSWORD   0x5a000000
 #define PM_RSTC       ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
@@ -44,28 +45,6 @@ shell_interactive ()
 }
 
 void
-ftoa (double f, int size, char *buf)
-{
-  double probe = 1000000;
-  int cnt = 0;
-
-  while (f / probe < 1)
-    {
-      if (probe == 1)
-	break;
-      probe /= 10;
-    }
-  while (cnt < size - 1)
-    {
-      buf[cnt++] = ((char) (f / probe) % 10) + '0';
-      if (probe == 1)
-	buf[cnt++] = '.';
-      probe /= 10;
-    }
-  buf[size - 1] = '\0';
-}
-
-void
 print_time ()
 {
   unsigned long freq;
@@ -77,10 +56,7 @@ print_time ()
   asm volatile ("mrs %0, CNTFRQ_EL0\n"
 		"mrs %1, CNTPCT_EL0\n":"=r" (freq), "=r" (cnt));
   result = (double) cnt / (double) freq;
-  ftoa (result, 0x20, buf);
-  uart_puts ("[");
-  uart_puts (buf);
-  uart_puts ("]\n");
+  printf ("[%lf]\n", result);
 }
 
 void
