@@ -36,6 +36,16 @@
 #define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
+
+void uart_init();
+void uart_send(unsigned int c);
+char uart_getc();
+int uart_get_string(char *s);
+int uart_get_string_with_echo(char *s);
+void uart_puts(char *s);
+void uart_hex(unsigned int d);
+
+
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
