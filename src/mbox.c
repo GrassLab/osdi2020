@@ -1,6 +1,6 @@
 #include "constant/mbox.h"
 
-#include "uart.h"
+#include "uart0.h"
 
 int mbox_call(unsigned int* mbox, unsigned char channel) {
     unsigned int r = (unsigned int)(((unsigned long)mbox) & (~0xF)) | (channel & 0xF);

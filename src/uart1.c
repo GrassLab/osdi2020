@@ -2,7 +2,7 @@
 #include "constant/gpio.h"
 #include "my_string.h"
 
-void uart_init() {
+void uart1_init() {
     /* Initialize UART */
     *AUX_ENABLES |= 1;   // Enable mini UART
     *AUX_MU_CNTL = 0;    // Disable TX, RX during configuration
@@ -42,7 +42,7 @@ void uart_init() {
     *AUX_MU_CNTL = 3;
 }
 
-char uart_read() {
+char uart1_read() {
     // Check data ready field
     do {
         asm volatile("nop");
@@ -53,7 +53,7 @@ char uart_read() {
     return r == '\r' ? '\n' : r;
 }
 
-void uart_write(unsigned int c) {
+void uart1_write(unsigned int c) {
     // Check transmitter idle field
     do {
         asm volatile("nop");
@@ -62,7 +62,7 @@ void uart_write(unsigned int c) {
     *AUX_MU_IO = c;
 }
 
-void uart_printf(char* fmt, ...) {
+void uart1_printf(char* fmt, ...) {
     __builtin_va_list args;
     __builtin_va_start(args, fmt);
 
@@ -71,12 +71,12 @@ void uart_printf(char* fmt, ...) {
     vsprintf(s, fmt, args);
 
     while (*s) {
-        if (*s == '\n') uart_write('\r');
-        uart_write(*s++);
+        if (*s == '\n') uart1_write('\r');
+        uart1_write(*s++);
     }
 }
 
-void uart_flush() {
+void uart1_flush() {
     while (*AUX_MU_LSR & 0x01) {
         (void) *AUX_MU_IO; // unused variable
     }
