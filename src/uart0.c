@@ -1,8 +1,9 @@
-#include "constant/uart0.h"
-#include "constant/gpio.h"
-#include "constant/mbox.h"
+#include "peripherals/uart0.h"
+
 #include "mbox.h"
 #include "my_string.h"
+#include "peripherals/gpio.h"
+#include "peripherals/mbox.h"
 
 void uart_init() {
     *UART0_CR = 0;  // turn off UART0

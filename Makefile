@@ -4,7 +4,7 @@ LD = $(TOOLCHAIN_PREFIX)ld
 OBJCPY = $(TOOLCHAIN_PREFIX)objcopy
 
 SRC_DIR = src
-OUT_DIR = out
+OUT_DIR = build
 
 LINKER_FILE = $(SRC_DIR)/linker.ld
 ENTRY = $(SRC_DIR)/start.s
@@ -14,9 +14,9 @@ OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OUT_DIR)/%.o)
 
 CFLAGS = -Wall -I include -c
 
-.PHONY: all clean asm run debug directories
+.PHONY: all clean asm run debug build_dir
 
-all: directories kernel8.img
+all: build_dir kernel8.img
 
 $(ENTRY_OBJS): $(ENTRY)
 	$(CC) $(CFLAGS) $< -o $@
@@ -37,10 +37,10 @@ run: all
 debug: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s
 
-directories: $(OUT_DIR)
+build_dir: $(OUT_DIR)
 
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
 clean:
-	rm -f out/* kernel8.*
+	rm -f $(OUT_DIR)/* kernel8.*

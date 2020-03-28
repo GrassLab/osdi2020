@@ -1,4 +1,4 @@
-#include "constant/mmio.h"
+#include "peripherals/mmio.h"
 
 #ifndef GPIO_H
 #define GPIO_H 

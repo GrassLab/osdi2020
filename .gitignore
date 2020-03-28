@@ -1,3 +1,4 @@
 kernel8.*
-out/
+build/
 .gdb_history
+.vscode/

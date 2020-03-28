@@ -1,4 +1,4 @@
-#include "constant/mbox.h"
+#include "peripherals/mbox.h"
 
 #include "uart0.h"
 

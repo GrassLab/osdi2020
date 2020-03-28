@@ -118,14 +118,15 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
             }
             // float
             if (*fmt == 'f') {
-                float arg = (float) __builtin_va_arg(args, double);
+                float arg = (float)__builtin_va_arg(args, double);
                 char buf[19];  // sign + 10 int + dot + 6 float
                 char *p = ftoa(arg, buf);
                 while (*p) {
                     *dst++ = *p++;
                 }
             }
-        } else {
+        }
+        else {
         put:
             *dst++ = *fmt;
         }

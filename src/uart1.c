@@ -1,6 +1,6 @@
-#include "constant/aux.h"
-#include "constant/gpio.h"
 #include "my_string.h"
+#include "peripherals/aux.h"
+#include "peripherals/gpio.h"
 
 void uart1_init() {
     /* Initialize UART */
@@ -78,6 +78,6 @@ void uart1_printf(char* fmt, ...) {
 
 void uart1_flush() {
     while (*AUX_MU_LSR & 0x01) {
-        (void) *AUX_MU_IO; // unused variable
+        (void)*AUX_MU_IO;  // unused variable
     }
 }
