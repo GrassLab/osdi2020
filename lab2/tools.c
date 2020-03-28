@@ -57,4 +57,10 @@ int strcmp(const char *X, const char *Y){
 
 	// return the ASCII difference after converting char* to unsigned char*
 	return *(const unsigned char*)X - *(const unsigned char*)Y;
-} 
+}
+
+int strlen(const char *str){
+    int len;
+	for(len = 0; str[len]; len++);
+	return len;
+}

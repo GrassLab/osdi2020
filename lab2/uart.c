@@ -41,22 +41,22 @@
  */
 void uart_init()
 {
-    register unsigned int r;
+	register unsigned int r;
 
-    /* initialize UART */
-    *UART0_CR = 0;         // turn off UART0
+	/* initialize UART */
+	*UART0_CR = 0;         // turn off UART0
 
-    /* set up clock for consistent divisor values */
-    mbox[0] = 9*4;
-    mbox[1] = MBOX_REQUEST;
-    mbox[2] = MBOX_TAG_SETCLKRATE; // set clock rate
-    mbox[3] = 12;
-    mbox[4] = 8;
-    mbox[5] = 2;           // UART clock
-    mbox[6] = 4000000;     // 4Mhz
-    mbox[7] = 0;           // clear turbo
-    mbox[8] = MBOX_TAG_LAST;
-    mbox_call(MBOX_CH_PROP);
+	/* set up clock for consistent divisor values */
+	mbox[0] = 9*4;
+	mbox[1] = MBOX_REQUEST;
+	mbox[2] = MBOX_TAG_SETCLKRATE; // set clock rate
+	mbox[3] = 12;
+	mbox[4] = 8;
+	mbox[5] = 2;           // UART clock
+	mbox[6] = 4000000;     // 4Mhz
+	mbox[7] = 0;           // clear turbo
+	mbox[8] = MBOX_TAG_LAST;
+	mbox_call(MBOX_CH_PROP);
 
     /* map UART0 to GPIO pins */
     r=*GPFSEL1;
@@ -74,6 +74,7 @@ void uart_init()
     *UART0_FBRD = 0xB;
     *UART0_LCRH = 0b11<<5; // 8n1
     *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
+	return;
 }
 
 /**
@@ -84,7 +85,9 @@ void uart_send(unsigned int c) {
     do{asm volatile("nop");}while(*UART0_FR&0x20);
     /* write the character to the buffer */
     *UART0_DR=c;
+	return;
 }
+
 
 /**
  * Receive a character
@@ -100,6 +103,44 @@ char uart_getc() {
 }
 
 /**
+ * Receive a string
+ */
+int uart_get_string(char * s){
+	char r;
+	int iter = 0;
+	while(1){
+		r = uart_getc();
+		if(r=='\n' || r=='\r' || r=='\0'){	// the end of input line
+			break;
+		}
+		s[iter] = r;
+		iter++;
+	}
+	s[iter] = '\0';
+	return iter;
+}
+
+/**
+ * Receive a string
+ */
+int uart_get_string_with_echo(char * s){
+	char r;
+	int iter = 0;
+	while(1){
+		r = uart_getc();
+		if(r=='\n' || r=='\r' || r=='\0'){	// the end of input line
+			uart_puts("\r\n");
+			break;
+		}
+		uart_send(r);
+		s[iter] = r;
+		iter++;
+	}
+	s[iter] = '\0';
+	return iter;
+}
+
+/**
  * Display a string
  */
 void uart_puts(char *s) {
@@ -109,6 +150,7 @@ void uart_puts(char *s) {
             uart_send('\r');
         uart_send(*s++);
     }
+	return;
 }
 
 /**
@@ -124,4 +166,5 @@ void uart_hex(unsigned int d) {
         n+=n>9?0x37:0x30;
         uart_send(n);
     }
+	return;
 }
