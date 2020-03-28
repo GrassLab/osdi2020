@@ -21,5 +21,6 @@
 
 // tag
 #define MBOX_TAG_GET_BOARD_REVISION     0x00010002
+#define MBOX_TAG_GET_VC_MEMORY          0x00010006
 
 #endif

@@ -1,4 +1,5 @@
 #include "constant/mbox.h"
+
 #include "uart.h"
 
 int mbox_call(unsigned int* mbox, unsigned char channel) {
@@ -22,7 +23,7 @@ int mbox_call(unsigned int* mbox, unsigned char channel) {
     return 0;
 }
 
-unsigned int get_board_revision() {
+void mbox_board_revision() {
     unsigned int __attribute__((aligned(16))) mbox[7];
     mbox[0] = 7 * 4;  // buffer size in bytes
     mbox[1] = MBOX_CODE_BUF_REQ;
@@ -34,5 +35,21 @@ unsigned int get_board_revision() {
     mbox[6] = 0x0;                          // end tag
     // tags end
     mbox_call(mbox, 8);
-    return mbox[5];
+    uart_printf("Board Revision: %x\n", mbox[5]);
+}
+
+void mbox_vc_memory() {
+    unsigned int __attribute__((aligned(16))) mbox[8];
+    mbox[0] = 8 * 4;  // buffer size in bytes
+    mbox[1] = MBOX_CODE_BUF_REQ;
+    // tags begin
+    mbox[2] = MBOX_TAG_GET_VC_MEMORY;  // tag identifier
+    mbox[3] = 8;                       // maximum of request and response value buffer's length.
+    mbox[4] = MBOX_CODE_TAG_REQ;       // tag code
+    mbox[5] = 0;                       // base address
+    mbox[6] = 0;                       // size in bytes
+    mbox[7] = 0x0;                     // end tag
+    // tags end
+    mbox_call(mbox, 8);
+    uart_printf("VC Core base addr: 0x%x size: 0x%x\n", mbox[5], mbox[6]);
 }
