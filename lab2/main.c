@@ -8,27 +8,56 @@
 #define	CMD_TIME	"timestamp"
 #define	CMD_REBOOT	"reboot"
 #define CMD_LOADIMG	"loadimg"
+#define CMD_PICTURE "picture"
 
 void get_timestamp();
+void main();
 // extern void uart_read_line(char *line);
 
 void load_image(char *load_address) {
+	
+	//new_kernel();
+	// load_address = 0x10000;
 	int kernel_size = uart_read_int();
 	int checksum = 0;
-
-	for(int i=0; i<kernel_size; i++) {
-		unsigned char c = uart_getc();
-		checksum += c;
-		load_address[i] = c;
+	load_address = 0x80000;
+	for(int i=0; i<4000; i++) {
+		// unsigned char c = uart_getc();
+		// *load_address = c;
+		uart_send(load_address[i]);
+		// checksum++;
+		// load_address += 1;
 	}
+	
 
-	uart_puts(itoa(checksum));
-	if(checksum == kernel_size) {
-		uart_puts("[rpi3]\tDONE!");
-		// TODO: jump to new kernel
-	} else {
-		uart_puts("[rpi3]\tERROR!");	
-	}
+	// uart_puts("\r\n");
+
+	// // uart_puts(itoa(kernel_size));
+	// for(int i=0; i<kernel_size; i++) {
+	// 	unsigned char c = uart_getc();
+	// 	*load_address = c;
+	// 	// uart_send(*load_address);
+	// 	checksum++;
+	// 	load_address += 1;
+	// }
+	// new_kernel();
+	// if(checksum == kernel_size) {
+	// 	uart_puts("[rpi3]\tDONE!\r\n");
+	// 	// TODO: jump to new kernel
+	// 	void (* new_kernel)(void) = 0x80000;
+	// 	// new_kernel = (void (*)(void)) 0x80000;
+	// 	new_kernel();
+	// 	// load_address = 0x80000;
+	// 	// for(int i=0; i<kernel_size; i++) {
+	// 	// 	// unsigned char c = uart_getc();
+	// 	// 	// *load_address = c;
+	// 	// 	uart_send(*load_address);
+	// 	// 	// checksum++;
+	// 	// 	load_address += 1;
+	// 	// }
+	// } else {
+	// 	uart_puts("[rpi3]\tERROR!");	
+	// }
 }
 
 void main()
@@ -79,6 +108,12 @@ void main()
 			uart_puts(itoa(addr, res_str, 10));
 			uart_puts("\r\n");
 			uart_puts("[rpi3]\tPlease send kernel image from UART now...\r\n");
+			load_image(0x80000);
+			void (* new_kernel)(void) = 0x80000;
+			new_kernel();
+		} else if(strcmp(command, CMD_PICTURE)) {
+			lfb_init();
+			lfb_showpicture();
 		} else {
 			uart_puts("ERROR: ");
 			uart_puts(command);
