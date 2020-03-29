@@ -8,8 +8,21 @@
 
 ## How to build
 
+bootloader@0x80000 
+
 ```bash
 make
+```
+
+kernel@0x20000 with timestamp
+
+```bash
+make stamp
+```
+
+kernel@0x40000 with timestamp
+```
+make stamp LOC=0x40000
 ```
 
 ## How to run
@@ -33,35 +46,52 @@ WIP
 ```
 .
 ├── bin
+│   ├── img2clang.py
+│   ├── Raspberry-Pi-Logo.jpg
 │   ├── rpish
 │   └── test.sh
-├── CMakeLists.txt
 ├── include
+│   ├── gpio.h
+│   ├── homer.h
+│   ├── info.h
 │   ├── io.h
+│   ├── lfb.h
+│   ├── loadimg.h
 │   ├── map.h
-│   ├── mini_uart.h
+│   ├── mbox.h
 │   ├── mm.h
 │   ├── power.h
+│   ├── raspi.h
 │   ├── shell.h
+│   ├── sprintf.h
 │   ├── string.h
+│   ├── test.h
 │   ├── time.h
+│   ├── uart.h
 │   └── util.h
 ├── LICENSE
 ├── Makefile
 ├── README.md
 └── src
     ├── boot.S
-    ├── CMakeLists.txt
+    ├── info.c
     ├── io.c
     ├── kernel.c
-    ├── linker.ld
-    ├── mini_uart.c
+    ├── lfb.c
+    ├── loadimg.c
+    ├── mbox.c
+    ├── mini.c
     ├── mm.S
+    ├── pl011.c
     ├── power.c
+    ├── raspi.c
     ├── shell.c
+    ├── sprintf.c
     ├── string.c
+    ├── template.ld
+    ├── test.c
     ├── time.c
     └── util.S
 
-3 directories, 28 files
+3 directories, 44 files
 ```
