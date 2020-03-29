@@ -1,6 +1,7 @@
 #include "simple_shell.h"
 
 #include "mini_uart.h"
+#include "utils.h"
 
 #define PM_RSTC      ((volatile unsigned int*)(0x3F10001C))
 #define PM_WDOG      ((volatile unsigned int*)(0x3F100024))
@@ -8,20 +9,20 @@
 #define PM_PASSWORD  0x5A000000
 
 
-char* promptStr="simple shell> ";
+char *promptStr="simple shell> ";
 
-char* commandStr[NUM_COMMAND]=
+char *commandStr[NUM_COMMAND]=
 {
 	"help", "hello", "timestamp", "reboot"//, "exit"
 };
 
-char* commandDesc[NUM_COMMAND]={
+char *commandDesc[NUM_COMMAND]={
 	"Show commands available.", "Show \"Hello World!\"", "Get current timestamp.", "Reboot device."
 };
 
 void (*commandArray[NUM_COMMAND])()=
 {
-	show_help, show_hello, show_timestamp, reboot_rpi3
+	cmd_help, cmd_hello, cmd_timestamp, cmd_reboot
 };
 
 // TODO: formated string
@@ -30,16 +31,16 @@ void (*commandArray[NUM_COMMAND])()=
 */
 void run_shell()
 {
-	char buf[MAX_COMMAND_LENGTH];
+	char buff[MAX_COMMAND_LENGTH];
 	int n, cmd_type;
 
 	uart_puts(promptStr);
-	while ((n=read_command(buf, MAX_COMMAND_LENGTH)) >= 0){
-		buf[n]='\0';
-		cmd_type = parse_command(buf);
+	while ((n=read_command(buff, MAX_COMMAND_LENGTH)) >= 0){
+		buff[n]='\0';
+		cmd_type = parse_command(buff);
 		if (cmd_type==-1){
 			uart_puts("command '");
-			uart_puts(buf);
+			uart_puts(buff);
 			uart_puts("' not found, try <help>\n");
 		} else {
 			commandArray[cmd_type]();
@@ -50,14 +51,14 @@ void run_shell()
 }
 
 // TODO: boundary test
-int read_command(char* buffer, unsigned int max_len)
+int read_command(char *buff, unsigned int size)
 {
 	int count = 0;
 	char char_recv;
-	while (count < max_len){
+	while (count < size){
 		char_recv = uart_getc();
 		uart_putc(char_recv);
-		buffer[count] = char_recv;
+		buff[count] = char_recv;
 		count ++;
 		if (char_recv == '\n'){
 			return --count;
@@ -71,29 +72,21 @@ int read_command(char* buffer, unsigned int max_len)
 	return -1; // out of buff	
 }
 
-int _strcmp(const char* s1, const char* s2){
-	for (; *s1 == *s2 ; s1++, s2++){
-		if (*s1 == '\0')
-			return 0;
-	}
-	return *s1 - *s2;
-}
-
 // TODO:  parameter parse
-int parse_command(char* buf)
+int parse_command(char *buff)
 {
 	int i;
 	for (i=NUM_COMMAND-1; i>=0; i--){
-		if (_strcmp(buf, commandStr[i])==0)
+		if (strcmp(buff, commandStr[i]) == 0)
 			break;
 	}
 	return i;
 }
 
 // TODO: formate string
-void show_help()
+void cmd_help()
 {
-	for(int i=0; i<NUM_COMMAND; i++){
+	for(int i=0; i< NUM_COMMAND; i++){
 		uart_puts(commandStr[i]);
 		uart_puts(": ");
 		uart_puts(commandDesc[i]);
@@ -101,36 +94,25 @@ void show_help()
 	}
 }
 
-void show_hello()
+void cmd_hello()
 {
     uart_puts("Hello world!\n");
 }
 
-// TODO: need implement malloc for dynamic length array
-// TODO: uding while version to eliminate leading zeros
-void _unitoa(unsigned num, char* buf, unsigned num_dig){
-	unsigned int ASCII_BIAS = 48;
-	buf[num_dig] = '\0';
-	for(int i=num_dig-1; i>=0; i--){
-		buf[i] = (char)(num%10 + ASCII_BIAS);
-		num = num / 10;
-	}
-}
-
 // TODO: hard-coding num_digit
-void show_timestamp()
+void cmd_timestamp()
 {
 	unsigned int time, time_count, time_freq;
-	char buf[10];
+	char buff[10];
 	asm volatile("mrs %0, cntpct_el0": "=r"(time_count)::); // read counts of core timer
 	asm volatile("mrs %0, cntfrq_el0": "=r"(time_freq)::); // read frequency of core timer
 	time = time_count / (time_freq / 100000U);
 	
-	_unitoa((time/100000U), buf, 3);
-	uart_puts(buf); // natural part
+	unitoa((time/100000U), buff, 3);
+	uart_puts(buff); // natural part
 	uart_send('.');
-	_unitoa(time%100000U, buf, 5);
-	uart_puts(buf); // decimal part
+	unitoa(time%100000U, buff, 5);
+	uart_puts(buff); // decimal part
 	uart_puts("\n");
 }
 
@@ -144,7 +126,7 @@ void _cancel_reboot() {
 	*PM_WDOG = PM_PASSWORD | 0; // number of watchdog tick
 }
 
-void reboot_rpi3()
+void cmd_reboot()
 {
     uart_puts("rebooting ...");
 	_reboot(50);// timeout = 1/16th of a second? (whatever)

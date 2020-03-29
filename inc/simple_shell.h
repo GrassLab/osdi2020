@@ -8,12 +8,9 @@ void run_shell(void);
 int read_command(char*, unsigned int);
 int parse_command(char*);
 
-void show_help();
-void show_hello();
-void show_timestamp();
-void reboot_rpi3();
-
-void print_prompt(void);
-
+void cmd_help();
+void cmd_hello();
+void cmd_timestamp();
+void cmd_reboot();
 
 #endif//_SIMPLE_SHELL_H
