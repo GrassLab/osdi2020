@@ -43,9 +43,6 @@ $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
 	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
 
-DEP_FILES = $(OBJ_FILES:%.o=%.d)
--include $(DEP_FILES)
-
 $(IMG): $(BUILD_DIR) $(OBJ_FILES)
 	$(eval KERNEL_LOC := $(if $(KERNEL_LOC),$(KERNEL_LOC), $(DEFAULT_KERNEL_LOC)))
 	$(eval TARGET := $(if $(TARGET),$(TARGET), $(DEFAULT_TARGET)))
