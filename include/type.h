@@ -14,6 +14,7 @@ typedef enum
     timestamp,
     reboot,
     hardwareInfo,
+    loadImg,
     none
 } command_t;
 

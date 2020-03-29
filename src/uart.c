@@ -42,7 +42,7 @@
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
-void uart_init()
+void uartInit()
 {
     register unsigned int r;
 
@@ -82,7 +82,7 @@ void uart_init()
 /**
  * Send a character
  */
-void uart_send(unsigned int c)
+void uartSend(unsigned int c)
 {
     /* wait until we can send */
     do
@@ -96,7 +96,7 @@ void uart_send(unsigned int c)
 /**
  * Receive a character
  */
-char uart_getc()
+char uartGetc()
 {
     char r;
     /* wait until something is in the buffer */
@@ -113,21 +113,21 @@ char uart_getc()
 /**
  * Display a string
  */
-void uart_puts(const char *s)
+void uartPuts(const char *s)
 {
     while (*s)
     {
         /* convert newline to carrige return + newline */
         if (*s == '\n')
-            uart_send('\r');
-        uart_send(*s++);
+            uartSend('\r');
+        uartSend(*s++);
     }
 }
 
 /**
  * Display a binary value in hexadecimal
  */
-void uart_hex(unsigned int d)
+void uartHex(unsigned int d)
 {
     unsigned int n;
     int c;
@@ -137,6 +137,6 @@ void uart_hex(unsigned int d)
         n = (d >> c) & 0xF;
         // 0-9 => '0'-'9', 10-15 => 'A'-'F'
         n += n > 9 ? 0x37 : 0x30;
-        uart_send(n);
+        uartSend(n);
     }
 }

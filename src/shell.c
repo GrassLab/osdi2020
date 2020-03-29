@@ -3,82 +3,39 @@
 #include "time.h"
 #include "power.h"
 #include "mbox.h"
+#include "utils.h"
+#include "bootloader.h"
 
 const static unsigned int MAX_BUFFER_SIZE = 512;
 
-bool strcmp(const char *s1, const char *s2)
-{
-    for (; *s1 != '\0' && *s2 != '\0'; s1++, s2++)
-    {
-        if ((*s1 - *s2) != 0)
-            return false;
-    }
-
-    if (*s1 == '\0' && *s2 == '\0')
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-void itoaAndPrint(int i)
-{
-    char buf[MAX_BUFFER_SIZE];
-    int buf_ptr = 0;
-    while (i > 0)
-    {
-        buf[buf_ptr++] = (i % 10) + '0';
-        i = i / 10;
-    }
-    buf[buf_ptr] = '\0';
-    for (int e = buf_ptr - 1, s = 0, half = (buf_ptr - 1) / 2; e > half; --e, ++s)
-    {
-        char tmp = buf[s];
-        buf[s] = buf[e];
-        buf[e] = tmp;
-    }
-
-    uart_puts(buf);
-}
-
-void ftoaAndPrint(double f)
-{
-    int i = (int)f;
-    int frac = (int)((f - (double)i) * 100000);
-    itoaAndPrint(i);
-    uart_puts(".");
-    itoaAndPrint(frac);
-}
-
 static inline void helpCmd()
 {
-    uart_puts("Commands:\n");
-    uart_puts("    help               print all available commands\n");
-    uart_puts("    hello              print Hello World!\n");
-    uart_puts("    timestamp          get current timestamp\n");
-    uart_puts("    reboot             reboot rpi3\n");
+    uartPuts("Commands:\n");
+    uartPuts("    help               print all available commands\n");
+    uartPuts("    hello              print Hello World!\n");
+    uartPuts("    timestamp          get current timestamp\n");
+    uartPuts("    reboot             reboot rpi3\n");
+    uartPuts("    hardware           print hardware information\n");
+    uartPuts("    loadimg            load other kernel image\n");
 }
 
 static inline void helloCmd()
 {
-    uart_puts("Hello World!\n");
+    uartPuts("Hello World!\n");
 }
 
 static inline void timestampCmd()
 {
     double t = getTime();
 
-    uart_puts("[");
-    ftoaAndPrint(t);
-    uart_puts("]\n");
+    uartPuts("[");
+    printFloat(t);
+    uartPuts("]\n");
 }
 
 static inline void rebootCmd()
 {
-    uart_puts("-------Rebooting--------\n\n");
+    uartPuts("-------Rebooting--------\n\n");
 
     reset(10);
 }
@@ -89,11 +46,16 @@ static inline void hardwareInfoCmd()
     getVCMemory();
 }
 
+static inline void loadImgCmd()
+{
+    loadImage();
+}
+
 static inline void noneCmd(const char *input)
 {
-    uart_puts("Unknown command: ");
-    uart_puts(input);
-    uart_puts("\n");
+    uartPuts("Unknown command: ");
+    uartPuts(input);
+    uartPuts("\n");
 }
 
 command_t checkCmdType(const char *input)
@@ -108,6 +70,8 @@ command_t checkCmdType(const char *input)
         return reboot;
     else if (strcmp(input, "hardware"))
         return hardwareInfo;
+    else if (strcmp(input, "loadimg"))
+        return loadImg;
 
     return none;
 }
@@ -134,6 +98,9 @@ void processCmd(const char *input)
     case hardwareInfo:
         hardwareInfoCmd();
         break;
+    case loadImg:
+        loadImgCmd();
+        break;
     default:
         noneCmd(input);
         break;
@@ -142,10 +109,10 @@ void processCmd(const char *input)
 
 static inline void helloMessage()
 {
-    uart_puts("\n|------------------------|\n");
-    uart_puts("| Welcome to OSDI shell! |\n");
-    uart_puts("|------------------------|\n\n");
-    uart_puts("> ");
+    uartPuts("\n|------------------------|\n");
+    uartPuts("| Welcome to OSDI shell! |\n");
+    uartPuts("|------------------------|\n\n");
+    uartPuts("> ");
 }
 
 void runShell()
@@ -158,15 +125,15 @@ void runShell()
     // echo everything back
     while (1)
     {
-        char in_c = uart_getc();
-        uart_send(in_c);
+        char in_c = uartGetc();
+        uartSend(in_c);
 
         if (in_c == '\n')
         {
             buf[buf_ptr] = '\0';
 
             processCmd(buf);
-            uart_puts("> ");
+            uartPuts("> ");
 
             buf_ptr = 0;
             buf[buf_ptr] = '\0';

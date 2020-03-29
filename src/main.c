@@ -29,7 +29,7 @@
 void main()
 {
     // set up serial console
-    uart_init();
-    
+    uartInit();
+
     runShell();
 }

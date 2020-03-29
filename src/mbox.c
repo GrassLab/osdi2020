@@ -82,53 +82,53 @@ int mboxCall(unsigned char ch, unsigned int mbox[7])
 
 void getBoardRevision()
 {
-    unsigned int mailbox[7];
-    mailbox[0] = 7 * 4; // buffer size in bytes
-    mailbox[1] = REQUEST_CODE;
+    unsigned int mbox[7];
+    mbox[0] = 7 * 4; // buffer size in bytes
+    mbox[1] = REQUEST_CODE;
     // tags begin
-    mailbox[2] = GET_BOARD_REVISION; // tag identifier
-    mailbox[3] = 4;                  // maximum of request and response value buffer's length.
-    mailbox[4] = TAG_REQUEST_CODE;
-    mailbox[5] = 0; // value buffer
+    mbox[2] = GET_BOARD_REVISION; // tag identifier
+    mbox[3] = 4;                  // maximum of request and response value buffer's length.
+    mbox[4] = TAG_REQUEST_CODE;
+    mbox[5] = 0; // value buffer
     // tags end
-    mailbox[6] = END_TAG;
+    mbox[6] = END_TAG;
 
-    if (mboxCall(MBOX_CH_PROP, mailbox))
+    if (mboxCall(MBOX_CH_PROP, mbox))
     {
-        uart_puts("rpi3's board revision: ");
-        uart_hex(mailbox[5]);
-        uart_puts("\n"); // it should be 0xa020d3 for rpi3 b+
+        uartPuts("rpi3's board revision: ");
+        uartHex(mbox[5]);
+        uartPuts("\n"); // it should be 0xa020d3 for rpi3 b+
     }
     else
     {
-        uart_puts("Unable to get board revision\n");
+        uartPuts("Unable to get board revision\n");
     }
 }
 
 void getVCMemory()
 {
-    unsigned int mailbox[8];
-    mailbox[0] = 8 * 4; // buffer size in bytes
-    mailbox[1] = REQUEST_CODE;
+    unsigned int mbox[8];
+    mbox[0] = 8 * 4; // buffer size in bytes
+    mbox[1] = REQUEST_CODE;
     // tags begin
-    mailbox[2] = GET_VC_MEMORY; // tag identifier
-    mailbox[3] = 8;             // maximum of request and response value buffer's length.
-    mailbox[4] = TAG_REQUEST_CODE;
-    mailbox[5] = 0; // value buffer
-    mailbox[6] = 0; // value buffer
+    mbox[2] = GET_VC_MEMORY; // tag identifier
+    mbox[3] = 8;             // maximum of request and response value buffer's length.
+    mbox[4] = TAG_REQUEST_CODE;
+    mbox[5] = 0; // value buffer
+    mbox[6] = 0; // value buffer
     // tags end
-    mailbox[7] = END_TAG;
+    mbox[7] = END_TAG;
 
-    if (mboxCall(MBOX_CH_PROP, mailbox))
+    if (mboxCall(MBOX_CH_PROP, mbox))
     {
-        uart_puts("VC core base address: ");
-        uart_hex(mailbox[5]);
-        uart_puts("     size: ");
-        uart_hex(mailbox[6]);
-        uart_puts("\n"); // it should be 0xa020d3 for rpi3 b+
+        uartPuts("VC core base address: ");
+        uartHex(mbox[5]);
+        uartPuts("     size: ");
+        uartHex(mbox[6]);
+        uartPuts("\n"); // it should be 0xa020d3 for rpi3 b+
     }
     else
     {
-        uart_puts("Unable to get VC core base address\n");
+        uartPuts("Unable to get VC core base address\n");
     }
 }
