@@ -1,3 +1,4 @@
+#include "mbox.h"
 #include "uart.h"
 
 #define MMIO_BASE 0x3F000000
@@ -93,6 +94,10 @@ void compair(char *buf) {
     my_itoa(result);
   } else if (my_strcpy(buf, "reboot")) {
     reboot();
+  } else if (my_strcpy(buf, "version")) {
+    board_revision();
+  } else if (my_strcpy(buf, "vc_addr")) {
+    vc_base_address();
   } else {
     uart_puts("unknow command ");
     uart_puts(buf);
