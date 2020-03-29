@@ -67,6 +67,6 @@ _start:
     cbnz    w2, 3b
 
     // jump to relocated C code, should not return
-4:  bl      main-2560
+4:  bl      main-30720
     // for failsafe, halt this core too
     b       1b

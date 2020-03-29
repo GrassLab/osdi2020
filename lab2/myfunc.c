@@ -6,3 +6,10 @@ double get_time(){
     time = counter / frequency;
     return time;
 }
+
+int atoi(char *str){
+    int res = 0; 
+    for (int i = 2; str[i] != '\0'; ++i) 
+        res = res * 16 + str[i] - '0';  
+    return res; 
+}

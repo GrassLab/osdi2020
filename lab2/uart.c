@@ -121,3 +121,15 @@ void uart_send_double(double time){
     }
     uart_send_int(t2);
 }
+
+void uart_gets(char *s){
+    int i = 0;
+    char c;
+    while((c = uart_getc()) != '\n'){
+        uart_send(c);
+        s[i++] = c;
+    }
+    s[i] = '\0';
+    uart_send('\r');
+    uart_send('\n');
+}

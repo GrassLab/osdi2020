@@ -30,3 +30,4 @@ void uart_puts(char *s);
 void uart_hex(unsigned int d);
 void uart_send_int(unsigned long i);
 void uart_send_double(double time);
+char uart_gets(char *s);
