@@ -32,6 +32,11 @@ while [[ $# -gt 0 ]];do
             shift
             shift
         ;;
+        -l|-loc|--location)
+            IMG_LOC=$2
+            shift
+            shift
+        ;;
         -h|--help)
             echo -e ""
             echo -e "$NAME [-hi] [--help] [-c command_string | file ...]"
@@ -67,11 +72,28 @@ while [[ $# -gt 0 ]];do
             ;;
         -img)
             FILEoCMD=1
-            BYTES=512
-            IMG_SIZE=`wc -c kernel8.img | awk '{print $1}'`
-            sudo sh -c "echo -ne 'LOADIMG|$IMG_SIZE|' > $DEVICE;"
-            sudo sh -c "dd if=$2 bs=$BYTES of=$DEVICE;"
+            IMG_SIZE=`wc -c $2 | awk '{print $1}'`
+            BS=64
+
+            if [ -z "$input" ];then
+                IMG_LOC=200000
+                read -p "img loc(enter=0x${IMG_LOC}): 0x" input
+                [[ ! -z "$input" ]] && IMG_LOC=$input
+            fi
+
+            sudo sh -c "echo -e 'loadimg' | tr -s '\n' '\r' > $DEVICE;"
+            sleep 1
+            echo "img size is: $IMG_SIZE bytes"
+            echo -ne "sending size..."
+            sudo sh -c "echo -e '${IMG_SIZE}@${IMG_LOC}' | tr -s '\n' '\r' > $DEVICE;"
+            echo "done"
+            sleep 1
+            echo -ne "sending img..."
+            sudo sh -c "dd if=$2 of=$DEVICE status=progress;"
+            echo "done"
+            echo -ne "sending postfix..."
             sudo sh -c "echo -ne '|GMIDAOL' > $DEVICE;"
+            echo "done"
             shift
             shift
             ;;

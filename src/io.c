@@ -18,7 +18,7 @@ int expect(char* s){
     while(*s){
         c = getchar();
         if(*s != c){
-            printf("expect %c get %c\n", *s, c);
+            println("expect ", *s, "get", c);
             return 0;
         }
         s++;
@@ -26,14 +26,21 @@ int expect(char* s){
     return 1;
 }
 
-int is_digit(char c){
-    return c >= '0' && c <= '9'; 
+int is_digit(char c, int base){
+    if(c >= 97) c = c - 'a' + 'A';
+    for(int i = 0; i < base; i++)
+        if(c == "0123456789ABCDEFGHIJKLMNOPQRSTUVWXUZ"[i])
+            return i;
+    return -1; 
 }
 
-int get_int(char *p){
-    int n = 0, c;
-    while(is_digit(c = getchar()))
-        n = n * 10 + c - '0';
+unsigned long long get_nature(char *p, int base, int echo){
+    int n = 0, c, d;
+    while((d = is_digit(c = getchar(), base)) >= 0){
+        n = n * base + d;
+        if(echo) putchar(c);
+    }
     if(p) *p = c;
+    if(echo) putchar(c);
     return n;
 }

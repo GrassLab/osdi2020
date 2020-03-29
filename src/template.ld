@@ -1,6 +1,6 @@
 SECTIONS
 {
-    . = 0x80000;
+    . = __kernel__beg__loc__;
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
     PROVIDE(_data = .);
@@ -13,7 +13,6 @@ SECTIONS
         __bss_end = .;
     }
     _end = .;
-
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_beg)>>3;

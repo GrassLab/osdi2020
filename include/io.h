@@ -36,7 +36,7 @@ define__print_as_number_types();
 #define flush()    uart_flush()
 
 #define __print(x) \
-    _Generic((x), char: uart_send, char*: uart_send_string, \
+    _Generic((x), char: uart_send, char*: uart_puts, \
             long: __print_long_as_number, int: __print_int_as_number, \
             extra_number_printing, default: __print_ULL_as_number \
             )(x);
@@ -47,6 +47,6 @@ define__print_as_number_types();
 #define puts println
 
 int expect(char* s);
-int get_int();
+unsigned long long get_nature(char *, int, int);
 
 #endif

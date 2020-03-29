@@ -27,7 +27,7 @@
  * minimal sprintf implementation
  */
 
-#include "uart.h"
+#include "io.h"
 
 unsigned int vsprintf(char *dst, char* fmt, __builtin_va_list args)
 {
@@ -36,7 +36,7 @@ unsigned int vsprintf(char *dst, char* fmt, __builtin_va_list args)
     char *p, *orig=dst, tmpstr[19];
 
     // failsafes
-    if(dst==(void*)0 || fmt==(void*)0) {
+    if(fmt==(void*)0) {
         return 0;
     }
 
@@ -64,7 +64,8 @@ unsigned int vsprintf(char *dst, char* fmt, __builtin_va_list args)
             // character
             if(*fmt=='c') {
                 arg = __builtin_va_arg(args, int);
-                *dst++ = (char)arg;
+                if(dst) *dst++ = (char)arg;
+                else uart_send((char)arg);
                 fmt++;
                 continue;
             } else
@@ -127,15 +128,16 @@ copystring:     if(p==(void*)0) {
                     p="(null)";
                 }
                 while(*p) {
-                    *dst++ = *p++;
+                    if(dst) *dst++ = *p++;
+                    else uart_send(*p++);
                 }
             }
         } else {
-put:        *dst++ = *fmt;
+put:         if(dst) *dst++ = *fmt; else uart_send(*fmt);
         }
         fmt++;
     }
-    *dst=0;
+    if(dst) *dst=0;
     // number of bytes written
     return dst-orig;
 }
@@ -150,8 +152,6 @@ unsigned int sprintf(char *dst, char* fmt, ...)
     return vsprintf(dst,fmt,args);
 }
 
-// get address from linker
-extern volatile unsigned char _end;
 /**
  * Display a string
  */
@@ -160,14 +160,6 @@ void printf(char *fmt, ...) {
     __builtin_va_start(args, fmt);
     // we don't have memory allocation yet, so we
     // simply place our string after our code
-    char *s = (char*)&_end;
     // use sprintf to format our string
-    vsprintf(s,fmt,args);
-    // print out as usual
-    while(*s) {
-        /* convert newline to carrige return + newline */
-        if(*s=='\n')
-            uart_send('\r');
-        uart_send(*s++);
-    }
+    vsprintf(0,fmt,args);
 }
