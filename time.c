@@ -87,7 +87,7 @@ void get_time()
             timestamp[i] = '\0';
 
             uart_puts(timestamp);
-            uart_send('\n');
+            uart_puts("\n");
         }
     }
 }

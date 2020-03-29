@@ -29,9 +29,9 @@ void get_vccore_addr()
     //printf("0x%x\n", mailbox[5]); // it should be 0xa020d3 for rpi3 b+
     
     mbox_call(MBOX_CH_PROP);
-    uart_puts("My vc core based addr is ");
+    uart_puts("My vc core based addr is 0x");
     uart_hex(mbox[5]);
-    uart_puts(" and size is ");
+    uart_puts(" and size is 0x");
     uart_hex(mbox[6]);
     uart_puts("\n");
 }
@@ -53,7 +53,7 @@ void get_board_revision()
     //printf("0x%x\n", mailbox[5]); // it should be 0xa020d3 for rpi3 b+
     
     mbox_call(MBOX_CH_PROP);
-    uart_puts("My board revision is: ");
+    uart_puts("My board revision is 0x");
     uart_hex(mbox[5]);
     uart_puts("\n");
 }
@@ -74,7 +74,7 @@ void get_serial()
 
     // send the message to the GPU and receive answer
     if (mbox_call(MBOX_CH_PROP)) {
-        uart_puts("My serial number is: ");
+        uart_puts("My serial number is 0x");
         uart_hex(mbox[6]);
         uart_hex(mbox[5]);
         uart_puts("\n");
@@ -92,8 +92,7 @@ void main()
     get_board_revision();
     get_vccore_addr();
 
-    loop_start:do {
-	
+    while (1) {
         char tmp;
         char user_input[12];
         int i = 0;
@@ -105,38 +104,57 @@ void main()
             user_input[i++] = tmp;
         }
         user_input[i] = '\0';
-        uart_send('\n');
+        uart_puts("\n");
         //uart_send(uart_i2c(i));
         if (i == 0) {
-            goto loop_start;
+            continue;
         }
-
+        /*
+         * <hello> Echo hello
+         */
         if (uart_strcmp(user_input, "hello") == 0) {
             uart_puts("Hello World!\n");
-            goto loop_start;
+            continue;
         }
-        
+        /*
+         * <reboot> reboot in given cpu ticks
+         */
         if (uart_strcmp(user_input, "reboot") == 0) {
             get_time();
-            uart_puts("reboot in 10 ticks.\n");
+            uart_puts("reboot in 10 ticks.\n\n");
             reset(10);
-            goto loop_start;
+            continue;
         }
-        
+        /*
+         * <time> get the timestamp
+         */
         if (uart_strcmp(user_input, "time") == 0) {
             get_time();
-            goto loop_start;    
+            continue;    
         }
-        
+        /*
+         * <loadimg> listen for raspbootcom and load the img from UART
+         */
+        if (uart_strcmp(user_input, "loadimg") == 0) {
+            uart_puts("loading image from uart...\n");
+            continue;    
+        }
+        /*
+         * <help> list the existed commands
+         */
         if (uart_strcmp(user_input, "help") == 0) {
             uart_puts("hello: print hello world.\n");
             uart_puts("help: help.\n");
             uart_puts("reboot: restart.\n");
             uart_puts("time: show timestamp.\n");
-            goto loop_start;
+            uart_puts("loadimg: reload image from UART.\n");
+            continue;
         }
+        /*
+         * Invalid command
+         */
         uart_puts("Error: command ");
         uart_puts(user_input);
         uart_puts(" not found, try <help>.\n");
-    } while (1);
+    }
 }
