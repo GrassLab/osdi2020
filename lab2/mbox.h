@@ -59,6 +59,21 @@ volatile unsigned int __attribute__ ((aligned (16))) mbox[36];
 #define MBOX_FULL       0x80000000
 #define MBOX_EMPTY      0x40000000
 
+struct mbox_tag
+{
+  unsigned int id;
+  unsigned int buf_size;
+  unsigned int code;
+};
+
+struct mbox_msg
+{
+  unsigned int buf_size;
+  unsigned int code;
+  struct mbox_tag tag;
+};
+
+
 int mbox_call (unsigned char ch);
 
 #endif /* ifndef MAIL_BOX */
