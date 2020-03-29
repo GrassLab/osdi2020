@@ -5,9 +5,16 @@
 #include "gpio.h"
 #include "load_kernel.h"
 
+// for reboot
 #define PM_PASSWORD (0x5a000000)
 #define PM_RSTC ((int*)0x3F10001c)
 #define PM_WDOG ((int*)0x3F100024)
+
+// linker variable
+extern char kernel_begin[];
+extern char __bss_start[];
+extern char __bss_end[];
+extern char __bss_size[];
 
 void main()
 {
@@ -17,7 +24,7 @@ void main()
     int sizeof_current_line = 0;
     _Bool command_not_found = 1;
 	unsigned long long int kernel_address;
-	
+	char buf1[1000], buf2[1000], buf3[1000], buf4[1000];
 	// UART0 initialization
     uart_init();
 	uart_puts("\r\n");
@@ -53,10 +60,11 @@ void main()
 		else if(!strcmp(buffer, "timestamp")) {
 			timestamp(&i1, &i2);
 			// turn the number into string
-			char buf[100], buf1[100];
-			itoa(i1, buf, 10); itoa(i2, buf1, 10);
-			uart_puts("\r["); uart_puts(buf); uart_puts(".");
-			uart_puts(buf1); uart_puts("]"); uart_puts("\n");
+			// char *buf = "", *buf1 = "";
+			itoa(i1, buf1, 10);
+			itoa(i2, buf2, 10);
+			uart_puts("\r["); uart_puts(buf1); uart_puts(".");
+			uart_puts(buf2); uart_puts("]"); uart_puts("\n");
 			command_not_found = 0;
 		}
 		else if(!strcmp(buffer, "reboot")) {
@@ -72,12 +80,28 @@ void main()
 			command_not_found = 0;
 		}
 		else if(!strcmp(buffer, "loadimg")) {
-			// uart_puts("\rLoad kernel image\n");
 			kernel_address =  read_kernel_address();
-			//bss_start = ;
-			//bss_end = ;
-			//bss_size = ;
 			
+			uart_puts("\rThe kernel begins at: ");
+			char *tmp_char1 = kernel_begin;
+			uart_puts(tmp_char1);
+			uart_puts("\n");
+			
+			uart_puts("\rThe bss begins at: ");
+			char *tmp_char2 = __bss_start;
+			uart_puts(tmp_char2);
+			uart_puts("\n");
+			
+			uart_puts("\rThe bss ends at: ");
+			char *tmp_char3 = __bss_end;
+			uart_puts(tmp_char3);
+			uart_puts("\n");
+			
+			uart_puts("\rThe bss size is: ");
+			char *tmp_char4 = __bss_size;
+			uart_puts(tmp_char4);
+			uart_puts("\n");
+
 			command_not_found = 0;
 		}
 		if(command_not_found == 1 && sizeof_current_line>0) {

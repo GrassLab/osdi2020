@@ -3,6 +3,7 @@
 
 void reverse(char str[], int length);
 char* itoa(unsigned long long int num, char* str, unsigned long long int base);
+unsigned long long int atoulli(char* str);
 int strcmp(const char *X, const char *Y);
 int strlen(const char *str);
 int hexChar2int(char ch);

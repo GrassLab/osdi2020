@@ -34,14 +34,18 @@ char* itoa(unsigned long long int num, char* str, unsigned long long int base) {
         str[i++] = (rem > 9)? (rem-10) + 'a' : rem + '0'; 
         num = num/base; 
     }  
-    if (isNegative) 
-        str[i++] = '-'; 
+    if (isNegative) str[i++] = '-'; 
   
     str[i] = '\0';
     reverse(str, i); 
     return str; 
 }
 
+unsigned long long int atoulli(char* str){ 
+    unsigned long long res = 0; // Initialize result 
+    for(int i = 0; str[i] != '\0'; ++i) res = res * 10 + str[i] - '0'; 
+    return res;
+}
 
 int strcmp(const char *X, const char *Y){
 	while(*X)
