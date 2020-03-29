@@ -8,5 +8,6 @@ int strcmp(const char *X, const char *Y);
 int strlen(const char *str);
 int hexChar2int(char ch);
 void timestamp(int *integer_part, int *decimal_point_part);
+void naive_memcpy(void *destt, void *sourcet, size_t size);
 
 #endif

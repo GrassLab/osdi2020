@@ -84,20 +84,21 @@ void main()
 			
 			uart_puts("\rThe kernel begins at: ");
 			char *tmp_char1 = kernel_begin;
+			tmp_char1[1] = '\0';
 			uart_puts(tmp_char1);
 			uart_puts("\n");
 			
-			uart_puts("\rThe bss begins at: ");
+			uart_puts("The bss begins at: ");
 			char *tmp_char2 = __bss_start;
 			uart_puts(tmp_char2);
 			uart_puts("\n");
 			
-			uart_puts("\rThe bss ends at: ");
+			uart_puts("The bss ends at: ");
 			char *tmp_char3 = __bss_end;
 			uart_puts(tmp_char3);
 			uart_puts("\n");
 			
-			uart_puts("\rThe bss size is: ");
+			uart_puts("The bss size is: ");
 			char *tmp_char4 = __bss_size;
 			uart_puts(tmp_char4);
 			uart_puts("\n");

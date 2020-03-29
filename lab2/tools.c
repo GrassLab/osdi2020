@@ -109,3 +109,9 @@ void timestamp(int *integer_part, int *decimal_point_part){
 
 }
 
+
+void memcpy(void *destt, void *sourcet, size_t size){
+   char *source = (char *)sourcet;
+   char *dest = (char *)destt;
+   for(size_t s = 0; s < size; s++){ *dest++ = *source++; }
+}
