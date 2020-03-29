@@ -11,6 +11,7 @@ kernel = "kernel8.img"
 size = os.path.getsize(kernel)
 
 s.write(size.to_bytes(4, 'little'))
+time.sleep(1)
 
 with open(kernel, "rb") as f:
     write_len = s.write(f.read())
