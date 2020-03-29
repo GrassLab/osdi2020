@@ -2,7 +2,7 @@ ENTRY(_start)
 OUTPUT_ARCH(aarch64)
 SECTIONS
 {
-  . = 0x80000;
+  . = 0x20000;
   PROVIDE (__executable_start = .);
   .text :
   {

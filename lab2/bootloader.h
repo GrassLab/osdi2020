@@ -1,7 +1,7 @@
 #ifndef __BOOTLOADER_H__
 #define __BOOTLOADER_H__
 
-#define LOADIMG_TEMP_LOCATION 0x40000
+#define LOADIMG_TEMP_LOCATION 0x20000
 
 void bootloader_shell(void);
 void bootloader_shell_parser();

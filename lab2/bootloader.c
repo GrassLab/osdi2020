@@ -142,13 +142,9 @@ int bootloader_shell_loadimg(char * string_buffer)
     return 0;
   }
 
-  /* TODO: Copy shellcode to another location*/
-
-  /* TODO: Jump to shellcode */
-
-  /* TODO: Shellcode copy the file to its designate */
-
-  /* TODO: Execute _start of kernel */
+#pragma GCC diagnostic ignored "-Wint-conversion"
+  void (*start_os)(void) = LOADIMG_TEMP_LOCATION;
+  start_os();
 
   return 1;
 }
