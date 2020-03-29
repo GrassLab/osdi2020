@@ -1,26 +1,14 @@
 #include "mailbox.h"
 
-
-/* mailbox message buffer */
-volatile unsigned int  __attribute__((aligned(16))) mbox[36];
-
-#define VIDEOCORE_MBOX  (MMIO_BASE+0x0000B880)
-#define MBOX_READ       ((volatile unsigned int*)(VIDEOCORE_MBOX+0x0))
-#define MBOX_POLL       ((volatile unsigned int*)(VIDEOCORE_MBOX+0x10))
-#define MBOX_SENDER     ((volatile unsigned int*)(VIDEOCORE_MBOX+0x14))
-#define MBOX_STATUS     ((volatile unsigned int*)(VIDEOCORE_MBOX+0x18))
-#define MBOX_CONFIG     ((volatile unsigned int*)(VIDEOCORE_MBOX+0x1C))
-#define MBOX_WRITE      ((volatile unsigned int*)(VIDEOCORE_MBOX+0x20))
-#define MBOX_RESPONSE   0x80000000
-#define MBOX_FULL       0x80000000
-#define MBOX_EMPTY      0x40000000
-
 /**
  * Make a mailbox call. Returns 0 on failure, non-zero on success
  */
 int mbox_call(unsigned char ch)
 {
     unsigned int r = (((unsigned int)((unsigned long)&mbox)&~0xF) | (ch&0xF));
+    uart_puts("mail call\n");
+    uart_hex(r);
+    uart_puts("\n");
     /* wait until we can write to the mailbox */
     do{asm volatile("nop");}while(*MBOX_STATUS & MBOX_FULL);
     /* write the address of our message to the mailbox with channel identifier */
@@ -52,40 +40,79 @@ void set_mbox(unsigned int a)
 void get_board_revision(void)
 {
 	set_mbox(MBOX_TAG_GET_BOARD_REVISION);
-	mbox_call(MBOX_CH_PROP);
-	uart_puts("My board_revision number is\n");	
-	uart_hex(mbox[5]);
-    uart_puts("\n");
+	if(mbox_call(MBOX_CH_PROP))
+    {
+        uart_puts("My board_revision number is\n");	
+        uart_hex(mbox[5]);
+        uart_puts("\n");
+    }
+    else
+    {
+        uart_puts("Unable to query serial!\n");
+    }
+    
 }
 void get_serial(void)
 {
 	set_mbox(MBOX_TAG_GETSERIAL);
-	mbox_call(MBOX_CH_PROP);
-	uart_puts("My serial number is\n");	
-	uart_hex(mbox[5]);
-    uart_puts("\n");
+	if(mbox_call(MBOX_CH_PROP))
+    {
+        uart_puts("My serial number is\n");	
+        uart_hex(mbox[5]);
+        uart_puts("\n");
+    }
+    else
+    {
+        uart_puts("Unable to query serial!\n");
+    }
 }
 
 void get_vc_information(void)
 {
 	set_mbox(MBOX_TAG_GET_VC);
-	mbox_call(MBOX_CH_PROP);
-	uart_puts("My VC base address is\n");	
-	uart_hex(mbox[5]);
-    uart_puts("\n");
-    uart_puts("My VC memory size is\n");	
-    uart_hex(mbox[6]);
-    uart_puts("\n");
+	if(mbox_call(MBOX_CH_PROP))
+    {
+        uart_puts("My VC base address is\n");	
+        uart_hex(mbox[5]);
+        uart_puts("\n");
+        uart_puts("My VC memory size is\n");	
+        uart_hex(mbox[6]);
+        uart_puts("\n");
+    }
+    else
+    {
+        uart_puts("Unable to query serial!\n");
+    }
 }
 
 void get_arm_information(void)
 {
 	set_mbox(MBOX_TAG_GET_ARM);
-	mbox_call(MBOX_CH_PROP);
-	uart_puts("My ARM base address is\n");	
-	uart_hex(mbox[5]);
-    uart_puts("\n");
-    uart_puts("My ARM memory size is\n");	
-    uart_hex(mbox[6]);
-    uart_puts("\n");
+	if(mbox_call(MBOX_CH_PROP))
+    {
+        uart_puts("My ARM base address is\n");	
+        uart_hex(mbox[5]);
+        uart_puts("\n");
+        uart_puts("My ARM memory size is\n");	
+        uart_hex(mbox[6]);
+        uart_puts("\n");
+    }
+    else
+    {
+        uart_puts("Unable to query serial!\n");
+    }
+}
+
+void set_uart0_clock_rate(void)
+{
+    /* set up clock for consistent divisor values */
+    mbox[0] = 9*4;
+    mbox[1] = MBOX_REQUEST;
+    mbox[2] = MBOX_TAG_SETCLKRATE; // set clock rate
+    mbox[3] = 12;
+    mbox[4] = 8;
+    mbox[5] = 2;           // UART clock
+    mbox[6] = 4000000;     // 4Mhz
+    mbox[7] = 0;           // clear turbo
+    mbox[8] = MBOX_TAG_LAST;
 }

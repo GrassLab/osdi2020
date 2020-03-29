@@ -9,7 +9,7 @@
 - [x] [required] Get the hardware’s information by mailbox and print them, you should at least print board revision and VC Core base address.
 
 ### PL011 UART
-- [ ] [elective] Get or set UART clock by mailbox and replace mini UART by PL011 UART.
+- [x] [elective] Get or set UART clock by mailbox and replace mini UART by PL011 UART.
 
 ### Splash
 - [ ] [elective] Set framebuffer by mailbox to show a splash image, show the result by qemu.
