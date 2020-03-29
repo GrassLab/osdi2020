@@ -41,7 +41,6 @@ void uart_init()
     *AUX_MU_CNTL = 3;      // enable Tx, Rx
 }
 
-
 /**
  * Send a character by uart
  */

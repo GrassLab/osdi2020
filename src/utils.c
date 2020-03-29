@@ -18,3 +18,18 @@ void unitoa(unsigned num, char *buff, unsigned num_dig){
 		num = num / 10;
 	}
 }
+
+/**
+ * Transfer a binary value to hexadecimal string
+ */
+void bin2hex(unsigned int num, char buff[4]) {
+    unsigned int n;
+    int c,i;
+    for(i=0,c=28; c>=0; i++,c-=4) {
+        // get highest tetrad
+        n=(num>>c)&0xF;
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n+=n>9?0x37:0x30;
+		buff[i]=(char)n;
+    }
+}
