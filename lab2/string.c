@@ -67,3 +67,18 @@ strncmp (const char *s1, const char *s2, size_t n)
     }
   return c1 - c2;
 }
+
+void *
+memset (void *dest, int val, size_t len)
+{
+  unsigned char *ptr = dest;
+  while (len-- > 0)
+    *ptr++ = val;
+  return dest;
+}
+
+void
+bzero (void *s, size_t len)
+{
+  memset (s, '\0', len);
+}
