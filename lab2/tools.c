@@ -64,3 +64,44 @@ int strlen(const char *str){
 	for(len = 0; str[len]; len++);
 	return len;
 }
+
+int hexChar2int(char ch){
+	int num;
+	if(ch>='0' && ch<='9'){
+		num = ch - 0x30;
+	}else{
+		switch(ch){
+			case 'A': case 'a': num=10; break;
+			case 'B': case 'b': num=11; break;
+			case 'C': case 'c': num=12; break;
+			case 'D': case 'd': num=13; break;
+			case 'E': case 'e': num=14; break;
+			case 'F': case 'f': num=15; break;
+			default: num=0;
+		}
+	}
+	return num;
+}
+
+void timestamp(int *integer_part, int *decimal_point_part){
+	unsigned long long int tmp_CNTPCT_EL0;
+	unsigned long long int tmp_CNTFRQ_EL0;
+	int i1, i2;
+	float f1, f2;
+	// get the time
+	asm volatile("mrs %0, CNTPCT_EL0" : "=r" (tmp_CNTPCT_EL0));
+	asm volatile("mrs %0, CNTFRQ_EL0" : "=r" (tmp_CNTFRQ_EL0));
+	// divide operation
+	f1 = (float) ( (float)tmp_CNTPCT_EL0 / (float)tmp_CNTFRQ_EL0 );
+	i1 = f1;
+	f2 = f1 - i1;	
+	while(1) {
+		i2 = f2;
+		if((float)i2 == f2) break;
+		f2 = f2 * 10;
+	}
+	*integer_part = i1;
+	*decimal_point_part = i2;
+
+}
+
