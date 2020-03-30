@@ -11,6 +11,13 @@
 #define UART0_IMSC ((volatile unsigned int *)(MMIO_BASE + 0x00201038))
 #define UART0_ICR ((volatile unsigned int *)(MMIO_BASE + 0x00201044))
 
+void wait_cycles(unsigned int n) {
+  if (n)
+    while (n--) {
+      asm volatile("nop");
+    }
+}
+
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
@@ -39,14 +46,10 @@ void uart_init() {
   *GPFSEL1 = r;
   *GPPUD = 0; // enable pins 14 and 15
   r = 150;
-  while (r--) {
-    asm volatile("nop");
-  }
+  wait_cycles(150);
   *GPPUDCLK0 = (1 << 14) | (1 << 15);
   r = 150;
-  while (r--) {
-    asm volatile("nop");
-  }
+  wait_cycles(150);
   *GPPUDCLK0 = 0; // flush GPIO setup
 
   *UART0_ICR = 0x7FF; // clear interrupts

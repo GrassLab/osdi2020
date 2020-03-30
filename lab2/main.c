@@ -1,3 +1,4 @@
+#include "lfb.h"
 #include "mbox.h"
 #include "uart.h"
 
@@ -106,6 +107,13 @@ void compair(char *buf) {
 
 void main() {
   uart_init();
+  wait_cycles(10000);
+  lfb_init();
+  wait_cycles(10000);
+  // display a pixmap
+  lfb_showpicture();
+  wait_cycles(10000);
+
   uart_puts(welcome);
   uart_puts("# ");
 
