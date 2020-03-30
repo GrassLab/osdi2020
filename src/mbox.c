@@ -51,10 +51,12 @@ volatile unsigned int __attribute__((aligned(16))) mbox[36];
 /* channels */
 #define MBOX_CH_PROP 8
 
+volatile unsigned int mbox[36];
+
 /**
  * Make a mailbox call. Returns 0 on failure, non-zero on success
  */
-int mboxCall(unsigned char ch, unsigned int mbox[7])
+int mboxCall(unsigned char ch)
 {
     unsigned int r = (((unsigned int)((unsigned long)&mbox) & ~0xF) | (ch & 0xF));
     /* wait until we can write to the mailbox */
@@ -82,7 +84,6 @@ int mboxCall(unsigned char ch, unsigned int mbox[7])
 
 void getBoardRevision()
 {
-    unsigned int mbox[7];
     mbox[0] = 7 * 4; // buffer size in bytes
     mbox[1] = REQUEST_CODE;
     // tags begin
@@ -93,7 +94,7 @@ void getBoardRevision()
     // tags end
     mbox[6] = END_TAG;
 
-    if (mboxCall(MBOX_CH_PROP, mbox))
+    if (mboxCall(MBOX_CH_PROP))
     {
         uartPuts("rpi3's board revision: ");
         uartHex(mbox[5]);
@@ -107,7 +108,6 @@ void getBoardRevision()
 
 void getVCMemory()
 {
-    unsigned int mbox[8];
     mbox[0] = 8 * 4; // buffer size in bytes
     mbox[1] = REQUEST_CODE;
     // tags begin
@@ -119,7 +119,7 @@ void getVCMemory()
     // tags end
     mbox[7] = END_TAG;
 
-    if (mboxCall(MBOX_CH_PROP, mbox))
+    if (mboxCall(MBOX_CH_PROP))
     {
         uartPuts("VC core base address: ");
         uartHex(mbox[5]);

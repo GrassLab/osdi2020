@@ -1,6 +1,6 @@
-CC       = aarch64-linux-gnu-gcc
-LD       = aarch64-linux-gnu-ld
-OBJCOPY  = aarch64-linux-gnu-objcopy
+CC       = aarch64-none-linux-gnu-gcc
+LD       = aarch64-none-linux-gnu-ld
+OBJCOPY  = aarch64-none-linux-gnu-objcopy
 EMULATOR = qemu-system-aarch64
 CFLAGS   = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
 INCLUDES = -Iinclude
