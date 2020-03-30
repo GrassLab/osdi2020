@@ -68,6 +68,13 @@ char uart_read() {
     return r == '\r' ? '\n' : r;
 }
 
+char uart_read_raw() {
+    do {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x10);
+    return (char)(*UART0_DR);
+}
+
 void uart_write(unsigned int c) {
     // Check transmitter idle field
     do {
