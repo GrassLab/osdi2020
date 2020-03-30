@@ -4,7 +4,9 @@
 /* ==============================
  * > Mailbox
  * ============================== */
-#define MAILBOX_SIZE 7u
+#define BASIC_BUFFER_SIZE 6u
+#define BOARD_REVISION_MAILBOX_SIZE 7u // basic (6) + response (1)
+#define VC_MEM_MAILBOX_SIZE 8u         // basic (6) + response (2)
 
 // only upper 28 bits of message address can be passed
 // lower 4 bits will be truncated, so it must be 16-byte aligned (4-bit: 0~15).
@@ -55,8 +57,9 @@ static int sendMessage(volatile unsigned int *msg) {
 
 unsigned int getBoardRevision(void) {
     volatile unsigned int __attribute__((aligned(16u)))
-    mailbox[MAILBOX_SIZE] = {
-        MAILBOX_SIZE * sizeof(unsigned int), // buffer size in bytes
+    mailbox[BOARD_REVISION_MAILBOX_SIZE] = {
+        BOARD_REVISION_MAILBOX_SIZE *
+            sizeof(unsigned int), // buffer size in bytes
         kRequestCode,
 
         /* tags structure
@@ -66,7 +69,10 @@ unsigned int getBoardRevision(void) {
          *   3~: optional value buffer
          */
         // tags begin
-        kGetBoardRevision, (MAILBOX_SIZE - (3u + 3u)), kTagRequestCode, 0,
+        kGetBoardRevision,
+        (BOARD_REVISION_MAILBOX_SIZE - BASIC_BUFFER_SIZE) *
+            sizeof(unsigned int),
+        kTagRequestCode, 0u,
         // tags end
 
         kEndTag};
@@ -80,8 +86,8 @@ unsigned int getBoardRevision(void) {
 
 unsigned int getVCBaseAddress(void) {
     volatile unsigned int __attribute__((aligned(16u)))
-    mailbox[MAILBOX_SIZE] = {
-        MAILBOX_SIZE * sizeof(unsigned int), // buffer size in bytes
+    mailbox[VC_MEM_MAILBOX_SIZE] = {
+        VC_MEM_MAILBOX_SIZE * sizeof(unsigned int), // buffer size in bytes
         kRequestCode,
 
         /* tags structure
@@ -91,7 +97,9 @@ unsigned int getVCBaseAddress(void) {
          *   3~: optional value buffer
          */
         // tags begin
-        kGetVCMemory, (MAILBOX_SIZE - (3u + 3u)), kTagRequestCode, 0,
+        kGetVCMemory,
+        (VC_MEM_MAILBOX_SIZE - BASIC_BUFFER_SIZE) * sizeof(unsigned int),
+        kTagRequestCode, 0u,
         // tags end
 
         kEndTag};
