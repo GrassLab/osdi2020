@@ -6,10 +6,12 @@
 #include "mm.h"
 #include "time.h"
 
-#define PM_PASSWORD      0x5a000000
-#define PM_RSTC          ((volatile unsigned int*)0x3F10001c)
-#define PM_RSTS          ((volatile unsigned int*)0x3F100020)
-#define PM_WDOG          ((volatile unsigned int*)0x3F100024)
+enum {
+    PM_PASSWORD      = 0x5a000000,
+    PM_RSTC          = 0x3F10001c,
+    PM_RSTS          = 0x3F100020,
+    PM_WDOG          = 0x3F100024
+};
 
 void reboot(){ // reboot after watchdog timer expire
     mm_write(PM_WDOG, PM_PASSWORD | 10); // reset after 10 ticks

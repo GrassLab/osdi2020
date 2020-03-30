@@ -117,6 +117,7 @@ void shell_start()
             uint8_t * kernel = (uint8_t *)0x80000;
             while(size-- > 0){
                 *kernel++ = uart_getc();
+                uart_putc('a');
             }
             uart_puts("Booting...\r\n");
             void (*boot)(void) = 0x80000;

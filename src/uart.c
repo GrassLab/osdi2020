@@ -9,38 +9,40 @@
 #include "mailbox.h"
 #include "time.h"
 
-#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
-#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
-#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024))
-#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028))
-#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
-#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
-#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
-#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
+enum {
+    UART0_DR        = (MMIO_BASE+0x00201000),
+    UART0_FR        = (MMIO_BASE+0x00201018),
+    UART0_IBRD      = (MMIO_BASE+0x00201024),
+    UART0_FBRD      = (MMIO_BASE+0x00201028),
+    UART0_LCRH      = (MMIO_BASE+0x0020102C),
+    UART0_CR        = (MMIO_BASE+0x00201030),
+    UART0_IMSC      = (MMIO_BASE+0x00201038),
+    UART0_ICR       = (MMIO_BASE+0x00201044)
+};
 
 /**
  * https://wiki.osdev.org/Raspberry_Pi_Bare_Bones
  */
 void uart_setup()
 {
-    unsigned int r;
+    uint32_t r;
 
     mm_write(UART0_CR, 0);
 
     /* map UART0 to GPIO pins */
-    r=*GPFSEL1;
-    r&=~((7<<12)|(7<<15)); // gpio14, gpio15
-    r|=(4<<12)|(4<<15);    // alt0
-    *GPFSEL1 = r;
-    *GPPUD = 0;            // enable pins 14 and 15
+    r = mm_read(GPFSEL1);
+    r &= ~((7<<12)|(7<<15)); // gpio14, gpio15
+    r |= (4<<12)|(4<<15);    // alt0
+    mm_write(GPFSEL1, r);
+    mm_write(GPPUD, 0);            // enable pins 14 and 15
     r=150; while(r--) { asm volatile("nop"); }
-    *GPPUDCLK0 = (1<<14)|(1<<15);
+    mm_write(GPPUDCLK0, (1<<14)|(1<<15));
     r=150; while(r--) { asm volatile("nop"); }
-    *GPPUDCLK0 = 0;        // flush GPIO setup 
+    mm_write(GPPUDCLK0, 0);        // flush GPIO setup 
 
     mm_write(UART0_ICR, 0x7FF);    // clear interrupts
    
-    volatile unsigned int  __attribute__((aligned(16))) mbox[9] = {
+    volatile unsigned int __attribute__((aligned(16))) mbox[9] = {
         9*4, REQUEST_CODE, SET_CLK_RATE, 12, 8, 2, 4000000, 0 ,END_TAG
     };
 

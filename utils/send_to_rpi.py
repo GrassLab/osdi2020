@@ -18,12 +18,19 @@ try:
         timeout=1
     )
 
-    with open("cmds", 'rb') as file:
-        for line in file:
-            line = line.replace(b'\n', b'\r')
-            print(f"Sending : {line}")
-            s.write(line)
-            time.sleep(1)
+    with open("kernel8.img", 'rb') as file:
+        position = 0
+        size = file.tell()
+        byte = file.read(1)
+        while byte != b"":
+            #for line in file:
+            #line = line.replace(b'\n', b'\r')
+            file.seek(position, 0)
+            byte = file.read(1)
+            print(f"Sending : {byte}")
+            s.write(byte)
+            position = position + 1
+            #time.sleep(1)
 
 except Exception as e:
     print(f"[EXCEPTION] {e}")
