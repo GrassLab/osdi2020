@@ -28,6 +28,14 @@
 #include "string.h"
 #include <stdarg.h>
 
+// Loop <delay> times in a way that the compiler won't optimize away
+static inline void delay(int count)
+{
+    asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
+         : "=r"(count): [count]"0"(count) : "cc");
+}
+
+
 /* PL011 UART registers */
 #define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
 #define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
@@ -38,7 +46,6 @@
 #define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
-
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
@@ -46,15 +53,14 @@ void uart_init()
 {
     register unsigned int r;
 
-    /* turn off uart0 */
-    *UART0_CR = 0;
+    /* initialize UART */
+    *UART0_CR = 0;         // turn off UART0
 
-    /* setup clock for consistent divisor values */
+    /* set up clock for consistent divisor values */
     mbox[0] = 9*4;
     mbox[1] = MBOX_REQUEST;
     /* ====== /Tags begin ====== */
     mbox[2] = MBOX_TAG_SETCLKRATE; // set clock rate
-    /* buffer size */
     mbox[3] = 12;
     mbox[4] = 8;
     mbox[5] = 2;           // UART clock
@@ -65,27 +71,23 @@ void uart_init()
 
     mbox_call(MBOX_CH_PROP);
 
-    /* map uart0 to GPIO pins */
-    r =  *GPFSEL1;
-    r &= ~((7<<12)|(7<<15)); // gpio14, gpio15
-    r |= (4<<12)|(4<<15);    // alt0
+    /* map UART0 to GPIO pins */
+    r=*GPFSEL1;
+    r&=~((7<<12)|(7<<15)); // gpio14, gpio15
+    r|=(4<<12)|(4<<15);    // alt0
     *GPFSEL1 = r;
     *GPPUD = 0;            // enable pins 14 and 15
-    r = 150; while (r--) { asm volatile("nop"); }
-    *GPPUDCLK0 = (1 << 14) | (1 << 15);
-    r = 150; while (r--) { asm volatile("nop"); }
-    *GPPUDCLK0 = 0; // flush GPIO setup
+    r=150; while(r--) { asm volatile("nop"); }
+    *GPPUDCLK0 = (1<<14)|(1<<15);
+    r=150; while(r--) { asm volatile("nop"); }
+    *GPPUDCLK0 = 0;        // flush GPIO setup
 
-    *UART0_ICR = 0x7FF; // clear interrupts
-    *UART0_IBRD = 2;    // 115200 baud
+    *UART0_ICR = 0x7FF;    // clear interrupts
+    *UART0_IBRD = 2;       // 115200 baud
     *UART0_FBRD = 0xB;
-    *UART0_LCRH =
-        0b11 << 5; // configure the WLEN part: 0x3 for representing 8bits
-    /* 8n1: one start bit, eight (8) data bits, no (N) parity bit, and one (1)
-     * stop bit */
-    *UART0_CR = 0x301; // enable Tx, Rx, FIFO */
+    *UART0_LCRH = 0b11<<5; // 8n1
+    *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
 }
-
 
 /**
  * Send a character
@@ -113,12 +115,23 @@ void uart_flush() {
  * Receive a character
  */
 char uart_getc() {
-    char r;
     /* wait until something is in the buffer */
     do{asm volatile("nop");}while(*UART0_FR&0x10);
     /* read it and return */
     return (char)(*UART0_DR);
     /* convert carrige return to newline */
+}
+
+int is_digit(char c){
+    return c >= '0' && c <= '9';
+}
+
+int uart_getint() {
+  int r = 0, c;
+  while (is_digit(c = uart_getc())) {
+    r = r * 10 + c - '0';
+  }
+  return r;
 }
 
 /**
@@ -143,61 +156,4 @@ void uart_hex(unsigned int d) {
         n+=n>9?0x37:0x30;
         uart_send(n);
     }
-}
-
-void uart_println(char *format, ...) {
-  unsigned int i;
-  unsigned int n;
-  char *s;
-
-  va_list arg;
-  va_start(arg, format);
-
-  for (char *traverse = format; *traverse != 0; traverse++) {
-    while (*traverse != '%' && *traverse != 0) {
-      uart_send(*traverse++);
-    }
-
-    if (*traverse == 0) break;
-
-    /* move to the hole */
-    traverse++;
-    /* actions */
-    switch (*traverse) {
-    case 'c':
-      i = va_arg(arg, int);
-      uart_send(i);
-      break;
-    case 'd':
-      i = va_arg(arg, int);
-      if (i < 0) {
-        i = -i;
-        uart_send('-');
-      }
-      uart_puts(itoa(i, 10));
-      break;
-    case 'x':
-      i = va_arg(arg, unsigned int);
-      for (int c = 28; c >= 0; c-= 4) {
-        /* get highest tetrad */
-        n = (i >> c) & 0xF;
-        /* 0-9 => '0'-'9', 10-15 => 'A'-'F' */
-        n += (n > 9)? 0x37:0x30;
-        uart_send(n);
-      }
-      break;
-    case 's':
-      s = va_arg(arg, char*);
-      uart_puts(s);
-      break;
-    default:
-      uart_send('%');
-      uart_send(*traverse);
-      break;
-    }
-  }
-
-  uart_puts("\r\n");
-
-  va_end(arg);
 }

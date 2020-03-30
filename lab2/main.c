@@ -1,8 +1,10 @@
+#include "framebuffer.h"
+#include "libc.h"
+#include "loader.h"
 #include "mbox.h"
 #include "shell.h"
 #include "uart.h"
 #include "unittest.h"
-#include "framebuffer.h"
 
 #define MMIO_BASE 0x3F000000
 #define PM_RSTC ((volatile unsigned int *)(MMIO_BASE + 0x0010001c))
@@ -10,6 +12,9 @@
 #define PM_WDOG ((volatile unsigned int *)(MMIO_BASE + 0x00100024))
 #define PM_WDOG_MAGIC 0x5a000000
 #define PM_RSTC_FULLRST 0x00000020
+
+extern uint8_t __start;
+extern uint8_t __end;
 
 void hello() { uart_puts("Hello World!\r\n"); }
 
@@ -97,13 +102,29 @@ int timestamp_test() {
   float a = get_system_timer();
   wait_msec(1000000);
   float b = get_system_timer();
-  return (b > a && b - a < 2) ? 0 : 1;
+  return (b > a && b - a < 2) ? 0 : -1;
 }
 
-void get_revision() {
-  mbox[0] =
-      7 * sizeof(unsigned int); /* buffer size in bytes (length of message) */
-  mbox[1] = MBOX_REQUEST;       /* Request message */
+/* check the copied kernel is correct */
+int copy_test() {
+  size_t kernel_size = (&__end - &__start);
+  uint8_t *original_addr = &__start;
+  uint8_t *new_addr = (uint8_t *)(BOOT_ADDR);
+  int flag = 0;
+  while (kernel_size-- != 0) {
+    if (*(uint8_t *)new_addr++ != *(uint8_t *)original_addr++) {
+      /* uart_println("[copy test] differ @ %x", original_addr-1); */
+      flag = -1;
+    }
+  }
+  return flag;
+}
+
+void get_board_revision() {
+  /* buffer size in bytes (length of message) */
+  mbox[0] = 7 * sizeof(unsigned int);
+
+  mbox[1] = MBOX_REQUEST; /* Request message */
 
   /* ====== /Tags begin ====== */
   mbox[2] = MBOX_TAG_GETREV; /* get serial number command */
@@ -126,9 +147,11 @@ void get_revision() {
 }
 
 void get_vc_memory() {
-  mbox[0] =
-      8 * sizeof(unsigned int); /* buffer size in bytes (length of message) */
-  mbox[1] = MBOX_REQUEST;       /* Request message */
+  /* buffer size in bytes (length of message) */
+  mbox[0] = 8 * sizeof(unsigned int);
+
+  /* Request message */
+  mbox[1] = MBOX_REQUEST;
 
   /* ====== /Tags begin ====== */
   mbox[2] = MBOX_TAG_GETVCMEM; /* get serial number command */
@@ -136,50 +159,87 @@ void get_vc_memory() {
   mbox[4] = 0;
   /* 5-6 is reserve for output buffer (because the serial number 8 bytes is
    * required) */
-  mbox[5] = 0;
-  mbox[6] = 0;
+  mbox[5] = 0; /* base address */
+  mbox[6] = 0; /* size in bytes */
   /* the tag last for notify the mailbox */
   mbox[7] = MBOX_TAG_LAST;
   /* ====== Tags end/ ======== */
 
   /* send the message to the GPU and receive answer */
   if (mbox_call(MBOX_CH_PROP)) {
-    uart_println("VC MEM base address is: 0x%x", mbox[5]);
-    uart_println("Number of size in bytes: %d", mbox[6]);
+    uart_println("VC core base addr: 0x%x size 0x%x", mbox[5], mbox[6]);
   } else {
-    uart_println("Unable to qery revision!");
+    uart_println("Unable to qery vc memory!");
   }
 }
 
+void loadkernel() {
+  loadimg();
+  uart_println("[ERR] should not reach here if loading kernel successfully");
+  abort();
+}
+
+
 int main() {
+  size_t kernel_size = (&__end - &__start);
+  memset(&__start, 0, kernel_size);
+
   // set up serial console
   uart_init();
-  uart_flush();
 
+  // set up framebuffer
   lfb_init();
 
-  get_revision();
+  get_board_revision();
   get_vc_memory();
 
   // display a pixmap
   /* lfb_showpicture(); */
-
-
-  uart_puts("----------------\r\n"
-            "    OSDI2020    \r\n"
-            "----------------\r\n");
 
   /* shell */
   static char buf[1024];
   while (1) {
     if (getcmd(buf, sizeof(buf)) == -1)
       continue;
-    SWITCH_CONTINUE(buf, "hello", hello);
     SWITCH_CONTINUE(buf, "help", help);
-    SWITCH_CONTINUE(buf, "reboot", reset);
+    SWITCH_CONTINUE(buf, "hello", hello);
     SWITCH_CONTINUE(buf, "timestamp", get_system_timer);
     SWITCH_CONTINUE(buf, "show", lfb_showpicture);
+    SWITCH_CONTINUE(buf, "reboot", reset);
+    SWITCH_CONTINUE(buf, "loadimg", loadkernel);
 
     uart_println("[ERR] command `%s` not found", buf);
   }
+}
+
+
+__attribute__((section(".text.relocate"))) void relocate() {
+  uart_init();
+  uart_println("-----------------------------------\r\n"
+               "                                   \r\n"
+               "     OSDI2020 UART Bootloader      \r\n"
+               "                                   \r\n"
+               "-----------------------------------", BOOT_ADDR);
+
+  uart_println("\033[0;32mcopying itself to 0x%x address \033[0m", BOOT_ADDR);
+
+  size_t kernel_size = (&__end - &__start);
+  uint8_t *new_addr = (uint8_t *)(BOOT_ADDR);
+
+  uart_println("start copying from:          \r\n"
+               "   __start: %x to __end: %x  \n\r"
+               "   @ new_addr %x             \n\r"
+               "   w/t kernel_size 0x%x",
+               &__start, &__end, new_addr, kernel_size);
+
+  memcpy(new_addr, &__start, kernel_size);
+
+  kentry_t kentry = (kentry_t)new_addr;
+
+  unittest(copy_test, "copy_test", "Ensure the copied kernel is correct");
+
+  uart_println("executing the kernel @ %x", new_addr);
+  uart_println("-----------------------------------");
+
+  kentry();
 }

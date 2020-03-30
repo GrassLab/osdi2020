@@ -23,23 +23,33 @@
  *
  */
 
+ENTRY(__relocate)
+
 SECTIONS
 {
     . = 0x80000;
+    __relocate = .;
+    .relocate : { KEEP(*(.text.relocate)) }
+    . = ALIGN(4096); /* align to page size */
+    __start = .;
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
+    . = ALIGN(4096); /* align to page size */
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
+    . = ALIGN(4096); /* align to page size */
     PROVIDE(_data = .);
     .data : { *(.data .data.* .gnu.linkonce.d*) }
+    . = ALIGN(4096); /* align to page size */
     .bss (NOLOAD) : {
-        . = ALIGN(16);
+         /* . = ALIGN(4096); /\* align to page size *\/ */
         __bss_start = .;
         *(.bss .bss.*)
         *(COMMON)
         __bss_end = .;
     }
-    _end = .;
+    . = ALIGN(4096); /* align to page size */
+    __end = .;
 
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;
-__stack_top = _start;
+__stack_top = 0x200000;

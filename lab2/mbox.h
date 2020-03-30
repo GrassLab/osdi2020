@@ -48,3 +48,5 @@ extern volatile unsigned int mbox[36];
 #define MBOX_TAG_LAST           0
 
 int mbox_call(unsigned char ch);
+int mbox_read(unsigned char ch);
+void mbox_write(unsigned char ch);

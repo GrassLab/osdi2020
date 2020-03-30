@@ -1,25 +1,20 @@
-.section ".text.boot"
-
-.global _start
+.section .text.relocate
+.global _relocate
 
 // let core with cpuid != 0 enter busy loop
-_start:
+_relocate:
     mrs x0, mpidr_el1
     and x0, x0, 3     // Get the frist two bits in Aff0 fileds
-    cbz x0, 2f        // Compare and Branch on Zero,
+    cbz x0, 2f       // Compare and Branch on Zero,
                       // if zero goto forward label2, otherwise continue
-1: // cpuid > 0
+// cpuid > 0
+.global halt
+halt:
     wfe
-    b 1b
+    b halt
 
 // cpuid = 0
 2:
-    // set the stack pointer to _start
-    ldr x0, =__stack_top
-    mov sp, x0
-
-    // initialize the bss segment
-    // calcluate the bss size by giving the __
     ldr x0, =__bss_start
     ldr w2, =__bss_size
 3:
@@ -28,7 +23,17 @@ _start:
     sub     w2, w2, #1      // w2 = w2 - 1
     cbnz    w2, 3b          // go to label 3 backward, until the size of bss is 0
 
-    // then branch and link to main function(shell)
+    ldr     x0, =__stack_top
+    // ldr     x0, =__stack_top
+    mov     sp, x0
+    // b _start
 4:
+    bl      relocate
+
+.section ".text.boot"
+
+.global _start
+
+_start:
     bl main
-    b 1b
+    b halt

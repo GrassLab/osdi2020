@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "memset.h"
+#include "libc.h"
 #include "shell.h"
 #include "uart.h"
 
@@ -32,4 +32,8 @@ int getcmd(char *buf, int nbuf) {
   *buf = 0;
 
   return p_buf[0] == 0 ? -1 : 0;
+}
+
+void shell() {
+
 }
