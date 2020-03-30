@@ -59,7 +59,6 @@ void uart_init()
     *UART0_FBRD = 0xB;
     *UART0_LCRH = 0b11<<5; // 8n1
     *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
-	return;
 }
 
 /**
@@ -70,7 +69,6 @@ void uart_send(unsigned int c) {
     do{asm volatile("nop");}while(*UART0_FR&0x20);
     /* write the character to the buffer */
     *UART0_DR=c;
-	return;
 }
 
 
@@ -106,7 +104,7 @@ int uart_get_string(char * s){
 }
 
 /**
- * Receive a string
+ * Receive a string and display it character by character
  */
 int uart_get_string_with_echo(char * s){
 	char r;
@@ -135,7 +133,6 @@ void uart_puts(char *s) {
             uart_send('\r');
         uart_send(*s++);
     }
-	return;
 }
 
 /**
@@ -151,5 +148,4 @@ void uart_hex(unsigned int d) {
         n+=n>9?0x37:0x30;
         uart_send(n);
     }
-	return;
 }

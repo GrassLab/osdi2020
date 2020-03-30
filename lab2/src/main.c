@@ -40,7 +40,7 @@ void copy_and_jump_to_kernel(char *new_address) {
 void output_garbage(char *new_address, unsigned long long int new_size){
 	
 	char *kernel_size = "";
-	uart_puts("\rthe new kernel size is ");
+	uart_puts("\rThe new kernel size is ");
 	itoa(new_size, kernel_size, 10);
 	uart_puts(kernel_size);
 	uart_puts("\n");
@@ -68,14 +68,14 @@ void copy_current_kernel_and_jump(char *new_address, unsigned long long int new_
     char *kernel = __kernel_begin;
     char *end = __bss_end;
     char *copy = (char *)(TMP_KERNEL_ADDR);
-	uart_puts("\rready to copy the kernel to ");
+	uart_puts("\rReady to copy the kernel to ");
     uart_puts("\rStart copying kernel to 0x00100000(temporary area)\n");
     while (kernel <= end) {
 		//uart_puts("QQ\n");
         *copy = *kernel;
         kernel++; copy++;
     }
-    uart_puts("Copying kernel is done!\n");
+    uart_puts("\rCopying kernel is done!\n");
     void (*func_ptr)() = output_garbage;
     unsigned long int original_function_address = (unsigned long int)func_ptr;
     void (*call_function)(char *, unsigned long long int) = (void (*)(char *, unsigned long long int))(original_function_address - (unsigned long int)__kernel_begin + TMP_KERNEL_ADDR);

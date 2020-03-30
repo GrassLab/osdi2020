@@ -51,7 +51,7 @@ unsigned long long int read_kernel_address(){
 	int buffer_length = 0;
 	int iter = 0;
 	int tmp_num = 0;
-	uart_puts("Please input the address you want to load at(in hex format): ");
+	uart_puts("Please input the address you want to load the kernel at(in hex format): ");
 	//input_buffer_size = uart_get_string_with_echo(input_buffer);
 	uart_get_string_with_echo(input_buffer);
 	

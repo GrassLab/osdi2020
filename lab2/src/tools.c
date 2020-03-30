@@ -1,7 +1,3 @@
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-
 void reverse(char str[], int length) { 
     int start = 0; 
     int end = length -1; 
@@ -48,17 +44,10 @@ unsigned long long int atoulli(char* str){
 }
 
 int strcmp(const char *X, const char *Y){
-	while(*X)
-	{
-		// if characters differ or end of second string is reached
-		if (*X != *Y)
-			break;
-
-		// move to next pair of characters
-		X++;
-		Y++;
+	while(*X){
+		if (*X != *Y) break;
+		X++; Y++;
 	}
-
 	// return the ASCII difference after converting char* to unsigned char*
 	return *(const unsigned char*)X - *(const unsigned char*)Y;
 }
@@ -106,9 +95,7 @@ void timestamp(int *integer_part, int *decimal_point_part){
 	}
 	*integer_part = i1;
 	*decimal_point_part = i2;
-
 }
-
 
 void memcpy(void *destt, void *sourcet, int size){
    char *source = (char *)sourcet;
