@@ -1,6 +1,6 @@
 SECTIONS
 {
-    . = __kernel__beg__loc__;
+    . = _kbeg;
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
     PROVIDE(_data = .);
@@ -15,7 +15,13 @@ SECTIONS
         *(COMMON)
         __bss_end = .;
     }
-    _end = .;
+    .bootloader : {
+        . = ALIGN(4);
+        _bootloader_beg = .;
+        *(.bootloader*)
+        _bootloader_end = .;
+    }
+    _kend = .;
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_beg)>>3;

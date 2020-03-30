@@ -91,9 +91,6 @@ while [[ $# -gt 0 ]];do
             echo -ne "sending img..."
             sudo sh -c "dd if=$2 of=$DEVICE status=progress;"
             echo "done"
-            echo -ne "sending postfix..."
-            sudo sh -c "echo -ne '|GMIDAOL' > $DEVICE;"
-            echo "done"
             shift
             shift
             ;;

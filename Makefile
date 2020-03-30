@@ -46,7 +46,7 @@ $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
 $(IMG): $(BUILD_DIR) $(OBJ_FILES)
 	$(eval KERNEL_LOC := $(if $(KERNEL_LOC),$(KERNEL_LOC), $(DEFAULT_KERNEL_LOC)))
 	$(eval TARGET := $(if $(TARGET),$(TARGET), $(DEFAULT_TARGET)))
-	@echo "__kernel__beg__loc__ = $(KERNEL_LOC);" > $(LINKER_SCRIPT)
+	@echo "_kbeg = $(KERNEL_LOC);" > $(LINKER_SCRIPT)
 	@cat $(SRC_DIR)/template.ld >> $(LINKER_SCRIPT)
 	$(ARMGNU)-ld -T $(LINKER_SCRIPT) -o $(TARGET).elf  $(OBJ_FILES)
 	$(ARMGNU)-objcopy $(TARGET).elf -O binary $(TARGET).img

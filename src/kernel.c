@@ -16,8 +16,8 @@ char *welcome =
 " \\ V  V /  __/ | (_| (_) | | | | | |  __/"       NEWLINE
 "  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|"  NEWLINE;
 
-char *_end;
-char *__kernel__beg__loc__;
+char *_kend;
+char *_kbeg;
 int main(void){
 
     uart_init();
@@ -39,7 +39,7 @@ int main(void){
         println(" BUILD @ ", xstr(BUILD_STAMP));
 #endif
         printf("   kerned segment: 0x%x - 0x%x" NEWLINE NEWLINE,
-                &__kernel__beg__loc__, &_end);
+                &_kbeg, &_kend);
 
         println("UART TYPE: ", UART_TYPE);
         if(get_board_revision()) printf("Board revision: %x" NEWLINE, mbox[5]);
