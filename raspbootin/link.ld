@@ -1,6 +1,6 @@
 SECTIONS
 {
-    . = 0x80000 - 1024;
+    . = 0x80000 - 3096;
     PROVIDE(_code = .);
     .text : { KEEP(*(.text.boot)) *(.text .text.*) }
     .rodata : { *(.rodata .rodata.*) }

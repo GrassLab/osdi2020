@@ -16,25 +16,19 @@ get kernel image size
 KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/osdi2020/kernel8.img"
 KERNEL_IMG_SIZE = os.stat(KERNEL_IMG_PATH).st_size
 
-def init_connection(s):
-    raspi3_recv1 = b""
-    raspi3_recv2 = b""
+def send_size(s, kernel_size):
 
-    for _ in range(3):
-        raspi3_recv1 += s.read()
-    print(raspi3_recv1)
-    if (raspi3_recv1 != b"\x03\x03\x03"):
-        return False
+    print(s.readline()) ### b"Please send the kernel size...\r\n"
+    s.write(bytes( [kernel_size & 0xff] ))
+    s.write(bytes( [(kernel_size >> 8) & 0xff] ))
+    s.write(bytes( [(kernel_size >> 16) & 0xff] ))
+    s.write(bytes( [(kernel_size >> 24) & 0xff] ))
 
-    s.write(bytes( [KERNEL_IMG_SIZE & 0xff] ))
-    s.write(bytes( [(KERNEL_IMG_SIZE >> 8) & 0xff] ))
-    s.write(bytes( [(KERNEL_IMG_SIZE >> 16) & 0xff] ))
-    s.write(bytes( [(KERNEL_IMG_SIZE >> 24) & 0xff] ))
-
+    raspi3_recv = b""
     for _ in range(2):
-        raspi3_recv2 += s.read()
-    print(raspi3_recv2)
-    if (raspi3_recv2 != b"OK"):
+        raspi3_recv += s.read()
+    print(raspi3_recv)
+    if (raspi3_recv != b"OK"):
         return False
     
     return True
@@ -55,8 +49,10 @@ def main():
     print(s.readline()) ### b'HANK0438\r\n'
     while True:
         NO_REBOOT = True
-        logger.info("initialize connection...")
-        if init_connection(s):
+        logger.info("sending size...")
+        if send_size(s, KERNEL_IMG_SIZE):
+            print(s.readline()) ### b"Please input the kernel load address (default: 0x80000):\r\n"
+            print(s.readline()) ### b"Please send the kernel from UART...\n"
             logger.info("sending kernel...")
             send_kernel(s, KERNEL_IMG_SIZE)
             logger.info("finish!")

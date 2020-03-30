@@ -10,25 +10,10 @@ void main()
     // set up serial console
     uart_init();
 
-    //uart_puts("Please input the kernel load address (default: 0x80000):\n");
-    //uart_puts("Please send the kernel from UART...\n");
-    // say hello. To reduce loader size I removed uart_puts()
 again:
-    uart_send('H');
-    uart_send('A');
-    uart_send('N');
-    uart_send('K');
-    uart_send('0');
-    uart_send('4');
-    uart_send('3');
-    uart_send('8');
-    uart_send('\r');
-    uart_send('\n');
-    // notify raspbootcom to send the kernel
-    uart_send(3);
-    uart_send(3);
-    uart_send(3);
-
+    // magic number
+    uart_puts("HANK0438\n");
+    uart_puts("Please send the kernel size...\n");
     // read the kernel's size
     size=uart_getc();
     size|=uart_getc()<<8;
@@ -44,6 +29,9 @@ again:
     }
     uart_send('O');
     uart_send('K');
+
+    uart_puts("Please input the kernel load address (default: 0x80000):\n");
+    uart_puts("Please send the kernel from UART...\n");
 
     // read the kernel
     while(size--) *kernel++ = uart_getc();
