@@ -30,8 +30,10 @@
 void uart_init ();
 void uart_send (char c);
 void uart_puts (char *s);
-char uart_getc ();
+char uart_getc ()
+  __attribute__ ((section (".bootloader")));
 int uart_readline (int size, char *buf);
 void uart_hex (unsigned int d);
-void uart_read (char *buf, unsigned long count);
+void uart_read (char *buf, unsigned long count)
+  __attribute__ ((section (".bootloader")));
 #endif /* ifndef UART */
