@@ -2,7 +2,6 @@
 #include "uart.h"
 #include "string.h"
 #include "mm.h"
-#include "printf.h"
 #include "mbox.h"
 #include "lfb.h"
 
@@ -55,7 +54,7 @@ shell_interactive ()
 	}
       else if (!strncmp ("loadimg", buf, 7))
 	{
-	  loadimg (strtol (buf + 7, NULL, 16));
+	  loadimg (strtol (buf + 7, 0, 16));
 	}
       else
 	{
@@ -69,10 +68,18 @@ void
 loadimg (unsigned long address)
 {
   unsigned img_size;
-  printf ("Load image into 0x%lx\r\n", address);
-  printf ("Please give me the image.\r\n");
+  char buf[0x20];
+  uart_puts ("Load image into 0x");
+  uart_hex (address);
+  uart_puts ("\n");
+  uart_puts ("Please give me the image.\n");
   uart_read ((char *) &img_size, 4);
-  printf ("[%lf] image size: 0x%x\r\n", get_time (), img_size);
+  ftoa (get_time (), buf);
+  uart_puts ("[");
+  uart_puts (buf);
+  uart_puts ("] image size: 0x");
+  uart_hex (img_size);
+  uart_puts ("\n");
   uart_read ((char *) address, img_size);
   ((void (*)(void)) address) ();
 }
@@ -118,8 +125,13 @@ hardware ()
 
   base_addr = *(unsigned int *) (msg + 1);
 
-  printf ("board revision: %x\r\n", revision);
-  printf ("VC Core base address: %x\r\n", base_addr);
+  uart_puts ("board revision: ");
+  uart_hex (revision);
+  uart_puts ("\n");
+
+  uart_puts ("VC Core base address: ");
+  uart_hex (base_addr);
+  uart_puts ("\n");
 }
 
 void

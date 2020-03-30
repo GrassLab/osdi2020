@@ -1,6 +1,5 @@
 #include "uart.h"
 #include "shell.h"
-#include "printf.h"
 #include "lfb.h"
 
 #define BOOT_MSG "                                                               \n" \
