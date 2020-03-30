@@ -4,7 +4,10 @@ SECTIONS
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
     PROVIDE(_data = .);
-    .data : { *(.data .data.* .gnu.linkonce.d*) }
+    .data : { 
+        . = ALIGN(16);
+        *(.data .data.* .gnu.linkonce.d*)
+    }
     .bss (NOLOAD) : {
         . = ALIGN(16);
         __bss_beg = .;
