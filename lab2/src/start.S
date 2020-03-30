@@ -28,8 +28,3 @@ _start:
 4:  bl      main
     // for failsafe, halt this core too
     b       1b
-
-
-.global branch_to_address
-branch_to_address:
-    br x0

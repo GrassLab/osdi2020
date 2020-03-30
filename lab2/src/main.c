@@ -4,6 +4,7 @@
 #include "get_information.h"
 #include "gpio.h"
 #include "load_kernel.h"
+#include "utils.h"
 
 // for reboot
 #define PM_PASSWORD (0x5a000000)
@@ -21,30 +22,9 @@ extern char __bss_end[];
 extern char __bss_size[];
 //extern volatile unsigned char __bss_size[];
 
-/*
-void copy_and_jump_to_kernel(char *new_address) {
-    char *kernel = new_address;
-    int kernel_size = uart_read_int();
-    uart_send_int(kernel_size);
-
-    int checksum = 0;
-    for (int i = 0; i < kernel_size; i++) {
-        unsigned char c = uart_recv();
-        checksum += c;
-        kernel[i] = c;
-    }
-    uart_send_int(checksum);
-    branch_to_address((unsigned long int *)new_address);
-}
-*/
 void output_garbage(char *new_address, unsigned long long int new_size){
-/*	
-	uart("\rQ\n");
-	uart("\rQQ\n");
-	uart("\rQQQ\n");
-	uart("\rQQQQ\n");
-	uart("\rQQQQQ\n");
-*/
+	
+	char *iter = "";	
 
 	char *kernel_size = "";
 	uart_puts("\rThe new kernel size is ");
@@ -62,33 +42,17 @@ void output_garbage(char *new_address, unsigned long long int new_size){
 	if(!strcmp(syn_message, "SYN")){
 		uart_puts("ACK");
 	}
-
+	
 	for(int i=0; i<new_size; i++){
-		char ch;
-		//new_address[i] = uart_getc();
-		//uart_send(new_address[i]);
-		//uart_puts("\rRECEIVED\n");
-		ch = uart_getc();
-		uart_send(ch);
+		new_address[i] = uart_getc();
+		//itoa(i, iter, 10);
+		//uart_puts(iter);
+		//uart_puts("ACK");
 	}
 	uart_puts("already received all the data!!!\n");
-	//JMP(new_address);
+	//JMP((unsigned long int *)524288);	
+	//branch_to_address((unsigned long int *)__kernel_begin);
 	
-
-	/* char *kernel = new_address;
-    int kernel_size;
-	char *str = uart_get_string();
-	// turn str to int and assign to kernel size
-    uart_send_int(kernel_size);
-
-    int checksum = 0;
-    for (int i = 0; i < kernel_size; i++) {
-        unsigned char c = uart_recv();
-        checksum += c;
-        kernel[i] = c;
-    }
-    uart_send_int(checksum);
-    branch_to_address((unsigned long int *)new_address); */
 }
 
 void copy_current_kernel_and_jump(char *new_address, unsigned long long int new_size) {

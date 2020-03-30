@@ -34,5 +34,5 @@ kernel8.img: $(SRC_DIR)/link.ld $(OBJ_FILES)
 
 stdio_run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
-pts_run:	
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pts
+pty_run:	
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
