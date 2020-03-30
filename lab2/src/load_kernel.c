@@ -22,7 +22,7 @@ unsigned long long int read_kernel_size(){
 	uart_puts("Please input the size of the kernel(in hex format): ");
 
 	//input_buffer_size = uart_get_string_with_echo(input_buffer);
-	uart_get_string_with_echo(input_buffer);
+	uart_get_string(input_buffer);
 	//kernel_size = atoulli(input_buffer);
 	
 	// create the hex power table
@@ -53,7 +53,7 @@ unsigned long long int read_kernel_address(){
 	int tmp_num = 0;
 	uart_puts("Please input the address you want to load the kernel at(in hex format): ");
 	//input_buffer_size = uart_get_string_with_echo(input_buffer);
-	uart_get_string_with_echo(input_buffer);
+	uart_get_string(input_buffer);
 	
 	// create the hex power table
 	hex_power[0] = 1;	

@@ -38,16 +38,43 @@ void copy_and_jump_to_kernel(char *new_address) {
 }
 */
 void output_garbage(char *new_address, unsigned long long int new_size){
-	
+/*	
+	uart("\rQ\n");
+	uart("\rQQ\n");
+	uart("\rQQQ\n");
+	uart("\rQQQQ\n");
+	uart("\rQQQQQ\n");
+*/
+
 	char *kernel_size = "";
 	uart_puts("\rThe new kernel size is ");
 	itoa(new_size, kernel_size, 10);
 	uart_puts(kernel_size);
 	uart_puts("\n");
-			
+		
 	uart_puts("\rStart loading kernel at ");
 	uart_puts(new_address);
-	uart_puts("\n");    
+	uart_puts("\n");
+
+	// handshake
+	char *syn_message = "";
+	uart_get_string(syn_message);
+	if(!strcmp(syn_message, "SYN")){
+		uart_puts("ACK");
+	}
+
+	for(int i=0; i<new_size; i++){
+		char ch;
+		//new_address[i] = uart_getc();
+		//uart_send(new_address[i]);
+		//uart_puts("\rRECEIVED\n");
+		ch = uart_getc();
+		uart_send(ch);
+	}
+	uart_puts("already received all the data!!!\n");
+	//JMP(new_address);
+	
+
 	/* char *kernel = new_address;
     int kernel_size;
 	char *str = uart_get_string();
@@ -107,9 +134,9 @@ void main()
 
 	while(1){
 		/* for pyserial interface */
-		//sizeof_current_line = uart_get_string(buffer);
+		sizeof_current_line = uart_get_string(buffer);
 		/* for qemu */
-		sizeof_current_line = uart_get_string_with_echo(buffer);
+		//sizeof_current_line = uart_get_string_with_echo(buffer);
 		command_not_found = 1;
 		if(!strcmp(buffer, "hello")) {
 			uart_puts("\rHello World!\n");
