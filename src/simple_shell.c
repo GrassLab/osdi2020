@@ -59,15 +59,16 @@ int read_command(char *buff, unsigned int size)
 	while (count < size){
 		char_recv = uart_getc();
 		uart_putc(char_recv);
-		buff[count] = char_recv;
-		count ++;
 		if (char_recv == '\n'){
-			return --count;
+			return count;
 		} else if (char_recv == '\177'){// backspace
 			if (count >= 1){
 				uart_puts("\b \b");
 				count --;
 			}
+		} else {
+			buff[count] = char_recv;
+			count ++;
 		}
 	}
 	return -1; // out of buff	
