@@ -1,7 +1,7 @@
 SECTIONS
 {
     . = 0x80000;
-	kernel_begin = .;
+	PROVIDE(__kernel_begin = .);
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
     PROVIDE(_data = .);

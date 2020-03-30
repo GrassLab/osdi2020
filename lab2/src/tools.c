@@ -69,8 +69,8 @@ int strlen(const char *str){
 	return len;
 }
 
-int hexChar2int(char ch){
-	int num;
+unsigned long long int hexChar2int(char ch){
+	unsigned long long int num;
 	if(ch>='0' && ch<='9'){
 		num = ch - 0x30;
 	}else{
@@ -110,8 +110,9 @@ void timestamp(int *integer_part, int *decimal_point_part){
 }
 
 
-void memcpy(void *destt, void *sourcet, size_t size){
+void memcpy(void *destt, void *sourcet, int size){
    char *source = (char *)sourcet;
    char *dest = (char *)destt;
-   for(size_t s = 0; s < size; s++){ *dest++ = *source++; }
+   for(int s = 0; s < size; s++){ *dest++ = *source++; }
 }
+
