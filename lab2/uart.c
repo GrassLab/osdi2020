@@ -51,6 +51,8 @@ void uart_init()
  */
 void uart_send(unsigned int c) {
     /* wait until we can send */
+    //check 6th 100000 bit if it can send
+    //if Receive FIFO full, nop
     do{asm volatile("nop");}while(*UART0_FR&0x20);
     /* write the character to the buffer */
     *UART0_DR=c;
@@ -62,6 +64,8 @@ void uart_send(unsigned int c) {
 char uart_getc() {
     char r;
     /* wait until something is in the buffer */
+    //check 5th 10000 bit if it can send 
+    //if Transmit FIFO full, nop
     do{asm volatile("nop");}while(*UART0_FR&0x10);
     /* read it and return */
     r=(char)(*UART0_DR);
