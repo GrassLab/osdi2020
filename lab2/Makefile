@@ -4,7 +4,7 @@ LDFLAGS = -T linker.ld -nostdlib
 SDCARD ?= /dev/sdb
 SRC := $(wildcard *.c)
 OBJECTS := $(patsubst %.c,%.o,$(SRC))
-CFLAGS = -fno-stack-protector -include stackguard.h
+CFLAGS = -include stackguard.h
 
 .PHONY: all clean qemu debug indent
 
@@ -22,6 +22,8 @@ clean:
 
 qemu: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
+
+debug: CFLAGS += -ggdb -Og
 
 debug: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty -s -S
