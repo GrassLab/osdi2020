@@ -4,6 +4,7 @@
 #include "mm.h"
 #include "printf.h"
 #include "mbox.h"
+#include "lfb.h"
 
 #define PM_PASSWORD   0x5a000000
 #define PM_RSTC       ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
@@ -26,6 +27,7 @@ shell_interactive ()
 	  uart_puts ("reboot - reboot\n");
 	  uart_puts
 	    ("hardware - show board revision and VC Core base address\n");
+	  uart_puts ("picture - show picture\n");
 	}
       else if (!strcmp ("hello", buf))
 	{
@@ -43,12 +45,22 @@ shell_interactive ()
 	{
 	  hardware ();
 	}
+      else if (!strncmp ("picture", buf, 8))
+	{
+	  picture ();
+	}
       else
 	{
 	  uart_puts (buf);
 	  uart_puts (": command not found\n");
 	}
     }
+}
+
+void
+picture ()
+{
+  lfb_showpicture ();
 }
 
 void
@@ -84,7 +96,7 @@ hardware ()
   bzero (msg + 1, msg->tag.buf_size + 4);
   mbox_call (MBOX_CH_PROP);
 
-  base_addr = *(unsigned int *)(msg + 1);
+  base_addr = *(unsigned int *) (msg + 1);
 
   printf ("board revision: %x\r\n", revision);
   printf ("VC Core base address: %x\r\n", base_addr);

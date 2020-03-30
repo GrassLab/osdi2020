@@ -8,5 +8,6 @@ void print_time ();
 void reset (int tick);
 void cancel_reset ();
 void hardware ();
+void picture ();
 
 #endif /* ifndef SHELL */

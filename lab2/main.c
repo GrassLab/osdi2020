@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "shell.h"
 #include "printf.h"
+#include "lfb.h"
 
 #define BOOT_MSG "                                                               \n" \
                  "                                                               \n" \
@@ -20,6 +21,7 @@ main (void)
   // init stack guard. It should be random, but I'm lazy.
   __stack_chk_guard = (void *) 0xdeadbeef;
   uart_init ();
+  lfb_init ();
   uart_puts (BOOT_MSG);
   shell_interactive ();
   return 0;
