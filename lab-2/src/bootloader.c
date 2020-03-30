@@ -6,7 +6,7 @@ extern char __bss_end[];
 void load_new_kernel(char *new_address, int size) {
     char *kernel = new_address;
     for (int i = 0; i < size; i++) {
-        unsigned char c = uart_getc();
+        unsigned char c = uart_recv_char();
         kernel[i] = c;
     }
     uart_puts("Finished copy new kernel and jump.\n");

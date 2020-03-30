@@ -41,7 +41,7 @@ def serialSendChunk(ser, data):
     print("count = ", count) 
     resetSerialIO(ser)
 
-kernelPath = './kernel8.img'
+kernelPath = './bin/kernel8.img'
 # serialObject = serial.Serial("/dev/ttyUSB0", 115200, timeout=0.001)
 serialObject = serial.Serial("/dev/pts/0", 115200, timeout=0.001)
 resetSerialIO(serialObject)
