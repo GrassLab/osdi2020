@@ -47,6 +47,15 @@ void uart_init()
     r=150; while(r--) { asm volatile("nop"); }
     *GPPUDCLK0 = 0;        // flush GPIO setup
 
+    // Set integer & fractional part of baud rate.
+    // Divider = UART_CLOCK/(16 * Baud)
+    // Fraction part register = (Fractional part * 64) + 0.5
+    // UART_CLOCK = 3000000; Baud = 115200.
+    
+    // UART0_IBRD
+    // Divider = 4000000/(16 * 115200) = 2.17 = ~2.
+    // UART0_FBRD
+    // Fractional part register = (.17 * 64) + 0.5 = 11.38 = ~11.
     *UART0_ICR = 0x7FF;    // clear interrupts
     *UART0_IBRD = 2;       // 115200 baud
     *UART0_FBRD = 0xB;
@@ -54,9 +63,7 @@ void uart_init()
     *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
 }
 
-/**
- * Send a character
- */
+
 void uart_send(unsigned int c) {
     /* wait until we can send */
     do{asm volatile("nop");}while(*UART0_FR&0x20);
@@ -64,9 +71,7 @@ void uart_send(unsigned int c) {
     *UART0_DR=c;
 }
 
-/**
- * Receive a character
- */
+
 char uart_getc() {
     char r;
     /* wait until something is in the buffer */
@@ -77,9 +82,7 @@ char uart_getc() {
     return r=='\r'?'\n':r;
 }
 
-/**
- * Display a string
- */
+
 void uart_puts(char *s) {
     while(*s) {
         /* convert newline to carrige return + newline */
