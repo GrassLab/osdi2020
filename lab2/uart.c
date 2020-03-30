@@ -116,3 +116,10 @@ _putchar (char character)
 {
   uart_send (character);
 }
+
+void
+uart_read (char *buf, unsigned long count)
+{
+  while (count--)
+    *buf++ = uart_getc ();
+}

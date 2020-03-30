@@ -4,10 +4,11 @@
 #define CMD_SIZE 0x20
 
 void shell_interactive ();
-void print_time ();
+double get_time ();
 void reset (int tick);
 void cancel_reset ();
 void hardware ();
 void picture ();
+void loadimg (unsigned long address);
 
 #endif /* ifndef SHELL */

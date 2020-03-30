@@ -28,6 +28,7 @@ shell_interactive ()
 	  uart_puts
 	    ("hardware - show board revision and VC Core base address\n");
 	  uart_puts ("picture - show picture\n");
+	  uart_puts ("loadimg [address] - load image to address\n");
 	}
       else if (!strcmp ("hello", buf))
 	{
@@ -35,7 +36,7 @@ shell_interactive ()
 	}
       else if (!strcmp ("timestamp", buf))
 	{
-	  print_time ();
+	  printf ("[%lf]\r\n", get_time ());
 	}
       else if (!strcmp ("reboot", buf))
 	{
@@ -49,12 +50,28 @@ shell_interactive ()
 	{
 	  picture ();
 	}
+      else if (!strncmp ("loadimg", buf, 7))
+	{
+	  loadimg (strtol (buf + 7, NULL, 16));
+	}
       else
 	{
 	  uart_puts (buf);
 	  uart_puts (": command not found\n");
 	}
     }
+}
+
+void
+loadimg (unsigned long address)
+{
+  unsigned img_size;
+  printf ("Load image into 0x%lx\r\n", address);
+  printf ("Please give me the image.\r\n");
+  uart_read ((char *) &img_size, 4);
+  printf ("[%lf] image size: 0x%x\r\n", get_time (), img_size);
+  uart_read ((char *) address, img_size);
+  ((void (*)(void)) address) ();
 }
 
 void
@@ -102,8 +119,8 @@ hardware ()
   printf ("VC Core base address: %x\r\n", base_addr);
 }
 
-void
-print_time ()
+double
+get_time ()
 {
   unsigned long freq;
   unsigned long cnt;
@@ -113,8 +130,7 @@ print_time ()
 
   asm volatile ("mrs %0, CNTFRQ_EL0\n"
 		"mrs %1, CNTPCT_EL0\n":"=r" (freq), "=r" (cnt));
-  result = (double) cnt / (double) freq;
-  printf ("[%lf]\r\n", result);
+  return (double) cnt / (double) freq;
 }
 
 void

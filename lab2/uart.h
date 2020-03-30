@@ -32,4 +32,6 @@ void uart_send (char c);
 void uart_puts (char *s);
 char uart_getc ();
 int uart_readline (int size, char *buf);
+void uart_hex (unsigned int d);
+void uart_read (char *buf, unsigned long count);
 #endif /* ifndef UART */
