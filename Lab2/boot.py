@@ -19,11 +19,16 @@ def init_Serial(serial_port):
     )
     return ser
 
-def wait_for_Pi(ser_i):
+def wait_for_Pi(addr,ser_i):
     print("### Wait until Raspberry Pi is ready......")
-    
+   
     # write 'c' to trigger 
-    ser_i.write('c');
+    ser_i.write('c')
+    print('### Settiing image on address:',addr)
+
+    address = struct.pack('<l',addr);
+    for i in address:
+        ser_i.write(i)
     
     cnt = 0
     while cnt < 3:
@@ -77,10 +82,13 @@ def send_Kernel_size(ser_i, size):
 
 def send_Kernel(ser_i, kernel_data):
     print("### Sending kernel now......")
-	
+
+    start = time.time()
     for tmp, byte in enumerate(kernel_data):
         ser_i.write(byte)
-		
+    end = time.time()
+
+    print("Cost time: " , end-start);    
     print("### Finished sending!")
 
     return True
@@ -121,9 +129,9 @@ def main():
     ser_i = init_Serial(serial_port)
     print("### Serial init success!!")
 
-    a = raw_input("### Power on Raspberry Pi and press 'ENTER' to load kernel img!")
+    a = input("### Power on Raspberry Pi and input load address to load kernel img:")
     ## send 'c' to Pi and wait for '\x03\x03\x03' send back
-    wait_for_Pi(ser_i)
+    wait_for_Pi(a,ser_i)
 
     
     size, kernel_data = open_Kernel(kernel_img)

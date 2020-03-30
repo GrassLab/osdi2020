@@ -47,4 +47,4 @@ clean:
 main:
     bl    kernel_main-2048
 	
-b proc_hang    // for failsafe, halt this core too         
+b proc_hang    // for failsafe, halt this core too     

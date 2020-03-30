@@ -14,3 +14,7 @@ delay:
 	bne delay
 	ret
 
+.globl set_address
+set_address:
+	mov x30,x0
+	ret

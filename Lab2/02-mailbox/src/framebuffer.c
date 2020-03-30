@@ -19,7 +19,7 @@ void fb_init(){
 	unsigned tmp_width = mbox[5];
 	unsigned tmp_height = mbox[6];
 
-        //Set virtual display
+        //Set virtual buffer
 	mbox[0] = 8*4;
 	mbox[1] = REQUEST_CODE;
 	mbox[2] = SET_VIR_DISPLAY;
@@ -59,7 +59,7 @@ void fb_init(){
 	mbox[2] = SET_PIXEL_ORDER;
 	mbox[3] = 4;
 	mbox[4] = 0;
-	mbox[5] = 1;
+	mbox[5] = 1; // 1 fro RGB
 	mbox[6] = END_TAG;
 	mbox_call(8);
 	
@@ -105,9 +105,9 @@ void fb_init(){
 		uart_hex(pitch);
 		uart_send_string("\r\nIsRGB:");
 		uart_hex(isrgb);
-		*/		
+		*/	
 		fb = (void*)((unsigned long)pointer);
-		uart_send_string("\r\nSetting frame buffer sucess!\r\n");
+		uart_send_string("### Setting frame buffer sucess!\r\n");
 	}
 	else{
 	 uart_send_string("Unable to set frame buffer:(\r\n");
@@ -121,24 +121,35 @@ void fb_show()
     unsigned char *ptr=fb; 
     char pixel[4];
    
+    int flag = 0;
+
     for(y=0;y<height;y++) {
         for(x=0;x<width;x++) {
-            if(y>200&&y<500){	
+	    flag = 0;
+            if(x/100 % 2 == 0) 
+		    flag++;
+	    if(y/100 % 2 == 0)
+		    flag++;
+
+	    if(flag%2==0){	
 	    	pixel[0] = 255;
 	    	pixel[1] = 255;
 	    	pixel[2] = 255;
-		}
+	    }
 	    else{
 	    	pixel[0] = 0;
 		pixel[1] = 0;
-		pixel[2] = 0;
-	    }
+		pixel[2] = 255;
+	    } 
+	    
 	    
             // the image is in RGB. So if we have an RGB framebuffer, we can copy the pixels
             // directly, but for BGR we must swap R (pixel[0]) and B (pixel[2]) channels.
-            *((unsigned int*)ptr) = isrgb ? *((unsigned int *)&pixel) : (unsigned int)(pixel[0]<<16 | pixel[1]<<8 | pixel[2]);
+	    if(isrgb==1)
+            	*((unsigned int*)ptr) = (unsigned int)(pixel[2]<<16|pixel[1]<<8|pixel[0]);
+	    else
+		*((unsigned int*)ptr) = (unsigned int)(pixel[0]<<16 | pixel[1]<<8 | pixel[2]);
             
-	    //*((unsigned int*)ptr) = isrgb
 	    ptr+=4;
         }
         ptr+=pitch-width*4;

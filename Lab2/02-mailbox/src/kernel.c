@@ -114,15 +114,15 @@ void get_VC_core_base_addr(){
 void kernel_main(void)
 {	
     uart_init();
-    fb_init();
-    fb_show();
+    //fb_init();
+    //fb_show();
     
     uart_send_string("Hello, world!\r\n");
     
 
     //get hardware information by mailbox
-    //get_board_revision_info();
-    //get_VC_core_base_addr();
+    get_board_revision_info();
+    get_VC_core_base_addr();
 
     // simple shell implement
     char str[128];
