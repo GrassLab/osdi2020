@@ -8,7 +8,7 @@ import logging, coloredlogs
 create logger
 '''
 coloredlogs.install()
-logger = logging.getLogger("raspbootcom")
+logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
 '''
 get kernel image size

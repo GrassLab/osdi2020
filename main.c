@@ -1,7 +1,6 @@
 #include "include/uart.h"
 #include "include/power.h"
 #include "include/time.h"
-#include "include/mailbox.h"
 #include "include/info.h"
 
 void main()

@@ -1,4 +1,5 @@
 #include "uart.h"
+#include "lfb.h"
 
 void main()
 {
@@ -7,8 +8,12 @@ void main()
     char *kernel=(char*)0x80000;
     //if(offset) while(offset--) { asm volatile("nop"); }
 
-    // set up serial console
+    // set up serial console and linear frame buffer
     uart_init();
+    lfb_init();
+
+    // display a pixmap
+    lfb_showpicture();
 
 again:
     // magic number
