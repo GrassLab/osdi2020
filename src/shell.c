@@ -72,6 +72,7 @@ void command_controller ( enum SPECIAL_CHARACTER input_parse, char c, char buffe
             else if ( !strcmp(buffer, "reboot"          ) ) command_reboot();
             else if ( !strcmp(buffer, "vc_base_addr"    ) ) command_vc_base_addr();
             else if ( !strcmp(buffer, "board_revision"  ) ) command_board_revision();
+            else if ( !strcmp(buffer, "loadimg"         ) ) command_load_image();
             else                                            command_not_found(buffer);
         }
             

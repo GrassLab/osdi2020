@@ -104,3 +104,54 @@ void command_vc_base_addr()
         uart_puts("Unable to query serial!\n");
     }
 }
+
+void command_load_image ()
+{
+    int32_t size = 0;
+    int32_t is_receive_success = 0;
+    char *kernel = (char *)0x80000;
+        
+    uart_puts("Start Loading Kernel Image...\n");
+
+    do {
+
+        // start signal to receive image
+        uart_send(3);
+        uart_send(3);
+        uart_send(3);
+
+        // read the kernel's size
+        size  = uart_getc();
+        size |= uart_getc() << 8;
+        size |= uart_getc() << 16;
+        size |= uart_getc() << 24;
+
+        // send negative or positive acknowledge
+        if(size<64 || size>1024*1024)
+        {
+            // size error
+            uart_send('S');
+            uart_send('E');            
+            
+            continue;
+        }
+        uart_send('O');
+        uart_send('K');
+
+        // 從0x80000開始放
+        while ( size-- ) 
+        {
+            *kernel++ = uart_getc();
+        }
+
+        is_receive_success = 1;
+
+    } while ( !is_receive_success );
+
+    // restore arguments and jump to the new kernel.
+    asm volatile (
+        // we must force an absolute address to branch to
+        "mov x30, 0x80000;"
+        "ret"
+    );
+}

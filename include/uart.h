@@ -62,9 +62,4 @@ char uart_getc();
  */
 void uart_puts(char *s);
 
-/**
- * Display a binary value in hexadecimal
- */
-void uart_hex(unsigned int d);
-
 #endif

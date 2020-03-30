@@ -10,5 +10,6 @@ void command_not_found ( char * );
 void command_reboot ();
 void command_vc_base_addr();
 void command_board_revision();
+void command_load_image ();
 
 #endif
