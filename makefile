@@ -32,5 +32,8 @@ run-script:
 connect:
 	sudo screen /dev/ttyUSB0 115200
 
+check-elf:
+	aarch64-linux-gnu-readelf -s kernel8.elf
+
 clean:
 	rm -rf *.o kernel8.*
