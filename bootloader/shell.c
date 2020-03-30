@@ -1,6 +1,7 @@
 #include "my_string.h"
 #include "uart0.h"
 #include "utli.h"
+#include "loadimg.h"
 
 enum ANSI_ESC {
     Unknown,
@@ -118,7 +119,7 @@ void shell_controller(char* cmd) {
         uart_printf("loadimg: load image from UART!\n");
     }
     else if (!strcmp(cmd, "loadimg")) {
-        uart_printf("loadimg: load image from UART!\n");
+        loadimg();
     }
     else if (!strcmp(cmd, "reboot")) {
         uart_printf("Rebooting...");
