@@ -1,7 +1,6 @@
 #include "mbox.h"
 #include "uart.h"
 
-#define MMIO_BASE 0x3F000000
 #define PM_RSTC ((volatile unsigned int *)(MMIO_BASE + 0x0010001c))
 #define PM_RSTS ((volatile unsigned int *)(MMIO_BASE + 0x00100020))
 #define PM_WDOG ((volatile unsigned int *)(MMIO_BASE + 0x00100024))

@@ -14,11 +14,12 @@ extern volatile unsigned int mbox[36];
 #define MBOX_CH_PROP 8
 
 /* tags */
+#define MBOX_TAG_SETCLKRATE 0x38002
 #define MBOX_TAG_GETSERIAL 0x10004
 #define MBOX_TAG_LAST 0
 #define MBOX_TAG_BOARD_REVISION 0x00010002
 #define MBOX_TAG_REQUEST_CODE 0x00000000
-#define MBOX_TAG_VC_MEMORY 0x00010005
+#define MBOX_TAG_VC_MEMORY 0x00010006
 int mbox_call(unsigned char ch);
 void board_revision();
 void vc_base_address();
