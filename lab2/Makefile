@@ -23,5 +23,8 @@ clean:
 	rm *.o *.d
 	rm kernel8.*
 
+run_d:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty -S -s
+
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty

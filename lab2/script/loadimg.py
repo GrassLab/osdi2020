@@ -11,7 +11,7 @@ def serial_w(content):
     time.sleep(1)
 
 if __name__ == "__main__":
-    ser = serial.Serial(port='/dev/pts/21', baudrate=115200)
+    ser = serial.Serial(port='/dev/pts/4', baudrate=115200)
     kernel_size = os.path.getsize(KERNEL_PATH)
     with open(KERNEL_PATH, 'rb') as kernel_f:
 
@@ -24,6 +24,9 @@ if __name__ == "__main__":
         # kernel size
         serial_w(str(len(words))+'\r')
 
-        # serial_w(words)
+        
+
+        serial_w(words)
+        serial_w('Done~\r')
         print('hi')
         kernel_f.close()
