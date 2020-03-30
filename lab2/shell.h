@@ -10,5 +10,6 @@ void cancel_reset ();
 void hardware ();
 void picture ();
 void loadimg (unsigned long address);
+void ftoa (double val, char *buf);
 
 #endif /* ifndef SHELL */

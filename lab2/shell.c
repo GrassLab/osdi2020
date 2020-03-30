@@ -36,7 +36,10 @@ shell_interactive ()
 	}
       else if (!strcmp ("timestamp", buf))
 	{
-	  printf ("[%lf]\r\n", get_time ());
+	  ftoa (get_time (), buf);
+	  uart_puts ("[");
+	  uart_puts (buf);
+	  uart_puts ("]\n");
 	}
       else if (!strcmp ("reboot", buf))
 	{
@@ -117,6 +120,30 @@ hardware ()
 
   printf ("board revision: %x\r\n", revision);
   printf ("VC Core base address: %x\r\n", base_addr);
+}
+
+void
+ftoa (double val, char *buf)
+{
+  double scan = 1000000;
+  int cnt = 0;
+  int met_num = 0;
+
+  while (cnt < 6)
+    {
+      *buf = (long) (val / scan) % 10;
+      if (*buf != 0)
+	met_num = 1;
+      *buf += '0';
+      if (met_num)
+	buf++;
+      if (scan < 1)
+	cnt++;
+      if (scan == 1)
+	*buf++ = '.';
+      scan /= 10;
+    }
+  *buf = 0;
 }
 
 double
