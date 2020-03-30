@@ -41,6 +41,8 @@ extern volatile unsigned int mbox[36];
 #define MBOX_TAG_GET_BSERI       0x00010004 // Get board serial
 #define MBOX_TAG_GET_ARMADDR     0x00010005 // Get ARM memory
 #define MBOX_TAG_GET_VCADDR      0x00010006 // Get VC memory
+#define MBOX_TAG_GET_CLK_RATE    0x00038001 // Get clock state
+#define MBOX_TAG_SET_CLK_RATE    0x00038002 // Set clock state
 
 
 

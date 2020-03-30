@@ -8,7 +8,7 @@ C_OBJS = $(C_SRCS:src/%.c=build/%_c.o)
 
 .PHONY: all clean run debug
 
-all: kernel8.img
+all:clean kernel8.img
 
 build/%_s.o: src/%.S
 	$(TOOLCHAIN_PREFIX)-gcc $(CFLAGS) -c $< -o $@
@@ -24,7 +24,7 @@ clean:
 	rm kernel8.elf build/* >/dev/null 2>/dev/null || true
 
 run:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio 
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial pty
 
 debug:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio -s -S 
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -serial pty -s -S 

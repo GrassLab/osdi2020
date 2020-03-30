@@ -1,5 +1,5 @@
 #include "mailbox.h"
-#include "mini_uart.h"
+#include "uart.h"
 #include "simple_shell.h"
 
 char* info ="\n\

@@ -1,7 +1,8 @@
 #include "simple_shell.h"
 
-#include "mini_uart.h"
+#include "uart.h"
 #include "utils.h"
+
 
 #define PM_RSTC      ((volatile unsigned int*)(0x3F10001C))
 #define PM_WDOG      ((volatile unsigned int*)(0x3F100024))
