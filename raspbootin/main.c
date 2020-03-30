@@ -14,12 +14,14 @@ void main()
     //uart_puts("Please send the kernel from UART...\n");
     // say hello. To reduce loader size I removed uart_puts()
 again:
-    uart_send('R');
-    uart_send('B');
-    uart_send('I');
+    uart_send('H');
+    uart_send('A');
     uart_send('N');
-    uart_send('6');
+    uart_send('K');
+    uart_send('0');
     uart_send('4');
+    uart_send('3');
+    uart_send('8');
     uart_send('\r');
     uart_send('\n');
     // notify raspbootcom to send the kernel

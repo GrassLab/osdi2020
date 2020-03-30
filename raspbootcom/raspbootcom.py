@@ -52,7 +52,7 @@ def main():
     logger.info(f'kernel size: {KERNEL_IMG_SIZE}')
     logger.info("waiting...")
 
-    print(s.readline()) ### b'RBIN64\r\n'
+    print(s.readline()) ### b'HANK0438\r\n'
     while True:
         NO_REBOOT = True
         logger.info("initialize connection...")
@@ -84,7 +84,7 @@ def main():
                     if (res == b'\n'):
                         print(res_line)
                         
-                        if b'RBIN64\r\n' in res_line:
+                        if b'HANK0438\r\n' in res_line:
                             logger.info("rebooting...")
                             NO_REBOOT = False
                             break
