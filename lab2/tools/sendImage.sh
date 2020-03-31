@@ -1,12 +1,13 @@
 #!/bin/bash
 
-usage="$(basename "$0") [-h] [-l n] [- ]
+usage="$(basename "$0") [-h] [-l addr] [-k kernel] [-d device]
 program to send the image to indicate device
 
 where:
     -h  show this help message
-    -k  indicate the kernel image to upload
     -l  set the image location (default: 524288=0x80000)
+    -k  indicate the kernel image to upload
+    -d  indicate the device to upload
 "
 
 # default arguments
