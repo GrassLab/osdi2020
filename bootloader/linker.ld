@@ -5,17 +5,23 @@ SECTIONS
   {
     KEEP(*(.text.relocate))
   }
+
+  . = ALIGN(4096);
   _begin = .;
   .text :
   {
     KEEP(*(.text.boot))
     *(.text)
   }
+
+  . = ALIGN(4096);
   .data :
   {
     *(.data)
   }
-  .bss ALIGN(16) (NOLOAD) :
+
+  . = ALIGN(4096);
+  .bss (NOLOAD) :
   {
     __bss_start = .;
 
@@ -27,3 +33,4 @@ SECTIONS
 }
 
 __bss_size = (__bss_end - __bss_start) >> 3;
+__boot_loader = 0x3B3FC000;

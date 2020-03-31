@@ -14,7 +14,7 @@ _relocate:
     // if cpu_id == 0
 2:
     // set stack pointer
-    ldr     x1, =_start
+    ldr     x1, =__boot_loader
     mov     sp, x1
 
     // clear bss
@@ -36,6 +36,6 @@ _start:
     // jump to main function in C
     bl      main
     // halt this core if return
-5:
+1:
     wfe
-    b       5b
+    b       1b
