@@ -5,7 +5,7 @@ import cv2
 header_only = True
 
 def usage():
-    print("usage: {} [image] > img.c".format(sys.argv[0]))
+    print("usage: {} [image]".format(sys.argv[0]))
     exit(0)
 
 if len(sys.argv) <= 1 or ('-h' in sys.argv) or ('--help' in sys.argv):
