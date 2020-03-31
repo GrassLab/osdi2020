@@ -144,14 +144,16 @@ void shell() {
         print_i(img_size);
         print_c('\r');
 
-        long boot_start = (long)&_boot_start;
-        long boot_end = (long)&_end;
-        char *base = (char *)num + img_size + 0x100;
-        for (int i = 0; i < boot_end - boot_start; i++) {
-            *(base + i) = *(char *)(boot_start + i);
-        }
-        ((void (*)(long long, int))(*loadimg + num + img_size + 0x100 -
-                                    boot_start))(num, img_size);
+        /* long boot_start = (long)&_boot_start; */
+        /* long boot_end = (long)&_end; */
+        /* char *base = (char *)num + img_size + 0x100; */
+        /* for (int i = 0; i < boot_end - boot_start; i++) { */
+        /* *(base + i) = *(char *)(boot_start + i); */
+        /* } */
+
+        /* ((void (*)(long long, int))((long)*loadimg + num + img_size + 0x100 -
+         */
+        /* boot_start))(num, img_size); */
 
     } else if (!strcmp(cmd, "addr")) {
         print_h((long)loadimg);
@@ -187,5 +189,13 @@ int main() {
         "██║██████╔╝███████╗██║  ██║\r\n"
         "╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ "
         "╚══════╝╚═╝  ╚═╝\r\n");
-    run();
+    long boot_start = (long)&_boot_start;
+    long boot_end = (long)&_end;
+    char *base = 0x90000;
+    for (int i = 0; i < boot_end - boot_start; i++) {
+        *(base + i) = *(char *)(boot_start + i);
+    }
+
+    ((void (*)())(*run + 0x10000))();
+    /* run(); */
 }
