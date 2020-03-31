@@ -1,7 +1,5 @@
 #ifndef FRAMEBUFFER_H
 #define FRAMEBUFFER_H
-
-void write_buf(unsigned long loc);
-unsigned long framebuffer_init();
-
+void lfb_init();
+void lfb_showpicture();
 #endif

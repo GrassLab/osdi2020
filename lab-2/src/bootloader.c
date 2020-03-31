@@ -2,31 +2,43 @@
 #include "uart.h"
 
 extern char __bss_end[];
+extern char __kernel_start[];
+unsigned long int backup_address = 0x100000;
 
-void load_new_kernel(char *new_address, int size) {
-    char *kernel = new_address;
+void load_target_kernel(char *target_address, int size) {
+    uart_puts("[info] Starting to load target kernel\n");
     for (int i = 0; i < size; i++) {
-        unsigned char c = uart_recv_char();
-        kernel[i] = c;
+        char c = uart_recv_char();
+        target_address[i] = c;
     }
-    uart_puts("Finished copy new kernel and jump.\n");
-    void (*target)() = new_address;
+    uart_puts("[info] Finished load target kernel and running.\n");
+    void (*target)() = target_address;
     target();
 }
 
-void load_image(char *new_address, int size) {
+void save_running_image()
+{
     char *kernel = 0x80000;
     char *end = __bss_end;
-    char *copy = (char *)(0x100000);
-    uart_puts("begin of copy kernel\n");
+    char *backup = (char *)(backup_address);
+    uart_puts("[info] Starting to backup loader kernel\n");
     while (kernel <= end) {
-        *copy = *kernel;
+        *backup = *kernel;
         kernel++;
-        copy++;
+        backup++;
     }
-    uart_puts("end of copy kernel\n");
-    void (*func_ptr)() = load_new_kernel;
-    unsigned long int original_function_address = (unsigned long int)func_ptr;
-    void (*call_function)(char *, int) = (void (*)(char *))(original_function_address - (unsigned long int)0x80000 + 0x100000);
-    call_function(new_address, size);
+    uart_puts("[info] Finished backup loader kernel\n");
+}
+
+void load_image(char *target_address, int size) {
+    unsigned long int backup_size = __bss_end - __kernel_start;
+    while(backup_address < target_address || backup_address + backup_size < target_address + size) {
+        backup_address += 0x10000;
+    }
+    save_running_image();
+    void (*load_target_ptr)() = load_target_kernel;
+    unsigned long int load_target_func_address = (unsigned long int) load_target_ptr;
+    void (*new_load_target_kernel)(char *, int) = 
+        (void (*)(char *))(load_target_func_address - (unsigned long int)0x80000 + backup_address);
+    new_load_target_kernel(target_address, size);
 }

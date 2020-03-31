@@ -31,4 +31,4 @@ src/%.o: src/%.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
 clean: 
-	rm *.o $(TARGET) kernel8.elf >/dev/null 2>/dev/null
+	rm $(OBJS) $(TARGET) kernel8.elf >/dev/null 2>/dev/null

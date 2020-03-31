@@ -80,12 +80,33 @@ void hexToStr(unsigned int num, char *str) {
     strInvert(str);
 }
 
+void hexToStrNoTruncat(unsigned int num, char *str) {
+    unsigned int n;
+    for (int c = 28; c >= 0; c -= 4) {
+        n = (num >> c) & 0xF;
+        n += n > 9 ? 0x37: 0x30;
+        (str)[c/4] = n;
+    }
+    str[8] = '\0';
+    strInvert(str);
+}
+
 int strToInt(char *str) 
 {
     int num = 0;
     int len = strlen(str);
     for(int i = 0; i < len; i++) {
         num += (str[i] - 48) * pow(10, len-i-1);
+    }
+    return num;
+}
+
+int strToNum(char *str, int base)
+{
+    int num = 0;
+    int len = strlen(str);
+    for(int i = 0; i < len; i++) {
+        num += (str[i] - 48) * pow(base, len-i-1);
     }
     return num;
 }

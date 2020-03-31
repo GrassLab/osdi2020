@@ -31,7 +31,8 @@ extern volatile unsigned int mbox[36];
 #define GET_BOARD_REVISION      0x00010002
 #define GET_SERIAL_NUMBER       0x00010004
 #define GET_VC_MEMORY           0x00010006
-#define MBOX_TAG_SETCLKRATE     0x38001 //0x38002
+#define MBOX_TAG_SETCLKRATE     0x38002
+#define MBOX_TAG_GETCLKRATE     0x30001
 #define TAG_REQUEST_CODE        0x00000000
 #define TAG_END                 0x00000000
 

@@ -4,6 +4,7 @@ import time
 import sys
 
 sleepTime = 0.1
+kernelPath = './kernel8.img'
 
 def resetSerialIO(s):
     s.flush()
@@ -38,10 +39,8 @@ def serialSendChunk(ser, data):
         else:
             count += len(data[i*512:])
             ser.write(data[i*512:])
-    print("count = ", count) 
     resetSerialIO(ser)
 
-kernelPath = './bin/kernel8.img'
 # serialObject = serial.Serial("/dev/ttyUSB0", 115200, timeout=0.001)
 serialObject = serial.Serial("/dev/pts/0", 115200, timeout=0.001)
 resetSerialIO(serialObject)

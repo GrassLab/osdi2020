@@ -3,7 +3,7 @@ import serial
 import time
 import sys
 
-sleepTime = 0.1
+sleepTime = 0.05
 
 def resetSerialIO(s):
     s.flush()
@@ -28,17 +28,17 @@ def readKernel(kernelPath):
     return kernelContent
 
 def serialSendChunk(ser, data):
+    chunkSize = 512
     resetSerialIO(serialObject)
     count = 0
-    for i in range(len(data)/512 + 1):
+    for i in range(len(data)/chunkSize + 1):
         time.sleep(sleepTime)
-        if ((512 * (i+1)) < len(data)):
-            count += len(data[i*512:i*512+512])
-            ser.write(data[i*512:i*512+512])
+        if ((chunkSize * (i+1)) < len(data)):
+            count += len(data[i*chunkSize : (i+1)*chunkSize])
+            ser.write(data[i*chunkSize : (i+1)*chunkSize])
         else:
-            count += len(data[i*512:])
-            ser.write(data[i*512:])
-    print("count = ", count) 
+            count += len(data[ i*chunkSize: ])
+            ser.write(data[ i*chunkSize: ])
     resetSerialIO(ser)
 
 kernelPath = './kernel8.img'
@@ -48,7 +48,7 @@ resetSerialIO(serialObject)
 
 while True:
     command = raw_input() + '\n'
-    sleepTime = 0.1
+    sleepTime = 0.05
     if command == 'reboot\n':
         sleepTime = 2.0
     serialSend(serialObject, command)
@@ -56,4 +56,5 @@ while True:
     if command == 'loadimg\n':
         serialSend(serialObject, str(len(readKernel(kernelPath))) + '\n')
         serialSendChunk(serialObject, readKernel(kernelPath))
+
 serialObject.close()

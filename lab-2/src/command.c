@@ -1,8 +1,38 @@
+#include "command.h"
+#include "string.h"
 #include "uart.h"
 #include "utility.h"
 #include "mailbox.h"
 #include "bootloader.h"
 #include "framebuffer.h"
+
+static void commandSwitcher(char *comm)
+{
+    if (strEqual(comm, "help")) {
+        command_help();
+    } else if (strEqual(comm, "hello")) {
+        uart_puts("Hello World!\n");
+    } else if (strEqual(comm, "reboot")) {
+        command_reboot();
+        return;
+    } else if (strEqual(comm, "timestamp")) {
+        command_timestamp();
+    } else if (strEqual(comm, "info")) {
+        command_hardware_info();
+    } else if (strEqual(comm, "loadimg")) {
+        command_load_image();
+    } else if (strEqual(comm, "version")) {
+        command_version();
+    } else if (strEqual(comm, "uartclock")) {
+        command_get_uart_clock();
+    } else if (strEqual(comm, "framebuffer")) {
+        command_frame_buffer(); 
+    } else if (strlen(comm) != 0){
+        uart_puts("Error: command ");
+        uart_puts(comm);
+        uart_puts(" not found\n");
+    }
+}
 
 void processCommand()
 {
@@ -27,60 +57,6 @@ void processCommand()
             command[commandIndex] = c;
             commandIndex ++;
         }
-    }
-}
-
-void processTestCommand()
-{
-    uart_puts("# ");
-    char command[1024] = {0};
-    int commandIndex = 0;
-    int isbooting = 1;
-    while (1) {
-        char c = uart_getc();
-        if (isbooting) {
-            isbooting = 0;
-            continue;
-        }
-        if (c == '\n') {
-            uart_puts("\n");
-            if (strEqual(command, "loadimg")) {
-                command_load_image();
-            } else if (strEqual(command, "help")) {
-                uart_puts("loadimg: load kernel image\n");
-            }
-            uart_puts("# ");
-            memset(command, 0, sizeof(command));
-            commandIndex = 0;
-        } else {
-            uart_send(c);
-            command[commandIndex] = c;
-            commandIndex ++;
-        }
-    }
-}
-
-void commandSwitcher(char *comm)
-{
-    if (strEqual(comm, "help")) {
-        command_help();
-    } else if (strEqual(comm, "hello")) {
-        uart_puts("Hello World!\n");
-    } else if (strEqual(comm, "reboot")) {
-        command_reboot();
-        return;
-    } else if (strEqual(comm, "timestamp")) {
-        command_timestamp();
-    } else if (strEqual(comm, "info")) {
-        command_hardware_info();
-    } else if (strEqual(comm, "loadimg")) {
-        command_load_image();
-    } else if (strEqual(comm, "framebuffer")) {
-        command_frame_buffer(); 
-    } else if (strlen(comm) != 0){
-        uart_puts("Error: command ");
-        uart_puts(comm);
-        uart_puts(" not found\n");
     }
 }
 
@@ -123,19 +99,30 @@ void command_hardware_info()
 
 void command_load_image()
 {
-    // uart_puts("Please input kernel load address: (default: 0x80000): ");
+    uart_puts("Please input kernel load address: (default: 0x80000): ");
     char address[1024] = {0};
-    // uart_get_string(address);
-    // uart_puts(address);
-    uart_puts("Please input kernel size: ");
-    uart_puts("\n");
+    uart_get_string(address);
 
     char size[1024] = {0};
+    uart_puts("\nPlease input kernel size: ");
     uart_get_string(size);
-    load_image(0x80000, strToInt(size));
+    uart_puts("\n");
+    load_image(strToNum(address, 16), strToInt(size));
+}
+
+void command_version() 
+{
+    uart_puts("kernel version: release\n");
+    // uart_puts("kernel version: debug\n");
+}
+
+void command_get_uart_clock() {
+    print_uart_clock();
 }
 
 void command_frame_buffer() 
 {
-    write_buf(framebuffer_init());
+    uart_puts("Start showing image.\n");
+    lfb_init();
+    lfb_showpicture();
 }
