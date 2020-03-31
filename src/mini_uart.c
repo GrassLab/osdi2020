@@ -44,16 +44,18 @@ void mini_uart_init(void) {
   *AUX_MU_CNTL_REG = 3;
 }
 
-uint8_t mini_uart_getc(void) {
+uint8_t mini_uart_getc(bool verbose) {
   while ((*AUX_MU_LSR_REG & 1) == 0);
   uint8_t c = *AUX_MU_IO_REG & 0xff;
-  mini_uart_putc(c);
+  if (verbose) {
+    mini_uart_putc(c);
+  }
   return c;
 }
 
 void mini_uart_gets(char *buf) {
   char c;
-  while (c = mini_uart_getc(), c != '\r' && c != '\n') {
+  while (c = mini_uart_getc(true), c != '\r' && c != '\n') {
     *buf = c;
     ++buf;
   }

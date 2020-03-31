@@ -19,7 +19,7 @@
 
 void gpio_init(void);
 void mini_uart_init(void);
-uint8_t mini_uart_getc(void);
+uint8_t mini_uart_getc(bool verbose);
 void mini_uart_gets(char *buf);
 void mini_uart_putc(uint8_t c);
 void mini_uart_puts(uint8_t *s);
