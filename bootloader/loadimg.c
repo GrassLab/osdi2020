@@ -19,13 +19,20 @@ int loadimg() {
 
     uart_printf("Image Size: %d, Checksum: %d\n", img_size, img_checksum);
 
+    char *kernel=(char*)0xA0000;
+
     for (i = 0; i < img_size; i++) {
         char b = uart_read_raw();
+        *(kernel + i) = b;
         img_checksum -= (int)b;
     }
 
     if (img_checksum != 0) {
         uart_printf("Failed!");
+    }
+    else {
+        void (*start_os)(void) = (void*) kernel;
+        start_os();
     }
 
     return 0;
