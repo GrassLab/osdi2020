@@ -1,1 +1,1 @@
-int loadimg();
+void loadimg();
