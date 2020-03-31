@@ -9,7 +9,7 @@ if __name__ == '__main__':
         sys.exit()
 
     try:
-        ser = serial.Serial(sys.argv[1], 115200)
+        ser = serial.Serial(sys.argv[1], 115200, timeout=5)
     except FileNotFoundError:
         print("Oops! Wrong path of device, please check again.")
         sys.exit()

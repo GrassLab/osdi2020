@@ -46,8 +46,8 @@ char recvUART(void) {
     // wait until bit 1st set to 1
     while(!(*AUX_MU_LSR_REG & 0x01)) {}
 
-    char recv = *AUX_MU_IO_REG & 0xFF;
-    return recv != '\r' ? recv : '\n';
+
+    return *AUX_MU_IO_REG & 0xFF;
 }
 
 void sendStringUART(const char *str) {
