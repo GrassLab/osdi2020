@@ -4,8 +4,11 @@
 #include "power.h"
 #include "string.h"
 #include "mbox.h"
-#include "loadimg.h"
 #include "info.h"
+
+#ifndef WITHOUT_LOADER
+#include "loadimg.h"
+#endif
 
 char buffer[1024];
 
@@ -89,9 +92,11 @@ int shell_execute(char *cmd){
     else if(EQS("clear", cmd)){
         print("\e[1;1H\e[2J");
     }
+#ifndef WITHOUT_LOADER
     else if(EQS("loadimg", cmd)){
         loadimg();
     }
+#endif
     else if(EQS("board", cmd)){
         if(get_board_revision())
             printf("0x%x" NEWLINE, mbox[5]);

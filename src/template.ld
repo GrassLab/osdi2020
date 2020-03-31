@@ -1,21 +1,33 @@
 SECTIONS
 {
-    . = __kernel__beg__loc__;
-    .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
-    .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
+    . = _kbeg;
+    .text : {
+        /* . = ALIGN(16); */
+        KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*)
+    }
+    .rodata : {
+        /* . = ALIGN(16); */
+        *(.rodata .rodata.* .gnu.linkonce.r*)
+    }
     PROVIDE(_data = .);
-    .data : { 
-        . = ALIGN(16);
+    .data : {
+        /* . = ALIGN(16); */
         *(.data .data.* .gnu.linkonce.d*)
     }
     .bss (NOLOAD) : {
-        . = ALIGN(16);
+        /* . = ALIGN(16); */
         __bss_beg = .;
         *(.bss .bss.*)
         *(COMMON)
         __bss_end = .;
     }
-    _end = .;
+    .bootloader : {
+        /* . = ALIGN(16); */
+        _bootloader_beg = .;
+        *(.bootloader*)
+        _bootloader_end = .;
+    }
+    _kend = .;
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_beg)>>3;
