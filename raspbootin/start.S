@@ -30,8 +30,9 @@ _start:
     cbnz    w3, 1b
 
     // set stack before our code
-    ldr     x1, =_start
-    mov     sp, x1
+    //ldr     x1, =_start
+    //mov     sp, x1
+    mov     sp, #0xf0000
 
     // clear bss
     ldr     x1, =__bss_start

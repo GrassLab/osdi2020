@@ -111,7 +111,6 @@ void uart_hex(unsigned int d)
     }
 }
 
-
 /**
  * Compare two string and return 0 if they are identical
  */ 
@@ -125,4 +124,16 @@ int uart_strcmp(const char *cs, const char *ct)
         if (!c1) break;
     }
     return 0;
+}
+
+/**
+ * Copy memory by address and size
+ */ 
+void *uart_memcpy (const void *src, void *dst, int len)
+{
+    const char *s = src;
+    char *d = dst;
+    while (len--)
+        *d++ = *s++;
+    return dst;
 }

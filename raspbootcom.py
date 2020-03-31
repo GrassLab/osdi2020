@@ -14,6 +14,7 @@ logger.setLevel(logging.DEBUG)
 get kernel image size
 '''
 KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/osdi2020/kernel8.img"
+#KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/raspi3-tutorial/05_uart0/kernel8.img"
 KERNEL_IMG_SIZE = os.stat(KERNEL_IMG_PATH).st_size
 
 def send_size(s, kernel_size):
@@ -46,9 +47,34 @@ def main():
     logger.info(f'kernel size: {KERNEL_IMG_SIZE}')
     logger.info("waiting...")
 
-    print(s.readline()) ### b'HANK0438\r\n'
+    
     while True:
         NO_REBOOT = True
+        
+        while NO_REBOOT:
+            
+            res_line = b''
+            while True:
+                res = s.read()
+                res_line += res
+                #print(f'read: {res}')
+                if (res_line == b'>'):
+                    break 
+                if (res == b'\n'):
+                    print(res_line)
+                    
+                    if b'HANK0438\r\n' in res_line:
+                        logger.info("rebooting...")
+                        NO_REBOOT = False
+                        break
+
+                    res_line = b''
+
+            if NO_REBOOT:
+                command = input(">").strip()
+                logger.info(f"cmd > {command}")
+                s.write(command.encode()+b'\n')
+
         logger.info("sending size...")
         if send_size(s, KERNEL_IMG_SIZE):
             print(s.readline()) ### b"Please input the kernel load address (default: 0x80000):\r\n"
@@ -56,34 +82,5 @@ def main():
             logger.info("sending kernel...")
             send_kernel(s, KERNEL_IMG_SIZE)
             logger.info("finish!")
-
-            for _ in range(3):
-                res = s.readline().decode()
-                res = res.strip()
-                print(res)
-            
-            s.read() ### b'>'
-            while NO_REBOOT:
-                #logger.info("cmd > reboot")
-                #s.write(b'reboot\n')
-                command = input(">").strip()
-                logger.info(f"cmd > {command}")
-                s.write(command.encode()+b'\n')
-                
-                res_line = b''
-                while True:
-                    res = s.read()
-                    res_line += res
-                    #print(f'read: {res}')
-                    if (res_line == b'>'):
-                        break 
-                    if (res == b'\n'):
-                        print(res_line)
-                        
-                        if b'HANK0438\r\n' in res_line:
-                            logger.info("rebooting...")
-                            NO_REBOOT = False
-                            break
-
-                        res_line = b''   
+            print(s.readline()) ### b'Loading kernel at 0x00100000 with size 0x00007010 ...\r\n'
 main()

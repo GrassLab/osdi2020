@@ -26,3 +26,5 @@ objdump:
 	aarch64-linux-gnu-objdump -d kernel8.elf
 readelf:
 	aarch64-linux-gnu-readelf -a kernel8.elf
+copy:
+	cp kernel8.img /media/hank0438/4DFF-0A36/

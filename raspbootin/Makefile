@@ -19,3 +19,6 @@ clean:
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
+
+copy:
+	cp kernel8.img /media/hank0438/4DFF-0A36/

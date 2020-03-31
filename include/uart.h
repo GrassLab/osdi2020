@@ -5,3 +5,4 @@ void uart_puts(char *s);
 char uart_i2c(unsigned int d);
 void uart_hex(unsigned int d);
 int uart_strcmp(const char *cs, const char *ct);
+void *uart_memcpy (const void *src, void *dst, int len);

@@ -6,7 +6,6 @@ void main()
     int size=0;
     
     char *kernel=(char*)0x80000;
-    //if(offset) while(offset--) { asm volatile("nop"); }
 
     // set up serial console and linear frame buffer
     uart_init();
