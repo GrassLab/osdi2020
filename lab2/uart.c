@@ -126,6 +126,15 @@ int is_digit(char c){
     return c >= '0' && c <= '9';
 }
 
+unsigned long uart_getul() {
+  unsigned long r = 0, c;
+  while (is_digit(c = uart_getc())) {
+    r = r * 10 + c - '0';
+  }
+  return r;
+}
+
+
 int uart_getint() {
   int r = 0, c;
   while (is_digit(c = uart_getc())) {

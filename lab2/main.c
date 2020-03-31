@@ -182,6 +182,9 @@ void loadkernel() {
 
 int main() {
   size_t kernel_size = (&__end - &__start);
+
+  // just ensure that the program running at 0x200000
+  // is not using the memory in original one
   memset(&__start, 0, kernel_size);
 
   // set up serial console

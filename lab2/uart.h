@@ -29,6 +29,7 @@ void uart_init();
 void uart_send(unsigned int c);
 char uart_getc();
 int  uart_getint();
+unsigned long uart_getul();
 void uart_flush();
 void uart_puts(char *s);
 void uart_hex(unsigned int d);

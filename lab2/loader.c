@@ -2,6 +2,9 @@
 #include "libc.h"
 #include "loader.h"
 
+extern int __start;
+extern int __end;
+
 void loadimg() {
   uart_println("Start loading kernel image...");
   uart_println("Please input kernel load address(defualt: 0x80000):");
@@ -17,13 +20,22 @@ void loadimg() {
 
   /* default: UPLOAD_ADDRESS defined in loader.h */
   void *load_address = (void*)UPLOAD_ADDRESS;
-  volatile char *kernel_addr = load_address;
+
 
   /* DATA_ACK */
   {
     char c = uart_getc();
     if (c != DATA_ACK)
       goto PROTOCAL_ERROR;
+  }
+
+  /* customize load address */
+  {
+    char c = uart_getc();
+    if (c == ADDR_ACK) {
+      load_address = (void *)uart_getul();
+      uart_println("customize load address @ %x", load_address);
+    }
   }
 
   /* kernel size */
@@ -33,6 +45,7 @@ void loadimg() {
   uart_println("Kernel Image Size: %d Load addr: %x", kernel_size, load_address);
 
   /* starting recieve kernel image */
+  volatile char *kernel_addr = load_address;
   while(kernel_size--){
     *kernel_addr++ = uart_getc();
   }
