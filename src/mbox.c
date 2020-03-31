@@ -25,6 +25,7 @@
 
 #include "gpio.h"
 #include "uart.h"
+#include "mbox.h"
 
 /* mailbox message buffer */
 volatile unsigned int __attribute__((aligned(16))) mbox[36];
@@ -42,6 +43,7 @@ volatile unsigned int __attribute__((aligned(16))) mbox[36];
 
 #define GET_BOARD_REVISION 0x00010002
 #define GET_VC_MEMORY 0x00010006
+#define MBOX_TAG_SETCLKRATE 0x00038002
 #define REQUEST_CODE 0x00000000
 #define REQUEST_SUCCEED 0x80000000
 #define REQUEST_FAILED 0x80000001
@@ -131,4 +133,19 @@ void getVCMemory()
     {
         uartPuts("Unable to get VC core base address\n");
     }
+}
+
+void setUartClock()
+{
+    /* set up clock for consistent divisor values */
+    mbox[0] = 9 * 4;
+    mbox[1] = REQUEST_CODE;
+    mbox[2] = MBOX_TAG_SETCLKRATE; // set clock rate
+    mbox[3] = 12;
+    mbox[4] = 8;
+    mbox[5] = 2;       // UART clock
+    mbox[6] = 4000000; // 4Mhz
+    mbox[7] = 0;       // clear turbo
+    mbox[8] = END_TAG;
+    mboxCall(MBOX_CH_PROP);
 }

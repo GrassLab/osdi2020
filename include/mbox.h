@@ -3,5 +3,6 @@
 
 void getBoardRevision();
 void getVCMemory();
+void setUartClock();
 
 #endif
