@@ -22,9 +22,15 @@ def init_Serial(serial_port):
 def wait_for_Pi(addr,ser_i):
     print("### Wait until Raspberry Pi is ready......")
    
+    try:
+        addr = long(addr,0)  
+    except ValueError:
+        addr = 0x80000
+        print("Invalid address for booting, using default", addr)
+       
     # write 'c' to trigger 
     ser_i.write('c')
-    print('### Settiing image on address:',addr)
+    print('Settiing image on address:',addr)
 
     address = struct.pack('<l',addr);
     for i in address:
@@ -88,7 +94,7 @@ def send_Kernel(ser_i, kernel_data):
         ser_i.write(byte)
     end = time.time()
 
-    print("Cost time: " , end-start);    
+    print("Cost time: ", end-start);    
     print("### Finished sending!")
 
     return True
@@ -129,7 +135,7 @@ def main():
     ser_i = init_Serial(serial_port)
     print("### Serial init success!!")
 
-    a = input("### Power on Raspberry Pi and input load address to load kernel img:")
+    a = raw_input("### Power on Raspberry Pi and input load address to load kernel img:")
     ## send 'c' to Pi and wait for '\x03\x03\x03' send back
     wait_for_Pi(a,ser_i)
 
