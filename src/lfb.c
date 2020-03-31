@@ -26,12 +26,13 @@
 #include "io.h"
 #include "mbox.h"
 
-#define RASPI
 #ifdef HOMER
 #include "homer.h"
-#elif defined BUILD_STAMP
-#include "chpi.h"
-#elif defined RASPI
+#elif defined MOVPI
+#include "movpi.h"
+#elif defined NORPI
+// no extra boot image
+#else
 #include "raspi.h"
 #endif
 
@@ -124,7 +125,21 @@ void lfb_showpicture()
         }
         ptr+=pitch-homer_width*4;
     }
-#elif defined (RASPI) || defined (BUILD_STAMP)
+#elif defined (NORPI)
+#define BLOCK_WIDTH (width / 3)
+#define BLOCK_HEIGHT (height / 3)
+    pixel[3] = 0;
+    for(y=0;y<height;y++) {
+        for(x=0;x<width;x++) {
+            // the image is in RGB. So if we have an RGB framebuffer, we can copy the pixels
+            // directly, but for BGR we must swap R (pixel[0]) and B (pixel[2]) channels.
+            pixel[0] = pixel[1] = pixel[2] = ((y / BLOCK_HEIGHT) % 2 + (x / BLOCK_WIDTH) % 2) % 2 ? 0xff : 0x00;
+            *((unsigned int*)ptr)=isrgb ? *((unsigned int *)&pixel) : (unsigned int)(pixel[0]<<16 | pixel[1]<<8 | pixel[2]);
+            ptr+=4;
+        }
+        ptr+=pitch-width*4;
+    }
+#else
 #define BLOCK_WIDTH (width / 16)
 #define BLOCK_HEIGHT (height / 16)
     pixel[3] = 0;
@@ -152,20 +167,6 @@ void lfb_showpicture()
             ptr+=4;
         }
         ptr+=pitch-raspi_width*4;
-    }
-#else
-#define BLOCK_WIDTH (width / 2)
-#define BLOCK_HEIGHT (height / 2)
-    pixel[3] = 0;
-    for(y=0;y<height;y++) {
-        for(x=0;x<width;x++) {
-            // the image is in RGB. So if we have an RGB framebuffer, we can copy the pixels
-            // directly, but for BGR we must swap R (pixel[0]) and B (pixel[2]) channels.
-            pixel[0] = pixel[1] = pixel[2] = ((y / BLOCK_HEIGHT) % 2 + (x / BLOCK_WIDTH) % 2) % 2 ? 0xff : 0x00;
-            *((unsigned int*)ptr)=isrgb ? *((unsigned int *)&pixel) : (unsigned int)(pixel[0]<<16 | pixel[1]<<8 | pixel[2]);
-            ptr+=4;
-        }
-        ptr+=pitch-width*4;
     }
 #endif
 }

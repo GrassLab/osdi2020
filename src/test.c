@@ -1,3 +1,4 @@
+#ifdef TEST
 #include "io.h"
 
 int bss_all_be(){
@@ -32,3 +33,4 @@ int *stack_pointer(){
 #endif
     return sp;
 }
+#endif

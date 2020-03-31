@@ -1,3 +1,5 @@
+#ifndef WITHOUT_LOADER
+
 #include "io.h"
 #include "util.h"
 
@@ -55,6 +57,8 @@ void loadimg(){
 
     nkend = nkbeg + nksize;
 
+#ifndef NO_RELOC_SELF
+
     /* copy the current kernel */
     char *tkbeg,
          *okbeg = (char*)&_kbeg,
@@ -86,13 +90,24 @@ void loadimg(){
             __asm__ volatile("br %0" :: "r"(addr)); 
         }
     } else {
-        char *addr = bootloader_beg + 8;
-        // 8 bytes for skip function stack pop instruction
-        printf("ok 0x%x - 0x%x" NEWLINE, okbeg, okend);
-        printf("nk 0x%x - 0x%x" NEWLINE, nkbeg, nkend);
-        print("needn't do the kernel relocation...");
-        __asm__ volatile("br %0" :: "r"(addr)); 
+#endif
+        char *ptr = nkbeg;
+        printf("load to 0x%x" NEWLINE, nkbeg);
+        printf(NEWLINE "load %d bytes @0x%x" NEWLINE, nksize, (ULL)ptr);
+        print("please input image now...");
+        while(nksize--){
+            char c = getchar();
+            *ptr++ = c;
+        }
+        puts("done");
+        printf("jump to 0x%x" NEWLINE, nkbeg);
+        __asm__ volatile("br %0" :: "r"(nkbeg));
+        puts("jump failed");
+#ifndef NO_RELOC_SELF
     }
     printf("cannot load new kernel @0x%x "
             "becuase of no proper relocation for old kernel." NEWLINE, nkbeg);
+#endif
 }
+
+#endif

@@ -18,8 +18,16 @@ DEFAULT_KERNEL_LOC = 0x80000
 DEFAULT_STAMP_LOC = 0x80000
 #DEFAULT_STAMP_LOC = 0x200000
 LINKER_SCRIPT = $(SRC_DIR)/linker.ld
-
 IMG = $(DEFAULT_TARGET).img
+
+
+# boot image flags
+# -DMOVPI   moving rpi boot img
+# -DEXAMPLE HOMER
+# -DNORPI   only black white tabs
+# no flag   RPI logo
+#STAMP_OPT= -DWITHOUT_LOADER -DMOVPI
+STAMP_OPT= -DNORPI -DNO_RELOC_SELF
 
 all : $(IMG)
 
@@ -27,9 +35,12 @@ test:
 	make clean
 	make CFLAGS+=-DTEST
 
-stamp:
+stamp: stamp.img
+
+stamp.img:
 	$(eval LOC := $(if $(LOC),$(LOC), $(DEFAULT_STAMP_LOC)))
-	make CFLAGS+=-DBUILD_STAMP='"$(shell date -u)"' KERNEL_LOC='"$(LOC)"' TARGET='"stamp"' BUILD_DIR="stamp_build"
+	#make CFLAGS+=-DBUILD_STAMP='"$(shell date -u)"' KERNEL_LOC='"$(LOC)"' TARGET='"stamp"' BUILD_DIR="stamp_build"
+	make C'FLAGS+=-DBUILD_STAMP="$(shell date -u)" $(STAMP_OPT)' KERNEL_LOC='"$(LOC)"' TARGET='"stamp"' BUILD_DIR="stamp_build"
 
 showtest:
 	make clean
@@ -61,7 +72,7 @@ runmini: $(IMG)
 run: $(IMG)
 	@$(QEMU) -serial stdio -M raspi3 -kernel $(IMG)
 
-runt: $(IMG)
+runt: stamp.img
 	@$(QEMU) -serial stdio -M raspi3 -kernel stamp.img
 
 runasm: $(IMG)
@@ -73,7 +84,7 @@ minitty: $(IMG)
 tty: $(IMG)
 	@$(QEMU) -serial pty -M raspi3 -kernel $(IMG)
 
-ttyt: $(IMG)
+ttyt: stamp.img
 	@$(QEMU) -serial pty -M raspi3 -kernel stamp.img
 
 gdb: $(IMG)
@@ -83,4 +94,4 @@ update: $(IMG)
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt && sudo umount /mnt
 
 clean :
-	rm -rf *$(BUILD_DIR) *.img *.elf
+	rm -rf *$(BUILD_DIR) kernel8.img stamp.img *.elf
