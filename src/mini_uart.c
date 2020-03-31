@@ -53,6 +53,12 @@ uint8_t mini_uart_getc(bool verbose) {
   return c;
 }
 
+void mini_uart_getn(bool verbose, uint8_t *buf, uint32_t n) {
+  for (uint32_t i = 0; i < n; ++i) {
+    buf[i] = mini_uart_getc(verbose);
+  }
+}
+
 void mini_uart_gets(char *buf) {
   char c;
   while (c = mini_uart_getc(true), c != '\r' && c != '\n') {

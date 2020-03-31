@@ -7,6 +7,9 @@
 #define MAX_TIMER_FRACTION_LEN 6
 #define EOL "\n"
 
+extern char __text_start[];
+extern char __text_end[];
+
 int strcmp(const char *s1, const char *s2);
 uint32_t strlen(const char *s);
 int isspace(char c);
