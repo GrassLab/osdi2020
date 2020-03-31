@@ -1,6 +1,8 @@
 #include "uart.h"
 #include "myfunc.h"
 #include "hwinfo.h"
+#include "lfb.h"
+
 void main()
 {
     uart_init(4000000);
@@ -26,6 +28,9 @@ void main()
     uart_puts("[");
     uart_send_double(get_time());
     uart_puts("] recieve done!\n");
+
+    lfb_init();
+    lfb_showpicture();
 
     get_board_revision();
     get_VC_base_addr();
