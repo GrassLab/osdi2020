@@ -11,14 +11,14 @@ def serial_w(content):
     time.sleep(1)
 
 if __name__ == "__main__":
-    ser = serial.Serial(port='/dev/pts/4', baudrate=115200)
+    ser = serial.Serial(port='/dev/pts/18', baudrate=115200)
     kernel_size = os.path.getsize(KERNEL_PATH)
     with open(KERNEL_PATH, 'rb') as kernel_f:
 
         # cmd
         serial_w('loadimg\r')
         # addr
-        serial_w('0\r')
+        serial_w('50000\r')
         
         words = kernel_f.read()
         # kernel size
@@ -27,6 +27,6 @@ if __name__ == "__main__":
         
 
         serial_w(words)
-        serial_w('Done~\r')
+        serial_w('Done~\r\n')
         print('hi')
         kernel_f.close()

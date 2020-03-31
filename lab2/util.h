@@ -4,3 +4,4 @@ int intToStr(int x, char str[], int d);
 void ftoa(float n, char *res, int afterpoint);
 int strcmp(char *a, char *b);
 int atoi(char *input);
+int hex2int(char *hex);

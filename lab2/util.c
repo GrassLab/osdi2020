@@ -35,6 +35,21 @@ void reverse(char* str, int len)
 	}
 }
 
+int hex2int(char *hex) {
+    int val = 0;
+    while (*hex) {
+        // get current character then increment
+        int byte1 = *hex++; 
+        // transform hex character to the 4bit equivalent number, using the ascii table indexes
+        if (byte1 >= '0' && byte1 <= '9') byte1 = byte1 - '0';
+        else if (byte1 >= 'a' && byte1 <='f') byte1 = byte1 - 'a' + 10;
+        else if (byte1 >= 'A' && byte1 <='F') byte1 = byte1 - 'A' + 10;    
+        // shift 4 to make space for new digit, and add the 4 bits of the new digit 
+        val = (val << 4) | (byte1 & 0xF);
+    }
+    return val;
+}
+
 char* itoa(int num, char* str, int base) 
 { 
     int i = 0; 

@@ -12,23 +12,32 @@
 
 void get_timestamp();
 
-void load_image(char *load_address) {
-	load_address = 0x10000;
+void load_image(char *input_address) {
+	char *load_address;
+	int address_int = hex2int(input_address);
+	load_address = address_int;
+	char *load_address_s;
 	int kernel_size = uart_read_int();
-	int checksum = 0;
-	// load_address = 0x80000;
+	char *kernel_size_s;
+	uart_puts("Kernel size: ");
+	uart_puts(itoa(kernel_size, kernel_size_s, 10));
+	uart_puts("\t");
+	uart_puts("Load address: 0x");
+	uart_puts(itoa(address_int, kernel_size_s, 16));
+	uart_puts("\r\n");
 	for(int i=0; i<kernel_size; i++) {
 		unsigned char c = uart_getc();
 		*load_address = c;
-		checksum++;
 		load_address++;
 	}
+	
 	uart_puts("[rpi3]\tDONE!\r\n");
 	// TODO: jump to new kernel
 	// waiting
 	char read_buf[20];
 	uart_read_line(read_buf);
-	void (* new_kernel)(void) = 0x10000;
+	asm volatile("mov sp, %0" :: "r"(address_int));
+	void (* new_kernel)(void) = address_int;
 	// new_kernel = (void (*)(void)) 0x80000;
 	new_kernel();
 }
@@ -65,25 +74,25 @@ void main()
 			uart_puts(loadimg);
 		} else if(strcmp(command, CMD_HELLO)) {
 			uart_puts("Hello World!");
-		} else if(strcmp(command, CMD_TIME)) {
-			get_timestamp();
-		} else if(strcmp(command, CMD_REBOOT)) {
-			reset();
 		} else if(strcmp(command, CMD_LOADIMG)) {
 			uart_puts("[rpi3]\tStart Loading kernel image...\r\n");
 			uart_puts("[rpi3]\tPlease input kernel load address (press <Enter> to use default addr: 0x80000):\r\n");
-			int addr = uart_read_int();
-			if(addr == 0) {
-				addr = 80000;
+			char input_addr[20];
+			uart_read_line(input_addr);
+			if(strcmp(input_addr, "")) {
+				input_addr[20] = "80000";
 			}
 			char res_str[100];
 			uart_puts("[rpi3]\tSet load address 0x");
-			uart_puts(itoa(addr, res_str, 10));
+			uart_puts(input_addr);
 			uart_puts("\r\n");
 			uart_puts("[rpi3]\tPlease send kernel image from UART now...\r\n");
-			load_image(0x80000);
-			
-		} else if(strcmp(command, CMD_PICTURE)) {
+			load_image(input_addr);
+		}  else if(strcmp(command, CMD_TIME)) {
+			get_timestamp();
+		}  else if(strcmp(command, CMD_REBOOT)) {
+			reset();
+		}  else if(strcmp(command, CMD_PICTURE)) {
 			lfb_init();
 			lfb_showpicture();
 		} else {
