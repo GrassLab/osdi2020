@@ -1,7 +1,9 @@
 #include "simple_shell.h"
 
-#include "mini_uart.h"
+#include "bootloader.h"
+#include "uart.h"
 #include "utils.h"
+
 
 #define PM_RSTC      ((volatile unsigned int*)(0x3F10001C))
 #define PM_WDOG      ((volatile unsigned int*)(0x3F100024))
@@ -13,16 +15,16 @@ char *promptStr="simple shell> ";
 
 char *commandStr[NUM_COMMAND]=
 {
-	"help", "hello", "timestamp", "reboot"//, "exit"
+	"help", "hello", "timestamp", "reboot", "loadimg"//, "exit"
 };
 
 char *commandDesc[NUM_COMMAND]={
-	"Show commands available.", "Show \"Hello World!\"", "Get current timestamp.", "Reboot device."
+	"Show commands available.", "Show \"Hello World!\"", "Get current timestamp.", "Reboot device.", "Load kernel by UART."
 };
 
 void (*commandArray[NUM_COMMAND])()=
 {
-	cmd_help, cmd_hello, cmd_timestamp, cmd_reboot
+	cmd_help, cmd_hello, cmd_timestamp, cmd_reboot, cmd_loadimg
 };
 
 // TODO: formated string
@@ -58,15 +60,16 @@ int read_command(char *buff, unsigned int size)
 	while (count < size){
 		char_recv = uart_getc();
 		uart_putc(char_recv);
-		buff[count] = char_recv;
-		count ++;
 		if (char_recv == '\n'){
-			return --count;
+			return count;
 		} else if (char_recv == '\177'){// backspace
 			if (count >= 1){
 				uart_puts("\b \b");
 				count --;
 			}
+		} else {
+			buff[count] = char_recv;
+			count ++;
 		}
 	}
 	return -1; // out of buff	
@@ -131,4 +134,16 @@ void cmd_reboot()
     uart_puts("rebooting ...");
 	_reboot(50);// timeout = 1/16th of a second? (whatever)
 	while(1);
+}
+
+void cmd_loadimg() {
+	int n, size;
+	char buff[MAX_COMMAND_LENGTH];
+	uart_puts("Input kernel size(bytes): ");
+	if ((n = read_command(buff, MAX_COMMAND_LENGTH)) >= 0) {
+		buff[n]='\0';
+		size = atoi(buff);
+		uart_puts("Please send kernel image by UART!");
+		load_kernel(size);
+	}
 }
