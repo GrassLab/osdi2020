@@ -5,8 +5,36 @@ extern unsigned char _kbeg;
 extern unsigned char _kend;
 extern unsigned char _bootloader_beg;
 
-char *nkaddr;
-unsigned int nksize;
+#define MEMTOP ((char*)0x40000000)
+#define overlap(beg, end, _beg, _end) ((beg <= _end && _beg < end) || (end >= _beg && beg < _end))
+
+char *nkbeg, *nkend;
+unsigned long nksize;
+
+void __attribute__((__section__(".bootloader"))) copy_and_load(){
+    puts("done");
+    char *ptr = nkbeg;
+    printf(NEWLINE "load %d bytes @0x%x" NEWLINE, nksize, (ULL)ptr);
+    print("please input image now...");
+    while(nksize--){
+        char c = getchar();
+        *ptr++ = c;
+    }
+    puts("done");
+    __asm__ volatile("br %0" :: "r"(nkbeg));
+}
+
+char *schedule_tmp_kernel(char *okbeg, char *okend, char *nkbeg, char *nkend){
+    char *tkbeg;
+    unsigned long oksize = okend - okbeg;
+    for(tkbeg = (char*)0x80000; tkbeg + oksize < MEMTOP && tkbeg < tkbeg + oksize; tkbeg += 0x10000){
+        if(!overlap(tkbeg, tkbeg + oksize, okbeg, okend)
+                && !overlap(tkbeg, tkbeg + oksize, nkbeg, nkend)){
+            return tkbeg;
+        }
+    }
+    return 0x0;
+}
 
 void loadimg(){
 
@@ -16,44 +44,50 @@ void loadimg(){
     nksize = get_nature(&addr_mode, 10, 1);
 
     if(addr_mode == '@')
-        nkaddr = (char*)get_nature(0, 16, 1);
+        nkbeg = (char*)get_nature(0, 16, 1);
     else
-        nkaddr = (char*)&_kend;
+        nkbeg = (char*)&_kend;
 
     puts("");
 
+    nkend = nkbeg + nksize;
+
     /* copy the current kernel */
-    char *okbeg = (char*)&_kbeg,
-         //*nkbeg = (char*)0x80000;
-         *nkbeg = (char*)0x200000;
-    char *okptr = okbeg,
-         *nkptr = nkbeg;
-         
-    char *bootloader_beg = (char*)&_bootloader_beg;
-    char *addr = bootloader_beg - okbeg + nkbeg + 8;
+    char *tkbeg,
+         *okbeg = (char*)&_kbeg,
+         *okend = (char*)&_kend,
+         *bootloader_beg = (char*)&_bootloader_beg;
 
-    print("move old kernel code...");
-    while(okptr != (char*)&_kend){
-        *nkptr = *okptr;
-        nkptr++, okptr++;
-    }
-    puts("done");
-    printf("okbeg  0x%x" NEWLINE, okbeg);
-    printf("nkbeg  0x%x" NEWLINE, nkbeg);
-    printf("loader  0x%x" NEWLINE, bootloader_beg);
-    printf("jump to 0x%x" NEWLINE, addr);
-    print("jump to new location of old kernel...");
-    __asm__ volatile("br %0" :: "r"(addr)); 
-}
+    if(overlap(okbeg, okend, nkbeg, nkend)){
 
-void __attribute__((__section__(".bootloader"))) copy_and_load(){
-    puts("done");
-    char *ptr = nkaddr;
-    printf(NEWLINE "load %d bytes @0x%x" NEWLINE, nksize, (ULL)ptr);
-    println("please input image now...");
-    while(nksize--){
-        char c = getchar();
-        *ptr++ = c;
+        /* move self kernel code to temp location */
+        if((tkbeg = schedule_tmp_kernel(okbeg, okend, nkbeg, nkend))){
+            char *okptr = okbeg,
+                 *tkptr = tkbeg;
+
+            print("move old kernel code...");
+            while(okptr != okend){
+                *tkptr = *okptr;
+                tkptr++, okptr++;
+            }
+            puts("done");
+
+            char *addr = bootloader_beg - okbeg + tkbeg + 8;
+            // 8 bytes for skip function stack pop instruction
+            printf("ok 0x%x - 0x%x" NEWLINE, okbeg, okend);
+            printf("tk 0x%x - 0x%x" NEWLINE, tkbeg, tkbeg + (okend - okbeg));
+            printf("nk 0x%x - 0x%x" NEWLINE, nkbeg, nkend);
+            printf("old loader @ 0x%x" NEWLINE, bootloader_beg);
+            printf("jump to 0x%x" NEWLINE, addr);
+            print("jump to new location of old kernel...");
+            __asm__ volatile("br %0" :: "r"(addr)); 
+        }
+    } else {
+        char *addr = bootloader_beg + 8;
+        // 8 bytes for skip function stack pop instruction
+        print("needn't do the kernel relocation...");
+        __asm__ volatile("br %0" :: "r"(addr)); 
     }
-    __asm__ volatile("br %0" :: "r"(nkaddr));
+    printf("cannot load new kernel @0x%x "
+            "becuase of no proper relocation for old kernel." NEWLINE, nkbeg);
 }

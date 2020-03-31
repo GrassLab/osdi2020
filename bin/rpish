@@ -87,7 +87,7 @@ while [[ $# -gt 0 ]];do
             echo -ne "sending size..."
             sudo sh -c "echo -e '${IMG_SIZE}@${IMG_LOC}' | tr -s '\n' '\r' > $DEVICE;"
             echo "done"
-            sleep 1
+            read -p "enter to start sending image:" ignore
             echo -ne "sending img..."
             sudo sh -c "dd if=$2 of=$DEVICE status=progress;"
             echo "done"

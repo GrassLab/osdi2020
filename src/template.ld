@@ -1,8 +1,14 @@
 SECTIONS
 {
     . = _kbeg;
-    .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
-    .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
+    .text : {
+        . = ALIGN(16);
+        KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) 
+    }
+    .rodata : {
+        . = ALIGN(16);
+        *(.rodata .rodata.* .gnu.linkonce.r*) 
+    }
     PROVIDE(_data = .);
     .data : { 
         . = ALIGN(16);
@@ -16,7 +22,7 @@ SECTIONS
         __bss_end = .;
     }
     .bootloader : {
-        . = ALIGN(4);
+        . = ALIGN(16);
         _bootloader_beg = .;
         *(.bootloader*)
         _bootloader_end = .;

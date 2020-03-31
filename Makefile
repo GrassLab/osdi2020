@@ -15,7 +15,8 @@ OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
 
 DEFAULT_TARGET = kernel8
 DEFAULT_KERNEL_LOC = 0x80000
-DEFAULT_STAMP_LOC = 0x200000
+DEFAULT_STAMP_LOC = 0x80000
+#DEFAULT_STAMP_LOC = 0x200000
 LINKER_SCRIPT = $(SRC_DIR)/linker.ld
 
 IMG = $(DEFAULT_TARGET).img
@@ -71,6 +72,9 @@ minitty: $(IMG)
 
 tty: $(IMG)
 	@$(QEMU) -serial pty -M raspi3 -kernel $(IMG)
+
+ttyt: $(IMG)
+	@$(QEMU) -serial pty -M raspi3 -kernel stamp.img
 
 gdb: $(IMG)
 	$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none -S -s
