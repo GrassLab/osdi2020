@@ -1,6 +1,11 @@
 SECTIONS
 {
   . = 0x80000;
+  .relocate :
+  {
+    KEEP(*(.text.relocate))
+  }
+  _begin = .;
   .text :
   {
     KEEP(*(.text.boot))

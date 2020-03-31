@@ -1,8 +1,8 @@
-.section ".text.boot"
+.section ".text.relocate"
 
-.global _start
+.global _relocate
 
-_start:
+_relocate:
     // get cpu id
     mrs     x1, MPIDR_EL1
     and     x1, x1, #3
@@ -25,7 +25,17 @@ _start:
     sub     x2, x2, #1
     cbnz    x2, 3b
 
+4:  bl      relocate
+
+
+.section ".text.boot"
+
+.global _start
+
+_start:
     // jump to main function in C
-4:  bl      main
+    bl      main
     // halt this core if return
-    b       1b
+5:
+    wfe
+    b       5b
