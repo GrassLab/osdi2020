@@ -17,7 +17,11 @@ void command_help ()
     uart_puts("Valid Command:\n");
     uart_puts("\thelp:\t\tprint this help.\n");
     uart_puts("\thello:\t\tprint \"Hello World!\".\n");
-    uart_puts("\ttimestamp:\tget current timestamp.\n");
+    uart_puts("\ttimestamp:\tprint current timestamp.\n");
+    uart_puts("\tvc_base_addr:\tprint the VC core base address\n");
+    uart_puts("\tboard_revision:\tprint the board revision.\n");
+    uart_puts("\treboot:\t\treboot the raspi3.\n");
+    uart_puts("\tloadimg:\tload kernel image from uart.\n");
     uart_puts("\n");
 }
 
@@ -105,13 +109,31 @@ void command_vc_base_addr()
     }
 }
 
+// Loop <delay> times in a way that the compiler won't optimize away
+static inline void delay(int count)
+{
+    asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
+         : "=r"(count): [count]"0"(count) : "cc");
+}
+
 void command_load_image ()
 {
     int32_t size = 0;
     int32_t is_receive_success = 0;
-    char *kernel = (char *)0x80000;
-        
+    char output_buffer[20];
+    char *load_address;
+    char *address_counter;
+    
+
     uart_puts("Start Loading Kernel Image...\n");
+    uart_puts("Please input kernel load address in decimal.(defualt: 0x80000): ");
+    load_address = (char *)(uart_getint());
+    uart_puts("\nPlease send kernel image from UART now:\n");
+
+    delay(5000);
+
+    if ( load_address == 0 )
+        load_address = (char *)0x80000;
 
     do {
 
@@ -138,16 +160,25 @@ void command_load_image ()
         uart_send('O');
         uart_send('K');
 
+        address_counter = load_address;
+        
         // 從0x80000開始放
         while ( size-- ) 
         {
-            *kernel++ = uart_getc();
+            *address_counter++ = uart_getc();
         }
 
         is_receive_success = 1;
 
-    } while ( !is_receive_success );
+        uart_puts("Kernel Loaded address: ");
+        itohex_str( (uint64_t)load_address, sizeof(char *), output_buffer );
+        uart_puts(output_buffer);
+        uart_send('\n');
 
+        delay(5000);
+
+    } while ( !is_receive_success );
+   
     // restore arguments and jump to the new kernel.
     asm volatile (
         // we must force an absolute address to branch to

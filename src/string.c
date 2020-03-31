@@ -82,7 +82,6 @@ void ftoa(float n, char* res, int afterpoint)
     } 
 } 
 
-#include "uart.h"
 void itohex_str ( uint64_t d, int size, char * s )
 {
     int i = 0;

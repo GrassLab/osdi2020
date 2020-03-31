@@ -35,4 +35,4 @@ start.o: start.S
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
 run: kernel8.img
-	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial null -serial stdio
+	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio

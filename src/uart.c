@@ -25,6 +25,8 @@
 
 #include "gpio.h"
 #include "uart.h"
+#include "mailbox.h"
+#include "ctype.h"
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -33,33 +35,26 @@ void uart_init()
 {
     register unsigned int reg;
 
-    /* initialize UART */
-    *AUX_ENABLE     |= 1;       /* enable mini UART */
-    *AUX_MU_CNTL     = 0;       /* Disable transmitter and receiver during configuration. */
+    /*  turn off UART0 */
+    *UART_CR = 0;         
 
-    *AUX_MU_IER      = 0;       /* Disable interrupt */
-    *AUX_MU_LCR      = 3;       /* Set the data size to 8 bit. */
-    *AUX_MU_MCR      = 0;       /* Don’t need auto flow control. */
-    *AUX_MU_BAUD     = 270;     /* 115200 baud */
-    *AUX_MU_IIR      = 6;       /* No FIFO */
-    // *AUX_MU_IIR      = 0xc6;       /* No FIFO */
+    mbox_set_clock_to_PL011();
 
-    /* map UART1 to GPIO pins */
-    reg = *GPFSEL1;
+    /* map UART0 to GPIO pins */
+    reg  = *GPFSEL1;
     reg &= ~((7<<12)|(7<<15));  /* address of gpio 14, 15 */
-    reg |=   (2<<12)|(2<<15);   /* set to alt5 */
+    reg |=   (4<<12)|(4<<15);   /* set to alt0 */
 
     *GPFSEL1 = reg;
-
     *GPPUD = 0;                 /* enable gpio 14 and 15 */
-    reg=150;
+    reg = 150;
     while ( reg-- )
-    { 
+    {
         asm volatile("nop"); 
     }
-    
+
     *GPPUDCLK0 = (1<<14)|(1<<15);
-    reg=150; 
+    reg = 150;
     while ( reg-- )
     {
         asm volatile("nop");
@@ -67,7 +62,13 @@ void uart_init()
     
     *GPPUDCLK0 = 0;             /* flush GPIO setup */
 
-    *AUX_MU_CNTL = 3;           // Enable the transmitter and receiver.
+    *UART_ICR = 0x7FF;          /* clear interrupts */
+    *UART_IBRD = 2;             /* 115200 baud */
+    *UART_FBRD = 0xB;
+    *UART_LCRH = 0b11<<5;       /* 8n1 */
+    *UART_CR = 0x301;           /* enable Tx, Rx, FIFO */
+
+    //uart_flush();
 }
 
 /**
@@ -80,10 +81,10 @@ void uart_send(unsigned int c)
         
         asm volatile("nop");
 
-    } while( ! ( *AUX_MU_LSR&0x20 ));
+    } while( *UART_FR&0x20 );
     
     /* write the character to the buffer */   
-    *AUX_MU_IO = c;
+    *UART_DR = c;
 
     if ( c == '\n' ) 
     {
@@ -91,17 +92,17 @@ void uart_send(unsigned int c)
             
             asm volatile("nop");
 
-        } while( ! ( *AUX_MU_LSR&0x20 ));
+        } while( *UART_FR&0x20 );
         
-        *AUX_MU_IO = '\r';
+        *UART_DR = '\r';
     }
 }
 
 /**
  * Receive a character
  */
-char uart_getc() {
-
+char uart_getc()
+{
     char r;
     
     /* wait until something is in the buffer */
@@ -109,13 +110,36 @@ char uart_getc() {
         
         asm volatile("nop");
         
-    } while ( ! ( *AUX_MU_LSR&0x01 ) );
+    } while ( *UART_FR&0x10 );
 
     /* read it and return */
-    r = ( char )( *AUX_MU_IO );
+    r = ( char )( *UART_DR );
 
     /* convert carrige return to newline */
     return r == '\r' ? '\n' : r;
+}
+
+/**
+ * Receive a integer
+ */
+int uart_getint()
+{
+    int input, output;
+
+    output = 0;
+    
+    while ( 1 ) 
+    {
+        input = uart_getc();
+
+        if ( !isdigit ( input ) )
+            break;
+
+        output = output * 10 + (input - '0');
+        
+    }
+
+    return output;
 }
 
 /**

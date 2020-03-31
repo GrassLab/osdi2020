@@ -34,16 +34,38 @@
 #define TAGS_REQ_FAILED     0x80000001
 #define TAGS_END            0x00000000
 
-/** tags operator */
-#define TAGS_BOARD_MODEL    0x00010001
-#define TAGS_BOARD_REVISION 0x00010002
-#define TAGS_MAC_ADDR       0x00010003
-#define TAGS_BOARD_SERIAL   0x00010004
-#define TAGS_ARM_MEM        0x00010005
-#define TAGS_VC_MEM         0x00010006
-#define TAGS_CLOCKS         0x00010007
+/** hardware tags operator */
+#define TAGS_HARDWARE_BOARD_MODEL    0x00010001
+#define TAGS_HARDWARE_BOARD_REVISION 0x00010002
+#define TAGS_HARDWARE_MAC_ADDR       0x00010003
+#define TAGS_HARDWARE_BOARD_SERIAL   0x00010004
+#define TAGS_HARDWARE_ARM_MEM        0x00010005
+#define TAGS_HARDWARE_VC_MEM         0x00010006
+#define TAGS_HARDWARE_CLOCKS         0x00010007
+
+/** clock id */
+#define CLOCK_ID_RESERVED   0x000000000       
+#define CLOCK_ID_EMMC       0x000000001   
+#define CLOCK_ID_UART       0x000000002   
+#define CLOCK_ID_ARM        0x000000003          
+#define CLOCK_ID_CORE       0x000000004   
+#define CLOCK_ID_V3D        0x000000005   
+#define CLOCK_ID_H264       0x000000006   
+#define CLOCK_ID_ISP        0x000000007   
+#define CLOCK_ID_SDRAM      0x000000008   
+#define CLOCK_ID_PIXEL      0x000000009   
+#define CLOCK_ID_PWM        0x00000000a   
+#define CLOCK_ID_HEVC       0x00000000b   
+#define CLOCK_ID_EMMC2      0x00000000c   
+#define CLOCK_ID_M2MC       0x00000000d   
+#define CLOCK_ID_PIXEL_BVB  0x00000000e   
+
+/** clock tags operator */
+#define TAGS_GET_CLOCK      0x00030002
+#define TAGS_SET_CLOCK      0x00038002
 
 uint32_t mbox_get_board_revision ();
 uint64_t mbox_get_VC_base_addr ();
+void mbox_set_clock_to_PL011 ();
 
 #endif

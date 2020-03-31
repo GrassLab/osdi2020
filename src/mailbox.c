@@ -46,10 +46,10 @@ uint32_t mbox_get_board_revision ()
     mail_box[1] = TAGS_REQ_CODE;
     
     // tags begin
-    mail_box[2] = TAGS_BOARD_REVISION;   // tag identifier
-    mail_box[3] = 4;                     // maximum of request and response value buffer's length.
+    mail_box[2] = TAGS_HARDWARE_BOARD_REVISION;     // tag identifier
+    mail_box[3] = 4;                                // maximum of request and response value buffer's length.
     mail_box[4] = TAGS_REQ_CODE;
-    mail_box[5] = 0;                     // value buffer
+    mail_box[5] = 0;                                // value buffer
     // tags end
     mail_box[6] = TAGS_END;
 
@@ -67,15 +67,15 @@ uint64_t mbox_get_VC_base_addr ()
 {
     volatile unsigned int  __attribute__((aligned(16))) mail_box[36];
 
-    mail_box[0] = 8 * 4;                 // buffer size in bytes
+    mail_box[0] = 8 * 4;                // buffer size in bytes
     mail_box[1] = TAGS_REQ_CODE;
     
     // tags begin
-    mail_box[2] = TAGS_VC_MEM;           // tag identifier
-    mail_box[3] = 8;                     // maximum of request and response value buffer's length.
-    mail_box[4] = TAGS_REQ_CODE;         // operation
-    mail_box[5] = 0;                     // value buffer
-    mail_box[6] = 0;                     // value buffer
+    mail_box[2] = TAGS_HARDWARE_VC_MEM; // tag identifier
+    mail_box[3] = 8;                    // maximum of request and response value buffer's length.
+    mail_box[4] = TAGS_REQ_CODE;        
+    mail_box[5] = 0;                    // value buffer
+    mail_box[6] = 0;                    // value buffer
     // tags end
     mail_box[7] = TAGS_END;
 
@@ -87,4 +87,23 @@ uint64_t mbox_get_VC_base_addr ()
     {
         return 0;
     }
+}
+
+void mbox_set_clock_to_PL011 () 
+{
+    volatile unsigned int  __attribute__((aligned(16))) mail_box[36];
+
+    mail_box[0] = 9*4;
+    mail_box[1] = TAGS_REQ_CODE;
+
+    // tags begin
+    mail_box[2] = TAGS_SET_CLOCK;   // set clock rate
+    mail_box[3] = 12;               // maximum of request and response value buffer's length.
+    mail_box[4] = 8;       
+    mail_box[5] = CLOCK_ID_UART;    // clock id: UART clock
+    mail_box[6] = 4000000;          // rate: 4Mhz
+    mail_box[7] = 0;                // clear turbo
+    mail_box[8] = TAGS_END;
+    
+    mailbox_call( MAILBOX_CH_PROP, mail_box );
 }
