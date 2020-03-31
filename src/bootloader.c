@@ -11,7 +11,6 @@ void loadImage()
 again:
     uartPuts("start to load kernel...\n");
 
-    // echo everything back
     while (1)
     {
         char in_c = uartGetc();
@@ -43,7 +42,7 @@ again:
 
     // read the kernel
     while (size--)
-        *kernel++ = uartGetc();
+        *kernel++ = uartGetcWithCR();
 
     // restore arguments and jump to the new kernel.
     asm volatile(

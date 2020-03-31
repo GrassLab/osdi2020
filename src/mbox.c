@@ -53,14 +53,12 @@ volatile unsigned int __attribute__((aligned(16))) mbox[36];
 /* channels */
 #define MBOX_CH_PROP 8
 
-volatile unsigned int mbox[36];
-
 /**
  * Make a mailbox call. Returns 0 on failure, non-zero on success
  */
-int mboxCall(unsigned char ch)
+int mboxCall(unsigned char ch, volatile unsigned int* mbox)
 {
-    unsigned int r = (((unsigned int)((unsigned long)&mbox) & ~0xF) | (ch & 0xF));
+    unsigned int r = (((unsigned int)((unsigned long)mbox) & ~0xF) | (ch & 0xF));
     /* wait until we can write to the mailbox */
     do
     {
@@ -86,6 +84,7 @@ int mboxCall(unsigned char ch)
 
 void getBoardRevision()
 {
+    volatile unsigned int  __attribute__((aligned(16))) mbox[7];
     mbox[0] = 7 * 4; // buffer size in bytes
     mbox[1] = REQUEST_CODE;
     // tags begin
@@ -96,7 +95,7 @@ void getBoardRevision()
     // tags end
     mbox[6] = END_TAG;
 
-    if (mboxCall(MBOX_CH_PROP))
+    if (mboxCall(MBOX_CH_PROP, mbox))
     {
         uartPuts("rpi3's board revision: ");
         uartHex(mbox[5]);
@@ -110,6 +109,7 @@ void getBoardRevision()
 
 void getVCMemory()
 {
+    volatile unsigned int  __attribute__((aligned(16))) mbox[8];
     mbox[0] = 8 * 4; // buffer size in bytes
     mbox[1] = REQUEST_CODE;
     // tags begin
@@ -121,7 +121,7 @@ void getVCMemory()
     // tags end
     mbox[7] = END_TAG;
 
-    if (mboxCall(MBOX_CH_PROP))
+    if (mboxCall(MBOX_CH_PROP, mbox))
     {
         uartPuts("VC core base address: ");
         uartHex(mbox[5]);
@@ -137,6 +137,8 @@ void getVCMemory()
 
 void setUartClock()
 {
+    volatile unsigned int  __attribute__((aligned(16))) mbox[9];
+
     /* set up clock for consistent divisor values */
     mbox[0] = 9 * 4;
     mbox[1] = REQUEST_CODE;
@@ -147,5 +149,5 @@ void setUartClock()
     mbox[6] = 4000000; // 4Mhz
     mbox[7] = 0;       // clear turbo
     mbox[8] = END_TAG;
-    mboxCall(MBOX_CH_PROP);
+    mboxCall(MBOX_CH_PROP, mbox);
 }

@@ -29,6 +29,7 @@
 void uartInit();
 void uartSend(unsigned int c);
 char uartGetc();
+char uartGetcWithCR();
 void uartPuts(const char *s);
 void uartHex(unsigned int d);
 
