@@ -2,7 +2,7 @@ CC       = aarch64-none-linux-gnu-gcc
 LD       = aarch64-none-linux-gnu-ld
 OBJCOPY  = aarch64-none-linux-gnu-objcopy
 EMULATOR = qemu-system-aarch64
-CFLAGS   = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
+CFLAGS   = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -g
 INCLUDES = -Iinclude
 
 SRCDIR	 = src
@@ -28,13 +28,16 @@ $(KERNEL).elf: start.o $(OBJS)
 start.o: start.S
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-.PHONY: clean test monitor
+.PHONY: clean test debug monitor
 
 clean:
 	$(RM) *.o $(KERNEL).elf $(KERNEL).img
 
 test: $(KERNEL).img
-	$(EMULATOR) -M raspi3 -kernel $< -display none -serial null -serial pty
+	$(EMULATOR) -M raspi3 -kernel $< -serial stdio
+
+debug: $(KERNEL).img
+	$(EMULATOR) -M raspi3 -kernel $< -serial stdio -S -s
 
 monitor:
 	screen /dev/pts/23 115200
