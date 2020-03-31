@@ -27,4 +27,4 @@ run:
 	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial pty
 
 debug:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -serial pty -s -S 
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -s -S
