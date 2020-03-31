@@ -37,4 +37,4 @@ makedir:
 	mkdir -p $(OUTPUT_DIR)
 
 run:
-	$(QEMU) -M raspi3 -kernel $(IMG) -serial null -serial stdio
+	$(QEMU) -M raspi3 -kernel $(IMG) -serial stdio

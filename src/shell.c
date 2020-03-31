@@ -35,6 +35,9 @@ void put_shell() {
   char *hello = "hello";
   char *time = "timestamp";
   char *reboot = "reboot";
+  char *board = "board revision";
+  char *vc= "VC base";
+  char *loadimage = "loadimg";
 
   char str[100];
   int p = 0;
@@ -70,9 +73,54 @@ void put_shell() {
     uart_puts("[");
     uart_puts(ftoa(t, buf, 5));
     uart_puts("]\n");
-  }
-  else if (strcmp(str, reboot) == 0)
+  } else if (strcmp(str, board) == 0) {
+  // get the board's unique serial number with a mailbox call
+    mbox[0] = 8*4;                  // length of the message
+    mbox[1] = MBOX_REQUEST;         // this is a request message
+
+    mbox[2] = MBOX_TAG_GETBOARD;   // get serial number command
+    mbox[3] = 8;                    // buffer size
+    mbox[4] = 8;
+    mbox[5] = 0;                    // clear output buffer
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+
+    // send the message to the GPU and receive answer
+    if (mbox_call(MBOX_CH_PROP)) {
+        uart_puts("My board revision is: ");
+        //uart_hex(mbox[6]);
+        uart_hex(mbox[5]);
+        uart_puts("\n");
+    } else {
+        uart_puts("Unable to query board revision!\n");
+    }
+  } else if (strcmp(str, vc) == 0) {
+  // get the board's unique serial number with a mailbox call
+    mbox[0] = 8*4;                  // length of the message
+    mbox[1] = MBOX_REQUEST;         // this is a request message
+
+    mbox[2] = MBOX_TAG_GETVCBASE;   // get serial number command
+    mbox[3] = 8;                    // buffer size
+    mbox[4] = 8;
+    mbox[5] = 0;                    // clear output buffer
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+
+    // send the message to the GPU and receive answer
+    if (mbox_call(MBOX_CH_PROP)) {
+        uart_puts("My VC base is: ");
+        //uart_hex(mbox[6]);
+        uart_hex(mbox[5]);
+        uart_puts("\n");
+    } else {
+        uart_puts("Unable to query VC base!\n");
+    }
+  } else if (strcmp(str, reboot) == 0)
     reset(0);
+  else if (strcmp(str, loadimage) == 0)
+    loadimg();
   else {
     uart_puts("command not found: ");
     uart_puts(str);
