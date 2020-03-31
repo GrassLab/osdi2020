@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "string.h"
 
 int strcmp(const char* s1, const char* s2){
 	for (; *s1 == *s2 ; s1++, s2++){
@@ -29,7 +29,7 @@ int atoi(char *ascii){
 /**
  * Transfer a binary value to hexadecimal string
  */
-void bin2hex(unsigned int num, char buff[4]) {
+void bin2hex(unsigned int num, char buff[9]) {
     unsigned int n;
     int c,i;
     for(i=0,c=28; c>=0; i++,c-=4) {
@@ -39,4 +39,5 @@ void bin2hex(unsigned int num, char buff[4]) {
         n+=n>9?0x37:0x30;
 		buff[i]=(char)n;
     }
+	buff[8]='\0';
 }

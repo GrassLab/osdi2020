@@ -1,9 +1,9 @@
-#ifndef _UTILS_H
-#define _UTILS_H 
+#ifndef _STRING_H
+#define _STRING_H 
 
 int strcmp(const char* s1, const char* s2);
 void unitoa(unsigned num, char *buff, unsigned num_dig);
 int atoi(char *ascii);
-void bin2hex(unsigned int num, char buff[4]);
+void bin2hex(unsigned int num, char buff[9]);
 
-#endif//_UTILS_H
+#endif//_STRING_H

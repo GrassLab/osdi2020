@@ -1,8 +1,8 @@
 #include "simple_shell.h"
 
 #include "bootloader.h"
+#include "string.h"
 #include "uart.h"
-#include "utils.h"
 
 
 #define PM_RSTC      ((volatile unsigned int*)(0x3F10001C))

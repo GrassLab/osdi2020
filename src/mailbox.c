@@ -1,12 +1,9 @@
-#include "gpio.h"
 #include "mailbox.h"
+#include "peri_base.h"
+#include "string.h"
 #include "uart.h"
-#include "utils.h"
 
-/* mailbox message buffer */
-volatile unsigned int  __attribute__((aligned(16))) mbox[36];
 
-#define MBOX_REG_BASE  (MMIO_BASE+0x0000B880)
 static struct _MBOX_REG
 {
     volatile unsigned int READ;      // +0x00
@@ -19,6 +16,9 @@ static struct _MBOX_REG
     volatile unsigned int CONFIG;    // +0x1C
     volatile unsigned int WRITE;     // +0x20
 } *MBOX_REG = (void *)MBOX_REG_BASE;
+
+/* mailbox message buffer */
+volatile unsigned int  __attribute__((aligned(16))) mbox[36];
 
 
 /**
@@ -61,7 +61,7 @@ void init_mbox_buff(unsigned int tag_id){
 }
 
 void get_board_revision(){
-    char buff[4];
+    char buff[8];
     init_mbox_buff(MBOX_TAG_GET_BREVI);
     if (mbox_call(MBOX_CH_PROPT_ARM_VC)) {
         uart_puts("Board revision: ");
@@ -74,7 +74,7 @@ void get_board_revision(){
 }
 
 void get_ARM_address(){
-    char buff[4];
+    char buff[8];
     init_mbox_buff(MBOX_TAG_GET_ARMADDR);
     if (mbox_call(MBOX_CH_PROPT_ARM_VC)){
         uart_puts("ARM address base: ");
@@ -90,10 +90,10 @@ void get_ARM_address(){
 }
 
 void get_VC_address(){
-    char buff[4];
+    char buff[8];
     init_mbox_buff(MBOX_TAG_GET_VCADDR);
     if (mbox_call(MBOX_CH_PROPT_ARM_VC)){
-        uart_puts("VC address base: ");
+        uart_puts("VC  address base: ");
         bin2hex(mbox[5], buff);
         uart_puts(buff);
         uart_puts("\tsize: ");

@@ -22,7 +22,7 @@ with open(args.filename,'rb') as fd:
         print("Start to transfer...")
         for i in range(length):
             ser.write(raw[i: i+1])
-            time.sleep(0.001)
+            time.sleep(0.0001)
             if i%100==0:
                 print("{:>5}/{:>5} bytes".format(i, length))
         print("{:>5} /{:>5} bytes".format(length, length))

@@ -1,7 +1,8 @@
 #ifndef	_P_GPIO_H
 #define	_P_GPIO_H
 
-#define MMIO_BASE       0x3F000000
+#include "peri_base.h"
+
 
 #define GPFSEL1         ((volatile unsigned int*)(MMIO_BASE+0x00200004))
 #define GPPUD           ((volatile unsigned int*)(MMIO_BASE+0x00200094))
