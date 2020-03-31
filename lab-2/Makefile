@@ -9,11 +9,11 @@ OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
 run: $(TARGET)
-	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -serial stdio -display none
 debug: $(TARGET)
-	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -s -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -s -serial pty -display none
 loader: 
-	qemu-system-aarch64 -M raspi3 -kernel ./bin/kernel8.img -s -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel ./bin/kernel8.img -s -serial pty -display none
 
 
 start.o: start.S

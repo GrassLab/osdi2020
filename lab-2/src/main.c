@@ -6,8 +6,8 @@
 
 int main()
 {
+    uart_init();
     printPowerOnMessage();
     // printDebugPowerOnMessage();
-    uart_init();
     processCommand();
 }

@@ -18,7 +18,7 @@ void load_target_kernel(char *target_address, int size) {
 
 void save_running_image()
 {
-    char *kernel = 0x80000;
+    char *kernel = __kernel_start;
     char *end = __bss_end;
     char *backup = (char *)(backup_address);
     uart_puts("[info] Starting to backup loader kernel\n");
@@ -32,7 +32,7 @@ void save_running_image()
 
 void load_image(char *target_address, int size) {
     unsigned long int backup_size = __bss_end - __kernel_start;
-    while(backup_address < target_address || backup_address + backup_size < target_address + size) {
+    while(backup_address <= target_address + size) {
         backup_address += 0x10000;
     }
     save_running_image();

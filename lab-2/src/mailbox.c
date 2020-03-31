@@ -39,10 +39,10 @@ int mbox_call(unsigned char ch)
 
 void print_serial_number()
 {
-    mbox[0] = 7*4;                  // length of the message
+    mbox[0] = 8*4;                  // length of the message
     mbox[1] = MBOX_REQUEST;         // this is a request message
-    mbox[2] = GET_SERIAL_NUMBER;   // get board revision command
-    mbox[3] = 8;                  // buffer size
+    mbox[2] = GET_SERIAL_NUMBER;    // get board revision command
+    mbox[3] = 8;                    // buffer size
     mbox[4] = TAG_REQUEST_CODE;
     mbox[5] = 0;                    // clear output buffer
     mbox[6] = 0;
@@ -55,7 +55,7 @@ void print_serial_number()
 
 void print_vc_base_address()
 {
-    mbox[0] = 7*4;                  // length of the message
+    mbox[0] = 8*4;                  // length of the message
     mbox[1] = MBOX_REQUEST;         // this is a request message
     mbox[2] = GET_VC_MEMORY;   // get board revision command
     mbox[3] = 8;                    // buffer size
@@ -70,7 +70,7 @@ void print_vc_base_address()
 
 void print_vc_size()
 {
-    mbox[0] = 7*4;                  // length of the message
+    mbox[0] = 8*4;                  // length of the message
     mbox[1] = MBOX_REQUEST;         // this is a request message
     mbox[2] = GET_VC_MEMORY;   // get board revision command
     mbox[3] = 8;                    // buffer size
@@ -96,6 +96,5 @@ void print_board_revision()
 
     mbox_call(MBOX_CH_PROP);
     uart_puts("0x");
-    uart_print_hex(mbox[6]);
     uart_print_hex(mbox[5]);
 }

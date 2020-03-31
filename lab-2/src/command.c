@@ -67,6 +67,8 @@ void command_help()
     uart_puts("reboot: reboot pi\n");
     uart_puts("timestamp: get current timestamp\n");
     uart_puts("loadimg: load kernel image\n");
+    uart_puts("info: get hardware information\n");
+    uart_puts("version: get kernel version\n");
 }
 
 void command_reboot()
@@ -112,8 +114,8 @@ void command_load_image()
 
 void command_version() 
 {
-    uart_puts("kernel version: release\n");
-    // uart_puts("kernel version: debug\n");
+    uart_puts("kernel version: lab-2-release\n");
+    // uart_puts("kernel version: lab-2-debug\n");
 }
 
 void command_get_uart_clock() {

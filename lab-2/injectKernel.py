@@ -3,8 +3,16 @@ import serial
 import time
 import sys
 
+
+"""
+sudo python injectKernel.py ./kernel8.img /dev/ttyUSB0 80000
+"""
+
 sleepTime = 0.1
-kernelPath = './kernel8.img'
+kernelPath = sys.argv[1] # './kernel8.img'
+device = sys.argv[2] # '/dev/ttyUSB0'
+loadAddres = sys.argv[3] # '80000'
+# device = '/dev/pts/0'
 
 def resetSerialIO(s):
     s.flush()
@@ -29,21 +37,17 @@ def serialSend(ser, string):
     time.sleep(sleepTime)
 
 def serialSendChunk(ser, data):
+    chunkSize = 512
     resetSerialIO(serialObject)
-    count = 0
-    for i in range(len(data)/512 + 1):
+    for i in range(len(data)/chunkSize + 1):
         time.sleep(sleepTime)
-        if ((512 * (i+1)) < len(data)):
-            count += len(data[i*512:i*512+512])
-            ser.write(data[i*512:i*512+512])
+        if ((chunkSize * (i+1)) < len(data)):
+            ser.write(data[i*chunkSize : (i+1)*chunkSize])
         else:
-            count += len(data[i*512:])
-            ser.write(data[i*512:])
-    resetSerialIO(ser)
+            ser.write(data[ i*chunkSize: ])
 
-# serialObject = serial.Serial("/dev/ttyUSB0", 115200, timeout=0.001)
-serialObject = serial.Serial("/dev/pts/0", 115200, timeout=0.001)
+serialObject = serial.Serial(device, 115200, timeout=0.001)
 resetSerialIO(serialObject)
-
+serialSend(serialObject, loadAddres + '\n')
 serialSend(serialObject, str(len(readKernel(kernelPath))) + '\n')
 serialSendChunk(serialObject, readKernel(kernelPath))
