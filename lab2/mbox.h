@@ -22,11 +22,16 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
+#ifndef _MBOX_H_
+#define _MBOX_H_
 
 /* a properly aligned buffer */
 extern volatile unsigned int mbox[36];
 
 #define MBOX_REQUEST    0
+
+/* tag request/response code */
+#define TAG_REQUEST_CODE 0x00000000
 
 /* channels */
 #define MBOX_CH_POWER   0
@@ -40,9 +45,24 @@ extern volatile unsigned int mbox[36];
 #define MBOX_CH_PROP    8
 
 /* tags */
+#define MBOX_POWER_STATE		0x20001
 #define MBOX_TAG_GETSERIAL      0x10004
 #define MBOX_BOARD_REVISION		0x10002
 #define MBOX_VC_MEM_BASE 		0x10006
+#define MBOX_TAG_SETCLKRATE     0x38002
+
 #define MBOX_TAG_LAST           0
 
+/* power unique device ID */
+#define PWID_UART0				0x01
+#define PWID_UART1				0x02
+
 int mbox_call(unsigned char ch);
+void set_board_ver_mbox(void);
+void set_VC_Mem_base_size_mbox(void);
+void set_queryUART0_mbox(void);
+void set_queryUART1_mbox(void);
+void set_uart0_clock_rate_mbox(void);
+void set_lfb_init_mbox(void);
+
+#endif

@@ -22,9 +22,15 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
+#ifndef _UART_H_
+#define _UART_H_
 
-void uart_init();
-void uart_send(unsigned int c);
-char uart_getc();
+void mini_uart_init();
+void PL011_uart_init();
 void uart_puts(char *s);
 void uart_hex(unsigned int d);
+
+extern void (*uart_send)(unsigned int c);
+extern char (*uart_getc)(void);
+
+#endif

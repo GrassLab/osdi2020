@@ -24,6 +24,7 @@
  */
 
 #include "gpio.h"
+#include "mbox.h"
 
 /* mailbox message buffer */
 volatile unsigned int  __attribute__((aligned(16))) mbox[36];
@@ -62,4 +63,115 @@ int mbox_call(unsigned char ch)
             return mbox[1]==MBOX_RESPONSE;
     }
     return 0;
+}
+
+void set_board_ver_mbox(){
+    mbox[0] = 8*4;                  
+    mbox[1] = MBOX_REQUEST;         
+    
+    mbox[2] = MBOX_BOARD_REVISION;
+    mbox[3] = 8;                    
+    mbox[4] = TAG_REQUEST_CODE;
+    mbox[5] = 0;                    
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+}
+
+void set_VC_Mem_base_size_mbox(){
+    mbox[0] = 8*4;                  
+    mbox[1] = MBOX_REQUEST;         
+
+    mbox[2] = MBOX_VC_MEM_BASE;
+    mbox[3] = 8;                    
+    mbox[4] = TAG_REQUEST_CODE;
+    mbox[5] = 0;                    
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+}
+
+void set_queryUART0_mbox(){
+    mbox[0] = 8*4;                  
+    mbox[1] = MBOX_REQUEST;         
+
+    mbox[2] = MBOX_POWER_STATE;
+    mbox[3] = 8;                    
+    mbox[4] = TAG_REQUEST_CODE;
+    mbox[5] = PWID_UART0;
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+}
+
+void set_queryUART1_mbox(){
+    mbox[0] = 8*4;                  
+    mbox[1] = MBOX_REQUEST;         
+
+    mbox[2] = MBOX_POWER_STATE;
+    mbox[3] = 8;                    
+    mbox[4] = TAG_REQUEST_CODE;
+    mbox[5] = PWID_UART1;
+    mbox[6] = 0;
+
+    mbox[7] = MBOX_TAG_LAST;
+}
+
+void set_uart0_clock_rate_mbox(){
+    mbox[0] = 9*4;
+    mbox[1] = MBOX_REQUEST;
+    mbox[2] = MBOX_TAG_SETCLKRATE; 
+    mbox[3] = 12;
+    mbox[4] = TAG_REQUEST_CODE;
+    mbox[5] = 2;                    // clock id
+    mbox[6] = 4000000;              // rate (in Hz)
+    mbox[7] = 0;                    // skip setting tutbo
+    mbox[8] = MBOX_TAG_LAST;
+}
+
+//linear framebuffer
+void set_lfb_init_mbox(){
+    mbox[0] = 35*4;
+    mbox[1] = MBOX_REQUEST;
+
+    mbox[2] = 0x48003;  //set phy wh
+    mbox[3] = 8;
+    mbox[4] = 8;
+    mbox[5] = 1024;         //FrameBufferInfo.width
+    mbox[6] = 768;          //FrameBufferInfo.height
+
+    mbox[7] = 0x48004;  //set virt wh
+    mbox[8] = 8;
+    mbox[9] = 8;
+    mbox[10] = 1024;        //FrameBufferInfo.virtual_width
+    mbox[11] = 768;         //FrameBufferInfo.virtual_height
+
+    mbox[12] = 0x48009; //set virt offset
+    mbox[13] = 8;
+    mbox[14] = 8;
+    mbox[15] = 0;           //FrameBufferInfo.x_offset
+    mbox[16] = 0;           //FrameBufferInfo.y.offset
+
+    mbox[17] = 0x48005; //set depth
+    mbox[18] = 4;
+    mbox[19] = 4;
+    mbox[20] = 32;          //FrameBufferInfo.depth
+
+    mbox[21] = 0x48006; //set pixel order
+    mbox[22] = 4;
+    mbox[23] = 4;
+    mbox[24] = 1;           //RGB, not BGR preferably
+
+    mbox[25] = 0x40001; //get framebuffer, gets alignment on request
+    mbox[26] = 8;
+    mbox[27] = 8;
+    mbox[28] = 4096;        //FrameBufferInfo.pointer
+    mbox[29] = 0;           //FrameBufferInfo.size
+
+    mbox[30] = 0x40008; //get pitch
+    mbox[31] = 4;
+    mbox[32] = 4;
+    mbox[33] = 0;           //FrameBufferInfo.pitch
+
+    mbox[34] = MBOX_TAG_LAST;
 }
