@@ -1,6 +1,8 @@
 #include "tools.h"
 #include "mailbox.h"
 
+char command[100];
+
 void main(){
     // set up serial console
     uart_init();
@@ -12,7 +14,7 @@ void main(){
     
     print_hello();    
     uart_puts("# ");
-    char *command = "";
+            
     int command_index=0;
     // echo everything back
     while(1) {

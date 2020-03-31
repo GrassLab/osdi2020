@@ -9,4 +9,5 @@ void print_hello();
 int get_cpu_time();
 int get_cpu_clock();
 void get_timestamp();
+void load_image();
 char * int2char(int input);

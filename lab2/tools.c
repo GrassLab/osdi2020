@@ -15,6 +15,7 @@ int cmd_box(char * command){
     if(my_strcmp(command, "hello")==1)return 2;
     if(my_strcmp(command, "reset")==1)return 3;
     if(my_strcmp(command, "timestamp")==1)return 4;
+    if(my_strcmp(command, "loadimage")==1)return 5;
     return -1;
 }
 void process_cmd(char * command){
@@ -23,6 +24,7 @@ void process_cmd(char * command){
             uart_puts("help        :show every commands.\n");
             uart_puts("hello       :say hello to you.\n");
             uart_puts("reset       :reboot the mechine.\n");
+            uart_puts("loadimage   :load kernel image.\n");
             break;
         case 2:
             uart_puts("Hello World!");
@@ -34,6 +36,10 @@ void process_cmd(char * command){
         case 4:
             uart_puts("Get Time!");
             get_timestamp();
+            break;
+        case 5:
+            uart_puts("Load Image!");
+            load_image();
             break;
         default:
             uart_puts(command);
@@ -115,4 +121,63 @@ void get_timestamp(){
     uart_puts(time_int_char);
     uart_puts(".");
     uart_puts(time_dec_char);
+}
+
+extern char __bss_end[];
+extern char __kernel_start[];
+extern void branch_to_address( void * );
+
+#define  TMP_KERNEL_ADDR  0x00100000
+
+void load_image(){
+    uart_puts("in function:Load Image!\n");
+    
+}
+void copy_and_jump_to_kernel() {
+    int kernel_size = uart_read_int();
+
+    // Confirm kernel size
+     uart_send_int(kernel_size);
+
+     char *kernel = (char *)0;
+
+     int checksum = 0;
+
+    for (int i = 0; i < kernel_size; i++) {
+        char c = uart_getc();
+        checksum += c;
+        kernel[i] = c;
+    }
+
+    uart_send_int(checksum);
+
+    uart_puts("Done copying kernel\r\n"); 
+
+    branch_to_address((void *)0x00);
+}
+
+void copy_current_kernel_and_jump(char *new_address) {
+    char *kernel = (char *)0x00;
+    char *end = __bss_end;
+
+    char *copy = new_address;
+
+    while (kernel <= end) {
+        *copy = *kernel;
+        kernel++;
+        copy++;
+    }
+
+    // Cast the function pointer to char* to deal with bytes.
+    char *original_function_address = (char *)&copy_and_jump_to_kernel;
+
+    // Add the new address (we're assuming that the original kernel resides in
+    // address 0). copied_function_address should now contain the address of the
+    // original function but in the new location.
+    char *copied_function_address =
+        original_function_address + (long)new_address;
+
+    // Cast the address back to a function and call it.
+    void (*call_function)() = (void (*)())copied_function_address;
+    call_function();
 }

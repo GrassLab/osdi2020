@@ -21,7 +21,7 @@
 
 1. GPU executes the first stage bootloader from ROM on the SoC.   
 電源正常啟動後，x86 CPU 會先執行 0xFFFF0，也就是 BIOS ROM 的進入點。
-由CPU激活一个reset vector
+由CPU啟動一个reset vector
 POST(power-on self test)通常用 beep 聲來表示檢查結果。   
 MBR 位於 hard disk 的 cylinder 0, head 0, sector 1，紀錄著 hard disk 的分割狀態，於開機時被載入至記憶體 0x0000:7C00。
 GPT GPT是較MBR更先進的分割表格式，GPT使用了GUID分割表格這一更加符合現代需求的技術取代了老舊的MBR。  
@@ -52,7 +52,11 @@ Stage 2 boot loader 也稱為 kernel boot loader，它最主要的任務就是�
 
 ### Load by UART
 - [ ] [required] Implement bootloader can load kernel image by UART.
-- [ ] [question] Calculate how long will it take for loading a 10MB kernel image by UART if baud rate is 115200.
+- [x] [question] Calculate how long will it take for loading a 10MB kernel image by UART if baud rate is 115200.   
+A: 7281.77s   
+baud rate 115200 = 115200 bit/s = 14400 byte/s   
+10 MB = 10 * 1024 * 1024 byte   
+10 MB / 1440 byte = 10 * 1024 * 1024 / 1440 = 7281.777  
 
 ### Load to certain address
 - [ ] [elective] User can specify the kernel image’s loading address.

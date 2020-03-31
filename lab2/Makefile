@@ -1,6 +1,6 @@
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFALG = -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles 
+CFALG = -fPIC -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles 
 
 
 all: clean kernel8.img
@@ -28,7 +28,7 @@ runpty:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial pty
 
 runasm:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial null -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial stdio
 
 
 rundis:
