@@ -1,6 +1,11 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+// for reboot
+#define PM_PASSWORD (0x5a000000)
+#define PM_RSTC ((int*)0x3F10001c)
+#define PM_WDOG ((int*)0x3F100024)
+
 void reverse(char str[], int length);
 char* itoa(unsigned long long int num, char* str, unsigned long long int base);
 unsigned long long int atoulli(char* str);

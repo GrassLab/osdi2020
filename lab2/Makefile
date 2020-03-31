@@ -2,8 +2,8 @@ ARMGNU ?= aarch64-linux-gnu
 
 # -Iinclude tells it to look for header files in the include folder
 #COPS = -fPIC -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
-COPS = -fPIC -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude
-ASMOPS = -fPIC -Iinclude
+COPS = -fPIC -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -Wno-unused-variable
+ASMOPS = -fPIC -Iinclude -Wno-unused-variable
 
 BUILD_DIR = build
 SRC_DIR = src

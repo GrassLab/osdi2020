@@ -98,8 +98,8 @@ void timestamp(int *integer_part, int *decimal_point_part){
 }
 
 void memcpy(void *destt, void *sourcet, int size){
-   char *source = (char *)sourcet;
-   char *dest = (char *)destt;
+   unsigned char *source = (unsigned char *)sourcet;
+   unsigned char *dest = (unsigned char *)destt;
    for(int s = 0; s < size; s++){ *dest++ = *source++; }
 }
 

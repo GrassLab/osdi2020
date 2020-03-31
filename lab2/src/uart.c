@@ -80,7 +80,7 @@ char uart_getc() {
     /* wait until something is in the buffer */
     do{asm volatile("nop");}while(*UART0_FR&0x10);
     /* read it and return */
-    r=(char)(*UART0_DR);
+    r = (char)(*UART0_DR);
     /* convert carrige return to newline */
     return r=='\r'?'\n':r;
 }
@@ -100,6 +100,9 @@ int uart_get_string(char * s){
 		iter++;
 	}
 	s[iter] = '\0';
+	if(s[0] == '\n'){
+		uart_puts("FUCK\n");
+	}
 	return iter;
 }
 
@@ -126,13 +129,11 @@ int uart_get_string_with_echo(char * s){
 /**
  * Display a string
  */
+
 void uart_puts(char *s) {
-    while(*s) {
-        /* convert newline to carrige return + newline */
-        if(*s=='\n')
-            uart_send('\r');
-        uart_send(*s++);
-    }
+	for(int i = 0; s[i] != '\0'; i++) {
+		uart_send((char)s[i]);
+	}
 }
 
 /**

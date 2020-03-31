@@ -7,12 +7,10 @@ import time
 
 if __name__ == '__main__':
 
-    #ser = serial.Serial('/dev/cu.SLAB_USBtoUART', 115200, timeout=1)
-    ser = serial.Serial('/dev/pts/3', 115200, timeout=1)
+    ser = serial.Serial('/dev/cu.SLAB_USBtoUART', 115200, timeout=1)
     ser.write("\n".encode())
     print(ser.read_until("# ").decode(), end="")
-	 
-    '''
+    
     # set the serial to blocking mode
     ser.timeout=None
     tdata = ser.read()
@@ -26,8 +24,6 @@ if __name__ == '__main__':
     print(tdata.decode(), end="")
     # set the serial to non blocking mode
     ser.timeout=1
-    '''
-
     # input loop
     while True:
         line_buffer = input()
@@ -71,7 +67,7 @@ if __name__ == '__main__':
             # wait for rpi3 to copy kernel and read the check message
             ser.timeout=None
             tdata = ser.read()
-            time.sleep(3)
+            time.sleep(5)
             data_left = ser.inWaiting()
             tdata = tdata + ser.read(data_left)
             print(tdata.decode(), end="")
@@ -91,21 +87,48 @@ if __name__ == '__main__':
                 print("rpi3 is ready!")
             else:
                 print("FUCK")
+                break
+                
+ 
+            print(ser.readline().decode())
             
             # start sending kernel
+            #checksum = 0
             fp = open("kernel8.img", "rb")
             while True:
                 char_buffer = fp.read(1)
                 if char_buffer:
                     ser.write(char_buffer)
-                    #print(ser.readline().decode())
+                    #checksum = checksum + (int)(char_buffer)
+
                 else:
                     break
-
+            
+            # echo checksum
+            
             # ending message
-            print(ser.readline().decode())
+            
+            ser.timeout=None
+            time.sleep(1)
+            data_left = ser.inWaiting()
+            tdata = ser.read(data_left)
+            print(tdata.decode(), end="")
+            ser.timeout=1
 
         # read the input data until the pound sign comes up
-        print(ser.read_until("# ").decode(), end="")
+        #print(ser.read_until("# ").decode(), end="")
+        
+        #print("QQ1")
+        ser.timeout=None
+        time.sleep(1)
+        data_left = ser.inWaiting()
+        tdata = ser.read(data_left)
+        print(tdata.decode(), end="")
+        ser.timeout=1
+        #print("QQ2")
+        
+        ser.flush()
+        ser.flushInput()
+        ser.flushOutput()
 
     ser.close()

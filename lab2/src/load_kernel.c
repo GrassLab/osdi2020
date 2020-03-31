@@ -4,13 +4,7 @@
 #include "tools.h"
 #include "get_information.h"
 
-void load_kernel_at_target_address(const char * target_address){
-
-
-
-}
-
-unsigned long long int read_kernel_size(){
+unsigned long long int read_new_kernel_size(){
 	
 	unsigned long long int hex_power[8];
 	char input_buffer[1000];
@@ -43,7 +37,7 @@ unsigned long long int read_kernel_size(){
 	return kernel_size;
 }
  
-unsigned long long int read_kernel_address(){
+unsigned long long int read_new_kernel_address(){
 	unsigned long long int hex_power[8];
 	unsigned long long int kernel_address = 0;
 	char input_buffer[1000];

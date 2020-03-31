@@ -6,71 +6,89 @@
 #include "load_kernel.h"
 #include "utils.h"
 
-// for reboot
-#define PM_PASSWORD (0x5a000000)
-#define PM_RSTC ((int*)0x3F10001c)
-#define PM_WDOG ((int*)0x3F100024)
-
-#define  TMP_KERNEL_ADDR  0x00100000
-
-#define JMP(new_address) __asm__("mov pc,%0" : /*output*/ : /*input*/ "r" (new_address) );
-
 // linker variable
-extern char __kernel_begin[];
-extern char __bss_start[];
-extern char __bss_end[];
-extern char __bss_size[];
+extern unsigned char __kernel_begin;
+extern unsigned char __bss_start;
+extern unsigned char __bss_end;
+extern unsigned char __bss_size;
 //extern volatile unsigned char __bss_size[];
 
-void output_garbage(char *new_address, unsigned long long int new_size){
-	
-	char *iter = "";	
+void output_garbage(unsigned long long int new_kernel_address, unsigned long long int new_kernel_size);
+void copy_current_kernel_and_jump(char *new_address, unsigned long long int new_size);
+void copyOldKernel2TempSpace(unsigned long long int new_kernel_address, unsigned long long int new_kernel_size);
 
-	char *kernel_size = "";
+
+void output_garbage(unsigned long long int new_kernel_address, unsigned long long int new_kernel_size){
+	// print and check the size of the new kernel
+	char *new_size = "";
 	uart_puts("\rThe new kernel size is ");
-	itoa(new_size, kernel_size, 10);
-	uart_puts(kernel_size);
+	itoa(new_kernel_size, new_size, 10);
+	uart_puts(new_size);
 	uart_puts("\n");
-		
+	// print and check the new kernel start address
+	char *new_address = "";
 	uart_puts("\rStart loading kernel at ");
+	itoa(new_kernel_address, new_address, 10);
 	uart_puts(new_address);
 	uart_puts("\n");
-
 	// handshake
 	char *syn_message = "";
 	uart_get_string(syn_message);
 	if(!strcmp(syn_message, "SYN")){
 		uart_puts("ACK");
 	}
-	
-	for(int i=0; i<new_size; i++){
-		new_address[i] = uart_getc();
-		//itoa(i, iter, 10);
-		//uart_puts(iter);
-		//uart_puts("ACK");
+	// start receiving new kernel
+	volatile char *kernel_addr = (void *)new_kernel_address;
+	int checksum = 0;
+	unsigned char c;
+	for(int i=0; i<new_kernel_size; i++){
+		c = uart_getc();
+		checksum = checksum + c;
+		kernel_addr[i] = c;
 	}
-	uart_puts("already received all the data!!!\n");
-	//JMP((unsigned long int *)524288);	
-	//branch_to_address((unsigned long int *)__kernel_begin);
-	
+	// print and check the checksum
+	char *checksum_str = "";
+	itoa(checksum, checksum_str, 10);
+	uart_puts("rpi3 check sum: ");
+	uart_puts(checksum_str);
+	uart_puts("\nalready received all the data!!!\n");
+	// jump to specified address
+	void (*func_ptr)() = (void (*)())((char *)new_kernel_address);
+	asm volatile("mov sp, %0" :: "r"((void *)new_kernel_address));
+	func_ptr();
+
+
+	//JMP((unsigned long int *)524288);
+	//branch_to_address((unsigned long int *)new_address);
+	//asm volatile("br %0" : "=r"((unsigned long int *)new_address));
+/*
+	void (*start_os)(void) = 0x00080000;
+  	start_os();
+*/
 }
 
-void copy_current_kernel_and_jump(char *new_address, unsigned long long int new_size) {
-    char *kernel = __kernel_begin;
-    char *end = __bss_end;
-    char *copy = (char *)(TMP_KERNEL_ADDR);
-	uart_puts("\rReady to copy the kernel to ");
+void copyOldKernel2TempSpace(unsigned long long int new_kernel_address, unsigned long long int new_kernel_size){
+
+	// set the temporary address for old kernel 
+	unsigned char *tempAddrForOldKernel = (unsigned char *)(0x00100000);
+	// COPY OLD KERNEL
+	unsigned char *start = &__kernel_begin;
+    unsigned char *end = &__bss_end;
+	uart_puts("\rReady to copy the kernel\n");
     uart_puts("\rStart copying kernel to 0x00100000(temporary area)\n");
-    while (kernel <= end) {
-		//uart_puts("QQ\n");
-        *copy = *kernel;
-        kernel++; copy++;
-    }
-    uart_puts("\rCopying kernel is done!\n");
-    void (*func_ptr)() = output_garbage;
-    unsigned long int original_function_address = (unsigned long int)func_ptr;
-    void (*call_function)(char *, unsigned long long int) = (void (*)(char *, unsigned long long int))(original_function_address - (unsigned long int)__kernel_begin + TMP_KERNEL_ADDR);
-	call_function(new_address, new_size);
+// *****************************************************************************	
+	memcpy(tempAddrForOldKernel, &__kernel_begin, &__bss_end - &__kernel_begin);
+// *****************************************************************************	
+    uart_puts("\rCopying is done!\n");
+
+	// jump to temporary address
+	//void (*func_ptr)() = (void (*)())(tempAddrForOldKernel);
+	//func_ptr();
+
+	void (*func_ptr)() = output_garbage;
+	unsigned long int original_function_address = (unsigned long int)func_ptr;
+	void (*call_function)(unsigned long long int, unsigned long long int) = (void (*)(unsigned long long int, unsigned long long int))(original_function_address - (unsigned long long int)(&__kernel_begin) + 0x00100000);
+	call_function(new_kernel_address, new_kernel_size);
 }
 
 void main()
@@ -80,8 +98,8 @@ void main()
     int i1 = 0, i2 = 0;
     int sizeof_current_line = 0;
     _Bool command_not_found = 1;
-	unsigned long long int kernel_address;
-	unsigned long long int kernel_size = 0;
+	unsigned long long int new_kernel_address = 0;
+	unsigned long long int new_kernel_size = 0;
 	char buf1[1000], buf2[1000];
 	// UART0 initialization
     uart_init();
@@ -91,7 +109,7 @@ void main()
 	get_serial_number();
 	get_board_revision();
 	get_VC_memory();
-    
+
 
 	// Welcome message
 	uart_puts("\r\nWelcome to raspberry pi 3!\n# ");
@@ -103,10 +121,12 @@ void main()
 		//sizeof_current_line = uart_get_string_with_echo(buffer);
 		command_not_found = 1;
 		if(!strcmp(buffer, "hello")) {
-			uart_puts("\rHello World!\n");
+			uart_puts("\rHello World 1 !\n");
 			command_not_found = 0;
-		}
-		else if(!strcmp(buffer, "help")) {
+		}else if(!strcmp(buffer, "\nhello")) {
+			uart_puts("\rHello World 4 !\n");
+			command_not_found = 0;
+		}else if(!strcmp(buffer, "help")) {
 			uart_puts("\rhello: print Hello World!\n");
 			uart_puts("help: help\n");
 			uart_puts("reboot: reboot rpi3\n");
@@ -114,8 +134,15 @@ void main()
 			uart_puts("framebuffer: show the framebuffer\n");
 			uart_puts("loadimg: load kernel at specified address\n");
 			command_not_found = 0;
-		}
-		else if(!strcmp(buffer, "timestamp")) {
+		}else if(!strcmp(buffer, "\nhelp")) {
+			uart_puts("\rhello: print Hello World!\n");
+			uart_puts("help: help\n");
+			uart_puts("reboot: reboot rpi3\n");
+			uart_puts("timestamp: get current timestamp\n");
+			uart_puts("framebuffer: show the framebuffer\n");
+			uart_puts("loadimg: load kernel at specified address\n");
+			command_not_found = 0;
+		}else if(!strcmp(buffer, "timestamp")) {
 			timestamp(&i1, &i2);
 			// turn the number into string
 			// char *buf = "", *buf1 = "";
@@ -124,46 +151,43 @@ void main()
 			uart_puts("\r["); uart_puts(buf1); uart_puts(".");
 			uart_puts(buf2); uart_puts("]"); uart_puts("\n");
 			command_not_found = 0;
-		}
-		else if(!strcmp(buffer, "reboot")) {
+		}else if(!strcmp(buffer, "\ntimestamp")) {
+			timestamp(&i1, &i2);
+			// turn the number into string
+			// char *buf = "", *buf1 = "";
+			itoa(i1, buf1, 10);
+			itoa(i2, buf2, 10);
+			uart_puts("\r["); uart_puts(buf1); uart_puts(".");
+			uart_puts(buf2); uart_puts("]"); uart_puts("\n");
+			command_not_found = 0;
+		}else if(!strcmp(buffer, "reboot")) {
 			/* reboot rpi3 */
 			*PM_RSTC = ((PM_PASSWORD) | 0x20); // full reset
   			*PM_WDOG = ((PM_PASSWORD) | 10); // number of watchdog tick
 			
 			command_not_found = 0;
 			continue;
-		}
-		else if(!strcmp(buffer, "framebuffer")) {
+		}else if(!strcmp(buffer, "\nreboot")) {
+			/* reboot rpi3 */
+			*PM_RSTC = ((PM_PASSWORD) | 0x20); // full reset
+  			*PM_WDOG = ((PM_PASSWORD) | 10); // number of watchdog tick
+			
+			command_not_found = 0;
+			continue;
+		}else if(!strcmp(buffer, "framebuffer")) {
 			uart_puts("\rShow framebuffer\n");
 			command_not_found = 0;
-		}
-		else if(!strcmp(buffer, "loadimg")) {
-			kernel_address =  read_kernel_address();
-			kernel_size = read_kernel_size();
-			char *tmp_address = "";
-			itoa(kernel_address, tmp_address, 10);
-			//copy_current_kernel_and_jump((char *)kernel_address, kernel_size);
-			copy_current_kernel_and_jump(tmp_address, kernel_size);
-			// copy_current_kernel_and_jump((char *)kernel_address);
+		}else if(!strcmp(buffer, "\nframebuffer")) {
+			uart_puts("\rShow framebuffer\n");
+			command_not_found = 0;
+		}else if(!strcmp(buffer, "loadimg")) {
 			
-			/*
-			char * StartOfProgram1 = &__kernel_begin;
-			// string_longlong_to_hex_char(string_buffer, (long long)&kernel_begin);
-			uart_puts("\rThe kernel begins at: ");
-			for(int i=0; i<10; i++){
-				uart_send(StartOfProgram1[i]);
-			}
-			uart_puts(StartOfProgram1);
-			uart_puts("\n");
-			
-			volatile unsigned char * const StartOfProgram2 = &__bss_start;
-			uart_puts("The bss begins at: ");
-			for(int i=0; i<10; i++){
-				uart_send(StartOfProgram2[i]);
-			}
-			uart_puts(StartOfProgram2);
-			uart_puts("\n");
-			*/
+			// input the address where the new kernel loaded at(in hex format, e.g. 0x12345678)
+			new_kernel_address =  read_new_kernel_address();
+			// input the size of the new kernel
+			new_kernel_size = read_new_kernel_size();
+			// copy the old kernel to temporary space	
+			copyOldKernel2TempSpace(new_kernel_address, new_kernel_size);
 
 			command_not_found = 0;
 		}
