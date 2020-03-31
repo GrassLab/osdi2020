@@ -174,11 +174,21 @@ void get_vc_memory() {
 }
 
 void loadkernel() {
-  loadimg();
-  uart_println("[ERR] should not reach here if loading kernel successfully");
-  abort();
+  while (1) {
+    loadimg();
+  RESEND:
+    uart_println("[ERR] load image failed, please type 'r' to resend kernel"
+                 " or type ctrl+c to cancel");
+    char c = uart_getc();
+    if (c == 0x3) { /* ctrl+c */
+      break;
+    } else if (c == 'r') {
+      continue;
+    } else {
+      goto RESEND;
+    }
+  }
 }
-
 
 int main() {
   size_t kernel_size = (&__end - &__start);
@@ -215,14 +225,14 @@ int main() {
   }
 }
 
-
 __attribute__((section(".text.relocate"))) void relocate() {
   uart_init();
   uart_println("-----------------------------------\r\n"
                "                                   \r\n"
                "     OSDI2020 UART Bootloader      \r\n"
                "                                   \r\n"
-               "-----------------------------------", BOOT_ADDR);
+               "-----------------------------------",
+               BOOT_ADDR);
 
   uart_println("\033[0;32mcopying itself to 0x%x address \033[0m", BOOT_ADDR);
 

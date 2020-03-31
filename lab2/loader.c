@@ -10,51 +10,37 @@ void loadimg() {
   uart_println("Please input kernel load address(defualt: 0x80000):");
   uart_println("Please send kernel image from UART now:");
   /* The kernel image must have following protocal */
-  /* recieve 'S' */
-  /* recieve kernel size */
   /* recieve load address */
+  /* recieve kernel size */
   /* start recieve kerenl_image based on kernel size */
-  /* recieve 'E' */
-
-  int kernel_size;
 
   /* default: UPLOAD_ADDRESS defined in loader.h */
   void *load_address = (void*)UPLOAD_ADDRESS;
 
 
-  /* DATA_ACK */
-  {
-    char c = uart_getc();
-    if (c != DATA_ACK)
-      goto PROTOCAL_ERROR;
-  }
-
-  /* customize load address */
-  {
-    char c = uart_getc();
-    if (c == ADDR_ACK) {
-      load_address = (void *)uart_getul();
-      uart_println("customize load address @ %x", load_address);
-    }
+  void *new_addr = (void*)uart_getul();
+  if (new_addr != 0) {
+    load_address = new_addr;
   }
 
   /* kernel size */
   /* (e.g. 4000\r) */
-  kernel_size = uart_getint();
+  int kernel_size = uart_getint();
 
   uart_println("Kernel Image Size: %d Load addr: %x", kernel_size, load_address);
+
+  /* Data ack */
+  {
+    int u = uart_getint();
+    if (u != 1) {
+      goto PROTOCAL_ERROR;
+    }
+  }
 
   /* starting recieve kernel image */
   volatile char *kernel_addr = load_address;
   while(kernel_size--){
     *kernel_addr++ = uart_getc();
-  }
-
-  /* DATA_SYN */
-  {
-    char c = uart_getc();
-    if (c != DATA_SYN)
-      goto PROTOCAL_ERROR;
   }
 
   kentry_t kentry = (kentry_t)load_address;
