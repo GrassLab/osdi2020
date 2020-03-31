@@ -1,5 +1,5 @@
 ## Simple Shell
-A simple shall with several commands
+A simple shell with several commands
 
 |Command|Description|
 |---|---|

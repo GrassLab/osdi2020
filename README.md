@@ -12,4 +12,4 @@ Please read the detailed README.md in each directory
 
 ## Disclaimer
 
-This repo is academic use
+This repo is for academic use
