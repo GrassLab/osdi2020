@@ -22,7 +22,7 @@ make stamp
 
 kernel@0x40000 with timestamp
 ```
-make stamp LOC=0x40000
+make stamp
 ```
 
 ## How to run
@@ -46,10 +46,14 @@ WIP
 ```
 .
 ├── bin
+│   ├── chpi.jpg
 │   ├── img2clang.py
+│   ├── movpi.jpg
 │   ├── Raspberry-Pi-Logo.jpg
 │   ├── rpish
-│   └── test.sh
+│   ├── test.sh
+│   └── trpi.jpg
+├── echo.img
 ├── include
 │   ├── gpio.h
 │   ├── homer.h
@@ -60,6 +64,7 @@ WIP
 │   ├── map.h
 │   ├── mbox.h
 │   ├── mm.h
+│   ├── movpi.h
 │   ├── power.h
 │   ├── raspi.h
 │   ├── shell.h
@@ -78,13 +83,13 @@ WIP
     ├── io.c
     ├── kernel.c
     ├── lfb.c
+    ├── linker.ld
     ├── loadimg.c
     ├── mbox.c
     ├── mini.c
     ├── mm.S
     ├── pl011.c
     ├── power.c
-    ├── raspi.c
     ├── shell.c
     ├── sprintf.c
     ├── string.c
@@ -93,5 +98,5 @@ WIP
     ├── time.c
     └── util.S
 
-3 directories, 44 files
+3 directories, 49 files
 ```
