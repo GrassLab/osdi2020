@@ -21,3 +21,14 @@ int compareString(const char *s1, const char *s2) {
 
     return c1 - c2;
 }
+
+// only take 10-base integer string
+unsigned int getIntegerFromString(const char *str) {
+    unsigned int value = 0u;
+
+    while (*str) {
+        value = value * 10u + (*str - '0');
+        ++str;
+    }
+    return value;
+}

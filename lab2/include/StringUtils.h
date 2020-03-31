@@ -3,5 +3,6 @@
 
 void stripString(char *str);
 int compareString(const char *s1, const char *s2);
+unsigned int getIntegerFromString(const char *str);
 
 #endif

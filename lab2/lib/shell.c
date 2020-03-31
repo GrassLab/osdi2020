@@ -1,5 +1,6 @@
 #include "MiniUart.h"
 #include "StringUtils.h"
+#include "utils.h"
 
 #include <stddef.h>
 
@@ -39,6 +40,33 @@ static void hello(void) {
     sendStringUART("Hello World!\n");
 }
 
+static void loadimg(void) {
+    static char * const kLoadAddr = (char *)0x40000;
+    static const size_t kImgMaxSize = 0x40000;
+
+    sendStringUART("Please input kernel image size (max: 262144): ");
+
+    char buffer[BUFFER_MAX_SIZE];
+    readCommand(buffer);
+    stripString(buffer);
+
+    size_t img_size = getIntegerFromString(buffer);
+    if (img_size > kImgMaxSize) {
+        sendStringUART("[LOG][ERROR] Over the capacity.\n");
+        return;
+    }
+    sendHexUART(img_size);
+    sendUART('\n');
+
+    sendStringUART("Start loading os kernel image ...\n");
+
+    size_t current_size = 0u;
+    while (current_size < img_size) {
+        kLoadAddr[current_size++] = recvUART();
+    }
+    branchAddr(kLoadAddr);
+}
+
 static void parseCommand(char *buffer) {
     // remove newline
     stripString(buffer);
@@ -51,6 +79,8 @@ static void parseCommand(char *buffer) {
         help();
     } else if (compareString("hello", buffer) == 0) {
         hello();
+    } else if (compareString("loadimg", buffer) == 0) {
+        loadimg();
     } else {
         sendStringUART("command not found: ");
         sendStringUART(buffer);
