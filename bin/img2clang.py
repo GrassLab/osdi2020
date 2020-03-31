@@ -2,7 +2,8 @@ import sys
 import numpy as np
 import cv2
 
-#img = cv2.imread('128raspi.jpg')
+header_only = True
+
 def usage():
     print("usage: {} [image] > img.c".format(sys.argv[0]))
     exit(0)
@@ -23,10 +24,15 @@ header.write("""
 #define raspi_height {}
 #define raspi_width {}
 \n""".format(img.shape[0], img.shape[1]))
-header.write('extern char *raspi_data[];'.format(filename))
-header.close()
 
-source = open("raspi.c", "w")
+if not header_only:
+    header.write('extern char *raspi_data[];'.format(filename))
+
+if header_only:
+    source = header
+else:
+    source = open("raspi.c", "w")
+
 source.write('/* convert from {} */\n'.format(filename))
 source.write("char *raspi_data[] = {\n")
 for c in [2, 1, 0]:
@@ -38,4 +44,6 @@ for c in [2, 1, 0]:
     if c: source.write(",\n")
     else: source.write("\n")
 source.write("};")
-source.close()
+
+header.close()
+if not header_only: source.close()

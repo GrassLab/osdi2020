@@ -29,6 +29,8 @@
 #define RASPI
 #ifdef HOMER
 #include "homer.h"
+#elif defined BUILD_STAMP
+#include "chpi.h"
 #elif defined RASPI
 #include "raspi.h"
 #endif
@@ -122,7 +124,7 @@ void lfb_showpicture()
         }
         ptr+=pitch-homer_width*4;
     }
-#elif defined RASPI
+#elif defined (RASPI) || defined (BUILD_STAMP)
 #define BLOCK_WIDTH (width / 16)
 #define BLOCK_HEIGHT (height / 16)
     pixel[3] = 0;
