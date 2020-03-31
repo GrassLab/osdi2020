@@ -23,15 +23,6 @@ idel_cpu:
   
 // cpu id == 0
 main_cpu:
-    // relocate our code from load address to link address
-    ldr     x1, =0x80000
-    ldr     x2, =_start
-    ldr     w3, =__loader_size
-1:  ldr     x4, [x1], #8
-    str     x4, [x2], #8
-    sub     w3, w3, #1
-    cbnz    w3, 1b
-
     // set stack before our code
     ldr     x1, =_start
     mov     sp, x1
@@ -47,7 +38,7 @@ clear_bss_loop:
 
     // goto main.o main()
 run:
-    bl main - 10000
+    bl main 
 
     // if any problem, let cpu idel
     b idel_cpu

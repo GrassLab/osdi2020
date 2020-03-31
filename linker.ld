@@ -1,6 +1,7 @@
 SECTIONS
 {
-    . = 0x80000 - 10000;
+    . = 0x80000;
+    __start_begin = .;
     /* . = 0x80000;*/
     PROVIDE(_code = .);
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }

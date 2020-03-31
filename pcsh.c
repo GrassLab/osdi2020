@@ -88,8 +88,8 @@ int cmd_load_images(int i)
     uart_send_hex(address);
     uart_send('\n');
 
-    // copy_kernel_and_load_images((void *)(long)address, image_size);
-    load_images((char *)(long)address, image_size);
+    copy_kernel_and_load_images((void *)(long)address, image_size);
+    // load_images((char *)(long)address, image_size);
 }
 
 int cmd_not_find(int i)
