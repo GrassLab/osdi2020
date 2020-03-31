@@ -25,7 +25,7 @@
 
 SECTIONS
 {
-    . = 0x80000 - 2560;
+    . = 0x80000;
     PROVIDE(_code = .);
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
@@ -43,4 +43,4 @@ SECTIONS
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;
-__loader_size = (_end - _code)>>3;
+__loader_size = _end - _code;
