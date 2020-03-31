@@ -3,14 +3,14 @@ SECTIONS
     . = _kbeg;
     .text : {
         . = ALIGN(16);
-        KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) 
+        KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*)
     }
     .rodata : {
         . = ALIGN(16);
-        *(.rodata .rodata.* .gnu.linkonce.r*) 
+        *(.rodata .rodata.* .gnu.linkonce.r*)
     }
     PROVIDE(_data = .);
-    .data : { 
+    .data : {
         . = ALIGN(16);
         *(.data .data.* .gnu.linkonce.d*)
     }

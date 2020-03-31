@@ -14,6 +14,7 @@ unsigned long nksize;
 void __attribute__((__section__(".bootloader"))) copy_and_load(){
     puts("done");
     char *ptr = nkbeg;
+    printf("load to 0x%x" NEWLINE, nkbeg);
     printf(NEWLINE "load %d bytes @0x%x" NEWLINE, nksize, (ULL)ptr);
     print("please input image now...");
     while(nksize--){
@@ -21,7 +22,9 @@ void __attribute__((__section__(".bootloader"))) copy_and_load(){
         *ptr++ = c;
     }
     puts("done");
+    printf("jump to 0x%x" NEWLINE, nkbeg);
     __asm__ volatile("br %0" :: "r"(nkbeg));
+    puts("jump failed");
 }
 
 char *schedule_tmp_kernel(char *okbeg, char *okend, char *nkbeg, char *nkend){
@@ -85,6 +88,8 @@ void loadimg(){
     } else {
         char *addr = bootloader_beg + 8;
         // 8 bytes for skip function stack pop instruction
+        printf("ok 0x%x - 0x%x" NEWLINE, okbeg, okend);
+        printf("nk 0x%x - 0x%x" NEWLINE, nkbeg, nkend);
         print("needn't do the kernel relocation...");
         __asm__ volatile("br %0" :: "r"(addr)); 
     }

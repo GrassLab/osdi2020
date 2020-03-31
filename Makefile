@@ -1,6 +1,6 @@
 ARMGNU ?= aarch64-linux-gnu
 
-ASMOPS = -Iinclude -g
+ASMOPS = -fPIC -Iinclude -g
 COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g
 #COPS += -DMINIUART
 
