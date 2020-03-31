@@ -63,23 +63,29 @@ void get_board_revision(){
     // message passing procedure call, you should implement it following the 6 steps provided above.
     if(mailbox_call(mailbox, 8)){
         printf("Board revision: 0x%x\n", mailbox[5]); // it should be 0xa020d3 for rpi3 b+
+    }else{
+        printf("Unable to get board revision\n");
     }
 }
 
 void get_VC_memory(){
-    unsigned int mailbox[7];
-    mailbox[0] = 7 * 4; // buffer size in bytes
+    unsigned int mailbox[8];
+    mailbox[0] = 8 * 4; // buffer size in bytes
     mailbox[1] = REQUEST_CODE;
     // tags begin
     mailbox[2] = GET_VC_MEMORY; // tag identifier
     mailbox[3] = 8; // maximum of request and response value buffer's length.
     mailbox[4] = TAG_REQUEST_CODE;
     mailbox[5] = 0; // value buffer
+    mailbox[6] = 0;
     // tags end
-    mailbox[6] = END_TAG;
+    mailbox[7] = END_TAG;
 
     // message passing procedure call, you should implement it following the 6 steps provided above.
     if(mailbox_call(mailbox, 8)){
         printf("VC Core base addr: 0x%x\n", mailbox[5]);
-    } 
+        printf("VC memory size: 0x%x\n", mailbox[6]);
+    }else{
+        printf("Unable to get VC memory\n");
+    }
 }

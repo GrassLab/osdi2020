@@ -47,11 +47,11 @@ void uart_init()
     register unsigned int r;
 
     /* initialize UART */
-    *AUX_ENABLE |= 1;       // enable UART1, AUX mini uart
-    *AUX_MU_CNTL = 0;
+    *AUX_ENABLE |= 1;      // enable UART1, AUX mini uart
+    *AUX_MU_CNTL = 0;      // mini uart disable
     *AUX_MU_LCR = 3;       // 8 bits
-    *AUX_MU_MCR = 0;
-    *AUX_MU_IER = 0;
+    *AUX_MU_MCR = 0;       // set RTS to High
+    *AUX_MU_IER = 0;       // disable receive/transmit interrupts
     *AUX_MU_IIR = 0xc6;    // disable interrupts
     *AUX_MU_BAUD = 270;    // 115200 baud
     /* map UART1 to GPIO pins */
