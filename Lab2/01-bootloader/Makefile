@@ -1,5 +1,5 @@
 ARMGNU ?= aarch64-linux-gnu
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude
+COPS = -O2 -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude
 ASMOPS = -Iinclude 
 BUILD_DIR = build
 SRC_DIR = src

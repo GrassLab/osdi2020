@@ -19,15 +19,23 @@ def init_Serial(serial_port):
     )
     return ser
 
-def wait_for_Pi(addr,ser_i):
+def wait_for_Pi(addr,ser_i,size):
     print("### Wait until Raspberry Pi is ready......")
    
     try:
         addr = long(addr,0)  
+        
+        if(addr<0x80000 and addr > 0x7F800):
+            print("Input address may overlap loader, change to default 0x80000")
+            addr = 0x80000
+        elif (addr<0x7F800 and addr + size >0x7F800):
+            print("Input address may overlap loader, change to default 0x80000")
+            addr = 0x80000
+
     except ValueError:
         addr = 0x80000
         print("Invalid address for booting, using default", addr)
-       
+             
     # write 'c' to trigger 
     ser_i.write('c')
     print('Settiing image on address:',addr)
@@ -135,12 +143,14 @@ def main():
     ser_i = init_Serial(serial_port)
     print("### Serial init success!!")
 
-    a = raw_input("### Power on Raspberry Pi and input load address to load kernel img:")
-    ## send 'c' to Pi and wait for '\x03\x03\x03' send back
-    wait_for_Pi(a,ser_i)
+    a = raw_input("### Power on Raspberry Pi and input load address to load kernel img:\n>>")
 
-    
+    # load kernel first, so we can check if it will overlap our loader yet.
     size, kernel_data = open_Kernel(kernel_img)
+
+    ## send 'c' to Pi and wait for '\x03\x03\x03' send back
+    wait_for_Pi(a,ser_i,size)
+
     guard = send_Kernel_size(ser_i, size)
 
     if(guard == True):

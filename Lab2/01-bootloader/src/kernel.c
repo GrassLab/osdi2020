@@ -11,15 +11,7 @@ void kernel_main(void){
 
 again:    
     keyword = uart_getc();
-    
-    unsigned long address = 0;
-    address=uart_getc();
-    address|=uart_getc()<<8;
-    address|=uart_getc()<<16;
-    address|=uart_getc()<<24;
-    
-    uart_hex(address);
-
+        
     while(keyword!='c'){
 	 uart_send(keyword);
     	 uart_send('E');
@@ -30,6 +22,12 @@ again:
 	 keyword = uart_getc();
     } 
 
+    unsigned long address = 0;
+    address=uart_getc();
+    address|=uart_getc()<<8;
+    address|=uart_getc()<<16;
+    address|=uart_getc()<<24;
+    
     uart_send(3);
     uart_send(3);
     uart_send(3);
@@ -42,8 +40,8 @@ again:
 
     char *kernel = (char*)address;
 
-    // Should we chekck if kernel is too large...? 
-    if(size<64){ 
+    if(size<64 || (address>0x7F800 && address<0x80000) || \
+		  (address<0x7F800 && address+size>0x7F800)){ 
     	uart_send('S');
 	uart_send('E');
 	goto again;

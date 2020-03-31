@@ -70,9 +70,3 @@ void uart_hex(unsigned int d) {
     uart_send(' ');
 }
 
-void uart_send_int(int number) {
-    uart_send((char)((number >> 24) & 0xFF));
-    uart_send((char)((number >> 16) & 0xFF));
-    uart_send((char)((number >> 8) & 0xFF));
-    uart_send((char)(number & 0xFF));
-}
