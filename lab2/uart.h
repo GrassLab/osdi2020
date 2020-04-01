@@ -6,3 +6,4 @@ void uart_puts(char *s);
 void uart_hex(unsigned int d);
 int uart_read_int();
 void uart_send_int(int number);
+int uart_gets(char *buf, int buf_size);

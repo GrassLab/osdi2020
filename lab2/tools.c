@@ -10,6 +10,75 @@ int my_strcmp(char * str1, char * str2){
         return 0;
     return 1;
 }
+void reverse(char str[], int length)
+{
+    int start = 0;
+    int end = length - 1;
+    while (start < end)
+    {
+        int tmp;
+        tmp = *(str + start);
+        *(str + start) = *(str + end);
+        *(str + end) = tmp;
+
+        start++;
+        end--;
+    }
+}
+// Implementation of itoa()
+char *itoa(int num, char *str, int base)
+{
+    int i = 0;
+    int isNegative = 0;
+
+    /* Handle 0 explicitely, otherwise empty string is printed for 0 */
+    if (num == 0)
+    {
+        str[i++] = '0';
+        str[i] = '\0';
+        return str;
+    }
+
+    // In standard itoa(), negative numbers are handled only with
+    // base 10. Otherwise numbers are considered unsigned.
+    if (num < 0 && base == 10)
+    {
+        isNegative = 1;
+        num = -num;
+    }
+
+    // Process individual digits
+    while (num != 0)
+    {
+        int rem = num % base;
+        str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        num = num / base;
+    }
+
+    // If number is negative, append '-'
+    if (isNegative)
+        str[i++] = '-';
+
+    str[i] = '\0'; // Append string terminator
+
+    // Reverse the string
+    reverse(str, i);
+
+    return str;
+}
+int atoi(const char *str)
+{
+    int res = 0; // Initialize result
+
+    // Iterate through all characters of input string and
+    // update result
+    for (int i = 0; str[i] != '\0' && str[i] != '\n'; ++i)
+        res = res * 10 + str[i] - '0';
+
+    // return result.
+    return res;
+}
+
 int cmd_box(char * command){
     if(my_strcmp(command, "help")==1)return 1;
     if(my_strcmp(command, "hello")==1)return 2;
@@ -27,7 +96,7 @@ void process_cmd(char * command){
             uart_puts("loadimage   :load kernel image.\n");
             break;
         case 2:
-            uart_puts("Hello World33!");
+            uart_puts("Hello World!");
             break;
         case 3:
             uart_puts("Rebooting");
@@ -38,7 +107,7 @@ void process_cmd(char * command){
             get_timestamp();
             break;
         case 5:
-            uart_puts("Load Image!");
+            uart_puts("Load Image!\n");
             load_image();
             break;
         default:
@@ -69,7 +138,6 @@ void print_hello(){
     uart_puts("     /:/  /     \\:\\ \\/__/     \\:\\  \\    \\:\\  \\    \\:\\/:/  /     \n");
     uart_puts("    /:/  /       \\:\\__\\        \\:\\__\\    \\:\\__\\    \\::/  /      \n");
     uart_puts("    \\/__/         \\/__/         \\/__/     \\/__/     \\/__/       \n");
-
 }
 char s[500]="";
 char * int2char(int input){
@@ -129,57 +197,55 @@ extern char __kernel_start[];
 extern void branch_to_address( void * );
 
 #define  TMP_KERNEL_ADDR  0x00100000
-
+#define INPUT_BUFFER_SIZE 256
+char cmd[INPUT_BUFFER_SIZE];
 void load_image(){
-    // uart_puts("in function:Load Image!\n");
-    copy_current_kernel_and_jump((char *)TMP_KERNEL_ADDR);
+    
+    uart_gets(cmd, INPUT_BUFFER_SIZE);
+    int image_size = atoi(cmd);
+    uart_puts("Kernel size is: ");
+    uart_send_int(image_size);
+    uart_send('\n');
+
+    uart_puts("Input Kernel load address: ");
+    uart_gets(cmd, INPUT_BUFFER_SIZE);
+    int address = atoi(cmd);
+    uart_puts("Kernel load address is: ");
+    uart_hex(address);
+    uart_send('\n');
+
+    copy_kernel_and_load_images((void *)(long)address, image_size);
 }
-void copy_and_jump_to_kernel() {
-    int kernel_size = uart_read_int();
-    // Confirm kernel size
-    // uart_puts(int2char(kernel_size));
+void copy_and_jump_to_kernel(char *new_address, int kernel_size) {
+    char *kernel = new_address;
 
-    char *kernel = (char *)0x80000;
-
-    int checksum = 0;
+    uart_puts("Kernel_size: ");
+    uart_send_int(kernel_size);
 
     for (int i = 0; i < kernel_size; i++) {
-        char c = uart_getc();   
-        uart_puts(int2char(i));     
-        uart_puts("\n");
-        checksum += c;
+        unsigned char c = uart_getc();
         kernel[i] = c;
     }
-
-    // uart_send_int(checksum);
-
-    uart_puts("Done copying kernel\n"); 
-
-    branch_to_address((void *)0x80000);
+    uart_puts("done\n");
+    uart_puts("Jump to new kernel\n");
+    //branch_to_address((unsigned long int *)new_address);
+    asm volatile("br %0" : "=r"((unsigned long int*)new_address));
 }
 
-void copy_current_kernel_and_jump(char *new_address) {
-    char *kernel = (char *)0x80000;
+void copy_kernel_and_load_images(char *new_address, int kernel_size) {
+    //char *kernel = _start;
+    char *kernel = __kernel_start;
     char *end = __bss_end;
-
-    char *copy = new_address;
-
+    char *copy = (char *)(TMP_KERNEL_ADDR);
+    uart_puts("begin of copy kernel\n");
     while (kernel <= end) {
         *copy = *kernel;
         kernel++;
         copy++;
     }
-
-    // Cast the function pointer to char* to deal with bytes.
-    char *original_function_address = (char *)&copy_and_jump_to_kernel;
-
-    // Add the new address (we're assuming that the original kernel resides in
-    // address 0). copied_function_address should now contain the address of the
-    // original function but in the new location.
-    char *copied_function_address =
-        original_function_address + (long)new_address;
-
-    // Cast the address back to a function and call it.
-    void (*call_function)() = (void (*)())copied_function_address;
-    call_function();
+    uart_puts("end of copy kernel\n");
+    void (*func_ptr)(char *, int) = copy_and_jump_to_kernel;
+    unsigned long int original_function_address = (unsigned long int)func_ptr;
+    void (*call_function)(char *, int) = (void (*)(char *, int))(original_function_address - (unsigned long int)__kernel_start + TMP_KERNEL_ADDR);
+    call_function(new_address, kernel_size);
 }

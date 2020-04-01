@@ -76,17 +76,19 @@ char uart_getc() {
  int uart_read_int() {
      int num = 0;
      for (int i = 0; i < 4; i++) {
-        char c = uart_getc();
-        num = num * 10;
-        num += c-'0';
+         char c = uart_getc();
+         num = num *10;
+         num += c-'0';
      }
      return num;
  }
- void uart_send_int(int number) {
-    uart_send((char) ((number >> 24) & 0xFF));
-    uart_send((char) ((number >> 16) & 0xFF));
-    uart_send((char) ((number >> 8) & 0xFF));
-    uart_send((char) (number & 0xFF));
+char ss[1024];
+void uart_send_int(int n)
+{
+    
+    itoa(n, ss, 10);
+
+    uart_puts(ss);
 }
 /**
  * Display a string
@@ -114,4 +116,42 @@ void uart_hex(unsigned int d) {
         n+=n>9?0x37:0x30;
         uart_send(n);
     }
+}
+int uart_gets(char *buf, int buf_size)
+{
+    int i = 0;
+    char c;
+
+    do
+    {
+        c = uart_getc();
+
+        c = c == '\r' ? '\n' : c;
+
+        if (c == 8 || c == 127)
+        {
+            if (i > 0)
+            {
+                buf[i--] = '\0';
+                uart_send(8);
+                uart_send(' ');
+                uart_send(8);
+            }
+        }
+        else if(c != '\n')
+        {
+            buf[i++] = c;
+            // ensure users can see what they type
+            uart_send(c);
+        }
+    } while (c != '\n' && i < buf_size - 1);
+
+    // replace '\n' with NULL
+    if(i > 0)
+        buf[i] == '\0';
+
+    if (i == buf_size)
+        return -1;
+    uart_send('\n');
+    return i;
 }
