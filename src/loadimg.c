@@ -23,9 +23,9 @@ void jump() {
       uart_puts("\b=>");
     }
   }
-  uart_puts("ready to jump!\n");
+  uart_puts("\nready to jump!\n");
   // restore arguments and jump to the new kernel.
-  asm volatile("br %0" :: "r"((char *)(NEW_KERNEL_ADDR)));
+  asm volatile("br %0" :: "r"((char *)(addr)));
 }
 
 void copyjump() {
@@ -77,7 +77,7 @@ void loadimg() {
     addr *= 10;
     addr += (chr - '0');
   }
-  new_start = (char *)(NEW_KERNEL_ADDR);
+  new_start = (char *)(addr);
   new_end = new_start + size;
 
   old_start = (char*)&_start;
