@@ -48,7 +48,7 @@ void loadimg(unsigned int bootloader_end) {
     uart_println(
         "\033[0;31m[ERR]\033[0m you should align the address to 4096 bytes\r\n"
         "that is the recommended address: 0x%x\r\n"
-        "(e.g. the next align of 0x80000 is 0x81000)"
+        "(e.g. the next align of 0x80000 is 0x81000)\r\n"
         "please resend to other address",
         ceil((float)(unsigned int)new_addr / 4096) * 4096);
     goto EAT_KERNEL;
