@@ -15,4 +15,6 @@ void ftoa(float x, char *i_res, char *f_res);
 
 void unsign_itohexa(unsigned long long x, char *res);
 
+int atoi(char *s);
+
 #endif

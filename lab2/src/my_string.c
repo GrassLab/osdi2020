@@ -91,3 +91,16 @@ void unsign_itohexa(unsigned long long x, char *res){
 
     reverse(buf, res);
 }
+
+int atoi(char *s){
+    int res=0;
+    res += *s - '0';
+    s++;
+    while(*s != '\0'){
+        res *= 10;
+        res += *s - '0';
+        s++;
+    }
+
+    return res;
+}

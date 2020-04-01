@@ -25,4 +25,6 @@ void get_board_revision();
 
 void get_vc_base_address();
 
+void loadimg();
+
 #endif

@@ -44,6 +44,9 @@ void run(char *command){
         get_board_revision();
         get_vc_base_address();
     }
+    else if (!strcmp(command, "loadimg")){
+        loadimg();
+    }
     else {
         uart_puts("Error: command not found, try <help>.\n");
     }
@@ -57,6 +60,8 @@ void help(){
     uart_puts("<reboot>: reboot rpi3.\n");
     uart_puts("---\n");;
     uart_puts("<hwinfo>: get hardware information.\n");
+    uart_puts("---\n");
+    uart_puts("<loadimg>: load kernel image and run.\n");
     uart_puts("---\n");
     uart_puts("<help>: print all available commands.\n");
 }
@@ -106,7 +111,7 @@ void get_board_revision(){
 }
 
 void get_vc_base_address(){
-	mbox[0] = 7*4;                  // length of the message
+	mbox[0] = 8*4;                  // length of the message
     mbox[1] = MBOX_REQUEST;         // this is a request message
     
     mbox[2] = GET_VC_BASE_ADDRESS;   // get board revision
@@ -122,4 +127,45 @@ void get_vc_base_address(){
     uart_puts("VC Core base address: 0x");
 	uart_puts(res);
 	uart_puts("\n");
+}
+
+void loadimg(){
+    char buf[10];
+    int i=0;
+
+    uart_puts("Please input image size: ");
+    buf[i] = uart_getc();
+    while(buf[i] != '\n' && buf[i] != '\r'){
+        uart_send(buf[i++]);
+        buf[i] = uart_getc();
+    }
+    buf[i] = '\0';
+    uart_puts("\n");
+    uart_puts("Please send image\n");
+
+    int size = atoi(buf);
+    char *load_addr = (char*)0x90000;
+    char *base = load_addr;
+
+    /*char res[30];
+    itoa(size, res);
+    uart_puts(res);
+    uart_puts("\n");
+    int counter = 0;*/
+
+    while(size--){
+        *load_addr = uart_getbyte();
+        /*if (counter < 21){
+            unsign_itohexa((unsigned int) *load_addr, res);
+            uart_puts(res);
+            uart_puts("\n");
+        }
+        counter++;*/
+        load_addr++;
+    }
+
+    /*asm volatile(
+            "mov sp, #0x80000;"
+    );*/
+    ((void(*)(void))base)();
 }

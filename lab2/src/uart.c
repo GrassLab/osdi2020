@@ -92,3 +92,9 @@ void uart_puts(char *s) {
     }
 }
 
+char uart_getbyte(){
+    do{asm volatile("nop");}while(!(*AUX_MU_LSR&0x01));
+    /* read it and return */
+    return (char)(*AUX_MU_IO);
+}
+

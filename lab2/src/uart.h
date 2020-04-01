@@ -48,4 +48,6 @@ char uart_getc();
 
 void uart_puts(char *s);
 
+char uart_getbyte();
+
 #endif

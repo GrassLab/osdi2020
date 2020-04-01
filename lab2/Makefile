@@ -19,5 +19,8 @@ src/%.o: src/%.c
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
 
+boot:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial pty
+
 clean:
 	rm -f $(OBJS) *.elf *.img
