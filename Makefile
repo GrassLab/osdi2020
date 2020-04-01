@@ -24,7 +24,7 @@ vpath %.c %.S $(SRCDIR)
 all: clean kernel8.img
 
 clean:
-	@rm kernel8.elf kernel8.img *.o >/dev/null 2>/dev/null || true
+	@rm kernel8.elf kernel8.img raspbootocm *.o >/dev/null 2>/dev/null || true
 
 loader: loader/raspbootocm.cc
 	gcc loader/raspbootocm.cc -o raspbootocm
