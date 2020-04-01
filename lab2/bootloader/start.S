@@ -47,6 +47,6 @@ set_zero:
 
 4:  
     // jump to relocated C code, should not return
-    bl      main-1024
+    bl      main-2048
     // for failsafe, halt this core too
     b       loop

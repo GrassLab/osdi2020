@@ -95,3 +95,13 @@ char uart_getc() {
     /* read it and return */
     return (char)(*UART0_DR);
 }
+
+/* Display a string */
+void uart_puts(char *s) {
+    while(*s) {
+        /* convert newline to carrige return + newline */
+        if(*s=='\n')
+            uart_send('\r');
+        uart_send(*s++);
+    }
+}

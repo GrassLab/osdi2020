@@ -23,7 +23,7 @@ kernel8.img: start.o $(OBJS)
 	$(OBJCOPY) -O binary kernel8.elf kernel8.img
 
 clean:
-	rm kernel8.elf $(DIR)/*.o >/dev/null 2>/dev/null || true
+	rm kernel8.elf *.o $(DIR)/*.o >/dev/null 2>/dev/null || true
 
 run:
 	$(QEMU) -M raspi3 -kernel kernel8.img -serial stdio
