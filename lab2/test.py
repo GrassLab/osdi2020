@@ -5,7 +5,7 @@ import os
 from array import array
 
 PORT = '/dev/pts/3'
-PORT = '/dev/ttyUSB0'
+# PORT = '/dev/ttyUSB0'
 BAUD_RATES = 115200
 
 ser = serial.Serial(PORT, BAUD_RATES)

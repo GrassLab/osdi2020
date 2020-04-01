@@ -72,12 +72,13 @@ char uart_getc() {
     /* convert carrige return to newline */
     return r=='\r'?'\n':r;
 }
+
  int uart_read_int() {
      int num = 0;
      for (int i = 0; i < 4; i++) {
-         char c = uart_getc();
-         num = num << 8;
-         num += (int)c;
+        char c = uart_getc();
+        num = num * 10;
+        num += c-'0';
      }
      return num;
  }

@@ -10,7 +10,7 @@ kernel8.img: kernel8.elf
 kernel8.elf: start.o $(OBJS)
 	aarch64-linux-gnu-ld -T l.ld -o kernel8.elf start.o $(OBJS)
 start.o:
-	aarch64-linux-gnu-gcc -c start.S
+	aarch64-linux-gnu-gcc -fPIC -c start.S
 %.o: %.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 

@@ -27,7 +27,7 @@ void process_cmd(char * command){
             uart_puts("loadimage   :load kernel image.\n");
             break;
         case 2:
-            uart_puts("Hello World!");
+            uart_puts("Hello World33!");
             break;
         case 3:
             uart_puts("Rebooting");
@@ -71,8 +71,9 @@ void print_hello(){
     uart_puts("    \\/__/         \\/__/         \\/__/     \\/__/     \\/__/       \n");
 
 }
+char s[500]="";
 char * int2char(int input){
-    char * s = "";
+    
     unsigned long bit=1, tmp=input, in=input;
     int ind=0;
     while(tmp/10>0){
@@ -130,34 +131,35 @@ extern void branch_to_address( void * );
 #define  TMP_KERNEL_ADDR  0x00100000
 
 void load_image(){
-    uart_puts("in function:Load Image!\n");
-    
+    // uart_puts("in function:Load Image!\n");
+    copy_current_kernel_and_jump((char *)TMP_KERNEL_ADDR);
 }
 void copy_and_jump_to_kernel() {
     int kernel_size = uart_read_int();
-
     // Confirm kernel size
-     uart_send_int(kernel_size);
+    // uart_puts(int2char(kernel_size));
 
-     char *kernel = (char *)0;
+    char *kernel = (char *)0x80000;
 
-     int checksum = 0;
+    int checksum = 0;
 
     for (int i = 0; i < kernel_size; i++) {
-        char c = uart_getc();
+        char c = uart_getc();   
+        uart_puts(int2char(i));     
+        uart_puts("\n");
         checksum += c;
         kernel[i] = c;
     }
 
-    uart_send_int(checksum);
+    // uart_send_int(checksum);
 
-    uart_puts("Done copying kernel\r\n"); 
+    uart_puts("Done copying kernel\n"); 
 
-    branch_to_address((void *)0x00);
+    branch_to_address((void *)0x80000);
 }
 
 void copy_current_kernel_and_jump(char *new_address) {
-    char *kernel = (char *)0x00;
+    char *kernel = (char *)0x80000;
     char *end = __bss_end;
 
     char *copy = new_address;
