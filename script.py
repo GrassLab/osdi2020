@@ -2,7 +2,7 @@ import serial
 import sys
 import time
 
-ser = serial.Serial('/dev/ttyUSB0', 115200)
+ser = serial.Serial('/dev/pts/4', 115200)
 
 try:
     filename = sys.argv[1]
