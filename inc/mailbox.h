@@ -68,8 +68,6 @@ extern volatile unsigned int mbox[36];
 
 
 int mbox_call(unsigned char ch);
-void get_board_revision();
-void get_ARM_address();
-void get_VC_address();
+void get_board_info();
 
 #endif//_MAILBOX_H

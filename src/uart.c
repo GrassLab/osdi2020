@@ -41,11 +41,11 @@ void uart_init()
     mbox[0] = 9*4;                   // buffer size in bytes
     mbox[1] = MBOX_REQUEST_CODE;     // buffer request/response code
     mbox[2] = MBOX_TAG_SET_CLK_RATE; // tag identifier
-    mbox[3] = 6;                     // buffer size
-    mbox[4] = 8;//MBOX_TAG_REQUEST_CODE; // tag request/response code
+    mbox[3] = 3*4;                   // value buffer size in bytes
+    mbox[4] = MBOX_TAG_REQUEST_CODE; // tag request/response code
     mbox[5] = MBOX_CLK_ID_UART;      // clock id
     mbox[6] = 4000000;               // rate (in Hz)
-    mbox[7] = 0;                     // skip setting turbo
+    mbox[7] = 0;                     // setting turbo
     mbox[8] = MBOX_END_TAG;
     mbox_call(MBOX_CH_PROPT_ARM_VC);
 
