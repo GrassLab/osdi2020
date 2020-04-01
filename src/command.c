@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "mailbox.h"
 #include "string.h"
+#include "time.h"
 
 void input_buffer_overflow_message ( char cmd[] )
 {
@@ -32,17 +33,12 @@ void command_hello ()
 
 void command_timestamp ()
 {
-    unsigned long int cnt_freq, cnt_tpct;
+    float timestamp;
     char str[20];
 
-    asm volatile(
-        "mrs %0, cntfrq_el0 \n\t"
-        "mrs %1, cntpct_el0 \n\t"
-        : "=r" (cnt_freq),  "=r" (cnt_tpct)
-        :
-    );
+    timestamp = get_current_timestamp ( );
 
-    ftoa( ((float)cnt_tpct) / cnt_freq, str, 6);
+    ftoa( timestamp, str, 6);
 
     uart_send('[');
     uart_puts(str);
@@ -109,13 +105,6 @@ void command_vc_base_addr()
     }
 }
 
-// Loop <delay> times in a way that the compiler won't optimize away
-static inline void delay(int count)
-{
-    asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
-         : "=r"(count): [count]"0"(count) : "cc");
-}
-
 void command_load_image ()
 {
     int32_t size = 0;
@@ -130,7 +119,7 @@ void command_load_image ()
     load_address = (char *)(uart_getint());
     uart_puts("\nPlease send kernel image from UART now:\n");
 
-    delay(5000);
+    wait_cycles(5000);
 
     if ( load_address == 0 )
         load_address = (char *)0x80000;
@@ -175,7 +164,7 @@ void command_load_image ()
         uart_puts(output_buffer);
         uart_send('\n');
 
-        delay(5000);
+        wait_cycles(5000);
 
     } while ( !is_receive_success );
    
