@@ -8,29 +8,26 @@ pc means Po-Chun, NOT personal computer
 #include "common.h"
 #include "string.h"
 #include "system.h"
+#include "bootloader.h"
+#include "pcsh.h"
 
-#define INPUT_BUFFER_SIZE 2048
+#define INPUT_BUFFER_SIZE 256
 
-typedef struct cmd_t
+extern char __bss_end[];
+
+static cmd_t default_cmd_arr[8] = {
+        {"exit", "exit shell", cmd_exit},
+        {"help", "show all command", cmd_help},
+        {"hello", "uart_print Hello World!", cmd_hello},
+        {"reboot", "reboot system", cmd_reboot},
+        {"timestamp", "system running time", cmd_timestamp},
+        {"load_images", "load images from UART", cmd_load_images},
+        {NULL, NULL, cmd_not_find}};
+
+int cmd_init()
 {
-    char *name;
-    char *detail;
-    int (*func)(int);
-} cmd_t;
 
-int cmd_exit(int);
-int cmd_help(int);
-int cmd_hello(int);
-int cmd_reboot(int);
-int cmd_timestamp(int);
-int cmd_not_find(int);
-cmd_t default_cmd_arr[] = {
-    {"exit", "exit shell", cmd_exit},
-    {"help", "show all command", cmd_help},
-    {"hello", "print Hello World!", cmd_hello},
-    {"reboot", "reboot system", cmd_reboot},
-    {"timestamp", "system running time", cmd_timestamp},
-    {NULL, NULL, cmd_not_find}};
+}
 
 int cmd_exit(int i)
 {
@@ -40,22 +37,24 @@ int cmd_exit(int i)
 int cmd_help(int i)
 {
     cmd_t *ptr = default_cmd_arr;
-        
-    print("Author: Hsu, Po-Chun(0856168)\n");
-    print("Available command list:\n");
-    while(ptr->name != NULL){
-        print(ptr->name);
-	print(": ");
-	print(ptr->detail);
-        print("\n");
+
+    uart_print("Author: Hsu, Po-Chun(0856168)\n");
+    uart_print("Available command list:\n");
+    while (ptr->name != NULL)
+    {
+        uart_print(ptr->name);
+        uart_print(": ");
+        uart_print(ptr->detail);
+        uart_print("\n");
         ++ptr;
     }
+    uart_print("===\n");
     return 0;
 }
 
 int cmd_hello(int i)
 {
-    print("Hello World!\n");
+    uart_print("Hello World!\n");
 }
 
 int cmd_reboot(int i)
@@ -70,44 +69,33 @@ int cmd_timestamp(int i)
     uart_send('\n');
 }
 
-int cmd_not_find(int i)
+int cmd_load_images(int i)
 {
-    print("Command not find, Try 'help'\n");
+    uart_puts("Input kernel size: ");
+    char cmd[INPUT_BUFFER_SIZE];
+    // memset(cmd, 0, INPUT_BUFFER_SIZE);
+
+    uart_gets(cmd, INPUT_BUFFER_SIZE);
+    int image_size = atoi(cmd);
+    uart_puts("Kernel size is: ");
+    uart_send_int(image_size);
+    uart_send('\n');
+
+    uart_puts("Input Kernel load address: ");
+    uart_gets(cmd, INPUT_BUFFER_SIZE);
+    int address = atoi(cmd);
+    uart_puts("Kernel load address is: ");
+    uart_send_hex(address);
+    uart_send('\n');
+
+    loadimg(address, image_size);
+    // copy_kernel_and_load_images((void *)(long)address, image_size);
+    // load_images((char *)(long)address, image_size);
 }
 
-int gets(char *buf, int buf_size)
+int cmd_not_find(int i)
 {
-    int i = 0;
-    char c;
-
-    do
-    {
-        c = uart_getc();
-
-        c = c == '\r' ? '\n' : c;
-
-        if(c == 8 || c == 127){
-            if(i > 0){
-                buf[i--] = '\0';
-                uart_send(8);
-                uart_send(' ');
-                uart_send(8);
-            }
-        }
-        else{
-            buf[i++] = c;
-	    // ensure users can see what they type
-            uart_send(c);
-        }
-    } while (c != '\n' && i < buf_size - 1);
-
-    // replace '\n' with NULL
-    buf[--i] == '\0';
-
-    if (i == buf_size)
-        return -1;
-
-    return i;
+    uart_print("Command not find, Try 'help'\n");
 }
 
 int sh_default_command(char *cmd)
@@ -115,11 +103,12 @@ int sh_default_command(char *cmd)
     cmd_t *ptr = default_cmd_arr;
     while (ptr->name != NULL)
     {
-        if (my_strcmp(ptr->name, cmd) == 0){
+        if (strcmp(ptr->name, cmd) == 0)
+        {
             ptr->func(0);
             return 0;
         }
-	ptr++;
+        ptr++;
     }
     ptr->func(0);
 
@@ -134,28 +123,30 @@ int symbol()
 
 int pcsh()
 {
-
+    char cmd[INPUT_BUFFER_SIZE];
+    
     // main loop
     while (1)
     {
-        // get command
-        char cmd[INPUT_BUFFER_SIZE];
-        my_memset(cmd, 0, INPUT_BUFFER_SIZE);
-
         symbol();
-        gets(cmd, INPUT_BUFFER_SIZE);
+
+        // get command
+        memset(cmd, 0, INPUT_BUFFER_SIZE);
+        uart_gets(cmd, INPUT_BUFFER_SIZE);
 
         uart_send('\r');
+        uart_send('\n');
 
-
-        if(my_strcmp(cmd, "\n") == 0)
+        if (strcmp(cmd, "") == 0)
             continue;
 
         // default command
         sh_default_command(cmd);
 
+
         // other program
     }
+    uart_puts("Shell End\n");
 
     return 0;
 }
