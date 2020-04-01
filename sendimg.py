@@ -31,7 +31,15 @@ def main():
 
     ser.write(file_size.to_bytes(4, byteorder="big"))
     ser.write(file_checksum.to_bytes(4, byteorder="big"))
-    ser.write(bytecodes)
+
+    per_chunk = 128
+    chunk_count = file_size // per_chunk + 1 if file_size % per_chunk else file_size // per_chunk
+
+    for i in range(chunk_count):
+        ser.write(bytecodes[i * per_chunk : (i+1) * per_chunk])
+        while not ser.writable():
+            pass
+
 
     print(f"Image Size: {file_size}, Checksum: {file_checksum}")
 

@@ -78,9 +78,6 @@ void loadimg() {
         img_checksum |= (int)uart_read_raw();
     }
 
-    uart_printf("Load image to 0x%x\n", address);
-    uart_printf("Image Size: %d bytes, Checksum: %d\n", img_size, img_checksum);
-
     char *kernel = (char *)address;
 
     for (i = 0; i < img_size; i++) {
