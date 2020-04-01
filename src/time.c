@@ -6,13 +6,13 @@ void delay(int32_t count) {
             : "=r"(count): [count]"0"(count) : "cc");
 }
 
-uint32_t mm_freq() {
+static uint32_t mm_freq() {
     uint32_t cntfrq_el0;
     asm volatile("mrs %0, CNTFRQ_EL0" : "=r" (cntfrq_el0));
     return cntfrq_el0;
 }
 
-uint64_t mm_ticks() {
+static uint64_t mm_ticks() {
     uint64_t cntpct_el0;
     asm volatile("mrs %0, CNTPCT_EL0" : "=r" (cntpct_el0));
     return cntpct_el0;

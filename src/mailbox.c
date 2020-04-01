@@ -28,6 +28,7 @@ uint32_t get_board_revision() {
     if (mbox_call(mbox, MBOX_CH_PROP)) {
         return mbox[5];
     } else {
+        uart_log(LOG_ERROR, "Unable to get the board revision");
         return 0;
     }
 }
@@ -41,6 +42,7 @@ uint32_t get_vc_memory() {
     if (mbox_call(mbox, MBOX_CH_PROP)) {
         return mbox[5];
     } else {
+        uart_log(LOG_ERROR, "Unable to get the video memory map");
         return 0;
     }
 }   
