@@ -54,10 +54,10 @@ Stage 2 boot loader 也稱為 kernel boot loader，它最主要的任務就是�
 - [x] [required] Implement bootloader can load kernel image by UART.   
 Ok in qemu, but fail in raspi3   
 - [x] [question] Calculate how long will it take for loading a 10MB kernel image by UART if baud rate is 115200.   
-A: 7281.77s   
+A: 728.177s   
 baud rate 115200 = 115200 bit/s = 14400 byte/s   
 10 MB = 10 * 1024 * 1024 byte   
-10 MB / 1440 byte = 10 * 1024 * 1024 / 1440 = 7281.777  
+10 MB / 1440 byte = 10 * 1024 * 1024 / 14400 = 728.1777  
 
 ### Load to certain address
 - [x] [elective] User can specify the kernel image’s loading address.
