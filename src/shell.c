@@ -47,7 +47,7 @@ void shell_init() {
     uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
 
     // Welcome Messages
-    fb_splash();
+    // fb_splash();
     uart_printf("\n\n _  _  ___ _____ _   _  ___  ___ ___ ___ \n");
     uart_printf("| \\| |/ __|_   _| | | |/ _ \\/ __|   \\_ _|\n");
     uart_printf("| .` | (__  | | | |_| | (_) \\__ \\ |) | | \n");
