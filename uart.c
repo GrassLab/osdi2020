@@ -1,3 +1,4 @@
+#include "hard_info.h"
 #include "uart.h"
 
 #define MMU_BASE            0x3F000000

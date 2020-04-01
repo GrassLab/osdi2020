@@ -1,24 +1,25 @@
 #include "uart.h"
+#include "utils.h"
+#include "hard_info.h"
 
 char buff[50];
-int strcmp(const char *s1,const char *s2);
-void print(const char *s);
-void init();
-
 
 void main(){
 	uart_init();
 	init();
+	hard_info();
 	char c;
-	int count;
+	int count=0;
 	int i;
+	int size;
+	char *kernel_adr=(char*)0x40000;
 	while(1){
 		c=uart_read();
-		if(c==8){
+		if(c==0x7f||c==0x08){
 			if(count!=0){
-				buff[count]=' ';
+				buff[count]='\0';
 				count--;
-				//delete?
+				uart_write(0x08);
 			}
 		}
 		else if(c==10||c==13){
@@ -29,6 +30,26 @@ void main(){
 			}
 			else if(strcmp(buff,"hello")){
 				print("Hello World!\n\r");
+			}
+			else if(strcmp(buff,"loadimg")){
+				print("rec\n\r");
+				size=(int)uart_read();
+				size|=uart_read()<<8;
+				size|=uart_read()<<16;
+				size|=uart_read()<<24;
+				print("OK\n");
+				while(size>0){
+					*(kernel_adr++)=uart_read();
+					size--;
+				}
+				asm volatile (
+        		"mov x0, x10;"
+        		"mov x1, x11;"
+		        "mov x2, x12;"
+        		"mov x3, x13;"
+        		"mov x30, 0x80000; ret"
+    			);
+				print("done\n");
 			}
 			else print("Err, command not found, try <help>.\n\r");
 			for(i=0;i<50;i++)	buff[i]='\0';
@@ -43,25 +64,3 @@ void main(){
 	}
 }
 
-int strcmp(const char *s1,const char *s2){
-	int b=0;
-	while(*s2&&(*s1==*s2)){
-		s1++;
-		s2++;
-	}
-	if((*s2=='\0')&&!*s1)	return 1;
-	else return 0;
-}
-
-void print(const char *s){
-	while(*s!='\0'){
-		uart_write(*s);
-		s++;
-	}
-}
-
-void init(){
-	char c=8;
-	uart_write(c);
-	print("Hello RPI3\n\r#");
-}
