@@ -130,10 +130,7 @@ void get_board_revision() {
   mbox[2] = MBOX_TAG_GETREV; /* get serial number command */
   mbox[3] = 4;               /* buffer size */
   mbox[4] = 0;
-  /* 5-6 is reserve for output buffer (because the serial number 8 bytes is
-   * required) */
   mbox[5] = 0;
-  /* mbox[6] = 0; */
   /* the tag last for notify the mailbox */
   mbox[6] = MBOX_TAG_LAST;
   /* ====== Tags end/ ======== */
@@ -190,6 +187,9 @@ void loadkernel() {
   }
 }
 
+const unsigned int clock_rate = 4000000;
+const unsigned int baud_rate  = 115200;
+
 int main() {
   size_t kernel_size = (&__end - &__start);
 
@@ -198,7 +198,7 @@ int main() {
   memset(&__start, 0, kernel_size);
 
   // set up serial console
-  uart_init();
+  uart_init(clock_rate, baud_rate);
 
   // set up framebuffer
   lfb_init();
@@ -226,7 +226,10 @@ int main() {
 }
 
 __attribute__((section(".text.relocate"))) void relocate() {
-  uart_init();
+  uart_init(clock_rate, baud_rate);
+
+
+
   uart_println("-----------------------------------\r\n"
                "                                   \r\n"
                "     OSDI2020 UART Bootloader      \r\n"
@@ -234,14 +237,16 @@ __attribute__((section(".text.relocate"))) void relocate() {
                "-----------------------------------",
                BOOT_ADDR);
 
+  uart_println("Init PL011 done [clock rate: %dHz]", uart_getrate());
+
   uart_println("\033[0;32mcopying itself to 0x%x address \033[0m", BOOT_ADDR);
 
   size_t kernel_size = (&__end - &__start);
   uint8_t *new_addr = (uint8_t *)(BOOT_ADDR);
 
-  uart_println("start copying from:          \r\n"
-               "   __start: %x to __end: %x  \n\r"
-               "   @ new_addr %x             \n\r"
+  uart_println("start copying from:              \r\n"
+               "   __start: 0x%x to __end: 0x%x  \r\n"
+               "   @ new_addr %x                 \r\n"
                "   w/t kernel_size 0x%x",
                &__start, &__end, new_addr, kernel_size);
 

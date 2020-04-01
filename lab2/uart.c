@@ -49,9 +49,13 @@ static inline void delay(int count)
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
-void uart_init()
+void uart_init(unsigned int clock_rate, unsigned int baud_rate)
 {
     register unsigned int r;
+
+    unsigned int divider = (unsigned int)(clock_rate / (16 * baud_rate));
+    unsigned int temp = (unsigned int)(((clock_rate % (16 * baud_rate)) * 8) / baud_rate);
+    unsigned int fraction = (temp >> 1) + (temp & 1);
 
     /* initialize UART */
     *UART0_CR = 0;         // turn off UART0
@@ -64,7 +68,8 @@ void uart_init()
     mbox[3] = 12;
     mbox[4] = 8;
     mbox[5] = 2;           // UART clock
-    mbox[6] = 4000000;     // 4Mhz
+    mbox[6] = clock_rate;  // 4Mhz
+    /* mbox[6] = clock_rate;  // 4Mhz */
     mbox[7] = 0;           // clear turbo
     mbox[8] = MBOX_TAG_LAST;
     /* ====== Tags end/ ======== */
@@ -83,10 +88,33 @@ void uart_init()
     *GPPUDCLK0 = 0;        // flush GPIO setup
 
     *UART0_ICR = 0x7FF;    // clear interrupts
-    *UART0_IBRD = 2;       // 115200 baud
-    *UART0_FBRD = 0xB;
+    /* *UART0_IBRD = 2; */
+    /* *UART0_FBRD = 0xB; */
+    *UART0_IBRD = divider; // 115200 baud
+    *UART0_FBRD = fraction;
     *UART0_LCRH = 0b11<<5; // 8n1
     *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
+}
+
+/* get the clock rate */
+unsigned int uart_getrate() {
+    register unsigned int r;
+
+    mbox[0] = 8*4;
+    mbox[1] = MBOX_REQUEST;
+    /* ====== /Tags begin ====== */
+    mbox[2] = MBOX_TAG_GETCLKRATE; /* get clock rate */
+    mbox[3] = 8;                  /* buffer size */
+    mbox[4] = 0;
+    /* 5-6 is reserve for output buffer */
+    mbox[5] = 2;
+    mbox[6] = 0;
+    mbox[7] = MBOX_TAG_LAST;
+    /* ====== Tags end/ ======== */
+
+    mbox_call(MBOX_CH_PROP);
+
+    return mbox[6];
 }
 
 /**

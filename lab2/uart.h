@@ -26,6 +26,7 @@
 #pragma once
 
 void uart_init();
+unsigned int uart_getrate();
 void uart_send(unsigned int c);
 char uart_getc();
 int  uart_getint();
