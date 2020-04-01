@@ -24,6 +24,7 @@
  */
 
 #include "gpio.h"
+#include "mbox.h"
 
 /* PL011 UART registers */
 #define UART0_DR ((volatile unsigned int *)(MMIO_BASE + 0x00201000))
@@ -44,6 +45,8 @@ void uartInit()
 
     /* initialize UART */
     *UART0_CR = 0; // turn off UART0
+
+    setUartClock();
 
     /* map UART0 to GPIO pins */
     r = *GPFSEL1;
