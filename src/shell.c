@@ -1,3 +1,4 @@
+#include "mailbox.h"
 #include "mini_uart.h"
 #include "shell.h"
 
@@ -25,13 +26,14 @@ char *strtrim(char *s) {
   return begin;
 }
 
-char *uitos(uint64_t num, char *buf) {
+char *uitos_generic(uint64_t num, int base, char *buf) {
+  const char *alphabet = "0123456789abcdef";
   char *cur = buf;
   uint8_t len = 0;
 
   do {
-    *cur = '0' + (num % 10);
-    num /= 10;
+    *cur = alphabet[num % base];
+    num /= base;
     ++cur;
     ++len;
   } while (num > 0);
@@ -46,15 +48,113 @@ char *uitos(uint64_t num, char *buf) {
   return buf;
 }
 
+char *uitos(uint64_t num, char *buf) {
+  uitos_generic(num, 10, buf);
+}
+
+int32_t ctoi(char c) {
+  if (c >= 'A' && c <= 'F') {
+    return 10 + (c - 'A');
+  } else if (c >= 'a' && c <= 'f') {
+    return 10 + (c - 'a');
+  } else if (c >= '0' && c <= '9') {
+    return c - '0';
+  } else {
+    return -1;
+  }
+}
+
+uint64_t pow(uint32_t base, uint32_t exponent) {
+  uint64_t rst = 1;
+  for (uint32_t i = 0; i < exponent; ++i) {
+    rst *= base;
+  }
+  return rst;
+}
+
+uint64_t stoui(const char *s, int base) {
+  uint64_t num = 0;
+  for (int32_t i = strlen(s) - 1, j = 0; i >= 0; --i, ++j) {
+    int32_t val = ctoi(s[i]);
+    if (val < 0) {
+      return num;
+    } else {
+      num += val * pow(base, j);
+    }
+  }
+  return num;
+}
+
 void help(void) {
-  mini_uart_puts("hello: print Hello World!" CRLF);
-  mini_uart_puts("help: help" CRLF);
-  mini_uart_puts("reboot: reboot rpi3" CRLF);
-  mini_uart_puts("timestamp: get current timestamp" CRLF);
+  mini_uart_puts("hello: print Hello World!" EOL);
+  mini_uart_puts("help: help" EOL);
+  mini_uart_puts("loadimg: load kernel image to specific location" EOL);
+  mini_uart_puts("reboot: reboot rpi3" EOL);
+  mini_uart_puts("timestamp: get current timestamp" EOL);
 }
 
 void hello(void) {
-  mini_uart_puts("Hello World!" CRLF);
+  mini_uart_puts("Hello World!" EOL);
+}
+
+void loadimg(void) {
+  const uint64_t default_base = 0x90000;
+  char buf[32];
+  mini_uart_puts("Start Loading kernel image..." EOL);
+  mini_uart_puts("Please input kernel load address (default: 0x");
+  mini_uart_puts(uitos_generic(default_base, 16, buf));
+  mini_uart_puts("): ");
+  mini_uart_gets(buf);
+  uint64_t base = strlen(buf) == 0 ? default_base : stoui(buf, 16);
+
+  uint32_t size;
+  uint16_t checksum;
+  mini_uart_puts("Please send kernel image from UART now..." EOL);
+load:
+  mini_uart_getn(false, (uint8_t *)&size, sizeof(size));
+  mini_uart_getn(false, (uint8_t *)&checksum, sizeof(checksum));
+
+  uint8_t begin = base, end = begin + size;
+  if ((end >= __text_start && end < __text_end) ||
+      (begin >= __text_start && begin < __text_end) ||
+      (begin <= __text_start && end > __text_end)) {
+    mini_uart_puts("The image will overlap with loader code." EOL);
+    mini_uart_puts("Default load address will be used." EOL);
+    base = default_base;
+  }
+
+  mini_uart_puts("Kernel Image Size: ");
+  mini_uart_puts(uitos(size, buf));
+  mini_uart_puts(", Load Addr: 0x");
+  mini_uart_puts(uitos_generic(base, 16, buf));
+  mini_uart_puts(EOL);
+
+  uint32_t chk = 0;
+  for (uint32_t i = 0; i < size; ++i) {
+    uint8_t byte = mini_uart_getc(false);
+    chk = (chk + byte) % 65536;
+    *((uint8_t *)base + i) = byte;
+  }
+
+  if (chk == checksum) {
+    ((void (*)(void))base)();
+  } else {
+    mini_uart_puts("The image is corrupted, please retry..." EOL);
+    goto load;
+  }
+}
+
+void lshw(void) {
+  char buf[32];
+  mini_uart_puts("Board revision: ");
+  mini_uart_puts("0x");
+  mini_uart_puts(uitos_generic(get_board_revision(), 16, buf));
+  mini_uart_puts(EOL);
+
+  mini_uart_puts("VC core address: ");
+  mini_uart_puts("0x");
+  mini_uart_puts(uitos_generic(get_vc_memory(), 16, buf));
+  mini_uart_puts(EOL);
 }
 
 void timestamp(void) {
@@ -69,29 +169,28 @@ void timestamp(void) {
   mini_uart_puts(uitos(time_int, buf));
   mini_uart_puts(".");
   mini_uart_puts(uitos(time_fra, buf));
-  mini_uart_puts("]" CRLF);
+  mini_uart_puts("]" EOL);
 }
 
 void reboot(void) {
   // full reset
   *PM_RSTC = PM_PASSWORD | 0x20;
-  mini_uart_puts("Reboot..." CRLF);
-  while (1);
+  mini_uart_puts("Reboot..." EOL);
+  while (true);
 }
 
 void shell(void) {
-  mini_uart_puts("               _ _       _          _ _ " CRLF);
-  mini_uart_puts("  ___  ___  __| (_)  ___| |__   ___| | |" CRLF);
-  mini_uart_puts(" / _ \\/ __|/ _` | | / __| '_ \\ / _ \\ | |" CRLF);
-  mini_uart_puts("| (_) \\__ \\ (_| | | \\__ \\ | | |  __/ | |" CRLF);
-  mini_uart_puts(" \\___/|___/\\__,_|_| |___/_| |_|\\___|_|_|" CRLF);
-  mini_uart_puts(CRLF);
+  mini_uart_puts("               _ _       _          _ _ " EOL);
+  mini_uart_puts("  ___  ___  __| (_)  ___| |__   ___| | |" EOL);
+  mini_uart_puts(" / _ \\/ __|/ _` | | / __| '_ \\ / _ \\ | |" EOL);
+  mini_uart_puts("| (_) \\__ \\ (_| | | \\__ \\ | | |  __/ | |" EOL);
+  mini_uart_puts(" \\___/|___/\\__,_|_| |___/_| |_|\\___|_|_|" EOL);
+  mini_uart_puts(EOL);
 
-  while (1) {
+  while (true) {
     mini_uart_puts("# ");
     char buf[MAX_CMD_LEN];
     mini_uart_gets(buf);
-    mini_uart_puts(CRLF);
 
     char *cmd = strtrim(buf);
     if (strlen(cmd) != 0) {
@@ -99,14 +198,27 @@ void shell(void) {
         help();
       } else if (!strcmp(cmd, "hello")) {
         hello();
+      } else if (!strcmp(cmd, "loadimg")) {
+        loadimg();
+      } else if (!strcmp(cmd, "lshw")) {
+        lshw();
       } else if (!strcmp(cmd, "reboot")) {
         reboot();
       } else if (!strcmp(cmd, "timestamp")) {
         timestamp();
+      } else if (!strcmp(cmd, "test")) {
+          char buf[32];
+          while (true) {
+            while ((*AUX_MU_LSR_REG & 1) == 0);
+            uint8_t c = *AUX_MU_IO_REG & 0xff;
+            mini_uart_puts("0x");
+            mini_uart_puts(uitos_generic(c, 16, buf));
+            mini_uart_puts(EOL);
+          }
       } else {
         mini_uart_puts("Error: command ");
         mini_uart_puts(cmd);
-        mini_uart_puts(" not found, try <help>" CRLF);
+        mini_uart_puts(" not found, try <help>" EOL);
       }
     }
   }

@@ -20,7 +20,7 @@ kernel8.img: $(OBJS)
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf $@
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial pty
 
 clean:
 	@rm src/*.o kernel8.*
