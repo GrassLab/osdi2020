@@ -154,35 +154,15 @@ void loadimg(){
     uart_puts("\n");
     char *load_addr = (char *)hexatoi(buf);
 
-    char res[30];
-    itoa(hexatoi(buf), res);
-    uart_puts(res);
-    uart_puts("\n");
-
     uart_puts("Please send image...\n");
 
-    //char *load_addr = (char*)0x90000;
     char *base = load_addr;
 
-    /*char res[30];
-    itoa(size, res);
-    uart_puts(res);
-    uart_puts("\n");
-    int counter = 0;*/
 
     while(size--){
         *load_addr = uart_getbyte();
-        /*if (counter < 21){
-            unsign_itohexa((unsigned int) *load_addr, res);
-            uart_puts(res);
-            uart_puts("\n");
-        }
-        counter++;*/
         load_addr++;
     }
 
-    /*asm volatile(
-            "mov sp, #0x80000;"
-    );*/
     ((void(*)(void))base)();
 }
