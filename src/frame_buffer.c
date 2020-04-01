@@ -1,4 +1,3 @@
-#include "homer.h"
 #include "mbox.h"
 #include "peripherals/mbox.h"
 #include "uart0.h"
@@ -16,15 +15,15 @@ void fb_init() {
     mbox[2] = MBOX_TAG_SET_PHY_WIDTH_HEIGHT;
     mbox[3] = 8;
     mbox[4] = MBOX_CODE_TAG_REQ;
-    mbox[5] = 1024;  // width in pixels
-    mbox[6] = 768;   // height in pixels
+    mbox[5] = 960;  // width in pixels
+    mbox[6] = 720;  // height in pixels
 
     // set virtual width / height
     mbox[7] = MBOX_TAG_SET_VTL_WIDTH_HEIGHT;
     mbox[8] = 8;
     mbox[9] = MBOX_CODE_TAG_REQ;
-    mbox[10] = 1024;  // width in pixels
-    mbox[11] = 768;   // height in pixels
+    mbox[10] = 920;  // width in pixels
+    mbox[11] = 720;  // height in pixels
 
     // set virtual offset
     mbox[12] = MBOX_TAG_SET_VTL_OFFSET;
@@ -78,17 +77,21 @@ void fb_init() {
 void fb_splash() {
     int x, y;
     unsigned char *ptr = fb;
-    char *data = homer_data, pixel[4];
+    unsigned int white = 255 << 16 | 255 << 8 | 255;  // A B G R
+    unsigned int black = 0;
+    unsigned int current, start = black, spacing = 40;
 
-    ptr += (height - homer_height) / 2 * pitch + (width - homer_width) * 2;
-    for (y = 0; y < homer_height; y++) {
-        for (x = 0; x < homer_width; x++) {
-            HEADER_PIXEL(data, pixel);
-            // the image is in RGB. So if we have an RGB framebuffer, we can copy the pixels
-            // directly, but for BGR we must swap R (pixel[0]) and B (pixel[2]) channels.
-            *((unsigned int *)ptr) = isrgb ? *((unsigned int *)&pixel) : (unsigned int)(pixel[0] << 16 | pixel[1] << 8 | pixel[2]);
+    for (y = 0; y < height; y++) {
+        if (y % spacing == 0 && y != 0) {
+            start = (start == white) ? black : white;
+        }
+        current = start;
+        for (x = 0; x < width; x++) {
+            if (x % spacing == 0 && x != 0) {
+                current = (current == white) ? black : white;
+            }
+            *((unsigned int *)ptr) = current;
             ptr += 4;
         }
-        ptr += pitch - homer_width * 4;
     }
 }
