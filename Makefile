@@ -34,7 +34,10 @@ clean:
 	$(RM) -r $(OBJ_DIR) $(OUT_DIR)
 
 run: $(TARGET)
-	$(QEMU) -M raspi3 -kernel $< -serial null -serial mon:stdio -nographic
+	$(QEMU) -M raspi3 -kernel $< -serial mon:stdio -nographic 
+
+guirun: $(TARGET)
+	$(QEMU) -M raspi3 -kernel $< -serial mon:stdio
 
 asmrun: $(TARGET)
 	$(QEMU) -M raspi3 -kernel $< -display none -d in_asm

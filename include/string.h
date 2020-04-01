@@ -11,4 +11,6 @@ void itoa(int n, char *s);
 
 void ftoa(float f, char *s);
 
+void memcpy(void *dest, void *src, size_t n);
+
 #endif
