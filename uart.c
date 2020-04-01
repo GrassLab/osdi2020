@@ -103,7 +103,7 @@ void uart0_init()
 	mbox[6] = 4000000;     // 4Mhz
 	mbox[7] = 0;           // clear turbo
 	mbox[8] = MBOX_TAG_LAST;
-	//mbox_call(MBOX_CH_PROP);
+	mbox_call(MBOX_CH_PROP);
 
 	/* map UART0 to GPIO pins */
 	r=*GPFSEL1;
@@ -176,4 +176,19 @@ void uart_puts(char *s) {
 
 int mode() {
 	return uart_mode;
+}
+
+/**
+ * binary value to hex
+ */
+void uart_hex(unsigned int d) {
+    unsigned int n;
+    int c;
+    for(c=28;c>=0;c-=4) {
+        // get highest tetrad
+        n=(d>>c)&0xF;
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n+=n>9?0x37:0x30;
+        uart_send(n);
+    }
 }

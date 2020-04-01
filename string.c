@@ -29,7 +29,13 @@ char* itoa(unsigned int val, char* str) {
 		str[i++] = val % 10 + '0';
 		val /= 10;
 	}
-	str[i] = '\0';
+	if(i == 0) {
+		str[0] = '0';
+		str[1] = 0;
+	}
+	else
+		str[i] = '\0';
+
 	return revstr(str, 0, i-1);
 }
 
@@ -48,7 +54,13 @@ char* ftoa(unsigned int frac, unsigned int deno, char* str) {
 			frac *= 10;
 		}
 	}
-	str[i] = '\0';
+	if(i == 0) {
+		str[0] = '0';
+		str[1] = 0;
+	}
+	else
+		str[i] = '\0';
+
 	return str;
 }
 

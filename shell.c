@@ -141,14 +141,48 @@ void cmd_load() {
 }
 
 void cmd_hardwareInfo() {
-	int serial;
-	int revision;
-	int vcBase;
-	int vcSize;
-	uart_puts("Serial number: ");
-	uart_puts("Board revision: ");
-	uart_puts("VC memory base address: ");
-	uart_puts("VC memory size: ");
+
+    mbox[0] = 17 * 4;               // length of the message
+    mbox[1] = MBOX_REQUEST;         // this is a request message
+    
+	mbox[2] = MBOX_TAG_GETREVISION; // get board revision command
+    mbox[3] = 4;                    // buffer size
+    mbox[4] = 0;                    // request code
+    mbox[5] = 0;                    // clear output buffer
+    
+	mbox[6] = MBOX_TAG_GETSERIAL;
+	mbox[7] = 8;
+	mbox[8] = 0;
+	mbox[9] = 0;
+	mbox[10] = 0;
+
+	mbox[11] = MBOX_TAG_GETVCMEM;
+	mbox[12] = 8;
+	mbox[13] = 0;
+	mbox[14] = 0;
+	mbox[15] = 0;
+	
+	mbox[16] = MBOX_TAG_LAST;
+	mbox_call(MBOX_CH_PROP);
+
+	uart_puts("Board revision: 0x");
+	uart_hex(mbox[5]);
+	uart_puts("\nSerial number: 0x");
+	uart_hex(mbox[10]);
+	uart_hex(mbox[9]);
+	uart_puts("\nVC memory base address: 0x");
+	uart_hex(mbox[15]);
+	uart_puts("\nVC memory size: 0x");
+	uart_hex(mbox[14]);
+	uart_puts("\n");
+
+//	for(int i=0; i<17; i++) {
+//		uart_puts("mbox[");
+//		uart_puts(itoa(i, tmp));
+//		uart_puts("]: ");
+//		uart_puts(itoa(mbox[i], tmp));
+//		uart_puts("\n");
+//	}
 }
 
 void cmd_err(char* buf) {
