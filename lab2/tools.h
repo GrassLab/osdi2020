@@ -12,6 +12,7 @@ int get_cpu_time();
 int get_cpu_clock();
 void get_timestamp();
 void load_image();
+void get_number();
 char * int2char(int input);
 void copy_and_jump_to_kernel(char *new_address, int kernel_size); 
 void copy_kernel_and_load_images(char *new_address, int kernel_size);

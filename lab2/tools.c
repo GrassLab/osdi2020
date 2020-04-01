@@ -85,6 +85,7 @@ int cmd_box(char * command){
     if(my_strcmp(command, "reset")==1)return 3;
     if(my_strcmp(command, "timestamp")==1)return 4;
     if(my_strcmp(command, "loadimage")==1)return 5;
+    if(my_strcmp(command, "getnum")==1)return 6;
     return -1;
 }
 void process_cmd(char * command){
@@ -109,6 +110,10 @@ void process_cmd(char * command){
         case 5:
             uart_puts("Load Image!\n");
             load_image();
+            break;
+        case 6:
+            uart_puts("Get number!\n");
+            get_number();
             break;
         default:
             uart_puts(command);
@@ -199,6 +204,11 @@ extern void branch_to_address( void * );
 #define  TMP_KERNEL_ADDR  0x00100000
 #define INPUT_BUFFER_SIZE 256
 char cmd[INPUT_BUFFER_SIZE];
+void get_number(){
+    uart_gets(cmd, INPUT_BUFFER_SIZE);
+    int image_size = atoi(cmd);
+    uart_send_int(image_size);
+}
 void load_image(){
     
     uart_gets(cmd, INPUT_BUFFER_SIZE);
@@ -218,7 +228,7 @@ void load_image(){
 }
 void copy_and_jump_to_kernel(char *new_address, int kernel_size) {
     char *kernel = new_address;
-
+    uart_puts("Find New func address! \n");
     uart_puts("Kernel_size: ");
     uart_send_int(kernel_size);
 
@@ -246,6 +256,7 @@ void copy_kernel_and_load_images(char *new_address, int kernel_size) {
     uart_puts("end of copy kernel\n");
     void (*func_ptr)(char *, int) = copy_and_jump_to_kernel;
     unsigned long int original_function_address = (unsigned long int)func_ptr;
-    void (*call_function)(char *, int) = (void (*)(char *, int))(original_function_address - (unsigned long int)__kernel_start + TMP_KERNEL_ADDR);
+    // void (*call_function)(char *, int) = (void (*)(char *, int))(original_function_address - (unsigned long int)__kernel_start + TMP_KERNEL_ADDR);
+    void (*call_function)(char *, int) = (void (*)(char *, int))(original_function_address - (unsigned long int)__kernel_start + (unsigned long int)TMP_KERNEL_ADDR);
     call_function(new_address, kernel_size);
 }

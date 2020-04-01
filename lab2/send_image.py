@@ -7,7 +7,7 @@ from array import array
 
 
 PORT = '/dev/ttyUSB0'
-# PORT = '/dev/pts/4'
+# PORT = '/dev/pts/3'
 
 BAUD_RATES = 115200
 
@@ -17,10 +17,11 @@ ser.flush()
 ser.flushInput()
 ser.flushOutput()
 
-kernel_path = './kernel/kernel81.img'
+kernel_path = './kernel/kernel82.img'
 kernel_size = os.path.getsize(kernel_path)
 # 0x80000 = 524288
 content = ["hello\n", "loadimage\n", str(kernel_size)+"\n", "524288\n"]
+
 try:
     for line in content:
         delay_time = 1.

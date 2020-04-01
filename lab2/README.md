@@ -51,7 +51,8 @@ Stage 2 boot loader 也稱為 kernel boot loader，它最主要的任務就是�
 8. 接下來就是Kernel的工作了, 也就是Raspbian開始在Raspberry Pi上運行了. -->
 
 ### Load by UART
-- [ ] [required] Implement bootloader can load kernel image by UART.
+- [x] [required] Implement bootloader can load kernel image by UART.   
+Ok in qemu, but fail in raspi3   
 - [x] [question] Calculate how long will it take for loading a 10MB kernel image by UART if baud rate is 115200.   
 A: 7281.77s   
 baud rate 115200 = 115200 bit/s = 14400 byte/s   
@@ -59,4 +60,5 @@ baud rate 115200 = 115200 bit/s = 14400 byte/s
 10 MB / 1440 byte = 10 * 1024 * 1024 / 1440 = 7281.777  
 
 ### Load to certain address
-- [ ] [elective] User can specify the kernel image’s loading address.
+- [x] [elective] User can specify the kernel image’s loading address.
+Only work on 0x80000   
