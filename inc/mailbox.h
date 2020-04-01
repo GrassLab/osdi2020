@@ -42,10 +42,32 @@ extern volatile unsigned int mbox[36];
 #define MBOX_TAG_GET_BSERI       0x00010004 // Get board serial
 #define MBOX_TAG_GET_ARMADDR     0x00010005 // Get ARM memory
 #define MBOX_TAG_GET_VCADDR      0x00010006 // Get VC memory
+
 #define MBOX_TAG_GET_CLK_STATE   0x00038001 // Get clock state
 #define MBOX_TAG_SET_CLK_STATE   0x00038001 // Set clock state
 #define MBOX_TAG_GET_CLK_RATE    0x00038002 // Get clock rate
 #define MBOX_TAG_SET_CLK_RATE    0x00038002 // Set clock rate
+
+#define MBOX_TAG_ALLOCATE_BUFF   0x00040001 // Allocate buffer
+#define MBOX_TAG_RELEASE_BUFF    0x00048001 // Release buffer
+#define MBOX_TAG_BLANK_SCREEN    0x00040002 // Blank screen
+#define MBOX_TAG_GET_PHY_DISP    0x00040003 // Get physical (display) width/height
+#define MBOX_TAG_TEST_PHY_DISP   0x00044003 // Test physical (display) width/height
+#define MBOX_TAG_SET_PHY_DISP    0x00048003 // Set physical (display) width/height
+#define MBOX_TAG_GET_VBUFF       0x00040004 // Get virtual (buffer) width/height
+#define MBOX_TAG_TEST_VBUFF      0x00044004 // Test virtual (buffer) width/height
+#define MBOX_TAG_SET_VBUFF       0x00048004 // Set virtual (buffer) width/height
+#define MBOX_TAG_GET_DEPTH       0x00040005 // Get depth
+#define MBOX_TAG_TEST_DEPTH      0x00044005 // Test depth
+#define MBOX_TAG_SET_DEPTH       0x00048005 // Get depth
+#define MBOX_TAG_GET_PIXEL_ORD   0x00040006 // Get pixel order
+#define MBOX_TAG_TEST_PIXEL_ORD  0x00044006 // Test pixel order
+#define MBOX_TAG_SET_PIXEL_ORD   0x00048006 // Set pixel order
+#define MBOX_TAG_GET_ALPHA_MOD   0x00040007 // Get alpha mode
+#define MBOX_TAG_SET_ALPHA_MOD   0x00048007 // Set alpha mode
+#define MBOX_TAG_GET_PITCH       0x00040008 // Get pitch
+#define MBOX_TAG_GET_VOFFSET     0x00040009 // Get virtual offset
+#define MBOX_TAG_SET_VOFFSET     0x00048009 // Set virtual offset
 
 /*
  * Unique clock IDs:

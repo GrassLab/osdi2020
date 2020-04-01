@@ -1,4 +1,4 @@
-#include "lfb.h"
+#include "frame_buffer.h"
 #include "mailbox.h"
 #include "simple_shell.h"
 #include "uart.h"
@@ -9,10 +9,10 @@ int main()
     uart_init();    
     get_board_info();
 
-    lfb_init();
+    fbuff_init();
     // // display a pixmap
-    lfb_showpicture();
-    
+    fbuff_showBitmap();
+
     run_shell();
     return -1;
 }
