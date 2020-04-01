@@ -32,7 +32,7 @@ clean:
 	rm kernel8.img kernel8.elf *.o $(DIR)/*.o >/dev/null 2>/dev/null || true
 
 debug: kernel8
-	$(QEMU) -M raspi3 -kernel kernel8.img -serial null -serial stdio -S -s
+	$(QEMU) -M raspi3 -kernel kernel8.img -serial stdio -S -s
 
 run:
-	$(QEMU) -M raspi3 -kernel kernel8.img -serial null -serial stdio
+	$(QEMU) -M raspi3 -kernel kernel8.img -serial stdio

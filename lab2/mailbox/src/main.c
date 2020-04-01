@@ -1,6 +1,7 @@
 #include "gpio.h"
 #include "uart.h"
 #include "printf.h"
+#include "mailbox.h"
 #define S_MAX 100
 
 void read_string(char *buf){
@@ -60,9 +61,7 @@ void timestamp(){
 #define PM_WDOG_MAGIC   0x5a000000
 #define PM_RSTC_FULLRST 0x00000020
 
-/**
- * Reboot
- */
+// reboot
 void reset()
 {
     unsigned int r;
@@ -76,7 +75,7 @@ void reset()
 void main(){
     // set up serial console
     uart_init();
-    
+
     // say hello
     uart_puts("Hello World!\n");
     
@@ -100,13 +99,14 @@ void main(){
             printf("%s%s%s%s",
                 "hello: print Hello World!\n",
                 "help: help\n",
+                "loadimg: load kernel img info by mailbox\n",
                 "reboot: reboot rpi3\n",
                 "timestamp: get current timestamp\n");
+        }else if(strcmp(str,"loadimg")==0){
+            get_VC_memory();
+            get_board_revision();
         }else{
             printf("Err: command %s not found, try <help>\n", str);
         }
-        // printf("\n");
-        // uart_puts(uart_getc());
     }
-
 }
