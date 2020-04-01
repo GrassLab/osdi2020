@@ -75,7 +75,6 @@ char uart_getc();
  */
 int uart_getint();
 
-
 /**
  * Display a string
  */

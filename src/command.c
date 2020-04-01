@@ -22,7 +22,6 @@ void command_help ()
     uart_puts("\tvc_base_addr:\tprint the VC core base address\n");
     uart_puts("\tboard_revision:\tprint the board revision.\n");
     uart_puts("\treboot:\t\treboot the raspi3.\n");
-    uart_puts("\tloadimg:\tload kernel image from uart.\n");
     uart_puts("\n");
 }
 
@@ -112,7 +111,6 @@ void command_load_image ()
     char output_buffer[20];
     char *load_address;
     char *address_counter;
-    
 
     uart_puts("Start Loading Kernel Image...\n");
     uart_puts("Please input kernel load address in decimal.(defualt: 0x80000): ");
