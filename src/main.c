@@ -7,9 +7,8 @@
 int main()
 {
     uart_init();    
-    get_board_info();
-
     fbuff_init();
+    get_board_info();
     // // display a pixmap
     fbuff_showBitmap();
 
