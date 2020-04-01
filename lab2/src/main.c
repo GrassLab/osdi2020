@@ -5,6 +5,7 @@
 #include "gpio.h"
 #include "load_kernel.h"
 #include "utils.h"
+#include "lfb.h"
 
 // linker variable
 extern unsigned char __kernel_begin;
@@ -13,8 +14,13 @@ extern unsigned char __bss_end;
 extern unsigned char __bss_size;
 //extern volatile unsigned char __bss_size[];
 
+// framebuffer extern settings
+extern unsigned int width, height, pitch, isrgb;
+extern unsigned char *lfb;
+
+
+// functions
 void output_garbage(unsigned long long int new_kernel_address, unsigned long long int new_kernel_size);
-void copy_current_kernel_and_jump(char *new_address, unsigned long long int new_size);
 void copyOldKernel2TempSpace(unsigned long long int new_kernel_address, unsigned long long int new_kernel_size);
 
 
@@ -176,19 +182,21 @@ void main()
 			continue;
 		}else if(!strcmp(buffer, "framebuffer")) {
 			uart_puts("\rShow framebuffer\n");
+			lfb_init();
+			lfb_showpicture();
 			command_not_found = 0;
 		}else if(!strcmp(buffer, "\nframebuffer")) {
 			uart_puts("\rShow framebuffer\n");
+			lfb_init();
+			lfb_showpicture();
 			command_not_found = 0;
 		}else if(!strcmp(buffer, "loadimg")) {
-			
 			// input the address where the new kernel loaded at(in hex format, e.g. 0x12345678)
 			new_kernel_address =  read_new_kernel_address();
 			// input the size of the new kernel
 			new_kernel_size = read_new_kernel_size();
 			// copy the old kernel to temporary space	
 			copyOldKernel2TempSpace(new_kernel_address, new_kernel_size);
-
 			command_not_found = 0;
 		}
 		if(command_not_found == 1 && sizeof_current_line>0) {
