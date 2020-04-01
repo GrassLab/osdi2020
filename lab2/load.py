@@ -6,8 +6,8 @@ from array import array
 
 
 
-PORT = '/dev/ttyUSB0'
-
+#PORT = '/dev/ttyUSB0'
+PORT = '/dev/pts/5'
 BAUD_RATES = 115200
 
 ser = serial.Serial(PORT, BAUD_RATES)
@@ -37,6 +37,7 @@ try:
             data_raw = ser.read(count)
             print(data_raw.decode())
             ser.flushInput()
+        input('aaa')
         time.sleep(delay_time)
 
     time.sleep(3)
@@ -56,9 +57,36 @@ try:
             index += 1
             ser.write(byte)
             byte = f.read(1)
-
             time.sleep(0.01)
+    count = ser.in_waiting
+    if count != 0:
+        data_raw = ser.read(count)
+        print(data_raw.decode())
+        ser.flushInput()
+    input('aaa')
+    time.sleep(delay_time)
     print("sendend")
+    input('aaa')
+    content = ["help\n"]
+    
+    for line in content:
+        delay_time = 1.
+        ser.flush()
+        ser.flushInput()
+        ser.flushOutput()
+
+        print(line)
+        ser.write(line.encode())
+
+        time.sleep(delay_time)
+
+        count = ser.in_waiting
+        if count != 0:
+            data_raw = ser.read(count)
+            print(data_raw.decode())
+            ser.flushInput()
+        time.sleep(delay_time)
+
 
 finally:
     ser.close()

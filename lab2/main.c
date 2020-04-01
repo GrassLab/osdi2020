@@ -8,7 +8,6 @@
 #define PM_WDOG ((volatile unsigned int *)(MMIO_BASE + 0x00100024))
 #define PM_WDOG_MAGIC 0x5a000000
 #define PM_RSTC_FULLRST 0x00000020
-typedef void (*fun)(void);
 
 extern char __bss_start[];
 extern char __bss_end[];
@@ -70,7 +69,6 @@ void clearbuf(char *buf, int size) {
   }
 }
 
-void img_jmp() {}
 void loadimg() {
   unsigned long k_addr = 0; // 64bit
   void *load_address;
@@ -195,12 +193,12 @@ void compair(char *buf) {
 
 void main() {
   uart_init();
-  // wait_cycles(10000);
-  // lfb_init();
-  // wait_cycles(10000);
-  // // display a pixmap
-  // lfb_showpicture();
-  // wait_cycles(10000);
+  wait_cycles(10000);
+  lfb_init();
+  wait_cycles(10000);
+  // display a pixmap
+  lfb_showpicture();
+  wait_cycles(10000);
 
   uart_puts(welcome);
   uart_puts("# ");
