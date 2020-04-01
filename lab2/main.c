@@ -133,6 +133,17 @@ void loadimg() {
       ((k_addr + size) >= (unsigned long)__bss_start &&
        (k_addr + size) <= (unsigned long)__bss_end)) {
     uart_puts("in bss\n");
+    load_address = TMP_KERNEL_ADDR;
+    volatile char *add = load_address;
+    for (int i = 0; i < size; i++) {
+      // read img
+      *add = uart_getc();
+      add++;
+    }
+    // jmp to img
+    uart_puts("jmp\n");
+    asm volatile("mov sp, %0" ::"r"(load_address));
+    ((void (*)(void))(load_address))();
   } else {
     // cant modify
     uart_puts("not in bss, give me img\n");
