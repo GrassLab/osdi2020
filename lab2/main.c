@@ -63,63 +63,17 @@ void queryUART(){
     return;
 }
 
-
-void loadimg(){
-    int size=0;
-    char *kernel=(char*)0x80000;
-
-again:
-    uart_send('\r');
-    uart_send('\n');
-    // notify raspbootcom to send the kernel
-    uart_send(3);
-    uart_send(3);
-    uart_send(3);
-
-    // read the kernel's size
-    size=uart_getc();
-    size|=uart_getc()<<8;
-    size|=uart_getc()<<16;
-    size|=uart_getc()<<24;
-
-    // send negative or positive acknowledge
-    if(size<64 || size>1024*1024) {
-        // size error
-        uart_send('S');
-        uart_send('E');
-        goto again;
-    }
-    uart_send('O');
-    uart_send('K');
-
-    // read the kernel
-    while(size--) *kernel++ = uart_getc();
-
-    // restore arguments and jump to the new kernel.
-    asm volatile (
-        "mov x0, x10;"
-        "mov x1, x11;"
-        "mov x2, x12;"
-        "mov x3, x13;"
-        // we must force an absolute address to branch to
-        "mov x30, 0x80000; ret"
-    );
-
-}
-
 void cmd_process(){
     uart_puts("\r");
 
-    if(strcmp(cmd, "loadimg")){
-        loadimg();
-    }else if(strcmp(cmd, "uartstate")){
+    if(strcmp(cmd, "uartstate")){
         queryUART();
     }else if(strcmp(cmd, "uart1")){
         PL011_uart_init();
         uart_puts("\n");
     }else if(strcmp(cmd, "help")){
         uart_puts("command: \"help\" Description: \"print all available commands\"  \n");
-        uart_puts("command: \"loadimg\" Description: \"loading image by UART\"  \n");
+        uart_puts("command: \"uart1\" Description: \"change uart0 to uart1\"  \n");
     }
     else if(strlen(cmd) != 0){
         uart_puts("command \"");
