@@ -57,7 +57,7 @@ void put_shell() {
   str[p] = '\0';
   uart_puts("\n");
   if (strcmp(str, help) == 0)
-    uart_puts("help : print all available commands\nhello : print Hello World!\nreboot : reboot rpi3\ntimestamp : print current timestamp\n");
+    uart_puts("help : print all available commands\nhello : print Hello World!\nreboot : reboot rpi3\ntimestamp : print current timestamp\nloadimg : load custom image\n");
   else if (strcmp(str, hello) == 0)
     uart_puts("Hello World!\n");
   else if (strcmp(str, time) == 0) {
