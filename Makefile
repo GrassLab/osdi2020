@@ -40,3 +40,5 @@ run:
 	$(QEMU) -M raspi3 -kernel $(IMG) -serial stdio
 tty:
 	$(QEMU) -M raspi3 -kernel $(IMG) -display none -serial "pty"
+debug:
+	$(QEMU) -M raspi3 -kernel $(IMG) -display none -serial "pty" -S -s
