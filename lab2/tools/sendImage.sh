@@ -46,7 +46,9 @@ upload $kernel w/t size $kernel_size bytes @ address $(printf '0x%x\n' $loc)
 send to device: $dev"
 
 echo -ne "$loc\r" > $dev
+sleep 0.1
 echo -ne "$kernel_size\r" > $dev
+sleep 0.1
 echo -ne "1\r" > $dev
 sleep 0.1
 dd status=progress if=$kernel of=$dev # start loading kernel
