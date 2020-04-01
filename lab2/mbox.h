@@ -43,6 +43,7 @@ extern volatile unsigned int mbox[36];
 #define MBOX_TAG_GETBOARD       0x10001
 #define MBOX_TAG_GETREV         0x10002
 #define MBOX_TAG_GETSERIAL      0x10004
+#define MBOX_TAG_GETARMMEM      0x10005
 #define MBOX_TAG_GETVCMEM       0x10006
 #define MBOX_TAG_SETCLKRATE     0x38002
 #define MBOX_TAG_GETCLKRATE     0x30002

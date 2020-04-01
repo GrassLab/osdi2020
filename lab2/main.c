@@ -151,11 +151,10 @@ void get_vc_memory() {
   mbox[1] = MBOX_REQUEST;
 
   /* ====== /Tags begin ====== */
-  mbox[2] = MBOX_TAG_GETVCMEM; /* get serial number command */
+  mbox[2] = MBOX_TAG_GETVCMEM;
   mbox[3] = 8;                 /* buffer size */
   mbox[4] = 0;
-  /* 5-6 is reserve for output buffer (because the serial number 8 bytes is
-   * required) */
+  /* 5-6 is reserve for output buffer */
   mbox[5] = 0; /* base address */
   mbox[6] = 0; /* size in bytes */
   /* the tag last for notify the mailbox */
@@ -167,6 +166,32 @@ void get_vc_memory() {
     uart_println("VC core base addr: 0x%x size 0x%x", mbox[5], mbox[6]);
   } else {
     uart_println("Unable to qery vc memory!");
+  }
+}
+
+void get_arm_memory() {
+  /* buffer size in bytes (length of message) */
+  mbox[0] = 8 * sizeof(unsigned int);
+
+  /* Request message */
+  mbox[1] = MBOX_REQUEST;
+
+  /* ====== /Tags begin ====== */
+  mbox[2] = MBOX_TAG_GETARMMEM;
+  mbox[3] = 8;                 /* buffer size */
+  mbox[4] = 0;
+  /* 5-6 is reserve for output buffer */
+  mbox[5] = 0; /* base address */
+  mbox[6] = 0; /* size in bytes */
+  /* the tag last for notify the mailbox */
+  mbox[7] = MBOX_TAG_LAST;
+  /* ====== Tags end/ ======== */
+
+  /* send the message to the GPU and receive answer */
+  if (mbox_call(MBOX_CH_PROP)) {
+    uart_println("ARM base addr: 0x%x size 0x%x", mbox[5], mbox[6]);
+  } else {
+    uart_println("Unable to qery ARM memory!");
   }
 }
 
@@ -204,6 +229,7 @@ int main() {
   lfb_init();
 
   get_board_revision();
+  get_arm_memory();
   get_vc_memory();
 
   // display a pixmap
