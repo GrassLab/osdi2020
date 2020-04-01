@@ -190,13 +190,13 @@ int main() {
         "██║██████╔╝███████╗██║  ██║\r\n"
         "╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ "
         "╚══════╝╚═╝  ╚═╝\r\n");
-    /* long boot_start = (long)&_boot_start; */
-    /* long boot_end = (long)&_end; */
-    /* char *base = (char *)0xB000000; */
-    /* for (int i = 0; i < boot_end - boot_start; i++) { */
-    /* *(base + i) = *(char *)(boot_start + i); */
-    /* } */
+    long boot_start = (long)&_boot_start;
+    long boot_end = (long)&_end;
+    char *base = (char *)0xB000000;
+    for (int i = 0; i < boot_end - boot_start; i++) {
+        *(base + i) = *(char *)(boot_start + i);
+    }
 
-    /* ((void (*)())((long)*run + base - boot_start))(); */
-    run();
+    ((void (*)())((long)*run + base - boot_start))();
+    /* run(); */
 }
