@@ -1,30 +1,30 @@
-TOOLCHAIN_PREFIX = aarch64-linux-gnu-
-CC = $(TOOLCHAIN_PREFIX)gcc
-LD = $(TOOLCHAIN_PREFIX)ld
-OBJCP= $(TOOLCHAIN_PREFIX)objcopy
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
-CFLAGS = -Wall -g -nostdlib -nostartfiles
+TOOLCHAIN_PREFIX = aarch64-linux-gnu
+CFLAGS = -Wall -g -nostdlib -nostartfiles -ffreestanding -Iinc
+
+S_SRCS = $(wildcard src/*.S)
+C_SRCS = $(wildcard src/*.c)
+S_OBJS = $(S_SRCS:src/%.S=build/%_s.o)
+C_OBJS = $(C_SRCS:src/%.c=build/%_c.o)
 
 .PHONY: all clean run debug
 
-all: clean kernel8.img
+all:clean kernel8.img
 
-start.o: start.S
-	$(CC) $(CFLAGS) -c start.S -o start.o
+build/%_s.o: src/%.S
+	$(TOOLCHAIN_PREFIX)-gcc $(CFLAGS) -c $< -o $@
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+build/%_c.o: src/%.c
+	$(TOOLCHAIN_PREFIX)-gcc $(CFLAGS) -c $< -o $@
 
-kernel8.img: start.o $(OBJS)
-	$(LD) start.o $(OBJS) -T link.ld -o kernel8.elf
-	$(OBJCP) -O binary kernel8.elf kernel8.img
+kernel8.img: $(S_OBJS) $(C_OBJS)
+	$(TOOLCHAIN_PREFIX)-ld -T link.ld -o kernel8.elf $(S_OBJS) $(C_OBJS)
+	$(TOOLCHAIN_PREFIX)-objcopy -O binary kernel8.elf kernel8.img
 
 clean:
-	rm kernel8.img kernel8.elf *.o >/dev/null 2>/dev/null || true
+	rm kernel8.elf build/* >/dev/null 2>/dev/null || true
 
 run:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial stdio 
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display gtk -serial stdio
 
 debug:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -s -S -serial null -serial stdio 
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -s -S
