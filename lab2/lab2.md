@@ -260,3 +260,72 @@ _start:
 + 這裏 code和lab1一樣，差別在於，中間加入一段relocate的code
 + 由於預設載入就是在0x80000所以我們這裏就把code移動到0x80000之前（_start在linker.ld裡面寫的位置）
 + 所以這裡我們把code移動到0x80000之前也就是我們的原本stack段，如此我們就可以將要load的kernal載入到0x80000的位置也不會碰到我們的loader code
+
+```c=
+SECTIONS
+{
+    . = 0x80000 - 2048;
+    PROVIDE(_code = .);
+    .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
+    .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
+    PROVIDE(_data = .);
+    .data : { *(.data .data.* .gnu.linkonce.d*) }
+    .bss (NOLOAD) : {
+        . = ALIGN(16);
+        __bss_start = .;
+        *(.bss .bss.*)
+        *(COMMON)
+        __bss_end = .;
+    }
+    _end = .;
+
+   /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
+}
+__bss_size = (__bss_end - __bss_start)>>3;
+__loader_size = (_end - _code)>>3;
+```
++ linker.ld裡面 就是定義上面所寫的一些參數，其中有計算loader size去幫助我們移動到我們想放的loader位置。這裡的起始位置也要先扣掉才會放對。
+
++ main.c裡面我加入一開始要讀取address的4 bytes再來才是size，這裡的address就是之後要存的位置。(注意不能蓋掉..)
+```c=
+unsigned long addr=0;
+
+addr=uart_getc();
+addr|=uart_getc()<<8;
+addr|=uart_getc()<<16;
+addr|=uart_getc()<<24;
+
+kernel=(char*)addr;
+
+asm volatile (
+        "mov x0, x10;"
+        "mov x1, x11;"
+        "mov x2, x12;"
+        "mov x3, x13;"
+        // we must force an absolute address to branch to
+        "mov x30, %0; ret"
+    ::"r"(addr):);
+
+```
+
+## question
+
++ Calculate how long will it take for loading a 10MB kernel image by UART if baud rate is 115200.
+    + 115200 bit /sec = 14400 byte / sec
+    + 10MB = 10000000 / 14400 = 694
+    + 2\*\*20\*10 / 14400 = 728 (2進位算法)
+
++ In x86 machine, how the above 4 steps are implemented? Roughly describe it.
+    1. CPU先執行0xFFFF0的進入點，那是一個jump會跳到真正的bios code
+    2. BIOS第一件事情會先Power-On self test，這裡就是會用beep聲檢查結果
+    3. 啟動顯示卡，掃描記憶體 0xC000:0000 ~ 0xC780:0000，也就是顯示卡 BIOS 位址
+    4. 總檢查
+        Video Test: 初始化顯示卡插槽並測試顯示卡和顯示記憶體。
+        BIOS Identification: 顯示 BIOS 版本、製造商及日期。
+        Memory Test: 測試並顯示安裝的主記憶體總容量數。
+    以上是冷開機 (cold-start) 的檢查流程，若是暖開機 (warm-start) 則省略 Memory Test。這時畫面就豐富多了。
+    5. booting，照順序搜尋所有開機磁碟的裝置，他會找cylinder 0, head 0, sector 1(MBR)的資料，然後把這個512bytes的資料載入到記憶體0x0000:7C00然後跳過去(對MBR來說還會再檢查最後的2 bytes是不是0x55AA)。
+
+![](https://i.imgur.com/ZPflr5J.png)
+
+![](https://i.imgur.com/ngzfEGt.png)

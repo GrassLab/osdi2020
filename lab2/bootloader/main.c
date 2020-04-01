@@ -27,9 +27,12 @@
 
 void main()
 {
-    int size=0;
-    int addr=0;
+    unsigned long size=0;
+    unsigned long addr=0;
     char *kernel=(char*)0x60000;
+    //extern void *_code;
+    //extern void *_end;
+
 
     // set up serial console
     uart_init();
@@ -53,15 +56,37 @@ again:
     addr|=uart_getc()<<8;
     addr|=uart_getc()<<16;
     addr|=uart_getc()<<24;
-    kernel=(char*)addr;
-    // read the kernel's size
+    
+    // read the kernel's size b *0x7fadc
     size=uart_getc();
     size|=uart_getc()<<8;
     size|=uart_getc()<<16;
     size|=uart_getc()<<24;
 
+    //unsigned long end_addr = addr + size;
+
+    /*if((end_addr <= (unsigned long)&_end) && (end_addr >= (unsigned long)&_code))
+    {
+        addr -= ((end_addr - (unsigned long)&_code)-1);
+    }*/
+    /*if((addr <= (unsigned long)&_end) && (addr >= (unsigned long)&_code))
+    {
+        addr += ((unsigned long)&_end - addr + 1);
+    }*/
+    /*
+    if((addr <= (unsigned long)&_code) && (end_addr >= (unsigned long)&_end))
+    {
+        addr -= size;
+    }
+    if((end_addr <= (unsigned long)&_end) && (addr >= (unsigned long)&_code))
+    {
+        addr -= ((addr - (unsigned long)&_code) + size + 1);
+    }*/
+
+    kernel=(char*)addr;
+
     // send negative or positive acknowledge
-    if(size<64 || size>1024*1024) {
+    if(size<64) {
         // size error
         uart_send('S');
         uart_send('E');
