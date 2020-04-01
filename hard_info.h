@@ -1,0 +1,1 @@
+void hard_info();
