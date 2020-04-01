@@ -2,6 +2,7 @@
 #include "my_string.h"
 #include "uart0.h"
 #include "utli.h"
+#include "frame_buffer.h"
 
 enum ANSI_ESC {
     Unknown,
@@ -38,6 +39,8 @@ enum ANSI_ESC decode_ansi_escape() {
 void shell_init() {
     uart_init();
     uart_flush();
+    fb_init();
+    fb_showpicture();
     uart_printf("\n\nHello From RPI3\n");
     mbox_board_revision();
     mbox_vc_memory();

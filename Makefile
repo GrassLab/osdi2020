@@ -56,10 +56,10 @@ bootloader.img: $(BL_OBJS) $(BL_ENTRY_OBJS)
 # run emulator
 
 kernel: $(OUT_DIR) kernel8.img
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 
 bootloader: $(BL_OUT_DIR) bootloader.img
-	qemu-system-aarch64 -M raspi3 -kernel bootloader.img -display none -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel bootloader.img -serial pty
 
 asm:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
