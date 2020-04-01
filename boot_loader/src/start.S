@@ -1,16 +1,8 @@
-.section ".text.boot"
+.section ".text"
 
 .global _start
 
 _start:
-    // save arguments in registers (we will need them later for the new kernel)
-    // I choosed x10-x13 because instructions generated from C by gcc does not
-    // touch them. You can check that with "aarch64-elf-objdump -d kernel8.elf"
-    mov     x10, x0
-    mov     x11, x1
-    mov     x12, x2
-    mov     x13, x3
-
     // let core with cpuid != 0 enter busy loop
     mrs x0, mpidr_el1
     and x0, x0, #3

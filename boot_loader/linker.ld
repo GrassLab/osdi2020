@@ -26,11 +26,11 @@
 SECTIONS
 {
     . = 0x80000 - 2048;
-    PROVIDE(_bootloader_start = .);
-    .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
-    .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
-    PROVIDE(_data = .);
-    .data : { *(.data .data.* .gnu.linkonce.d*) }
+    _bootloader_start = .;
+    .text : { *(.text) }
+    .rodata : { *(.rodata) }
+    _data = .;
+    .data : { *(.data) }
     .bss (NOLOAD) : {
         . = ALIGN(16);
         __bss_start = .;
@@ -42,5 +42,4 @@ SECTIONS
 
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
-__bss_size = (__bss_end - __bss_start)>>3;
 __loader_size = (_end - _bootloader_start)>>3;
