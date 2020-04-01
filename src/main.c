@@ -6,6 +6,7 @@
 
 int main()
 {
+    int r=15000000; while(r--) { asm volatile("nop"); }
     uart_init();    
     fbuff_init();
     get_board_info();
