@@ -95,6 +95,7 @@ void uart_puts(char *s) {
 void uart_send_int(int n)
 {
     char s[1024];
+    memset(s, 0, 1024);
     itoa(n, s, 10);
 
     uart_puts(s);
@@ -103,6 +104,7 @@ void uart_send_int(int n)
 void uart_send_hex(int n)
 {
     char s[1024];
+    memset(s, 0, 1024);
     itoa(n, s, 16);
 
     uart_puts("0x");
@@ -112,6 +114,7 @@ void uart_send_hex(int n)
 void uart_send_float(float f, int n)
 {
     char s[1024];
+    memset(s, 0, 1024);
     ftoa(f, s, n);
     uart_puts(s);
 }
