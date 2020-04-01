@@ -26,7 +26,6 @@
 #include "gpio.h"
 #include "mbox.h"
 #include "string.h"
-#include <stdarg.h>
 
 // Loop <delay> times in a way that the compiler won't optimize away
 static inline void delay(int count)
@@ -106,7 +105,6 @@ unsigned int uart_getrate() {
     mbox[2] = MBOX_TAG_GETCLKRATE; /* get clock rate */
     mbox[3] = 8;                  /* buffer size */
     mbox[4] = 0;
-    /* 5-6 is reserve for output buffer */
     mbox[5] = 2;
     mbox[6] = 0;
     mbox[7] = MBOX_TAG_LAST;
