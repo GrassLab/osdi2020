@@ -151,8 +151,8 @@ void showpicture()
     int pic_height = 128;
     int pic_width = 128;
 
-    for(int i=0; i<10 * 10 * 4; i++){
-        pic[i] = 80;
+    for(int i=0; i< pic_height * pic_width * 4; i++){
+        pic[i] = 0x123456;
     }
 
 

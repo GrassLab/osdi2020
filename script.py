@@ -10,7 +10,7 @@ with open('./test_cmd.txt') as f:
 
 
 PORT = '/dev/ttyUSB0'
-PORT = '/dev/pts/4'
+#PORT = '/dev/pts/22'
 
 BAUD_RATES = 115200
 
