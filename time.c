@@ -1,5 +1,5 @@
-#include "gpio.h"
-#include "uart.h"
+#include "include/gpio.h"
+#include "include/uart.h"
 
 #define SYSTMR_LO        ((volatile unsigned int*)(MMIO_BASE+0x00003004))
 #define SYSTMR_HI        ((volatile unsigned int*)(MMIO_BASE+0x00003008))
@@ -87,7 +87,7 @@ void get_time()
             timestamp[i] = '\0';
 
             uart_puts(timestamp);
-            uart_send('\n');
+            uart_puts("\n");
         }
     }
 }
