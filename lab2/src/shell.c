@@ -140,11 +140,28 @@ void loadimg(){
         buf[i] = uart_getc();
     }
     buf[i] = '\0';
-    uart_puts("\n");
-    uart_puts("Please send image\n");
-
     int size = atoi(buf);
-    char *load_addr = (char*)0x90000;
+    uart_puts("\n");
+
+    i = 0;
+    uart_puts("Please input image load address: ");
+    buf[i] = uart_getc();
+    while(buf[i] != '\n' && buf[i] != '\r'){
+        uart_send(buf[i++]);
+        buf[i] = uart_getc();
+    }
+    buf[i] = '\0';
+    uart_puts("\n");
+    char *load_addr = (char *)hexatoi(buf);
+
+    char res[30];
+    itoa(hexatoi(buf), res);
+    uart_puts(res);
+    uart_puts("\n");
+
+    uart_puts("Please send image...\n");
+
+    //char *load_addr = (char*)0x90000;
     char *base = load_addr;
 
     /*char res[30];

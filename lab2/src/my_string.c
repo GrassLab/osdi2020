@@ -104,3 +104,16 @@ int atoi(char *s){
 
     return res;
 }
+
+int hexatoi(char *s){
+    int res=0;
+    res += *s >='0' && *s <='9' ? *s - '0' : *s - 'a' + 10;
+    s++;
+    while(*s != '\0'){
+        res *= 16;
+        res += *s >='0' && *s <='9' ? *s - '0' : *s - 'a' + 10;
+        s++;
+    }
+
+    return res;
+}
