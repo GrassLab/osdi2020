@@ -133,11 +133,11 @@ void loadimg() {
       ((k_addr + size) >= (unsigned long)__bss_start &&
        (k_addr + size) <= (unsigned long)__bss_end)) {
     uart_puts("in bss\n");
-    load_address = TMP_KERNEL_ADDR;
+    load_address = (void *)TMP_KERNEL_ADDR;
     volatile char *add = load_address;
     for (int i = 0; i < size; i++) {
       // read img
-      *add = uart_getc();
+      *add = uart_img();
       add++;
     }
     // jmp to img
@@ -150,7 +150,7 @@ void loadimg() {
     volatile char *add = load_address;
     for (int i = 0; i < size; i++) {
       // read img
-      *add = uart_getc();
+      *add = uart_img();
       add++;
     }
     // jmp to img

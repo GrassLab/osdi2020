@@ -1,5 +1,5 @@
 #define MMIO_BASE 0x3F000000
-
+char uart_img();
 void uart_init();
 void uart_send(unsigned int c);
 char uart_getc();
