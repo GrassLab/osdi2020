@@ -199,7 +199,7 @@ void loadkernel() {
   while (1) {
     loadimg(BOOT_ADDR + (&__end - &__start));
   RESEND:
-    uart_println("[ERR] load image failed, please type 'r' to resend kernel"
+    uart_println("\033[0;31m[ERR]\033[0m load image failed, please type 'r' to resend kernel"
                  " or type ctrl+c to cancel");
     char c = uart_getc();
     if (c == 0x3) { /* ctrl+c */
