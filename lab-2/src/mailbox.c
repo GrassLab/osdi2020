@@ -65,7 +65,7 @@ void print_vc_base_address()
     mbox[7] = TAG_END;
     mbox_call(MBOX_CH_PROP);
     uart_puts("0x");
-    uart_print_hex(mbox[6]);
+    uart_print_hex(mbox[5]);
 }
 
 void print_vc_size()
@@ -80,7 +80,7 @@ void print_vc_size()
     mbox[7] = TAG_END;
     mbox_call(MBOX_CH_PROP);
     uart_puts("0x");
-    uart_print_hex(mbox[5]);
+    uart_print_hex(mbox[6]);
 }
 
 void print_board_revision()
