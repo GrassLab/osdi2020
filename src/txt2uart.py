@@ -24,8 +24,8 @@ with open(args.filename,'rb') as fd:
             ser.write(raw[i: i+1])
             time.sleep(0.0001)
             if i%100==0:
-                print("{:>5}/{:>5} bytes".format(i, length))
-        print("{:>5} /{:>5} bytes".format(length, length))
+                print("{:>6}/{:>6} bytes".format(i, length))
+        print("{:>6}/{:>6} bytes".format(length, length))
         print("Transfer finished!")
 
         
