@@ -2,7 +2,9 @@ ARMGNU = aarch64-linux-gnu
 COPS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
 INCLUDE = /usr/aarch64-linux-gnu/include
 SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
+LIB_ASM = $(wildcard *.s)
+OBJS = $(SRCS:.c=.o) \
+       $(LIB_ASM:.s=.o)
 
 .PHONY:
 	clean all run
@@ -11,6 +13,9 @@ all: kernel8.img
 
 start.o: start.S
 	$(ARMGNU)-gcc -I $(COPS) -MMD -c $< -o $@
+
+%.o: %.s
+	$(ARMGNU)-gcc -o $@ -c $<
 
 %.o: %.c
 	$(ARMGNU)-gcc $(COPS) -MMD -c $< -o $@
