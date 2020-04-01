@@ -1,11 +1,11 @@
-# Lab 1
+# NCTU 2020 spring, OSDI Lab 2 by Waylon Shih
 
 CC = aarch64-linux-gnu-gcc
 LD = aarch64-linux-gnu-ld
 OBJC = aarch64-linux-gnu-objcopy
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
+CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinc
 
 all: clean kernel8.img
 
@@ -23,8 +23,8 @@ clean:
 	rm -f kernel8.elf *.o || true
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 
-# Transfer file to shared folder
+# Transfer img file to shared folder
 teleport:
 	cp kernel8.img /media/sf_TELEPORT/kernel8.img

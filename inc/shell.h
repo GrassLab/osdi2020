@@ -1,0 +1,10 @@
+void shell_start();
+void shell_welcome_msg();
+void cmdSwitch(char* buf);
+void cmd_help();
+void cmd_time();
+void cmd_reboot();
+void cmd_hardwareInfo();
+void cmd_load();
+void cmd_err(char* buf);
+void cmd_debug(char* buf);
