@@ -4,7 +4,6 @@
 #include "power.h"
 #include "mbox.h"
 #include "utils.h"
-#include "bootloader.h"
 
 const static unsigned int MAX_BUFFER_SIZE = 512;
 
@@ -16,7 +15,6 @@ static inline void helpCmd()
     uartPuts("    timestamp          get current timestamp\n");
     uartPuts("    reboot             reboot rpi3\n");
     uartPuts("    hardware           print hardware information\n");
-    uartPuts("    loadimg            load other kernel image\n");
 }
 
 static inline void helloCmd()
@@ -46,11 +44,6 @@ static inline void hardwareInfoCmd()
     getVCMemory();
 }
 
-static inline void loadImgCmd()
-{
-    loadImage();
-}
-
 static inline void noneCmd(const char *input)
 {
     uartPuts("Unknown command: ");
@@ -70,8 +63,6 @@ command_t checkCmdType(const char *input)
         return reboot;
     else if (strcmp(input, "hardware"))
         return hardwareInfo;
-    else if (strcmp(input, "loadimg"))
-        return loadImg;
 
     return none;
 }
@@ -97,9 +88,6 @@ void processCmd(const char *input)
         break;
     case hardwareInfo:
         hardwareInfoCmd();
-        break;
-    case loadImg:
-        loadImgCmd();
         break;
     default:
         noneCmd(input);

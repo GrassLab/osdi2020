@@ -42,7 +42,7 @@ again:
 
     // read the kernel
     while (size--)
-        *kernel++ = uartGetcWithCR();
+        *kernel++ = uartGetc();
 
     // restore arguments and jump to the new kernel.
     asm volatile(

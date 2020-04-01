@@ -28,29 +28,14 @@ $(KERNEL).elf: start.o $(OBJS)
 start.o: start.S
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-.PHONY: clean test debug monitor
-
-bl:
-	make -C boot_loader/
-
-bl-clean:
-	make clean -C boot_loader/
-
-bl-test:
-	make test -C boot_loader/
-
-bl-debug:
-	make debug -C boot_loader/
+.PHONY: clean test debug
 
 clean:
 	$(RM) *.o $(KERNEL).elf $(KERNEL).img
 
 test: $(KERNEL).img
-	$(EMULATOR) -M raspi3 -kernel $< -display none -serial stdio
+	$(EMULATOR) -M raspi3 -kernel $< -display none -serial pty
 
 debug: $(KERNEL).img
-	$(EMULATOR) -M raspi3 -kernel $< -display none -serial stdio -S -s
-
-monitor:
-	screen /dev/pts/23 115200
+	$(EMULATOR) -M raspi3 -kernel $< -display none -serial pty -S -s
 	
