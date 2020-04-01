@@ -118,7 +118,7 @@ void uart_print_hex(unsigned int num) {
 void uart_print_hex_array(unsigned int *num, int size) {
     char str[1024] = {0};
     for(int i = 0; i < size; i++) {
-        hexToStrNoTruncat(num[i], str+(8*i));
+        hexToStrNoTruncat(num-i, str+(8*i));
     }
     uart_puts(str);
 }
@@ -129,7 +129,7 @@ void print_uart_clock()
     mbox[1] = TAG_REQUEST_CODE;
     mbox[2] = MBOX_TAG_GETCLKRATE;
     mbox[3] = 8;
-    mbox[4] = 0;
+    mbox[4] = TAG_REQUEST_CODE;
     mbox[5] = 0x2;
     mbox[6] = 0;            
     mbox[7] = 0;           
@@ -137,7 +137,6 @@ void print_uart_clock()
     if (mbox_call(MBOX_CH_PROP)) {
         uart_puts("uart clock: 0x");
         uart_print_hex(mbox[6]);
-        uart_print_hex(mbox[5]);
         uart_puts("\n");
     } else uart_puts("Unable to read uart clock!");
 }
