@@ -41,23 +41,25 @@ void myread(char *str, int max_size)
 				input_c = uart_getc();
 				if(input_c == 0x43)
 				{
-					if(*(now+1)!='\0' && *now!='\0'){
+					if(*(now+1)=='\0' && *now=='\0'){
+					}
+					else{
 						uart_puts("\x1B\x5B\x43");
 						now++;
 					}
 				}
 				if(input_c == 0x44)
 				{
-					if(*now != *str){
+					if(now != str){
 						uart_puts("\x1B\x5B\x44");
 						now--;
 					}
 				}
 			}
 		}
-		else if(input_c == 0x7f && count > 0) //backspace
+		else if(input_c == 0x7f) //backspace
 		{
-			if(*now != 0)
+			if(*now != 0  && count > 0)
 			{
 				uart_send(input_c);
 				tmpc=now-1;
@@ -110,7 +112,7 @@ void mywrite(char *str)
 	uart_puts(str);
 }
 
-void cal_time(volatile unsigned int time_FRQ, volatile unsigned int time_CT, char *char_time)
+void cal_time(volatile long long int time_FRQ, volatile long long int time_CT, char *char_time)
 {
 	/*float timer = (float)time_CT/time_FRQ;
 	int int_part = (int)timer;
@@ -136,13 +138,15 @@ void cal_time(volatile unsigned int time_FRQ, volatile unsigned int time_CT, cha
 }
 void main()
 {
-	volatile unsigned int time_FRQ;
+	
+	volatile unsigned long long int time_FRQ;
 	asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(time_FRQ) ::);
 	/*asm volatile("mrs x1, CNTFRQ_EL0");
 	asm volatile("str x1, [sp, #96]");*/
-	volatile unsigned int time_CT;
+	volatile unsigned long long int time_CT;
     // set up serial console
     uart_init();
+	
 	mywrite("Hello~~ try 'help' \n");
 	char *command[5] = {"help", "hello", "timestamp", "reboot", 0};
 	char *command_detial[5] = {" : help", " : print Hello World!", " : get current timestamp", " : reboot system", 0};
