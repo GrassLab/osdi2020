@@ -10,4 +10,5 @@ enum {
 
 typedef void (*kentry_t)(void);
 
-void loadimg();
+/* the parameter for the loadimg is used to indicate the region of bootloader */
+void loadimg(unsigned int bootloader_end);

@@ -197,7 +197,7 @@ void get_arm_memory() {
 
 void loadkernel() {
   while (1) {
-    loadimg();
+    loadimg(BOOT_ADDR + (&__end - &__start));
   RESEND:
     uart_println("[ERR] load image failed, please type 'r' to resend kernel"
                  " or type ctrl+c to cancel");
