@@ -1,4 +1,5 @@
 #include "mbox.h"
+#include "branch.h"
 #include "uart.h"
 #define GET_BOARD_REVISION 0x00010002
 #define GET_VC_MEMORY 0x00010006
@@ -91,23 +92,26 @@ void recv_loadimg(char *address_loadto) {
 
     // read the kernel
     char *kernel = address_loadto;
-/*    int chunck = 256;
-    for (int i = 0; i < size/chunck ; i++){
+    int chunck = 128;
+    int i = 0;
+    for (i = 0; i < size/chunck ; i++){
         for (int j = 0; j < chunck; j++) {
             char c = uart_getc();
-            kernel[j] = c;
+            kernel[i*chunck + j] = c;
         }
         uart_puts("RecvChunckImgDone");
     }
     for (int j = 0; j < size%chunck; j++){
         char c = uart_getc();
-        kernel[j] = c;
+        kernel[i*chunck + j] = c;
     }
-*/
+
+/*    
     for (int j = 0; j < size; j++) {
         char c = uart_getc();
         kernel[j] = c;
     }
+*/
     uart_puts("RecvImgDone");
     branch_to_address((unsigned long int *)address_loadto);
 }
