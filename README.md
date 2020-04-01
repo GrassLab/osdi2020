@@ -24,7 +24,20 @@
 │   ├── type.h          # header file to define some type like in <type.h>
 │   └── uart.h          # header file to process uart interface
 ├── LICENSE
-├── link.ld
+├── link.ld             # linker script
+├── loader              # loaders relative files
+│   ├── kernel8.img     # pre-compiler image 
+│   ├── Makefile
+│   ├── raspbootocm.cc  # source code to run host to send image to rpi3 by UART
+│   └── src             # source files
+│       ├── gpio.h
+│       ├── link.ld
+│       ├── main.c
+│       ├── mbox.c
+│       ├── mbox.h
+│       ├── start.S
+│       ├── uart.c
+│       └── uart.h
 ├── Makefile
 ├── raspbootocm.cc      # code for sending kernel image
 ├── README.md
@@ -40,21 +53,20 @@
     ├── string.c        # source file to implement some function in <string.h>
     ├── time.c          # source file to process time relative function
     └── uart.c          # source file to process uart interface
-
-
 ```
 
-## How to build
+## LAB 2 Project
+### How to build
 ```bash
 make
 ```
 
-## Run on QEMU
+### Run on QEMU
 ```bash
-make run
+make run    # it will run with UART 0
 ```
 
-## Simple Shell
+### Simple Shell
 | command       | description                   | 
 | --------------| ----------------------------- | 
 | hello         | print Hello World!            |
@@ -63,16 +75,28 @@ make run
 | reboot        | reset rpi3                    |
 | vc_base_addr  | print vc core base address    |
 | board_revision| print boarf revision          |
-| loadimg       | load kernel image             |
 
-## Send kernel image
+### How to run
+It should run with the sender below
 
-* Step 1. Compile code
+## Prepare image burn on sd card
+* Step 1. Copy image file under the loader directory to the SD card.
     ```bash
-    gcc raspbootocm.cc -o raspbootocm
+    cp ./loader/kernel8.img <SD Card>
+
+    # you can build a new kernel8.img under the loader directory
+    # cd loader
+    # make
+    ```
+* Step 2. Build host sender program.
+    ```bash
+    make loader # done this on the root directory
     ```
 
-* Step 2. Run with follow patterm
+* Step 3. Run the host code
+    * kernel image sould be the built by the [previous step](#LAB-2-Project).
     ```bash
-    ./raspbootocm <dev> <kernel image>
+    ./raspbootocm <dev> ./kernel8.img  
     ```
+
+*  Therefore, there is a image in sd card that will always load image from uart when booting.
