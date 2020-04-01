@@ -34,6 +34,7 @@ The information of timer can get from the ARM Register.
 You have to know **watch dog timer**.<br>
 The information of WDT in [BCM2835 register](https://elinux.org/BCM2835_registers#PM_WDOG)<br>
 By setting the **watch dog timer** and **tick time**, then the raspi will reboot.
+register: [PM_RSTC, PM_RSTS](http://imrc.noip.me/blog/vc4/PM_RSTC_and_RSTS/)
 
 ## Host Program
 **\<lab1\>/host_serial/serial**<br>
