@@ -17,4 +17,4 @@ try:
             line = f.readline()
             time.sleep(0.1)
 except PermissionError as e:
-        print("ERROR!");
+        print("ERROR!")
