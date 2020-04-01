@@ -137,3 +137,12 @@ void *uart_memcpy (const void *src, void *dst, int len)
         *d++ = *s++;
     return dst;
 }
+/**
+ * Transfer string to int
+ */
+/*
+unsigned int uart_c2i(char *s) 
+{
+    return (d<10) ? d+48 :0;
+}
+*/

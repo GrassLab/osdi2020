@@ -2,12 +2,13 @@
 #include "include/power.h"
 #include "include/time.h"
 #include "include/info.h"
-//#include "include/lfb.h"
+#include "include/lfb.h"
 
 int LOADIMG = 0;
-char *KERNEL_ADDR=(char*)0x100000;
+int SPLASH_ON = 0;
+unsigned int KERNEL_ADDR;
 
-void loadimg(char *kernel_addr)
+void loadimg(unsigned int kernel_addr)
 {
     unsigned int size=0;
 
@@ -23,35 +24,35 @@ void loadimg(char *kernel_addr)
     // send negative or positive acknowledge
     if(size<64 || size>1024*1024) {
         // size error
-        uart_send('S');
-        uart_send('E');
+        uart_puts("SE");
         return;
     }
-    uart_send('O');
-    uart_send('K');
+    uart_puts("OK");
 
     uart_puts("Please input the kernel load address (default: 0x80000):\n");
+    KERNEL_ADDR = 0x100000
     uart_puts("Please send the kernel from UART...\n");
 
 
     uart_puts("Loading kernel at 0x");
-    uart_hex((unsigned int)kernel_addr);
+    uart_hex(kernel_addr);
     uart_puts(" with size 0x");
     uart_hex(size);
     uart_puts(" ...\n");
     
     // read the kernel
-    while(size--) *kernel_addr++ = uart_getc();
+    while(size--) *(char *)kernel_addr++ = uart_getc();
 }
 
 void main()
 {
     // set up serial console and linear frame buffer
     uart_init();
-    //lfb_init();
+    lfb_init();
 
     // display a pixmap
-    //lfb_showpicture();
+    if (SPLASH_ON == 1)    
+        lfb_showpicture();
 
     get_serial();
     get_board_revision();
@@ -126,10 +127,21 @@ void main()
     }
 
     if (LOADIMG == 1) {
-        // restore arguments and jump to the new kernel.
+        unsigned int stack_pointer;; 
+        asm volatile ("mov %0, sp" : "=r"(stack_pointer));
+        uart_puts("stack pointer: 0x");
+        uart_hex(stack_pointer);
+        uart_puts("\n");
+
+        unsigned int program_counter;; 
+        asm volatile ("mov %0, x30" : "=r"(program_counter));
+        uart_puts("program counter: 0x");
+        uart_hex(program_counter);
+        uart_puts("\n");
+
         asm volatile (
             // we must force an absolute address to branch to
-            "mov x30, 0x100000; ret"
+            "mov x30, %0; ret" :: "r"(KERNEL_ADDR)
         );
     }
 }
