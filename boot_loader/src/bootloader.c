@@ -41,7 +41,7 @@ again:
 
     // read the kernel
     while (size--)
-        *kernel++ = uartGetc();
+        *kernel++ = uartGetcWithCR();
 
     asm volatile(
         // we must force an absolute address to branch to

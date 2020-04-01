@@ -106,6 +106,23 @@ char uartGetc()
 }
 
 /**
+ * Receive a character without converting carrige return
+ */
+char uartGetcWithCR()
+{
+    char r;
+    /* wait until something is in the buffer */
+    do
+    {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x10);
+    /* read it and return */
+    r = (char)(*UART0_DR);
+    /* convert carrige return to newline */
+    return r;
+}
+
+/**
  * Display a string
  */
 void uartPuts(char *s)
