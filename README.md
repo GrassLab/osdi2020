@@ -6,6 +6,58 @@
 | -----------| -------------- | ---- | -------------------------- |
 | 0856009    | JingWangTW     | 王靖  | jingwang.cs08g@nctu.edu.tw |
 
+## LAB 2 Project
+
+### How to build
+```bash
+make
+```
+
+### Run on QEMU
+```bash
+make run 
+```
+
+### Simple Shell
+| command       | description                   | 
+| --------------| ----------------------------- | 
+| hello         | print Hello World!            |
+| help          | print all available commands  |
+| timestamp     | print current timestamp       |
+| reboot        | reset rpi3                    |
+| vc_base_addr  | print vc core base address    |
+| board_revision| print boarf revision          |
+
+### How to run
+It should run with the sender below
+
+## Prepare image burn on sd card
+* Step1. Build image under `loader` directory.
+    ```bash
+    # done this under the loader directory (eg. cd loader)
+    make
+    ```
+
+* Step 2. Copy image file under the loader directory to the SD card.
+    ```bash
+    # done this in the root directory
+    cp ./loader/kernel8.img <SD Card>
+    ```
+* Step 3. Build host sender program.
+    ```bash
+    # done this in the root directory
+    make loader
+    ```
+
+* Step 4. Run the host code
+    * kernel image sould be the built by the [previous step](#LAB-2-Project).
+    ```bash
+    # done this in the root directory
+    ./raspbootocm <dev> ./kernel8.img  
+    ```
+
+*  Therefore, there is a image in sd card that will always load image from uart when booting.
+
 ## Directory structure
 
 ```
@@ -54,49 +106,3 @@
     ├── time.c          # source file to process time relative function
     └── uart.c          # source file to process uart interface
 ```
-
-## LAB 2 Project
-### How to build
-```bash
-make
-```
-
-### Run on QEMU
-```bash
-make run    # it will run with UART 0
-```
-
-### Simple Shell
-| command       | description                   | 
-| --------------| ----------------------------- | 
-| hello         | print Hello World!            |
-| help          | print all available commands  |
-| timestamp     | print current timestamp       |
-| reboot        | reset rpi3                    |
-| vc_base_addr  | print vc core base address    |
-| board_revision| print boarf revision          |
-
-### How to run
-It should run with the sender below
-
-## Prepare image burn on sd card
-* Step 1. Copy image file under the loader directory to the SD card.
-    ```bash
-    cp ./loader/kernel8.img <SD Card>
-
-    # you can build a new kernel8.img under the loader directory
-    # cd loader
-    # make
-    ```
-* Step 2. Build host sender program.
-    ```bash
-    make loader # done this on the root directory
-    ```
-
-* Step 3. Run the host code
-    * kernel image sould be the built by the [previous step](#LAB-2-Project).
-    ```bash
-    ./raspbootocm <dev> ./kernel8.img  
-    ```
-
-*  Therefore, there is a image in sd card that will always load image from uart when booting.
