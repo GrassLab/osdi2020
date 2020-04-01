@@ -1,3 +1,5 @@
-kernel8.*
-out/
+*.elf
+*.img
+build/
 .gdb_history
+.vscode/

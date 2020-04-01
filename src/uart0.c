@@ -1,25 +1,34 @@
-#include "aux.h"
-#include "gpio.h"
+#include "peripherals/uart0.h"
+
+#include "mbox.h"
 #include "my_string.h"
+#include "peripherals/gpio.h"
+#include "peripherals/mbox.h"
 
 void uart_init() {
-    /* Initialize UART */
-    *AUX_ENABLES |= 1;   // Enable mini UART
-    *AUX_MU_CNTL = 0;    // Disable TX, RX during configuration
-    *AUX_MU_IER = 0;     // Disable interrupt
-    *AUX_MU_LCR = 3;     // Set the data size to 8 bit
-    *AUX_MU_MCR = 0;     // Don't need auto flow control
-    *AUX_MU_BAUD = 270;  // Set baud rate to 115200
-    *AUX_MU_IIR = 6;     // No FIFO
+    *UART0_CR = 0;  // turn off UART0
+
+    /* Configure UART0 Clock Frequency */
+    unsigned int __attribute__((aligned(16))) mbox[9];
+    mbox[0] = 9 * 4;
+    mbox[1] = MBOX_CODE_BUF_REQ;
+    // tags begin
+    mbox[2] = MBOX_TAG_SET_CLOCK_RATE;
+    mbox[3] = 12;
+    mbox[4] = MBOX_CODE_TAG_REQ;
+    mbox[5] = 2;        // UART clock
+    mbox[6] = 4000000;  // 4MHz
+    mbox[7] = 0;        // clear turbo
+    mbox[8] = 0x0;      // end tag
+    // tags end
+    mbox_call(mbox, 8);
 
     /* Map UART to GPIO Pins */
-
     // 1. Change GPIO 14, 15 to alternate function
     register unsigned int r = *GPFSEL1;
     r &= ~((7 << 12) | (7 << 15));  // Reset GPIO 14, 15
-    r |= (2 << 12) | (2 << 15);     // Set ALT5
+    r |= (4 << 12) | (4 << 15);     // Set ALT0
     *GPFSEL1 = r;
-
     // 2. Disable GPIO pull up/down (Because these GPIO pins use alternate functions, not basic input-output)
     // Set control signal to disable
     *GPPUD = 0;
@@ -38,17 +47,23 @@ void uart_init() {
     // Remove the clock
     *GPPUDCLK0 = 0;
 
-    // 3. Enable TX, RX
-    *AUX_MU_CNTL = 3;
+    /* Configure UART0 */
+    *UART0_IBRD = 0x2;        // Set 115200 Baud
+    *UART0_FBRD = 0xB;        // Set 115200 Baud
+    *UART0_LCRH = 0b11 << 5;  // Set word length to 8-bits
+    *UART0_ICR = 0x7FF;       // Clear Interrupts
+
+    /* Enable UART */
+    *UART0_CR = 0x301;
 }
 
 char uart_read() {
     // Check data ready field
     do {
         asm volatile("nop");
-    } while (!(*AUX_MU_LSR & 0x01));
+    } while (*UART0_FR & 0x10);
     // Read
-    char r = (char)(*AUX_MU_IO);
+    char r = (char)(*UART0_DR);
     // Convert carrige return to newline
     return r == '\r' ? '\n' : r;
 }
@@ -57,9 +72,9 @@ void uart_write(unsigned int c) {
     // Check transmitter idle field
     do {
         asm volatile("nop");
-    } while (!(*AUX_MU_LSR & 0x20));
+    } while (*UART0_FR & 0x20);
     // Write
-    *AUX_MU_IO = c;
+    *UART0_DR = c;
 }
 
 void uart_printf(char* fmt, ...) {
@@ -77,7 +92,7 @@ void uart_printf(char* fmt, ...) {
 }
 
 void uart_flush() {
-    while (*AUX_MU_LSR & 0x01) {
-        *AUX_MU_IO;
+    while (!(*UART0_FR & 0x10)) {
+        (void)*UART0_DR;  // unused variable
     }
 }

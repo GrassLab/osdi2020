@@ -1,8 +1,7 @@
-#include "mbox.h"
 #include "my_string.h"
 #include "uart0.h"
 #include "utli.h"
-#include "frame_buffer.h"
+#include "loadimg.h"
 
 enum ANSI_ESC {
     Unknown,
@@ -37,24 +36,14 @@ enum ANSI_ESC decode_ansi_escape() {
 }
 
 void shell_init() {
-    // Initialize UART
     uart_init();
     uart_flush();
     uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
-
-    // Initialize Frame Buffer
-    fb_init();
-    uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
-
-    // Welcome Messages
-    // fb_splash();
-    uart_printf("\n\n _  _  ___ _____ _   _  ___  ___ ___ ___ \n");
-    uart_printf("| \\| |/ __|_   _| | | |/ _ \\/ __|   \\_ _|\n");
-    uart_printf("| .` | (__  | | | |_| | (_) \\__ \\ |) | | \n");
-    uart_printf("|_|\\_|\\___| |_|  \\___/ \\___/|___/___/___|\n\n");
-    mbox_board_revision();
-    mbox_vc_memory();
-    uart_printf("\n");
+    uart_printf("\n\n ____              _     _                    _           \n");
+    uart_printf("| __ )  ___   ___ | |_  | |    ___   __ _  __| | ___ _ __ \n");
+    uart_printf("|  _ \\ / _ \\ / _ \\| __| | |   / _ \\ / _` |/ _` |/ _ \\ '__|\n");
+    uart_printf("| |_) | (_) | (_) | |_  | |__| (_) | (_| | (_| |  __/ |   \n");
+    uart_printf("|____/ \\___/ \\___/ \\__| |_____\\___/ \\__,_|\\__,_|\\___|_|   \n\n");
 }
 
 void shell_input(char* cmd) {
@@ -127,15 +116,10 @@ void shell_controller(char* cmd) {
     }
     else if (!strcmp(cmd, "help")) {
         uart_printf("help: print all available commands\n");
-        uart_printf("hello: print Hello World!\n");
-        uart_printf("timestamp: get current timestamp\n");
-        uart_printf("reboot: reboot pi\n");
+        uart_printf("loadimg: load image from UART!\n");
     }
-    else if (!strcmp(cmd, "hello")) {
-        uart_printf("Hello World!\n");
-    }
-    else if (!strcmp(cmd, "timestamp")) {
-        uart_printf("%f\n", get_timestamp());
+    else if (!strcmp(cmd, "loadimg")) {
+        loadimg();
     }
     else if (!strcmp(cmd, "reboot")) {
         uart_printf("Rebooting...");

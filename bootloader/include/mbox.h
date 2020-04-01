@@ -1,0 +1,1 @@
+int mbox_call(unsigned int* mbox, unsigned char channel);
