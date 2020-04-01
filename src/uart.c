@@ -131,6 +131,7 @@ int uart_getint()
     while ( 1 ) 
     {
         input = uart_getc();
+        uart_send(input);
 
         if ( !isdigit ( input ) )
             break;

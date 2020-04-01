@@ -117,7 +117,7 @@ void command_load_image ()
     uart_puts("Start Loading Kernel Image...\n");
     uart_puts("Please input kernel load address in decimal.(defualt: 0x80000): ");
     load_address = (char *)((unsigned long)uart_getint());
-    uart_puts("\nPlease send kernel image from UART now:\n");
+    uart_puts("Please send kernel image from UART now:\n");
 
     wait_cycles(5000);
 
