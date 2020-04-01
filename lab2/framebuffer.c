@@ -87,9 +87,9 @@ void lfb_init()
         pitch=mbox[33];         //get number of bytes per line
         isrgb=mbox[24];         //get the actual channel order
         lfb=(void*)((unsigned long)mbox[28]);
-        uart_println("screen resolution: %dx%dx%d", mbox[5], mbox[6], mbox[20]);
+        uart_println("Monitor resolution: %dx%dx%d", mbox[5], mbox[6], mbox[20]);
     } else {
-        uart_puts("Unable to set screen resolution to 1024x768x32\n");
+        uart_puts("Unable to set monitor resolution to 1024x768x32\n");
     }
 }
 
