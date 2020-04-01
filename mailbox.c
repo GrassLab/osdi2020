@@ -19,7 +19,7 @@ volatile unsigned int  __attribute__((aligned(16))) mbox[36];
  */
 int mbox_call(unsigned char ch)
 {
-    unsigned int r = (((unsigned int)((unsigned long)&mbox)&~0xF) | (ch&0xF));
+    unsigned int r = (((unsigned int)((unsigned long)&mbox)&~0xF) | (ch&0xF));  /* (channel | (buff_addr & 0xFFFFFFF0) ) */
     /* wait until we can write to the mailbox */
     do{asm volatile("nop");}while(*MBOX_STATUS & MBOX_FULL);
     /* write the address of our message to the mailbox with channel identifier */

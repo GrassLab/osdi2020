@@ -96,9 +96,9 @@ void lfb_showpicture()
     unsigned int splash_width = 768;
     char bright_pixel[4] = {255, 255, 255, 255};
     //char shallow_pixel[4] = {0, 0, 0, 0}; /* black */
-    //char shallow_pixel[4] = {133, 55, 126, 0}; /* red */
+    char shallow_pixel[4] = {133, 55, 126, 0}; /* red */
     //char shallow_pixel[4] = {55, 145, 198, 0}; /* blue */
-    char shallow_pixel[4] = {123, 145, 55, 0}; /* green */
+    //char shallow_pixel[4] = {123, 145, 55, 0}; /* green */
     
     /* Generate splash */ 
     for(y=0;y<splash_height;y++) {
