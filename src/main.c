@@ -6,15 +6,13 @@
 
 int main()
 {
-    uart_init();
-    get_board_revision();
-    get_ARM_address();
-    get_VC_address();    
+    uart_init();    
+    get_board_info();
 
     lfb_init();
     // // display a pixmap
     lfb_showpicture();
-
+    
     run_shell();
     return -1;
 }

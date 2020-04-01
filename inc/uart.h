@@ -15,10 +15,10 @@
 #define UART_LCRH_STP2      (1<<3)// Two stop bits selec
 #define UART_LCRH_FEN       (1<<4)// Enable FIFOs
 #define UART_LCRH_WLEN      (3<<5)// Word length
-#define UART_LCRH_WLEN_5    (0b00<<5)// Word length 5 bits
-#define UART_LCRH_WLEN_6    (0b01<<5)// Word length 6 bits
-#define UART_LCRH_WLEN_7    (0b10<<5)// Word length 7 bits
-#define UART_LCRH_WLEN_8    (0b11<<5)// Word length 8 bits
+#define UART_LCRH_WLEN_5    (0<<5)// Word length 5 bits
+#define UART_LCRH_WLEN_6    (1<<5)// Word length 6 bits
+#define UART_LCRH_WLEN_7    (2<<5)// Word length 7 bits
+#define UART_LCRH_WLEN_8    (3<<5)// Word length 8 bits
 #define UART_LCRH_SPS       (1<<7)// Stick parity select
 
 #define UART_CR_UARTEN      (1<<0)// UART enable

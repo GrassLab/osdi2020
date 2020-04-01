@@ -2,7 +2,7 @@
 
 #include "uart.h"
 
-#define LOAD_ADDRESS (void *)0x100000
+#define LOAD_ADDRESS (void *)0x200000
 
 void load_kernel(int kernel_size){
     char *ptr = LOAD_ADDRESS;

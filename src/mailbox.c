@@ -46,61 +46,50 @@ int mbox_call(unsigned char ch)
     return 0;
 }
 
-void init_mbox_buff(unsigned int tag_id){
+void get_board_info(){
     // header
-    mbox[0] = 8*4;                  // buffer size in bytes
-    mbox[1] = MBOX_REQUEST_CODE;    // buffer request/response code
-    // tag
-    mbox[2] = tag_id;               // tag identifier
-    mbox[3] = 5;                    // buffer size
-    mbox[4] = MBOX_TAG_REQUEST_CODE;// tag request/response code
-    mbox[5] = 0;                    // clear output buffer
-    mbox[6] = 0;                    // clear output buffer
-    mbox[7] = 0;                    // clear output buffer
-    mbox[8] = MBOX_END_TAG;
-}
+    mbox[ 0] = 17*4;                  // buffer size in bytes
+    mbox[ 1] = MBOX_REQUEST_CODE;     // buffer request/response code
+    // tags
+    mbox[ 2] = MBOX_TAG_GET_BREVI;    // tag identifier
+    mbox[ 3] = 1*4;                   // value buffer size in bytes
+    mbox[ 4] = MBOX_TAG_REQUEST_CODE; // tag request/response code
+    mbox[ 5] = 0;                     // value buffer
 
-void get_board_revision(){
-    char buff[8];
-    init_mbox_buff(MBOX_TAG_GET_BREVI);
+    mbox[ 6] = MBOX_TAG_GET_ARMADDR;
+    mbox[ 7] = 2*4;
+    mbox[ 8] = MBOX_TAG_REQUEST_CODE;
+    mbox[ 9] = 0;
+    mbox[10] = 0;
+
+    mbox[11] = MBOX_TAG_GET_VCADDR;
+    mbox[12] = 2*4;
+    mbox[13] = MBOX_TAG_REQUEST_CODE;
+    mbox[14] = 0;
+    mbox[15] = 0;
+    // tailer
+    mbox[16] = MBOX_END_TAG;
+
+    // send the message to the GPU and receive answer
     if (mbox_call(MBOX_CH_PROPT_ARM_VC)) {
-        uart_puts("Board revision: ");
+        char buff[11];
+        uart_puts("Board revision:");
         bin2hex(mbox[5], buff);
         uart_puts(buff);
-        uart_puts("\n");
-    } else {
-        uart_puts("Unable to query board revision!\n");
-    }
-}
-
-void get_ARM_address(){
-    char buff[8];
-    init_mbox_buff(MBOX_TAG_GET_ARMADDR);
-    if (mbox_call(MBOX_CH_PROPT_ARM_VC)){
-        uart_puts("ARM address base: ");
-        bin2hex(mbox[5], buff);
+        uart_puts("\nARM address base: ");
+        bin2hex(mbox[9], buff);
         uart_puts(buff);
         uart_puts("\tsize: ");
-        bin2hex(mbox[6], buff);
+        bin2hex(mbox[10], buff);
         uart_puts(buff);
-        uart_puts("\n");
-    } else {
-        uart_puts("Unable to query ARM address!\n");
-    }
-}
-
-void get_VC_address(){
-    char buff[8];
-    init_mbox_buff(MBOX_TAG_GET_VCADDR);
-    if (mbox_call(MBOX_CH_PROPT_ARM_VC)){
-        uart_puts("VC  address base: ");
-        bin2hex(mbox[5], buff);
+        uart_puts("\nVC  address base: ");
+        bin2hex(mbox[14], buff);
         uart_puts(buff);
         uart_puts("\tsize: ");
-        bin2hex(mbox[6], buff);
+        bin2hex(mbox[15], buff);
         uart_puts(buff);
         uart_puts("\n");
     } else {
-        uart_puts("Unable to query VC address!\n");
+        uart_puts("Mailbox fail to query board info!\n");
     }
 }

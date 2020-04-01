@@ -143,7 +143,7 @@ void cmd_loadimg() {
 	if ((n = read_command(buff, MAX_COMMAND_LENGTH)) >= 0) {
 		buff[n]='\0';
 		size = atoi(buff);
-		uart_puts("Please send kernel image by UART!");
+		uart_puts("Please send kernel image by UART!\n\n");
 		load_kernel(size);
 	}
 }
