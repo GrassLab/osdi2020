@@ -23,5 +23,3 @@
 **Put kernel8.img from bootloader in SD card as it is the bootloader which loads the real kernel\
 Put kernel8.img from kernel in host computer as it is the actual kearnel**
 
-
-
