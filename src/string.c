@@ -43,3 +43,13 @@ void bin2hex(unsigned int num, char buff[11]) {
 	buff[1]='x';
 	buff[8]='\0';
 }
+
+int hex2int(char *hex){
+	int num = 0;
+	char *c;
+	for(c=hex+2; *c!='\0'; c++){
+			num *= 16;
+			num += *c>'9'?(*c-'A'+10):(*c-'0');
+	}
+	return num;
+}

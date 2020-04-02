@@ -1,6 +1,7 @@
 #include "simple_shell.h"
 
-#include "bootloader.h"
+#include "kernel_recv.h"
+#include "mm.h"
 #include "string.h"
 #include "uart.h"
 
@@ -137,13 +138,24 @@ void cmd_reboot()
 }
 
 void cmd_loadimg() {
-	int n, size;
+	unsigned int n, size;
+	void *load_addr;
 	char buff[MAX_COMMAND_LENGTH];
 	uart_puts("Input kernel size(bytes): ");
 	if ((n = read_command(buff, MAX_COMMAND_LENGTH)) >= 0) {
 		buff[n]='\0';
 		size = atoi(buff);
+		uart_puts("Input kernel load address: ");
+		if ((n = read_command(buff, MAX_COMMAND_LENGTH)) >= 0) {
+			buff[n]='\0';
+			load_addr = (void*)(hex2int(buff));
+		}
 		uart_puts("Please send kernel image by UART!\n\n");
-		load_kernel(size);
+		// copy kernel_reciver
+		void (*reciver_start)(unsigned int size, void *load_addr) = kernel_recv;
+		memncpy((char *)reciver_start, load_addr-60, 60);
+		// start load kernel
+		reciver_start = load_addr-60;
+		reciver_start(size, load_addr);
 	}
 }
