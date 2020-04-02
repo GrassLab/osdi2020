@@ -27,5 +27,7 @@ void uart_init();
 void uart_send(unsigned int c);
 char uart_getc();
 void uart_puts(char *s);
-void uart_send_int(unsigned long i);
 char uart_gets(char *s);
+void uart_dec(unsigned long i);
+void uart_double(double time);
+

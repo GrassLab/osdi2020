@@ -102,12 +102,6 @@ void uart_puts(char *s) {
     }
 }
 
-void uart_send_int(unsigned long i) {
-    if(i/10)
-		uart_send_int(i/10);
-    uart_send((i%10) + '0');
-}
-
 void uart_gets(char *s){
     int i = 0;
     char c;
@@ -118,4 +112,24 @@ void uart_gets(char *s){
     s[i] = '\0';
     uart_send('\r');
     uart_send('\n');
+}
+
+void uart_dec(unsigned long i) {
+    if(i/10)
+		uart_dec(i/10);
+    uart_send((i%10) + '0');
+}
+
+void uart_double(double time){
+    unsigned long t1, t2;
+    unsigned long max = 1000000000;
+    t1 = time;
+    t2 = (time-t1)*1000000000;
+    uart_dec(time);
+    uart_send('.');
+    while(t2 < max/10){
+        uart_dec(0);
+        max/=10;
+    }
+    uart_dec(t2);
 }
