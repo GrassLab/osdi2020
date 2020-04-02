@@ -20,7 +20,7 @@ void uart_init()
 
     /* initialize UART */
     *UART0_CR = 0;         // turn off UART0
-    unsigned int  mbox[36];
+    volatile unsigned int  __attribute__((aligned(16))) mbox[10];
     /* set up clock for consistent divisor values */
     mbox[0] = 9*4;
     mbox[1] = MBOX_REQUEST;

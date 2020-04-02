@@ -24,14 +24,14 @@
  */
 
 #include "uart.h"
-
+void loadcode(unsigned long addr, unsigned long size);
 void main()
 {
     unsigned long size=0;
     unsigned long addr=0;
-    char *kernel=(char*)0x60000;
-    //extern void *_code;
-    //extern void *_end;
+    extern void *_code;
+    extern void *_end;
+    extern unsigned long __loader_size;
 
 
     // set up serial console
@@ -63,39 +63,60 @@ again:
     size|=uart_getc()<<16;
     size|=uart_getc()<<24;
 
-    //unsigned long end_addr = addr + size;
-
-    /*if((end_addr <= (unsigned long)&_end) && (end_addr >= (unsigned long)&_code))
-    {
-        addr -= ((end_addr - (unsigned long)&_code)-1);
-    }*/
-    /*if((addr <= (unsigned long)&_end) && (addr >= (unsigned long)&_code))
-    {
-        addr += ((unsigned long)&_end - addr + 1);
-    }*/
-    /*
-    if((addr <= (unsigned long)&_code) && (end_addr >= (unsigned long)&_end))
-    {
-        addr -= size;
-    }
-    if((end_addr <= (unsigned long)&_end) && (addr >= (unsigned long)&_code))
-    {
-        addr -= ((addr - (unsigned long)&_code) + size + 1);
-    }*/
-
-    kernel=(char*)addr;
-
-    // send negative or positive acknowledge
     if(size<64) {
         // size error
         uart_send('S');
         uart_send('E');
         goto again;
     }
-    uart_send('O');
-    uart_send('K');
+
+    unsigned long end_addr = addr + size;
+    int check = 0;
+
+    if((end_addr <= (unsigned long)&_end) && (end_addr >= (unsigned long)&_code))
+    {
+        check = 1;
+    }
+    if((addr <= (unsigned long)&_end) && (addr >= (unsigned long)&_code))
+    {
+        check = 1;
+    }
+    if((addr <= (unsigned long)&_code) && (end_addr >= (unsigned long)&_end))
+    {
+        check = 1;
+    }
+
+    void (*ptr)(unsigned long, unsigned long);
+    if(check)
+    {
+        char *newloader=(char*)0x20000;
+        char *oldloader=(char*)&_code;
+        unsigned long loadersize=(unsigned long)&_end - (unsigned long)&_code;
+        while(loadersize--) *newloader++ = *oldloader++;
+        ptr = (((unsigned long)loadcode - (unsigned long)&_code) + ((unsigned long)0x20000) );
+    }
+    else
+    {
+        ptr = loadcode;
+    }
+    
+    (*ptr)(addr, size);
+    
+    //uart_init();
+    
+
+    // send negative or positive acknowledge
+    
 
     // read the kernel
+    
+}
+
+void loadcode(unsigned long addr, unsigned long size)
+{
+    uart_send('O');
+    uart_send('K');
+    char *kernel=(char*)addr;
     while(size--) *kernel++ = uart_getc();
 
     // restore arguments and jump to the new kernel.

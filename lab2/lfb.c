@@ -10,7 +10,7 @@ unsigned char *lfb;                         /* raw frame buffer address */
  */
 void lfb_init()
 {
-    unsigned int mbox[36];
+    volatile unsigned int  __attribute__((aligned(16))) mbox[36];
     mbox[0] = 35*4;
     mbox[1] = MBOX_REQUEST;
 
@@ -77,7 +77,7 @@ void lfb_showpicture()
     int x,y;
     unsigned char *ptr=lfb;
     //char *data=homer_data;
-    char pixel[4] = {255, 255, 255, 255}, bpixel[4] = {0,0,0,0};
+    char pixel[4] = {255, 156, 156, 255}, bpixel[4] = {0,0,0,0};
 
     /*ptr += (height-homer_height)/2*pitch + (width-homer_width)*2;
     for(y=0;y<homer_height;y++) {

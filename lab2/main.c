@@ -75,7 +75,7 @@ void reboot()
 
 void get_VC_base()
 {
-	unsigned int  mailbox[8];
+	volatile unsigned int  __attribute__((aligned(16))) mailbox[8];
 	mailbox[0] = 7 * 4; // buffer size in bytes
 	mailbox[1] = REQUEST_CODE;
 	// tags begin
@@ -96,7 +96,7 @@ void get_VC_base()
 
 void get_board_revision()
 {
-	unsigned int  mailbox[36];
+	volatile unsigned int  __attribute__((aligned(16))) mailbox[8];
 	mailbox[0] = 7 * 4; // buffer size in bytes
 	mailbox[1] = REQUEST_CODE;
 	// tags begin

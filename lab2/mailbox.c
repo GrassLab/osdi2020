@@ -43,7 +43,7 @@ int mbox_call(unsigned char ch)
 #define MBOX_RESPONSE   0x80000000
 #define MAILBOX_EMPTY   0x40000000
 #define MAILBOX_FULL    0x80000000
-
+/*arm 是little*/
 int mbox_call(unsigned int *mailbox, unsigned char ch)
 {
     unsigned int reg = (((unsigned int)((unsigned long)mailbox)&~0xF) | (ch&0xF));
