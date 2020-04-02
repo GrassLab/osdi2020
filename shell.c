@@ -3,6 +3,7 @@
 #include "reboot.h"
 #include "mbox.h"
 #include "string.h"
+#include "lfb.h"
 
 // say hello
 void shell_welcome_msg() {
@@ -83,6 +84,9 @@ void cmdSwitch(char* buf) {
 		cmd_load();
 	else if(!cmpstr(buf, "hwinfo"))
 		cmd_hardwareInfo();
+	else if(!cmpstr(buf, "framebuf"))
+		cmd_framebuf();
+
 	else if(!cmpstr(buf, "")) ;
 	else
 		cmd_err(buf);
@@ -97,6 +101,7 @@ void cmd_help() {
 	uart_puts("timestamp : get current timestamp\n");
 	uart_puts("\n");
 	uart_puts("hwinfo    : print hardware info\n");
+	uart_puts("framebuf  : framebuffer\n");
 }
 
 // DONE!!!!!!!!!!
@@ -183,6 +188,12 @@ void cmd_hardwareInfo() {
 //		uart_puts(itoa(mbox[i], tmp));
 //		uart_puts("\n");
 //	}
+}
+
+void cmd_framebuf() {
+	lfb_init();
+	uart_puts("Showing image...\n");
+	lfb_showpicture();
 }
 
 void cmd_err(char* buf) {
