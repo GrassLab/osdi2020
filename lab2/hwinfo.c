@@ -52,7 +52,7 @@ void get_clock_rate(unsigned int clock_id){
     mbox[6] = 0;       
     mbox[7] = MBOX_TAG_LAST;
     mbox_call(MBOX_CH_PROP);
-    uart_puts("PL011 UART clock rate: ");
-    uart_send_int(mbox[6]);
+    uart_puts("UART clock rate: ");
+    uart_dec(mbox[6]);
     uart_puts("\n");
 }
