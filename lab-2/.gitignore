@@ -1,0 +1,4 @@
+*.o
+*.img
+kernel8.elf
+peda*
