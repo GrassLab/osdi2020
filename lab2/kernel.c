@@ -124,6 +124,6 @@ void load_kernel_img(){
     unsigned long loader_copy_addr;
     loader_copy_addr = calc_loader_copy_addr(load_addr_ul);
     copy_loader_and_jump((char*)loader_copy_addr, (char*)load_addr_ul, kernel_size);
-    uart_puts("\n\n\n");
+    uart_puts("\nloading kernel image...\n\n\n");
     recieve_kernel(load_addr_ul, kernel_size);
 }
