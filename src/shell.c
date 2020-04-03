@@ -1,4 +1,3 @@
-
 #include "shell.h"
 #include "string.h"
 #include "command.h"
@@ -20,8 +19,6 @@ void shell_start ()
     while(1)
     {
         input_char = uart_getc();
-
-        
 
         input_parse = parse ( input_char );
 
@@ -69,11 +66,13 @@ void command_controller ( enum SPECIAL_CHARACTER input_parse, char c, char buffe
         {
             buffer[(*counter)] = '\0';
 
-            if      ( !strcmp(buffer, "help"        ) ) command_help();
-            else if ( !strcmp(buffer, "hello"       ) ) command_hello();
-            else if ( !strcmp(buffer, "timestamp"   ) ) command_timestamp();
-            else if ( !strcmp(buffer, "reboot"      ) ) command_reboot();
-            else                                        command_not_found(buffer);
+            if      ( !strcmp(buffer, "help"            ) ) command_help();
+            else if ( !strcmp(buffer, "hello"           ) ) command_hello();
+            else if ( !strcmp(buffer, "timestamp"       ) ) command_timestamp();
+            else if ( !strcmp(buffer, "reboot"          ) ) command_reboot();
+            else if ( !strcmp(buffer, "vc_base_addr"    ) ) command_vc_base_addr();
+            else if ( !strcmp(buffer, "board_revision"  ) ) command_board_revision();
+            else                                            command_not_found(buffer);
         }
             
         (*counter) = 0;

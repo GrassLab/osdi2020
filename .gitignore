@@ -1,3 +1,6 @@
 *.elf
 *.img
 *.o
+.vscode/*
+*.out
+raspbootocm
