@@ -27,5 +27,8 @@ const char *entry_error_messages[] = {
 
 void show_invalid_entry_message(int type, unsigned long esr, unsigned long address)
 {
+    
     uart_send_hex(address);
+    uart_send_hex(esr>>26);
+    uart_send_hex(esr & 0xfff);
 }

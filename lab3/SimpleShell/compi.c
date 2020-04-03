@@ -18,7 +18,12 @@ int main(void)
     while (read_write_user_input(&simsl)) {
         memset(rx_buffer,'\0' ,500);
         read_line(&simsl, rx_buffer);
-        printf("%s\n", rx_buffer);
+        if (strcmp(rx_buffer, "exc") == 0) {
+            read_exc_return(&simsl);
+        }
+        else {
+            printf("%s\n", rx_buffer);
+        }
         printf("%s", "# ");
     }
     return -1;

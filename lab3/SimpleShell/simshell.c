@@ -160,3 +160,15 @@ bool read_revision(simshell *sim)
     printf("%s\n", rx_buffer);
     return 1;
 }
+
+bool read_exc_return(simshell *sim) 
+{
+    char rx_buffer[100];
+    read_line(sim, rx_buffer);
+    printf("Exception return address %s\n", rx_buffer);
+    read_line(sim, rx_buffer);
+    printf("Exception class (EC) %s\n", rx_buffer);
+    read_line(sim, rx_buffer);
+    printf("Instruction specific syndrome (ISS) %s\n", rx_buffer);
+    return 1;
+}

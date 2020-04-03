@@ -25,4 +25,6 @@ bool read_vc_address(simshell *sim);
 int read_line(simshell *sim, char *buffer);
 
 bool read_revision(simshell *sim);
+
+bool read_exc_return(simshell *sim);
 #endif 

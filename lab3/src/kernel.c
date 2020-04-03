@@ -29,6 +29,7 @@ void kernel_main(void)
             uart_send_string("Hello World!!!\n");
         }
 		else if (strcmp(buffer, "exc") == 0) {
+			uart_send_string("exc\n");
 			sync_call();
 		}
 		else if (strcmp(buffer, "level") == 0) {
