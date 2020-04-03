@@ -4,3 +4,4 @@ void reset(int tick);
 void cancel_reset();
 int atoi(char *str);
 void print_next_instr_addr();
+void show_boot_msg();
