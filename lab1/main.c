@@ -51,10 +51,15 @@ double get_time(){
 
 void send_time(double time){
     unsigned long t1, t2;
+    unsigned long max = 1000000000;
     t1 = time;
     t2 = (time-t1)*1000000000;
     uart_send_int(time);
     uart_send('.');
+    while(t2 < max/10){
+        uart_send_int(0);
+        max/=10;
+    }
     uart_send_int(t2);
     uart_puts("\r\n");
 }
