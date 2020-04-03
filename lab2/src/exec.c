@@ -1,19 +1,34 @@
-#include "shell.h"
+#include "exec.h"
 
-struct cmd
+extern struct cmd
 {
     char name[10];
     char description[30];
     void(*callback)(void);
 };
 
-struct cmd cmd_list[] = { 
+extern struct cmd cmd_list[5] = { 
     { .name = "hello", .description = " Show commands available.", .callback = exec_hello}, 
     { .name = "help", .description = " Show \"Hello World!\"", .callback = exec_help}, 
     { .name = "boot", .description = " Get current timestamp.", .callback = exec_boot}, 
     { .name = "timestamp", .description = " Reboot device.", .callback = exec_timestamp}, 
+    { .name = "send", .description = " send kernel img to raspi", .callback = copy_self_kernel}, 
 };
 
+int _compare_input(char * input){
+    for(int i = 0; i < CMD_NUM; i++) {
+        if(!strcmp(input,cmd_list[i].name)){
+            cmd_list[i].callback();
+            return 1;
+        }
+    }
+    if(!strcmp(input,"haha")){
+        exec_hello();
+        exec_timestamp();
+        return 1;
+    }
+    return 0;
+}
 
 void exec_boot(){
     uart_puts("rebooting\n");
@@ -52,11 +67,28 @@ void exec_help(){
     }
 }
 
-void _unsign_arr_to_digit(unsigned num, char* buf, unsigned len){
-	for(int i=len-1; i>=0; i--){
-		buf[i] = (char)(num%10 + '0');
-		num /= 10;
-	}
+void exec_send(){
+    int size = recv_img_size();
+    uint8_t *kernel = (uint8_t*)0x10000;
+    
+    int check = 0;
+    for (int i = 0; i < size-1; i++) {
+        if (i % 10000 == 0){
+            uart_puts("have sent 10000 bytes\n");
+        }
+        uint8_t c = uart_recv();
+        *kernel++ = c;
+        check += c;
+    }
+
+    uart_hex(kernel);
+    uart_puts("\n");
+
+    uart_puts("send finish\n");
+    uart_send_int(check);
+    // branch_to_address((unsigned long int *)0x10000);
+    // void (*jump_new_kernel)(void) = new_address;
+    // jump_new_kernel();
 }
 
 void reset(int tick){ // reboot after watchdog timer expire
@@ -67,17 +99,4 @@ void reset(int tick){ // reboot after watchdog timer expire
 void cancel_reset(){
   *PM_RSTC = (PM_PASSWORD | 0); // full reset
   *PM_WDOG = (PM_PASSWORD | 0); // number of watchdog tick
-}
-
-int _compare_input(char * input){
-    for(int i = 0; i < CMD_NUM; i++) {
-        int s;
-        for (s = 0; cmd_list[i].name[s] == input[s] && input[s] && cmd_list[i].name[s]; s++)
-            ;
-        if(s == _strlen(cmd_list[i].name) && (!input[s]) ){
-            cmd_list[i].callback();
-            return 1;
-        }
-    }
-    return 0;
 }
