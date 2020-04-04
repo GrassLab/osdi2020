@@ -114,7 +114,7 @@ load:
   mini_uart_getn(false, (uint8_t *)&size, sizeof(size));
   mini_uart_getn(false, (uint8_t *)&checksum, sizeof(checksum));
 
-  uint8_t begin = base, end = begin + size;
+  uint8_t *begin = base, end = begin + size;
   if ((end >= __text_start && end < __text_end) ||
       (begin >= __text_start && begin < __text_end) ||
       (begin <= __text_start && end > __text_end)) {
@@ -206,15 +206,6 @@ void shell(void) {
         reboot();
       } else if (!strcmp(cmd, "timestamp")) {
         timestamp();
-      } else if (!strcmp(cmd, "test")) {
-          char buf[32];
-          while (true) {
-            while ((*AUX_MU_LSR_REG & 1) == 0);
-            uint8_t c = *AUX_MU_IO_REG & 0xff;
-            mini_uart_puts("0x");
-            mini_uart_puts(uitos_generic(c, 16, buf));
-            mini_uart_puts(EOL);
-          }
       } else {
         mini_uart_puts("Error: command ");
         mini_uart_puts(cmd);
