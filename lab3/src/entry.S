@@ -65,8 +65,8 @@ vectors:
 	ventry	fiq_invalid_el2t			// FIQ EL2t
 	ventry	error_invalid_el2t			// Error EL2t
 
-	ventry	sync_invalid_el2h			// Synchronous EL2h (this one)
-	ventry	irq_invalid_el2h			// IRQ EL2h
+	ventry	sync_el2h					// Synchronous EL2h (this one)
+	ventry	el2_irq						// IRQ EL2h
 	ventry	fiq_invalid_el2h			// FIQ EL2h
 	ventry	error_invalid_el2h			// Error EL2h
 
@@ -119,8 +119,6 @@ fiq_invalid_el0_64:
 error_invalid_el0_64:
 	handle_invalid_entry  ERROR_INVALID_EL0_64
 
-
-
 sync_invalid_el0_32:
 	handle_invalid_entry  SYNC_INVALID_EL0_32
 
@@ -134,11 +132,24 @@ error_invalid_el0_32:
 	handle_invalid_entry  ERROR_INVALID_EL0_32
 
 
-//sync_el2h:
+sync_el2h:
 	// TODO print the return address, EC field, and ISS field 
-	//kernel_entry
-	//bl	handle_sync
-	//kernel_exit
+	kernel_entry
+	mrs	x0, esr_el2
+	mrs	x1, elr_el2
+	bl	handle_sync
+	kernel_exit
+
+el2_irq:
+	kernel_entry 
+	bl	handle_irq
+	kernel_exit 
 
 .globl err_hang
 err_hang: b err_hang
+
+.globl el2_vector_init
+el2_vector_init:
+	adr x0, vectors
+	msr vbar_el2, x0
+	ret

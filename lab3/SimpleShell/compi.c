@@ -21,6 +21,22 @@ int main(void)
         if (strcmp(rx_buffer, "exc") == 0) {
             read_exc_return(&simsl);
         }
+        else if(strcmp(rx_buffer, "irq1") == 0) {
+            printf("irq1\n");
+            read_line(&simsl, rx_buffer);
+            printf("%s\n", rx_buffer);
+        }
+        else if(strcmp(rx_buffer, "irq") == 0) {
+            unsigned int x ;
+            read_line(&simsl, rx_buffer);
+            printf("%s\n", rx_buffer);
+            read_line(&simsl, rx_buffer);
+            printf("%s\n", rx_buffer);
+            read_line(&simsl, rx_buffer);
+            printf("%s\n", rx_buffer);
+            read_line(&simsl, rx_buffer);
+            printf("%s\n", rx_buffer);
+        }
         else {
             printf("%s\n", rx_buffer);
         }

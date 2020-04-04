@@ -27,4 +27,6 @@ int read_line(simshell *sim, char *buffer);
 bool read_revision(simshell *sim);
 
 bool read_exc_return(simshell *sim);
+
+int read_int(simshell *sim);
 #endif 
