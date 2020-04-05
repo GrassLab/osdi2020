@@ -26,16 +26,16 @@ unsigned int read_cntfrq(void)
     return val;
 }
 
-void write_cnthp_tval(unsigned int val)
+void write_cntp_tval(unsigned int val)
 {
-	asm volatile ("msr cnthp_tval_el2, %0" :: "r" (val));
+	asm volatile ("msr cntp_tval_el0, %0" :: "r" (val));
     return;
 }
 
-unsigned int read_cnthp_tval(void)
+unsigned int read_cntp_tval(void)
 {
     unsigned int val;
-	asm volatile ("mrs %0, cnthp_tval_el2" : "=r" (val));
+	asm volatile ("mrs %0, cntp_tval_el0" : "=r" (val));
     return val;
 }
 
@@ -49,7 +49,7 @@ void kernel_main(void)
 		readline(buffer, buff_size);
 		if (strcmp(buffer, "hello") == 0) {
             uart_send_string("Hello World!!!\n");
-        }
+		}
 		else if (strcmp(buffer, "exc") == 0) {
 			uart_send_string("exc\n");
 			sync_call();
@@ -60,20 +60,22 @@ void kernel_main(void)
 		}
 		else if (strcmp(buffer, "irq1") == 0) {
 			uart_send_string("irq1\n");
-			timer_init();
+			sys_timer_init();
 			enable_interrupt_controller();
 			enable_irq();
 		}
 		else if (strcmp(buffer, "irq") == 0) {
+			uart_send_string("irq\n");
+			// enable system timer
+			sys_timer_init();
+			enable_interrupt_controller();
+
+			// enable core timer
 			unsigned int cntfrq;
 			unsigned int val;
-			uart_send_string("irq\n");
 			cntfrq = read_cntfrq();
-			uart_send_int(cntfrq);
-
-			write_cnthp_tval(cntfrq);    // clear cnthp interrupt and set next 1 sec timer.
-			val = read_cnthp_tval();     // read 
-			uart_send_int(val);
+			write_cntp_tval(cntfrq);    // clear cnthp interrupt and set next 1 sec timer.
+			val = read_cntp_tval();     // read 
 			core_timer_enable();
 			enable_irq();
 		}

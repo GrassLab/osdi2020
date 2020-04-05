@@ -19,4 +19,5 @@
 #define SYSTEM_TIMER_IRQ_2	(1 << 2)
 #define SYSTEM_TIMER_IRQ_3	(1 << 3)
 
+#define CORE0_INTERRUPT_SOURCE 0x40000060
 #endif  /*_P_IRQ_H */

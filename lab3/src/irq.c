@@ -7,17 +7,18 @@
 
 void handle_irq(void)
 {
-	unsigned int irq = get32(IRQ_PENDING_1);
-	switch (irq) {
-		case (SYSTEM_TIMER_IRQ_1):
-			handle_timer_irq();
-			break;
-		default:
-            uart_send_hex(irq);
+	unsigned int fir_level_irq = get32(CORE0_INTERRUPT_SOURCE);
+	if (fir_level_irq == 256) {
+		handle_sys_timer_irq();
 	}
+	else if (fir_level_irq == 2) {
+		handle_core_timer_irq();
+	}
+	return;
 }
 
 void enable_interrupt_controller()
 {
 	put32(ENABLE_IRQS_1, SYSTEM_TIMER_IRQ_1);
+	return;
 }

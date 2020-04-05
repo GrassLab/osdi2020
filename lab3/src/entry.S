@@ -142,7 +142,15 @@ sync_el2h:
 
 el2_irq:
 	kernel_entry 
+	
+	//diable_irq
+	msr	daifset, #2
+
 	bl	handle_irq
+	//enable_irq
+	msr    daifclr, #2 
+	mov    x0, #16
+	msr    hcr_el2, x0
 	kernel_exit 
 
 .globl err_hang
