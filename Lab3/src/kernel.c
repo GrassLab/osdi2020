@@ -10,7 +10,7 @@ int check_string(char * str){
 	char* cmd_hello = "hello";
 	char* cmd_time = "timestamp";
 	char* cmd_reboot = "reboot";
-	char* cmd_loadimg = "loadimg";
+	char* cmd_exc = "exc";
 
 	if(strcmp(str,cmd_help)==0){
 	// print all available commands
@@ -57,8 +57,12 @@ int check_string(char * str){
 		reset(10000);
 		return 1;	
 	}
-	else if(strcmp(str,cmd_loadimg)==0){
-	
+	else if(strcmp(str,cmd_exc)==0){		
+		// issue exception                	
+		asm volatile(
+			"svc #1;"
+    		);
+
 	}
 	else{
 		uart_send_string("\r\nErr:command ");
@@ -117,9 +121,9 @@ void get_VC_core_base_addr(){
 void kernel_main(void)
 {	
     uart_init();
-    fb_init();
-    fb_show();
-    
+    //fb_init();
+    //fb_show();
+   
     uart_send_string("Hello, world!\r\n");
     
 
