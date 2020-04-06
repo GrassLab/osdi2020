@@ -4,14 +4,20 @@
 #include "irq.h"
 #include "mini_uart.h"
 #include "../include/peripherals/irq.h"
-
+#define AUX_IRQ (1 << 29)
 void handle_irq(void)
 {
+	unsigned int sec_level_irq = get32(IRQ_PENDING_1);
 	unsigned int fir_level_irq = get32(CORE0_INTERRUPT_SOURCE);
-	if (fir_level_irq == 256) {
-		handle_sys_timer_irq();
+	if(sec_level_irq & AUX_IRQ) {
+		handle_uart_irq();
+		sec_level_irq &= ~AUX_IRQ;
 	}
-	else if (fir_level_irq == 2) {
+	if (sec_level_irq& SYSTEM_TIMER_IRQ_1) {
+		handle_sys_timer_irq();
+		sec_level_irq &= ~SYSTEM_TIMER_IRQ_1;
+	}
+	if (fir_level_irq == 2) {
 		handle_core_timer_irq();
 	}
 	return;
@@ -20,5 +26,11 @@ void handle_irq(void)
 void enable_interrupt_controller()
 {
 	put32(ENABLE_IRQS_1, SYSTEM_TIMER_IRQ_1);
+	return;
+}
+
+void enable_uart_interrupt()
+{
+	put32(ENABLE_IRQS_1, AUX_IRQ);
 	return;
 }

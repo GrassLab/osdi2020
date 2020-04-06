@@ -9,3 +9,8 @@ void handle_sync(unsigned long esr, unsigned long address)
     uart_send_hex(esr>>26);
     uart_send_hex(esr & 0xfff);
 }
+
+void handle_el0_sync(unsigned long esr, unsigned long address)
+{
+    uart_send_hex(esr>>26);
+}

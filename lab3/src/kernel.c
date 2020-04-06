@@ -2,6 +2,7 @@
 #include "sys.h"
 #include "mini_uart.h"
 #include "irq.h"
+
 #define CORE0_TIMER_IRQCNTL 0x40000040
 
 int strcmp(char *str1, char *str2) {
@@ -40,9 +41,7 @@ unsigned int read_cntp_tval(void)
 }
 
 void kernel_main(void)
-{
-	uart_init();
-	el2_vector_init();
+{	
 	int buff_size = 100;
 	char buffer[buff_size];
 	while (1) {
@@ -58,11 +57,13 @@ void kernel_main(void)
 			int el = get_el();
 			uart_send_int(el);
 		}
-		else if (strcmp(buffer, "irq1") == 0) {
-			uart_send_string("irq1\n");
-			sys_timer_init();
-			enable_interrupt_controller();
+		else if (strcmp(buffer, "uart_irq") == 0) {
+			uart_send_string("uart_irq\n");
+			enable_uart_interrupt();
 			enable_irq();
+			while(1) {
+
+			}
 		}
 		else if (strcmp(buffer, "irq") == 0) {
 			uart_send_string("irq\n");

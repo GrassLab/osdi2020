@@ -1,3 +1,4 @@
+#include "arm/sysregs.h"
 .globl get_el
 get_el:
 	mrs x0, CurrentEL
@@ -19,3 +20,5 @@ delay:
 	subs x0, x0, #1
 	bne delay
 	ret
+
+
