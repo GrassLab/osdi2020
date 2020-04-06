@@ -1,7 +1,7 @@
 #ifndef UART
 #define UART
 
-#include "mm.h"
+#include <mm.h>
 
 /* Mini UART registers */
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))

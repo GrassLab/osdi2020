@@ -1,9 +1,9 @@
+#include <uart.h>
+#include <string.h>
+#include <mm.h>
+#include <mbox.h>
+#include <lfb.h>
 #include "shell.h"
-#include "uart.h"
-#include "string.h"
-#include "mm.h"
-#include "mbox.h"
-#include "lfb.h"
 
 #define PM_PASSWORD   0x5a000000
 #define PM_RSTC       ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
