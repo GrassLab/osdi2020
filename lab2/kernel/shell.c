@@ -70,7 +70,8 @@ loadimg (unsigned long address)
 {
   extern void *__start_bootloader;
   extern void *__stop_bootloader;
-  unsigned long __bootloader_size = (unsigned long)&__stop_bootloader - (unsigned long)&__start_bootloader;
+  unsigned long __bootloader_size =
+    (unsigned long) &__stop_bootloader - (unsigned long) &__start_bootloader;
   unsigned long img_size;
   unsigned long rebased_bootloader;
   unsigned long rebased_end;
@@ -97,10 +98,11 @@ loadimg (unsigned long address)
 	  __bootloader_size);
   // call rebased bootloader
   rebased_loadimg =
-	  rebased_bootloader + ((unsigned long) &loadimg_jmp -
+    rebased_bootloader + ((unsigned long) &loadimg_jmp -
 			  (unsigned long) &__start_bootloader);
   asm volatile ("mov x0, %0\n" "mov x1, %1\n" "mov sp, %2\n"
-		"blr %3\n"::"r" (address), "r" (img_size), "r" ((rebased_end + 0x8000) & ~0xf),
+		"blr %3\n"::"r" (address), "r" (img_size),
+		"r" ((rebased_end + 0x8000) & ~0xf),
 		"r" (rebased_loadimg):"x0", "x1");
   //((void (*)(void *, unsigned long, void *)) rebased_bootloader)((void *) address, img_size, rebased_bootloader + &__bootloader_size);
 }

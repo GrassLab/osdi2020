@@ -126,9 +126,9 @@ lfb_showpicture (char buf[3])
 	  *((unsigned int *) ptr) = *(unsigned int *) &pixel;
 	  //*((unsigned int *) ptr) =
 	  //  isrgb ? *((unsigned int *) &pixel) : (unsigned int) (pixel[0] <<
-								 //16 | pixel[1]
-								 //<< 8 |
-								 //pixel[2]);
+	  //16 | pixel[1]
+	  //<< 8 |
+	  //pixel[2]);
 	  ptr += 4;
 	}
       //ptr += pitch - homer_width * 4;
