@@ -1,24 +1,26 @@
 ARMGNU = aarch64-linux-gnu-
 CC = $(ARMGNU)gcc
-LDFLAGS = -T linker.ld -nostdlib
+LDFLAGS = -T kernel/linker.ld -nostdlib
 SDCARD ?= /dev/sdb
-SRC := $(wildcard *.c)
+HEADER := $(wildcard */*.h)
+SRC := $(wildcard */*.c)
 OBJECTS := $(patsubst %.c,%.o,$(SRC))
-CFLAGS = -include stackguard.h
+CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral
 
 .PHONY: all clean qemu debug indent
 
 all: kernel8.img
 
-$(wildcard *.o): $(wildcard *.h)
+$(wildcard */*.o): $(wildcard */*.h)
 
-boot: $(OBJECTS)
+kernel8.elf: $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ kernel/boot.S $(OBJECTS)
 
-kernel8.img: boot
-	$(ARMGNU)objcopy -O binary boot kernel8.img
+kernel8.img: kernel8.elf
+	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
 
 clean:
-	rm boot kernel8.img *.o *.*~
+	rm kernel8.elf kernel8.img $(patsubst %,%~*,$(SRC) $(HEADER)) $(OBJECTS)
 
 qemu: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
@@ -34,4 +36,4 @@ sd: kernel8.img
 	sudo umount rootfs
 
 indent:
-	indent *.c *.h
+	indent $(SRC) $(HEADER)

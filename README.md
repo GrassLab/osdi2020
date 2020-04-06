@@ -36,11 +36,20 @@ make debug
 
 ```
 .
-├── labX		# labX (X = 0 ~ 8)
-│   ├── boot.S		# source code for boot
-│   ├── README.md	# some notes for labX
-│   ├── linker.ld	# linker script
-│   └── Makefile
+├── include		# common used headers
+│   └── *.h
+├── kernel		# kernel main
+│   ├── boot.S
+│   ├── linker.ld
+│   ├── *.h
+│   └── *.c
+├── lib			# some useful stuff
+│   ├── *.h
+│   └── *.c
+├── peripheral		# ARM peripherals
+│   ├── *.h
+│   └── *.c
+├── Makefile
 ├── LICENSE
 └── README.md		# this file
 ```
