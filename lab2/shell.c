@@ -50,7 +50,7 @@ shell_interactive ()
 	}
       else if (!strncmp ("picture", buf, 8))
 	{
-	  picture ();
+	  picture (buf);
 	}
       else if (!strncmp ("loadimg", buf, 7))
 	{
@@ -61,6 +61,7 @@ shell_interactive ()
 	  uart_puts (buf);
 	  uart_puts (": command not found\n");
 	}
+      picture (buf);
     }
 }
 
@@ -113,9 +114,9 @@ loadimg_jmp (void *address, unsigned long img_size)
 }
 
 void
-picture ()
+picture (char buf[3])
 {
-  lfb_showpicture ();
+  lfb_showpicture (buf);
 }
 
 void

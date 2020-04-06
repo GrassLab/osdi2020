@@ -26,6 +26,6 @@
 #define FRAME_BUFFER
 
 void lfb_init ();
-void lfb_showpicture ();
+void lfb_showpicture (char buf[3]);
 
 #endif /* ifndef FRAME_BUFFER */

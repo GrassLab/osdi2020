@@ -22,6 +22,7 @@ main (void)
   uart_init ();
   lfb_init ();
   uart_puts (BOOT_MSG);
+  uart_puts ("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
   shell_interactive ();
   return 0;
 }

@@ -101,27 +101,37 @@ lfb_init ()
  * Show a picture
  */
 void
-lfb_showpicture ()
+lfb_showpicture (char buf[3])
 {
   int x, y;
   unsigned char *ptr = lfb;
   char *data = homer_data, pixel[4];
 
-  ptr += (height - homer_height) / 2 * pitch + (width - homer_width) * 2;
-  for (y = 0; y < homer_height; y++)
+  //ptr += (height - homer_height) / 2 * pitch + (width - homer_width) * 2;
+  //for (y = 0; y < homer_height; y++)
+  for (y = 0; y < height; y++)
     {
-      for (x = 0; x < homer_width; x++)
+      //for (x = 0; x < homer_width; x++)
+      for (x = 0; x < width; x++)
 	{
-	  HEADER_PIXEL (data, pixel);
+	  // HEADER_PIXEL (data, pixel);
 	  // the image is in RGB. So if we have an RGB framebuffer, we can copy the pixels
 	  // directly, but for BGR we must swap R (pixel[0]) and B (pixel[2]) channels.
-	  *((unsigned int *) ptr) =
-	    isrgb ? *((unsigned int *) &pixel) : (unsigned int) (pixel[0] <<
-								 16 | pixel[1]
-								 << 8 |
-								 pixel[2]);
+	  pixel[0] = x / (width / 256);
+	  pixel[1] = y / (height / 256);
+	  pixel[2] = (pixel[0] & pixel[1] & 1) ? 255 : 0;
+	  pixel[0] = (pixel[0] == buf[0]) ? 256 - pixel[0] : pixel[0];
+	  pixel[1] = (pixel[1] == buf[1]) ? 256 - pixel[1] : pixel[1];
+	  pixel[2] = (pixel[2] == buf[2]) ? 256 - pixel[2] : pixel[2];
+	  *((unsigned int *) ptr) = *(unsigned int *) &pixel;
+	  //*((unsigned int *) ptr) =
+	  //  isrgb ? *((unsigned int *) &pixel) : (unsigned int) (pixel[0] <<
+								 //16 | pixel[1]
+								 //<< 8 |
+								 //pixel[2]);
 	  ptr += 4;
 	}
-      ptr += pitch - homer_width * 4;
+      //ptr += pitch - homer_width * 4;
+      //ptr += pitch - homer_width * 4;
     }
 }

@@ -8,7 +8,7 @@ double get_time ();
 void reset (int tick);
 void cancel_reset ();
 void hardware ();
-void picture ();
+void picture (char buf[3]);
 void ftoa (double val, char *buf);
 void loadimg (unsigned long address)
   __attribute__ ((section (".bootloader")));
