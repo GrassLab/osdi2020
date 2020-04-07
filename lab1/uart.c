@@ -47,6 +47,7 @@ void uart_init()
  */
 void uart_send(unsigned int c) {
     /* wait until we can send */
+    //AUX_MU_LSR's 5th bit is to check if we can send or not
     do{asm volatile("nop");}while(!(*AUX_MU_LSR&0x20));
     /* write the character to the buffer */
     *AUX_MU_IO=c;
@@ -58,6 +59,7 @@ void uart_send(unsigned int c) {
 char uart_getc() {
     char r;
     /* wait until something is in the buffer */
+    //AUX_MU_LSR's 0th bit is to check is it receiving someting or not
     do{asm volatile("nop");}while(!(*AUX_MU_LSR&0x01));
     /* read it and return */
     r=(char)(*AUX_MU_IO);

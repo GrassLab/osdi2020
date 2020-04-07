@@ -30,3 +30,8 @@ _start:
     //jump to c code
 4:  bl     main
     b      1b
+
+.global branch_to_address
+branch_to_address:
+    br x0
+    ret // We never reach this point
