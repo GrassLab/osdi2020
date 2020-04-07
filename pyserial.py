@@ -14,14 +14,11 @@ if __name__ == '__main__':
         print("Oops! Wrong path of device, please check again.")
         sys.exit()
 
-    print(ser.read_until("> ").decode(), end="")
-    ser.timeout = 1;
-
     size = 0
     while True:
         try:
+            print(ser.read_until(b"> ").decode()[size:], end="")
             size = ser.write((input() + '\n').encode())
-            print(ser.read_until("> ").decode()[size:], end="")
         except:
             print("Something went wrong :(")
             break
