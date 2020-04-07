@@ -29,16 +29,59 @@ check_EL2:
   mrs x0, CurrentEL
   lsr x0, x0, #2
   cmp x0, #2
+  b.ne setup_msg_table
+
+setup_exception_vector_table:
+  ldr x0, =exception_table
+  msr vbar_EL2, x0
+
   mov x0, xzr
-  b.eq jmp_main
+jmp_main:
+  ldr x1, =error_msg_table
+  b main
 
 setup_msg_table:
   mov x0, #1
-  ldr x1, =error_msg_table
-
-jmp_main:
-  b main
+  b jmp_main
  
 loop:
   wfe
   b loop
+
+.align 11
+exception_table:
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
+  b exception_handler
+  .align 7
