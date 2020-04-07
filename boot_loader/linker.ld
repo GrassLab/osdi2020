@@ -23,13 +23,23 @@
  *
  */
 
-#include "uart.h"
-#include "shell.h"
-
-void main()
+SECTIONS
 {
-    // set up serial console
-    uartInit();
+    . = 0x80000 - 2048;
+    _bootloader_start = .;
+    .text : { *(.text) }
+    .rodata : { *(.rodata) }
+    _data = .;
+    .data : { *(.data) }
+    .bss (NOLOAD) : {
+        . = ALIGN(16);
+        __bss_start = .;
+        *(.bss .bss.*)
+        *(COMMON)
+        __bss_end = .;
+    }
+    _end = .;
 
-    runShell();
+   /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
+__loader_size = (_end - _bootloader_start)>>3;

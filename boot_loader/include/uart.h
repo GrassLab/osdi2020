@@ -23,13 +23,13 @@
  *
  */
 
-#include "uart.h"
-#include "shell.h"
+#ifndef UART_H
+#define UART_H
 
-void main()
-{
-    // set up serial console
-    uartInit();
+void uartInit();
+void uartSend(unsigned int c);
+char uartGetc();
+char uartGetcWithCR();
+void uartPuts(const char *s);
 
-    runShell();
-}
+#endif
