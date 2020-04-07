@@ -5,8 +5,8 @@
 #include "include/lfb.h"
 
 int LOADIMG = 0;
-int SPLASH_ON = 1;
-unsigned int KERNEL_ADDR;
+int SPLASH_ON = 0;
+unsigned int KERNEL_ADDR = 0x7fff0;
 
 void loadimg(unsigned int kernel_addr)
 {
@@ -30,7 +30,6 @@ void loadimg(unsigned int kernel_addr)
     uart_puts("OK");
 
     uart_puts("Please input the kernel load address (default: 0x80000):\n");
-    KERNEL_ADDR = 0x100000;
     uart_puts("Please send the kernel from UART...\n");
 
 
