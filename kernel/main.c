@@ -23,11 +23,11 @@ main (int error, char *argv[])
   lfb_init ();
   uart_puts (BOOT_MSG);
   if (error)
-  {
-    uart_puts ("---------- Warning ----------\n");
-    uart_puts (argv[0]);
-    uart_puts ("-----------------------------\n");
-  }
+    {
+      uart_puts ("---------- Warning ----------\n");
+      uart_puts (argv[0]);
+      uart_puts ("-----------------------------\n");
+    }
   shell_interactive ();
   return 0;
 }
