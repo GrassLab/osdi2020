@@ -3,6 +3,12 @@
 #include "time.h"
 #include "power.h"
 #include "string.h"
+#include "mbox.h"
+#include "info.h"
+
+#ifndef WITHOUT_LOADER
+#include "loadimg.h"
+#endif
 
 char buffer[1024];
 
@@ -63,6 +69,11 @@ int shell_execute(char *cmd){
         println("timestamp : show timestamp");
         println("reboot : reboot the device");
         println("help : print all available commands");
+#ifdef BUILD_STAMP
+#define xstr(a) str(a)
+#define str(a) #a
+        println("BUILD @ ", xstr(BUILD_STAMP));
+#endif
     }
     else if(EQS("timestamp", cmd)){
         timestamp();
@@ -73,12 +84,30 @@ int shell_execute(char *cmd){
     else if(EQS("reboot", cmd)){
         puts("rebooting...");
         reboot();
+        return -1;
     }
     else if(EQS("exit", cmd) || cmd[0] == 4){
         return -1;
     }
     else if(EQS("clear", cmd)){
         print("\e[1;1H\e[2J");
+    }
+#ifndef WITHOUT_LOADER
+    else if(EQS("loadimg", cmd)){
+        loadimg();
+    }
+#endif
+    else if(EQS("board", cmd)){
+        if(get_board_revision())
+            printf("0x%x" NEWLINE, mbox[5]);
+        else
+            puts("get_board_reversion() failed");
+    }
+    else if(EQS("vcaddr", cmd)){
+        if(get_vc_memaddr())
+            printf("0x%x\n", mbox[5]); // it should be 0xa020d3 for rpi3 b+
+        else
+            puts("get_vc_memaddr() failed");
     }
 #ifdef TEST
     else if(EQS("bss", cmd)){
@@ -100,7 +129,6 @@ int shell_execute(char *cmd){
 }
 
 int shell_loop(){
-    //while(1) shell_read_line(buffer);
     while(shell_execute(shell_read_line(buffer)) >= 0);
     return 0;
 }

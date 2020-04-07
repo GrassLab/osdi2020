@@ -2,7 +2,8 @@
 #define __IO_H__
 
 #include "map.h"
-#include "mini_uart.h"
+#include "uart.h"
+#include "sprintf.h"
 
 #define NEWLINE "\r\n"
 
@@ -30,12 +31,12 @@ define__print_as_number_types();
         extra_number_printing \
         )(x)
 
-#define getchar(x) uart_recv()
+#define getchar() uart_recv()
 #define putchar(x) uart_send(x)
 #define flush()    uart_flush()
 
 #define __print(x) \
-    _Generic((x), char: uart_send, char*: uart_send_string, \
+    _Generic((x), char: uart_send, char*: uart_puts, \
             long: __print_long_as_number, int: __print_int_as_number, \
             extra_number_printing, default: __print_ULL_as_number \
             )(x);
@@ -44,5 +45,8 @@ define__print_as_number_types();
 
 #define println(...) print(__VA_ARGS__, NEWLINE)
 #define puts println
+
+int expect(char* s);
+unsigned long long get_nature(char *, int, int);
 
 #endif

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 NAME=$0
+DEVICE=/dev/ttyUSB0
 
 INTERATIVE=0
 POSITIONAL=()
@@ -10,15 +11,32 @@ if [ "$#" -eq 0 ];then INTERATIVE=1; fi
 while [[ $# -gt 0 ]];do
     key="$1"
     case $key in
-        -c)
-            POSITIONAL+=("-c $2")
+        -c|--command)
+            POSITIONAL+=("-c")
+            POSITIONAL+=("$2")
             shift
             shift
             ;;
-        -i)
+        -d|--device)
+            DEVICE=$2
+            shift
+            shift
+            ;;
+        -i|--interative)
             INTERATIVE=1
             shift
             ;;
+        -img|--image|-k|--kernel)
+            POSITIONAL+=("-img")
+            POSITIONAL+=("$2")
+            shift
+            shift
+        ;;
+        -l|-loc|--location)
+            IMG_LOC=$2
+            shift
+            shift
+        ;;
         -h|--help)
             echo -e ""
             echo -e "$NAME [-hi] [--help] [-c command_string | file ...]"
@@ -37,22 +55,49 @@ done
 
 set -- "${POSITIONAL[@]}" 
 
-if [ ! -e /dev/ttyUSB0 ];then
-    echo "ttyUSB0 not found. Did you connect your device?" >&2
+if [ ! -e $DEVICE ];then
+    echo "$DEVICE not found. Did you connect your device?" >&2
     exit 1
 fi
 
+FILEoCMD=0
 while [[ $# -gt 0 ]];do
     key="$1"
     case $key in
         -c)
-            sudo sh -c "echo '$2' | tr -s '\n' '\r' > /dev/ttyUSB0;"
+            FILEoCMD=1
+            sudo sh -c "echo '$2' | tr -s '\n' '\r' > $DEVICE;"
+            shift
+            shift
+            ;;
+        -img)
+            FILEoCMD=1
+            IMG_SIZE=`wc -c $2 | awk '{print $1}'`
+            BS=64
+
+            if [ -z "$input" ];then
+                IMG_LOC=200000
+                read -p "img loc(enter=0x${IMG_LOC}): 0x" input
+                [[ ! -z "$input" ]] && IMG_LOC=$input
+            fi
+
+            sudo sh -c "echo -e 'loadimg' | tr -s '\n' '\r' > $DEVICE;"
+            sleep 1
+            echo "img size is: $IMG_SIZE bytes"
+            echo -ne "sending size..."
+            sudo sh -c "echo -e '${IMG_SIZE}@${IMG_LOC}' | tr -s '\n' '\r' > $DEVICE;"
+            echo "done"
+            read -p "enter to start sending image:" ignore
+            echo -ne "sending img..."
+            sudo sh -c "dd if=$2 of=$DEVICE status=progress;"
+            echo "done"
             shift
             shift
             ;;
         *)
+            FILEoCMD=1
             for l in `cat $1`;do
-                sudo sh -c "echo $l | tr -s '\n' '\r' > /dev/ttyUSB0;"
+                sudo sh -c "echo $l | tr -s '\n' '\r' > $DEVICE;"
                 sleep 0.1;
             done
             shift
@@ -60,6 +105,6 @@ while [[ $# -gt 0 ]];do
     esac
 done
 
-if [[ $INTERATIVE -eq 1 ]]; then
-    sudo screen /dev/ttyUSB0 115200
+if [ $INTERATIVE -eq 1 -o $FILEoCMD -eq 0 ]; then
+    sudo screen $DEVICE 115200
 fi
