@@ -93,7 +93,7 @@ vectors:
 	ventry	error_invalid_el1h			// Error EL1h
 
 	ventry	sync_el0_64					// Synchronous 64-bit EL0
-	ventry	irq_invalid_el0_64			// IRQ 64-bit EL0
+	ventry	irq_el0_64					// IRQ 64-bit EL0
 	ventry	fiq_invalid_el0_64			// FIQ 64-bit EL0
 	ventry	error_invalid_el0_64		// Error 64-bit EL0
 
@@ -155,11 +155,18 @@ error_invalid_el0_32:
 
 sync_el0_64:
 	kernel_entry 0
-
 	mrs x0, esr_el1
 	mrs x1, elr_el1
 	bl	handle_el0_sync
-	
+	kernel_exit 0
+
+irq_el0_64:
+	kernel_entry 0
+	//diable_irq
+	msr	daifset, #2
+	bl	handle_irq
+	//enable_irq
+	msr    daifclr, #2
 	kernel_exit 0
 
 sync_el1h:

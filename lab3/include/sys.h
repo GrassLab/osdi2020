@@ -1,6 +1,7 @@
 #ifndef	_SYS_H
 #define	_SYS_H
-void handle_sync(unsigned long esr, unsigned long address);
-void handle_el0_sync(unsigned long esr, unsigned long address);
+#define SYS_TIME_IRQ   0x1
+#define SYS_EXC        0x2
+
 
 #endif  /*_SYS_H */

@@ -51,7 +51,7 @@ void kernel_main(void)
 		}
 		else if (strcmp(buffer, "exc") == 0) {
 			uart_send_string("exc\n");
-			sync_call();
+			sync_call_exc();
 		}
 		else if (strcmp(buffer, "level") == 0) {
 			int el = get_el();
@@ -67,18 +67,20 @@ void kernel_main(void)
 		}
 		else if (strcmp(buffer, "irq") == 0) {
 			uart_send_string("irq\n");
-			// enable system timer
-			sys_timer_init();
-			enable_interrupt_controller();
+			sync_call_time();
+			uart_send_string("ttt\n");
+			// // enable system timer
+			// sys_timer_init();
+			// enable_interrupt_controller();
 
-			// enable core timer
-			unsigned int cntfrq;
-			unsigned int val;
-			cntfrq = read_cntfrq();
-			write_cntp_tval(cntfrq);    // clear cnthp interrupt and set next 1 sec timer.
-			val = read_cntp_tval();     // read 
-			core_timer_enable();
-			enable_irq();
+			// // enable core timer
+			// unsigned int cntfrq;
+			// unsigned int val;
+			// cntfrq = read_cntfrq();
+			// write_cntp_tval(cntfrq);    // clear cnthp interrupt and set next 1 sec timer.
+			// val = read_cntp_tval();     // read 
+			// core_timer_enable();
+			// enable_irq();
 		}
 		else {
 			uart_send_string("Wrong Command\n");
