@@ -5,7 +5,8 @@ SDCARD ?= /dev/sdb
 HEADER := $(wildcard */*.h)
 SRC := $(wildcard */*.c)
 OBJECTS := $(patsubst %.c,%.o,$(SRC))
-CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Iexception
+ASM = kernel/boot.S kernel/exception.S
+CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral
 
 .PHONY: all clean qemu debug indent
 
@@ -13,8 +14,8 @@ all: kernel8.img
 
 $(wildcard */*.o): $(SRC) $(HEADER)
 
-kernel8.elf: kernel/boot.S $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ kernel/boot.S $(OBJECTS)
+kernel8.elf: $(ASM) $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ $(ASM) $(OBJECTS)
 
 kernel8.img: kernel8.elf
 	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
