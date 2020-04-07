@@ -9,7 +9,6 @@ void reset (int tick);
 void cancel_reset ();
 void hardware ();
 void picture (char buf[3]);
-void ftoa (double val, char *buf);
 void loadimg (unsigned long address)
   __attribute__ ((section (".bootloader")));
 void loadimg_jmp (void *address, unsigned long img_size)

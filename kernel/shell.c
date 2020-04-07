@@ -28,6 +28,7 @@ shell_interactive ()
 	    ("hardware - show board revision and VC Core base address\n");
 	  uart_puts ("picture - show picture\n");
 	  uart_puts ("loadimg [address] - load image to address\n");
+	  uart_puts ("exc - raise exception (svc #1)\n");
 	}
       else if (!strcmp ("hello", buf))
 	{
@@ -55,6 +56,10 @@ shell_interactive ()
       else if (!strncmp ("loadimg", buf, 7))
 	{
 	  loadimg (strtol (buf + 7, 0, 16));
+	}
+      else if (!strcmp ("exc", buf))
+	{
+	  asm volatile ("svc #1");
 	}
       else
 	{
@@ -163,30 +168,6 @@ hardware ()
   uart_puts ("VC Core base address: ");
   uart_hex (base_addr);
   uart_puts ("\n");
-}
-
-void
-ftoa (double val, char *buf)
-{
-  double scan = 1000000;
-  int cnt = 0;
-  int met_num = 0;
-
-  while (cnt < 6)
-    {
-      *buf = (long) (val / scan) % 10;
-      if (*buf != 0)
-	met_num = 1;
-      *buf += '0';
-      if (met_num)
-	buf++;
-      if (scan < 1)
-	cnt++;
-      if (scan == 1)
-	*buf++ = '.';
-      scan /= 10;
-    }
-  *buf = 0;
 }
 
 double
