@@ -15,14 +15,19 @@
                  "                                                                  \n"
 
 int
-main (void)
+main (int error, char *argv[])
 {
   // init stack guard. It should be random, but I'm lazy.
   __stack_chk_guard = (void *) 0xdeadbeef;
   uart_init ();
   lfb_init ();
   uart_puts (BOOT_MSG);
-  uart_puts ("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
+  if (error)
+  {
+    uart_puts ("---------- Warning ----------\n");
+    uart_puts (argv[0]);
+    uart_puts ("-----------------------------\n");
+  }
   shell_interactive ();
   return 0;
 }

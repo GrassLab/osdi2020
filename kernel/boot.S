@@ -1,3 +1,8 @@
+.section ".data"
+EEL2: .string "not in EL2\n"
+error_msg_table:
+.quad EEL2
+
 .section ".text"
 _start:
   # get cpuid
@@ -20,7 +25,18 @@ cmp_adr:
   # init stack
   mov sp, #0x80000
 
-  # jmp to main
+check_EL2:
+  mrs x0, CurrentEL
+  lsr x0, x0, #2
+  cmp x0, #2
+  mov x0, xzr
+  b.eq jmp_main
+
+setup_msg_table:
+  mov x0, #1
+  ldr x1, =error_msg_table
+
+jmp_main:
   b main
  
 loop:
