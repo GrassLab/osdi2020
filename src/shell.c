@@ -176,7 +176,7 @@ void reboot(void) {
   // full reset
   *PM_RSTC = PM_PASSWORD | 0x20;
   mini_uart_puts("Reboot..." EOL);
-  while (true);
+  while (true) {}
 }
 
 void shell(void) {
