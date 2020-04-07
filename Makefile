@@ -11,24 +11,24 @@ CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral
 
 all: kernel8.img
 
-$(wildcard */*.o): $(wildcard */*.h)
+$(wildcard */*.o): $(SRC) $(HEADER)
 
-kernel8.elf: $(OBJECTS)
+kernel8.elf: kernel/boot.S $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@ kernel/boot.S $(OBJECTS)
 
 kernel8.img: kernel8.elf
 	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
 
 clean:
-	rm kernel8.elf kernel8.img $(patsubst %,%~*,$(SRC) $(HEADER)) $(OBJECTS)
+	rm -f kernel8.elf kernel8.img $(patsubst %,%~*,$(SRC) $(HEADER)) $(OBJECTS)
 
 qemu: kernel8.img
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 
 debug: CFLAGS += -ggdb -Og
 
 debug: kernel8.img
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty -s -S
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -s -S
 
 sd: kernel8.img
 	sudo mount -t vfat $(SDCARD)1 rootfs/
