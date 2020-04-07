@@ -4,8 +4,9 @@
 #include "string.h"
 #include "timer.h"
 #include "uart.h"
-
-// #include "utility.h"
+#include "io.h"
+#include "stdint.h"
+#include "framebuffer.h"
 
 void welcome_msg()
 {
@@ -21,8 +22,15 @@ void init()
 {
 	timmer_init(); // initial timer
 	uart_init(); // initial mini uart
+	char test = "a";
+test:
+	printk("Kernel address: %p\n", &&test);
+	// /* check if there is any pending loader */
+	// uart_send(0x06)
+	// uart_
+	// fb_init();
+	// fb_show();
 }
-
 int main()
 {
 	init();

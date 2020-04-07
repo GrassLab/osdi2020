@@ -10,7 +10,7 @@
 #define SMALL 64 /* use 'abcdef' instead of 'ABCDEF' */
 
 #define is_digit(x) (x >= '0' && x <= '9')
-int do_div(int n, int base)
+unsigned long long int do_div(unsigned long long int n, int base)
 {
 	return n % base;
 }
@@ -19,14 +19,26 @@ char *int_to_str(char *str, unsigned long long int num, int base, int size,
 		 int precision, int type)
 {
 	const char *digits = "0123456789abcdef";
-	char tmp[36]; // max lengh of int
-	int i = 0;
+	char tmp[72]; // max lengh of int
+	long i = 0;
 	if (num == 0) {
 		tmp[i++] = digits[0];
 	} else {
-		while (num != 0) {
-			tmp[i++] = digits[do_div(num, base)];
-			num = num / base;
+		if (base == 16) { // should be 16 disable for now
+			unsigned char n;
+			int c;
+			for (c = 60; c >= 0; c -= 4) {
+				// get highest tetrad
+				n = (num >> c) & 0xF;
+				// 0-9 => '0'-'9', 10-15 => 'A'-'F'
+				n += n > 9 ? 0x37 : 0x30;
+				tmp[i++] = n;
+			}
+		} else {
+			while (num != 0) {
+				tmp[i++] = digits[do_div(num, base)];
+				num = num / base;
+			}
 		}
 	}
 	if (i > precision)
@@ -87,7 +99,7 @@ int skip_atoi(const char **s)
 
 char *vsprintf(char *buf, const char *fmt, __builtin_va_list args)
 {
-	int num;
+	unsigned long long int num;
 	float float_num;
 	char *str;
 	char *s;
@@ -156,6 +168,11 @@ char *vsprintf(char *buf, const char *fmt, __builtin_va_list args)
 			ptr = __builtin_va_arg(args, void *);
 			str = int_to_str(str, (unsigned long)ptr, 16,
 					 field_width, precision, flags);
+			break;
+		case 'x':
+			num = __builtin_va_arg(args, unsigned long long int);
+			str = int_to_str(str, num, 16, field_width, precision,
+					 flags);
 			break;
 		case 'd': // get integer
 			num = __builtin_va_arg(args, unsigned long long int);

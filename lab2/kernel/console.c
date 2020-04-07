@@ -2,12 +2,15 @@
 #include "kernel.h"
 #include "string.h"
 #include "uart.h"
+
 void help();
+
 struct command {
 	char *name;
 	char *descript;
 	void (*func)(char *argv);
 };
+
 struct command buildin_cmds[] = {
 	{ .name = "help", .descript = "get help", .func = help },
 	{ .name = "hello", .descript = "print hello world", .func = hello },
@@ -19,6 +22,15 @@ struct command buildin_cmds[] = {
 	{ .name = "timestamp",
 	  .descript = "print timestamp",
 	  .func = getTimestamp },
+	{ .name = "get_version",
+	  .descript = "get board version",
+	  .func = get_board_revision },
+	{ .name = "splash",
+	  .descript = "show splash screen",
+	  .func = show_splash },
+	{ .name = "loadkernel",
+	  .descript = "load image from uart",
+	  .func = load_kernel },
 	{ .name = NULL, .descript = NULL, .func = NULL }
 };
 

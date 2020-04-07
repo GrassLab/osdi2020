@@ -10,6 +10,7 @@ void hello()
 {
 	printk("Hello World!!\n");
 }
+
 void reset()
 { // reboot after watchdog timer expire
 	float second = 1.5;
@@ -30,8 +31,9 @@ void print_info()
 	printk("Board: Raspberry Pi 3 B+\n"
 	       "OS: Bare Metal\n"
 	       "Maintainer: njt@2020\n"
-	       "CNTFRQ: %d\n",
-	       getFrequency());
+	       "CNTFRQ: %d\n"
+	       "CNTPCT: %d\n",
+	       getFrequency(), getCurrentCount());
 }
 
 void getTimestamp()
