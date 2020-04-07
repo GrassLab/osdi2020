@@ -205,5 +205,4 @@ exc (unsigned long elr_el2, unsigned long esr_el2)
   printf ("Exception return address 0x%p\r\n", (void *) elr_el2);
   printf ("Exception class (EC) 0x%x\r\n", esr_el2 >> 26);
   printf ("Instruction specific syndrome (ISS) 0x%x\r\n", esr_el2 & 0xffffff);
-  asm volatile ("eret");
 }
