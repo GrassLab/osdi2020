@@ -9,6 +9,7 @@
 #include "watchdog.h"
 #include "mailbox.h"
 #include "time.h"
+#include "printf.h"
 
 #define BUFFER_SIZE 1024
 #define SHELL_CHAR "# " 
@@ -23,12 +24,7 @@ void shell_splash()
     uart_puts("   \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___| |_| |_|\\___/|_| |_| |_|\\___|   \r\n");
     uart_puts("\r\n");
     uart_puts("+-----------------------+-----------------------+\r\n");
-    uart_puts("|\tRevision\t|\t");
-    uart_hex(get_board_revision());
-    uart_puts("\t|\r\n");
-    uart_puts("|\tVC start\t|\t");
-    uart_hex(get_vc_memory());
-    uart_puts("\t|\r\n");
+    printf("|\tRevision\t|\t%08X\t|\r\n|\tVC start\t|\t%08X\t|\r\n", get_board_revision(), get_vc_memory());
     uart_puts("+-----------------------+-----------------------+\r\n");
 }
 
@@ -71,7 +67,6 @@ void shell_start()
     uart_log(LOG_INFO, "Starting shell...");
 
     char line[BUFFER_SIZE];
-    char int_buffer[11];
     
     //char *cmd
     //char **args;
@@ -95,44 +90,43 @@ void shell_start()
         if (!strcmp(line, shell_cmds[0][0])) {
             uart_puts("world");
         } else if (!strcmp(line, shell_cmds[1][0])) {
-            get_timestamp(int_buffer);
-            uart_puts(int_buffer);
+            printf("%f", get_timestamp());
         } else if (!strcmp(line, shell_cmds[2][0])) {
             reboot();
         } else if (!strcmp(line, shell_cmds[3][0])) {
             shutdown();
         } else if (!strcmp(line, shell_cmds[4][0])){
             uart_puts("Waiting for the image...\r\n");
-            uint32_t size = uart_getc();
-            size|=uart_getc()<<8;
-            size|=uart_getc()<<16;
-            size|=uart_getc()<<24;
-
-            uart_putc((size>>24)&0xff);
-            uart_putc((size>>16)&0xff);
-            uart_putc((size>>8)&0xff);
-            uart_putc(size&0xff);
-            
-            uart_puts("Loading the image...\r\n");
-            uint8_t * kernel = (uint8_t *)0x80000;
-            while(size-- > 0){
-                *kernel++ = uart_getc();
-                uart_putc('a');
+            int size = 0;
+            for (size_t i = 0; i < 4; i++) {
+                char c = uart_getc();
+                size = size << 8;
+                size += (int)c;
             }
+            printf("Image size: %d\r\n", size);
+            uart_puts("Loading the image...\r\n");
+            uint8_t *kernel = (uint8_t *)0x10000;
+            uint8_t *original_kernel = (uint8_t *)0x80000;
+            while(--size){
+                *kernel++ = uart_getc();
+            }
+
+            uart_puts("loading done\r\n");
+
+            /* for (int i = 0; i < stmp; i++) {
+                if (i % 100 == 0) printf("%d\r\n", i);
+                *(original_kernel + i) = *(kernel - size + i);
+            } */
+
+            uart_puts("copy done \r\n");
             uart_puts("Booting...\r\n");
-            void (*boot)(void) = 0x80000;
+            void (*boot)(void) = 0x10000;
             boot();
         } else if (!strcmp(line, shell_cmds[5][0])) {
-            for(size_t i = 0; i < sizeof(shell_cmds)/sizeof(shell_cmds[0]); i++) {
-                uart_puts(shell_cmds[i][0]);
-                uart_puts(" : ");
-                uart_puts(shell_cmds[i][1]);
-                uart_puts("\r\n");
-            }
+            for(size_t i = 0; i < sizeof(shell_cmds) / sizeof(shell_cmds[0]); i++)
+                printf("%s : %s \r\n", shell_cmds[i][0], shell_cmds[i][1]);
        } else {
-            uart_puts("ERROR: ");
-            uart_puts(line);
-            uart_puts(" unknown command, seek <help>");
+            printf("ERROR: %s unknown command, seek <help>", line);
         }
     }
 }

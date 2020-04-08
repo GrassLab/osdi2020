@@ -18,6 +18,6 @@ static uint64_t mm_ticks() {
     return cntpct_el0;
 }
 
-void get_timestamp(char* timestamp) {
-     ftoa(mm_ticks()/(float)mm_freq(), timestamp);
+float get_timestamp() {
+     return mm_ticks()/(float)mm_freq();
 }

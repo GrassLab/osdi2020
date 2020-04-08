@@ -3,6 +3,6 @@
 
 void delay(int32_t count);
 
-void get_timestamp(char* timestamp);
+float get_timestamp();
 
 #endif

@@ -4,6 +4,7 @@
  */
 
 #include "types.h"
+#include "printf.h"
 
 size_t strlen(const char *s) {
     const char *p;
@@ -40,20 +41,17 @@ void itoa(int n, char *s) {
     reverse(s);
 }
 
-void ftoa(float f, char *s) {
-    int n = (int)f;
-    float fp = f - (float)n;
-    fp *= 100000; // fixed precision
-    itoa(n, s);
-    int i = strlen(s);
-    *(s+i) = '.';
-    itoa((int)fp, s + i + 1);  
+void strcpy(char *dest, const char *src) {
+    while (*src != '\0')
+        *dest++ = *src++;
+    *dest = '\0';
 }
 
 void memcpy(void *dest, void *src, size_t n) {
    char *csrc = (char *)src;
    char *cdest = (char *)dest;
 
-   for (int i=0; i<n; i++)
+   for (int i=0; i<n; i++) {
        cdest[i] = csrc[i];
+    }
 }

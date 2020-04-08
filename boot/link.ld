@@ -9,7 +9,13 @@ SECTIONS                        /* defines where the code is going to be stored 
         *(.bss*)
         __bss_end = .;
     }
-    _end =.;
+    .bootloader : {
+        __bootloader_start = .;
+        *(.bootloader)
+        __bootloader_end = .;
+    }
+    _end = .;
 }
 
 __bss_size = (__bss_end - __bss_start) >> 3;
+__bootloader_size = (__bootloader_end - __bootloader_start) >> 3;
