@@ -40,6 +40,12 @@
   eret
   .endm
 
+.global setup_exception_vector_table
+setup_exception_vector_table:
+  ldr x0, =exception_table
+  msr vbar_EL2, x0
+  ret
+
 exception_handler:
   kernel_entry
   mrs x0, elr_el2
@@ -47,41 +53,46 @@ exception_handler:
   bl exc
   kernel_exit
 
+irq_handler:
+  kernel_entry
+  bl irq_router
+  kernel_exit
+
 .align 11
 .global exception_table
 exception_table:
-  b exception_handler
+  b not_implemented
   .align 7
-  b exception_handler
+  b not_implemented
   .align 7
-  b exception_handler
+  b not_implemented
   .align 7
-  b exception_handler
-  .align 7
-
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
+  b not_implemented
   .align 7
 
   b exception_handler
   .align 7
-  b exception_handler
+  b irq_handler
   .align 7
-  b exception_handler
+  b not_implemented
   .align 7
-  b exception_handler
+  b not_implemented
   .align 7
 
-  b exception_handler
+  b not_implemented
   .align 7
-  b exception_handler
+  b not_implemented
   .align 7
-  b exception_handler
+  b not_implemented
   .align 7
-  b exception_handler
+  b not_implemented
+  .align 7
+
+  b not_implemented
+  .align 7
+  b not_implemented
+  .align 7
+  b not_implemented
+  .align 7
+  b not_implemented
   .align 7

@@ -5,7 +5,7 @@ SDCARD ?= /dev/sdb
 HEADER := $(wildcard */*.h)
 SRC := $(wildcard */*.c)
 OBJECTS := $(patsubst %.c,%.o,$(SRC))
-ASM = kernel/boot.S kernel/exception.S
+ASM = kernel/boot.S kernel/exception.S peripheral/timer.S kernel/irq.S
 CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral
 
 .PHONY: all clean qemu debug indent

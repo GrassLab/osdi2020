@@ -3,7 +3,9 @@
 #include <mm.h>
 #include <mbox.h>
 #include <lfb.h>
+#include <timer.h>
 #include "shell.h"
+#include "irq.h"
 
 #define PM_PASSWORD   0x5a000000
 #define PM_RSTC       ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
@@ -29,6 +31,7 @@ shell_interactive ()
 	  uart_puts ("picture - show picture\n");
 	  uart_puts ("loadimg [address] - load image to address\n");
 	  uart_puts ("exc - raise exception (svc #1)\n");
+	  uart_puts ("irq - trigger timer interrupt\n");
 	}
       else if (!strcmp ("hello", buf))
 	{
@@ -60,6 +63,12 @@ shell_interactive ()
       else if (!strcmp ("exc", buf))
 	{
 	  asm volatile ("svc #1");
+	}
+      else if (!strcmp ("irq", buf))
+	{
+	  init_irq ();
+	  enable_irq ();
+	  core_timer_enable ();
 	}
       else
 	{

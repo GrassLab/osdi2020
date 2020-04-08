@@ -30,12 +30,9 @@ check_EL2:
   lsr x0, x0, #2
   cmp x0, #2
   b.ne setup_msg_table
-
-setup_exception_vector_table:
-  ldr x0, =exception_table
-  msr vbar_EL2, x0
-
+  bl setup_exception_vector_table
   mov x0, xzr
+
 jmp_main:
   ldr x1, =error_msg_table
   b main
