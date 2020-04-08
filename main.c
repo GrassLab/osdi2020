@@ -75,14 +75,14 @@ void main()
             continue;
         }
         /*
-         * <hello> Echo hello
+         ** <hello> Echo hello
          */
         if (uart_strcmp(user_input, "hello") == 0) {
             uart_puts("Hello World!\n");
             continue;
         }
         /*
-         * <reboot> reboot in given cpu ticks
+         ** <reboot> reboot in given cpu ticks
          */
         if (uart_strcmp(user_input, "reboot") == 0) {
             get_time();
@@ -91,14 +91,14 @@ void main()
             continue;
         }
         /*
-         * <time> get the timestamp
+         ** <time> get the timestamp
          */
         if (uart_strcmp(user_input, "time") == 0) {
             get_time();
             continue;    
         }
         /*
-         * <loadimg> listen for raspbootcom and load the img from UART
+         ** <loadimg> listen for raspbootcom and load the img from UART
          */
         if (uart_strcmp(user_input, "loadimg") == 0) {
             uart_puts("loading image from uart...\n");
@@ -107,7 +107,7 @@ void main()
             break;    
         }
         /*
-         * <help> list the existed commands
+         ** <help> list the existed commands
          */
         if (uart_strcmp(user_input, "help") == 0) {
             uart_puts("hello: print hello world.\n");
@@ -117,8 +117,30 @@ void main()
             uart_puts("loadimg: reload image from UART.\n");
             continue;
         }
+        if (uart_strcmp(user_input, "svc") == 0) {
+            uart_puts("execute `svc #1`\n");
+            asm volatile ("svc #1");
+            uart_puts("done\n");
+            continue;
+        }
+        if (uart_strcmp(user_input, "brk") == 0) {
+            uart_puts("execute `brk #1`\n");
+            asm volatile ("brk #1");
+            uart_puts("done\n");
+            continue;
+        }
+        if (uart_strcmp(user_input, "data") == 0) {
+            uart_puts("execute `bad address access`\n");
+            unsigned int r;
+            // generate a Data Abort with a bad address access
+            r=*((volatile unsigned int*)0xFFFFFFFFFF000000);
+            // make gcc happy about unused variables :-)
+            r++;
+            uart_puts("done\n");
+            continue;
+        }
         /*
-         * Invalid command
+         ** Invalid command
          */
         uart_puts("Error: command ");
         uart_puts(user_input);
