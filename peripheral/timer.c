@@ -1,4 +1,4 @@
-#define LOCAL_TIMER_CONTROL_REG (unsigned int *)0x40000034
+#include "timer.h"
 
 void
 local_timer_init ()
@@ -7,8 +7,6 @@ local_timer_init ()
   unsigned int reload = 25000000;
   *LOCAL_TIMER_CONTROL_REG = flag | reload;
 }
-
-#define LOCAL_TIMER_IRQ_CLR (unsigned int *)0x40000038
 
 void
 local_timer_handler ()

@@ -69,6 +69,7 @@ shell_interactive ()
 	  init_irq ();
 	  enable_irq ();
 	  core_timer_enable ();
+	  local_timer_init ();
 	}
       else
 	{
