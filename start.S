@@ -5,75 +5,112 @@ _start:
     // read cpu id, stop slave cores
     mrs     x1, mpidr_el1
     and     x1, x1, #3
-    cbz     x1, 2f
-    // cpu id > 0, stop
-1:  wfe
-    b       1b
-2:  // cpu id == 0
+    // cpu id == 0
+    cbnz     x1, loop
 
     // set stack before our code
     ldr     x1, =_start
 
-    // set up EL1
-    mrs     x0, CurrentEL
-    and     x0, x0, #12 // clear reserved bits
+//     // enable interrupt
+//     msr DAIFClr, 0xf
+    
+//     // disable interrupt
+//     msr DAIFSet, 0xf
+    
+//     // set up EL1
+//     mrs     x0, CurrentEL
+//     and     x0, x0, #12 // clear reserved bits
 
-    // running at EL3?
-    cmp     x0, #12
-    bne     5f
-    // should never be executed, just for completeness
-    mov     x2, #0x5b1
-    msr     scr_el3, x2
-    mov     x2, #0x3c9
-    msr     spsr_el3, x2
-    adr     x2, 5f
-    msr     elr_el3, x2
-    eret
+//     // running at EL3?
+//     cmp     x0, #12
+//     bne     move_sp
+    
+//     // should never be executed, just for completeness
+//     mov     x2, #0x5b1
+//     msr     scr_el3, x2
+//     mov     x2, #0x3c9
+//     msr     spsr_el3, x2
+//     adr     x2, move_sp
+//     msr     elr_el3, x2
+//     eret
 
-    // running at EL2?
-5:  cmp     x0, #4
-    beq     5f
-    msr     sp_el1, x1
-    // enable CNTP for EL1
-    mrs     x0, cnthctl_el2
-    orr     x0, x0, #3
-    msr     cnthctl_el2, x0
-    msr     cntvoff_el2, xzr
-    // enable AArch64 in EL1
-    mov     x0, #(1 << 31)      // AArch64
-    orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
-    msr     hcr_el2, x0
-    mrs     x0, hcr_el2
-    // Setup SCTLR access
-    mov     x2, #0x0800
-    movk    x2, #0x30d0, lsl #16
-    msr     sctlr_el1, x2
-    // set up exception handlers
-    ldr     x2, =_exception_table
-    msr     vbar_el1, x2
-    // change execution level to EL1
-    mov     x2, #0x3c4
-    msr     spsr_el2, x2
-    adr     x2, 5f
-    msr     elr_el2, x2
-    eret
+//     // running at EL2?
+// 5:  cmp     x0, #4
+//     beq     move_sp
+//     msr     sp_el1, x1
+    
+//     // enable CNTP for EL1
+//     mrs     x0, cnthctl_el2
+//     orr     x0, x0, #3
+//     msr     cnthctl_el2, x0
+//     msr     cntvoff_el2, xzr
+    
+//     // enable AArch64 in EL1
+//     mov     x0, #(1 << 31)      // AArch64
+//     orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
+//     msr     hcr_el2, x0
+//     mrs     x0, hcr_el2
+    
+//     // Setup SCTLR access
+//     mov     x2, #0x0800
+//     movk    x2, #0x30d0, lsl #16
+//     msr     sctlr_el1, x2
+    
+//     // set up exception handlers
+//     ldr     x2, =_exception_table
+//     msr     vbar_el1, x2
 
-5:  mov     sp, x1
+//     // change execution level to EL1
+//     mov     x2, #0x3c4
+//     msr     spsr_el2, x2
+//     adr     x2, move_sp
+//     msr     elr_el2, x2
+//     eret
+
+    // load exception_table to vbar_el2
+    ldr     x0, =_exception_table
+    msr     vbar_el2, x0
+
+
+move_sp:  
+    mov     sp, x1
 
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
-3:  cbz     w2, 4f
+clear_bss:
     str     xzr, [x1], #8
     sub     w2, w2, #1
-    cbnz    w2, 3b
+    cbnz    w2, clear_bss
 
     // jump to C code, should not return
-4:  bl      main
+    bl      main
+loop:  
     // for failsafe, halt this core too
-    b       1b
+    // cpu id > 0, stop
+    wfe
+    b       loop
 
-.macro EXCEPTION_STORE_CONTEXT
+
+
+.section ".text.exception"
+/// Call the function provided by parameter `\handler` after saving the exception context.
+/// Provide the context as the first parameter to '\handler'.
+.macro CALL_WITH_CONTEXT num handler
+    bl __exception_store_context
+    mov     x0, \num 
+    mrs     x1, esr_el2
+    mrs     x2, elr_el2
+    mrs     x3, spsr_el2
+    mrs     x4, far_el2
+    //mrs     x5, CurrentEL
+    bl       \handler
+    bl __exception_load_context
+    eret
+.endm
+
+.global __exception_store_context
+__exception_store_context:
     // Make room on the stack for the exception context.
     sub    sp,  sp,  #16 * 17
 
@@ -94,19 +131,20 @@ _start:
     stp    x26, x27, [sp, #16 * 13]
     stp    x28, x29, [sp, #16 * 14]
 
-    mrs    x2,  elr_el1
-    mrs    x3,  spsr_el1
+    mrs    x2,  elr_el2
+    mrs    x3,  spsr_el2
 
     stp    lr,  x2,  [sp, #16 * 15]
     str    w3,       [sp, #16 * 16]
-.endm
+    ret
 
-.macro EXCEPTION_LOAD_CONTEXT
+.global __exception_load_context
+__exception_load_context:
     ldr    w19,      [sp, #16 * 16]
     ldp    lr,  x20, [sp, #16 * 15]
 
-    msr    spsr_el1, x19
-    msr    elr_el1,  x20
+    msr    spsr_el2, x19
+    msr    elr_el2,  x20
 
     ldp    x0,  x1,  [sp, #16 * 0]
     ldp    x2,  x3,  [sp, #16 * 1]
@@ -125,24 +163,9 @@ _start:
     ldp    x28, x29, [sp, #16 * 14]
 
     add    sp,  sp,  #16 * 17
+    ret
 
-    eret
-.endm
 
-/// Call the function provided by parameter `\handler` after saving the exception context.
-/// Provide the context as the first parameter to '\handler'.
-.macro CALL_WITH_CONTEXT num handler
-    EXCEPTION_STORE_CONTEXT
-    mov     x0, \num
-    mrs     x1, esr_el1
-    //mrs     x2, elr_el1
-    //mrs     x3, spsr_el1
-    mrs     x4, far_el1
-    bl       \handler
-    EXCEPTION_LOAD_CONTEXT
-.endm
-
-.section ".text.exception"
 .align 11
 .global _exception_table
 _exception_table:

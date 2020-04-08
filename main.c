@@ -6,7 +6,7 @@
 
 int LOADIMG = 0;
 int SPLASH_ON = 0;
-unsigned int KERNEL_ADDR = 0x7fff0;
+unsigned int KERNEL_ADDR = 0x100000;
 
 void loadimg(unsigned int kernel_addr)
 {
@@ -47,19 +47,22 @@ void main()
 {
     // set up serial console and linear frame buffer
     uart_init();
-    lfb_init();
 
     // display a pixmap
-    if (SPLASH_ON == 1)    
+    if (SPLASH_ON == 1) {
+        lfb_init();
         lfb_showpicture();
+    }   
 
+    // get hardware info
     get_serial();
     get_board_revision();
     get_vccore_addr();
 
     while (1) {
-        char tmp;
+        // get user input
         char user_input[12];
+        char tmp;
         int i = 0;
         uart_send('>');
         while (i < 10) {
@@ -117,19 +120,22 @@ void main()
             uart_puts("loadimg: reload image from UART.\n");
             continue;
         }
-        if (uart_strcmp(user_input, "svc") == 0) {
+        /*
+         ** <exc> test exception
+         */
+        if (uart_strcmp(user_input, "exc_svc") == 0) {
             uart_puts("execute `svc #1`\n");
             asm volatile ("svc #1");
             uart_puts("done\n");
             continue;
         }
-        if (uart_strcmp(user_input, "brk") == 0) {
+        if (uart_strcmp(user_input, "exc_brk") == 0) {
             uart_puts("execute `brk #1`\n");
             asm volatile ("brk #1");
             uart_puts("done\n");
             continue;
         }
-        if (uart_strcmp(user_input, "data") == 0) {
+        if (uart_strcmp(user_input, "exc_data") == 0) {
             uart_puts("execute `bad address access`\n");
             unsigned int r;
             // generate a Data Abort with a bad address access
@@ -137,6 +143,13 @@ void main()
             // make gcc happy about unused variables :-)
             r++;
             uart_puts("done\n");
+            continue;
+        }
+        /*
+         ** <irq> test interrupt
+         */
+        if (uart_strcmp(user_input, "irq") == 0) {
+            uart_puts("not implement\n");
             continue;
         }
         /*

@@ -5,6 +5,9 @@
  */
 void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far)
 {
+    // uart_puts("CurrentEL: ");
+    // uart_hex(level);
+    // uart_puts("\n");
     // print out interruption type
     switch(type) {
         case 0: uart_puts("Synchronous"); break;
@@ -50,9 +53,7 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
             case 3: uart_puts(" at level 3"); break;
         }
     }
-    if(esr>>26==0b010101) {
-        
-    }
+    
     // dump registers
     uart_puts(":\n  ESR_EL1 ");
     uart_hex(esr>>32);
