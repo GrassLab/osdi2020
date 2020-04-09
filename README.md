@@ -5,7 +5,7 @@
 | --- | ----------- | --- | --- |
 |`A071725`| `hank0438` | `陳廣翰` | hank0438@gmail.com |
 
-## [Note](https://hackmd.io/91rAgddMQTeChqhNaZPSBQ)
+## [Note](https://hackmd.io/@hank0438/osdi2020_notes)
 
 ## Directory structure
 
