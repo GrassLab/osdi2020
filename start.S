@@ -97,8 +97,9 @@ loop:
 .section ".text.exception"
 /// Call the function provided by parameter `\handler` after saving the exception context.
 /// Provide the context as the first parameter to '\handler'.
-.macro CALL_WITH_CONTEXT //num handler
-    bl __exception_store_context
+.macro EXCEPTION_ROUTINE num
+    mov     x30, \num
+    bl      __exception_store_context
 .endm
 
 .global __exception_store_context
@@ -123,29 +124,29 @@ __exception_store_context:
     stp    x26, x27, [sp, #16 * 13]
     stp    x28, x29, [sp, #16 * 14]
 
-    // mrs    x2,  elr_el2
-    // mrs    x3,  spsr_el2
-
-    // stp    lr,  x2,  [sp, #16 * 15]
-    // str    w3,       [sp, #16 * 16]
-
-    mov     x0, #0 //\num 
+    mov     x0, x30 //\num 
     mrs     x1, esr_el2
     mrs     x2, elr_el2
     mrs     x3, spsr_el2
     mrs     x4, far_el2
     //mrs     x5, CurrentEL
+
+    // store PC and PSTATE
+    stp     lr,  x2,  [sp, #16 * 15]
+    str     w3,       [sp, #16 * 16]
+
     bl      exc_handler//\handler
     bl      __exception_load_context
     
 
 .global __exception_load_context
 __exception_load_context:
-    // ldr    w19,      [sp, #16 * 16]
-    // ldp    lr,  x20, [sp, #16 * 15]
+    // load PC and PSTATE
+    ldr    w19,      [sp, #16 * 16]
+    ldp    lr,  x20, [sp, #16 * 15]
 
-    // msr    spsr_el2, x19
-    // msr    elr_el2,  x20
+    msr    spsr_el2, x19
+    msr    elr_el2,  x20
 
     ldp    x0,  x1,  [sp, #16 * 0]
     ldp    x2,  x3,  [sp, #16 * 1]
@@ -174,86 +175,70 @@ _exception_table:
 // Current exception level with SP_EL0.
     // synchronous
     .align 7 //  0x000
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #0 exc_handler
+    EXCEPTION_ROUTINE #0
 
     // IRQ
     .align 7 //  0x080
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #1 exc_handler
+    EXCEPTION_ROUTINE #1
 
     // FIQ
     .align 7 //  0x100
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #2 exc_handler
+    EXCEPTION_ROUTINE #2
 
     // SError
     .align 7 //  0x180
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #3 exc_handler
+    EXCEPTION_ROUTINE #3
 
     // Current exception level with SP_ELx, x > 0.
     // synchronous
     .align 7 //  0x200
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #0 exc_handler
+    EXCEPTION_ROUTINE #0
 
     // IRQ
     .align 7 //  0x280
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #1 exc_handler
+    EXCEPTION_ROUTINE #1
 
     // FIQ
     .align 7 //  0x300
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #2 exc_handler
+    EXCEPTION_ROUTINE #2
 
     // SError
     .align 7 //  0x380
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #3 exc_handler
+    EXCEPTION_ROUTINE #3
 
     // Lower exception level, AArch64
     // synchronous
     .align 7 //  0x400
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #0 exc_handler
+    EXCEPTION_ROUTINE #0
 
     // IRQ
     .align 7 //  0x480
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #1 exc_handler
+    EXCEPTION_ROUTINE #1
 
     // FIQ
     .align 7 //  0x500
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #2 exc_handler
+    EXCEPTION_ROUTINE #2
 
     // SError
     .align 7 //  0x580
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #3 exc_handler
+    EXCEPTION_ROUTINE #3
 
     // Lower exception level, AArch32
     // synchronous
     .align 7 //  0x600
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #0 exc_handler
+    EXCEPTION_ROUTINE #0
 
     // IRQ
     .align 7 //  0x680
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #1 exc_handler
+    EXCEPTION_ROUTINE #1
 
     // FIQ
     .align 7 //  0x700
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #2 exc_handler
+    EXCEPTION_ROUTINE #2
 
     // SError
     .align 7 //  0x780
-    bl __exception_store_context
-    //CALL_WITH_CONTEXT #3 exc_handler
+    EXCEPTION_ROUTINE #3
 
     .align 7 //  0x800
 

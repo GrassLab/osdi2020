@@ -38,23 +38,10 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
         case 0b100101: uart_puts("Data abort, same EL"); break;
         case 0b100110: uart_puts("Stack alignment fault"); break;
         case 0b101100: uart_puts("Floating point"); break;
+        case 0b110000: uart_puts("Breakpoint, lower EL"); break;
+        case 0b110001: uart_puts("Breakpoint, same EL"); break;
+        case 0b111100: uart_puts("Breakpoint instruction"); break;
         default: uart_puts("Unknown"); break;
-    }
-    // decode data abort cause
-    if(esr>>26==0b100100 || esr>>26==0b100101) {
-        uart_puts(", ");
-        switch((esr>>2)&0x3) { 
-            case 0: uart_puts("Address size fault"); break;
-            case 1: uart_puts("Translation fault"); break;
-            case 2: uart_puts("Access flag fault"); break;
-            case 3: uart_puts("Permission fault"); break;
-        }
-        switch(esr&0x3) { 
-            case 0: uart_puts(" at level 0"); break;
-            case 1: uart_puts(" at level 1"); break;
-            case 2: uart_puts(" at level 2"); break;
-            case 3: uart_puts(" at level 3"); break;
-        }
     }
     
     // dump registers
@@ -75,7 +62,8 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
     uart_hex(far);
     uart_puts("\n");
     // no return from exception for now
+    // exception return should be implement at start.S
     //while(1);
-    //asm volatile ("eret");
+
 }
 
