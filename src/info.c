@@ -1,5 +1,5 @@
-#include "include/uart.h"
-#include "include/mailbox.h"
+#include "../include/uart.h"
+#include "../include/mailbox.h"
 
 #define GET_VCCORE_ADDR     0x00010006
 #define GET_BOARD_REVISION  0x00010002

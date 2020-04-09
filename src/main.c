@@ -1,9 +1,9 @@
-#include "include/uart.h"
-#include "include/power.h"
-#include "include/time.h"
-#include "include/info.h"
-#include "include/lfb.h"
-#include "include/loadimg.h"
+#include "../include/uart.h"
+#include "../include/power.h"
+#include "../include/time.h"
+#include "../include/info.h"
+#include "../include/lfb.h"
+#include "../include/loadimg.h"
 
 int SPLASH_ON = 0;
 int LOADIMG = 0;

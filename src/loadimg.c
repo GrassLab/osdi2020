@@ -1,4 +1,4 @@
-#include "include/uart.h"
+#include "../include/uart.h"
 
 void loadimg(unsigned int kernel_addr)
 {

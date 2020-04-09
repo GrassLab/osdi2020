@@ -1,5 +1,5 @@
-#include "include/gpio.h"
-#include "include/mailbox.h"
+#include "../include/gpio.h"
+#include "../include/mailbox.h"
 
 /* PL011 UART registers */
 #define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))

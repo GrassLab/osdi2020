@@ -1,5 +1,5 @@
-#include "include/uart.h"
-#include "include/mailbox.h"
+#include "../include/uart.h"
+#include "../include/mailbox.h"
 //#include "include/homer.h"
 
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
