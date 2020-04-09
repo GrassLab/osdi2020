@@ -59,7 +59,7 @@ void main()
     get_board_revision();
     get_vccore_addr();
 
-    while (1) {
+    while (LOADIMG == 0) { 
         // get user input
         char user_input[12];
         char tmp;
@@ -159,23 +159,23 @@ void main()
         uart_puts(user_input);
         uart_puts(" not found, try <help>.\n");
     }
+    unsigned int stack_pointer;; 
+    asm volatile ("mov %0, sp" : "=r"(stack_pointer));
+    uart_puts("stack pointer: 0x");
+    uart_hex(stack_pointer);
+    uart_puts("\n");
 
-    if (LOADIMG == 1) {
-        unsigned int stack_pointer;; 
-        asm volatile ("mov %0, sp" : "=r"(stack_pointer));
-        uart_puts("stack pointer: 0x");
-        uart_hex(stack_pointer);
-        uart_puts("\n");
-
-        unsigned int program_counter;; 
-        asm volatile ("mov %0, x30" : "=r"(program_counter));
-        uart_puts("program counter: 0x");
-        uart_hex(program_counter);
-        uart_puts("\n");
-
-        asm volatile (
-            // we must force an absolute address to branch to
-            "mov x30, %0; ret" :: "r"(KERNEL_ADDR)
-        );
-    }
+    unsigned int program_counter;; 
+    asm volatile ("mov %0, x30" : "=r"(program_counter));
+    uart_puts("program counter: 0x");
+    uart_hex(program_counter);
+    uart_puts("\n");
+    /*
+     ** Start to load image
+     */
+    asm volatile (
+        // we must force an absolute address to branch to
+        "mov x30, %0; ret" :: "r"(KERNEL_ADDR)
+    );
+    
 }

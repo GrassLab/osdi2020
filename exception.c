@@ -8,6 +8,7 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
     // uart_puts("CurrentEL: ");
     // uart_hex(level);
     // uart_puts("\n");
+
     // print out interruption type
     switch(type) {
         case 0: uart_puts("Synchronous"); break;
@@ -15,13 +16,15 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
         case 2: uart_puts("FIQ"); break;
         case 3: uart_puts("SError"); break;
     }
+    
+    // print EC and ISS
     uart_puts(": ");
     uart_puts("\n Exception Class (EC): ");
     uart_hex(esr>>26);
-    uart_puts(", ");
-    uart_puts("Instr Specific Syndrome (ISS): ");
+    uart_puts("\n Instr Specific Syndrome (ISS): ");
     uart_hex(esr&0xffffff);
     uart_puts("\n");
+    
     // decode exception type (some, not all. See ARM DDI0487B_b chapter D10.2.28)
     switch(esr>>26) { 
         case 0b000000: uart_puts("Unknown"); break;
@@ -55,24 +58,24 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
     }
     
     // dump registers
-    uart_puts(":\n  ESR_EL1 ");
+    uart_puts(":\n  ESR_EL2 ");
     uart_hex(esr>>32);
     uart_hex(esr);
-    uart_puts(" ELR_EL1 ");
+    uart_puts(" ELR_EL2 "); // exception return address
     uart_hex(elr>>32);
     uart_hex(elr);
 
    
 
-    uart_puts("\n SPSR_EL1 ");
+    uart_puts("\n SPSR_EL2 ");
     uart_hex(spsr>>32);
     uart_hex(spsr);
-    uart_puts(" FAR_EL1 ");
+    uart_puts(" FAR_EL2 ");
     uart_hex(far>>32);
     uart_hex(far);
     uart_puts("\n");
     // no return from exception for now
     //while(1);
-    asm volatile ("eret");
+    //asm volatile ("eret");
 }
 
