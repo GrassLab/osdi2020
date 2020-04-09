@@ -2,15 +2,15 @@
 #include "../include/mini_uart.h"
 
 const char *entry_error_messages[] = {
-	"SYNC_INVALID_EL2t\n",
-	"IRQ_INVALID_EL2t\n",		
-	"FIQ_INVALID_EL2t\n",		
-	"ERROR_INVALID_EL2T\n",		
+	"SYNC_INVALID_EL1t\n",
+	"IRQ_INVALID_EL1t\n",		
+	"FIQ_INVALID_EL1t\n",		
+	"ERROR_INVALID_EL1T\n",		
 
-	"SYNC_INVALID_EL2h\n",		
-	"IRQ_INVALID_EL2h\n",		
-	"FIQ_INVALID_EL2h\n",		
-	"ERROR_INVALID_EL2h\n",		
+	"SYNC_INVALID_EL1h\n",		
+	"IRQ_INVALID_EL1h\n",		
+	"FIQ_INVALID_EL1h\n",		
+	"ERROR_INVALID_EL1h\n",		
 
 	"SYNC_INVALID_EL0_64\n",		
 	"IRQ_INVALID_EL0_64\n",		

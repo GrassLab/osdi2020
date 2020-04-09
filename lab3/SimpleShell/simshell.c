@@ -105,7 +105,7 @@ bool send_kernel(simshell *sim)
 bool set_up_options(simshell *sim)
 {
     sim->utf = -1;
-    sim->utf = open("/dev/pts/2", O_RDWR | O_NOCTTY );
+    sim->utf = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY );
     if(sim->utf == -1) {
         printf("Fail to set_up_options\n");
         return false;

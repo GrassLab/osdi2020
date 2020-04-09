@@ -42,10 +42,12 @@ unsigned int read_cntp_tval(void)
 
 void kernel_main(void)
 {	
+	int uart_flag = 0;
 	int buff_size = 100;
 	char buffer[buff_size];
 	while (1) {
-		readline(buffer, buff_size);
+		if (uart_flag != 1)
+			readline(buffer, buff_size);
 		if (strcmp(buffer, "hello") == 0) {
             uart_send_string("Hello World!!!\n");
 		}
@@ -59,16 +61,17 @@ void kernel_main(void)
 		}
 		else if (strcmp(buffer, "uart_irq") == 0) {
 			uart_send_string("uart_irq\n");
-			enable_uart_interrupt();
-			enable_irq();
+			sync_call_uart();
+			int i = 0;
 			while(1) {
-
+				i = i + 1;
+				if (i == 50000)
+					i = 0;
 			}
 		}
 		else if (strcmp(buffer, "irq") == 0) {
 			uart_send_string("irq\n");
 			sync_call_time();
-			uart_send_string("ttt\n");
 			// // enable system timer
 			// sys_timer_init();
 			// enable_interrupt_controller();

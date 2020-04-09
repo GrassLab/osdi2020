@@ -73,10 +73,27 @@ void uart_init ( void )
 void handle_uart_irq()
 {
     unsigned int id = get32(AUX_MU_IIR_REG);
-    if ((id & 0x06) == 4) {
-        char c = uart_recv();
-        uart_send(c);
-    }
+    if((id & 0x06) == 0x04)
+	{
+        // open tansmit interrupt
+        put32(AUX_MU_IER_REG, 3); 
+		buffer[wr_buffer_index++] = get32(AUX_MU_IO_REG)&0xFF;
+		if(wr_buffer_index == BUFFER_SIZE)
+			wr_buffer_index = 0;
+        
+	}
+    if((id & 0x06) == 0x02)
+	{
+		if(rd_buffer_index == wr_buffer_index) {
+            // close transmit interrupt
+            put32(AUX_MU_IER_REG, 1); 
+            return;
+        }
+		char c = buffer[rd_buffer_index++];
+		put32(AUX_MU_IO_REG,c);
+		if(rd_buffer_index == BUFFER_SIZE)
+			rd_buffer_index = 0;
+	}
 
     return;
 }

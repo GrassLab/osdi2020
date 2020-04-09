@@ -3,6 +3,7 @@
 #include "entry.h"
 #include "timer.h"
 #include "sys.h"
+#include "irq.h"
 
 void handle_sync(unsigned long esr, unsigned long address)
 {
@@ -28,9 +29,15 @@ void handle_el0_sync(unsigned long esr, unsigned long address)
         enable_irq();
     }
     if (imm_value == SYS_EXC) {
-       uart_send_hex(address);
-       uart_send_hex(esr>>26);
-       uart_send_hex(esr & 0xfff);
+        uart_send_hex(address);
+        uart_send_hex(esr>>26);
+        uart_send_hex(esr & 0xfff);
+    }
+    if (imm_value == SYS_UART) {
+
+        // TODO enable uart
+        enable_uart_interrupt();
+        enable_irq();
     }
     return;
 }
