@@ -4,6 +4,8 @@
 #include "include/string.h"
 #include "include/mbox.h"
 #include "include/framebuffer.h"
+#include "include/irq.h"
+#include "include/timer.h"
 
 int check_string(char * str){
 	char* cmd_help = "help";
@@ -11,6 +13,7 @@ int check_string(char * str){
 	char* cmd_time = "timestamp";
 	char* cmd_reboot = "reboot";
 	char* cmd_exc = "exc";
+	char* cmd_irq = "irq";
 
 	if(strcmp(str,cmd_help)==0){
 	// print all available commands
@@ -63,6 +66,10 @@ int check_string(char * str){
 			"svc #1;"
     		);
 
+	}
+	else if(strcmp(str,cmd_irq)==0){
+    		uart_send_string("\r\nEnable timer\r\n");
+		core_timer_enable();
 	}
 	else{
 		uart_send_string("\r\nErr:command ");
@@ -121,6 +128,10 @@ void get_VC_core_base_addr(){
 void kernel_main(void)
 {	
     uart_init();
+ 
+    async_exc_routing(); //set HCR_EL2.IMO
+    enable_irq();        //clear PSTATE.DAIF
+
     //fb_init();
     //fb_show();
    

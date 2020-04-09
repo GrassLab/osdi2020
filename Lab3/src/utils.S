@@ -24,4 +24,10 @@ get_timer_counts:
 	mrs x0, cntpct_el0
 	ret
 
+.global get_reg
+get_reg:
+        //adr x0,.
+	mov x0, x30
+	//mov x0, SP
+	ret
 
