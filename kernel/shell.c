@@ -52,9 +52,9 @@ shell_interactive ()
 	{
 	  hardware ();
 	}
-      else if (!strncmp ("picture", buf, 8))
+      else if (!strncmp ("picture", buf, 7))
 	{
-	  picture (buf);
+	  picture (&buf[8]);
 	}
       else if (!strncmp ("loadimg", buf, 7))
 	{
@@ -74,7 +74,6 @@ shell_interactive ()
 	  uart_puts (buf);
 	  uart_puts (": command not found\n");
 	}
-      picture (buf);
     }
 }
 
