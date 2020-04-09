@@ -43,13 +43,13 @@
 .global setup_exception_vector_table
 setup_exception_vector_table:
   ldr x0, =exception_table
-  msr vbar_EL2, x0
+  msr vbar_EL1, x0
   ret
 
 exception_handler:
   kernel_entry
-  mrs x0, elr_el2
-  mrs x1, esr_el2
+  mrs x0, elr_el1
+  mrs x1, esr_el1
   bl exc
   kernel_exit
 
@@ -70,18 +70,18 @@ exception_table:
   b not_implemented
   .align 7
 
-  b exception_handler
+  b not_implemented
   .align 7
-  b irq_handler
+  b not_implemented
   .align 7
   b not_implemented
   .align 7
   b not_implemented
   .align 7
 
-  b not_implemented
+  b exception_handler
   .align 7
-  b not_implemented
+  b irq_handler
   .align 7
   b not_implemented
   .align 7
