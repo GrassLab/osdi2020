@@ -133,8 +133,10 @@ void *uart_memcpy (const void *src, void *dst, int len)
 {
     const char *s = src;
     char *d = dst;
-    while (len--)
+    while (len--) {
         *d++ = *s++;
+        //if (*s == 0) break;
+    }
     return dst;
 }
 /**
@@ -146,3 +148,30 @@ unsigned int uart_c2i(char *s)
     return (d<10) ? d+48 :0;
 }
 */
+int uart_atoi(char *dst, int d) 
+{
+    int sign, i;
+    char tmpstr[19];
+    // check input
+    sign=0;
+    if(d<0) {
+        d*=-1;
+        sign++;
+    }
+    if(d>2147483647) {
+        d=2147483647;
+    }
+    // convert to string
+    i=18;
+    tmpstr[i]=0;
+    do {
+        tmpstr[--i]='0'+(d%10);
+        d/=10;
+    } while(d!=0 && i>0);
+    if(sign) {
+        tmpstr[--i]='-';
+    }
+    uart_memcpy(&tmpstr[i], dst, 18-i);
+    dst[18-i] = 0;
+    return 18-i;
+}

@@ -4,6 +4,8 @@
 #include "../include/info.h"
 #include "../include/lfb.h"
 #include "../include/loadimg.h"
+#include "../include/cmdline.h"
+
 
 int SPLASH_ON = 0;
 int LOADIMG = 0;
@@ -14,6 +16,12 @@ void main()
 {
     // set up serial console and linear frame buffer
     uart_init();
+    char *int1 = 0;
+    uart_atoi(int1, 123456);
+    uart_puts(int1);
+    char *int2 = 0;
+    uart_atoi(int2, -13456);
+    uart_puts(int1);
 
     // display a pixmap
     if (SPLASH_ON == 1) {
@@ -28,22 +36,24 @@ void main()
 
     while (LOADIMG == 0) { 
         // get user input
-        char user_input[12];
-        char tmp;
-        int i = 0;
-        uart_send('>');
-        while (i < 10) {
-            tmp = uart_getc();
-            if (tmp == '\n') break;
-            uart_send(tmp);
-            user_input[i++] = tmp;
-        }
-        user_input[i] = '\0';
-        uart_puts("\n");
-        //uart_send(uart_i2c(i));
-        if (i == 0) {
-            continue;
-        }
+        // command line
+        char user_input[256];
+        // char tmp;
+        // int i = 0;
+        // uart_send('>');
+        // while (i < 10) {
+        //     tmp = uart_getc();
+        //     if (tmp == '\n') break;
+        //     uart_send(tmp);
+        //     user_input[i++] = tmp;
+        // }
+        // user_input[i] = '\0';
+        // uart_puts("\n");
+        // //uart_send(uart_i2c(i));
+        // if (i == 0) {
+        //     continue;
+        // }
+        read_cmdline(user_input);
         /*
          ** <hello> Echo hello
          */

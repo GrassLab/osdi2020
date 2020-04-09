@@ -1,5 +1,8 @@
 #include "../include/uart.h"
 
+// array to store register values 
+unsigned long dbg_regs[37];
+
 /**
  * common exception handler
  */
@@ -65,5 +68,25 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
     // exception return should be implement at start.S
     //while(1);
 
+    
+    // uart_puts("Exception in debugger!\n")
+    // uart_puts("  elr_el1: ");
+    // uart_hex(dbg_regs[31]);
+    // uart_puts("  spsr_el1: ");
+    // uart_hex(dbg_regs[32]);
+    // uart_puts("\n");
+
+    // uart_puts("  esr_el1: ");
+    // uart_hex(dbg_regs[33]);
+    // uart_puts("  far_el1: ");
+    // uart_hex(dbg_regs[34]);
+    // uart_puts("\n");
+
+    // uart_puts("  sctlr_el1: ");
+    // uart_hex(dbg_regs[35]);
+    // uart_puts("  tcr_el1: ");
+    // uart_hex(dbg_regs[36]);
+    // uart_puts("\n");
+    
 }
 
