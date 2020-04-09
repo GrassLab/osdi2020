@@ -45,27 +45,6 @@ sudo screen /dev/ttyUSB0 115200
 ├── provided
 │   └── nctuos.img
 ├── raspbootcom.py
-├── raspbootin
-│   ├── gpio.h
-│   ├── homer.h
-│   ├── kernel8.elf
-│   ├── kernel8.img
-│   ├── lfb.c
-│   ├── lfb.h
-│   ├── lfb.o
-│   ├── link.ld
-│   ├── main.c
-│   ├── main.o
-│   ├── Makefile
-│   ├── mbox.c
-│   ├── mbox.h
-│   ├── mbox.o
-│   ├── README.md
-│   ├── start.o
-│   ├── start.S
-│   ├── uart.c
-│   ├── uart.h
-│   └── uart.o
 ├── README.md
 ├── src
 │   ├── exception.c
