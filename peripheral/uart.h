@@ -25,6 +25,7 @@
 #define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
 #define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
 #define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
+#define UART0_RIS       ((volatile unsigned int*)(MMIO_BASE+0x0020103c))
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
 #define UARTBUF_SIZE 0x30

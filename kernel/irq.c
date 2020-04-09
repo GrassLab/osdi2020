@@ -16,16 +16,32 @@ irq_router ()
   if (arm & 0x80000)
     {
       // uart interrupt
-      while (*UART0_FR & 0x40)
+      if (*UART0_RIS & 0x10)	// UARTRXINTR
 	{
-	  r = (char) (*UART0_DR);
-	  if (!QUEUE_FULL (read_buf))
+	  while (*UART0_FR & 0x40)
 	    {
-	      QUEUE_SET (read_buf, r);
-	      QUEUE_PUSH (read_buf);
+	      // receive
+	      r = (char) (*UART0_DR);
+	      if (!QUEUE_FULL (read_buf))
+		{
+		  QUEUE_SET (read_buf, r);
+		  QUEUE_PUSH (read_buf);
+		}
 	    }
+	  *UART0_ICR = 1 << 4;
 	}
-      *UART0_ICR = 1 << 4;
+      else if (*UART0_RIS & 0x20)	// UARTTXINTR
+	{
+	  while (!QUEUE_EMPTY (write_buf))
+	    {
+	      r = QUEUE_GET (write_buf);
+	      QUEUE_POP (write_buf);
+	      while (*UART0_FR & 0x20)
+		asm volatile ("nop");
+	      *UART0_DR = r;
+	    }
+	  *UART0_ICR = 2 << 4;
+	}
     }
   else if (arm_local & 0x800)
     {

@@ -35,23 +35,47 @@ uart_init ()
   *UART0_LCRH = 3 << 5;		// 8n1
   *UART0_CR = 0x301;		// enable Tx, Rx, FIFO
   // enable interrupt
-  *UART0_IMSC = 1 << 4;		// Tx, Rx
+  *UART0_IMSC = 3 << 4;		// Tx, Rx
   // init uart buf
   read_buf.head = 0;
   read_buf.tail = 0;
+  write_buf.head = 0;
+  write_buf.tail = 0;
 }
 
 void
 uart_send (char c)
 {
-  /* wait until we can send */
-  do
+  char r;
+  if (*UART0_FR & 0x80)
     {
-      asm volatile ("nop");
+      // we need to send one character to trigger interrupt.
+      // because the interrupt only set after data transmitted
+      if (QUEUE_EMPTY (write_buf))
+	{
+	  *UART0_DR = c;
+	}
+      else
+	{
+	  r = QUEUE_GET (write_buf);
+	  QUEUE_POP (write_buf);
+	  QUEUE_SET (write_buf, c);
+	  QUEUE_PUSH (write_buf);
+	  *UART0_DR = r;
+	}
     }
-  while (*UART0_FR & 0x20);
-  /* write the character to the buffer */
-  *(char *) UART0_DR = c;
+  else
+    {
+      // Raspberry PI is toooooo slow
+      // We need push the data into queue
+      if (!QUEUE_FULL (write_buf))
+	{
+	  QUEUE_SET (write_buf, c);
+	  QUEUE_PUSH (write_buf);
+	}
+      // else: drop that :(
+    }
+  return;
 }
 
 void
