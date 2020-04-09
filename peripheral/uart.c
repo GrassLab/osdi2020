@@ -34,6 +34,11 @@ uart_init ()
   *UART0_FBRD = 0xB;
   *UART0_LCRH = 3 << 5;		// 8n1
   *UART0_CR = 0x301;		// enable Tx, Rx, FIFO
+  // enable interrupt
+  *UART0_IMSC = 1 << 4;		// Tx, Rx
+  // init uart buf
+  read_buf.head = 0;
+  read_buf.tail = 0;
 }
 
 void
@@ -65,15 +70,11 @@ char
 uart_getc ()
 {
   char r;
-  /* wait until something is in the buffer */
-  do
-    {
-      asm volatile ("nop");
-    }
-  while (*UART0_FR & 0x10);
-  /* read it and return */
-  r = (char) (*UART0_DR);
-  /* convert carrige return to newline */
+
+  while (QUEUE_EMPTY (read_buf))
+    asm volatile ("wfi");
+  r = QUEUE_GET (read_buf);
+  QUEUE_POP (read_buf);
   return r == '\r' ? '\n' : r;
 }
 

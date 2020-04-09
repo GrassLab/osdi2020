@@ -1,20 +1,43 @@
 #include <timer.h>
 #include <uart.h>
 #include <stddef.h>
+#include <string.h>
 #include "irq.h"
 
 void
 irq_router ()
 {
-  if (is_core_timer ())
+  unsigned int arm, arm_local;
+  char r;
+  arm = *IRQ_BASIC_PENDING;
+  arm_local = *CORE0_INTR_SRC;
+  //printf ("%x | ", arm);
+  //printf ("%x\r\n", arm_local);
+  if (arm & 0x80000)
     {
-      uart_puts ("core timer\n");
-      core_timer_handler ();
+      // uart interrupt
+      while (*UART0_FR & 0x40)
+	{
+	  r = (char) (*UART0_DR);
+	  if (!QUEUE_FULL (read_buf))
+	    {
+	      QUEUE_SET (read_buf, r);
+	      QUEUE_PUSH (read_buf);
+	    }
+	}
+      *UART0_ICR = 1 << 4;
     }
-  else if (is_local_timer ())
+  else if (arm_local & 0x800)
     {
+      // local timer interrupt
       uart_puts ("local timer\n");
       local_timer_handler ();
+    }
+  else if (arm_local & 0x2)
+    {
+      // core timer interrupt
+      uart_puts ("core timer\n");
+      core_timer_handler ();
     }
   else
     {
@@ -34,4 +57,10 @@ is_core_timer ()
   size_t cntp_ctl_el0;
   asm volatile ("mrs %0, cntp_ctl_el0":"=r" (cntp_ctl_el0));
   return cntp_ctl_el0 & 4;
+}
+
+void
+init_uart_irq ()
+{
+  *ENABLE_IRQ2 = 1 << 25;
 }

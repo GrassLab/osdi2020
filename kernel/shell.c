@@ -66,8 +66,6 @@ shell_interactive ()
 	}
       else if (!strcmp ("irq", buf))
 	{
-	  init_irq ();
-	  enable_irq ();
 	  core_timer_enable ();
 	  local_timer_init ();
 	}

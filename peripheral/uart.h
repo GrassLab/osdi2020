@@ -27,6 +27,21 @@
 #define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
+#define UARTBUF_SIZE 0x30
+#define QUEUE_EMPTY(q) (q.tail == q.head)
+#define QUEUE_FULL(q) ((q.tail + 1) % UARTBUF_SIZE == q.head)
+#define QUEUE_POP(q) (q.head = (q.head + 1) % UARTBUF_SIZE)
+#define QUEUE_PUSH(q) (q.tail = (q.tail + 1) % UARTBUF_SIZE)
+#define QUEUE_GET(q) (q.buf[q.head])
+#define QUEUE_SET(q, val) (q.buf[q.tail] = val)
+
+struct uart_buf
+{
+  int head;
+  int tail;
+  char buf[UARTBUF_SIZE];
+} read_buf, write_buf;
+
 void uart_init ();
 void uart_send (char c);
 void uart_puts (char *s);

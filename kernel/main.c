@@ -1,6 +1,7 @@
 #include <uart.h>
 #include <lfb.h>
 #include "shell.h"
+#include "irq.h"
 
 #define BOOT_MSG "                                                               \n" \
                  "                                                               \n" \
@@ -19,6 +20,9 @@ main (int error, char *argv[])
 {
   // init stack guard. It should be random, but I'm lazy.
   __stack_chk_guard = (void *) 0xdeadbeef;
+  init_uart_irq ();
+  init_irq ();
+  enable_irq ();
   uart_init ();
   lfb_init ();
   uart_puts (BOOT_MSG);
