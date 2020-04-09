@@ -43,6 +43,10 @@ check_EL2:
   msr elr_el2, x0
   eret
 ret2EL1:
+  # disable exception of access SIMD register in EL1
+  mrs x0, CPACR_EL1
+  orr x0, x0, #(3 << 20)
+  msr CPACR_EL1, x0
   # setup EL0 stack
   adr x0, _start
   sub x0, x0, #0x10000
