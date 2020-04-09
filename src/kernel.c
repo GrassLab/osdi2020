@@ -53,7 +53,7 @@ int main(void){
 #endif
 
 #if !defined (WITHOUT_LOADER) && !defined(NO_RELOC_SELF)
-        printf("   kerned segment: 0x%x - 0x%x" NEWLINE NEWLINE,
+        printf("   kernel segment: 0x%x - 0x%x" NEWLINE NEWLINE,
                 &_kbeg, &_kend);
 #endif
 
