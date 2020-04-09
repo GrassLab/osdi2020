@@ -1,3 +1,7 @@
 *.elf
 *.img
 *.o
+src/*.o
+raspbootin/*.elf
+raspbootin/*.img
+raspbootin/*.o
