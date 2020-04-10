@@ -14,6 +14,7 @@ void system_start()
 
 void make_exc()
 {
+    uart_puts("exception happen!!!!!\n");
     unsigned int r;
     r = *((volatile unsigned int *)0xFFFFFFFFFF000000);
 
@@ -34,36 +35,10 @@ int main()
     get_frame_buffer();
     showpicture();
 
-    uart_puts("exception happen!!!!!\n");
-    //make_exc();
+    //test
+    make_exc();
 
-    char cmd[INPUT_BUFFER_SIZE];
-    // main loop
-    while (1)
-    {
-        uart_puts(">");
-
-        // get command
-        memset(cmd, 0, INPUT_BUFFER_SIZE);
-        uart_gets(cmd, INPUT_BUFFER_SIZE);
-
-        uart_send('\r');
-        uart_send('\n');
-
-        if (strcmp(cmd, "") == 0)
-            continue;
-        else if (strcmp(cmd, "hello") == 0)
-            cmd_hello(0);
-        else if (strcmp(cmd, "reboot") == 0)
-            cmd_reboot(0);
-        else if (strcmp(cmd, "timestamp") == 0)
-            cmd_timestamp(0);
-        else if (strcmp(cmd, "load_images") == 0)
-            cmd_load_images(0);
-        else
-            cmd_not_find(0);
-    }
-    uart_puts("Shell End\n");
+    pcsh();
 
     return 0;
 }
