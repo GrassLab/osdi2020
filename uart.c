@@ -92,7 +92,8 @@ void uart_send_int(int n)
     uart_puts(s);
 }
 
-void uart_send_hex(int n)
+/*
+void uart_send_hex(unsigned long n)
 {
     char s[1024];
     memset(s, 0, 1024);
@@ -100,6 +101,20 @@ void uart_send_hex(int n)
 
     uart_puts("0x");
     uart_puts(s);
+}
+*/
+
+void uart_send_hex(unsigned int d) {
+    unsigned int n;
+    int c;
+    // uart_puts("0x");
+    for(c=28;c>=0;c-=4) {
+        // get highest tetrad
+        n=(d>>c)&0xF;
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n+=n>9?0x37:0x30;
+        uart_send(n);
+    }
 }
 
 void uart_send_float(float f, int n)

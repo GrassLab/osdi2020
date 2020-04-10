@@ -15,7 +15,7 @@ kearnel8.elf kernel8.img: start.o $(OBJS)
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@ $(CFLAGS)
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none
 
 run-detail:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
