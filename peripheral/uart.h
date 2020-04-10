@@ -28,7 +28,7 @@
 #define UART0_RIS       ((volatile unsigned int*)(MMIO_BASE+0x0020103c))
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
-#define UARTBUF_SIZE 0x30
+#define UARTBUF_SIZE 0x400
 #define QUEUE_EMPTY(q) (q.tail == q.head)
 #define QUEUE_FULL(q) ((q.tail + 1) % UARTBUF_SIZE == q.head)
 #define QUEUE_POP(q) (q.head = (q.head + 1) % UARTBUF_SIZE)
