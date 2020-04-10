@@ -66,7 +66,7 @@ shell_interactive ()
 	}
       else if (!strcmp ("irq", buf))
 	{
-	  core_timer_enable ();
+	  asm volatile ("mov x0, #0\n" "svc #0\n");
 	  local_timer_init ();
 	}
       else
@@ -204,12 +204,4 @@ cancel_reset ()
 {
   *PM_RSTC = PM_PASSWORD | 0;	// full reset
   *PM_WDOG = PM_PASSWORD | 0;	// number of watchdog tick
-}
-
-void
-exc (unsigned long elr_el2, unsigned long esr_el2)
-{
-  printf ("Exception return address 0x%p\r\n", (void *) elr_el2);
-  printf ("Exception class (EC) 0x%x\r\n", esr_el2 >> 26);
-  printf ("Instruction specific syndrome (ISS) 0x%x\r\n", esr_el2 & 0xffffff);
 }

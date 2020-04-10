@@ -48,9 +48,7 @@ setup_exception_vector_table:
 
 exception_handler:
   kernel_entry
-  mrs x0, elr_el1
-  mrs x1, esr_el1
-  bl exc
+  bl exception_router
   kernel_exit
 
 irq_handler:
