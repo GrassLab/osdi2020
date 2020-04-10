@@ -1,6 +1,7 @@
-#include "uart.h"
+#include <uart.h>
+#include <lfb.h>
 #include "shell.h"
-#include "lfb.h"
+#include "irq.h"
 
 #define BOOT_MSG "                                                               \n" \
                  "                                                               \n" \
@@ -15,14 +16,20 @@
                  "                                                                  \n"
 
 int
-main (void)
+main (int error, char *argv[])
 {
   // init stack guard. It should be random, but I'm lazy.
   __stack_chk_guard = (void *) 0xdeadbeef;
+  init_uart_irq ();
   uart_init ();
   lfb_init ();
   uart_puts (BOOT_MSG);
-  uart_puts ("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
+  if (error)
+    {
+      uart_puts ("---------- Warning ----------\n");
+      uart_puts (argv[0]);
+      uart_puts ("-----------------------------\n");
+    }
   shell_interactive ();
   return 0;
 }

@@ -1,9 +1,11 @@
+#include <uart.h>
+#include <string.h>
+#include <mm.h>
+#include <mbox.h>
+#include <lfb.h>
+#include <timer.h>
 #include "shell.h"
-#include "uart.h"
-#include "string.h"
-#include "mm.h"
-#include "mbox.h"
-#include "lfb.h"
+#include "irq.h"
 
 #define PM_PASSWORD   0x5a000000
 #define PM_RSTC       ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
@@ -28,6 +30,8 @@ shell_interactive ()
 	    ("hardware - show board revision and VC Core base address\n");
 	  uart_puts ("picture - show picture\n");
 	  uart_puts ("loadimg [address] - load image to address\n");
+	  uart_puts ("exc - raise exception (svc #1)\n");
+	  uart_puts ("irq - trigger timer interrupt\n");
 	}
       else if (!strcmp ("hello", buf))
 	{
@@ -48,20 +52,28 @@ shell_interactive ()
 	{
 	  hardware ();
 	}
-      else if (!strncmp ("picture", buf, 8))
+      else if (!strncmp ("picture", buf, 7))
 	{
-	  picture (buf);
+	  picture (&buf[8]);
 	}
       else if (!strncmp ("loadimg", buf, 7))
 	{
 	  loadimg (strtol (buf + 7, 0, 16));
+	}
+      else if (!strcmp ("exc", buf))
+	{
+	  asm volatile ("svc #1");
+	}
+      else if (!strcmp ("irq", buf))
+	{
+	  core_timer_enable ();
+	  local_timer_init ();
 	}
       else
 	{
 	  uart_puts (buf);
 	  uart_puts (": command not found\n");
 	}
-      picture (buf);
     }
 }
 
@@ -70,7 +82,8 @@ loadimg (unsigned long address)
 {
   extern void *__start_bootloader;
   extern void *__stop_bootloader;
-  unsigned long __bootloader_size = (unsigned long)&__stop_bootloader - (unsigned long)&__start_bootloader;
+  unsigned long __bootloader_size =
+    (unsigned long) &__stop_bootloader - (unsigned long) &__start_bootloader;
   unsigned long img_size;
   unsigned long rebased_bootloader;
   unsigned long rebased_end;
@@ -97,10 +110,11 @@ loadimg (unsigned long address)
 	  __bootloader_size);
   // call rebased bootloader
   rebased_loadimg =
-	  rebased_bootloader + ((unsigned long) &loadimg_jmp -
+    rebased_bootloader + ((unsigned long) &loadimg_jmp -
 			  (unsigned long) &__start_bootloader);
   asm volatile ("mov x0, %0\n" "mov x1, %1\n" "mov sp, %2\n"
-		"blr %3\n"::"r" (address), "r" (img_size), "r" ((rebased_end + 0x8000) & ~0xf),
+		"blr %3\n"::"r" (address), "r" (img_size),
+		"r" ((rebased_end + 0x8000) & ~0xf),
 		"r" (rebased_loadimg):"x0", "x1");
   //((void (*)(void *, unsigned long, void *)) rebased_bootloader)((void *) address, img_size, rebased_bootloader + &__bootloader_size);
 }
@@ -163,42 +177,23 @@ hardware ()
   uart_puts ("\n");
 }
 
-void
-ftoa (double val, char *buf)
-{
-  double scan = 1000000;
-  int cnt = 0;
-  int met_num = 0;
-
-  while (cnt < 6)
-    {
-      *buf = (long) (val / scan) % 10;
-      if (*buf != 0)
-	met_num = 1;
-      *buf += '0';
-      if (met_num)
-	buf++;
-      if (scan < 1)
-	cnt++;
-      if (scan == 1)
-	*buf++ = '.';
-      scan /= 10;
-    }
-  *buf = 0;
-}
-
 double
 get_time ()
 {
+  double t;
+  asm volatile ("mov x1, %0\n" "mov x0, #1\n" "svc #0\n"::"r" (&t));
+  return t;
+}
+
+void
+sys_get_time (double *result)
+{
   unsigned long freq;
   unsigned long cnt;
-  double result;
-  char buf[0x20];
-  int len = 0;
 
   asm volatile ("mrs %0, CNTFRQ_EL0\n"
 		"mrs %1, CNTPCT_EL0\n":"=r" (freq), "=r" (cnt));
-  return (double) cnt / (double) freq;
+  *result = (double) cnt / (double) freq;
 }
 
 void
