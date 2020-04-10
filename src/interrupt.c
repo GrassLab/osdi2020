@@ -9,6 +9,10 @@
 extern unsigned int CORE_TIMER_COUNT;
 extern unsigned int LOCAL_TIMER_COUNT;
 
+void debug(){
+    uart_puts("debugggggg!!\n");
+}
+
 void disable_irq() 
 {
     asm volatile("msr daifset,#2");
@@ -35,12 +39,8 @@ void core_timer_counter()
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
 void core_timer_enable()
 {
-    unsigned int val = CORE0_TIMER_IRQ_CTRL;
     asm volatile ("mov x0, 1");
 	asm volatile ("msr cntp_ctl_el0, x0");
-    // asm volatile ("mov x0, 2");
-    // asm volatile ("ldr x1, %0" :: "m" (val));
-    // asm volatile ("str x0, [x1]");
     set(CORE0_TIMER_IRQ_CTRL, 0x2);
 }
 
@@ -62,14 +62,11 @@ void local_timer_counter()
 }
 
 #define LOCAL_TIMER_IRQ_CLR 0x40000038
-
+#define LOCAL_TIMER_RELOAD 0xc000000//0xc0000000
 void local_timer_handler()
 {
-    set(LOCAL_TIMER_IRQ_CLR, 0xc0000000); // clear interrupt and reload.
+    set(LOCAL_TIMER_IRQ_CLR, LOCAL_TIMER_RELOAD); // clear interrupt and reload.
     local_timer_counter();
-    // unsigned long elr; 
-    // asm volatile ("mrs %0, elr_el2" : "=r"(elr));
-    // asm volatile ("msr elr_el2, %0" : : "r" (elr+4));
 }
 
 

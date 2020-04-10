@@ -9,11 +9,6 @@ _start:
     cbnz     x1, loop
 
 
-//     // enable interrupt
-//     msr DAIFClr, 0xf
-    
-//     // disable interrupt
-//     msr DAIFSet, 0xf
     
 //     // set up EL1
 //     mrs     x0, CurrentEL
@@ -106,14 +101,12 @@ loop:
 // .endm
 
 .macro EXCEPTION_ROUTINE num
-    // sub    sp,  sp,  #16 * 18
-    // stp    x0,  x1,  [sp, #16 * 0]
-    // mov    x0, \num
-    b      __exception_store_context
+    b      __exception_routine
 .endm
-__exception_store_context:
+
+.macro STORE_CONTEXT
     // Make room on the stack for the exception context.
-    sub    sp,  sp,  #16 * 18
+    sub    sp,  sp,  #16 * 16
 
     // Store all general purpose registers on the stack.
     stp    x0,  x1,  [sp, #16 * 0]
@@ -132,25 +125,9 @@ __exception_store_context:
     stp    x26, x27, [sp, #16 * 13]
     stp    x28, x29, [sp, #16 * 14]
     str    x30,      [sp, #16 * 15]
+.endm
 
-    //mrs     x2, elr_el2
-    //mrs     x3, spsr_el2
-
-    // store PC and PSTATE
-    //stp     lr,  x2,  [sp, #16 * 16]
-    //str     w3,       [sp, #16 * 17]
-
-    mov     x0, #0
-    bl      exc_handler
-
-__exception_load_context:
-    // load PC and PSTATE
-    //ldr    w19,      [sp, #16 * 17]
-    //ldp    lr,  x20, [sp, #16 * 16]
-
-    //msr    spsr_el2, x19
-    //msr    elr_el2,  x20
-
+.macro LOAD_CONTEXT
     ldp    x0,  x1,  [sp, #16 * 0]
     ldp    x2,  x3,  [sp, #16 * 1]
     ldp    x4,  x5,  [sp, #16 * 2]
@@ -168,18 +145,28 @@ __exception_load_context:
     ldp    x28, x29, [sp, #16 * 14]
     ldr    x30,      [sp, #16 * 15]
 
-    add    sp,  sp,  #16 * 17
-    
+    add    sp,  sp,  #16 * 16
+.endm
+
+
+__exception_routine:
+    STORE_CONTEXT
+    mov     x0, #0
+    bl      exc_handler
+    LOAD_CONTEXT
     eret
 
 
-__interrupt_handler:
+__interrupt_routine:
     bl      disable_irq
-    //EXCEPTION_ROUTINE #
+    STORE_CONTEXT
+    //mov     x0, #1
+    //bl      exc_handler
     bl      debug
-    bl      core_timer_handler
     //bl      local_timer_handler
+    bl      core_timer_handler
 after_timer:
+    LOAD_CONTEXT
     bl      enable_irq
     eret
     
@@ -204,7 +191,7 @@ after_timer:
 //     str     x0, [x1] // enable timer interrupt
 //     ret
 
-#define EXPIRE_PERIOD 0xffffff
+#define EXPIRE_PERIOD 0xfffffff
 
 .global core_timer_handler
 core_timer_handler:
@@ -252,7 +239,7 @@ _exception_table:
     // IRQ
     .align 7 //  0x280
     //EXCEPTION_ROUTINE #5
-    b   __interrupt_handler
+    b   __interrupt_routine
 
     // FIQ
     .align 7 //  0x300

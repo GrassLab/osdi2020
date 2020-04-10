@@ -1,8 +1,5 @@
 #include "../include/uart.h"
 
-void debug(){
-    uart_puts("debugggggg!!\n");
-}
 /**
  * common exception handler
  */
@@ -53,15 +50,19 @@ void exc_handler(unsigned long type)
 
     // dump registers
     uart_puts("\n\t  ESR_ELx: 0x");
+    uart_hex(esr>>16);
     uart_hex(esr);
     
     uart_puts("\n\t  ELR_ELx: 0x");
+    uart_hex(elr>>16);
     uart_hex(elr);
 
     uart_puts("\n\t SPSR_ELx: 0x");
+    uart_hex(spsr>>16);
     uart_hex(spsr);
     
     uart_puts("\n\t  FAR_ELx: 0x");
+    uart_hex(far>>16);
     uart_hex(far);
     uart_puts("\n");
 
