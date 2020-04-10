@@ -40,6 +40,7 @@ unsigned long get_timer_counter()
     register unsigned long t;
     // read the current counter
     asm volatile ("mrs %0, cntpct_el0" : "=r"(t));
+    uart_hex(t);
     return t;
 }
 

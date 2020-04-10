@@ -1,16 +1,21 @@
 #include "../include/uart.h"
 
-// array to store register values 
-unsigned long dbg_regs[37];
-
+void debug(){
+    uart_puts("debugggggg!!\n");
+}
 /**
  * common exception handler
  */
-void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far)
+void exc_handler(unsigned long type)
 {
-    // uart_puts("CurrentEL: ");
-    // uart_hex(level);
-    // uart_puts("\n");
+    unsigned long esr; 
+    asm volatile ("mrs %0, esr_el2" : "=r"(esr));
+    unsigned long elr; 
+    asm volatile ("mrs %0, elr_el2" : "=r"(elr));
+    unsigned long spsr; 
+    asm volatile ("mrs %0, spsr_el2" : "=r"(spsr));
+    unsigned long far; 
+    asm volatile ("mrs %0, far_el2" : "=r"(far));
 
     // print out interruption type
     switch(type) {
@@ -19,14 +24,7 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
         case 2: uart_puts("FIQ"); break;
         case 3: uart_puts("SError"); break;
     }
-    
-    // print EC and ISS
     uart_puts(": ");
-    uart_puts("\n Exception Class (EC): ");
-    uart_hex(esr>>26);
-    uart_puts("\n Instr Specific Syndrome (ISS): ");
-    uart_hex(esr&0xffffff);
-    uart_puts("\n");
     
     // decode exception type (some, not all. See ARM DDI0487B_b chapter D10.2.28)
     switch(esr>>26) { 
@@ -47,46 +45,30 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
         default: uart_puts("Unknown"); break;
     }
     
+    // print EC and ISS
+    uart_puts("\n\t Exception Class (EC): ");
+    uart_hex(esr>>26);
+    uart_puts("\n\t Instr Specific Syndrome (ISS): ");
+    uart_hex(esr&0x1ffffff);
+
     // dump registers
-    uart_puts(":\n  ESR_EL2 ");
-    uart_hex(esr>>32);
+    uart_puts("\n\t  ESR_ELx: 0x");
     uart_hex(esr);
-    uart_puts(" ELR_EL2 "); // exception return address
-    uart_hex(elr>>32);
+    
+    uart_puts("\n\t  ELR_ELx: 0x");
     uart_hex(elr);
 
-   
-
-    uart_puts("\n SPSR_EL2 ");
-    uart_hex(spsr>>32);
+    uart_puts("\n\t SPSR_ELx: 0x");
     uart_hex(spsr);
-    uart_puts(" FAR_EL2 ");
-    uart_hex(far>>32);
+    
+    uart_puts("\n\t  FAR_ELx: 0x");
     uart_hex(far);
     uart_puts("\n");
-    // no return from exception for now
-    // exception return should be implement at start.S
-    //while(1);
 
-    
-    // uart_puts("Exception in debugger!\n")
-    // uart_puts("  elr_el1: ");
-    // uart_hex(dbg_regs[31]);
-    // uart_puts("  spsr_el1: ");
-    // uart_hex(dbg_regs[32]);
-    // uart_puts("\n");
-
-    // uart_puts("  esr_el1: ");
-    // uart_hex(dbg_regs[33]);
-    // uart_puts("  far_el1: ");
-    // uart_hex(dbg_regs[34]);
-    // uart_puts("\n");
-
-    // uart_puts("  sctlr_el1: ");
-    // uart_hex(dbg_regs[35]);
-    // uart_puts("  tcr_el1: ");
-    // uart_hex(dbg_regs[36]);
-    // uart_puts("\n");
-    
+    // breakpoint jump out
+    if (esr>>26==0b110000 || esr>>26==0b110001 || esr>>26==0b111100) {
+        asm volatile ("mrs %0, elr_el2" : "=r"(elr));
+        asm volatile ("msr elr_el2, %0" : : "r" (elr+4));
+    }  
 }
 

@@ -67,7 +67,6 @@ _start:
 
     
 
-
     // set stack before our code
     ldr     x1, =_start
 5:  mov     sp, x1
@@ -75,6 +74,8 @@ _start:
     // load exception_table to vbar_el2
     ldr     x0, =_exception_table
     msr     vbar_el2, x0
+
+
 
     // clear bss
     ldr     x1, =__bss_start
@@ -92,20 +93,27 @@ loop:
     wfe
     b       loop
 
-
-
 .section ".text.exception"
 /// Call the function provided by parameter `\handler` after saving the exception context.
 /// Provide the context as the first parameter to '\handler'.
-.macro EXCEPTION_ROUTINE num
-    mov     x30, \num
-    bl      __exception_store_context
-.endm
 
-.global __exception_store_context
+// .macro ISR num
+//     bl      __exception_store_context
+//     mov     x0, \num
+//     bl      exc_handler
+//     bl      __exception_load_context
+//     eret
+// .endm
+
+.macro EXCEPTION_ROUTINE num
+    // sub    sp,  sp,  #16 * 18
+    // stp    x0,  x1,  [sp, #16 * 0]
+    // mov    x0, \num
+    b      __exception_store_context
+.endm
 __exception_store_context:
     // Make room on the stack for the exception context.
-    sub    sp,  sp,  #16 * 17
+    sub    sp,  sp,  #16 * 18
 
     // Store all general purpose registers on the stack.
     stp    x0,  x1,  [sp, #16 * 0]
@@ -123,30 +131,25 @@ __exception_store_context:
     stp    x24, x25, [sp, #16 * 12]
     stp    x26, x27, [sp, #16 * 13]
     stp    x28, x29, [sp, #16 * 14]
+    str    x30,      [sp, #16 * 15]
 
-    mov     x0, x30 //\num 
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
-    //mrs     x5, CurrentEL
+    //mrs     x2, elr_el2
+    //mrs     x3, spsr_el2
 
     // store PC and PSTATE
-    stp     lr,  x2,  [sp, #16 * 15]
-    str     w3,       [sp, #16 * 16]
+    //stp     lr,  x2,  [sp, #16 * 16]
+    //str     w3,       [sp, #16 * 17]
 
-    bl      exc_handler//\handler
-    bl      __exception_load_context
-    
+    mov     x0, #0
+    bl      exc_handler
 
-.global __exception_load_context
 __exception_load_context:
     // load PC and PSTATE
-    ldr    w19,      [sp, #16 * 16]
-    ldp    lr,  x20, [sp, #16 * 15]
+    //ldr    w19,      [sp, #16 * 17]
+    //ldp    lr,  x20, [sp, #16 * 16]
 
-    msr    spsr_el2, x19
-    msr    elr_el2,  x20
+    //msr    spsr_el2, x19
+    //msr    elr_el2,  x20
 
     ldp    x0,  x1,  [sp, #16 * 0]
     ldp    x2,  x3,  [sp, #16 * 1]
@@ -163,10 +166,62 @@ __exception_load_context:
     ldp    x24, x25, [sp, #16 * 12]
     ldp    x26, x27, [sp, #16 * 13]
     ldp    x28, x29, [sp, #16 * 14]
+    ldr    x30,      [sp, #16 * 15]
 
     add    sp,  sp,  #16 * 17
     
     eret
+
+
+__interrupt_handler:
+    bl      disable_irq
+    //EXCEPTION_ROUTINE #
+    bl      debug
+    bl      core_timer_handler
+    //bl      local_timer_handler
+after_timer:
+    bl      enable_irq
+    eret
+    
+
+// #define HCR_RW	    (1 << 4)
+// #define HCR_VALUE	HCR_RW
+
+// .global set_HCR_EL2_IMO
+// set_HCR_EL2_IMO:
+//     ldr	    x0, =HCR_VALUE
+// 	msr	    hcr_el2, x0
+//     ret
+
+// #define CORE0_TIMER_IRQ_CTRL 0x40000040
+
+// .global core_timer_enable
+// core_timer_enable:
+//     mov     x0, 1
+//     msr     cntp_ctl_el0, x0 // enable timer
+//     mov     x0, 2
+//     ldr     x1, =CORE0_TIMER_IRQ_CTRL
+//     str     x0, [x1] // enable timer interrupt
+//     ret
+
+#define EXPIRE_PERIOD 0xffffff
+
+.global core_timer_handler
+core_timer_handler:
+    mov     x0, EXPIRE_PERIOD
+    msr     cntp_tval_el0, x0
+    bl      core_timer_counter
+    b       after_timer
+
+
+
+
+
+
+
+
+
+
 
 
 .align 11
@@ -192,53 +247,54 @@ _exception_table:
     // Current exception level with SP_ELx, x > 0.
     // synchronous
     .align 7 //  0x200
-    EXCEPTION_ROUTINE #0
+    EXCEPTION_ROUTINE #4
 
     // IRQ
     .align 7 //  0x280
-    EXCEPTION_ROUTINE #1
+    //EXCEPTION_ROUTINE #5
+    b   __interrupt_handler
 
     // FIQ
     .align 7 //  0x300
-    EXCEPTION_ROUTINE #2
+    EXCEPTION_ROUTINE #6
 
     // SError
     .align 7 //  0x380
-    EXCEPTION_ROUTINE #3
+    EXCEPTION_ROUTINE #7
 
     // Lower exception level, AArch64
     // synchronous
     .align 7 //  0x400
-    EXCEPTION_ROUTINE #0
+    EXCEPTION_ROUTINE #8
 
     // IRQ
     .align 7 //  0x480
-    EXCEPTION_ROUTINE #1
+    EXCEPTION_ROUTINE #9
 
     // FIQ
     .align 7 //  0x500
-    EXCEPTION_ROUTINE #2
+    EXCEPTION_ROUTINE #10
 
     // SError
     .align 7 //  0x580
-    EXCEPTION_ROUTINE #3
+    EXCEPTION_ROUTINE #11
 
     // Lower exception level, AArch32
     // synchronous
     .align 7 //  0x600
-    EXCEPTION_ROUTINE #0
+    EXCEPTION_ROUTINE #12
 
     // IRQ
     .align 7 //  0x680
-    EXCEPTION_ROUTINE #1
+    EXCEPTION_ROUTINE #13
 
     // FIQ
     .align 7 //  0x700
-    EXCEPTION_ROUTINE #2
+    EXCEPTION_ROUTINE #14
 
     // SError
     .align 7 //  0x780
-    EXCEPTION_ROUTINE #3
+    EXCEPTION_ROUTINE #15
 
     .align 7 //  0x800
 
