@@ -196,6 +196,8 @@ void shell(void) {
     if (strlen(cmd) != 0) {
       if (!strcmp(cmd, "help")) {
         help();
+      } else if (!strcmp(cmd, "exc")) {
+        asm("svc #1");
       } else if (!strcmp(cmd, "hello")) {
         hello();
       } else if (!strcmp(cmd, "loadimg")) {
