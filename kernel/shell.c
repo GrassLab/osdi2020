@@ -66,7 +66,7 @@ shell_interactive ()
 	}
       else if (!strcmp ("irq", buf))
 	{
-	  asm volatile ("mov x0, #0\n" "svc #0\n");
+	  core_timer_enable ();
 	  local_timer_init ();
 	}
       else

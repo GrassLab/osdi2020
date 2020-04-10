@@ -1,7 +1,7 @@
 .section ".text"
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
-.global core_timer_enable
-core_timer_enable:
+.global sys_core_timer_enable
+sys_core_timer_enable:
   stp x29, x30, [sp, #-16]!
   mov x29, sp
 

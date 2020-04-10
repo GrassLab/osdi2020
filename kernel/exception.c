@@ -50,7 +50,7 @@ system_call (size_t x0, size_t x1, size_t x2, size_t x3)
   switch (x0)
     {
     case 0:
-      core_timer_enable ();
+      sys_core_timer_enable ();
       break;
     case 1:
       sys_get_time ((double *) x1);

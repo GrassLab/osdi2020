@@ -13,3 +13,9 @@ local_timer_handler ()
 {
   *LOCAL_TIMER_IRQ_CLR = 0xc0000000;	// clear interrupt and reload.
 }
+
+void
+core_timer_enable ()
+{
+  asm volatile ("mov x0, #0\n" "svc #0\n");
+}
