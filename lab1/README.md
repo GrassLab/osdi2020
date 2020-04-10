@@ -13,4 +13,3 @@ just run `make`
 ## How to run
 
 `make run`
-
