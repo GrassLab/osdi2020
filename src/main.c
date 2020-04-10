@@ -7,7 +7,7 @@ int main()
     uart_init();
 
     // say hello
-    uart_puts("Hello World!\n");
+    uart_printf("Hello World\n\n");
 
     // start shell
     shell_start();

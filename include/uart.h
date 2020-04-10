@@ -80,4 +80,9 @@ int uart_getint();
  */
 void uart_puts(char *s);
 
+/**
+ * Display a string
+ */
+void uart_printf ( const char *  format, ... );
+
 #endif
