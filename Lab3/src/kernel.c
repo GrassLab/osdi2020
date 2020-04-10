@@ -6,6 +6,7 @@
 #include "include/framebuffer.h"
 #include "include/irq.h"
 #include "include/timer.h"
+#include "include/sys.h"
 
 int check_string(char * str){
 	char* cmd_help = "help";
@@ -61,15 +62,16 @@ int check_string(char * str){
 		return 1;	
 	}
 	else if(strcmp(str,cmd_exc)==0){		
+		
 		// issue exception                	
 		asm volatile(
+			"mov w8,#2;" // invalid system call will return back
 			"svc #1;"
     		);
 
 	}
 	else if(strcmp(str,cmd_irq)==0){
-    		uart_send_string("\r\nEnable timer\r\n");
-		core_timer_enable();
+		call_sys_timer("\r\nTry to enable timer......\r\n");
 	}
 	else{
 		uart_send_string("\r\nErr:command ");
@@ -91,7 +93,7 @@ void get_board_revision_info(){
   mbox[6] = END_TAG;
 
   if(mbox_call(8)){
-	 uart_send_string("Board Revision:"); 
+	 uart_send_string("### Board Revision:"); 
  	 uart_hex(mbox[5]); // it should be 0xa020d3 for rpi3 b+
   	 uart_send_string("\r\n");
   }
@@ -114,7 +116,7 @@ void get_VC_core_base_addr(){
   mbox[7] = END_TAG;
 
   if(mbox_call(8)){
-	 uart_send_string("VC core base address:"); 
+	 uart_send_string("### VC core base address:"); 
 	 uart_hex(mbox[5]); //base address in bytes:3B400000
 	 uart_send_string(", size ");
 	 uart_hex(mbox[6]); //size:4C00000
@@ -128,16 +130,19 @@ void get_VC_core_base_addr(){
 void kernel_main(void)
 {	
     uart_init();
+    uart_hex(get_reg());
+    uart_send_string("Hello, world!\r\n");
+
  
-    async_exc_routing(); //set HCR_EL2.IMO
-    enable_irq();        //clear PSTATE.DAIF
+    //async_exc_routing(); //set HCR_EL2.IMO
+                           // Do not set HCR_EL2.IMO if you want your interrupt directly goto kernel in EL1 
+
+    //enable_irq();        //clear PSTATE.DAIF
 
     //fb_init();
     //fb_show();
    
-    uart_send_string("Hello, world!\r\n");
     
-
     //get hardware information by mailbox
     get_board_revision_info();
     get_VC_core_base_addr();

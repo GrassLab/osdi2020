@@ -3,12 +3,18 @@
 
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
+        
+	uart_send_string("\r\n");	
+	uart_hex(get_reg());
+
 	switch(type){
 		case 0:uart_send_string("\r\nSynchronous");break;
 		case 1:uart_send_string("\r\nIRQ");break;
 		case 2:uart_send_string("\r\nFIQ");break;	
 		case 3:uart_send_string("\r\nSError");break;	
-		case 4:uart_send_string("\r\nSynchronous at 0x200");break;
+		case 4:uart_send_string("\r\nSynchronous at 0x400");break;
+		
+		case 5:uart_send_string("\r\nIRQ at 0x480");break;
 	}
 	uart_send_string(":");
 
@@ -19,7 +25,9 @@ void exception_handler(unsigned long type,unsigned long esr, \
 		case 0b010101: uart_send_string("System call"); break;
        		case 0b100100: uart_send_string("Data abort, lower EL"); break;
                 case 0b100101: uart_send_string("Data abort, same EL"); break;
-        	default: uart_send_string("Unknown...?"); break;
+		case 0b011000: uart_send_string("Exception from MSR, MRS, or System instruction execution in AArch64 state");
+			       
+	 	default: uart_send_string("Unknown...?"); break;
         }
         
 	// decode data abort cause

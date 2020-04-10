@@ -25,9 +25,7 @@ get_timer_counts:
 	ret
 
 .global get_reg
-get_reg:
-        //adr x0,.
-	mov x0, x30
-	//mov x0, SP
+get_reg: 
+        mov x0, SP
 	ret
 
