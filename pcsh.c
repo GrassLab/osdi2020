@@ -24,11 +24,6 @@ static cmd_t default_cmd_arr[8] = {
         {"load_images", "load images from UART", cmd_load_images},
         {NULL, NULL, cmd_not_find}};
 
-int cmd_init()
-{
-
-}
-
 int cmd_exit(int i)
 {
     return 0;
@@ -73,7 +68,7 @@ int cmd_load_images(int i)
 {
     uart_puts("Input kernel size: ");
     char cmd[INPUT_BUFFER_SIZE];
-    // memset(cmd, 0, INPUT_BUFFER_SIZE);
+    memset(cmd, 0, INPUT_BUFFER_SIZE);
 
     uart_gets(cmd, INPUT_BUFFER_SIZE);
     int image_size = atoi(cmd);
@@ -82,7 +77,9 @@ int cmd_load_images(int i)
     uart_send('\n');
 
     uart_puts("Input Kernel load address: ");
+    memset(cmd, 0, INPUT_BUFFER_SIZE);
     uart_gets(cmd, INPUT_BUFFER_SIZE);
+
     int address = atoi(cmd);
     uart_puts("Kernel load address is: ");
     uart_send_hex(address);

@@ -7,7 +7,7 @@ from array import array
 
 
 PORT = '/dev/ttyUSB0'
-#PORT = '/dev/pts/21'
+PORT = '/dev/pts/7'
 
 BAUD_RATES = 115200
 
@@ -64,7 +64,7 @@ try:
             count = ser.in_waiting
             if count != 0:
                 data_raw = ser.read(count)
-                print("=", data_raw.decode())
+                print("=", data_raw)
 
     
     time.sleep(3)
@@ -72,7 +72,7 @@ try:
     count = ser.in_waiting
     if count != 0:
         data_raw = ser.read(count)
-        print(data_raw.decode())
+        print(data_raw)
     
     ser.flush()
     ser.flushInput()

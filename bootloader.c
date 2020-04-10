@@ -17,11 +17,11 @@ void loadimg (unsigned long address, unsigned long img_size)
   uart_send_hex (address);
   uart_puts ("\n");
   uart_puts ("image size: ");
-  uart_send_int (img_size);
+  uart_send_int ((int)img_size);
   uart_puts ("\n");
 
   // rebase tiny bootloader
-  rebased_bootloader = address + img_size;
+  rebased_bootloader = address + img_size + 0x10000;
   rebased_end = rebased_bootloader + __bootloader_size;
   if ((unsigned long) &__stop_bootloader > rebased_end)
     rebased_bootloader = (unsigned long) &__stop_bootloader;
@@ -34,31 +34,50 @@ void loadimg (unsigned long address, unsigned long img_size)
   rebased_loadimg =
       rebased_bootloader + ((unsigned long) &loadimg_jmp -
               (unsigned long) &__start_bootloader);
+
+  
+  uart_puts("Move bootloader done, start copy kernel\n");
+loadimg_jmp(address, img_size);
+  uart_send_hex(rebased_loadimg);
   asm volatile ("mov x0, %0;" \
                 "mov x1, %1;" \
                 "mov sp, %2;" \
                 ::"r" (address), "r" (img_size), "r" ((rebased_end + 0x8000) & ~0xf));
   asm volatile("blr %0;" :: "r" (rebased_loadimg): "x0", "x1");
 
+    void (*func)(void*, unsigned long) = (void (*)(void*, unsigned long))rebased_loadimg;
+    func(address, img_size);
 
-/*
-  asm volatile("mov x0, %0;" : "=r" (address));
-  asm volatile("mov x1, %0;" : "=r" (img_size));
-  asm volatile("mov sp, %0;" : "r" ((rebased_end + 0x8000)));
-  asm volatile("blr %0" : "=r" (rebased_loadimg) : "x0", "x1");
-*/
-  //((void (*)(void *, unsigned long, void *)) rebased_bootloader)((void *) address, img_size, rebased_bootloader + &__bootloader_size);
+    uart_puts("no see");
+
+  asm volatile ("mov x0, %0\n" "mov x1, %1\n" "mov sp, %2\n"
+        "blr %3\n"::"r" (address), "r" (img_size), "r" ((rebased_end + 0x8000) & ~0xf),
+        "r" (rebased_loadimg):"x0", "x1");
+
+
 }
 
-void uart_read(char *buf, unsigned long count){
-    while(count--)
-        *buf++ = uart_getc();
-}
 
 void loadimg_jmp (void *address, unsigned long img_size)
 {
   // save image base
-  uart_read ((char *) address, img_size);
-  asm volatile("mov x30, 0x80000; ret");
-  //((void (*)(void)) (address)) ();
+  char *buf = (char*)address;
+  int count = img_size;
+
+  uart_puts("Start copy kernel\n");
+  uart_send_hex((int)address);
+  uart_send_int((int)img_size);
+  while(count--){
+    // uart_getc()
+    /* wait until something is in the buffer */
+    do{asm volatile("nop");}while(*UART0_FR&0x10);
+    /* read it and return */
+    *buf = (char)(*UART0_DR);
+    /* convert carrige return to newline */
+    buf++;
+  }
+ uart_puts("Copy kernel done, jump to new kernel\n");
+
+   asm volatile("mov x30, 0x80000; ret");
+  ((void (*)(void)) (address)) ();
 }

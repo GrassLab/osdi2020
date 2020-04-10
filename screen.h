@@ -152,7 +152,7 @@ void showpicture()
     int pic_width = 128;
 
     for(int i=0; i< pic_height * pic_width * 4; i++){
-        pic[i] = 0x123456;
+        pic[i] = 0xfc;
     }
 
 
