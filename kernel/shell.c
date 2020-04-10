@@ -180,15 +180,20 @@ hardware ()
 double
 get_time ()
 {
+  double t;
+  asm volatile ("mov x1, %0\n" "mov x0, #1\n" "svc #0\n"::"r" (&t));
+  return t;
+}
+
+void
+sys_get_time (double *result)
+{
   unsigned long freq;
   unsigned long cnt;
-  double result;
-  char buf[0x20];
-  int len = 0;
 
   asm volatile ("mrs %0, CNTFRQ_EL0\n"
 		"mrs %1, CNTPCT_EL0\n":"=r" (freq), "=r" (cnt));
-  return (double) cnt / (double) freq;
+  *result = (double) cnt / (double) freq;
 }
 
 void
