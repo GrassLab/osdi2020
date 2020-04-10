@@ -1,10 +1,24 @@
 #include "../include/uart.h"
 
+#include "../include/utils.h"
+
 /**
  * common exception handler
  */
 void exc_handler(unsigned long type)
 {
+    //  check exception level
+    int el;
+    asm volatile ("mrs %0, CurrentEL" : "=r"(el));
+    char *level = 0;
+    uart_atoi(level, (el>>2));
+
+    uart_puts("Exception Level: ");
+    //uart_hex(el);
+    //uart_puts("     ");
+    uart_puts(level);
+    uart_puts("\n");
+
     unsigned long esr; 
     asm volatile ("mrs %0, esr_el2" : "=r"(esr));
     unsigned long elr; 

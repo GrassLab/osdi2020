@@ -2,6 +2,8 @@
 // #include "../include/mailbox.h"
 // #include "../include/utils.h"
 // #include "../include/peripherals/timer.h"
+
+
 #include "../include/uart.h"
 
 #define set(a, b) *(int *)a = b
@@ -68,37 +70,6 @@ void local_timer_handler()
     set(LOCAL_TIMER_IRQ_CLR, LOCAL_TIMER_RELOAD); // clear interrupt and reload.
     local_timer_counter();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const unsigned int interval = 200000;
-// unsigned int curVal = 0;
-
-// void handle_timer_irq() 
-// {
-// 	curVal += interval;
-// 	put32(TIMER_C1, curVal);
-// 	put32(TIMER_CS, TIMER_CS_M1);
-// 	uart_puts("Timer interrupt received\n\r");
-// }
-
-
-
-
-
-
 
 
 

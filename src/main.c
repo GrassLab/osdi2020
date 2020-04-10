@@ -15,31 +15,6 @@ unsigned int KERNEL_ADDR = 0x100000;
 unsigned int CORE_TIMER_COUNT = 0;
 unsigned int LOCAL_TIMER_COUNT = 0;
 
-// #define CORE0_TIMER_IRQ_CTRL 0x40000040
-// #define EXPIRE_PERIOD 0xfffffff
-
-// void core_timer_enable()
-// {
-//     asm volatile(
-//         "mov x0, #1\n\t"
-//         "msr cntp_ctl_el0, x0\n\t" // enable timer
-//         "mov x0, #2\n\t"
-//     );
-//     asm volatile("ldr x1, %1"::"i"(CORE0_TIMER_IRQ_CTRL));
-//     asm volatile(
-//         "str x0, [x1]\n\t" // enable timer interrupt
-//     );
-//     uart_puts("core timer is enable.\n");
-// }    
-
-// void core_timer_handler()
-// {
-//     asm volatile ("mov x0, %1"::"i"(EXPIRE_PERIOD));
-//     asm volatile(
-//         "msr cntp_tval_el0, x0\n\t"
-//     );
-
-// }
 void main()
 {
     // set up serial console and linear frame buffer
