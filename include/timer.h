@@ -3,7 +3,7 @@
 
 void enableCoreTimer();
 void coreTimerHandler();
-void local_timer_init();
-void local_timer_handler();
+void localTimerInit();
+void localTimerHandler();
 
 #endif

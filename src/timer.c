@@ -3,9 +3,10 @@
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
 #define EXPIRE_PERIOD 0xfffffff
 #define LOCAL_TIMER_CONTROL ((volatile unsigned int *)0x40000034)
-#define LOCAL_TIMER_IRQ_CLR 0x40000038
+#define LOCAL_TIMER_IRQ_CLR ((volatile unsigned int *)0x40000038)
 
-unsigned int timer_count = 0;
+unsigned int core_timer_count = 0;
+unsigned int local_timer_count = 0;
 
 void enableCoreTimer()
 {
@@ -22,9 +23,9 @@ void enableCoreTimer()
 
 void coreTimerHandler()
 {
-    timer_count++;
+    core_timer_count++;
     uartPuts("Core timer interrupt, jiffies ");
-    uartInt(timer_count);
+    uartInt(core_timer_count);
     uartPuts("\n");
   
     asm volatile("mov x0, 0xffffff");
@@ -33,12 +34,17 @@ void coreTimerHandler()
     return;
 }
 
-void local_timer_init(){
+void localTimerInit(){
     unsigned int flag = 0x30000000; // enable timer and interrupt.
     unsigned int reload = 25000000;
     *LOCAL_TIMER_CONTROL = flag | reload;
 }
 
-void local_timer_handler(){
-    *LOCAL_TIMER_CONTROL = 0xc0000000; // clear interrupt and reload.
+void localTimerHandler(){
+    local_timer_count++;
+    uartPuts("Local timer interrupt, jiffies ");
+    uartInt(local_timer_count);
+    uartPuts("\n");
+
+    *LOCAL_TIMER_IRQ_CLR = 0xc0000000; // clear interrupt and reload.
 }

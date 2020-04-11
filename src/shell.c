@@ -55,6 +55,7 @@ static inline void excCmd()
 static inline void irqCmd()
 {
     enableCoreTimer();
+    localTimerInit();
     enableIrq();
 }
 

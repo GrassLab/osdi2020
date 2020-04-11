@@ -9,6 +9,7 @@
 #define GPU_INTERRUPTS_ROUTING ((volatile unsigned int *)(0x4000000C))
 #define CORE0_INTERRUPT_SOURCE ((volatile unsigned int *)(0x40000060))
 #define CORE_TIMER_IRQ 2
+#define LOCAL_TIMER_IRQ 2048
 
 #define LAST(k,n) ((k) & ((1<<(n))-1))
 #define MID(k,m,n) LAST((k)>>(m),((n)-(m)))
@@ -29,14 +30,12 @@ void excHandler(unsigned long esr, unsigned long elr)
 
 void irqHandler()
 {
-    unsigned int irq = *CORE0_INTERRUPT_SOURCE;
-	switch (irq) 
-    {
-		case (CORE_TIMER_IRQ):
-			coreTimerHandler();
-			break;
-		default:
-			uartPuts("Unknown pending irq\n");
-	}
+    unsigned int cis = *CORE0_INTERRUPT_SOURCE;
+	if (cis == CORE_TIMER_IRQ)
+		coreTimerHandler();
+    else if (cis == LOCAL_TIMER_IRQ)
+        localTimerHandler();
+    else	
+        uartPuts("Unknown pending irq\n");
     return;
 }
