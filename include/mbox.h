@@ -1,5 +1,5 @@
-#ifndef MBOX_H
-#define MBOX_H
+#ifndef _MBOX_H
+#define _MBOX_H
 
 void getBoardRevision();
 void getVCMemory();

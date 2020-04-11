@@ -152,3 +152,32 @@ void uartHex(unsigned int d)
         uartSend(n);
     }
 }
+
+void uartInt(unsigned int i)
+{
+    char buf[256];
+    int buf_ptr = 0;
+    while (i > 0)
+    {
+        buf[buf_ptr++] = (i % 10) + '0';
+        i = i / 10;
+    }
+    buf[buf_ptr] = '\0';
+    for (int e = buf_ptr - 1, s = 0, half = (buf_ptr - 1) / 2; e > half; --e, ++s)
+    {
+        char tmp = buf[s];
+        buf[s] = buf[e];
+        buf[e] = tmp;
+    }
+
+    uartPuts(buf);
+}
+
+void uartFloat(double f)
+{
+    int i = (int)f;
+    int frac = (int)((f - (double)i) * 100000);
+    uartInt(i);
+    uartPuts(".");
+    uartInt(frac);
+}

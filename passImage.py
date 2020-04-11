@@ -5,8 +5,8 @@ import os
 import time
 from argparse import ArgumentParser
 
-def passImg(f):
-    rpi3b = serial.Serial("/dev/ttyUSB0", 115200, timeout=0.5) 
+def passImg(f, d):
+    rpi3b = serial.Serial(d, 115200, timeout=0.5) 
     # rpi3b = serial.Serial("/dev/pts/2", 115200, timeout=0.5) 
 
     file_stats = os.stat(f)
@@ -31,9 +31,10 @@ def passImg(f):
 def main():
     parser = ArgumentParser()
     parser.add_argument("-i", help="kernel image of rpi3b", default="./kernel8.img")
+    parser.add_argument("-d", help="path to rpi3b device", default="/dev/ttyUSB0")
     args = parser.parse_args()
 
-    passImg(args.i)
+    passImg(args.i, args.d)
 
 if __name__ == "__main__":
     main()

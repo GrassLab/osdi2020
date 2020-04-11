@@ -1,5 +1,5 @@
-#ifndef POWER_H
-#define POWER_H
+#ifndef _POWER_H
+#define _POWER_H
 
 void reset(int tick);
 void cancelReset();

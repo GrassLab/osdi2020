@@ -24,12 +24,14 @@
  */
 
 #include "uart.h"
+#include "irqTable.h"
 #include "shell.h"
 
 void main()
 {
     // set up serial console
     uartInit();
+    irqVectorInit();
 
     runShell();
 }

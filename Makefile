@@ -7,7 +7,9 @@ INCLUDES = -Iinclude
 
 SRCDIR	 = src
 SRC		 = $(wildcard $(SRCDIR)/*.c)
-OBJS	 = $(patsubst $(SRCDIR)/%.c,%.o,$(SRC))
+ASMSRC	 = $(wildcard $(SRCDIR)/*.S)
+OBJS	 = $(patsubst $(SRCDIR)/%.c,%.o,$(SRC)) \
+		   $(patsubst $(SRCDIR)/%.S,%.o,$(ASMSRC))
 
 LSCRIPT  = linker.ld
 KERNEL   = kernel8
@@ -25,7 +27,7 @@ $(KERNEL).elf: start.o $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-start.o: start.S
+%.o: %.S
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 .PHONY: clean test debug monitor
