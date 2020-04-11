@@ -1,6 +1,6 @@
-#include "exec.h"
+#include "exc.h"
 
-void exec_dispatcher(uint64_t identifier)
+void exc_dispatcher(uint64_t identifier)
 {
   /* identifier is 0xYZ */
   /* Y is exception level */
@@ -15,10 +15,10 @@ void exec_dispatcher(uint64_t identifier)
     switch(type)
     {
     case 4:
-      exec_EL2_current_EL_SP_EL2_sync();
+      exc_EL2_current_EL_SP_EL2_sync();
       return;
     default:
-      exec_not_implemented();
+      exc_not_implemented();
       return;
     }
     break;
@@ -31,13 +31,13 @@ void exec_dispatcher(uint64_t identifier)
   return;
 }
 
-void exec_not_implemented(void)
+void exc_not_implemented(void)
 {
   uart_puts("Exception handler not Implement\n");
   return;
 }
 
-void exec_EL2_current_EL_SP_EL2_sync(void)
+void exc_EL2_current_EL_SP_EL2_sync(void)
 {
   char string_buff[0x20];
   uint64_t ELR_EL2, ESR_EL2;

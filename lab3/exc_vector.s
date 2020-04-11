@@ -33,7 +33,7 @@ EL_dispatcher:
   stp x28, x29, [sp, #-16]!
   str x30,      [sp, #-8]!
 
-  bl exec_dispatcher
+  bl exc_dispatcher
 
   ldr x30,      [sp], #8
   ldp x28, x29, [sp], #16
