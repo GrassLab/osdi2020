@@ -14,7 +14,7 @@ all: kernel8.img
 start.o: start.S
 	$(ARMGNU)-gcc -I $(COPS) -MMD -c $< -o $@
 
-%.o: %.s
+%.o: %.S
 	$(ARMGNU)-gcc -o $@ -c $<
 
 %.o: %.c
@@ -32,4 +32,4 @@ run_d:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty -S -s
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
