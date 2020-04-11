@@ -10,7 +10,7 @@ unsigned int wr_buffer_index = 0;
 unsigned int rd_buffer_index = 0;
 unsigned int cmd_index = 0;
 unsigned int cmd_flag  = 0;
-
+int transmit_interrupt_open = 0;
 void reserve(char *str,int index)
 {
     int i = 0, j = index - 1, temp;
@@ -81,35 +81,48 @@ void handle_uart_irq()
     if((id & 0x06) == 0x04)
 	{
         // open tansmit interrupt
-        put32(AUX_MU_IER_REG, 3); 
-        char c;
-        c = get32(AUX_MU_IO_REG)&0xFF;
-        if ( c == '\r') {
-            
-            cmd_buffer[cmd_index++] = '\0';
-            cmd_index = 0;
-            cmd_flag  = 1;
-            uart_buffer[wr_buffer_index++] = '\r';
-            uart_buffer[wr_buffer_index++] = '\n';
+        if (transmit_interrupt_open == 0){
+            put32(AUX_MU_IER_REG, 3);
+            transmit_interrupt_open = 1;
         }
-        else{
-            cmd_buffer[cmd_index++] = c;
-            uart_buffer[wr_buffer_index++] = c;
+        while(get32(AUX_MU_LSR_REG)&0x01) {
+            char c;
+            c = get32(AUX_MU_IO_REG)&0xFF;
+            if ( c == '\r') {
+                cmd_buffer[cmd_index++] = '\0';
+                cmd_index = 0;
+                cmd_flag  = 1;
+                uart_buffer[wr_buffer_index++] = '\r';
+                if (wr_buffer_index == BUFFER_SIZE) {
+                    uart_buffer[0] = '\n';
+                    wr_buffer_index = 1;
+                }
+                else {
+                    uart_buffer[wr_buffer_index++] = '\n';
+                }
+            }
+            else{
+                cmd_buffer[cmd_index++] = c;
+                uart_buffer[wr_buffer_index++] = c;
+            }
+            if(wr_buffer_index == BUFFER_SIZE)
+                wr_buffer_index = 0;    
         }
-		if(wr_buffer_index == BUFFER_SIZE)
-			wr_buffer_index = 0;
 	}
     if((id & 0x06) == 0x02)
 	{
-		if(rd_buffer_index == wr_buffer_index) {
-            // close transmit interrupt
-            put32(AUX_MU_IER_REG, 1); 
-            return;
+        while(get32(AUX_MU_LSR_REG)&0x20) {
+            if(rd_buffer_index == wr_buffer_index) {
+                // close transmit interrupt
+                put32(AUX_MU_IER_REG, 1); 
+                transmit_interrupt_open = 0;
+                return;
+            }
+            char c = uart_buffer[rd_buffer_index++];
+            put32(AUX_MU_IO_REG,c);
+            if(rd_buffer_index == BUFFER_SIZE)
+                rd_buffer_index = 0;    
         }
-		char c = uart_buffer[rd_buffer_index++];
-		put32(AUX_MU_IO_REG,c);
-		if(rd_buffer_index == BUFFER_SIZE)
-			rd_buffer_index = 0;
 	}
 
     return;
@@ -172,8 +185,8 @@ void uart_send_hex(unsigned long number) {
             buffer[i] += 55;
         }
     }
-    buffer[10] = '\n';
-    buffer[11] = '\0';
+    buffer[10] = '\r';
+    buffer[11] = '\n';
     uart_send_string(buffer);
     return;
 }

@@ -55,56 +55,39 @@ unsigned int read_cntp_tval(void)
 
 void kernel_main(void)
 {	
-	int uart_flag = 0;
-	int buff_size = 100;
-	char buffer[buff_size];
+		
 	while (1) {
-		if (uart_flag != 1)
-			readline(buffer, buff_size);
-		if (strcmp(buffer, "hello") == 0) {
-            uart_send_string("Hello World!!!\n");
+		if (uart_recv()) {
+            break;
 		}
-		else if (strcmp(buffer, "exc") == 0) {
-			uart_send_string("exc\n");
+	}
+	uart_send_string("uart_init\r\n");
+	sync_call_uart();
+	uart_send_string("# ");
+	while (1) {
+		if (cmd_flag == 1 && strcmp(cmd_buffer, "hello") == 0) {
+            uart_send_string("Hello World!!!\r\n");
+			cmd_buffer[0] = '\0';
+			cmd_flag = 0;
+			uart_send_string("# ");
+		}
+		else if (cmd_flag == 1 && strcmp(cmd_buffer, "exc") == 0) {
 			sync_call_exc();
+			cmd_buffer[0] = '\0';
+			cmd_flag = 0;
+			uart_send_string("# ");
 		}
-		else if (strcmp(buffer, "level") == 0) {
+		else if (cmd_flag == 1 && strcmp(cmd_buffer, "level") == 0) {
 			int el = get_el();
 			uart_send_int(el);
+			cmd_buffer[0] = '\0';
+			cmd_flag = 0;
+			uart_send_string("# ");
 		}
-		else if (strcmp(buffer, "uart_irq") == 0) {
-			uart_send_string("uart_irq\n");
-			sync_call_uart();
-			int i = 0;
-			while(1) {
-				if (strcmp(cmd_buffer, "hello") == 0 && cmd_flag == 1) {
-					uart_send_string("Hello World!!!\r\n");
-					cmd_buffer[0] = '\0';
-					cmd_flag = 0;
-				}
-				else if (cmd_flag == 1) {
-					cmd_flag = 0;
-				}
-			}
-		}
-		else if (strcmp(buffer, "irq") == 0) {
-			uart_send_string("irq\n");
+		else if (cmd_flag == 1 && strcmp(cmd_buffer, "irq") == 0) {
 			sync_call_time();
-			// // enable system timer
-			// sys_timer_init();
-			// enable_interrupt_controller();
-
-			// // enable core timer
-			// unsigned int cntfrq;
-			// unsigned int val;
-			// cntfrq = read_cntfrq();
-			// write_cntp_tval(cntfrq);    // clear cnthp interrupt and set next 1 sec timer.
-			// val = read_cntp_tval();     // read 
-			// core_timer_enable();
-			// enable_irq();
-		}
-		else {
-			uart_send_string("Wrong Command\n");
+			cmd_buffer[0] = '\0';
+			cmd_flag = 0;
 		}
 	}
 }
