@@ -10,6 +10,7 @@
 unsigned long start_addr = 0x80000;
 extern char _end[];
 
+void execpt() { asm volatile("svc #1"); }
 void reboot() {
   unsigned int r;
   // trigger a restart by instructing the GPU to boot from partition 0

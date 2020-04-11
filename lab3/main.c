@@ -37,13 +37,12 @@ void compair(char *buf) {
     loadimg();
   } else if (strcpy(buf, "version")) {
     board_revision();
+  } else if (strcpy(buf, "exec")) {
+    execpt();
   } else if (strcpy(buf, "vc_addr")) {
     vc_base_address();
-  } else if (strcpy(buf, "exec")) {
   } else {
-    uart_puts("unknow command ");
-    uart_puts(buf);
-    uart_puts(". \n");
+    printf("unknow command %s\n", buf);
   }
 }
 
