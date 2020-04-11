@@ -10,6 +10,7 @@ pc means Po-Chun, NOT personal computer
 #include "system.h"
 #include "bootloader.h"
 #include "pcsh.h"
+#include "syscall.h"
 
 #define INPUT_BUFFER_SIZE 256
 
@@ -22,6 +23,8 @@ static cmd_t default_cmd_arr[8] = {
         {"reboot", "reboot system", cmd_reboot},
         {"timestamp", "system running time", cmd_timestamp},
         {"load_images", "load images from UART", cmd_load_images},
+        {"exc", "svc #1", cmd_exc},
+        {"brk", "brk #1", cmd_brk},
         {NULL, NULL, cmd_not_find}};
 
 int cmd_exit(int i)
@@ -90,6 +93,14 @@ int cmd_load_images(int i)
     // load_images((char *)(long)address, image_size);
 }
 
+int cmd_exc(int i){
+    svc(1);
+}
+
+int cmd_brk(int i){
+    brk(1);
+}
+
 int cmd_not_find(int i)
 {
     uart_print("Command not find, Try 'help'\n");
@@ -107,7 +118,7 @@ int sh_default_command(char *cmd)
         }
         ptr++;
     }
-    ptr->func(0);
+    cmd_not_find(0);
 
     return -1;
 }

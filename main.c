@@ -3,6 +3,8 @@
 #include "screen.h"
 #include "string.h"
 
+#include "syscall.h"
+
 #define INPUT_BUFFER_SIZE 1024
 
 void system_start()
@@ -36,7 +38,10 @@ int main()
     showpicture();
 
     //test
-    make_exc();
+//    make_exc();
+    //svc(1);
+
+    //brk(1);
 
     pcsh();
 

@@ -45,6 +45,11 @@ cmp_adr:
     // running at EL2?
 5:  cmp     x0, #4
     beq     5f
+    
+
+    ldr x0, =_exception_vector // in exception.S
+    msr VBAR_EL2, x0
+    /*
     msr     sp_el1, x1
     // enable CNTP for EL1
     mrs     x0, cnthctl_el2
@@ -61,7 +66,7 @@ cmp_adr:
     movk    x2, #0x30d0, lsl #16
     msr     sctlr_el1, x2
     // set up exception handlers
-    ldr     x2, =_vectors
+    ldr     x2, =_exception_vector // in exception.S
     msr     vbar_el1, x2
     // change execution level to EL1
     mov     x2, #0x3c4
@@ -69,6 +74,7 @@ cmp_adr:
     adr     x2, 5f
     msr     elr_el2, x2
     eret
+    */
 
 5:  mov     sp, x1
 
@@ -86,42 +92,3 @@ loop:
   b loop
 
 
-# exception
-    // important, code has to be properly aligned
-    .align 11
-_vectors:
-    // synchronous
-    .align  7
-    mov     x0, #0
-    mrs     x1, esr_el1
-    mrs     x2, elr_el1
-    mrs     x3, spsr_el1
-    mrs     x4, far_el1
-    b       exc_handler
-
-    // IRQ
-    .align  7
-    mov     x0, #1
-    mrs     x1, esr_el1
-    mrs     x2, elr_el1
-    mrs     x3, spsr_el1
-    mrs     x4, far_el1
-    b       exc_handler
-
-    // FIQ
-    .align  7
-    mov     x0, #2
-    mrs     x1, esr_el1
-    mrs     x2, elr_el1
-    mrs     x3, spsr_el1
-    mrs     x4, far_el1
-    b       exc_handler
-
-    // SError
-    .align  7
-    mov     x0, #3
-    mrs     x1, esr_el1
-    mrs     x2, elr_el1
-    mrs     x3, spsr_el1
-    mrs     x4, far_el1
-    b       exc_handler

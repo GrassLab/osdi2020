@@ -111,9 +111,8 @@ void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsig
     uart_send_hex(far >> 32);
     uart_send_hex(far);
     uart_puts("\n");
+
     // no return from exception for now
-    while (1)
-        ;
 }
 
 void not_implemented()
@@ -121,4 +120,61 @@ void not_implemented()
     uart_puts("kernel panic - function not implemented!");
     while (1)
         ;
+}
+
+void synchronous_handler(unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far){
+
+
+    uart_puts("*Interrput*: <Synchronous>\n");
+    // decode exception type (some, not all. See ARM DDI0487B_b chapter D10.2.28)
+    switch (esr >> 26)
+    {
+    case 0b000000:
+        uart_puts("Unknown");
+        break;
+    case 0b000001:
+        uart_puts("Trapped WFI/WFE");
+        break;
+    case 0b001110:
+        uart_puts("Illegal execution");
+        break;
+    case 0b010101:
+        uart_puts("System call");
+        break;
+    case 0b100000:
+        uart_puts("Instruction abort, lower EL");
+        break;
+    case 0b100001:
+        uart_puts("Instruction abort, same EL");
+        break;
+    case 0b100010:
+        uart_puts("Instruction alignment fault");
+        break;
+    case 0b100100:
+        uart_puts("Data abort, lower EL");
+        break;
+    case 0b100101:
+        uart_puts("Data abort, same EL");
+        break;
+    case 0b100110:
+        uart_puts("Stack alignment fault");
+        break;
+    case 0b101100:
+        uart_puts("Floating point");
+        break;
+    default:
+        uart_puts("Unknown");
+        break;
+    }
+    uart_puts("\n");
+
+    uart_puts("Exception return address: ");
+    uart_send_hex(elr );
+    uart_puts("\nException class (EC): ");
+    uart_send_hex(esr >> 26);
+    uart_puts("\nInstruction specific syndrome (ISS): ");
+    uart_send_hex(esr & 0x00FFFFFF);
+
+    uart_puts("\n");
+
 }

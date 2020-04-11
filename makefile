@@ -1,18 +1,29 @@
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
+
+ARMGNU = aarch64-linux-gnu-
+CC = $(ARMGNU)gcc
+LDFLAGS = -T linker.ld -nostdlib
+SDCARD ?= /dev/sdb
+HEADER := $(wildcard *.h)
+SRC := $(wildcard *.c)
+OBJECTS := $(patsubst %.c,%.o,$(SRC))
+ASM := $(wildcard *.S)
 CFLAGS = -fpie -pie -fno-stack-protector -nostdlib -nostartfiles -ffreestanding
+
+.PHONY: all clean qemu debug indent
 
 all: kernel8.img
 
-start.o: start.S
-	aarch64-linux-gnu-gcc -c start.S
+$(wildcard */*.o): $(SRC) $(HEADER)
 
-kearnel8.elf kernel8.img: start.o $(OBJS)
-	aarch64-linux-gnu-ld -T linker.ld -o kernel8.elf start.o $(OBJS)
-	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+kernel8.elf: $(ASM) $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ $(ASM) $(OBJECTS)
 
-%.o: %.c
-	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@ $(CFLAGS)
+kernel8.img: kernel8.elf
+	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
+
+clean:
+	rm -f kernel8.elf kernel8.img $(patsubst %,%~*,$(SRC) $(HEADER)) $(OBJECTS)
+
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none
