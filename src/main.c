@@ -6,13 +6,8 @@
 
 int main()
 {
-    int r=15000000; while(r--) { asm volatile("nop"); }
     uart_init();    
-    fbuff_init();
     get_board_info();
-    // display a pixmap
-    fbuff_showBitmap();
-
     run_shell();
     return -1;
 }
