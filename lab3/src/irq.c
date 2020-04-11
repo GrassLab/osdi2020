@@ -2,9 +2,8 @@
 #include "timer.h"
 #include "entry.h"
 #include "irq.h"
-#include "mini_uart.h"
 #include "../include/peripherals/irq.h"
-#define AUX_IRQ (1 << 29)
+
 void handle_irq(void)
 {
 	unsigned int sec_level_irq = get32(IRQ_PENDING_1);
@@ -20,17 +19,5 @@ void handle_irq(void)
 	if (fir_level_irq == 2) {
 		handle_core_timer_irq();
 	}
-	return;
-}
-
-void enable_interrupt_controller()
-{
-	put32(ENABLE_IRQS_1, SYSTEM_TIMER_IRQ_1);
-	return;
-}
-
-void enable_uart_interrupt()
-{
-	put32(ENABLE_IRQS_1, AUX_IRQ);
 	return;
 }

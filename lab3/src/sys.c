@@ -3,7 +3,34 @@
 #include "entry.h"
 #include "timer.h"
 #include "sys.h"
-#include "irq.h"
+#include "../include/peripherals/irq.h"
+
+unsigned int read_cntfrq(void)
+{
+    unsigned int val;
+	asm volatile ("mrs %0, cntfrq_el0" : "=r" (val));
+    return val;
+}
+
+void write_cntp_tval(unsigned int val)
+{
+	asm volatile ("msr cntp_tval_el0, %0" :: "r" (val));
+    return;
+}
+
+unsigned int read_cntp_tval(void)
+{
+    unsigned int val;
+	asm volatile ("mrs %0, cntp_tval_el0" : "=r" (val));
+    return val;
+}
+
+void enable_uart_interrupt()
+{
+	put32(ENABLE_IRQS_1, AUX_IRQ);
+	return;
+}
+
 
 void handle_sync(unsigned long esr, unsigned long address)
 {
@@ -19,7 +46,7 @@ void handle_el0_sync(unsigned long esr, unsigned long address)
     unsigned int imm_value = (*instruct_value & ~0xfff00000) >> 5;
     if (imm_value == SYS_TIME_IRQ) {
         sys_timer_init();
-        enable_interrupt_controller();
+        enable_timer_controller();  // function in irq.c
         unsigned int cntfrq;
         unsigned int val;
         cntfrq = read_cntfrq();

@@ -13,6 +13,7 @@ extern unsigned int wr_buffer_index;
 extern unsigned int rd_buffer_index;
 extern unsigned int cmd_index;
 extern int cmd_flag ;
+
 int strcmp(char *str1, char *str2) {
     while (1) {
         if (*str1 != *str2) {
@@ -33,25 +34,6 @@ int strcmp(char *str1, char *str2) {
     }
 }
 
-unsigned int read_cntfrq(void)
-{
-    unsigned int val;
-	asm volatile ("mrs %0, cntfrq_el0" : "=r" (val));
-    return val;
-}
-
-void write_cntp_tval(unsigned int val)
-{
-	asm volatile ("msr cntp_tval_el0, %0" :: "r" (val));
-    return;
-}
-
-unsigned int read_cntp_tval(void)
-{
-    unsigned int val;
-	asm volatile ("mrs %0, cntp_tval_el0" : "=r" (val));
-    return val;
-}
 
 void kernel_main(void)
 {	

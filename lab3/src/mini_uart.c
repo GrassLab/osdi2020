@@ -11,6 +11,8 @@ unsigned int rd_buffer_index = 0;
 unsigned int cmd_index = 0;
 unsigned int cmd_flag  = 0;
 int transmit_interrupt_open = 0;
+
+
 void reserve(char *str,int index)
 {
     int i = 0, j = index - 1, temp;

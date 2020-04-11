@@ -29,7 +29,7 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
     uart_send_string(entry_error_messages[type]);
 	uart_send_string("\r\n");
 	uart_send_string("Exception class (EC) ");
-	uart_send_hex(esr);
-	uart_send_string("Instruction specific syndrome (EC) ");
+	uart_send_hex(esr>>26);
+	uart_send_string("Instruction specific syndrome (ISS) ");
     uart_send_hex(esr & 0xfff);
 }
