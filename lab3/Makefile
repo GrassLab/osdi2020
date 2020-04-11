@@ -5,9 +5,9 @@ OBJCOPY = aarch64-linux-gnu-objcopy
 GENERAL_FLAGS =
 C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles
 
-KERNEL_C_SOURCE_FILES = main.c shell.c string_util.c mailbox.c uart.c
+KERNEL_C_SOURCE_FILES = main.c shell.c string_util.c mailbox.c uart.c exec.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
-KERNEL_ASSEMBLY_SOURCE_FILES = start.s get_time.s
+KERNEL_ASSEMBLY_SOURCE_FILES = start.s get_time.s exec_vector.s
 KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.s=.o)
 
 all: kernel8.img

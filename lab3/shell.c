@@ -13,6 +13,7 @@ const char * shell_command_list[] = {
   "bd",
   "vcmem",
   "txt",
+  "exc",
   0x0
 };
 
@@ -24,6 +25,7 @@ const char * shell_command_descriptions[] = {
   "Show board revision",
   "Show vc memory address",
   "Show .text location",
+  "Issue same EL synchronous exception",
   0x0
 };
 
@@ -35,6 +37,7 @@ int (*shell_command_function_ptr[])(char *) = {
   shell_show_board_revision,
   shell_show_vc_memory,
   shell_show_text_location,
+  shell_exec,
   0x0
 };
 
@@ -227,5 +230,13 @@ int shell_show_text_location(char * string_buffer)
   uart_puts(string_buffer);
   uart_putc('\n');
   return 1;
+}
+
+int shell_exec(char * string_buffer)
+{
+  UNUSED(string_buffer);
+  asm volatile("svc #1");
+
+  return 0;
 }
 

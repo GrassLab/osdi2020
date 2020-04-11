@@ -1,4 +1,3 @@
-
 .global _start // otherwise the linkder script cannot find this as entry point
 
 .text
@@ -20,6 +19,10 @@ other_core:
 
 // core 0 will jump here
 core_0:
+
+  // setup exception vector for EL2
+  ldr x0, =EL2_vector
+  msr VBAR_EL2, x0
 
   // set stack pointer to __bss_end__ + 0x4000
   ldr x0, =__bss_end__
@@ -48,5 +51,4 @@ bss_reset_loop:
 
   // If main return, enter low power mode
   b other_core
-
 

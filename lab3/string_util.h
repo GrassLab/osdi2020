@@ -1,10 +1,6 @@
 #ifndef __STRING_UTIL_H__
 #define __STRING_UTIL_H__
 
-#ifdef DEBUG
-#include "miniuart.h"
-#endif
-
 #include "meta_macro.h"
 
 int string_cmp(const char * string_a, const char * string_b, const int length);
