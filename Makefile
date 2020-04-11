@@ -29,12 +29,14 @@ clean:
 loader: loader/raspbootocm.cc
 	gcc loader/raspbootocm.cc -o raspbootocm
 
-kernel8.img: start.o $(OBJS)
+kernel8.img: start.o exception_.o $(OBJS)
 	$(LD) -nostdlib -nostartfiles $^ -T $(LINK_SCRIPT) -o kernel8.elf
 	$(OBJ_CPY) -O binary kernel8.elf $@
 
 start.o: start.S
 	$(CC) $(CFLAGS) -c $< -o $@
+
+exception_.o: exception_.S
 
 %.o: %.c
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@

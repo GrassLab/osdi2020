@@ -28,28 +28,41 @@
 .global _start
 
 _start:
-    // read cpu id, stop slave cores
+    # read cpu id, stop slave cores
     mrs     x1, mpidr_el1
     and     x1, x1, #3
-    cbz     x1, 2f
-    // cpu id > 0, stop
-1:  wfe
-    b       1b
-2:  // cpu id == 0
+    
+    # cpu id > 0, stop
+    cbnz     x1, loop
+    
 
-    // set stack before our code
+setup_exception_table:
+    ldr     x1, =exception_table
+    msr     vbar_EL2, x1
+
+stack_init:  
+
+    # set stack before our code
     ldr     x1, =_start
     mov     sp, x1
 
-    // clear bss
+    # clear bss
     ldr     x1, =__bss_start
-    ldr     w2, =__bss_size
-3:  cbz     w2, 4f
+    ldr     x2, =__bss_size
+    
+cmp_addr: 
+    cbz     x2, jmp_main
     str     xzr, [x1], #8
-    sub     w2, w2, #1
-    cbnz    w2, 3b
+    sub     x2, x2, #1
+    cbnz    x2, cmp_addr
+    
+jmp_main:  
+    
+    # jump to C code, should not return
+    bl      main
+    # for failsafe, halt this core too
+    b       loop
 
-    // jump to C code, should not return
-4:  bl      main
-    // for failsafe, halt this core too
-    b       1b
+loop:  
+    wfe
+    b       loop

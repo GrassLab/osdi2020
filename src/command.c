@@ -173,3 +173,13 @@ void command_load_image ()
         "ret"
     );
 }
+
+void command_svc_exception_trap ()
+{
+    asm volatile ( "svc #1;" );
+}
+
+void command_brk_exception_trap ()
+{
+    asm volatile ( "brk #1;" );
+}
