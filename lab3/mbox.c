@@ -62,9 +62,7 @@ void board_revision() {
   // tags end
   mbox[6] = MBOX_TAG_LAST;
   mbox_call(MBOX_CH_PROP);
-  uart_puts("board revision : 0x");
-  uart_hex(mbox[5]);
-  uart_send('\n');
+  printf("board revision : 0x%8x\n", mbox[5]);
 }
 /*
 Tag: 0x00010005
@@ -88,10 +86,6 @@ void vc_base_address() {
   // tags end
   mbox[7] = MBOX_TAG_LAST;
   mbox_call(MBOX_CH_PROP);
-  uart_puts("VC base address : 0x");
-  uart_hex(mbox[5]);
-  uart_send('\n');
-  uart_puts("VC size : 0x");
-  uart_hex(mbox[6]);
-  uart_send('\n');
+  printf("VC base address : 0x%8x\n", mbox[5]);
+  printf("VC size : 0x%8x\n", mbox[6]);
 }

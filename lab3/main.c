@@ -16,19 +16,21 @@ char *welcome = " \
 
 void compair(char *buf) {
   if (strcpy(buf, "hello")) {
-    uart_puts("Hello World!\n");
+    printf("Hello World!\n");
   } else if (strcpy(buf, "help")) {
-    uart_puts("help : print all  command\n");
-    uart_puts("hello : say hello\n");
-    uart_puts("timestamp : get time\n");
-    uart_puts("reboot : reboot rpi3 \n");
+    printf("help : print all  command\n");
+    printf("hello : say hello\n");
+    printf("timestamp : get time\n");
+    printf("reboot : reboot rpi3 \n");
+    printf("loadimg : loadimg you want \n");
+    printf("version : show board revision \n");
+    printf("vc_addr : show vc base address \n");
   } else if (strcpy(buf, "timestamp")) {
     long countertimer = get_system_count();
     long frequency = get_system_frequency();
     countertimer = countertimer * 1000;
     long result = countertimer / frequency;
-    itoa(result);
-    uart_puts(" ms\n");
+    printf("%d ms\n", result);
   } else if (strcpy(buf, "reboot")) {
     reboot();
   } else if (strcpy(buf, "loadimg")) {
@@ -54,8 +56,8 @@ void main() {
   // lfb_showpicture();
   // wait_cycles(10000);
 
-  uart_puts(welcome);
-  uart_puts("# ");
+  printf(welcome);
+  printf("# ");
 
   char commandbuf[100];
   clearbuf(commandbuf, 100);
@@ -69,7 +71,7 @@ void main() {
     } else {
       commandbuf[count] = '\x00';
       compair(commandbuf);
-      uart_puts("# ");
+      printf("# ");
       count = 0;
       clearbuf(commandbuf, 100);
     }

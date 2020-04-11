@@ -7,9 +7,8 @@
 #define PM_WDOG ((volatile unsigned int *)(MMIO_BASE + 0x00100024))
 #define PM_WDOG_MAGIC 0x5a000000
 #define PM_RSTC_FULLRST 0x00000020
-
-extern char __bss_start[];
-extern char __bss_end[];
+unsigned long start_addr = 0x80000;
+extern char _end[];
 
 void reboot() {
   unsigned int r;
@@ -27,11 +26,10 @@ void reboot() {
 void loadimg() {
   unsigned long k_addr = 0; // 64bit
   void *load_address;
-  uart_puts("bss : 0x");
-  uart_hex_64((unsigned long int)__bss_start);
-  uart_puts("\nbss_end : 0x");
-  uart_hex_64((unsigned long int)__bss_end);
-  uart_puts("\ngive me kernel address : (0x)");
+  printf("_start : 0x%x \n", (unsigned long int)start_addr);
+  printf("_end : 0x%x \n", (unsigned long int)_end);
+
+  printf("give me kernel address : (0x)");
   // read address
   for (int i = 0; i < 8; i++) {
     char get = uart_getc();
@@ -48,16 +46,15 @@ void loadimg() {
       else if (get >= 'A' && get <= 'F')
         in = get - 'A' + 10;
       else {
-        uart_puts("input error");
+        printf("input error");
         return;
       }
       k_addr += in;
     }
   }
-  uart_puts("\nyour input addrs = 0x");
-  uart_hex_64(k_addr);
+  printf("\nyour input addrs = 0x%8x\n", k_addr);
   load_address = (void *)k_addr;
-  uart_puts("\ngive me kernel size : ");
+  printf("give me kernel size : ");
 
   // read size
   unsigned long size = 0;
@@ -73,21 +70,18 @@ void loadimg() {
         in = get - '0';
         size += in;
       } else {
-        uart_puts("input error\n");
+        printf("input error\n");
         return;
       }
     }
   }
-  uart_puts("\nkernel size : ");
-  itoa(size);
+  printf("\nkernel size : %d\n", size);
 
   // is k_addr modify bss ?
-  uart_send('\n');
-  if ((k_addr >= (unsigned long)__bss_start &&
-       k_addr <= (unsigned long)__bss_end) ||
-      ((k_addr + size) >= (unsigned long)__bss_start &&
-       (k_addr + size) <= (unsigned long)__bss_end)) {
-    uart_puts("in bss\n");
+  if ((k_addr >= (unsigned long)start_addr && k_addr <= (unsigned long)_end) ||
+      ((k_addr + size) >= (unsigned long)start_addr &&
+       (k_addr + size) <= (unsigned long)_end)) {
+    printf("in session\n");
     load_address = (void *)TMP_KERNEL_ADDR;
     volatile char *add = load_address;
     for (int i = 0; i < size; i++) {
