@@ -1,33 +1,50 @@
 #include "../include/uart.h"
+#include "../include/info.h"
 
-#include "../include/utils.h"
+
 
 /**
  * common exception handler
  */
 void exc_handler(unsigned long type)
 {
-    //  check exception level
-    int el;
-    asm volatile ("mrs %0, CurrentEL" : "=r"(el));
-    char *level = 0;
-    uart_atoi(level, (el>>2));
-
-    uart_puts("Exception Level: ");
-    //uart_hex(el);
-    //uart_puts("     ");
-    uart_puts(level);
-    uart_puts("\n");
 
     unsigned long esr; 
-    asm volatile ("mrs %0, esr_el2" : "=r"(esr));
     unsigned long elr; 
-    asm volatile ("mrs %0, elr_el2" : "=r"(elr));
     unsigned long spsr; 
-    asm volatile ("mrs %0, spsr_el2" : "=r"(spsr));
-    unsigned long far; 
-    asm volatile ("mrs %0, far_el2" : "=r"(far));
+    unsigned long far;
 
+    //  check exception level
+    int level = get_exception_level();
+    switch(level) {
+        // case 0: 
+        //     asm volatile ("mrs %0, esr_el0" : "=r"(esr));
+        //     asm volatile ("mrs %0, elr_el0" : "=r"(elr));
+        //     asm volatile ("mrs %0, spsr_el0" : "=r"(spsr));
+        //     asm volatile ("mrs %0, far_el0" : "=r"(far));
+        //     break;
+        case 1: 
+            asm volatile ("mrs %0, esr_el1" : "=r"(esr));
+            asm volatile ("mrs %0, elr_el1" : "=r"(elr));
+            asm volatile ("mrs %0, spsr_el1" : "=r"(spsr));
+            asm volatile ("mrs %0, far_el1" : "=r"(far));
+            break;
+        case 2: 
+            asm volatile ("mrs %0, esr_el2" : "=r"(esr));
+            asm volatile ("mrs %0, elr_el2" : "=r"(elr));
+            asm volatile ("mrs %0, spsr_el2" : "=r"(spsr));
+            asm volatile ("mrs %0, far_el2" : "=r"(far));
+            break;
+        case 3: 
+            asm volatile ("mrs %0, esr_el3" : "=r"(esr));
+            asm volatile ("mrs %0, elr_el3" : "=r"(elr));
+            asm volatile ("mrs %0, spsr_el3" : "=r"(spsr));
+            asm volatile ("mrs %0, far_el3" : "=r"(far));
+            break;
+        default: 
+            uart_puts("Unknown Exception level"); 
+            return;
+    }
     // print out interruption type
     switch(type) {
         case 0: uart_puts("Synchronous"); break;
@@ -82,8 +99,14 @@ void exc_handler(unsigned long type)
 
     // breakpoint jump out
     if (esr>>26==0b110000 || esr>>26==0b110001 || esr>>26==0b111100) {
-        asm volatile ("mrs %0, elr_el2" : "=r"(elr));
-        asm volatile ("msr elr_el2, %0" : : "r" (elr+4));
-    }  
+        switch(level) {
+            case 1:
+                asm volatile ("msr elr_el1, %0" : : "r" (elr+4)); break;
+            case 2:
+                asm volatile ("msr elr_el2, %0" : : "r" (elr+4)); break;
+            case 3:
+                asm volatile ("msr elr_el3, %0" : : "r" (elr+4)); break;  
+        }  
+    }
 }
 

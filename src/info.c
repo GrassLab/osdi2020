@@ -80,3 +80,20 @@ void get_serial()
         uart_puts("Unable to query serial!\n");
     }
 }
+
+int get_exception_level()
+{
+    //  check exception level
+    int el;
+    asm volatile ("mrs %0, CurrentEL" : "=r"(el));
+    char *level = 0;
+    el = el >> 2;
+    uart_atoi(level, el);
+
+    uart_puts("Exception Level: ");
+    //uart_hex(el);
+    //uart_puts("     ");
+    uart_puts(level);
+    uart_puts("\n");
+    return el;
+}

@@ -17,18 +17,18 @@ void debug(){
 
 void disable_irq() 
 {
-    asm volatile("msr daifset,#2");
+    asm volatile("msr daifset, 0xf");
 }
 
 void enable_irq() 
 {
-    asm volatile("msr daifclr,#2");
+    asm volatile("msr daifclr, 0xf");
 }
 
 void set_HCR_EL2_IMO()
 {
-    unsigned int val = (1 << 4);
-	asm volatile ("msr hcr_el2, %0" :: "r" (val));
+    asm volatile("mov x0, #(1 << 4)");
+    asm volatile("msr hcr_el2, x0");
 }
 
 void core_timer_counter()
@@ -46,6 +46,13 @@ void core_timer_enable()
     set(CORE0_TIMER_IRQ_CTRL, 0x2);
 }
 
+#define EXPIRE_PERIOD 0xfffffff
+void core_timer_handler()
+{
+    unsigned int val = EXPIRE_PERIOD;
+    asm volatile("msr cntp_tval_el0, %0" :: "r" (val));
+    core_timer_counter();
+}
 
 #define LOCAL_TIMER_CONTROL_REG 0x40000034
 

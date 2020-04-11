@@ -36,6 +36,7 @@ void main()
     get_serial();
     get_board_revision();
     get_vccore_addr();
+    int level = get_exception_level();
 
     while (1) { 
 
@@ -63,28 +64,25 @@ void main()
          */
         if (uart_strncmp(user_input, "hello", 5) == 0) {
             uart_puts("Hello World!\n");
-            continue;
         }
         /*
          ** <reboot> reboot in given cpu ticks
          */
-        if (uart_strncmp(user_input, "reboot", 6) == 0) {
+        else if (uart_strncmp(user_input, "reboot", 6) == 0) {
             get_time();
             uart_puts("reboot in 10 ticks.\n\n");
             reset(10);
-            continue;
         }
         /*
          ** <time> get the timestamp
          */
-        if (uart_strncmp(user_input, "time", 4) == 0) {
-            get_time();
-            continue;    
+        else if (uart_strncmp(user_input, "time", 4) == 0) {
+            get_time(); 
         }
         /*
          ** <loadimg> listen for raspbootcom and load the img from UART
          */
-        if (uart_strncmp(user_input, "loadimg", 7) == 0) {
+        else if (uart_strncmp(user_input, "loadimg", 7) == 0) {
             uart_puts("loading image from uart...\n");
             loadimg(KERNEL_ADDR);
             LOADIMG = 1;
@@ -93,7 +91,7 @@ void main()
         /*
          ** <help> list the existed commands
          */
-        if (uart_strncmp(user_input, "help", 4) == 0) {
+        else if (uart_strncmp(user_input, "help", 4) == 0) {
             uart_puts("hello: print hello world.\n");
             uart_puts("help: help.\n");
             uart_puts("reboot: restart.\n");
@@ -103,40 +101,38 @@ void main()
             uart_puts("exc_brk: execute `brk #0`.\n");
             uart_puts("irq_core: core timer interrupt.\n");
             uart_puts("irq_local: local timer interrupt.\n");
-            continue;
         }
         /*
          ** <exc> test exception
          */
-        if (uart_strncmp(user_input, "exc_svc", 7) == 0) {
+        else if (uart_strncmp(user_input, "exc_svc", 7) == 0) {
             uart_puts("execute `svc #1`\n");
             asm volatile ("svc #1");
             uart_puts("done\n");
-            continue;
         }
-        if (uart_strncmp(user_input, "exc_brk", 7) == 0) {
+        else if (uart_strncmp(user_input, "exc_brk", 7) == 0) {
             uart_puts("execute `brk #0`\n");
             asm volatile ("brk #0");
             uart_puts("done\n");
-            continue;
         }
         /*
          ** <irq> test interrupt
          */
-        if (uart_strncmp(user_input, "irq", 3) == 0) {
+        else if (uart_strncmp(user_input, "irq", 3) == 0) {
             uart_puts("this is irq test\n");
-            set_HCR_EL2_IMO();
+            if (level == 2) set_HCR_EL2_IMO();
             enable_irq();
             core_timer_enable();
             local_timer_init();
-            continue;
         }
         /*
-         ** Invalid command
-         */
-        uart_puts("Error: command ");
-        uart_puts(user_input);
-        uart_puts(" not found, try <help>.\n");
+        ** Invalid command
+        */
+        else {
+            uart_puts("Error: command ");
+            uart_puts(user_input);
+            uart_puts(" not found, try <help>.\n");
+        }
     }
     if (LOADIMG == 1) {
         unsigned int stack_pointer;; 

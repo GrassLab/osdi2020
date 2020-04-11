@@ -8,68 +8,55 @@ _start:
     // cpu id == 0
     cbnz     x1, loop
 
-
-    
-//     // set up EL1
-//     mrs     x0, CurrentEL
-//     and     x0, x0, #12 // clear reserved bits
-
-//     // running at EL3?
-//     cmp     x0, #12
-//     bne     5f
-    
-//     // should never be executed, just for completeness
-//     mov     x2, #0x5b1
-//     msr     scr_el3, x2
-//     mov     x2, #0x3c9
-//     msr     spsr_el3, x2
-//     adr     x2, 5f
-//     msr     elr_el3, x2
-//     eret
-
-//     // running at EL2?
-// 5:  cmp     x0, #4
-//     beq     5f
-//     msr     sp_el1, x1
-    
-//     // enable CNTP for EL1
-//     mrs     x0, cnthctl_el2
-//     orr     x0, x0, #3
-//     msr     cnthctl_el2, x0
-//     msr     cntvoff_el2, xzr
-    
-//     // enable AArch64 in EL1
-//     mov     x0, #(1 << 31)      // AArch64
-//     orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
-//     msr     hcr_el2, x0
-//     mrs     x0, hcr_el2
-    
-//     // Setup SCTLR access
-//     mov     x2, #0x0800
-//     movk    x2, #0x30d0, lsl #16
-//     msr     sctlr_el1, x2
-    
-//     // set up exception handlers
-//     ldr     x2, =_exception_table
-//     msr     vbar_el1, x2
-
-//     // change execution level to EL1
-//     mov     x2, #0x3c4
-//     msr     spsr_el2, x2
-//     adr     x2, 5f
-//     msr     elr_el2, x2
-//     eret
-
-    
-
     // set stack before our code
     ldr     x1, =_start
-5:  mov     sp, x1
 
+_setup_el1:
+    // set up EL1
+    mrs     x0, CurrentEL
+    and     x0, x0, #12 // clear reserved bits //lsr x0, x0, #2
+
+
+    // running at EL2?
+5:  cmp     x0, #4
+    beq     5f
+    msr     sp_el1, x1
+    
+    // // enable CNTP for EL1
+    // mrs     x0, cnthctl_el2
+    // orr     x0, x0, #3
+    // msr     cnthctl_el2, x0
+    // msr     cntvoff_el2, xzr
+    
+    // enable AArch64 in EL1
+    mov     x0, #(1 << 31)      // AArch64
+    orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
+    msr     hcr_el2, x0
+    mrs     x0, hcr_el2
+    
+    // // Setup SCTLR access
+    // mov     x2, #0x0800
+    // movk    x2, #0x30d0, lsl #16
+    // msr     sctlr_el1, x2
+    
+    // set up exception handlers
+    ldr     x2, =_exception_table
+    msr     vbar_el1, x2
+
+    // change execution level to EL1
+    mov     x2, #0x3c4
+    msr     spsr_el2, x2
+    adr     x2, 5f
+    msr     elr_el2, x2
+    eret
+
+    
+_setup_el2:
     // load exception_table to vbar_el2
     ldr     x0, =_exception_table
     msr     vbar_el2, x0
 
+5:  mov     sp, x1
 
 
     // clear bss
@@ -92,16 +79,12 @@ loop:
 /// Call the function provided by parameter `\handler` after saving the exception context.
 /// Provide the context as the first parameter to '\handler'.
 
-// .macro ISR num
-//     bl      __exception_store_context
-//     mov     x0, \num
-//     bl      exc_handler
-//     bl      __exception_load_context
-//     eret
-// .endm
-
 .macro EXCEPTION_ROUTINE num
     b      __exception_routine
+.endm
+
+.macro INTERRUPT_ROUTINE num
+    b      __interrupt_routine
 .endm
 
 .macro STORE_CONTEXT
@@ -171,117 +154,59 @@ after_timer:
     eret
     
 
-// #define HCR_RW	    (1 << 4)
-// #define HCR_VALUE	HCR_RW
-
-// .global set_HCR_EL2_IMO
-// set_HCR_EL2_IMO:
-//     ldr	    x0, =HCR_VALUE
-// 	msr	    hcr_el2, x0
-//     ret
-
-// #define CORE0_TIMER_IRQ_CTRL 0x40000040
-
-// .global core_timer_enable
-// core_timer_enable:
-//     mov     x0, 1
-//     msr     cntp_ctl_el0, x0 // enable timer
-//     mov     x0, 2
-//     ldr     x1, =CORE0_TIMER_IRQ_CTRL
-//     str     x0, [x1] // enable timer interrupt
-//     ret
-
-#define EXPIRE_PERIOD 0xfffffff
-
-.global core_timer_handler
-core_timer_handler:
-    mov     x0, EXPIRE_PERIOD
-    msr     cntp_tval_el0, x0
-    bl      core_timer_counter
-    b       after_timer
-
-
-
-
-
-
-
-
-
-
-
-
 .align 11
 .global _exception_table
 _exception_table:
-// Current exception level with SP_EL0.
-    // synchronous
-    .align 7 //  0x000
+    // Current exception level with SP_EL0.
+    .align 7 // synchronous //  0x000
     EXCEPTION_ROUTINE #0
 
-    // IRQ
-    .align 7 //  0x080
+    .align 7 // IRQ //  0x080
     EXCEPTION_ROUTINE #1
-
-    // FIQ
-    .align 7 //  0x100
+    
+    .align 7 // FIQ //  0x100
     EXCEPTION_ROUTINE #2
 
-    // SError
-    .align 7 //  0x180
+    .align 7 // SError //  0x180
     EXCEPTION_ROUTINE #3
 
     // Current exception level with SP_ELx, x > 0.
-    // synchronous
-    .align 7 //  0x200
+    .align 7 // synchronous //  0x200
     EXCEPTION_ROUTINE #4
 
-    // IRQ
-    .align 7 //  0x280
-    //EXCEPTION_ROUTINE #5
-    b   __interrupt_routine
+    .align 7 // IRQ //  0x280
+    INTERRUPT_ROUTINE #5
 
-    // FIQ
-    .align 7 //  0x300
+    .align 7 // FIQ //  0x300
     EXCEPTION_ROUTINE #6
 
-    // SError
-    .align 7 //  0x380
+    .align 7 // SError //  0x380
     EXCEPTION_ROUTINE #7
 
     // Lower exception level, AArch64
-    // synchronous
-    .align 7 //  0x400
+    .align 7 // synchronous //  0x400
     EXCEPTION_ROUTINE #8
-
-    // IRQ
-    .align 7 //  0x480
+    
+    .align 7 // IRQ //  0x480
     EXCEPTION_ROUTINE #9
 
-    // FIQ
-    .align 7 //  0x500
+    .align 7 // FIQ //  0x500
     EXCEPTION_ROUTINE #10
 
-    // SError
-    .align 7 //  0x580
+    .align 7 // SError //  0x580
     EXCEPTION_ROUTINE #11
 
     // Lower exception level, AArch32
-    // synchronous
-    .align 7 //  0x600
+    .align 7 // synchronous //  0x600
     EXCEPTION_ROUTINE #12
 
-    // IRQ
-    .align 7 //  0x680
+    .align 7 // IRQ //  0x680
     EXCEPTION_ROUTINE #13
 
-    // FIQ
-    .align 7 //  0x700
+    .align 7 // FIQ //  0x700
     EXCEPTION_ROUTINE #14
 
-    // SError
-    .align 7 //  0x780
+    .align 7 // SError //  0x780
     EXCEPTION_ROUTINE #15
 
     .align 7 //  0x800
-
