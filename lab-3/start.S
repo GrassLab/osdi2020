@@ -73,7 +73,6 @@ _vectors:
     mrs     x3, spsr_el2
     mrs     x4, far_el2
     b exception_handler
-    .align 7
 
     // synchronous
     .align  7
@@ -91,7 +90,7 @@ _vectors:
     mrs     x2, elr_el2
     mrs     x3, spsr_el2
     mrs     x4, far_el2
-    b       local_timer_handler
+    b       core_timer_handler
 
     // FIQ
     .align  7

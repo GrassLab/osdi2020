@@ -4,13 +4,15 @@
 
 int local_timer_counter = 0;
 
-void local_timer_init(){
+void local_timer_init()
+{
     unsigned int flag = 0x30000000; // enable timer and interrupt.
     unsigned int reload = 25000000;
     setRegister(LOCAL_TIMER_CONTROL_REG, flag | reload);
 }
 
-void local_timer_handler() {
+void local_timer_handler()
+{
     uart_puts("Local timer interrupt, repeat ");
     uart_print_int(local_timer_counter);
     uart_puts(" times\n");
@@ -19,14 +21,32 @@ void local_timer_handler() {
     asm volatile("eret");
 }
 
-void sys_timer_init(){
+void sys_timer_init()
+{
     unsigned int t = getRegister(SYSTEM_TIMER_CLO);
     setRegister(SYSTEM_TIMER_COMPARE1, t + 2500000);
     setRegister(IRQ_ENABLE0, 1 << 1);
 }
 
-void sys_timer_handler(){
+void sys_timer_handler()
+{
     unsigned int t = getRegister(SYSTEM_TIMER_CLO);
     setRegister(SYSTEM_TIMER_COMPARE1, t + 2500000);
     setRegister(SYSTEM_TIMER_CS, 0xf);
+}
+
+void core_timer_init()
+{
+    asm volatile("mov x0, 1");
+    asm volatile("msr cntp_ctl_el0, x0");
+    asm volatile("mov x0, 2");
+    asm volatile("ldr x1, =0x40000040");
+    asm volatile("str x0, [x1]");
+}
+
+void core_timer_handler()
+{
+    asm volatile("mov x0, 0xfffffff");
+    asm volatile("msr cntp_tval_el0, x0");
+    asm volatile("eret");
 }
