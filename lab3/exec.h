@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "uart.h"
+#include "string_util.h"
 #ifndef __EXEC_H__
 #define __EXEC_H__
 

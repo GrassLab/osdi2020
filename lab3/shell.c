@@ -190,7 +190,7 @@ int shell_reboot(char * string_buffer)
 int shell_show_board_revision(char * string_buffer)
 {
   uart_puts("Board revision: ");
-  string_longlong_to_hex_char(string_buffer, mailbox_get_board_revision());
+  string_ulonglong_to_hex_char(string_buffer, mailbox_get_board_revision());
   uart_puts(string_buffer);
   uart_putc('\n');
   return 1;
@@ -211,10 +211,10 @@ int shell_show_vc_memory(char * string_buffer)
   vc_memory_size = __mailbox_buffer[6];
 
   uart_puts("VC core base address: ");
-  string_longlong_to_hex_char(string_buffer, vc_memory_base);
+  string_ulonglong_to_hex_char(string_buffer, vc_memory_base);
   uart_puts(string_buffer);
   uart_puts(" size: ");
-  string_longlong_to_hex_char(string_buffer, vc_memory_size);
+  string_ulonglong_to_hex_char(string_buffer, vc_memory_size);
   uart_puts(string_buffer);
   uart_putc('\n');
   return 1;
@@ -223,10 +223,10 @@ int shell_show_vc_memory(char * string_buffer)
 int shell_show_text_location(char * string_buffer)
 {
   uart_puts("Start of .text: ");
-  string_longlong_to_hex_char(string_buffer, (long long)&__executable_start);
+  string_ulonglong_to_hex_char(string_buffer, (unsigned long long)&__executable_start);
   uart_puts(string_buffer);
   uart_puts(" end of .text: ");
-  string_longlong_to_hex_char(string_buffer, (long long)&__etext);
+  string_ulonglong_to_hex_char(string_buffer, (unsigned long long)&__etext);
   uart_puts(string_buffer);
   uart_putc('\n');
   return 1;

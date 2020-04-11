@@ -121,10 +121,10 @@ void string_longlong_to_char(char * string, const long long i)
   return;
 }
 
-void string_longlong_to_hex_char(char * string, const long long i)
+void string_ulonglong_to_hex_char(char * string, const unsigned long long i)
 {
   char output_buffer[36];
-  long long process_integer = i;
+  unsigned long long process_integer = i;
   int string_idx = 0;
   while(process_integer != 0)
   {

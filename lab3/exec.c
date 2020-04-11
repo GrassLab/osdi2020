@@ -33,12 +33,37 @@ void exec_dispatcher(uint64_t identifier)
 
 void exec_not_implemented(void)
 {
-  uart_puts("Not Implement\n");
+  uart_puts("Exception handler not Implement\n");
   return;
 }
 
 void exec_EL2_current_EL_SP_EL2_sync(void)
 {
-  uart_puts("Hi");
+  char string_buff[0x20];
+  uint64_t ELR_EL2, ESR_EL2;
+  uint8_t exception_class;
+  uint32_t exception_iss;
+  asm volatile("mrs %0, elr_el2\n"
+               "mrs %1, esr_el2\n":
+               "=r"(ELR_EL2), "=r"(ESR_EL2));
+  exception_class = (uint8_t)(ESR_EL2 >> 26);
+  exception_iss = ESR_EL2 & 0x1ffffff;
+
+  uart_puts("Exception return address: ");
+  string_ulonglong_to_hex_char(string_buff, ELR_EL2);
+  uart_puts(string_buff);
+  uart_putc('\n');
+
+  uart_puts("Exception class (EC): ");
+  string_ulonglong_to_hex_char(string_buff, exception_class);
+  uart_puts(string_buff);
+  uart_putc('\n');
+
+  uart_puts("Instruction specific syndrome (ISS): ");
+  string_ulonglong_to_hex_char(string_buff, exception_iss);
+  uart_puts(string_buff);
+  uart_putc('\n');
+
   return;
 }
+
