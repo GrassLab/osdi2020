@@ -10,6 +10,7 @@
 #define	CMD_REBOOT	"reboot"
 #define CMD_LOADIMG	"loadimg"
 #define CMD_PICTURE "picture"
+#define CMD_EXC		"exc"
 
 void get_timestamp();
 
@@ -34,6 +35,7 @@ void main()
 			char *timestamp = "timestamp:\t get current timestamp";
 			char *reboot = "reboot:\t\t reboot rpi3";
 			char *loadimg = "loadimg:\t load image to rpi3";
+			char *exc = "exc:\t\t svc #1";
 			uart_puts(help);
 			uart_puts("\r\n");
 			uart_puts(hello);
@@ -43,6 +45,8 @@ void main()
 			uart_puts(reboot);
 			uart_puts("\r\n");
 			uart_puts(loadimg);
+			uart_puts("\r\n");
+			uart_puts(exc);
 		} else if(strcmp(command, CMD_HELLO)) {
 			uart_puts("Hello World!");
 		} else if(strcmp(command, CMD_LOADIMG)) {
@@ -63,6 +67,8 @@ void main()
 		}  else if(strcmp(command, CMD_PICTURE)) {
 			lfb_init();
 			lfb_showpicture();
+		} else if(strcmp(command, CMD_EXC)) {
+			asm volatile ("svc #1");
 		} else {
 			uart_puts("ERROR: ");
 			uart_puts(command);
