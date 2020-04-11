@@ -5,6 +5,8 @@ void printPowerOnMessage();
 void printDebugPowerOnMessage();
 void setRegister(unsigned int address, unsigned int value);
 unsigned int getRegister(unsigned int address);
+void stackSave();
+void stackRestore();
 void reboot(int tick);
 double getTimestamp();
 void memset(void* mem, int value, int size);

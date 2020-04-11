@@ -3,6 +3,7 @@
 #include "uart.h"
 
 int local_timer_counter = 0;
+int core_timer_counter = 0;
 
 void local_timer_init()
 {
@@ -13,12 +14,10 @@ void local_timer_init()
 
 void local_timer_handler()
 {
-    uart_puts("Local timer interrupt, repeat ");
-    uart_print_int(local_timer_counter);
+    uart_puts("[info] Local timer interrupt, repeat ");
+    uart_print_int(local_timer_counter++);
     uart_puts(" times\n");
-    local_timer_counter ++;
     setRegister(LOCAL_TIMER_IRQ_CLR, 0xc0000000);
-    asm volatile("eret");
 }
 
 void sys_timer_init()
@@ -46,7 +45,9 @@ void core_timer_init()
 
 void core_timer_handler()
 {
+    uart_puts("[info] Core timer interrupt, ");
+    uart_print_int(core_timer_counter++);
+    uart_puts(" times\n");
     asm volatile("mov x0, 0xfffffff");
     asm volatile("msr cntp_tval_el0, x0");
-    asm volatile("eret");
 }

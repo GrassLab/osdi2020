@@ -10,7 +10,8 @@ void command_load_image();
 void command_version();
 void command_picture();
 void command_get_uart_clock();
-void command_exec();
+void command_exc();
+void command_irq();
 
 typedef struct command {
     char name[32];

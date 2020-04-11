@@ -52,6 +52,46 @@ unsigned int getRegister(unsigned int address)
     return *(volatile unsigned int*)(address);
 }
 
+void stackSave() 
+{
+    asm volatile("stp     x0, x1, [sp, #-16]!");
+    asm volatile("stp     x2, x3, [sp, #-16]!");
+    asm volatile("stp     x4, x5, [sp, #-16]!");
+    asm volatile("stp     x6, x7, [sp, #-16]!");
+    asm volatile("stp     x8, x9, [sp, #-16]!");
+    asm volatile("stp     x10, x11, [sp, #-16]!");
+    asm volatile("stp     x12, x13, [sp, #-16]!");
+    asm volatile("stp     x14, x15, [sp, #-16]!");
+    asm volatile("stp     x16, x17, [sp, #-16]!");
+    asm volatile("stp     x18, x19, [sp, #-16]!");
+    asm volatile("stp     x20, x21, [sp, #-16]!");
+    asm volatile("stp     x22, x23, [sp, #-16]!");
+    asm volatile("stp     x24, x25, [sp, #-16]!");
+    asm volatile("stp     x26, x27, [sp, #-16]!");
+    asm volatile("stp     x28, x29, [sp, #-16]!");
+    asm volatile("str     x30,      [sp, #-8]!");
+}
+
+void stackRestore()
+{
+    asm volatile("ldr x30,      [sp, #8]");
+    asm volatile("ldp x28, x29, [sp, #16]");
+    asm volatile("ldp x26, x27, [sp, #16]");
+    asm volatile("ldp x24, x25, [sp, #16]");
+    asm volatile("ldp x22, x23, [sp, #16]");
+    asm volatile("ldp x20, x21, [sp, #16]");
+    asm volatile("ldp x18, x19, [sp, #16]");
+    asm volatile("ldp x16, x17, [sp, #16]");
+    asm volatile("ldp x14, x15, [sp, #16]");
+    asm volatile("ldp x12, x13, [sp, #16]");
+    asm volatile("ldp x10, x11, [sp, #16]");
+    asm volatile("ldp x8, x9, [sp, #16]");
+    asm volatile("ldp x6, x7, [sp, #16]");
+    asm volatile("ldp x4, x5, [sp, #16]");
+    asm volatile("ldp x2, x3, [sp, #16]");
+    asm volatile("ldp x0, x1, [sp, #16]");
+}
+
 void reboot(int tick)
 {
     unsigned int r = *PM_RSTS;

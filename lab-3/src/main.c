@@ -11,9 +11,9 @@ int main()
     printPowerOnMessage();
     // printDebugPowerOnMessage();
     // unsigned int * r=*((volatile unsigned int*)0xFFFFFFFFFF000000);
-    // asm volatile("brk #1");
+    asm volatile("brk #0");
     // local_timer_init();
     // sys_timer_init();
-    core_timer_init();
+    // core_timer_init();
     interative();
 }

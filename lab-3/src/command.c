@@ -6,7 +6,7 @@
 #include "bootloader.h"
 #include "framebuffer.h"
 
-#define command_size 8
+#define command_size 9
 Command command_list[command_size] = {
     {.name = "help", .description = "help: help", .function = command_help},
     {.name = "reboot", .description = "reboot: reboot pi", .function = command_reboot},
@@ -15,7 +15,8 @@ Command command_list[command_size] = {
     {.name = "info", .description = "info: get hardware information", .function = command_hardware_info},
     {.name = "uartclock", .description = "uartclock: get uart clock", .function = command_get_uart_clock},
     {.name = "picture", .description = "picture: print a picture", .function = command_picture},
-    {.name = "exec", .description = "exec: execute exception handler", .function = command_exec}
+    {.name = "exc", .description = "exc: execute exception handler", .function = command_exc},
+    {.name = "irq", .description = "irq: enable timer interrupt", .function = command_irq}
 };
 
 static void commandSwitcher(char *comm)
@@ -119,7 +120,14 @@ void command_picture()
     lfb_showpicture();
 }
 
-void command_exec() 
+void command_exc() 
 {
-    uart_puts("exec exception\n");
+    asm volatile("svc #1");
+}
+
+void command_irq()
+{
+    local_timer_init();
+    core_timer_init();
+    // sys_timer_init();
 }
