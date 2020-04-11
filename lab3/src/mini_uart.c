@@ -2,9 +2,14 @@
 #include "peripherals/mini_uart.h"
 #include "peripherals/gpio.h"
 #define BUFFER_SIZE 32
-static char buffer[BUFFER_SIZE];
-static unsigned int wr_buffer_index = 0;
-static unsigned int rd_buffer_index = 0;
+#define CMD_BUFFER_SIZE 32
+
+char uart_buffer[BUFFER_SIZE];
+char cmd_buffer[CMD_BUFFER_SIZE];
+unsigned int wr_buffer_index = 0;
+unsigned int rd_buffer_index = 0;
+unsigned int cmd_index = 0;
+unsigned int cmd_flag  = 0;
 
 void reserve(char *str,int index)
 {
@@ -77,10 +82,22 @@ void handle_uart_irq()
 	{
         // open tansmit interrupt
         put32(AUX_MU_IER_REG, 3); 
-		buffer[wr_buffer_index++] = get32(AUX_MU_IO_REG)&0xFF;
+        char c;
+        c = get32(AUX_MU_IO_REG)&0xFF;
+        if ( c == '\r') {
+            
+            cmd_buffer[cmd_index++] = '\0';
+            cmd_index = 0;
+            cmd_flag  = 1;
+            uart_buffer[wr_buffer_index++] = '\r';
+            uart_buffer[wr_buffer_index++] = '\n';
+        }
+        else{
+            cmd_buffer[cmd_index++] = c;
+            uart_buffer[wr_buffer_index++] = c;
+        }
 		if(wr_buffer_index == BUFFER_SIZE)
 			wr_buffer_index = 0;
-        
 	}
     if((id & 0x06) == 0x02)
 	{
@@ -89,7 +106,7 @@ void handle_uart_irq()
             put32(AUX_MU_IER_REG, 1); 
             return;
         }
-		char c = buffer[rd_buffer_index++];
+		char c = uart_buffer[rd_buffer_index++];
 		put32(AUX_MU_IO_REG,c);
 		if(rd_buffer_index == BUFFER_SIZE)
 			rd_buffer_index = 0;

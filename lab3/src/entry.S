@@ -162,11 +162,7 @@ sync_el0_64:
 
 irq_el0_64:
 	kernel_entry 0
-	//diable_irq
-	msr	daifset, #2
 	bl	handle_irq
-	//enable_irq
-	msr    daifclr, #2
 	kernel_exit 0
 
 sync_el1h:
@@ -178,13 +174,7 @@ sync_el1h:
 
 el1_irq:
 	kernel_entry 1
-	
-	//diable_irq
-	msr	daifset, #2
-
 	bl	handle_irq
-	//enable_irq
-	msr    daifclr, #2 
 	kernel_exit 1
 
 .globl err_hang
