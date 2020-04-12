@@ -15,11 +15,14 @@ _start:
     // set stack before our code
     ldr     x1, =_start
 
-5:  // set HCR_EL2.IMO
+5:  
     mrs     x0, hcr_el2
-    orr     x0, x0, #(1 << 4)
+    // set HCR_EL2.IMO
+    // orr     x0, x0, #(1 << 4)
+    // set HCR_EL2.RW
     orr     x0, x0, #0x8000000
     msr     hcr_el2, x0
+
 
     // for debug not route to El1
     // mrs x0, MDCR_EL2
@@ -33,6 +36,9 @@ _start:
     // set up exception handlers
     ldr     x2, =el2_exception_table
     msr     vbar_el2, x2
+
+    ldr     x3, =el1_exception_table
+    msr     vbar_el1, x3
 
 5:  mov     sp, x1
 
