@@ -81,6 +81,8 @@ static void parseCommand(char *buffer) {
         hello();
     } else if (compareString("loadimg", buffer) == 0) {
         loadimg();
+    } else if (compareString("exc", buffer) == 0) {
+        asm volatile("svc #1");
     } else {
         sendStringUART("command not found: ");
         sendStringUART(buffer);
