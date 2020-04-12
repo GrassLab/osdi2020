@@ -42,4 +42,5 @@ void uart_puts(char *s);
 void uart_hex(unsigned int d);
 void uart_send_int(int n);
 char uart_recv();
+void putc ( void* p, char c);
 

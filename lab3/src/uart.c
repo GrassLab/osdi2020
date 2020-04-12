@@ -26,7 +26,7 @@
 #include "gpio.h"
 #include "mbox.h"
 #include "uart.h"
-
+#include "config.h"
 
 
 /**
@@ -137,3 +137,8 @@ char uart_recv() {
     return get32(UART0_DR)&0xFF;
 }
 
+// This function is required by printf function
+void putc ( void* p, char c)
+{
+	uart_send(c);
+}
