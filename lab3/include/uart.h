@@ -23,34 +23,23 @@
  *
  */
 
-/* a properly aligned buffer */
-extern volatile unsigned int mbox[36];
+/* PL011 UART registers */
+#include "config.h"
 
-#define MBOX_REQUEST    0
+#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
+#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
+#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024))
+#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028))
+#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
+#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
+#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
+#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
-/* channels */
-#define MBOX_CH_POWER   0
-#define MBOX_CH_FB      1
-#define MBOX_CH_VUART   2
-#define MBOX_CH_VCHIQ   3
-#define MBOX_CH_LEDS    4
-#define MBOX_CH_BTNS    5
-#define MBOX_CH_TOUCH   6
-#define MBOX_CH_COUNT   7
-#define MBOX_CH_PROP    8
+void uart_init();
+void uart_send(unsigned int c);
+char uart_getc();
+void uart_puts(char *s);
+void uart_hex(unsigned int d);
+void uart_send_int(int n);
+char uart_recv();
 
-/* tags */
-#define MBOX_TAG_BOARD_VERSION       0x00010002
-#define MBOX_TAG_VC_MEMORY       0x00010006
-#define MBOX_TAG_SET_UART_CLK       0x00038002
-#define MBOX_TAG_GET_UART_CLK       0x00030002
-#define MBOX_TAG_GETSERIAL      0x10004
-#define MBOX_TAG_LAST           0
-
-#define MBOX_TAG_SETCLKRATE     0x38002
-
-int mbox_call(unsigned char ch);
-void get_vc_memory();
-void get_board_revision();
-void set_UART_clock();
-void get_UART_clock();

@@ -21,7 +21,7 @@ int recv_img_size(){
 }
 
 void copy_and_jump_to_kernel(char *new_address) {
-    new_address = 0x10000;
+    new_address = 0x80000;
     char *kernel = new_address;
     int kernel_size = recv_img_size();
     uart_send_int(kernel_size);
@@ -38,7 +38,7 @@ void copy_and_jump_to_kernel(char *new_address) {
     uart_puts("copy new kernel finish\n");
     uart_hex(end);
     uart_puts("\n");
-    #define LOADIMG_TEMP_LOCATION 0x10000;
+    // #define LOADIMG_TEMP_LOCATION 0x10000;
     void (*jump_new_kernel)(void) = new_address;
     jump_new_kernel();
 
