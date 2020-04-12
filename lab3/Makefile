@@ -4,11 +4,12 @@ OBJCOPY = aarch64-linux-gnu-objcopy
 
 GENERAL_FLAGS =
 C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles
+ASM_FLAGS =
 
-KERNEL_C_SOURCE_FILES = main.c shell.c string_util.c mailbox.c uart.c exc.c
+KERNEL_C_SOURCE_FILES = main.c shell.c string_util.c mailbox.c uart.c exc.c irq.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
-KERNEL_ASSEMBLY_SOURCE_FILES = start.s get_time.s exc_vector.s
-KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.s=.o)
+KERNEL_ASSEMBLY_SOURCE_FILES = start.s get_time.s exc_vector.s timer.s
+KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.s=.asmo)
 
 all: kernel8.img
 
@@ -21,8 +22,8 @@ kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES}
 %.o: %.c
 	${CC} -c ${GENERAL_FLAGS} ${C_FLAGS} $^ -o $@
 
-%.o: %.s
-	${CC} -c ${GENERAL_FLAGS} $^ -o $@
+%.asmo: %.s
+	${CC} -c ${GENERAL_FLAGS} ${ASM_FLAGS} $^ -o $@
 
 debug: GENERAL_FLAGS += -DDEBUG -g3
 debug: all
@@ -31,6 +32,7 @@ qemu: all
 	@echo "Make sure .text in os.ld is at 0x80000"
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -vnc :0 -serial stdio
 
+.PHONY: qemu_dbg
 qemu_dbg: debug
 	@echo "Make sure .text in os.ld is at 0x80000"
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -vnc :0 -s -S -serial pty

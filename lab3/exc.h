@@ -7,6 +7,8 @@
 void exc_dispatcher(uint64_t identifier);
 void exc_not_implemented(void);
 void exc_EL2_current_EL_SP_EL2_sync(void);
+void exc_EL2_current_EL_SP_EL2_irq(void);
+void exc_EL2_enable_physical_interrupt(void);
 
 #endif
 

@@ -82,6 +82,11 @@ EL2_vector:
   bl EL_dispatcher
   LEAVE_DISPATCHER
 .align 7
+  ENTER_DISPATCHER
+  add x0, x0, #0x25
+  bl EL_dispatcher
+  LEAVE_DISPATCHER
+.align 7
 
 // The rest are not implemented yet
 

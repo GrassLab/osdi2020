@@ -4,6 +4,9 @@
 #include "string_util.h"
 #include "mailbox.h"
 #include "pm.h"
+#include "timer.h"
+#include "irq.h"
+#include "exc.h"
 
 const char * shell_command_list[] = {
   "hello",
@@ -14,6 +17,7 @@ const char * shell_command_list[] = {
   "vcmem",
   "txt",
   "exc",
+  "irq",
   0x0
 };
 
@@ -26,6 +30,7 @@ const char * shell_command_descriptions[] = {
   "Show vc memory address",
   "Show .text location",
   "Issue same EL synchronous exception",
+  "Enable timer interrupt",
   0x0
 };
 
@@ -38,6 +43,7 @@ int (*shell_command_function_ptr[])(char *) = {
   shell_show_vc_memory,
   shell_show_text_location,
   shell_exec,
+  shell_irq,
   0x0
 };
 
@@ -237,6 +243,33 @@ int shell_exec(char * string_buffer)
   UNUSED(string_buffer);
   asm volatile("svc #1");
 
+  return 0;
+}
+
+int shell_irq(char * string_buffer)
+{
+  UNUSED(string_buffer);
+
+  static int EL2_physical_int_enabled = 0;
+  static int EL2_irq_enabled = 0;
+  static int core_timer_enabled = 0;
+
+  if(!EL2_physical_int_enabled)
+  {
+    exc_EL2_enable_physical_interrupt();
+    EL2_physical_int_enabled = 1;
+  }
+  if(!EL2_irq_enabled)
+  {
+    irq_el2_enable();
+    EL2_irq_enabled = 1;
+  }
+  if(!core_timer_enabled)
+  {
+    timer_enable_core_timer();
+    core_timer_enabled = 1;
+  }
+  timer_set_core_timer(3);
   return 0;
 }
 

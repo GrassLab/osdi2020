@@ -1,4 +1,5 @@
 #include "exc.h"
+#include "irq.h"
 
 void exc_dispatcher(uint64_t identifier)
 {
@@ -16,6 +17,9 @@ void exc_dispatcher(uint64_t identifier)
     {
     case 4:
       exc_EL2_current_EL_SP_EL2_sync();
+      return;
+    case 5:
+      exc_EL2_current_EL_SP_EL2_irq();
       return;
     default:
       exc_not_implemented();
@@ -64,6 +68,21 @@ void exc_EL2_current_EL_SP_EL2_sync(void)
   uart_puts(string_buff);
   uart_putc('\n');
 
+  return;
+}
+
+void exc_EL2_current_EL_SP_EL2_irq(void)
+{
+  irq_el2_handler();
+  return;
+}
+
+void exc_EL2_enable_physical_interrupt(void)
+{
+  asm volatile(
+    "mrs x0, hcr_el2\n"
+    "orr x0, x0 ,#0x10\n"
+    "msr hcr_el2, x0"); // IMO is bit 4
   return;
 }
 
