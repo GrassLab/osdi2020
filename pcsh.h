@@ -17,6 +17,7 @@ int cmd_timestamp(int);
 int cmd_load_images(int);
 int cmd_exc(int);
 int cmd_brk(int);
+int cmd_irq(int);
 int cmd_not_find(int);
 
 int symbol();

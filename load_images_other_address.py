@@ -7,7 +7,7 @@ from array import array
 
 
 PORT = '/dev/ttyUSB0'
-PORT = '/dev/pts/6'
+PORT = '/dev/pts/2'
 
 BAUD_RATES = 115200
 

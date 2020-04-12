@@ -11,25 +11,27 @@ pc means Po-Chun, NOT personal computer
 #include "bootloader.h"
 #include "pcsh.h"
 #include "syscall.h"
+#include "timer.h"
 
 #define INPUT_BUFFER_SIZE 256
 
 extern char __bss_end[];
 
-static cmd_t default_cmd_arr[8] = {
-        {"exit", "exit shell", cmd_exit},
-        {"help", "show all command", cmd_help},
-        {"hello", "uart_print Hello World!", cmd_hello},
-        {"reboot", "reboot system", cmd_reboot},
-        {"timestamp", "system running time", cmd_timestamp},
-        {"load_images", "load images from UART", cmd_load_images},
-        {"exc", "svc #1", cmd_exc},
-        {"brk", "brk #1", cmd_brk},
-        {NULL, NULL, cmd_not_find}};
+static cmd_t default_cmd_arr[] = {
+    {"exit", "exit shell", cmd_exit},
+    {"help", "show all command", cmd_help},
+    {"hello", "uart_print Hello World!", cmd_hello},
+    {"reboot", "reboot system", cmd_reboot},
+    {"timestamp", "system running time", cmd_timestamp},
+    {"load_images", "load images from UART", cmd_load_images},
+    {"exc", "svc #1", cmd_exc},
+    {"brk", "brk #1", cmd_brk},
+    {"irq", "start irq", cmd_irq},
+    {NULL, NULL, cmd_not_find}};
 
 int cmd_exit(int i)
 {
-    return 0;
+    return -1;
 }
 
 int cmd_help(int i)
@@ -53,6 +55,7 @@ int cmd_help(int i)
 int cmd_hello(int i)
 {
     uart_print("Hello World!\n");
+    return 0;
 }
 
 int cmd_reboot(int i)
@@ -65,6 +68,7 @@ int cmd_timestamp(int i)
     float t = gettime();
     uart_send_float(t, 4);
     uart_send('\n');
+    return 0;
 }
 
 int cmd_load_images(int i)
@@ -93,17 +97,38 @@ int cmd_load_images(int i)
     // load_images((char *)(long)address, image_size);
 }
 
-int cmd_exc(int i){
+int cmd_exc(int i)
+{
     svc(1);
+    return 0;
 }
 
-int cmd_brk(int i){
+int cmd_brk(int i)
+{
     brk(1);
+    return 0;
+}
+
+static int timer_enable = 0;
+int cmd_irq(int i)
+{
+    if (timer_enable)
+    {
+        _core_timer_disable();
+        timer_enable = 0;
+    }
+    else
+    {
+        _core_timer_enable();
+        timer_enable = 1;
+    }
+    return 0;
 }
 
 int cmd_not_find(int i)
 {
     uart_print("Command not find, Try 'help'\n");
+    return 0;
 }
 
 int sh_default_command(char *cmd)
@@ -113,14 +138,13 @@ int sh_default_command(char *cmd)
     {
         if (strcmp(ptr->name, cmd) == 0)
         {
-            ptr->func(0);
-            return 0;
+            return ptr->func(0);
         }
         ptr++;
     }
     cmd_not_find(0);
 
-    return -1;
+    return 0;
 }
 
 int symbol()
@@ -132,9 +156,10 @@ int symbol()
 int pcsh()
 {
     char cmd[INPUT_BUFFER_SIZE];
-    
+    int x = 0;
+
     // main loop
-    while (1)
+    while (x == 0)
     {
         symbol();
 
@@ -149,8 +174,7 @@ int pcsh()
             continue;
 
         // default command
-        sh_default_command(cmd);
-
+        x = sh_default_command(cmd);
 
         // other program
     }

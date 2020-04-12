@@ -21,6 +21,9 @@ kernel8.elf: $(ASM) $(OBJECTS)
 kernel8.img: kernel8.elf
 	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
 
+send_kernel:
+	python load_images.py --port "/dev/ttyUSB0" --kernel "other_kernels/kernel8.img"
+
 clean:
 	rm -f kernel8.elf kernel8.img $(patsubst %,%~*,$(SRC) $(HEADER)) $(OBJECTS)
 
@@ -45,6 +48,3 @@ connect:
 
 check-elf:
 	aarch64-linux-gnu-readelf -s kernel8.elf
-
-clean:
-	rm -rf *.o kernel8.*

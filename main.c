@@ -4,6 +4,7 @@
 #include "string.h"
 
 #include "syscall.h"
+#include "irq.h"
 
 #define INPUT_BUFFER_SIZE 1024
 
@@ -26,6 +27,7 @@ void make_exc()
 int main()
 {
 
+    _irq_init();
     // set uart
     uart_init();
 

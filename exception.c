@@ -1,10 +1,23 @@
 #include "uart.h"
+#include "irq.h"
 
 /**
  * common exception handler
  */
-void exc_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far)
+void exc_handler(unsigned long type)
 {
+    unsigned long esr;
+    unsigned long elr;
+    unsigned long spsr;
+    unsigned long far;
+
+    asm volatile(
+        "mrs %0, elr_el2;"
+        "mrs %1, esr_el2;"
+        "mrs %2, spsr_el2;"
+        "mrs %3, far_el2;"
+        : "=r"(elr), "=r"(esr), "=r"(spsr), "=r"(far));
+
     // print out interruption type
     switch (type)
     {
@@ -122,8 +135,18 @@ void not_implemented()
         ;
 }
 
-void synchronous_handler(unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far){
+void synchronous_handler()
+{
 
+    unsigned long esr;
+    unsigned long elr;
+    unsigned long spsr;
+    unsigned long far;
+
+    asm volatile(
+        "mrs %0, elr_el2;"
+        "mrs %1, esr_el2;"
+        : "=r"(elr), "=r"(esr));
 
     uart_puts("*Interrput*: <Synchronous>\n");
     // decode exception type (some, not all. See ARM DDI0487B_b chapter D10.2.28)
@@ -169,12 +192,33 @@ void synchronous_handler(unsigned long esr, unsigned long elr, unsigned long sps
     uart_puts("\n");
 
     uart_puts("Exception return address: ");
-    uart_send_hex(elr );
+    uart_send_hex(elr);
+    // ESR [31:26]
     uart_puts("\nException class (EC): ");
     uart_send_hex(esr >> 26);
+    // ESR [24:0]
     uart_puts("\nInstruction specific syndrome (ISS): ");
     uart_send_hex(esr & 0x00FFFFFF);
 
     uart_puts("\n");
 
+    while (1)
+        ;
+}
+
+void irq_handler()
+{
+    uart_puts("*Interrput*: <IRQ>\n");
+
+    unsigned int arm, arm_local;
+    char r;
+    arm = *IRQ_BASIC_PENDING;
+    arm_local = *CORE0_INTR_SRC;
+
+    if (arm_local & 0x2)
+    {
+        // core timer interrupt
+        uart_puts("core timer\n");
+        _core_timer_handler();
+    }
 }
