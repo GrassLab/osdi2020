@@ -3,5 +3,7 @@
 #define SYS_TIME_IRQ   0x1
 #define SYS_EXC        0x2
 #define SYS_UART       0x3
+#define SYS_ENIRQ      0x4
+#define SYS_DSIRQ      0x5
 
 #endif  /*_SYS_H */

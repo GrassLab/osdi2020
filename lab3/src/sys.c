@@ -67,5 +67,11 @@ void handle_el0_sync(unsigned long esr, unsigned long address)
         enable_uart_interrupt();
         enable_irq();
     }
+    if (imm_value == SYS_ENIRQ) {
+        enable_irq();
+    }
+    if (imm_value == SYS_DSIRQ) {
+        disable_irq();
+    }
     return;
 }

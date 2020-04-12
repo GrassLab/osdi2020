@@ -17,4 +17,5 @@
 #define TIMER_CS_M3	(1 << 3)
 
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
+#define SYSTEM_TIMER_INTERVAL 1000000
 #endif  /*_P_TIMER_H */

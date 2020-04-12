@@ -1,8 +1,8 @@
 #include "utils.h"
 #include "peripherals/mini_uart.h"
 #include "peripherals/gpio.h"
-#define BUFFER_SIZE 32
-#define CMD_BUFFER_SIZE 32
+#define BUFFER_SIZE 100
+#define CMD_BUFFER_SIZE 100
 
 char uart_buffer[BUFFER_SIZE];
 char cmd_buffer[CMD_BUFFER_SIZE];
@@ -90,6 +90,10 @@ void handle_uart_irq()
         while(get32(AUX_MU_LSR_REG)&0x01) {
             char c;
             c = get32(AUX_MU_IO_REG)&0xFF;
+            if (cmd_flag == 1) {
+                cmd_flag = 0;
+                cmd_index = 0;
+            }
             if ( c == '\r') {
                 cmd_buffer[cmd_index++] = '\0';
                 cmd_index = 0;
