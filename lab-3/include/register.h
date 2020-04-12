@@ -5,7 +5,9 @@
 #define HCR_VALUE			    HCR_RW
 
 #define SPSR_MASK_ALL 			(7 << 6)
+#define SPSR_EL2h			    (9 << 0)
 #define SPSR_EL1h			    (5 << 0)
+#define SPSR_EL0t			    (0 << 0)
 #define SPSR_VALUE			    (SPSR_MASK_ALL | SPSR_EL1h)
 
 

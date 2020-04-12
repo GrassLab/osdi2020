@@ -60,13 +60,6 @@ _start:
     // set stack before our code
     ldr     x1, =_start
 
-    // set up EL1
-    mrs     x0, CurrentEL
-    and     x0, x0, #12 // clear reserved bits
-
-    // running at EL2?
-5:  cmp     x0, #4
-    beq     5f
     msr     sp_el1, x1
     // set hcr_el2
     ldr     x0, =HCR_VALUE
@@ -74,15 +67,24 @@ _start:
     // set spsr_el2
     ldr	    x0, =SPSR_VALUE
 	msr	    spsr_el2, x0
-    // clear DAIF
-    mov     x0, #0
-    msr     DAIF, x0
-    // set up exception handlers
-    ldr     x2, =exception_table
+    // set up exception table
+    ldr     x2, =exception_table_el1
     msr     vbar_el1, x2
+    ldr     x2, =exception_table_el2
+    msr     vbar_el2, x2
+    // jump to el1_start when call eret
+    adr	    x0, el1_start		
+	msr	    elr_el2, x0
     eret
-
-5:  mov     sp, x1 
+    
+el1_start: 
+    // change exception level to EL0 
+    adr	    x0, el0_start		
+	msr	    elr_el1, x0
+    eret
+    
+el0_start:
+    mov     sp, x1 
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
@@ -91,12 +93,11 @@ _start:
     sub     w2, w2, #1
     cbnz    w2, 3b
 
-    
 4:  bl      main   // jump to C code, should not return
     b       1b     // for failsafe, halt this core too
 
     .align 11      // important, code has to be properly aligned
-exception_table:
+exception_table_el1:
     ventry el1_exception
     ventry el1_exception
     ventry el1_exception
@@ -110,6 +111,30 @@ exception_table:
     // SError
     ventry el1_exception
 
+    ventry el1_exception
+    ventry el1_exception
+    ventry el1_exception
+    ventry el1_exception
+
+    .align 11      // important, code has to be properly aligned
+exception_table_el2:
+    ventry el2_exception
+    ventry el2_exception
+    ventry el2_exception
+    ventry el2_exception
+    // synchronous
+    ventry el2_exception
+    // IRQ
+    ventry el1_irq
+    // FIQ
+    ventry el2_exception
+    // SError
+    ventry el2_exception
+
+    ventry el2_exception
+    ventry el2_exception
+    ventry el2_exception
+    ventry el2_exception
 
 el1_exception:
     kernel_entry
@@ -119,4 +144,9 @@ el1_exception:
 el1_irq:
     kernel_entry
     bl irq_handler
+    kernel_exit
+
+el2_exception:
+    kernel_entry
+    bl exception_handler
     kernel_exit

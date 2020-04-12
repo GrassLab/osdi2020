@@ -8,9 +8,9 @@
 int main()
 {
     uart_init();
-    printPowerOnMessage();
+    // printPowerOnMessage();
     // printDebugPowerOnMessage();
-    asm volatile("svc #1");
+    asm volatile("svc #1000");
     // enable_irq();
     // local_timer_init();
     // core_timer_init();
