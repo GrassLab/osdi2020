@@ -1,3 +1,4 @@
+#include "register.h"
 .section ".text.boot"
 
 .global _start
@@ -51,31 +52,48 @@ _start:
 1:  wfe
     b       1b
 2:  // cpu id == 0
-
     // set stack before our code
     ldr     x1, =_start
 
-5:  // set HCR_EL2.IMO
-    mrs     x0, hcr_el2
-    orr     x0, x0, #(1 << 4)
-    orr     x0, x0, #0x8000000
+    // set up EL1
+    mrs     x0, CurrentEL
+    and     x0, x0, #12 // clear reserved bits
+
+    // running at EL2?
+5:  cmp     x0, #4
+    beq     5f
+    msr     sp_el1, x1
+
+    // set hcr_el2
+    ldr     x0, =HCR_VALUE
     msr     hcr_el2, x0
-
-    // for debug not route to El1
-    // mrs x0, MDCR_EL2
-    // bic x0, x0, 0x100
-    // msr MDCR_EL2, x0
-
-    // clear PSTATE.DAIF
+    
+    // set spsr_el2
+    ldr	    x0, =SPSR_VALUE
+	msr	    spsr_el2, x0
+    // clear 
     mov     x0, #0
     msr     DAIF, x0
+    // set up exception handlers
+    ldr     x2, =exception_table
+    msr     vbar_el1, x2
+    eret
+
+//5:  // set HCR_EL2.IMO
+    //mrs     x0, hcr_el2
+    //orr     x0, x0, #(1 << 4)
+    //orr     x0, x0, #0x8000000
+    //msr     hcr_el2, x0
+
+    // clear PSTATE.DAIF
+    //mov     x0, #0
+    //msr     DAIF, x0
 
     // set up exception handlers
-    ldr     x2, =_vectors
-    msr     vbar_el2, x2
+    //ldr     x2, =exception_table
+    //msr     vbar_el2, x2
 
-5:  mov     sp, x1
-
+5:  mov     sp, x1 
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
@@ -91,42 +109,22 @@ _start:
 
     // important, code has to be properly aligned
     .align 11
-_vectors:
-    mov     x0, #10
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
+exception_table:
     b exception_handler
     .align 7
-    mov     x0, #11
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
     bl exception_handler
     .align 7
-    mov     x0, #12
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
     b exception_handler
     .align 7
-    mov     x0, #13
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
     b exception_handler
 
     // synchronous
     .align  7
     mov     x0, #0
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
+    mrs     x1, esr_el1
+    mrs     x2, elr_el1
+    mrs     x3, spsr_el1
+    mrs     x4, far_el1
     b       exception_handler
 
     // IRQ
@@ -138,17 +136,17 @@ _vectors:
     // FIQ
     .align  7
     mov     x0, #2
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
+    mrs     x1, esr_el1
+    mrs     x2, elr_el1
+    mrs     x3, spsr_el1
+    mrs     x4, far_el1
     b       exception_handler
 
     // SError
     .align  7
     mov     x0, #3
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
+    mrs     x1, esr_el1
+    mrs     x2, elr_el1
+    mrs     x3, spsr_el1
+    mrs     x4, far_el1
     b       exception_handler

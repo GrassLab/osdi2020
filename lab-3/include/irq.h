@@ -20,6 +20,8 @@
 
 #define CORE0_INTERRUPT_SOURCE 0x40000060
 
+void enable_irq();
+void disable_irq();
 void irq_handler();
 
 #endif
