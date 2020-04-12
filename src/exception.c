@@ -4,6 +4,14 @@
 
 void exception_init(void) {
   asm("msr vbar_el2, %0" : : "r"(vector_table));
+
+  // Set HCR_EL2.IMO, bit [4] to 1
+  asm("mrs x0, hcr_el2");
+  asm("orr x0, x0, #16");
+  asm("msr hcr_el2, x0");
+
+  // Enable interrupt
+  asm("msr daifclr, #0xf");
 }
 
 void curr_el_spx_sync_handler(void) {
@@ -26,6 +34,19 @@ void curr_el_spx_sync_handler(void) {
   mini_uart_puts("Instruction specific syndrome (ISS) 0x");
   mini_uart_puts(uitos_generic(iss, 16, buf));
   mini_uart_puts(EOL);
+}
+
+static uint64_t jiffie = 0;
+
+void curr_el_spx_irq_handler(void) {
+  char buf[32];
+  mini_uart_puts("Core timer interrupt, jiffies ");
+  mini_uart_puts(uitos(++jiffie, buf));
+  mini_uart_puts(EOL);
+
+  // Set the interval to be approximately 1 second
+  asm("mrs x0, cntfrq_el0");
+  asm("msr cntp_tval_el0, x0");
 }
 
 void not_implemented(void) {

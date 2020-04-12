@@ -49,6 +49,11 @@ curr_el_spx_sync:
   bl curr_el_spx_sync_handler
   exception_epilogue
 
+curr_el_spx_irq:
+  exception_prologue
+  bl curr_el_spx_irq_handler
+  exception_epilogue
+
 .align 11 // vector table should be aligned to 0x800
 .global vector_table
 vector_table:
@@ -58,7 +63,7 @@ vector_table:
   vec_entry not_implemented
 
   vec_entry curr_el_spx_sync
-  vec_entry not_implemented
+  vec_entry curr_el_spx_irq
   vec_entry not_implemented
   vec_entry not_implemented
 
