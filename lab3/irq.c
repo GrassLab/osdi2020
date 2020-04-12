@@ -10,7 +10,7 @@ void irq_el1_enable(void)
 
 void irq_el1_handler(void)
 {
-  uart_puts("ARM core time interrupt received\n");
+  uart_puts("ARM core time interrupt received");
   timer_expire_core_timer();
   return;
 }

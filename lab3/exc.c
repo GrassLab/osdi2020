@@ -1,5 +1,7 @@
 #include "exc.h"
 #include "irq.h"
+#include "syscall.h"
+#include "timer.h"
 
 void exc_dispatcher(uint64_t identifier)
 {
@@ -24,7 +26,7 @@ void exc_dispatcher(uint64_t identifier)
       exc_EL1_lower_aa64_EL_SP_EL1_irq();
       return;
     default:
-      exc_not_implemented();
+      exc_not_implemented(identifier);
       return;
     }
     break;
@@ -35,38 +37,62 @@ void exc_dispatcher(uint64_t identifier)
   return;
 }
 
-void exc_not_implemented(void)
+void exc_not_implemented(uint64_t code)
 {
-  uart_puts("Exception handler not Implement\n");
+  char string_buff[0x20];
+  uint64_t ELR_EL1, ESR_EL1;
+  asm volatile("mrs %0, elr_el1\n"
+               "mrs %1, esr_el1\n":
+               "=r"(ELR_EL1), "=r"(ESR_EL1));
+  uart_puts("Exception handler not implemented. Code: ");
+  string_ulonglong_to_hex_char(string_buff, code);
+  uart_puts(string_buff);
+  uart_putc('\n');
+  uart_puts("Exception return address: ");
+  string_ulonglong_to_hex_char(string_buff, ELR_EL1);
+  uart_puts(string_buff);
+  uart_putc('\n');
+  uart_puts("ESR_EL1: ");
+  string_ulonglong_to_hex_char(string_buff, ESR_EL1);
+  uart_puts(string_buff);
+  uart_putc('\n');
+
+  uart_puts("Enter busy infinite loop for debug purpose\n");
+  while(1);
   return;
 }
 
 void exc_EL1_lower_aa64_EL_SP_EL1_sync(void)
 {
-  char string_buff[0x20];
   uint64_t ELR_EL1, ESR_EL1;
   uint8_t exception_class;
   uint32_t exception_iss;
+  uint16_t exception_imm;
   asm volatile("mrs %0, elr_el1\n"
                "mrs %1, esr_el1\n":
                "=r"(ELR_EL1), "=r"(ESR_EL1));
   exception_class = (uint8_t)(ESR_EL1 >> 26);
   exception_iss = ESR_EL1 & 0x1ffffff;
+  exception_imm = ESR_EL1 & 0xffff;
 
-  uart_puts("Exception return address: ");
-  string_ulonglong_to_hex_char(string_buff, ELR_EL1);
-  uart_puts(string_buff);
-  uart_putc('\n');
+  if(exception_class != 0x15) /* Not via aarch64 svc */
+  {
+    uart_puts("Unhandled exception class\n");
+    return;
+  }
 
-  uart_puts("Exception class (EC): ");
-  string_ulonglong_to_hex_char(string_buff, exception_class);
-  uart_puts(string_buff);
-  uart_putc('\n');
-
-  uart_puts("Instruction specific syndrome (ISS): ");
-  string_ulonglong_to_hex_char(string_buff, exception_iss);
-  uart_puts(string_buff);
-  uart_putc('\n');
+  switch(exception_imm)
+  {
+  case 1:
+    syscall_exc(ELR_EL1, exception_class, exception_iss);
+    break;
+  case 2:
+    syscall_timer_int();
+    break;
+  default:
+    uart_puts("Unhandled svc immediate value\n");
+    break;
+  }
 
   return;
 }

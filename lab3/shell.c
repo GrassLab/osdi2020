@@ -103,7 +103,6 @@ void shell(void)
   uart_init();
 
 	/* Show boot message */
-  shell_exc(string_buffer);
   uart_puts(pikachu0);
   uart_puts(pikachu1);
   shell_show_board_revision(string_buffer);
@@ -250,27 +249,7 @@ int shell_exc(char * string_buffer)
 int shell_irq(char * string_buffer)
 {
   UNUSED(string_buffer);
-
-  static int EL2_physical_int_enabled = 0;
-  static int EL2_irq_enabled = 0;
-  static int core_timer_enabled = 0;
-
-  if(!EL2_physical_int_enabled)
-  {
-    exc_EL2_enable_physical_interrupt();
-    EL2_physical_int_enabled = 1;
-  }
-  if(!EL2_irq_enabled)
-  {
-    irq_el1_enable();
-    EL2_irq_enabled = 1;
-  }
-  if(!core_timer_enabled)
-  {
-    timer_enable_core_timer();
-    core_timer_enabled = 1;
-  }
-  timer_set_core_timer(3);
+  asm volatile("svc #2");
   return 0;
 }
 
