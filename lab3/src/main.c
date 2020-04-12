@@ -60,10 +60,8 @@ void main()
             load_kernel_img();
         else if(strcmp(command, "exc"))
             asm volatile ("svc #1");
-        else if(strcmp(command, "irq")){
-            core_timer_enable();
-            local_timer_init();
-        }
+        else if(strcmp(command, "irq"))
+            asm volatile ("svc #2");
         else if (*command)
             uart_puts("error: command not found,  try <help>\n");
     }

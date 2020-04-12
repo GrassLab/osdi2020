@@ -5,12 +5,19 @@
 
 void exception_handler(unsigned long esr, unsigned long elr)
 {
-    uart_puts("Exception return address: ");
-    uart_hex(elr); uart_puts("\n");
-    uart_puts("Exception class(EC): ");
-    uart_hex((esr>>26)&0x3F); uart_puts("\n");
-    uart_puts("Instruction specific syndrome (ISS): ");
-    uart_hex(esr&0x1FFFFFF); uart_puts("\n");
+    int svc_type = esr&0x1FFFFFF;
+    if (svc_type == 1){
+        uart_puts("Exception return address: ");
+        uart_hex(elr); uart_puts("\n");
+        uart_puts("Exception class(EC): ");
+        uart_hex((esr>>26)&0x3F); uart_puts("\n");
+        uart_puts("Instruction specific syndrome (ISS): ");
+        uart_hex(esr&0x1FFFFFF); uart_puts("\n");
+    }
+    else if(svc_type == 2){
+        core_timer_enable();
+        local_timer_init();
+    }
 }
 
 void irq_handler()

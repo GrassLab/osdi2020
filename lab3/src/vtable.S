@@ -73,9 +73,9 @@ vector_table:
   b dummy_handler
   .align 7
 
-  b dummy_handler
+  b exception_entry
   .align 7
-  b dummy_handler
+  b irq_entry
   .align 7
   b dummy_handler
   .align 7
