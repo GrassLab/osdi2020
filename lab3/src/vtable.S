@@ -40,8 +40,8 @@ add	sp, sp, #256
 
 exception_entry:
     kernel_entry
-    mrs     x0, esr_el2
-    mrs     x1, elr_el2
+    mrs     x0, esr_el1
+    mrs     x1, elr_el1
     bl exception_handler
     kernel_exit
     eret
