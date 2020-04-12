@@ -120,12 +120,14 @@ exception_table:
 
     // synchronous
     .align  7
+    kernel_entry
     mov     x0, #0
     mrs     x1, esr_el1
     mrs     x2, elr_el1
     mrs     x3, spsr_el1
     mrs     x4, far_el1
-    b       exception_handler
+    bl       exception_handler
+    kernel_exit
 
     // IRQ
     .align  7

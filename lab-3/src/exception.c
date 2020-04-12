@@ -8,5 +8,4 @@ void exception_handler(unsigned long type, unsigned long esr, unsigned long elr,
     uart_print_hex(elr>>32);
     uart_print_hex(elr);
     uart_puts("\n");
-    asm volatile("eret");
 }

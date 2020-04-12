@@ -127,6 +127,7 @@ void command_exc()
 
 void command_irq()
 {
+    enable_irq();
     local_timer_init();
     core_timer_init();
     // sys_timer_init();

@@ -1,7 +1,5 @@
 #include "irq.h"
 #include "utility.h"
-#define AUX_IRQ         PBASE+0x00215000
-
 
 void enable_irq()
 {
