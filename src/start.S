@@ -17,6 +17,10 @@ _start:
     ldr     x1, =_start
     mov     sp, x1
 
+    // load exception_table to VBAR_EL2
+    ldr     x1, =exception_table
+    msr     vbar_el2, x1
+
     // clear bss
     ldr     x1, =__bss_start
     ldr     x2, =__bss_size

@@ -125,6 +125,9 @@ void shell_controller(char* cmd) {
     if (!strcmp(cmd, "")) {
         return;
     }
+    else if (!strcmp(cmd, "exc")) {
+        asm volatile("svc #1");
+    }
     else if (!strcmp(cmd, "help")) {
         uart_printf("help: print all available commands\n");
         uart_printf("hello: print Hello World!\n");

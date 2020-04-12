@@ -7,12 +7,12 @@ BUILD_DIR = build
 SRC_DIR = src
 
 LINKER_FILE = $(SRC_DIR)/linker.ld
-ENTRY = $(SRC_DIR)/start.s
-ENTRY_OBJS = $(BUILD_DIR)/start.o
-SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+SRCS_C = $(wildcard $(SRC_DIR)/*.c)
+OBJS_C = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+SRCS_ASM = $(wildcard $(SRC_DIR)/*.S)
+OBJS_ASM = $(SRCS_ASM:$(SRC_DIR)/%.S=$(BUILD_DIR)/%.o)
 
-CFLAGS = -Wall -I include -c
+CFLAGS = -Wall -nostdlib -Iinclude -c
 
 .PHONY: all clean
 
@@ -20,14 +20,14 @@ all: build_dir kernel8.img
 
 # build
 
-$(ENTRY_OBJS): $(ENTRY)
-	$(CC) $(CFLAGS) $< -o $@
-
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
-kernel8.img: $(OBJS) $(ENTRY_OBJS)
-	$(LD) $(ENTRY_OBJS) $(OBJS) -T $(LINKER_FILE) -o kernel8.elf
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.S
+	$(CC) $(CFLAGS) $< -o $@
+
+kernel8.img: $(OBJS_C) $(OBJS_ASM)
+	$(LD) $(OBJS_C) $(OBJS_ASM) -T $(LINKER_FILE) -o kernel8.elf
 	$(OBJCPY) -O binary kernel8.elf kernel8.img 
 
 # run emulator
@@ -45,7 +45,7 @@ asm:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm
 
 debug: all
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -S -s
 
 # utility 
 
