@@ -200,6 +200,8 @@ void shell(void) {
         asm("svc #1");
       } else if (!strcmp(cmd, "hello")) {
         hello();
+      } else if (!strcmp(cmd, "irq")) {
+        core_timer_enable();
       } else if (!strcmp(cmd, "loadimg")) {
         loadimg();
       } else if (!strcmp(cmd, "lshw")) {

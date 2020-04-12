@@ -14,6 +14,14 @@ void exception_init(void) {
   asm("msr daifclr, #0xf");
 }
 
+void core_timer_enable(void) {
+  // Enable timer
+  asm("mov x0, 1");
+  asm("msr cntp_ctl_el0, x0");
+
+  *CORE0_TIMER_IRQ_CTRL = 2;
+}
+
 void curr_el_spx_sync_handler(void) {
   uint64_t address, syndrome;
   asm("mrs %0, elr_el2" : "=r"(address));
