@@ -26,8 +26,10 @@ void make_exc()
 
 int main()
 {
-
     _irq_init();
+
+    *ENABLE_IRQ2 = 1 << 25;
+
     // set uart
     uart_init();
 
@@ -40,7 +42,7 @@ int main()
     showpicture();
 
     //test
-//    make_exc();
+    //    make_exc();
     //svc(1);
 
     //brk(1);

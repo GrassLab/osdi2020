@@ -20,11 +20,12 @@ void loadimg(unsigned long address, unsigned long img_size)
   uart_puts("\n");
 
   // rebase tiny bootloader
-  rebased_bootloader = address + img_size + 0x10000;
+  rebased_bootloader = address + img_size + 0x2000;
   rebased_end = rebased_bootloader + __bootloader_size;
+
   /*
-  if ((unsigned long)&__stop_bootloader > rebased_end)
-    rebased_bootloader = (unsigned long)&__stop_bootloader;
+  if ((unsigned long)&rebased_bootloader < address + img_size)
+    rebased_bootloader = (unsigned long)(address + img_size);
     */
 
   // place new bootloader
@@ -52,7 +53,7 @@ void loadimg(unsigned long address, unsigned long img_size)
 
   void (*func)(void *, unsigned long) = (void (*)(void *, unsigned long))rebased_loadimg;
   //uart_send_hex((unsigned int)func);
-  func((char*)address, img_size);
+  func((char *)address, img_size);
 
   /*
   uart_puts("no see");
@@ -71,31 +72,18 @@ void loadimg_jmp(void *address, unsigned long img_size)
 {
   // save image base
   char *buf = (char *)address;
-  int count = img_size;
+  unsigned long count = img_size;
 
-  /*
-  uart_puts("Start copy kernel\n");
-  */
   while (count--)
   {
-    // uart_getc()
-    /* wait until something is in the buffer */
-    do
-    {
-      asm volatile("nop");
-    } while (*UART0_FR & 0x10);
-    /* read it and return */
-    *buf = (char)(*UART0_DR);
-    /* convert carrige return to newline */
-    buf++;
+    *buf++ = uart_getc();
   }
-  /*
-  uart_puts("Copy kernel done, jump to new kernel\n");
-  */
 
+  /*
   asm volatile("br %0"
                : "=r"((unsigned long int *)address));
+               */
 
   //asm volatile("mov x30, 0x80000; ret");
-  //((void (*)(void))(address))();
+  ((void (*)(void))(address))();
 }

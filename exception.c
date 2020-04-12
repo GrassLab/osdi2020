@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "irq.h"
+#include "timer.h"
 
 /**
  * common exception handler
@@ -135,9 +136,50 @@ void not_implemented()
         ;
 }
 
-void synchronous_handler()
+void syscall_core_timer(int enable)
 {
+    uart_puts("core timer: ");
+    if (enable == 0)
+    {
+        uart_puts("core timer disable");
+        _core_timer_disable();
+    }
+    else
+    {
+        uart_puts("core timer enable");
+        _core_timer_enable();
+    }
+}
 
+void syscall_local_timer(int enable)
+{
+    uart_puts("local timer: ");
+    if (enable == 0)
+    {
+        uart_puts("local timer disable");
+        local_timer_disable();
+    }
+    else
+    {
+        uart_puts("local timer enable");
+        local_timer_enable();
+    }
+}
+
+void syscall_gettime(double *t)
+{
+    uart_puts("get time: ");
+    register unsigned long freq;
+    register unsigned long ct;
+
+    asm volatile("mrs %0, CNTFRQ_EL0\n"
+                 "mrs %1, CNTPCT_EL0\n"
+                 : "=r"(freq), "=r"(ct));
+    *t = (double)ct / (double)freq;
+}
+
+void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
+{
     unsigned long esr;
     unsigned long elr;
     unsigned long spsr;
@@ -191,6 +233,7 @@ void synchronous_handler()
     }
     uart_puts("\n");
 
+    unsigned long iss = esr & 0x00FFFFFF;
     uart_puts("Exception return address: ");
     uart_send_hex(elr);
     // ESR [31:26]
@@ -198,27 +241,43 @@ void synchronous_handler()
     uart_send_hex(esr >> 26);
     // ESR [24:0]
     uart_puts("\nInstruction specific syndrome (ISS): ");
-    uart_send_hex(esr & 0x00FFFFFF);
+    uart_send_hex(iss);
 
     uart_puts("\n");
 
-    while (1)
-        ;
+    if (iss == 0x80)
+    {
+        uart_puts("System Call[");
+        uart_send_int(x0);
+        uart_puts("]: ");
+        switch (x0)
+        {
+        // arm core timer
+        case 0x0:
+            syscall_core_timer(x1);
+            break;
+        // arm local timer
+        case 0x1:
+            syscall_local_timer(x1);
+            break;
+        // get time
+        case 0x2:
+            syscall_gettime((double *)x1);
+            break;
+        // not this syscall
+        default:
+            uart_puts("Can find this system call");
+
+            while (1)
+                ;
+        }
+        uart_puts("\n");
+    }
 }
 
 void irq_handler()
 {
     uart_puts("*Interrput*: <IRQ>\n");
 
-    unsigned int arm, arm_local;
-    char r;
-    arm = *IRQ_BASIC_PENDING;
-    arm_local = *CORE0_INTR_SRC;
-
-    if (arm_local & 0x2)
-    {
-        // core timer interrupt
-        uart_puts("core timer\n");
-        _core_timer_handler();
-    }
+    irq();
 }

@@ -68,7 +68,7 @@ try:
             ser.write(byte)
             byte = f.read(1)
 
-            time.sleep(0.0001)
+            time.sleep(1e-5)
             # check recv
             count = ser.in_waiting
             if count != 0:

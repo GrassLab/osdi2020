@@ -65,10 +65,18 @@ int cmd_reboot(int i)
 
 int cmd_timestamp(int i)
 {
-    float t = gettime();
-    uart_send_float(t, 4);
+    double t;
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #2\n"
+                 "svc #0x80\n" ::"r"(&t));
+    uart_send_float((float)t, 4);
     uart_send('\n');
     return 0;
+
+    // can't run in el0
+    /*
+    float t = gettime();
+    */
 }
 
 int cmd_load_images(int i)
@@ -114,12 +122,32 @@ int cmd_irq(int i)
 {
     if (timer_enable)
     {
-        _core_timer_disable();
+        // core timer
+        uart_puts("timer disable\n");
+        //_core_timer_disable();
+        asm volatile("mov x0, #0");
+        asm volatile("mov x1, #0");
+        asm volatile("svc #0x80");
+
+        // local timer
+        asm volatile("mov x0, #1");
+        asm volatile("mov x1, #0");
+        asm volatile("svc #0x80");
         timer_enable = 0;
     }
     else
     {
-        _core_timer_enable();
+        uart_puts("timer enable\n");
+        //_core_timer_enable();
+        asm volatile("mov x0, #0");
+        asm volatile("mov x1, #1");
+        asm volatile("svc #0x80");
+
+        // local timer
+        asm volatile("mov x0, #1");
+        asm volatile("mov x1, #1");
+        asm volatile("svc #0x80");
+
         timer_enable = 1;
     }
     return 0;
