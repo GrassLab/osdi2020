@@ -1,7 +1,7 @@
 #ifndef	_SIMPLE_SHELL_H
 #define	_SIMPLE_SHELL_H
 
-#define NUM_COMMAND 5
+#define NUM_COMMAND 6
 #define MAX_COMMAND_LENGTH 128
 
 void run_shell(void);
@@ -13,5 +13,6 @@ void cmd_hello();
 void cmd_timestamp();
 void cmd_reboot();
 void cmd_loadimg();
+void cmd_exc();
 
 #endif//_SIMPLE_SHELL_H

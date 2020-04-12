@@ -17,16 +17,27 @@ char *promptStr="simple shell> ";
 
 char *commandStr[NUM_COMMAND]=
 {
-	"help", "hello", "timestamp", "reboot", "loadimg"//, "exit"
+	"help",
+	"hello",
+	"timestamp",
+	"reboot",
+	"loadimg",
+	"exc"
+	//, "exit"
 };
 
 char *commandDesc[NUM_COMMAND]={
-	"Show commands available.", "Show \"Hello World!\"", "Get current timestamp.", "Reboot device.", "Load kernel by UART."
+	"Show commands available.",
+	"Show \"Hello World!\"",
+	"Get current timestamp.",
+	"Reboot device.",
+	"Load kernel by UART.",
+	"Issues \"svc #1\""
 };
 
 void (*commandArray[NUM_COMMAND])()=
 {
-	cmd_help, cmd_hello, cmd_timestamp, cmd_reboot, cmd_loadimg
+	cmd_help, cmd_hello, cmd_timestamp, cmd_reboot, cmd_loadimg, cmd_exc
 };
 
 /* 
@@ -143,4 +154,8 @@ void cmd_loadimg() {
 		reciver_start = load_addr-60;
 		reciver_start(size, load_addr);
 	}
+}
+
+void cmd_exc(){
+	asm volatile("svc #1");
 }

@@ -24,7 +24,7 @@ clean:
 	rm kernel8.elf build/* >/dev/null 2>/dev/null || true
 
 run:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial pty
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
 
 debug:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial pty -s -S
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -s -S -d int

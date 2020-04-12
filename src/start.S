@@ -16,6 +16,10 @@ clear_bss:
     ldr     x0, =__bss_start
     bl      memzero
 
+// setup el2 exception table
+	adr	x0, exception_table
+	msr	vbar_el2, x0
+
 // set_sp:
     ldr     x1, =_start
     mov     sp, x1
