@@ -5,7 +5,6 @@
 #include "power.h"
 #include "mbox.h"
 #include "utils.h"
-#include "irq.h"
 
 const static unsigned int MAX_BUFFER_SIZE = 512;
 
@@ -17,7 +16,8 @@ static inline void helpCmd()
     uartPuts("    timestamp          get current timestamp\n");
     uartPuts("    reboot             reboot rpi3\n");
     uartPuts("    hardware           print hardware information\n");
-    uartPuts("    exc                exception #0\n");
+    uartPuts("    exc                supervisor call #1\n");
+    uartPuts("    irq                enable core timer\n");
 }
 
 static inline void helloCmd()
@@ -49,14 +49,12 @@ static inline void hardwareInfoCmd()
 
 static inline void excCmd()
 {
-    asm volatile("svc 1");
+    asm volatile("svc #1");
 }
 
 static inline void irqCmd()
 {
-    enableCoreTimer();
-    localTimerInit();
-    enableIrq();
+    asm volatile("svc #2");
 }
 
 static inline void noneCmd(const char *input)

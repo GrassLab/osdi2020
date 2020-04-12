@@ -31,7 +31,6 @@ void main()
 {
     // set up serial console
     uartInit();
-    irqVectorInit();
 
     runShell();
 }

@@ -40,16 +40,15 @@
 
 .globl irqVectorInit
 irqVectorInit:
-    // load exception_table to VBAR_EL2
     ldr x0, =exception_table
-    msr VBAR_EL2, x0
+    msr VBAR_EL1, x0
     ret
 
 handle_exc:
     msr DAIFSet, 0xf
     save_reg
-    mrs     x0, ESR_EL2
-    mrs     x1, ELR_EL2
+    mrs     x0, ESR_EL1
+    mrs     x1, ELR_EL1
     bl       excHandler
     load_reg
     msr DAIFClr, 0xf

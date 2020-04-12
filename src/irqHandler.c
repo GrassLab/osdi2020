@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "timer.h"
 #include "irqTable.h"
+#include "irq.h"
 
 #define IRQ_BASIC   ((volatile unsigned int *)(0x3F00B200))
 #define IRQ_PEND1   ((volatile unsigned int *)(0x3F00B204))
@@ -16,13 +17,25 @@
 
 void excHandler(unsigned long esr, unsigned long elr)
 {
-    uartPuts("Exception return address ");
-    uartHex(elr);
-    uartPuts("\nException class (EC) ");
-    uartHex(MID(esr, 26, 32));
-    uartPuts("\nInstruction specific syndrome (ISS) ");
-    uartHex(LAST(esr, 16));
-    uartPuts("\n");
+    unsigned int iss = LAST(esr, 16);
+
+    if (iss == 1)
+    {
+        uartPuts("Exception return address ");
+        uartHex(elr);
+        uartPuts("\nException class (EC) ");
+        uartHex(MID(esr, 26, 32));
+        uartPuts("\nInstruction specific syndrome (ISS) ");
+        uartHex(LAST(esr, 16));
+        uartPuts("\n");
+    }
+    else if (iss == 2)
+    {
+        uartPuts("Enable timer \n");
+        enableCoreTimer();
+        localTimerInit();
+        enableIrq();
+    }
 
     return;
     // while(1);
