@@ -44,10 +44,20 @@ char uart_recv ( void )
 }
 
 void uart_send_string(char* str)
-{
+{   
+    // put into buffer
 	for (int i = 0; str[i] != '\0'; i ++) {
-		uart_send((char)str[i]);
+		uart_buffer[wr_buffer_index++] = str[i];
+        if (wr_buffer_index == BUFFER_SIZE) {
+            wr_buffer_index = 0;
+        }
 	}
+    // open uart_transmit interrupt
+    if (transmit_interrupt_open == 0){
+        put32(AUX_MU_IER_REG, 3);
+        transmit_interrupt_open = 1;
+    }
+    return;
 }
 
 void uart_init ( void )
@@ -163,15 +173,15 @@ void uart_send_int(int number) {
         number = number / 10; 
     } 
     reserve(str, i);
-    for ( j = 0 ; j < i ; j++) {
-        uart_send(str[j]);
-    }
-    uart_send('\n');
+    str[i] = '\r';
+    str[i + 1] = '\n';
+    str[i + 2] = '\0';
+    uart_send_string(str);
     return ; 
 }
 
 void uart_send_hex(unsigned long number) {
-    char buffer[11];
+    char buffer[12];
     int i;
     buffer[0] = '0';
     buffer[1] = 'x'; 
@@ -193,6 +203,7 @@ void uart_send_hex(unsigned long number) {
     }
     buffer[10] = '\r';
     buffer[11] = '\n';
+    buffer[12] = '\0';
     uart_send_string(buffer);
     return;
 }

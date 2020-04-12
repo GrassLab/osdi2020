@@ -56,11 +56,11 @@ void handle_el0_sync(unsigned long esr, unsigned long address)
         enable_irq();
     }
     if (imm_value == SYS_EXC) {
-        uart_send_string("Exception return address ");
+        uart_send_string("return address ");
         uart_send_hex(address);
-	    uart_send_string("Exception class (EC) ");
+	    uart_send_string("(EC) ");
         uart_send_hex(esr>>26);
-        uart_send_string("Instruction specific syndrome (ISS) ");
+        uart_send_string("(ISS) ");
         uart_send_hex(esr & 0xfff);
     }
     if (imm_value == SYS_UART) {

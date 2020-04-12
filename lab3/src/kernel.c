@@ -43,8 +43,8 @@ void kernel_main(void)
             break;
 		}
 	}
-	uart_send_string("uart_init\r\n");
 	sync_call_uart();
+	uart_send_string("uart_init\r\n");
 	uart_send_string("# ");
 	while (1) {
 		if (cmd_flag == 1 && strcmp(cmd_buffer, "hello") == 0) {
