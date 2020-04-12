@@ -59,8 +59,8 @@ _exception__handler:
     # FAR_EL2:  Holds the faulting Virtual Address for all synchronous Instruction or Data Abort, PC alignment fault and Watchpoint exceptions that are taken to EL2.
 
     save_reg
-    mrs     x0, elr_el2
-    mrs     x1, esr_el2
+    mrs     x0, ELR_EL2
+    mrs     x1, ESR_EL2
     # mrs     x2, spsr_el2
     # mrs     x3, far_el2
     bl      exec_controller

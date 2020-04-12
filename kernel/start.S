@@ -29,7 +29,7 @@
 
 _start:
     # read cpu id, stop slave cores
-    mrs     x1, mpidr_el1
+    mrs     x1, MPIDR_EL1
     and     x1, x1, #3
     
     # cpu id > 0, stop
@@ -38,7 +38,7 @@ _start:
 
 setup_exception_table:
     ldr     x1, =exception_table
-    msr     vbar_EL2, x1
+    msr     VBAR_EL2, x1
 
 stack_init:  
 

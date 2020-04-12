@@ -7,18 +7,18 @@
 irq_setup:
 
     # irq init (HCR_EL2.IMO
-    mrs x0, hcr_el2
+    mrs x0, HCR_EL2
     orr x0, x0, #0b10000
-    msr hcr_el2, x0
+    msr HCR_EL2, x0
 
     # return
     ret
 
 irq_enable:
-    msr daif, xzr
+    msr DAIF, xzr
     ret
 
 irq_disable:
     mov x0, #0b1111000000
-    msr daif, x0
+    msr DAIF, x0
     ret
