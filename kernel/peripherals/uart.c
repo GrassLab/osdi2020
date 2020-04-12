@@ -22,13 +22,13 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
+#include "lib/ctype.h"
+#include "lib/stdarg.h"
+#include "lib/string.h"
 
 #include "gpio.h"
-#include "uart.h"
 #include "mailbox.h"
-#include "lib/ctype.h"
-#include "lib/string.h"
-#include "lib/stdarg.h"
+#include "uart.h"
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO

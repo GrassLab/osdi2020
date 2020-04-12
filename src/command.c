@@ -1,7 +1,8 @@
-#include "kernel/peripherals/uart.h"
+#include "kernel/exception/irq.h"
+#include "kernel/exception/timer.h"
 #include "kernel/peripherals/mailbox.h"
 #include "kernel/peripherals/time.h"
-#include "kernel/exception/irq.h"
+#include "kernel/peripherals/uart.h"
 #include "lib/string.h"
 
 
@@ -188,12 +189,25 @@ void command_brk_exception_trap ()
 
 void command_irq_exception_enable ()
 {
-    irq_setup();
+    static int first = 1;
+    if ( first )
+        irq_setup();
+
+    first = 0;
+
     irq_enable();
+    uart_printf("[IRQ Enable]\n");
+
     core_timer_enable();
+    uart_printf("[Core Timer Enable]\n");
+
+    // local_timer_handler();
+    local_timer_enable();
+    uart_printf("[Local Timer Enable]\n");
 }
 
 void command_irq_exception_disable ()
 {
     irq_disable();
+    uart_printf("[IRQ Disable]\n");
 }

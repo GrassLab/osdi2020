@@ -1,8 +1,8 @@
 #include "kernel/peripherals/uart.h"
 #include "lib/string.h"
+
 #include "command.h"
 #include "shell.h"
-
 
 void shell_start () 
 {
