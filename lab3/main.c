@@ -75,6 +75,8 @@ void main()
 		} else if(strcmp(command, CMD_EXC)) {
 			asm volatile ("svc #1");
 		} else if(strcmp(command, CMD_IRQ)) {
+			asm volatile(" mov     x0, #0");
+			asm volatile("msr     DAIF, x0");
 			local_timer_init();
 			core_timer_init();
 		} else {

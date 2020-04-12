@@ -124,7 +124,7 @@ exception_table:
     .align 7
 
     context_switch
-    bl exception_handler
+    bl irq_handler
     context_switch_back
     .align 7
 
@@ -150,12 +150,6 @@ exception_table:
     .align 7
     b exception_handler
     .align 7
-
-
-el1_irq:
-    context_switch
-    bl handle_irq
-    context_switch_back
 
 exception_handler:
     context_switch
