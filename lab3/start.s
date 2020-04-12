@@ -22,5 +22,10 @@ master:
     bl memzero
 
     mov sp, #0x400000
+
+    // setup exception table
+    ldr x0, =_exception_table
+    msr VBAR_EL2, x0
+
     bl kernel_main
     b hang

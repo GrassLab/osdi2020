@@ -8,8 +8,12 @@ LIBDIR = lib/
 LIB_C := $(shell find $(LIBDIR) -name '*.c')
 LIB_ASM := $(shell find $(LIBDIR) -name '*.s')
 
+EXCEPTIONDIR = lib/exception/
+EXCEPTION_ASM := $(shell find $(EXCEPTIONDIR) -name '*.s')
+
 OBJS := $(LIB_C:%.c=%.o) \
         $(LIB_ASM:%.s=%.o) \
+        $(EXCEPTION_ASM:%.s=%.o) \
         $(KERNEL:=.o)
 
 all: $(EXEC).img
