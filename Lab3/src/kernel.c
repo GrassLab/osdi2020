@@ -71,7 +71,12 @@ int check_string(char * str){
 
 	}
 	else if(strcmp(str,cmd_irq)==0){
-		call_sys_timer("\r\nTry to enable timer......\r\n");
+		int retval;
+		retval = call_core_timer();
+		uart_send_string("\r\nGet return value:");
+		uart_hex(retval);
+		uart_send_string("\r\n");
+		call_sys_timer();
 	}
 	else{
 		uart_send_string("\r\nErr:command ");
@@ -129,11 +134,19 @@ void get_VC_core_base_addr(){
 
 void kernel_main(void)
 {	
-    uart_init();
-    uart_hex(get_reg());
-    uart_send_string("Hello, world!\r\n");
+    uart_init();  
 
- 
+    uart_send_string("Hello, world!\r\n");
+/*
+    unsigned long el;
+
+    // read the current level from system register
+    asm volatile ("mrs %0, CurrentEL" : "=r" (el));
+
+    uart_send_string("Current EL is: ");
+    uart_hex((el>>2)&3);
+    uart_send_string("\r\n");
+*/
     //async_exc_routing(); //set HCR_EL2.IMO
                            // Do not set HCR_EL2.IMO if you want your interrupt directly goto kernel in EL1 
 

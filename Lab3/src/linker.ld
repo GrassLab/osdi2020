@@ -15,4 +15,4 @@ SECTIONS
     _end = .;
    
 }
-__bss_size = (_bss_end - _bss_end)>>3;
+__bss_size = (_bss_end - _bss_begin)>>3;
