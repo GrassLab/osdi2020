@@ -1,27 +1,42 @@
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:c=o)
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -g
+ARMGNU ?= aarch64-linux-gnu
 
-all: clean kernel8.img
+CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude 
+ASM_FLAGS = -Iinclude 
 
-start.o: start.S
-	aarch64-linux-gnu-gcc $(CFLAGS) -c start.S -o start.o
+BUILD_DIR = build
+SRC_DIR = src
 
-%.o: %.c
-	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
+all : kernel8.img
 
-kernel8.img: start.o $(OBJS)
-	aarch64-linux-gnu-ld -nostdlib -nostartfiles start.o $(OBJS) -T link.ld -o kernel8.elf
-	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+$(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
+	mkdir -p $(@D)
+	$(ARMGNU)-gcc $(CFLAGS) -MMD -c $< -o $@
 
-clean:
-	rm kernel8.elf *.o >/dev/null 2>/dev/null || true
+$(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
+	$(ARMGNU)-gcc $(ASM_FLAGS) -MMD -c $< -o $@
 
-debug:
+C_FILES = $(wildcard $(SRC_DIR)/*.c)
+ASM_FILES = $(wildcard $(SRC_DIR)/*.S)
+OBJ_FILES = $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
+OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
+
+DEP_FILES = $(OBJ_FILES:%.o=%.d)
+-include $(DEP_FILES)
+
+kernel8.img: $(SRC_DIR)/link.ld $(OBJ_FILES)
+	$(ARMGNU)-ld -T $(SRC_DIR)/link.ld -o $(BUILD_DIR)/kernel8.elf  $(OBJ_FILES)
+	$(ARMGNU)-objcopy $(BUILD_DIR)/kernel8.elf -O binary kernel8.img
+
+clean :
+	rm -rf $(BUILD_DIR) *.img 
+
+debug: CFLAGS += -g
+
+debug: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img  -serial stdio -display none -s
 
-debug_level:
+level: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img  -serial stdio -display none -d int
 
-run:
+run: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img  -serial stdio -display none
