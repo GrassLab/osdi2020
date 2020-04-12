@@ -1,5 +1,5 @@
 EXEC = kernel8
-CFLAGS = -std=gnu11
+CFLAGS = -std=gnu11 -nostdlib
 INCLUDE = -Iinclude -g3
 
 KERNEL = kernel
