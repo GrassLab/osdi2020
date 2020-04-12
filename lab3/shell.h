@@ -10,7 +10,7 @@ int shell_reboot(char * string_buffer);
 int shell_show_board_revision(char * string_buffer);
 int shell_show_vc_memory(char * string_buffer);
 int shell_show_text_location(char * string_buffer);
-int shell_exec(char * string_buffer);
+int shell_exc(char * string_buffer);
 int shell_irq(char * string_buffer);
 
 extern unsigned long long get_cntfrq_el0(void);

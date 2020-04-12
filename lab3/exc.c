@@ -6,27 +6,27 @@ void exc_dispatcher(uint64_t identifier)
   /* identifier is 0xYZ */
   /* Y is exception level */
   /* Z is offset of Z * 0x80 */
-  uint8_t level = (uint8_t)(identifier & 0x20) >> 4;
+  uint8_t level = (uint8_t)(identifier & 0x30) >> 4;
   uint8_t type = (uint8_t)(identifier & 0xf);
   switch(level)
   {
   case 3:
     break;
   case 2:
+    break;
+  case 1:
     switch(type)
     {
-    case 4:
-      exc_EL2_current_EL_SP_EL2_sync();
+    case 8:
+      exc_EL1_lower_aa64_EL_SP_EL1_sync();
       return;
-    case 5:
-      exc_EL2_current_EL_SP_EL2_irq();
+    case 9:
+      exc_EL1_lower_aa64_EL_SP_EL1_irq();
       return;
     default:
       exc_not_implemented();
       return;
     }
-    break;
-  case 1:
     break;
   case 0: /* EL 0 */
   default:
@@ -41,20 +41,20 @@ void exc_not_implemented(void)
   return;
 }
 
-void exc_EL2_current_EL_SP_EL2_sync(void)
+void exc_EL1_lower_aa64_EL_SP_EL1_sync(void)
 {
   char string_buff[0x20];
-  uint64_t ELR_EL2, ESR_EL2;
+  uint64_t ELR_EL1, ESR_EL1;
   uint8_t exception_class;
   uint32_t exception_iss;
-  asm volatile("mrs %0, elr_el2\n"
-               "mrs %1, esr_el2\n":
-               "=r"(ELR_EL2), "=r"(ESR_EL2));
-  exception_class = (uint8_t)(ESR_EL2 >> 26);
-  exception_iss = ESR_EL2 & 0x1ffffff;
+  asm volatile("mrs %0, elr_el1\n"
+               "mrs %1, esr_el1\n":
+               "=r"(ELR_EL1), "=r"(ESR_EL1));
+  exception_class = (uint8_t)(ESR_EL1 >> 26);
+  exception_iss = ESR_EL1 & 0x1ffffff;
 
   uart_puts("Exception return address: ");
-  string_ulonglong_to_hex_char(string_buff, ELR_EL2);
+  string_ulonglong_to_hex_char(string_buff, ELR_EL1);
   uart_puts(string_buff);
   uart_putc('\n');
 
@@ -71,9 +71,10 @@ void exc_EL2_current_EL_SP_EL2_sync(void)
   return;
 }
 
-void exc_EL2_current_EL_SP_EL2_irq(void)
+
+void exc_EL1_lower_aa64_EL_SP_EL1_irq(void)
 {
-  irq_el2_handler();
+  irq_el1_handler();
   return;
 }
 

@@ -1,4 +1,3 @@
-.global EL2_vector
 
 // Ref: https://developer.arm.com/docs/100933/0100/example-exception-handlers
 // Note: x30 is link register, crucial to preserve
@@ -53,41 +52,62 @@ EL_dispatcher:
   ret
 
 .align 11 // aligned to 0x800
-EL2_vector:
+.global EL1_vector
+EL1_vector:
 // from current EL using EL0
   ENTER_DISPATCHER
-  add x0, x0, #0x20
+  add x0, x0, #0x10
   bl EL_dispatcher
   LEAVE_DISPATCHER
 .align 7
   ENTER_DISPATCHER
-  add x0, x0, #0x21
+  add x0, x0, #0x11
   bl EL_dispatcher
   LEAVE_DISPATCHER
 .align 7
   ENTER_DISPATCHER
-  add x0, x0, #0x22
+  add x0, x0, #0x12
   bl EL_dispatcher
   LEAVE_DISPATCHER
 .align 7
   ENTER_DISPATCHER
-  add x0, x0, #0x23
+  add x0, x0, #0x13
   bl EL_dispatcher
   LEAVE_DISPATCHER
 .align 7
 
 // from current EL using ELX
   ENTER_DISPATCHER
-  add x0, x0, #0x24
+  add x0, x0, #0x14
   bl EL_dispatcher
   LEAVE_DISPATCHER
 .align 7
   ENTER_DISPATCHER
-  add x0, x0, #0x25
+  add x0, x0, #0x15
+  bl EL_dispatcher
+  LEAVE_DISPATCHER
+.align 7
+  ENTER_DISPATCHER
+  add x0, x0, #0x16
+  bl EL_dispatcher
+  LEAVE_DISPATCHER
+.align 7
+  ENTER_DISPATCHER
+  add x0, x0, #0x17
   bl EL_dispatcher
   LEAVE_DISPATCHER
 .align 7
 
+// from lower EL using in aa64
+  ENTER_DISPATCHER
+  add x0, x0, #0x18
+  bl EL_dispatcher
+  LEAVE_DISPATCHER
+.align 7
+  ENTER_DISPATCHER
+  add x0, x0, #0x19
+  bl EL_dispatcher
+  LEAVE_DISPATCHER
 // The rest are not implemented yet
 
 

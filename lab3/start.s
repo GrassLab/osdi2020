@@ -20,9 +20,9 @@ other_core:
 // core 0 will jump here
 core_0:
 
-  // setup exception vector for EL2
-  ldr x0, =EL2_vector
-  msr VBAR_EL2, x0
+  // setup exception vector for EL1
+  ldr x0, =EL1_vector
+  msr VBAR_EL1, x0
 
   // set rw bit in hcr_el2 because we're using 64-bit kernel
   mrs x0, hcr_el2

@@ -42,7 +42,7 @@ int (*shell_command_function_ptr[])(char *) = {
   shell_show_board_revision,
   shell_show_vc_memory,
   shell_show_text_location,
-  shell_exec,
+  shell_exc,
   shell_irq,
   0x0
 };
@@ -103,6 +103,7 @@ void shell(void)
   uart_init();
 
 	/* Show boot message */
+  shell_exc(string_buffer);
   uart_puts(pikachu0);
   uart_puts(pikachu1);
   shell_show_board_revision(string_buffer);
@@ -238,7 +239,7 @@ int shell_show_text_location(char * string_buffer)
   return 1;
 }
 
-int shell_exec(char * string_buffer)
+int shell_exc(char * string_buffer)
 {
   UNUSED(string_buffer);
   asm volatile("svc #1");
@@ -261,7 +262,7 @@ int shell_irq(char * string_buffer)
   }
   if(!EL2_irq_enabled)
   {
-    irq_el2_enable();
+    irq_el1_enable();
     EL2_irq_enabled = 1;
   }
   if(!core_timer_enabled)
