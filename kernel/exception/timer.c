@@ -2,6 +2,9 @@
 
 void core_timer_enable ()
 {
+    // set init value of timer
+    core_timer_reload();
+    
     // enable timer
     // CNTP_CTL_EL0: Control register for the EL1 physical timer.
     // bit[0]: ENABLE
