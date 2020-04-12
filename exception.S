@@ -42,11 +42,13 @@
 
 _exc_handler:
   kernel_entry
+  /* 
     mov x0, #0
     mrs     x1, esr_el2
     mrs     x2, elr_el2
     mrs     x3, spsr_el2
     mrs     x4, far_el2
+    */
   bl exc_handler
   kernel_exit
 
@@ -79,6 +81,19 @@ _exception_vector:
     .align  7
     b       _exc_handler
 
+    // synchronous
+    .align  7
+    b       _exc_handler
+    // IRQ
+    .align  7
+    b       _exc_handler
+    // FIQ
+    .align  7
+    b       _exc_handler
+    // SError
+    .align  7
+    b       _exc_handler
+
 
     // synchronous
     .align  7
@@ -93,18 +108,6 @@ _exception_vector:
     .align  7
     b       _exc_handler
 
-    // synchronous
-    .align  7
-    b       _exc_handler
-    // IRQ
-    .align  7
-    b       _exc_handler
-    // FIQ
-    .align  7
-    b       _exc_handler
-    // SError
-    .align  7
-    b       _exc_handler
 
     // synchronous
     .align  7

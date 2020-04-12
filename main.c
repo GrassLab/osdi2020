@@ -26,7 +26,7 @@ void make_exc()
 
 int main()
 {
-    _irq_init();
+    //_irq_init();
 
     *ENABLE_IRQ2 = 1 << 25;
 
@@ -47,7 +47,19 @@ int main()
 
     //brk(1);
 
-    pcsh();
+    /* You can't know Current EL, if you in EL0 */
+    /*
+    uart_puts("Current EL: ");
+    uart_send_int(get_current_el());
+    uart_puts("\n");
+    */
+
+    while (1)
+    {
+        uart_puts("=Shell Start=\n");
+        pcsh();
+        uart_puts("=Shell End=\n");
+    }
 
     return 0;
 }

@@ -20,7 +20,7 @@ extern char __bss_end[];
 static cmd_t default_cmd_arr[] = {
     {"exit", "exit shell", cmd_exit},
     {"help", "show all command", cmd_help},
-    {"hello", "uart_print Hello World!", cmd_hello},
+    {"hello", "print Hello World!", cmd_hello},
     {"reboot", "reboot system", cmd_reboot},
     {"timestamp", "system running time", cmd_timestamp},
     {"load_images", "load images from UART", cmd_load_images},
@@ -206,7 +206,6 @@ int pcsh()
 
         // other program
     }
-    uart_puts("Shell End\n");
 
     return 0;
 }

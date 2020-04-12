@@ -1,8 +1,3 @@
-.section ".data"
-EEL2: .string "not in EL2\n"
-error_msg_table:
-.quad EEL2
-
 .section ".text"
 _start:
   # get cpuid
@@ -11,7 +6,7 @@ _start:
   # jmp if cpuid != 0
   cbnz x1, loop
 
-  # init bss
+  # clear bss
   ldr x1, =__bss_start
   ldr x2, =__bss_end
   b cmp_adr
@@ -22,73 +17,55 @@ cmp_adr:
   cmp x2, x1
   b.hi set_zero
 
+check_EL2:
+  mrs x0, CurrentEL
+  lsr x0, x0, #2
+  cmp x0, #2
+  # setup exception table before switch EL
+  ldr x0, =_exception_vector // in exception.S
+  msr vbar_EL1, x0
 
-    // set stack before our code
-    ldr     x1, =_start
+  # setup EL1 stack
+  adr x0, _start
+  msr sp_el1, x0
 
-    // set up EL1
-    mrs     x0, CurrentEL
-    and     x0, x0, #12 // clear reserved bits
+  # set RW (AArch64)
+  mov x0, #(1 << 31)
+  msr hcr_el2, x0
+  mrs x0, hcr_el2
 
-    // running at EL3?
-    cmp     x0, #12
-    bne     5f
-    // should never be executed, just for completeness
-    mov     x2, #0x5b1
-    msr     scr_el3, x2
-    mov     x2, #0x3c9
-    msr     spsr_el3, x2
-    adr     x2, 5f
-    msr     elr_el3, x2
-    eret
-
-    // running at EL2?
-5:  cmp     x0, #4
-    beq     5f
-    
-
-    ldr x0, =_exception_vector // in exception.S
-    msr VBAR_EL2, x0
-    /*
-    msr     sp_el1, x1
-    // enable CNTP for EL1
-    mrs     x0, cnthctl_el2
-    orr     x0, x0, #3
-    msr     cnthctl_el2, x0
-    msr     cntvoff_el2, xzr
-    // enable AArch64 in EL1
-    mov     x0, #(1 << 31)      // AArch64
-    orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
-    msr     hcr_el2, x0
-    mrs     x0, hcr_el2
-    // Setup SCTLR access
-    mov     x2, #0x0800
-    movk    x2, #0x30d0, lsl #16
-    msr     sctlr_el1, x2
-    // set up exception handlers
-    ldr     x2, =_exception_vector // in exception.S
-    msr     vbar_el1, x2
-    // change execution level to EL1
-    mov     x2, #0x3c4
-    msr     spsr_el2, x2
-    adr     x2, 5f
-    msr     elr_el2, x2
-    eret
-    */
-
-5:  mov     sp, x1
+  # switch to EL1
+  mov x0, 0x5
+  msr spsr_el2, x0
+  adr x0, ret2EL1 
+  msr elr_el2, x0
+  eret
 
 
-jmp_main:
-  ldr x1, =error_msg_table
-  b main
+ret2EL1:
+  # disable exception of access SIMD register in EL1
+  mrs x0, CPACR_EL1
+  orr x0, x0, #(3 << 20)
+  msr CPACR_EL1, x0
+  # setup EL0 stack
+  adr x0, _start
+  sub x0, x0, #0x10000
+  msr sp_el0, x0
+  # switch to EL0
+  # spsr_el1 clear daif and switch to EL0
+  mov x0, 0x0
+  msr spsr_el1, x0
+  adr x0, ret2EL0
+  msr elr_el1, x0
+  eret
 
-setup_msg_table:
-  mov x0, #1
-  b jmp_main
 
+ret2EL0:
+  mov x0, xzr
+
+
+b main
+ 
 loop:
   wfe
   b loop
-
-

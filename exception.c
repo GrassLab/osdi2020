@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "irq.h"
 #include "timer.h"
+#include "exception.h"
 
 /**
  * common exception handler
@@ -129,13 +130,6 @@ void exc_handler(unsigned long type)
     // no return from exception for now
 }
 
-void not_implemented()
-{
-    uart_puts("kernel panic - function not implemented!");
-    while (1)
-        ;
-}
-
 void syscall_core_timer(int enable)
 {
     uart_puts("core timer: ");
@@ -178,6 +172,31 @@ void syscall_gettime(double *t)
     *t = (double)ct / (double)freq;
 }
 
+unsigned long get_current_el()
+{
+    unsigned long current_el;
+
+    asm volatile(
+        "mrs %0, CurrentEL;"
+        : "=r"(current_el));
+    current_el = (current_el >> 2) & 3;
+
+    return current_el;
+}
+
+/* 
+https://developer.arm.com/docs/ddi0595/e/aarch64-system-registers/currentel
+
+EL [63:4]: Reserved, RES0.
+EL [3:2]:
+EL  	Meaning
+0b00	EL0
+0b01	EL1
+0b10	EL2
+0b11	EL3
+
+EL [1:0]: Reserved, RES0.
+*/
 void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
 {
     unsigned long esr;
@@ -185,10 +204,43 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
     unsigned long spsr;
     unsigned long far;
 
+    unsigned long current_el;
+    current_el = get_current_el();
+
+    uart_puts("Current EL: ");
+    uart_send_int(current_el);
+    uart_puts("\n");
+
+    switch (current_el)
+    {
+    case 0:
+        break;
+    case 1:
+        asm volatile(
+            "mrs %0, elr_el1;"
+            "mrs %1, esr_el1;"
+            : "=r"(elr), "=r"(esr));
+        break;
+    case 2:
+        asm volatile(
+            "mrs %0, elr_el2;"
+            "mrs %1, esr_el2;"
+            : "=r"(elr), "=r"(esr));
+        break;
+    case 3:
+        uart_puts("Something wrong. Halt");
+        while (1)
+            ;
+        break;
+    }
+
+    /* used in el2 */
+    /*
     asm volatile(
         "mrs %0, elr_el2;"
         "mrs %1, esr_el2;"
         : "=r"(elr), "=r"(esr));
+        */
 
     uart_puts("*Interrput*: <Synchronous>\n");
     // decode exception type (some, not all. See ARM DDI0487B_b chapter D10.2.28)
@@ -271,7 +323,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
             while (1)
                 ;
         }
-        uart_puts("\n");
+        uart_puts("\n===\n");
     }
 }
 
