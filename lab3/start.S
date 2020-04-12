@@ -40,6 +40,7 @@ _start:
 irq_vector_init:
 	adr	x0, exception_table		// load VBAR_EL1 with virtual
 	msr	vbar_el2, x0		// vector table address
+    b enable_irq
 	ret
 
 
@@ -139,3 +140,13 @@ sync_currentEL_SP_ELx:
 
 proc_hang:
     b proc_hang
+
+.globl enable_irq
+enable_irq:
+    msr    daifclr, #2
+    ret
+
+.globl disable_irq
+disable_irq:
+    msr    daifset, #2
+    ret
