@@ -2,7 +2,7 @@
 #include "exce.h"
 #include "mailbox.h"
 #include "printf.h"
-#include "simple_shell.h"
+#include "shell.h"
 #include "uart.h"
 #include "string.h"
 

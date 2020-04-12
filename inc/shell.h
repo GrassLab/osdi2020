@@ -1,5 +1,5 @@
-#ifndef	_SIMPLE_SHELL_H
-#define	_SIMPLE_SHELL_H
+#ifndef	_SHELL_H
+#define	_SHELL_H
 
 #define NUM_COMMAND 6
 #define MAX_COMMAND_LENGTH 128
@@ -15,4 +15,4 @@ void cmd_reboot();
 void cmd_loadimg();
 void cmd_exc();
 
-#endif//_SIMPLE_SHELL_H
+#endif//_SHELL_H

@@ -1,4 +1,4 @@
-#include "simple_shell.h"
+#include "shell.h"
 
 #include "kernel_recv.h"
 #include "mm.h"
@@ -15,29 +15,20 @@
 
 char *promptStr="simple shell> ";
 
-char *commandStr[NUM_COMMAND]=
+struct cmd
 {
-	"help",
-	"hello",
-	"timestamp",
-	"reboot",
-	"loadimg",
-	"exc"
-	//, "exit"
+    char name[10];
+    char desc[30];
+    void(*callback)(void);
 };
 
-char *commandDesc[NUM_COMMAND]={
-	"Show commands available.",
-	"Show \"Hello World!\"",
-	"Get current timestamp.",
-	"Reboot device.",
-	"Load kernel by UART.",
-	"Issues \"svc #1\""
-};
-
-void (*commandArray[NUM_COMMAND])()=
-{
-	cmd_help, cmd_hello, cmd_timestamp, cmd_reboot, cmd_loadimg, cmd_exc
+struct cmd cmdList[] = { 
+    { .name = "help",		.desc = "Show \"Hello World!\"",    .callback = cmd_help}, 
+    { .name = "hello", 		.desc = "Show commands available.", .callback = cmd_hello}, 
+    { .name = "timestamp", 	.desc = "Reboot device.", 			.callback = cmd_timestamp}, 
+    { .name = "reboot", 	.desc = "Get current timestamp.",   .callback = cmd_reboot}, 
+    { .name = "loadimg", 	.desc = "Load kernel by UART.",	 	.callback = cmd_loadimg}, 
+    { .name = "exc", 		.desc = "Issues \"svc #1\"",		.callback = cmd_exc}, 
 };
 
 /* 
@@ -55,7 +46,7 @@ void run_shell()
 		if (cmd_type==-1)
 			printf("command '%s' not found, try <help>\n", buff);
 		else
-			commandArray[cmd_type]();
+			cmdList[cmd_type].callback();
     	printf("\n%s", promptStr);
 	}
 }
@@ -87,7 +78,7 @@ int parse_command(char *buff)
 {
 	int i;
 	for (i=NUM_COMMAND-1; i>=0; i--){
-		if (strcmp(buff, commandStr[i]) == 0)
+		if (strcmp(buff, cmdList[i].name) == 0)
 			break;
 	}
 	return i;
@@ -97,7 +88,7 @@ int parse_command(char *buff)
 void cmd_help()
 {
 	for(int i=0; i< NUM_COMMAND; i++){
-		printf("%s: %s\n",commandStr[i], commandDesc[i]);
+		printf("%s: %s\n",cmdList[i].name, cmdList[i].desc);
 	}
 }
 
@@ -113,7 +104,7 @@ void cmd_timestamp()
 	asm volatile("mrs %0, cntpct_el0": "=r"(time_count)::); // read counts of core timer
 	asm volatile("mrs %0, cntfrq_el0": "=r"(time_freq)::); // read frequency of core timer
 	time = time_count / (time_freq / 100000);
-	printf("[ %d.%d ]\n",time/100000, time%100000);
+	printf("[ %d.%ds ]\n",time/100000, time%100000);
 }
 
 void _reboot(int tick){ // reboot after watchdog timer expire
