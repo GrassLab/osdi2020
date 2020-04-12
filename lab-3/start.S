@@ -43,6 +43,11 @@
 	eret
 	.endm
 
+	.macro	ventry	label
+	.align	7
+	b	\label
+	.endm
+
 _start:
     // read cpu id, stop slave cores
     mrs     x1, mpidr_el1
@@ -63,35 +68,19 @@ _start:
 5:  cmp     x0, #4
     beq     5f
     msr     sp_el1, x1
-
     // set hcr_el2
     ldr     x0, =HCR_VALUE
     msr     hcr_el2, x0
-    
     // set spsr_el2
     ldr	    x0, =SPSR_VALUE
 	msr	    spsr_el2, x0
-    // clear 
+    // clear DAIF
     mov     x0, #0
     msr     DAIF, x0
     // set up exception handlers
     ldr     x2, =exception_table
     msr     vbar_el1, x2
     eret
-
-//5:  // set HCR_EL2.IMO
-    //mrs     x0, hcr_el2
-    //orr     x0, x0, #(1 << 4)
-    //orr     x0, x0, #0x8000000
-    //msr     hcr_el2, x0
-
-    // clear PSTATE.DAIF
-    //mov     x0, #0
-    //msr     DAIF, x0
-
-    // set up exception handlers
-    //ldr     x2, =exception_table
-    //msr     vbar_el2, x2
 
 5:  mov     sp, x1 
     // clear bss
@@ -102,53 +91,32 @@ _start:
     sub     w2, w2, #1
     cbnz    w2, 3b
 
-    // jump to C code, should not return
-4:  bl      main
-    // for failsafe, halt this core too
-    b       1b
+    
+4:  bl      main   // jump to C code, should not return
+    b       1b     // for failsafe, halt this core too
 
-    // important, code has to be properly aligned
-    .align 11
+    .align 11      // important, code has to be properly aligned
 exception_table:
-    b exception_handler
-    .align 7
-    bl exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-    b exception_handler
-
+    ventry el1_exception
+    ventry el1_exception
+    ventry el1_exception
+    ventry el1_exception
     // synchronous
-    .align  7
-    kernel_entry
-    mov     x0, #0
-    mrs     x1, esr_el1
-    mrs     x2, elr_el1
-    mrs     x3, spsr_el1
-    mrs     x4, far_el1
-    bl       exception_handler
-    kernel_exit
-
+    ventry el1_exception
     // IRQ
-    .align  7
+    ventry el1_irq
+    // FIQ
+    ventry el1_exception
+    // SError
+    ventry el1_exception
+
+
+el1_exception:
     kernel_entry
-    bl      irq_handler//  core_timer_handler
+    bl exception_handler
     kernel_exit
 
-    // FIQ
-    .align  7
-    mov     x0, #2
-    mrs     x1, esr_el1
-    mrs     x2, elr_el1
-    mrs     x3, spsr_el1
-    mrs     x4, far_el1
-    b       exception_handler
-
-    // SError
-    .align  7
-    mov     x0, #3
-    mrs     x1, esr_el1
-    mrs     x2, elr_el1
-    mrs     x3, spsr_el1
-    mrs     x4, far_el1
-    b       exception_handler
+el1_irq:
+    kernel_entry
+    bl irq_handler
+    kernel_exit

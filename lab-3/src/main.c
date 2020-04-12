@@ -10,7 +10,7 @@ int main()
     uart_init();
     printPowerOnMessage();
     // printDebugPowerOnMessage();
-    // asm volatile("brk #1");
+    asm volatile("svc #1");
     // enable_irq();
     // local_timer_init();
     // core_timer_init();
