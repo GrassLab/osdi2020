@@ -1,7 +1,7 @@
 *.json
 Debug/*
 .ccls-cache/*
-.clangd/*
+.clangd
 *build/*
 *.img
 *.elf

@@ -1,4 +1,4 @@
-# My OSDI 2020
+# Environment Setup
 
 ## Author
 
@@ -8,18 +8,24 @@
 
 ## How to build
 
-```
+```bash
 make
 ```
 
 ## How to run
 
 ```
-make run
+make test
 ```
 
-## How to burn it into pi3
+## Directory structure
 
 ```
-make update
+.
+├── kernel8.s
+├── linker.ld
+├── Makefile
+└── README.md
+
+0 directories, 4 files
 ```

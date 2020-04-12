@@ -1,4 +1,4 @@
-# My OSDI 2020
+# Exception and Interrupt
 
 ## Author
 
@@ -15,11 +15,16 @@ make
 ## How to run
 
 ```
-make run
+make
 ```
 
 ## How to burn it into pi3
 
 ```
 make update
+```
+
+## Directory structure
+
+```
 ```
