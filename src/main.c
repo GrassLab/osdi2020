@@ -1,4 +1,4 @@
-#include "uart.h"
+#include "kernel/peripherals/uart.h"
 #include "shell.h"
 
 int main()
@@ -7,7 +7,7 @@ int main()
     uart_init();
 
     // say hello
-    uart_printf("Hello World\n\n");
+    uart_printf("Hello World\n");
 
     // start shell
     shell_start();

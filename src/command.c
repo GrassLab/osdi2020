@@ -1,7 +1,9 @@
-#include "uart.h"
-#include "mailbox.h"
-#include "string.h"
-#include "time.h"
+#include "kernel/peripherals/uart.h"
+#include "kernel/peripherals/mailbox.h"
+#include "kernel/peripherals/time.h"
+#include "kernel/exception/irq.h"
+#include "lib/string.h"
+
 
 void input_buffer_overflow_message ( char cmd[] )
 {
@@ -182,4 +184,16 @@ void command_svc_exception_trap ()
 void command_brk_exception_trap ()
 {
     asm volatile ( "brk #1;" );
+}
+
+void command_irq_exception_enable ()
+{
+    irq_setup();
+    irq_enable();
+    core_timer_enable();
+}
+
+void command_irq_exception_disable ()
+{
+    irq_disable();
 }

@@ -1,8 +1,7 @@
-#include "type.h"
-#include "uart.h"
+#include "lib/type.h"
+#include "kernel/peripherals/uart.h"
 
-
-void exec_handler ( uint64_t elr, uint64_t esr )
+void exec_controller ( uint64_t elr, uint64_t esr )
 {
     int ec = (((uint32_t)esr)>>26);
     // int il = (((uint32_t)esr)>>25) & 0x1 ;

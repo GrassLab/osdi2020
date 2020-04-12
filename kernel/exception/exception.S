@@ -1,5 +1,7 @@
-.section ".text.exception"
+.section ".text"
 
+.global save_reg
+.global load_reg
 .global exception_table
 
 # save general registers to stack
@@ -46,13 +48,28 @@
     ldr     x30,            [sp, 16 * 15]
     add     sp,     sp,     32 * 8
     eret
+
 .endm
 
-exception_handler:
+_exception__handler:
+
+    # ESR_EL2:  Holds syndrome information for an exception taken to EL2.
+    # ELR_EL2:  When taking an exception to EL2, holds the address to return to.
+    # SPSR_EL2: Holds the saved process state when an exception is taken to EL2.
+    # FAR_EL2:  Holds the faulting Virtual Address for all synchronous Instruction or Data Abort, PC alignment fault and Watchpoint exceptions that are taken to EL2.
+
     save_reg
     mrs     x0, elr_el2
     mrs     x1, esr_el2
-    bl      exec_handler
+    # mrs     x2, spsr_el2
+    # mrs     x3, far_el2
+    bl      exec_controller
+    load_reg
+
+_irq__handler:
+    # how to make macro gloabl?
+    save_reg
+    bl      irq_controller
     load_reg
 
 # Simple vector table
@@ -67,39 +84,39 @@ exception_table:
 
     # Synchronous
     # branch to a handler function.
-    b   exception_handler
+    b   _exception__handler
     # entry size is 0x80, .align will pad 0
     .align 7
 
     # IRQ
-    b   exception_handler
+    b   _exception__handler
     .align 7
     
     # FIQ
-    b   exception_handler
+    b   _exception__handler
     .align 7
     
     # SError
-    b   exception_handler
+    b   _exception__handler
     .align 7
 
     # ==================================================
     # Exception from the current EL whild using SP_ELx
     # ==================================================
     # Synchronous
-    b   exception_handler
+    b   _exception__handler
     .align 7
 
     # IRQ
-    b   exception_handler
+    b   _irq__handler
     .align 7
     
     # FIQ
-    b   exception_handler
+    b   _exception__handler
     .align 7
     
     # SError
-    b   exception_handler
+    b   _exception__handler
     .align 7
 
 
@@ -107,36 +124,36 @@ exception_table:
     # Exception from a lower EL and at least one lower EL is AArch64
     # ==================================================
     # Synchronous
-    b   exception_handler
+    b   _exception__handler
     .align 7
 
     # IRQ
-    b   exception_handler
+    b   _irq__handler
     .align 7
     
     # FIQ
-    b   exception_handler
+    b   _exception__handler
     .align 7
     
     # SError
-    b   exception_handler
+    b   _exception__handler
     .align 7
 
     # ==================================================
     # Exception from a lower EL and at least one lower EL is AArch32
     # ==================================================
     # Synchronous
-    b   exception_handler
+    b   _exception__handler
     .align 7
 
     # IRQ
-    b   exception_handler
+    b   _exception__handler
     .align 7
     
     # FIQ
-    b   exception_handler
+    b   _exception__handler
     .align 7
     
     # SError
-    b   exception_handler
+    b   _exception__handler
     .align 7

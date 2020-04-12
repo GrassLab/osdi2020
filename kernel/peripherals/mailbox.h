@@ -1,8 +1,8 @@
 #ifndef MAILBOX_H
 #define MAILBOX_H
 
-#include "gpio.h"
-#include "type.h"
+#include "kernel/peripherals/gpio.h"
+#include "lib/type.h"
 
 #define MAILBOX_BASE        (MMIO_BASE + 0x0000B880)
 

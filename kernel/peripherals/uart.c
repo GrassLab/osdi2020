@@ -26,9 +26,9 @@
 #include "gpio.h"
 #include "uart.h"
 #include "mailbox.h"
-#include "ctype.h"
-#include "string.h"
-#include "stdarg.h"
+#include "lib/ctype.h"
+#include "lib/string.h"
+#include "lib/stdarg.h"
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO

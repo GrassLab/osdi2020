@@ -1,5 +1,5 @@
 #include "mailbox.h"
-#include "type.h"
+#include "lib/type.h"
 
 /** https://github.com/raspberrypi/firmware/wiki/Accessing-mailboxes#general-procedure */
 /** retun 0 on failuer, non-zerp on success */
