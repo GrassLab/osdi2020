@@ -1,29 +1,25 @@
 .section ".text.boot"
 
 .global _start
-
 _start:
-    // Set slave PEs to low-power state
-    mrs     x1, mpidr_el1
-    and     x1, x1, #3
-    cbz     x1, 2f 
-1:  // cpu id != 0
-    wfe 
-    b       1b
-2:  // cpu id == 0
-    // set sp before our code
+    mrs     x0, mpidr_el1
+    and     x0, x0, #0xFF         // get CPU ID and mask reserved bits
+    cbz     x0, clear_bss
+
+pe_hang:                          // hang for all non-primary CPU
+    wfe                           // enter low power mode
+    b       pe_hang
+
+clear_bss:
+    ldr     w1, =__bss_size
+    cbz     w1, pseudo_main
+    ldr     x0, =__bss_start
+    bl      memzero
+
+// set_sp:
     ldr     x1, =_start
     mov     sp, x1
 
-    // clear bss
-    ldr     x1, =__bss_start // 64-bit name
-    ldr     w2, =__bss_size  // 32-bit name
-3:  cbz     w2, 4f
-    str     xzr, [x1], #8    // zero reg, imm offset
-    sub     w2, w2, #1
-    cbnz    w2, 3b
-
-    // jump to C code, should not return
-4:  bl      main
-    // for failsafe, halt this core too
-    b       1b
+pseudo_main:
+    bl      main                  // jump to C code, should not return
+    b       pe_hang               // for failsafe, halt this core too

@@ -2,6 +2,7 @@
 
 #include "kernel_recv.h"
 #include "mm.h"
+#include "printf.h"
 #include "string.h"
 #include "uart.h"
 
@@ -28,7 +29,6 @@ void (*commandArray[NUM_COMMAND])()=
 	cmd_help, cmd_hello, cmd_timestamp, cmd_reboot, cmd_loadimg
 };
 
-// TODO: formated string
 /* 
 * An infinity loop keep reading, parse, execute command
 */
@@ -41,26 +41,21 @@ void run_shell()
 	while ((n=read_command(buff, MAX_COMMAND_LENGTH)) >= 0){
 		buff[n]='\0';
 		cmd_type = parse_command(buff);
-		if (cmd_type==-1){
-			uart_puts("command '");
-			uart_puts(buff);
-			uart_puts("' not found, try <help>\n");
-		} else {
+		if (cmd_type==-1)
+			printf("command '%s' not found, try <help>\n", buff);
+		else
 			commandArray[cmd_type]();
-		}
-    	uart_puts("\n");
-		uart_puts(promptStr);
+    	printf("\n%s", promptStr);
 	}
 }
 
-// TODO: boundary test
 int read_command(char *buff, unsigned int size)
 {
 	int count = 0;
 	char char_recv;
 	while (count < size){
 		char_recv = uart_getc();
-		uart_putc(char_recv);
+		uart_putc(0, char_recv);
 		if (char_recv == '\n'){
 			return count;
 		} else if (char_recv == '\177'){// backspace
@@ -91,10 +86,7 @@ int parse_command(char *buff)
 void cmd_help()
 {
 	for(int i=0; i< NUM_COMMAND; i++){
-		uart_puts(commandStr[i]);
-		uart_puts(": ");
-		uart_puts(commandDesc[i]);
-		uart_puts("\n");
+		printf("%s: %s\n",commandStr[i], commandDesc[i]);
 	}
 }
 
@@ -106,18 +98,11 @@ void cmd_hello()
 // TODO: hard-coding num_digit
 void cmd_timestamp()
 {
-	unsigned int time, time_count, time_freq;
-	char buff[10];
+	int time, time_count, time_freq;
 	asm volatile("mrs %0, cntpct_el0": "=r"(time_count)::); // read counts of core timer
 	asm volatile("mrs %0, cntfrq_el0": "=r"(time_freq)::); // read frequency of core timer
-	time = time_count / (time_freq / 100000U);
-	
-	unitoa((time/100000U), buff, 3);
-	uart_puts(buff); // natural part
-	uart_send('.');
-	unitoa(time%100000U, buff, 5);
-	uart_puts(buff); // decimal part
-	uart_puts("\n");
+	time = time_count / (time_freq / 100000);
+	printf("[ %d.%d ]\n",time/100000, time%100000);
 }
 
 void _reboot(int tick){ // reboot after watchdog timer expire

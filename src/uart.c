@@ -106,7 +106,7 @@ char uart_getc() {
 /**
  * UART user interface put character
  */
-void uart_putc(char c) {
+void uart_putc(void* p, char c) {
     /* convert newline to carrige return + newline */
     if(c == '\n')
         uart_send('\r');
@@ -118,6 +118,6 @@ void uart_putc(char c) {
  */
 void uart_puts(char *s) {
     while(*s) {
-        uart_putc(*s++);
+        uart_putc(0, *s++);
     }
 }
