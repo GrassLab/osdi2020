@@ -3,6 +3,9 @@
 #include "uart.h"
 #include "mbox.h"
 #include "loadimg.h"
+#include "timer.h"
+#include "irq.h"
+#include "asm.h"
 
 #define	CMD_HELP	"help"
 #define	CMD_HELLO	"hello"
@@ -11,6 +14,7 @@
 #define CMD_LOADIMG	"loadimg"
 #define CMD_PICTURE "picture"
 #define CMD_EXC		"exc"
+#define CMD_IRQ		"irq"
 
 void get_timestamp();
 
@@ -23,6 +27,7 @@ void main()
 
 	get_board_revision();
 	get_vc_core_base_addr();
+	//local_timer_init();
 
 	while(1) {
 		uart_puts("#");
@@ -69,6 +74,9 @@ void main()
 			lfb_showpicture();
 		} else if(strcmp(command, CMD_EXC)) {
 			asm volatile ("svc #1");
+		} else if(strcmp(command, CMD_IRQ)) {
+			local_timer_init();
+			core_timer_init();
 		} else {
 			uart_puts("ERROR: ");
 			uart_puts(command);

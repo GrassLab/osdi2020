@@ -3,5 +3,7 @@
 
 void el2_current_sp2_sync_message(unsigned long elr_el2, unsigned long esr_el2);
 void el2_print();
+void
+_exception_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far);
 
 #endif

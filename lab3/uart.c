@@ -150,3 +150,10 @@ int uart_read_int()
     uart_read_line(line);
     return atoi(line);
 }
+
+void uart_print_int(int i)
+{
+    char ss[256];
+    intToStr(i, ss, 10);
+    uart_puts(ss);
+}

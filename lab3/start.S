@@ -1,88 +1,6 @@
 .section ".text.boot"
 
 
-
-.global _start
-
-_start:
-	mrs		x1, mpidr_el1
-	and 	x1, x1, #3
-	cbz		x1, 2f
-	// load exception_table to VBAR_EL2
-	ldr x0, =exception_table
-	msr VBAR_EL2, x0
-
-1: 
-	wfe
-	b		1b
-
-2:
-	ldr		x1, =_start
-	mov		sp, x1
-	
-	// clear bss
-	ldr		x1, =__bss_start
-	ldr 	w1, =__bss_size
-
-3:
-	cbz		w2, 4f
-	str		xzr, [x1], #8
-	sub		w2, w2, #1
-	cbnz	w2, 3b
-
-	// jump to C code
-4:
-	bl		irq_vector_init
-	bl 		main
-	b		1b
-
-.globl irq_vector_init
-irq_vector_init:
-	adr	x0, exception_table		// load VBAR_EL1 with virtual
-	msr	vbar_el2, x0		// vector table address
-    b enable_irq
-	ret
-
-
-// Simple vector table
-.align 11 // vector table should be aligned to 0x800
-exception_table:
-    b exception_handler // branch to a handler function.
-    .align 7 // entry size is 0x80, .align will pad 0
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-
-    b sync_currentEL_SP_ELx
-    .align 7
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-    b exception_handler
-    .align 7
-
 #define S_FRAME_SIZE 256
 
 .macro context_switch
@@ -126,9 +44,128 @@ add	sp, sp, #S_FRAME_SIZE
 eret
 .endm
 
+.global _start
+
+_start:
+    // read cpu id, stop slave cores
+    mrs     x1, mpidr_el1
+    and     x1, x1, #3
+    cbz     x1, 2f
+    // cpu id > 0, stop
+1:  wfe
+    b       1b
+2:  // cpu id == 0
+
+    // set stack before our code
+    ldr     x1, =_start
+
+5:  // set HCR_EL2.IMO
+    mrs     x0, hcr_el2
+    orr     x0, x0, #(1 << 4)
+    orr     x0, x0, #0x8000000
+    msr     hcr_el2, x0
+
+    // for debug not route to El1
+    // mrs x0, MDCR_EL2
+    // bic x0, x0, 0x100
+    // msr MDCR_EL2, x0
+
+    // clear PSTATE.DAIF
+    mov     x0, #0
+    msr     DAIF, x0
+
+    // set up exception handlers
+    ldr     x2, =exception_table
+    msr     vbar_el2, x2
+
+5:  mov     sp, x1
+
+    // clear bss
+    ldr     x1, =__bss_start
+    ldr     w2, =__bss_size
+3:  cbz     w2, 4f
+    str     xzr, [x1], #8
+    sub     w2, w2, #1
+    cbnz    w2, 3b
+
+    // jump to C code, should not return
+4:  bl      main
+    // for failsafe, halt this core too
+    b       1b
+
+.globl irq_vector_init
+irq_vector_init:
+    mrs     x0, hcr_el2
+    orr     x0, x0, #(1 << 4)
+    orr     x0, x0, #0x8000000
+    msr     hcr_el2, x0
+
+    mov     x0, #0
+    msr     DAIF, x0
+
+	adr	x2, exception_table		// load VBAR_EL1 with virtual
+	msr	vbar_el2, x2		// vector table address
+	// ret
+
+
+// Simple vector table
+.align 11 // vector table should be aligned to 0x800
+exception_table:
+    b exception_handler // branch to a handler function.
+    .align 7 // entry size is 0x80, .align will pad 0
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+
+    b exception_handler
+    .align 7
+
+    context_switch
+    bl exception_handler
+    context_switch_back
+    .align 7
+
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+    b exception_handler
+    .align 7
+
+
+el1_irq:
+    context_switch
+    bl handle_irq
+    context_switch_back
+
 exception_handler:
-	bl el2_not_implement
-    b proc_hang
+    context_switch
+    mov     x0, #0
+    mrs     x1, esr_el2
+    mrs     x2, elr_el2
+    mrs     x3, spsr_el2
+    mrs     x4, far_el2
+    bl _exception_handler
+    context_switch_back
 
 sync_currentEL_SP_ELx:
     context_switch
@@ -136,17 +173,7 @@ sync_currentEL_SP_ELx:
     mrs x1, ESR_EL2
     bl el2_current_sp2_sync_message
     context_switch_back
-	eret
 
 proc_hang:
     b proc_hang
 
-.globl enable_irq
-enable_irq:
-    msr    daifclr, #2
-    ret
-
-.globl disable_irq
-disable_irq:
-    msr    daifset, #2
-    ret
