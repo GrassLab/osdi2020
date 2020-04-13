@@ -14,6 +14,10 @@
 #define BUFFER_SIZE 1024
 #define SHELL_CHAR "# " 
 
+extern void enable_irq();
+
+extern void init_irq();
+
 void shell_splash()
 {
     uart_puts("               _                            _                                     \r\n");
@@ -77,6 +81,8 @@ void shell_start()
         {"reboot", "restart the rpi, only works on real hardware"},
         {"shutdown", "halt the rpi"},
         {"loadker", "loads the kernel on the fly using uart"},
+        {"exc", "issue a svc exception"},
+        {"irq", "issue a irq exception"},
         {"help", "print this screen"}
     };
 
@@ -122,7 +128,15 @@ void shell_start()
             uart_puts("Booting...\r\n");
             void (*boot)(void) = 0x10000;
             boot();
-        } else if (!strcmp(line, shell_cmds[5][0])) {
+        } else if (!strcmp(line, shell_cmds[5][0])){
+            asm volatile("svc #1");
+            //asm volatile("brk #1");
+        } else if (!strcmp(line, shell_cmds[6][0])){
+            init_irq();
+            enable_irq();
+            //local_timer_init();
+            core_timer_enable();
+        } else if (!strcmp(line, shell_cmds[7][0])) {
             for(size_t i = 0; i < sizeof(shell_cmds) / sizeof(shell_cmds[0]); i++)
                 printf("%s : %s \r\n", shell_cmds[i][0], shell_cmds[i][1]);
        } else {

@@ -8,6 +8,8 @@
 #include "shell.h"
 #include "printf.h"
 #include "math.h"
+#include "exception.h"
+#include "time.h"
 
 void ker_main() {
 
