@@ -28,6 +28,8 @@ void not_implemented() {
     }
 }
 
-void show_invalid_entry_message(int type, unsigned long esr, unsigned long address) {
+void show_exception_status(int type, unsigned long esr, unsigned long address) {
     uart_printf("%s, ESR: 0x%x, address: 0x%x\n", entry_error_messages[type], esr, address);
+    uart_printf("Exception class (EC) 0x%x\n", (esr >> 26) & 0b111111);
+    uart_printf("Instruction specific syndrome (ISS) 0x%x\n", esr & 0xFFFFFF);
 }

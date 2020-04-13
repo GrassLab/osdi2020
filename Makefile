@@ -8,9 +8,9 @@ SRC_DIR = src
 
 LINKER_FILE = $(SRC_DIR)/linker.ld
 SRCS_C = $(wildcard $(SRC_DIR)/*.c)
-OBJS_C = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+OBJS_C = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/c/%.o)
 SRCS_ASM = $(wildcard $(SRC_DIR)/*.S)
-OBJS_ASM = $(SRCS_ASM:$(SRC_DIR)/%.S=$(BUILD_DIR)/%.o)
+OBJS_ASM = $(SRCS_ASM:$(SRC_DIR)/%.S=$(BUILD_DIR)/asm/%.o)
 
 CFLAGS = -Wall -nostdlib -Iinclude -c
 
@@ -20,10 +20,12 @@ all: build_dir kernel8.img
 
 # build
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+$(BUILD_DIR)/c/%.o: $(SRC_DIR)/%.c
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.S
+$(BUILD_DIR)/asm/%.o: $(SRC_DIR)/%.S
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
 kernel8.img: $(OBJS_C) $(OBJS_ASM)

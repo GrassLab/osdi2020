@@ -5,7 +5,7 @@
     mov x0, #\type
     mrs x1, esr_el2
     mrs x2, elr_el2
-    bl  show_invalid_entry_message
+    bl  show_exception_status
     b   not_implemented
     .endm
 
@@ -65,7 +65,7 @@ exception_table:
     ventry fiq_invalid_el2t        // FIQ EL2t
     ventry error_invalid_el2t      // Error EL2t
 
-    ventry sync_invalid_el2h       // Synchronous EL2h
+    ventry sync_el2t_handler        // Synchronous EL2h
     ventry irq_invalid_el2h        // IRQ EL2h
     ventry fiq_invalid_el2h        // FIQ EL2h
     ventry error_invalid_el2h      // Error EL2h
@@ -91,9 +91,6 @@ fiq_invalid_el2t:
 
 error_invalid_el2t:
     handle_invalid_entry  ERROR_INVALID_EL2t
-
-sync_invalid_el2h:
-    handle_invalid_entry  SYNC_INVALID_EL2h
 
 irq_invalid_el2h:
     handle_invalid_entry  IRQ_INVALID_EL2h
@@ -127,3 +124,10 @@ fiq_invalid_el0_32:
 
 error_invalid_el0_32:
     handle_invalid_entry  ERROR_INVALID_EL0_32
+
+sync_el2t_handler:
+    kernel_entry
+    mrs x0, esr_el2
+    mrs x1, elr_el2
+    bl  sync_el2t_router
+    kernel_exit

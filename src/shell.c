@@ -125,14 +125,15 @@ void shell_controller(char* cmd) {
     if (!strcmp(cmd, "")) {
         return;
     }
-    else if (!strcmp(cmd, "exc")) {
-        asm volatile("svc #1");
-    }
     else if (!strcmp(cmd, "help")) {
         uart_printf("help: print all available commands\n");
         uart_printf("hello: print Hello World!\n");
         uart_printf("timestamp: get current timestamp\n");
         uart_printf("reboot: reboot pi\n");
+        uart_printf("exc: run svc #1\n");
+    }
+    else if (!strcmp(cmd, "exc")) {
+        asm volatile("svc #1");
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");
