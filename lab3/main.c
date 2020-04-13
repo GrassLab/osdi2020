@@ -1,4 +1,5 @@
 #include "command.h"
+#include "irq.h"
 #include "lfb.h"
 #include "mbox.h"
 #include "string.h"
@@ -41,6 +42,8 @@ void compair(char *buf) {
     execpt();
   } else if (strcpy(buf, "vc_addr")) {
     vc_base_address();
+  } else if (strcpy(buf, "irq")) {
+    irq();
   } else {
     printf("unknow command %s\n", buf);
   }

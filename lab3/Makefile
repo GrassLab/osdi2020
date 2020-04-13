@@ -1,17 +1,19 @@
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
+C_FILES = $(wildcard *.c)
+ASM_FILES = $(wildcard *.S)
+OBJS =  $(ASM_FILES:.S=.o)
+OBJS += $(C_FILES:.c=.o)
 CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -ggdb -Og
 
 all: clean kernel8.img
 
-start.o: start.S
-	aarch64-linux-gnu-gcc $(CFLAGS) -c start.S -o start.o
+%.o: %.S
+	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
 %.o: %.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
-kernel8.img: start.o $(OBJS)
-	aarch64-linux-gnu-ld -nostdlib -nostartfiles start.o $(OBJS) -T link.ld -o kernel8.elf
+kernel8.img: $(OBJS)
+	aarch64-linux-gnu-ld -nostdlib -nostartfiles $(OBJS) -T link.ld -o kernel8.elf
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
 
 debug: kernel8.img
