@@ -36,7 +36,10 @@ void main()
     get_serial();
     get_board_revision();
     get_vccore_addr();
+    
     int level = get_exception_level();
+    if (level == 2) set_HCR_EL2_IMO();
+    enable_irq();
 
     while (1) { 
 
@@ -118,11 +121,12 @@ void main()
         /*
          ** <irq> test interrupt
          */
-        else if (uart_strncmp(user_input, "irq", 3) == 0) {
-            uart_puts("this is irq test\n");
-            if (level == 2) set_HCR_EL2_IMO();
-            enable_irq();
+        else if (uart_strncmp(user_input, "irq_core", 8) == 0) {
+            uart_puts("enable core timer.\n");
             core_timer_enable();
+        }
+        else if (uart_strncmp(user_input, "irq_local", 9) == 0) {
+            uart_puts("enable local timer.\n");
             local_timer_init();
         }
         /*

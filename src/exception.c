@@ -1,7 +1,11 @@
 #include "../include/uart.h"
 #include "../include/info.h"
 
-
+void exc_not_implement()
+{
+    uart_puts("Exception not implement!"); 
+    while (1);
+}
 
 /**
  * common exception handler

@@ -8,57 +8,6 @@ _start:
     // cpu id == 0
     cbnz     x1, loop
 
-    // set stack before our code
-    ldr     x1, =_start
-
-_setup_el1:
-    // set up EL1
-    mrs     x0, CurrentEL
-    and     x0, x0, #12 // clear reserved bits //lsr x0, x0, #2
-
-
-    // running at EL2?
-5:  cmp     x0, #4
-    beq     5f
-    msr     sp_el1, x1
-    
-    // // enable CNTP for EL1
-    // mrs     x0, cnthctl_el2
-    // orr     x0, x0, #3
-    // msr     cnthctl_el2, x0
-    // msr     cntvoff_el2, xzr
-    
-    // enable AArch64 in EL1
-    mov     x0, #(1 << 31)      // AArch64
-    orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
-    msr     hcr_el2, x0
-    mrs     x0, hcr_el2
-    
-    // // Setup SCTLR access
-    // mov     x2, #0x0800
-    // movk    x2, #0x30d0, lsl #16
-    // msr     sctlr_el1, x2
-    
-    // set up exception handlers
-    ldr     x2, =_exception_table
-    msr     vbar_el1, x2
-
-    // change execution level to EL1
-    mov     x2, #0x3c4
-    msr     spsr_el2, x2
-    adr     x2, 5f
-    msr     elr_el2, x2
-    eret
-
-    
-_setup_el2:
-    // load exception_table to vbar_el2
-    ldr     x0, =_exception_table
-    msr     vbar_el2, x0
-
-5:  mov     sp, x1
-
-
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
@@ -67,6 +16,43 @@ clear_bss:
     sub     w2, w2, #1
     cbnz    w2, clear_bss
 
+
+_setup_el1:
+    // check if run in EL2
+    mrs     x0, CurrentEL
+    and     x0, x0, #12 // clear reserved bits //lsr x0, x0, #2
+
+    // set up exception handlers
+    ldr     x0, =_exception_table
+    msr     vbar_el1, x0
+
+    // set stack before our code
+    ldr     x1, =_start
+    msr     sp_el1, x1
+
+    // enable AArch64 in EL1
+    mov     x0, #(1 << 31)      // AArch64
+    orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
+    msr     hcr_el2, x0
+    mrs     x0, hcr_el2
+    
+    // change execution level to EL1
+    mov     x0, 0x5//#0x3c4
+    msr     spsr_el2, x0
+    adr     x0, _el2_to_el1
+    msr     elr_el2, x0
+    eret
+
+_el2_to_el1:
+    // disable exception of access SIMD register in EL1
+    mrs x0, cpacr_el1
+    orr x0, x0, #(3 << 20)
+    msr cpacr_el1, x0
+
+    ldr     x1, =_start
+    mov     sp, x1
+
+_run_main:
     // jump to C code, should not return
     bl      main
 loop:  
@@ -79,11 +65,11 @@ loop:
 /// Call the function provided by parameter `\handler` after saving the exception context.
 /// Provide the context as the first parameter to '\handler'.
 
-.macro EXCEPTION_ROUTINE num
+.macro EXCEPTION_ROUTINE
     b      __exception_routine
 .endm
 
-.macro INTERRUPT_ROUTINE num
+.macro INTERRUPT_ROUTINE 
     b      __interrupt_routine
 .endm
 
@@ -141,16 +127,15 @@ __exception_routine:
 
 
 __interrupt_routine:
-    bl      disable_irq
+    //bl      disable_irq
     STORE_CONTEXT
     //mov     x0, #1
     //bl      exc_handler
     bl      debug
-    //bl      local_timer_handler
-    bl      core_timer_handler
+    bl      interrupt_handler
 after_timer:
     LOAD_CONTEXT
-    bl      enable_irq
+    //bl      enable_irq
     eret
     
 
@@ -159,54 +144,54 @@ after_timer:
 _exception_table:
     // Current exception level with SP_EL0.
     .align 7 // synchronous //  0x000
-    EXCEPTION_ROUTINE #0
+    b exc_not_implement
 
     .align 7 // IRQ //  0x080
-    EXCEPTION_ROUTINE #1
+    b exc_not_implement
     
     .align 7 // FIQ //  0x100
-    EXCEPTION_ROUTINE #2
+    b exc_not_implement
 
     .align 7 // SError //  0x180
-    EXCEPTION_ROUTINE #3
+    b exc_not_implement
 
     // Current exception level with SP_ELx, x > 0.
     .align 7 // synchronous //  0x200
-    EXCEPTION_ROUTINE #4
+    EXCEPTION_ROUTINE
 
     .align 7 // IRQ //  0x280
-    INTERRUPT_ROUTINE #5
+    INTERRUPT_ROUTINE
 
     .align 7 // FIQ //  0x300
-    EXCEPTION_ROUTINE #6
+    b exc_not_implement
 
     .align 7 // SError //  0x380
-    EXCEPTION_ROUTINE #7
+    b exc_not_implement
 
     // Lower exception level, AArch64
     .align 7 // synchronous //  0x400
-    EXCEPTION_ROUTINE #8
+    b exc_not_implement
     
     .align 7 // IRQ //  0x480
-    EXCEPTION_ROUTINE #9
+    b exc_not_implement
 
     .align 7 // FIQ //  0x500
-    EXCEPTION_ROUTINE #10
+    b exc_not_implement
 
     .align 7 // SError //  0x580
-    EXCEPTION_ROUTINE #11
+    b exc_not_implement
 
     // Lower exception level, AArch32
     .align 7 // synchronous //  0x600
-    EXCEPTION_ROUTINE #12
+    b exc_not_implement
 
     .align 7 // IRQ //  0x680
-    EXCEPTION_ROUTINE #13
+    b exc_not_implement
 
     .align 7 // FIQ //  0x700
-    EXCEPTION_ROUTINE #14
+    b exc_not_implement
 
     .align 7 // SError //  0x780
-    EXCEPTION_ROUTINE #15
+    b exc_not_implement
 
     .align 7 //  0x800

@@ -3,6 +3,7 @@ import serial
 import os
 import sys
 import logging, coloredlogs
+import termios
 
 '''
 create logger
@@ -62,6 +63,7 @@ def main():
                     break 
                 if (res == b'\n'):
                     print(res_line)
+                    sys.stdout.flush()
                     
                     if b'HANK0438\r\n' in res_line:
                         logger.info("rebooting...")
@@ -71,6 +73,7 @@ def main():
                     res_line = b''
 
             if NO_REBOOT:
+                #termios.tcflush(sys.stdin, termios.TCIOFLUSH)
                 command = input(">").strip()
                 logger.info(f"cmd > {command}")
                 s.write(command.encode()+b'\n')

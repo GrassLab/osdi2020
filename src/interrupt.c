@@ -6,7 +6,7 @@
 
 #include "../include/uart.h"
 
-#define set(a, b) *(int *)a = b
+#define set(a, b) *a = b
 
 extern unsigned int CORE_TIMER_COUNT;
 extern unsigned int LOCAL_TIMER_COUNT;
@@ -27,7 +27,10 @@ void enable_irq()
 
 void set_HCR_EL2_IMO()
 {
-    asm volatile("mov x0, #(1 << 4)");
+    //asm volatile("mov x0, #(1 << 4)");
+    //asm volatile("msr hcr_el2, x0");
+    asm volatile("mrs x0, hcr_el2");
+    asm volatile("orr x0, x0, #16");
     asm volatile("msr hcr_el2, x0");
 }
 
@@ -38,23 +41,41 @@ void core_timer_counter()
     uart_puts("\n");
 }
 
-#define CORE0_TIMER_IRQ_CTRL 0x40000040
+#define CORE0_TIMER_IRQ_CTRL (unsigned int* )0x40000040
 void core_timer_enable()
 {
-    asm volatile ("mov x0, 1");
-	asm volatile ("msr cntp_ctl_el0, x0");
+    
+    asm volatile("mrs x0, cntfrq_el0");
+    asm volatile("msr cntp_tval_el0, x0");
+    asm volatile("mov x0, 1");
+	asm volatile("msr cntp_ctl_el0, x0");
     set(CORE0_TIMER_IRQ_CTRL, 0x2);
+
+    //asm volatile ("mov x0, #0\n" "svc #0\n");
+    
+    //unsigned int val = EXPIRE_PERIOD;
+    //asm volatile("msr cntp_tval_el0, %0" :: "r" (val));
 }
 
-#define EXPIRE_PERIOD 0xfffffff
+#define EXPIRE_PERIOD 0xffffff
 void core_timer_handler()
 {
-    unsigned int val = EXPIRE_PERIOD;
-    asm volatile("msr cntp_tval_el0, %0" :: "r" (val));
+    // unsigned int CNTP_CVAL_EL0;
+    // asm volatile("mrs %0, cntp_cval_el0" : "=r"(CNTP_CVAL_EL0));
+    // uart_puts("CNTP_CVAL_EL0: ");
+    // uart_hex(CNTP_CVAL_EL0);
+    // uart_puts("\n");
+
+    asm volatile("mrs x0, cntfrq_el0");
+    asm volatile("msr cntp_tval_el0, x0");
+
+    //unsigned int val = EXPIRE_PERIOD;
+    //asm volatile("msr cntp_tval_el0, %0" :: "r" (val));
     core_timer_counter();
 }
 
-#define LOCAL_TIMER_CONTROL_REG 0x40000034
+
+#define LOCAL_TIMER_CONTROL_REG (unsigned int* )0x40000034
 
 void local_timer_init()
 {
@@ -70,8 +91,8 @@ void local_timer_counter()
     uart_puts("\n");
 }
 
-#define LOCAL_TIMER_IRQ_CLR 0x40000038
-#define LOCAL_TIMER_RELOAD 0xc000000//0xc0000000
+#define LOCAL_TIMER_IRQ_CLR (unsigned int* )0x40000038
+#define LOCAL_TIMER_RELOAD (unsigned int* )0xc0000000//0xc0000000
 void local_timer_handler()
 {
     set(LOCAL_TIMER_IRQ_CLR, LOCAL_TIMER_RELOAD); // clear interrupt and reload.
@@ -79,8 +100,22 @@ void local_timer_handler()
 }
 
 
-
-
+#define CORE0_INTR_SRC (unsigned int* )0x40000060
+void interrupt_handler()
+{
+    unsigned int arm_local = *CORE0_INTR_SRC;
+    // local timer interrupt
+    if (arm_local & 0x800) {
+        local_timer_handler();
+    }
+    // core timer interrupt
+    else if (arm_local & 0x2) {
+        core_timer_handler();
+    }
+    else {
+        uart_puts("interrupt_handler error.");
+    }
+}
 
 
 
