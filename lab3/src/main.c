@@ -7,7 +7,7 @@
 #include "config.h"
 
 void init_uart(){
-    uart_init();
+    // uart_init();
     get_board_revision();
     get_vc_memory();
     get_UART_clock();
@@ -26,10 +26,13 @@ void main()
     init_lfb();
     init_printf(0, putc);
 
-    irq_vector_init();
+    // irq_vector_init();
     // timer_init();
-    enable_interrupt_controller();
-	enable_irq();
+    // enable_interrupt_controller();
+
+    // asm volatile ("svc #1");
+	// enable_irq();
+
     shell();
 
     // echo everything back

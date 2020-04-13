@@ -2,6 +2,7 @@
 #include "timer.h"
 #include "base.h"
 #include "config.h"
+#include "irq.h"
 
 const unsigned int interval = 20000000;
 
@@ -32,5 +33,19 @@ void local_timer_init()
 	unsigned int reload = 25000000;
 	*LOCAL_TIMER_CONTROL_REG = (flag | reload);
 }
+
+void disable_all_timer(){
+	core_timer_disable();
+	put32(TIMER_C1, 0xffffffff);
+	put32(TIMER_CS, TIMER_CS_M1); 
+	disable_timer_controller();
+}
+
+void disable_timer_controller()
+{
+	put32(DISABLE_IRQS_1, 1 << 1);
+	return;
+}
+
 
 

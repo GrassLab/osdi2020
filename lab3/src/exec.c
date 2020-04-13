@@ -16,13 +16,27 @@ struct cmd cmd_list[] = {
     { .name = "send_kernel", .description = " send kernel img to raspi", .callback = exec_send_kernel}, 
     { .name = "exc", .description = " go to kernel space", .callback = exec_exc},
     { .name = "irq", .description = " timer interrupt", .callback = exec_irq},
+    { .name = "end", .description = " end timer interrupt", .callback = exec_end},
 };
 
-void exec_irq(){
-    local_timer_init();
-    core_timer_enable();
+
+void exec_exc(){
+    _print("exec svc \n");
+    asm volatile ("svc #1");
+    // asm volatile ("brk #1");
 }
 
+void exec_irq(){
+    asm volatile ("svc #2");
+}
+
+void exec_end(){
+    asm volatile ("svc #3");
+}
+
+void exec_timestamp(){
+    asm volatile ("svc #4");
+}
 
 void exec_send_kernel(){
     copy_self_kernel();
@@ -34,29 +48,6 @@ void exec_boot(){
 	while(1);
 }
 
-void exec_exc(){
-    _print("exec svc \n");
-    asm volatile ("svc #1");
-    // asm volatile ("brk #1");
-}
-
-void exec_timestamp(){
-	unsigned int time, timer_counter, timer_freq;
-	char buf[10];
-    _memset(buf,'\0',10);
-	asm volatile("mrs %0, cntpct_el0": "=r"(timer_counter)::); 
-	asm volatile("mrs %0, cntfrq_el0": "=r"(timer_freq)::);
-	time = timer_counter / (timer_freq / 100000U);
-	
-	_unsign_arr_to_digit((time/100000U), buf, 5);
-	uart_send('[');
-	uart_puts(buf); 
-	uart_send('.');
-	_unsign_arr_to_digit(time%100000U, buf, 5);
-	uart_puts(buf); 
-	uart_send(']');
-	uart_puts("\n");
-}
 
 void exec_hello(){
     uart_puts("Hello World!\n");

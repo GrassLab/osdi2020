@@ -1,6 +1,7 @@
 #ifndef	_TIMER_H
 #define	_TIMER_H
 
+#include "base.h"
 
 #define TIMER_CS        (PBASE+0x00003000)
 #define TIMER_CLO       (PBASE+0x00003004)
@@ -24,6 +25,8 @@ void local_timer_init();
 
 void core_timer_enable();
 void clean_core_timer();
-
+void core_timer_disable();
+void disable_timer_controller();
+void disable_all_timer();
 
 #endif  /*_TIMER_H */

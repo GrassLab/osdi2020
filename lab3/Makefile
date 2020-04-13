@@ -40,7 +40,7 @@ pipe:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial  pipe:/tmp/guest -S -s
 
 debug: 
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -S -s
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -S -s -d int
 
 gtk:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img

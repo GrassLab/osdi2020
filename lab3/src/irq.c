@@ -53,29 +53,53 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 	_print("Instruction  specific syndrome (ISS) 0x");
 	uart_hex(esr & 0xffffff);
 	_print("\n");
-	// printf("%d, %s, ESR: %x, address: %x\r\n", type ,entry_error_messages[type], esr, address);
 }
 
 void handle_el0_sync(unsigned long esr, unsigned long address)
 {
-	_print("Exception return address 0x");
-	uart_hex(address);
-	_print("\n");
-	
-	_print("Exception class (EC) 0x");
-	uart_send_int(esr >> 26);
-	_print("\n");
+	printf("Exception return address 0x%x \n",address);
+	printf("Exception class (EC) 0x%x \n",esr >> 26);
+	printf("EInstruction  specific syndrome (ISS) 0x%x \n",esr & 0xffffff);
 
-	_print("Instruction  specific syndrome (ISS) 0x");
-	uart_hex(esr & 0xffffff);
-	_print("\n");
+	int num = (esr & 0xffffff);
+	if (num == 1){
+		printf("[info] svc command\n");
+	}
+	else if(num == 2){
+		printf("[info] enable timer interrupt\n");
+		local_timer_init();
+    	core_timer_enable();
+	}
+	else if(num == 3){
+		disable_all_timer();
+	}
+	else if(num == 4){
+		timestamp_handler();
+	}
 }
 
 
+
+void timestamp_handler(){
+	unsigned int time, timer_counter, timer_freq;
+	char buf[10];
+    _memset(buf,'\0',10);
+	asm volatile("mrs %0, cntpct_el0": "=r"(timer_counter)::); 
+	asm volatile("mrs %0, cntfrq_el0": "=r"(timer_freq)::);
+    time = timer_counter / (timer_freq / 100000U);
+	
+	_unsign_arr_to_digit((time/100000U), buf, 5);
+	uart_send('[');
+	uart_puts(buf); 
+	uart_send('.');
+	_unsign_arr_to_digit(time%100000U, buf, 5);
+	uart_puts(buf); 
+	uart_send(']');
+	uart_puts("\n");
+}
+
 void local_timer_handler(){
-	_print("Local timer interrupt, jiffies ");
-	uart_send_int(local_timer_count);
-	_print("\n");
+	printf("Local timer interrupt, jiffies %d \n",local_timer_count);
 	local_timer_count += 1;
 	*LOCAL_TIMER_IRQ_CLR = (0xc0000000);// clear interrupt and reload.
 	return;
@@ -83,10 +107,8 @@ void local_timer_handler(){
 
 void core_timer_handler() 
 {
-	// _print("Arm core timer interrupt, jiffies ");
-	// uart_send_int(core_timer_count);
-	// _print("\n");
-	// core_timer_count = core_timer_count + 1;
+	printf("Arm core timer interrupt, jiffies %d \n",core_timer_count);
+	core_timer_count += 1;
 	clean_core_timer();
 	return;
 }
@@ -94,24 +116,15 @@ void core_timer_handler()
 void handle_irq(void)
 {
 	unsigned int arm_local = *CORE0_INTR_SRC;
-  	if (arm_local & 0x800)
-    {
-      // local timer interrupt
+  	if (arm_local & 0x800){
 		local_timer_handler();
     }
-  	else if (arm_local & 0x2)
-    {
-		_print("Arm core timer interrupt, jiffies ");
-		uart_send_int(core_timer_count);
-		_print("\n");
-		core_timer_count = core_timer_count + 1;
-		// _print("Arm core timer interrupt, jiffies ");
-		//  uart_send_int(c);
-		// _print("\n");
-		// c += 1;
-
-      	// core timer interrupt
+  	else if (arm_local & 0x2){
     	core_timer_handler();
     }
+	else{
+		printf("%%%%%%%%%%%%%%%%%%%%%%\n");
+	}
 
 }
+

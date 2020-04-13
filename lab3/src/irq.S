@@ -4,9 +4,10 @@ irq_vector_init:
 	msr	vbar_el1, x0		// vector table address
 	ret
 
+
 .globl enable_irq
 enable_irq:
-	msr    daifclr, #2 
+	msr daifclr, #2 
 	ret
 
 .globl disable_irq

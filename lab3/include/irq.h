@@ -28,5 +28,6 @@ void disable_irq( void );
 void local_timer_handler(void);
 void core_timer_handler(void);
 void handle_el0_sync(unsigned long esr, unsigned long address);
+void timestamp_handler();
 
 #endif  /*_IRQ_H */

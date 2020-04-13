@@ -8,6 +8,7 @@ void exec_boot();
 void exec_send();
 void exec_exc();
 void exec_irq();
+void exec_end();
 void exec_timestamp();
 void exec_send_kernel();
 
