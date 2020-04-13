@@ -136,14 +136,17 @@ void shell_controller(char* cmd) {
         uart_printf("timestamp: get current timestamp\n");
         uart_printf("reboot: reboot pi\n");
         uart_printf("exc: run svc #1\n");
+        uart_printf("irq: test timer interrupt\n");
     }
     else if (!strcmp(cmd, "exc")) {
         asm volatile("svc #1");
     }
     else if (!strcmp(cmd, "irq")) {
         arm_core_timer_enable();
+        arm_local_timer_enable();
         uart_read();
         arm_core_timer_disable();
+        arm_local_timer_disable();
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");

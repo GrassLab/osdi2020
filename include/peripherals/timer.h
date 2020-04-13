@@ -16,3 +16,11 @@
 #define EXPRIED_PERIOD          0xffffff
 
 #endif
+
+#ifndef ARM_LOCAL_TIMER_H
+#define ARM_LOCAL_TIMER_H
+
+#define LOCAL_TIMER_CTRL        ((unsigned int*)0x40000034)
+#define LOCAL_TIMER_IRQ_CLR     ((unsigned int*)0x40000038)
+
+#endif
