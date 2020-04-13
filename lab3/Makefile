@@ -6,7 +6,7 @@ GENERAL_FLAGS =
 C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles
 ASM_FLAGS =
 
-KERNEL_C_SOURCE_FILES = main.c shell.c string_util.c mailbox.c uart.c exc.c irq.c syscall.c
+KERNEL_C_SOURCE_FILES = main.c shell.c string_util.c mailbox.c uart.c exc.c irq.c syscall.c timer.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
 KERNEL_ASSEMBLY_SOURCE_FILES = start.s get_time.s exc_vector.s timer.s
 KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.s=.asmo)

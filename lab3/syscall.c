@@ -29,14 +29,18 @@ int syscall_exc(uint64_t ELR_EL1, uint8_t exception_class, uint32_t exception_is
 int syscall_timer_int(void)
 {
   static int core_timer_enabled = 0;
+  static int local_timer_enabled = 0;
 
   if(!core_timer_enabled)
   {
     timer_enable_core_timer();
     core_timer_enabled = 1;
   }
-  timer_set_core_timer(3);
-  irq_el1_enable();
+  if(!local_timer_enabled)
+  {
+    timer_enable_and_set_local_timer();
+  }
+  timer_set_core_timer(1);
 
   return 0;
 }
