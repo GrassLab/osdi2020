@@ -27,7 +27,7 @@
 #include "printf.h"
 
 
-void    exception_handler (void)
+void exception_handler (void)
 {
   unsigned long elr_el2, esr_el2;
   asm volatile (

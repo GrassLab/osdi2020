@@ -41,8 +41,15 @@ add	sp, sp, #256
 eret
 .endm
 
-// exception
-// important, code has to be properly aligned
+/* 
+exception_handler:
+    kernel_entry
+    mrs x0, elr_el2
+    mrs x1, esr_el2
+    bl exc
+    kernel_exit
+*/
+
 // exception
 // Simple vector table
 .align 11 // vector table should be aligned to 0x800
