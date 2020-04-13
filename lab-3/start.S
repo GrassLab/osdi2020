@@ -112,7 +112,7 @@ exception_table_el1:
     ventry el1_exception
 
     ventry el1_exception
-    ventry el1_exception
+    ventry el1_irq
     ventry el1_exception
     ventry el1_exception
 
@@ -125,7 +125,7 @@ exception_table_el2:
     // synchronous
     ventry el2_exception
     // IRQ
-    ventry el1_irq
+    ventry el2_irq
     // FIQ
     ventry el2_exception
     // SError
@@ -149,4 +149,9 @@ el1_irq:
 el2_exception:
     kernel_entry
     bl exception_handler
+    kernel_exit
+
+el2_irq:
+    kernel_entry
+    bl irq_handler
     kernel_exit

@@ -7,6 +7,11 @@ int core_timer_counter = 0;
 
 void local_timer_init()
 {
+    asm volatile("svc #0x102");
+}
+
+void __local_timer_init()
+{
     unsigned int flag = 0x30000000; // enable timer and interrupt.
     unsigned int reload = 25000000;
     setRegister(LOCAL_TIMER_CONTROL_REG, flag | reload);
@@ -22,6 +27,11 @@ void local_timer_handler()
 
 void sys_timer_init()
 {
+    asm volatile("svc #0x103");
+}
+
+void __sys_timer_init()
+{
     unsigned int t = getRegister(SYSTEM_TIMER_CLO);
     setRegister(SYSTEM_TIMER_COMPARE1, t + 2500000);
     setRegister(IRQ_ENABLE0, 1 << 1);
@@ -35,6 +45,11 @@ void sys_timer_handler()
 }
 
 void core_timer_init()
+{
+    asm volatile("svc #0x104");
+}
+
+void __core_timer_init()
 {
     asm volatile("mov x0, 1");
     asm volatile("msr cntp_ctl_el0, x0");

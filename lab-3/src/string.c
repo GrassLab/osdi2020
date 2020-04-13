@@ -30,6 +30,18 @@ int strEqual(char *str1, char *str2)
     return 1;
 }
 
+void strConcat(char *result, char *s1, char *s2) 
+{
+    int size1 = strlen(s1);
+    int size2 = strlen(s2);
+    for(int i = 0; i < size1; i++) {
+        result[i] = s1[i];
+    }
+    for(int i = size1; i < size1 + size2; i++) {
+        result[i] = s2[i-size1];
+    }
+}
+
 void intToStr(int num, char *str) {
     int index = 0;
     while(num > 0) {

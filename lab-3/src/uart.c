@@ -116,14 +116,6 @@ void uart_print_hex(unsigned int num) {
     uart_puts(str);
 }
 
-void uart_print_hex_array(unsigned int *num, int size) {
-    char str[1024] = {0};
-    for(int i = 0; i < size; i++) {
-        hexToStrNoTruncat(num-i, str+(8*i));
-    }
-    uart_puts(str);
-}
-
 void print_uart_clock()
 {
     mbox[0] = 9*4;

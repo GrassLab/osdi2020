@@ -1,12 +1,23 @@
 #include "irq.h"
 #include "utility.h"
+#include "timer.h"
 
 void enable_irq()
+{
+    asm volatile("svc #0x100");
+}
+
+void disable_irq()
+{
+    asm volatile("svc #0x101");
+}
+
+void __enable_irq()
 {
     asm volatile("msr daifclr, #2");
 }
 
-void disable_irq()
+void __disable_irq()
 {
     asm volatile("msr daifset, #2");
 }

@@ -8,12 +8,9 @@
 int main()
 {
     uart_init();
-    // printPowerOnMessage();
-    // printDebugPowerOnMessage();
-    asm volatile("svc #1000");
-    // enable_irq();
-    // local_timer_init();
-    // core_timer_init();
-    // sys_timer_init();
+    printPowerOnMessage();
+    enable_irq();
+    local_timer_init();
+    core_timer_init();
     interative();
 }
