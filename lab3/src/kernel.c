@@ -27,28 +27,26 @@ char *_kend, *_kbeg;
 #define HCR_VALUE			HCR_RW
 
 void init_interrupt(){
-	
-    //__asm__ volatile ("ldr	x0, =0x80000000");
-    //__asm__ volatile ("msr	hcr_el2, x0");
-    unsigned long hcr, daif;
-    __asm__ volatile ("mrs %0, hcr_el2" : "=r"(hcr));
-    hcr |= 1 << 4;
-    __asm__ volatile ("msr hcr_el2, %0" :: "r"(hcr));
-	*ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ);
-    __asm__ volatile ("msr  daifclr, #2 ");
-    return;
-	
-    
-    
-    __asm__ volatile ("mrs %0, daif" : "=r"(daif));
-    daif &= ~(0b1111 << 6);
-    __asm__ volatile ("msr daif, %0" :: "r"(daif));
 
+#ifdef RUN_ON_EL2
+    unsigned long hcr;
+    __asm__ volatile ("mrs %0, hcr_el2" : "=r"(hcr));
+    hcr |= 1 << 4; //IMO
+    __asm__ volatile ("msr hcr_el2, %0" :: "r"(hcr));
+#endif
+    *ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ);
+    __asm__ volatile ("msr  daifclr, #2 ");
 }
 
 int main(void){
 
     uart_init();
+
+    puts("HELLO SUCCESSFULLY");
+
+    unsigned long current_el;
+    __asm__ volatile("mrs %0, CurrentEL\n\t" : "=r" (current_el) : : "memory");
+    printf("currentEL: %d" NEWLINE, current_el >> 2);
 
     lfb_init();
     lfb_showpicture();

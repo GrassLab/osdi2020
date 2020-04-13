@@ -2,7 +2,7 @@
 Debug/*
 .ccls-cache/*
 .clangd
-*build/*
+*build
 *.img
 *.elf
 src/linker.ld

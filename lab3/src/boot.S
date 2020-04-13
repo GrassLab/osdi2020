@@ -1,6 +1,5 @@
 #include "mm.h"
-#define HCR_RW           (1 << 31)
-#define HCR_VALUE        HCR_RW
+#include "sysregs.h"
 
 .section ".text.boot"
 
@@ -15,9 +14,33 @@ proc_hang:
     b proc_hang
 
 continue:
-    // load exception_table to VBAR_EL2
+
+#ifndef RUN_ON_EL2
+    ldr	x0, =SCTLR_VALUE_MMU_DISABLED
+    msr	sctlr_el1, x0		
+
+    ldr	x0, =HCR_VALUE
+    msr	hcr_el2, x0
+
+    ldr	x0, =SPSR_VALUE
+    msr	spsr_el2, x0
+
+    adr	x0, el1_entry		
+    msr	elr_el2, x0
+
+    eret
+#endif
+
+el1_entry:
+
+#ifdef RUN_ON_EL2
+    // load exception_table
     ldr x0, =exception_table
     msr vbar_el2, x0
+#else
+    ldr x0, =exception_table
+    msr vbar_el1, x0
+#endif
     
     // init bss
     adr x0, __bss_beg
@@ -58,38 +81,38 @@ exception_table:
   bl synchronous_exceptions // 0x200
   eret
   .align 7
-  bl irq_handler
+  bl irq_handler            //0x280
   eret
   .align 7
-  bl exception_handler
+  bl exception_handler      //0x300
   eret
   .align 7
-  bl exception_handler
-  eret
-  .align 7
-
-  bl exception_handler
-  eret
-  .align 7
-  bl exception_handler
-  eret
-  .align 7
-  bl exception_handler
-  eret
-  .align 7
-  bl exception_handler
+  bl exception_handler      //0x380
   eret
   .align 7
 
-  bl exception_handler
+  bl exception_handler //0x400
   eret
   .align 7
-  bl exception_handler
+  bl exception_handler //0x480
   eret
   .align 7
-  bl exception_handler
+  bl exception_handler //0x500
   eret
   .align 7
-  bl exception_handler
+  bl exception_handler //0x580
+  eret
+  .align 7
+
+  bl exception_handler //0x600
+  eret
+  .align 7
+  bl exception_handler //0x680
+  eret
+  .align 7
+  bl exception_handler //0x700
+  eret
+  .align 7
+  bl exception_handler //0x780
   eret
   .align 7

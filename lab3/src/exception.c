@@ -11,16 +11,24 @@ void exception_handler(){
     //__asm__ volatile ("mrs %0, ESR_EL2 " : "=r"(esr));
     //printf("esr reg val = 0x%x" NEWLINE, esr);
     puts("Exceptions Handler");
-    //__asm__ volatile("br %0" :: "r"(ret)); 
 }
 
 void synchronous_exceptions(){
     char *ret;
     unsigned long esr;
+    unsigned long current_el;
+    __asm__ volatile("mrs %0, CurrentEL\n\t" : "=r" (current_el) : : "memory");
+    printf("currentEL: %d" NEWLINE, current_el >> 2);
 
-    __asm__ volatile ("mrs %0, ELR_EL2 " : "=r"(ret));
+#ifdef RUN_ON_EL2
+    __asm__ volatile ("mrs %0, ELR_EL2" : "=r"(ret));
+    __asm__ volatile ("mrs %0, ESR_EL2" : "=r"(esr));
+#else
+    __asm__ volatile ("mrs %0, ELR_EL1" : "=r"(ret));
+    __asm__ volatile ("mrs %0, ESR_EL1" : "=r"(esr));
+#endif
+
     printf("Exception return address 0x%x" NEWLINE, ret);
-    __asm__ volatile ("mrs %0, ESR_EL2 " : "=r"(esr));
     printf("Exception class (EC) 0x%x" NEWLINE, nb8p(esr, 6, 26));
     printf("Instruction spepcfic syndrome (ISS) 0x%x" NEWLINE, nb8p(esr, 25, 0));
     puts("Synchronous Exceptions");
@@ -33,7 +41,4 @@ void synchronous_exceptions(){
     MAP(MOV_GPR, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
         20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30);
-    //char *esp;
-    //__asm__ volatile ("mrs %0, sp_el2" : "=r"(esp));
-    //printf("sp_el2 0x%x" NEWLINE, esp);
 }
