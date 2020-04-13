@@ -14,6 +14,9 @@ void system_start()
     uart_print("-------------------------\n");
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
+    uart_print("Author  : Hsu, Po-Chun\n");
+    uart_print("Version : 3.1.0\n");
+    uart_print("-------------------------\n");
 }
 
 void make_exc()
@@ -27,6 +30,7 @@ void make_exc()
 
 void bottom_half_0()
 {
+    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
     for (int i = 0; i < 5; i++)
     {
         uart_puts(".");
@@ -56,15 +60,11 @@ int main()
     get_frame_buffer();
     showpicture();
 
+    // enroll system call to bottom_half
     bottom_half_t n = {
         0,
         bottom_half_0};
     bottom_half_enroll(n);
-    //test
-    //    make_exc();
-    //svc(1);
-
-    //brk(1);
 
     /* You can't know Current EL, if you in EL0 */
     /*
