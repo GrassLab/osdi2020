@@ -7,5 +7,5 @@ void svc(int num);
 void brk(int num);
 
 /* FAIL dont use */
-void syscall(unsigned int, unsigned int, unsigned int, unsigned int);
+void syscall_router(unsigned long, unsigned long, unsigned long, unsigned long);
 #endif

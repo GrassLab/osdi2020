@@ -10,8 +10,9 @@ pc means Po-Chun, NOT personal computer
 #include "system.h"
 #include "bootloader.h"
 #include "pcsh.h"
-#include "syscall.h"
 #include "timer.h"
+
+#include "bottom_half.h"
 
 #define INPUT_BUFFER_SIZE 256
 
@@ -27,6 +28,8 @@ static cmd_t default_cmd_arr[] = {
     {"exc", "svc #1", cmd_exc},
     {"brk", "brk #1", cmd_brk},
     {"irq", "start irq", cmd_irq},
+    {"delay", "delay and print ....", cmd_delay},
+    {"delay_x", "delay and print ....(in exception)", cmd_delay_without_bottom_half},
     {NULL, NULL, cmd_not_find}};
 
 int cmd_exit(int i)
@@ -90,13 +93,13 @@ int cmd_load_images(int i)
 
 int cmd_exc(int i)
 {
-    svc(1);
+    asm volatile("svc #1");
     return 0;
 }
 
 int cmd_brk(int i)
 {
-    brk(1);
+    asm volatile("brk #1");
     return 0;
 }
 
@@ -136,6 +139,20 @@ int cmd_irq(int i)
     return 0;
 }
 
+int cmd_delay(int i)
+{
+    asm volatile("mov x0, #0x100");
+    asm volatile("svc #0x80");
+    return 0;
+}
+
+int cmd_delay_without_bottom_half(int i)
+{
+    asm volatile("mov x0, #0x101");
+    asm volatile("svc #0x80");
+    return 0;
+}
+
 int cmd_not_find(int i)
 {
     uart_print("Command not find, Try 'help'\n");
@@ -170,7 +187,7 @@ int pcsh()
     int x = 0;
 
     // main loop
-    while (x == 0)
+    while (x != -1)
     {
         symbol();
 
@@ -187,7 +204,9 @@ int pcsh()
         // default command
         x = sh_default_command(cmd);
 
-        // other program
+        // bottom half
+        // I don't have scheduler, so i implement bottom half here
+        bottom_half_router();
     }
 
     return 0;

@@ -5,6 +5,7 @@
 
 #include "syscall.h"
 #include "irq.h"
+#include "bottom_half.h"
 
 #define INPUT_BUFFER_SIZE 1024
 
@@ -24,6 +25,20 @@ void make_exc()
     r++;
 }
 
+void bottom_half_0()
+{
+    for (int i = 0; i < 5; i++)
+    {
+        uart_puts(".");
+        // very very very slow in real rpi3, but very very very fast in qemu
+        asm volatile(
+            "mov  x0, #0xffffff\n"
+            "bottom_half_0_l: subs  x0, x0, #1\n"
+            "bne   bottom_half_0_l\n");
+    }
+    uart_send('\n');
+}
+
 int main()
 {
     //_irq_init();
@@ -41,6 +56,10 @@ int main()
     get_frame_buffer();
     showpicture();
 
+    bottom_half_t n = {
+        0,
+        bottom_half_0};
+    bottom_half_enroll(n);
     //test
     //    make_exc();
     //svc(1);

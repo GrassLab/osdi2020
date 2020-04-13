@@ -2,7 +2,7 @@
 #include "irq.h"
 #include "timer.h"
 #include "exception.h"
-#include "bootloader.h"
+#include "syscall.h"
 
 /**
  * common exception handler
@@ -129,53 +129,6 @@ void exc_handler(unsigned long type)
     uart_puts("\n");
 
     // no return from exception for now
-}
-
-void syscall_core_timer(int enable)
-{
-    uart_puts("core timer: ");
-    if (enable == 0)
-    {
-        uart_puts("core timer disable");
-        _core_timer_disable();
-    }
-    else
-    {
-        uart_puts("core timer enable");
-        _core_timer_enable();
-    }
-}
-
-void syscall_local_timer(int enable)
-{
-    uart_puts("local timer: ");
-    if (enable == 0)
-    {
-        uart_puts("local timer disable");
-        local_timer_disable();
-    }
-    else
-    {
-        uart_puts("local timer enable");
-        local_timer_enable();
-    }
-}
-
-void syscall_gettime(double *t)
-{
-    uart_puts("get time: ");
-    register unsigned long freq;
-    register unsigned long ct;
-
-    asm volatile("mrs %0, CNTFRQ_EL0\n"
-                 "mrs %1, CNTPCT_EL0\n"
-                 : "=r"(freq), "=r"(ct));
-    *t = (double)ct / (double)freq;
-}
-
-void syscall_load_images()
-{
-    loadimg();
 }
 
 unsigned long get_current_el()
@@ -308,30 +261,8 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         uart_puts("System Call[");
         uart_send_int(x0);
         uart_puts("]: ");
-        switch (x0)
-        {
-        // arm core timer
-        case 0x0:
-            syscall_core_timer(x1);
-            break;
-        // arm local timer
-        case 0x1:
-            syscall_local_timer(x1);
-            break;
-        // get time
-        case 0x2:
-            syscall_gettime((double *)x1);
-            break;
-        case 0x3:
-            syscall_load_images();
-            break;
-        // not this syscall
-        default:
-            uart_puts("Can find this system call");
+        syscall_router(x0, x1, x2, x3);
 
-            while (1)
-                ;
-        }
         uart_puts("\n===\n");
     }
 }
