@@ -29,6 +29,7 @@ void handle_irq(void)
 
 void handle_sys_timer_irq( void ) 
 {
+	curVal = get32(TIMER_CLO);
 	curVal += interval;
 	put32(TIMER_C1, curVal);
 	put32(TIMER_CS, TIMER_CS_M1); // This register is used to record and clear timer channel comparator matches.
@@ -41,6 +42,8 @@ void handle_sys_timer_irq( void )
 		disable_timer_controller();
 		system_jf = 1;
 	}
+	//enable_irq();
+	//delay(10000000); //test for defferred interrupt IRQ
 	return;
 }
 

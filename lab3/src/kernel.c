@@ -71,5 +71,10 @@ void kernel_main(void)
 			cmd_buffer[0] = '\0';
 			cmd_flag = 0;
 		}
+		else if (cmd_flag == 1 && strcmp(cmd_buffer, "no_defint") == 0) {
+			sync_call_nodefint();
+			cmd_buffer[0] = '\0';
+			cmd_flag = 0;
+		}
 	}
 }

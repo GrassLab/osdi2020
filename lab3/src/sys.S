@@ -14,12 +14,12 @@ sync_call_uart:
     svc #3
     ret
 
-.globl sync_call_dintp
-sync_call_dintp:
+.globl sync_call_nodefint
+sync_call_nodefint:
     svc #4
     ret
 
-.globl sync_call_eintp
-sync_call_eintp:
+.globl sync_call_defint
+sync_call_defint:
     svc #5
     ret
