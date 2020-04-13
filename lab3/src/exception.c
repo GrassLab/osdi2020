@@ -18,7 +18,6 @@ void exception_handler (void)
     uart_puts("Instruction specific syndrome (ISS): ");
     uart_hex(iss);
     uart_send('\n');
-    asm volatile ("eret");
 }
 void not_implemented ()
 {

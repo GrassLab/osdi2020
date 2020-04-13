@@ -6,14 +6,19 @@
 ## ARM Exception
 ### Your first exception
 
-- [ ] `required 1-0` Set up the exception vector table.
-- [ ] `required 1-1` Implement the exception handler for Synchronous Exceptions from the currentEL while using SP_ELx (offset 0x200-0x280 in the vector table).
-- [ ] `required 1-2` Add an `exc` command to the shell. It issues `svc #1` and then your exception handler should print the return address, EC field, and ISS field.
-- [ ] `question 1` Change `svc` instruction to `brk` (breakpoint) instruction. See the difference in ELR_EL2(return address). Explain why there is a difference.
-
+- [x] `required 1-0` Set up the exception vector table.
+- [x] `required 1-1` Implement the exception handler for Synchronous Exceptions from the currentEL while using SP_ELx (offset 0x200-0x280 in the vector table).
+- [x] `required 1-2` Add an `exc` command to the shell. It issues `svc #1` and then your exception handler should print the return address, EC field, and ISS field.
+- [x] `question 1` Change `svc` instruction to `brk` (breakpoint) instruction. See the difference in ELR_EL2(return address). Explain why there is a difference.
+svc: 0x00081344
+because we setup elr_el2 register, so it will retrun to previous work.
+brk: 0x00081ED8
+create infinite loop
 
 ### Context saving
-- [ ] `required 2` Remove the infinite loop in exception_handler function and add `eret` at the end of ISRs. Observe the difference between saving and not saving general registers.
+- [x] `required 2` Remove the infinite loop in exception_handler function and add `eret` at the end of ISRs. Observe the difference between saving and not saving general registers.
+if we don't do kernel_entry and kernel_exit, the return address is 0x3F201000
+it will create infinite loop
 
 - [ ] `question 2` Do you need to save floating point SIMD registers in ISRs? Why or why not.
 

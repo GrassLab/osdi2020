@@ -78,12 +78,7 @@ int atoi(const char *str)
     // return result.
     return res;
 }
-void pirntaaa(){
-    uart_puts("aaaaa!\n");
-}
-void pirntbbb(){
-    uart_puts("bbb!\n");
-}
+
 
 int cmd_box(char * command){
     if(my_strcmp(command, "help")==1)return 1;
@@ -91,8 +86,7 @@ int cmd_box(char * command){
     if(my_strcmp(command, "reset")==1)return 3;
     if(my_strcmp(command, "timestamp")==1)return 4;
     if(my_strcmp(command, "loadimage")==1)return 5;
-    if(my_strcmp(command, "getnum")==1)return 6;
-    if(my_strcmp(command, "exc")==1)return 7;
+    if(my_strcmp(command, "exc")==1)return 6;
     return -1;
 }
 void process_cmd(char * command){
@@ -102,6 +96,7 @@ void process_cmd(char * command){
             uart_puts("hello       :say hello to you.\n");
             uart_puts("reset       :reboot the mechine.\n");
             uart_puts("loadimage   :load kernel image.\n");
+            uart_puts("exc         :create exception and print information.\n");
             break;
         case 2:
             uart_puts("Hello World!");
@@ -117,14 +112,10 @@ void process_cmd(char * command){
         case 5:
             uart_puts("Load Image!\n");
             load_image();
-            break;
+            break;        
         case 6:
-            uart_puts("Get number!\n");
-            pirntbbb();
-            break;
-        case 7:
-            uart_puts("Get Error!\n");
             asm volatile ("svc #1");
+            break;
         default:
             uart_puts(command);
             uart_puts(": command not found");
