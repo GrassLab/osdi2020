@@ -15,9 +15,12 @@ _core0:
 	ldr x1, =_bss_start
 	ldr w2, =_bss_size
 _clear_bss:	
-	cbz w2, _main
+	cbz w2, _set_exc_table
 	str xzr, [x1], #8
 	sub w2, w2, #1
 	cbnz w2, _clear_bss
-_main:	
+_set_exc_table:
+	ldr x0, =exception_table	//set exception table
+	msr VBAR_EL2, x0
+_main:
 	bl main

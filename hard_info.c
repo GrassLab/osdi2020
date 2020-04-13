@@ -57,6 +57,8 @@ void get_VCCore_base_address(){
 	mailbox_call(mailbox, MBOX_CH_PROP); // message passing procedure call, you should implement it following the 6 steps provided above.
 	print("VC core base address: ");
 	unsigned int num=mailbox[5];
+	print_hex(num);
+	/*
 	int i;
 	for(i=0;num!=0;i++){
 		buff[i]=(num%16<10)?(num%16+'0'):(num%16-10+'A');
@@ -66,6 +68,7 @@ void get_VCCore_base_address(){
 		--i;
 		uart_write(buff[i]);
 	}
+	*/
 	print("\n\r");
 	
 }

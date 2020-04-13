@@ -31,6 +31,7 @@ void main(){
 			else if(strcmp(buff,"hello")){
 				print("Hello World!\n\r");
 			}
+			/*
 			else if(strcmp(buff,"loadimg")){
 				print("rec\n\r");
 				size=(int)uart_read();
@@ -47,9 +48,13 @@ void main(){
         		"mov x1, x11;"
 		        "mov x2, x12;"
         		"mov x3, x13;"
-        		"mov x30, 0x80000; ret"
+        		"mov x30, 0x40000; ret"
     			);
 				print("done\n");
+			}
+			*/
+			else if(strcmp(buff,"exc")){
+				asm("svc 1");
 			}
 			else print("Err, command not found, try <help>.\n\r");
 			for(i=0;i<50;i++)	buff[i]='\0';
