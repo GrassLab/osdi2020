@@ -3,7 +3,17 @@
 
 #include "lib/type.h"
 
-void exec_controller ( uint64_t esr, uint64_t elr );
+enum system_call {
+    TEST_SVC = 1,
+    CORE_TIMER_ENABLE,
+    CORE_TIMER_DISABLE,
+};
+
+typedef enum system_call SYS_CALL;
+
+
+void exec_controller ( SYS_CALL x0 );
+void print_exec_info ( uint64_t elr, uint64_t esr );
 int get_current_el ( );
 
 #endif

@@ -1,3 +1,4 @@
+#include "kernel/exception/exception.h"
 #include "kernel/exception/irq.h"
 #include "kernel/exception/timer.h"
 #include "kernel/peripherals/mailbox.h"
@@ -179,7 +180,12 @@ void command_load_image ()
 
 void command_svc_exception_trap ()
 {
-    asm volatile ( "svc #1;" );
+    asm volatile ( 
+        "mov    x0, %0;"
+        "svc    #1;"
+        :
+        : "r"(TEST_SVC)
+    );
 }
 
 void command_brk_exception_trap ()
@@ -189,25 +195,26 @@ void command_brk_exception_trap ()
 
 void command_irq_exception_enable ()
 {
-    static int first = 1;
-    if ( first )
-        irq_setup();
-
-    first = 0;
-
-    irq_enable();
     uart_printf("[IRQ Enable]\n");
 
-    core_timer_enable();
+    // move core timer enable to sys call
+    asm volatile ( 
+        "mov    x0, %0;"
+        "svc    #1;"
+        :
+        : "r"(CORE_TIMER_ENABLE)
+    );
+
+    // core_timer_enable();
     uart_printf("[Core Timer Enable]\n");
 
-    // local_timer_handler();
+    local_timer_reload();
     local_timer_enable();
     uart_printf("[Local Timer Enable]\n");
 }
 
 void command_irq_exception_disable ()
 {
-    irq_disable();
+    // irq_el1_disable();
     uart_printf("[IRQ Disable]\n");
 }

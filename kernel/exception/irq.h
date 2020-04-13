@@ -8,9 +8,9 @@
 
 
 // define in irq.S
-extern void irq_setup ();
-extern void irq_enable ();
-extern void irq_disable ();
+extern void irq_el2_setup ();
+extern void irq_el2_enable ();
+extern void irq_el2_disable ();
 
 
 void irq_controller ();
