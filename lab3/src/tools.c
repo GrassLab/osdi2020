@@ -87,6 +87,7 @@ int cmd_box(char * command){
     if(my_strcmp(command, "timestamp")==1)return 4;
     if(my_strcmp(command, "loadimage")==1)return 5;
     if(my_strcmp(command, "exc")==1)return 6;
+    if(my_strcmp(command, "irq")==1)return 7;
     return -1;
 }
 void process_cmd(char * command){
@@ -97,6 +98,7 @@ void process_cmd(char * command){
             uart_puts("reset       :reboot the mechine.\n");
             uart_puts("loadimage   :load kernel image.\n");
             uart_puts("exc         :create exception and print information.\n");
+            uart_puts("irq         :create timer interrupt.\n");
             break;
         case 2:
             uart_puts("Hello World!");
@@ -115,6 +117,11 @@ void process_cmd(char * command){
             break;        
         case 6:
             asm volatile ("svc #1");
+            break;
+        case 7:
+            init_irq ();
+            enable_irq ();
+            core_timer_enable ();
             break;
         default:
             uart_puts(command);

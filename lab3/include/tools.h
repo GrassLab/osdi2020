@@ -1,6 +1,7 @@
 #include "peripherals/uart.h"
+#include "peripherals/timer.h"
 #include "reset.h"
-
+#include "irq.h"
 
 int my_strcmp(char * str1, char * str2);
 char *itoa(int num, char *str, int base);
