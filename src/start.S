@@ -21,9 +21,6 @@ _start:
     ldr     x1, =exception_table
     msr     vbar_el2, x1
 
-    // init exception
-    bl      init_irq
-
     // clear bss
     ldr     x1, =__bss_start
     ldr     x2, =__bss_size

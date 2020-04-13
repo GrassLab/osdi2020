@@ -47,6 +47,10 @@ void shell_init() {
     fb_init();
     uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
 
+    // Initialize IRQ
+    irq_init();
+    uart_printf("\n[%f] Init IRQ done", get_timestamp());
+
     // Welcome Messages
     // fb_splash();
     uart_printf("\n\n _  _  ___ _____ _   _  ___  ___ ___ ___ \n");
@@ -138,6 +142,8 @@ void shell_controller(char* cmd) {
     }
     else if (!strcmp(cmd, "irq")) {
         arm_core_timer_enable();
+        uart_read();
+        arm_core_timer_disable();
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");

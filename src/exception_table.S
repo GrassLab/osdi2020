@@ -1,4 +1,4 @@
-#include "vector_table.h"
+#include "exception_table.h"
 
     .macro handle_invalid_entry type
     kernel_entry
@@ -66,7 +66,7 @@ exception_table:
     ventry error_invalid_el2t      // Error EL2t
 
     ventry sync_el2h_handler       // Synchronous EL2h
-    ventry irq_invalid_el2h        // IRQ EL2h
+    ventry irq_el2h_handler        // IRQ EL2h
     ventry fiq_invalid_el2h        // FIQ EL2h
     ventry error_invalid_el2h      // Error EL2h
 
@@ -91,9 +91,6 @@ fiq_invalid_el2t:
 
 error_invalid_el2t:
     handle_invalid_entry  ERROR_INVALID_EL2t
-
-irq_invalid_el2h:
-    handle_invalid_entry  IRQ_INVALID_EL2h
 
 fiq_invalid_el2h:
     handle_invalid_entry  FIQ_INVALID_EL2h
@@ -130,4 +127,9 @@ sync_el2h_handler:
     mrs x0, esr_el2
     mrs x1, elr_el2
     bl  sync_el2h_router
+    kernel_exit
+
+irq_el2h_handler:
+    kernel_entry
+    bl  irq_el2h_router
     kernel_exit
