@@ -35,8 +35,8 @@ _el1_exception_handler(unsigned long type, unsigned long esr, unsigned long elr,
         }
         else if(iss == 0x0) {
             // svc #0 for time interrupts
-            uart_puts("#0\r\n");
-            // local_timer_init();
+            // uart_puts("#0\r\n");
+            local_timer_init();
 			core_timer_init();
         }
     }

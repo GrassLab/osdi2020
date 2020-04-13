@@ -106,7 +106,7 @@ el1_exception_table:
     b el_not_implement
     .align 7
 
-    b el1_exception_handler
+    b el_not_implement
     .align 7
     b el_not_implement
     .align 7
@@ -147,7 +147,7 @@ el1_exception_handler:
 el1_irq_handler:
     context_switch
     bl      irq_handler
-    bl      _context_switch_msg
+    // bl      _context_switch_msg
     context_switch_back
 
 el_not_implement:
