@@ -9,8 +9,5 @@ int main()
 {
     uart_init();
     printPowerOnMessage();
-    enable_irq();
-    local_timer_init();
-    core_timer_init();
     interative();
 }

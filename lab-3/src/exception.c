@@ -21,11 +21,11 @@ void exception_handler()
         __local_timer_init();
     }
 
-    // uart_puts("[info] Exception Class: 0x");
+    uart_puts("[info] Exception Class: 0x");
     uart_print_hex(ec);
-    // uart_puts("\n[info] Instruction Specific syndrome: 0x");
-    // uart_print_hex(iss);
-    // uart_puts("\n[info] Exception return address: 0x");
-    // uart_print_hex(retaddr);
-    // uart_puts("\n");
+    uart_puts("\n[info] Instruction Specific syndrome: 0x");
+    uart_print_hex(iss);
+    uart_puts("\n[info] Exception return address: 0x");
+    uart_print_hex(retaddr);
+    uart_puts("\n");
 }

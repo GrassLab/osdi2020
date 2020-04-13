@@ -78,8 +78,11 @@ _start:
     eret
     
 el1_start: 
-    // change exception level to EL0 
-    adr	    x0, el0_start		
+    // change exception level to EL0
+    mov	    sp, #EL1_LOW_MEMORY
+    ldr	    x0, =EL1_SPSR_VALUE
+	msr	    spsr_el1, x0 
+    adr	    x0, el0_start
 	msr	    elr_el1, x0
     eret
     
