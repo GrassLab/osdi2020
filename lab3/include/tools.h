@@ -1,4 +1,4 @@
-#include "uart.h"
+#include "peripherals/uart.h"
 #include "reset.h"
 
 

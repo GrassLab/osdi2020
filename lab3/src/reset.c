@@ -1,5 +1,5 @@
 #include "reset.h"
-#include "gpio.h"
+#include "peripherals/gpio.h"
 #define PM_RSTC         ((volatile unsigned int*)(MMIO_BASE+0x0010001c))
 #define PM_RSTS         ((volatile unsigned int*)(MMIO_BASE+0x00100020))
 #define PM_WDOG         ((volatile unsigned int*)(MMIO_BASE+0x00100024))

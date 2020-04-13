@@ -1,4 +1,4 @@
-#include "uart.h"
+#include "peripherals/uart.h"
 #include "mailbox.h"
 
 /* PL011 UART registers */
@@ -148,7 +148,7 @@ int uart_gets(char *buf, int buf_size)
 
     // replace '\n' with NULL
     if(i > 0)
-        buf[i] == '\0';
+        buf[i] = '\0';
 
     if (i == buf_size)
         return -1;
