@@ -92,6 +92,7 @@ int cmd_box(char * command){
     if(my_strcmp(command, "timestamp")==1)return 4;
     if(my_strcmp(command, "loadimage")==1)return 5;
     if(my_strcmp(command, "getnum")==1)return 6;
+    if(my_strcmp(command, "exc")==1)return 7;
     return -1;
 }
 void process_cmd(char * command){
@@ -121,6 +122,9 @@ void process_cmd(char * command){
             uart_puts("Get number!\n");
             pirntbbb();
             break;
+        case 7:
+            uart_puts("Get Error!\n");
+            asm volatile ("svc #1");
         default:
             uart_puts(command);
             uart_puts(": command not found");
