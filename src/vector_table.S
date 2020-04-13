@@ -1,4 +1,4 @@
-#include "exception.h"
+#include "vector_table.h"
 
     .macro handle_invalid_entry type
     kernel_entry
@@ -15,7 +15,7 @@
     .endm
 
     .macro kernel_entry
-    sub sp, sp, #S_FRAME_SIZE
+    sub sp, sp, #256
     stp x0, x1, [sp, #16 * 0]
     stp x2, x3, [sp, #16 * 1]
     stp x4, x5, [sp, #16 * 2]
@@ -31,7 +31,7 @@
     stp x24, x25, [sp, #16 * 12]
     stp x26, x27, [sp, #16 * 13]
     stp x28, x29, [sp, #16 * 14]
-    str x30, [sp, #16 * 15] 
+    str x30, [sp, #16 * 15]
     .endm
 
     .macro kernel_exit
@@ -51,7 +51,7 @@
     ldp x26, x27, [sp, #16 * 13]
     ldp x28, x29, [sp, #16 * 14]
     ldr x30, [sp, #16 * 15]
-    add sp, sp, #S_FRAME_SIZE
+    add sp, sp, #256
     eret
     .endm
 
@@ -65,7 +65,7 @@ exception_table:
     ventry fiq_invalid_el2t        // FIQ EL2t
     ventry error_invalid_el2t      // Error EL2t
 
-    ventry sync_el2t_handler        // Synchronous EL2h
+    ventry sync_el2h_handler       // Synchronous EL2h
     ventry irq_invalid_el2h        // IRQ EL2h
     ventry fiq_invalid_el2h        // FIQ EL2h
     ventry error_invalid_el2h      // Error EL2h
@@ -125,9 +125,9 @@ fiq_invalid_el0_32:
 error_invalid_el0_32:
     handle_invalid_entry  ERROR_INVALID_EL0_32
 
-sync_el2t_handler:
+sync_el2h_handler:
     kernel_entry
     mrs x0, esr_el2
     mrs x1, elr_el2
-    bl  sync_el2t_router
+    bl  sync_el2h_router
     kernel_exit

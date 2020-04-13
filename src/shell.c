@@ -3,6 +3,7 @@
 #include "uart0.h"
 #include "utli.h"
 #include "frame_buffer.h"
+#include "exception.h"
 
 enum ANSI_ESC {
     Unknown,
@@ -134,6 +135,9 @@ void shell_controller(char* cmd) {
     }
     else if (!strcmp(cmd, "exc")) {
         asm volatile("svc #1");
+    }
+    else if (!strcmp(cmd, "irq")) {
+        arm_core_timer_enable();
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");
