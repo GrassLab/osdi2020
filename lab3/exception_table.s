@@ -43,13 +43,13 @@ eret
 .global el2_exception_table
 .align 11 // vector table should be aligned to 0x800
 el2_exception_table:
-    b el2_exception_handler // branch to a handler function.
+    b el_not_implement // branch to a handler function.
     .align 7 // entry size is 0x80, .align will pad 0
-    b el2_exception_handler
+    b el_not_implement
     .align 7
-    b el2_exception_handler
+    b el_not_implement
     .align 7
-    b el2_exception_handler
+    b el_not_implement
     .align 7
 
     b el2_exception_handler
@@ -60,27 +60,27 @@ el2_exception_table:
     context_switch_back
     .align 7
 
-    b el2_exception_handler
+    b el_not_implement
     .align 7
-    b el2_exception_handler
-    .align 7
-
-    b el2_exception_handler
-    .align 7
-    b el2_exception_handler
-    .align 7
-    b el2_exception_handler
-    .align 7
-    b el2_exception_handler
+    b el_not_implement
     .align 7
 
-    b el2_exception_handler
+    b el_not_implement
     .align 7
-    b el2_exception_handler
+    b el_not_implement
     .align 7
-    b el2_exception_handler
+    b el_not_implement
     .align 7
-    b el2_exception_handler
+    b el_not_implement
+    .align 7
+
+    b el_not_implement
+    .align 7
+    b el_not_implement
+    .align 7
+    b el_not_implement
+    .align 7
+    b el_not_implement
     .align 7
 
 el2_exception_handler:
@@ -90,59 +90,67 @@ el2_exception_handler:
     mrs     x2, elr_el2
     mrs     x3, spsr_el2
     mrs     x4, far_el2
-    bl _el2_exception_handler
+    bl      _el2_exception_handler
     context_switch_back
 
 // Simple vector table
 .global el1_exception_table
 .align 11 // vector table should be aligned to 0x800
 el1_exception_table:
-    b el1_exception_handler // branch to a handler function.
+    b el_not_implement // branch to a handler function.
     .align 7 // entry size is 0x80, .align will pad 0
-    b el1_exception_handler
+    b el_not_implement
     .align 7
-    b el1_exception_handler
+    b el_not_implement
     .align 7
-    b el1_exception_handler
-    .align 7
-
-    b el1_exception_handler
+    b el_not_implement
     .align 7
 
-    context_switch
-    bl irq_handler
-    context_switch_back
+    b el_not_implement
+    .align 7
+    b el_not_implement
+    .align 7
+    b el_not_implement
+    .align 7
+    b el_not_implement
     .align 7
 
+    // from el0
     b el1_exception_handler
     .align 7
-    b el1_exception_handler
+    b el_not_implement
     .align 7
-
-    b el1_exception_handler
+    b el_not_implement
     .align 7
-    b el1_exception_handler
-    .align 7
-    b el1_exception_handler
-    .align 7
-    b el1_exception_handler
+    b el_not_implement
     .align 7
 
-    b el1_exception_handler
+    b el_not_implement
     .align 7
-    b el1_exception_handler
+    b el_not_implement
     .align 7
-    b el1_exception_handler
+    b el_not_implement
     .align 7
-    b el1_exception_handler
+    b el_not_implement
     .align 7
 
 el1_exception_handler:
     context_switch
     mov     x0, #0
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-    mrs     x4, far_el2
-    bl _el1_exception_handler
+    mrs     x1, esr_el1
+    mrs     x2, elr_el1
+    mrs     x3, spsr_el1
+    mrs     x4, far_el1
+    bl      _el1_exception_handler
+    context_switch_back
+    
+el1_irq_handler:
+    context_switch
+    bl      irq_handler
+    bl      _context_switch_msg
+    context_switch_back
+
+el_not_implement:
+    context_switch
+    bl      _not_implement
     context_switch_back

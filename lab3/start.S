@@ -1,3 +1,5 @@
+#include "sysregs.h"
+
 .section ".text.boot"
 
 .global _start
@@ -15,36 +17,39 @@ _start:
     // set stack before our code
     ldr     x1, =_start
 
-5:  
-    mrs     x0, hcr_el2
-    // set HCR_EL2.IMO
-    // orr     x0, x0, #(1 << 4)
-    // set HCR_EL2.RW
-    orr     x0, x0, #0x8000000
+    msr     sp_el1, x1
+
+    // hcr_el2
+    ldr     x0, =HCR_VALUE
     msr     hcr_el2, x0
 
+    // spsr_el2
+    ldr     x0, =SPSR_VALUE
+    msr     spsr_el2, x0
 
-    // for debug not route to El1
-    // mrs x0, MDCR_EL2
-    // bic x0, x0, 0x100
-    // msr MDCR_EL2, x0
-
-    // clear PSTATE.DAIF
-    mov     x0, #0
-    msr     DAIF, x0
-
-    // set up exception handlers
+    // exception tables
     ldr     x2, =el2_exception_table
     msr     vbar_el2, x2
 
-    ldr     x3, =el1_exception_table
-    msr     vbar_el1, x3
+    ldr     x2, =el1_exception_table
+    msr     vbar_el1, x2
 
-5:  mov     sp, x1
+    // jump to el1_start
+    adr     x0, el1_start
+    msr     elr_el2, x0
+    eret
 
+el1_start:
+    adr     x0, el0_start
+    msr     elr_el1, x0
+    eret
+
+el0_start:
+    mov     sp, x1 
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
+
 3:  cbz     w2, 4f
     str     xzr, [x1], #8
     sub     w2, w2, #1
@@ -54,6 +59,3 @@ _start:
 4:  bl      main
     // for failsafe, halt this core too
     b       1b
-
-
-

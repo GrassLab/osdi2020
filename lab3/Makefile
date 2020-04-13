@@ -27,8 +27,8 @@ clean:
 	rm *.o *.d
 	rm kernel8.*
 
-run_d:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty -S -s
+run_n:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -d int

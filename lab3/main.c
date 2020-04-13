@@ -73,16 +73,17 @@ void main()
 			lfb_init();
 			lfb_showpicture();
 		} else if(strcmp(command, CMD_EXC)) {
-			int i = get_el();
-			uart_print_int(i);
-			asm volatile ("svc #1");
-			i = get_el();
-			uart_print_int(i);
+			//int i = get_el();
+			//uart_print_int(i);
+			asm volatile ("svc	#1");
+			//i = get_el();
+			//uart_print_int(i);
 		} else if(strcmp(command, CMD_IRQ)) {
-			asm volatile(" mov     x0, #0");
-			asm volatile("msr     DAIF, x0");
-			local_timer_init();
-			core_timer_init();
+			// asm volatile(" mov     x0, #0");
+			// asm volatile("msr     DAIF, x0");
+			// local_timer_init();
+			// core_timer_init();
+			asm volatile ("mov x0, #0\n" "svc #0\n");
 		} else {
 			uart_puts("ERROR: ");
 			uart_puts(command);
