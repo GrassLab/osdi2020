@@ -2,6 +2,7 @@
 #include "irq.h"
 #include "timer.h"
 #include "exception.h"
+#include "bootloader.h"
 
 /**
  * common exception handler
@@ -172,6 +173,11 @@ void syscall_gettime(double *t)
     *t = (double)ct / (double)freq;
 }
 
+void syscall_load_images()
+{
+    loadimg();
+}
+
 unsigned long get_current_el()
 {
     unsigned long current_el;
@@ -184,7 +190,7 @@ unsigned long get_current_el()
     return current_el;
 }
 
-/* 
+/*
 https://developer.arm.com/docs/ddi0595/e/aarch64-system-registers/currentel
 
 EL [63:4]: Reserved, RES0.
@@ -315,6 +321,9 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         // get time
         case 0x2:
             syscall_gettime((double *)x1);
+            break;
+        case 0x3:
+            syscall_load_images();
             break;
         // not this syscall
         default:

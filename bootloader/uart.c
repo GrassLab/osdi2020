@@ -1,18 +1,9 @@
 #include "gpio.h"
 #include "common.h"
 #include "string.h"
-#include "gpio.h"
 #include "mailbox.h"
+#include "uart.h"
 
-/* PL011 UART registers */
-#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
-#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
-#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024))
-#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028))
-#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
-#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
-#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
-#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -82,6 +73,15 @@ char uart_getc() {
     return r=='\r'?'\n':r;
 }
 
+char uart_recv() {
+    char r;
+    /* wait until something is in the buffer */
+    do{asm volatile("nop");}while(*UART0_FR&0x10);
+    /* read it and return */
+    r=(char)(*UART0_DR);
+    /* convert carrige return to newline */
+    return r;
+}
 
 void uart_puts(char *s) {
     while(*s) {
@@ -92,37 +92,6 @@ void uart_puts(char *s) {
     }
 }
 
-void uart_send_int(int n)
-{
-    char s[1024];
-    memset(s, 0, 1024);
-    itoa(n, s, 10);
-
-    uart_puts(s);
-}
-
-void uart_send_hex(int n)
-{
-    char s[1024];
-    memset(s, 0, 1024);
-    itoa(n, s, 16);
-
-    uart_puts("0x");
-    uart_puts(s);
-}
-
-void uart_send_float(float f, int n)
-{
-    char s[1024];
-    memset(s, 0, 1024);
-    ftoa(f, s, n);
-    uart_puts(s);
-}
-
-int uart_print(char *s)
-{
-    uart_puts(s);
-}
 
 int uart_gets(char *buf, int buf_size)
 {
@@ -161,4 +130,19 @@ int uart_gets(char *buf, int buf_size)
         return -1;
 
     return i;
+}
+
+void uart_send_hex(unsigned int d)
+{
+    unsigned int n;
+    int c;
+    // uart_puts("0x");
+    for (c = 28; c >= 0; c -= 4)
+    {
+        // get highest tetrad
+        n = (d >> c) & 0xF;
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n += n > 9 ? 0x37 : 0x30;
+        uart_send(n);
+    }
 }

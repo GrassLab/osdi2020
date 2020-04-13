@@ -1,14 +1,14 @@
 #ifndef _BOOTLOADER_H_
 #define _BOOTLOADER_H_
 
-#define  TMP_KERNEL_ADDR  0x100000
+#define TMP_KERNEL_ADDR 0x100000
 #include "uart.h"
 #include "common.h"
 
 extern char __start_begin[];
 extern char __bss_end[];
 extern char __end[];
-
+/*
 void copy_and_jump_to_kernel(char *new_address, int kernel_size) {
     char *kernel = new_address;
 
@@ -20,6 +20,16 @@ void copy_and_jump_to_kernel(char *new_address, int kernel_size) {
         kernel[i] = c;
     }
     uart_puts("DONE\n");
+
+    asm volatile (
+        "mov x0, x10;"
+        "mov x1, x11;"
+        "mov x2, x12;"
+        "mov x3, x13;"
+        // we must force an absolute address to branch to
+
+    );
+
     uart_puts("Jump to new kernel\n");
     //branch_to_address((unsigned long int *)new_address);
      asm volatile("br %0" : "=r"((unsigned long int*)new_address));
@@ -42,5 +52,11 @@ void copy_kernel_and_load_images(char *new_address, int kernel_size) {
     void (*call_function)(char *, int) = (void (*)(char *, int))(original_function_address - (unsigned long int)__start_begin + TMP_KERNEL_ADDR);
     call_function(new_address, kernel_size);
 }
+*/
 
+void loadimg()
+    __attribute__((section(".bootloader")));
+
+void loadimg_jmp(void *address, unsigned long img_size)
+    __attribute__((section(".bootloader")));
 #endif

@@ -81,28 +81,11 @@ int cmd_timestamp(int i)
 
 int cmd_load_images(int i)
 {
-    uart_puts("Input kernel size: ");
-    char cmd[INPUT_BUFFER_SIZE];
-    memset(cmd, 0, INPUT_BUFFER_SIZE);
-
-    uart_gets(cmd, INPUT_BUFFER_SIZE);
-    int image_size = atoi(cmd);
-    uart_puts("Kernel size is: ");
-    uart_send_int(image_size);
-    uart_send('\n');
-
-    uart_puts("Input Kernel load address: ");
-    memset(cmd, 0, INPUT_BUFFER_SIZE);
-    uart_gets(cmd, INPUT_BUFFER_SIZE);
-
-    int address = atoi(cmd);
-    uart_puts("Kernel load address is: ");
-    uart_send_hex(address);
-    uart_send('\n');
-
-    loadimg(address, image_size);
-    // copy_kernel_and_load_images((void *)(long)address, image_size);
-    // load_images((char *)(long)address, image_size);
+    loadimg();
+    /*
+    asm volatile("mov x0, #3");
+    asm volatile("svc #0x80");
+    */
 }
 
 int cmd_exc(int i)
