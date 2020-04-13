@@ -36,4 +36,11 @@ memzero:
 	subs x1, x1, #8
 	b.gt memzero
 	ret
+
+.global asm_delay
+asm_delay:
+  // delay a second
+  mrs x0, CNTFRQ_EL0
+  msr CNTP_TVAL_EL0, x0
+  ret
 	

@@ -7,5 +7,6 @@ extern unsigned int get32 ( unsigned long );
 extern int get_el ( void );
 extern void enable_irq(void);
 extern void disable_irq(void);
+extern void asm_delay( void );
 
 #endif

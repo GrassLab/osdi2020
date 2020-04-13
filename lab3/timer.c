@@ -25,11 +25,18 @@ void handle_timer_irq( void )
 
 void core_timer_init()
 {
+    asm volatile("stp x29, x30, [sp, #-16]!");
+    asm volatile("mov x29, sp");
+
+    asm_delay();
     asm volatile("mov x0, 1");
     asm volatile("msr cntp_ctl_el0, x0");
     asm volatile("mov x0, 2");
     asm volatile("ldr x1, =0x40000040");
     asm volatile("str x0, [x1]");
+
+    asm volatile("ldp x29, x30, [sp], #16");
+    asm volatile("ret");
 }
 
 void core_timer_handler()
@@ -55,4 +62,3 @@ void local_timer_handler()
     uart_puts(" times\n");
     put32(LOCAL_TIMER_IRQ_CLR, 0xc0000000);
 }
-
