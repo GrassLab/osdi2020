@@ -8,6 +8,8 @@ DIR = src
 
 SRCS = $(wildcard $(DIR)/*.c)
 OBJS = $(SRCS:.c=.o)
+ASMS = a.S exception.S
+OBJS += $(ASMS:.S=.o)
 CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
 
 
@@ -18,14 +20,16 @@ all: clean kernel8
 a.o: a.S
 	$(CC) $(CFLAGS) -c a.S -o a.o
 
-start.o: start.S
-	$(CC) $(CFLAGS) -c start.S -o start.o
+exception.o: exception.S
+	$(CC) $(CFLAGS) -c exception.S -o exception.o
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-kernel8: a.o $(OBJS)
-	$(LD) -T linker.ld -o kernel8.elf $< $(OBJS)
+kernel8.elf: $(OBJS)
+	$(LD) -T linker.ld -o kernel8.elf $(OBJS)
+
+kernel8: kernel8.elf
 	$(OBJCOPY) -O binary kernel8.elf kernel8.img
 
 clean:
