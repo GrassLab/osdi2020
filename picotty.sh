@@ -1,3 +1,4 @@
 #!/bin/sh
 
-sudo picocom -b 115200 --imap lfcrlf /dev/ttyUSB0
+sudo picocom -b 115200 --imap lfcrlf "$1"
+
