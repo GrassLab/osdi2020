@@ -2,6 +2,8 @@
 #include "uart.h"
 #include "printf.h"
 #include "mailbox.h"
+#include "irq.h"
+#include "timer.h"
 #define S_MAX 100
 
 void read_string(char *buf){
@@ -74,6 +76,7 @@ void reset()
 
 void svc1(){
     asm volatile("svc #1");
+    // asm volatile("brk #1");
 }
 
 void main(){
@@ -97,6 +100,13 @@ void main(){
             svc1();
         }else if(strcmp(str,"hello")==0){
             printf("helloooo\n");
+        }else if(strcmp(str,"irq")==0){
+            printf("irq in main\n");
+            init_irq();
+            enable_irq();
+            // asm volatile("svc #0x104");
+            core_timer_enable();
+            local_timer_init();
         }else if(strcmp(str,"timestamp")==0){
             timestamp();
         }else if(strcmp(str,"reboot")==0){

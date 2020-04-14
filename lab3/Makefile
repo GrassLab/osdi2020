@@ -8,7 +8,7 @@ DIR = src
 
 SRCS = $(wildcard $(DIR)/*.c)
 OBJS = $(SRCS:.c=.o)
-ASMS = a.S exception.S
+ASMS = a.S timer.S irq.S exception.S 
 ASMS-OBJS = $(ASMS:.S=.o)
 CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
 
@@ -22,6 +22,12 @@ a.o: a.S
 
 exception.o: exception.S
 	$(CC) $(CFLAGS) -c exception.S -o exception.o
+
+timer.o: timer.S
+	$(CC) $(CFLAGS) -c timer.S -o timer.o
+
+irq.o : irq.S
+	$(CC) $(CFLAGS) -c irq.S -o irq.o
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

@@ -41,14 +41,17 @@ add	sp, sp, #256
 eret
 .endm
 
-/* 
 exception_handler:
     kernel_entry
     mrs x0, elr_el2
     mrs x1, esr_el2
     bl exc
     kernel_exit
-*/
+ 
+irq_handler:
+    kernel_entry
+    bl irq
+    kernel_exit
 
 // exception
 // Simple vector table
@@ -66,7 +69,7 @@ exception_table:
 
   b exception_handler
   .align 7
-  b exception_handler
+  b irq_handler
   .align 7
   b exception_handler
   .align 7
