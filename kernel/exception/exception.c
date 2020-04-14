@@ -19,17 +19,16 @@ void exec_controller_el1 ( SYS_CALL x0 )
     switch ( x0 ) 
     {
         case TEST_SVC:
-            print_exec_info ( elr, esr );
+            print_exec_info ( EL1, elr, esr );
+            break;
+        case TEST_HVC:
+            asm volatile ( "hvc #1" );
             break;
         case IRQ_EL1_ENABLE:
             irq_el1_enable ();
-            // since this instruction can only done in EL2, just request higher el.
-            // asm volatile ( "hvc #1;" );
             break;
         case IRQ_EL1_DISABLE:
             irq_el1_disable ();
-            // since this instruction can only done in EL2, just request higher el.
-            // asm volatile ( "hvc #1;" );
             break;
         case CORE_TIMER_ENABLE:
             core_timer_enable ();
@@ -38,7 +37,7 @@ void exec_controller_el1 ( SYS_CALL x0 )
             core_timer_disable ();
             break;
         default:
-            print_exec_info ( elr, esr );
+            print_exec_info ( EL1, elr, esr );
             break;
     }
 }
@@ -57,7 +56,10 @@ void exec_controller_el2 ( SYS_CALL x0 )
     switch ( x0 ) 
     {
         case TEST_SVC:
-            print_exec_info ( elr, esr );
+            print_exec_info ( EL2, elr, esr );
+            break;
+        case TEST_HVC:
+            uart_printf ( "Here, I am in EL2\n" );
             break;
         case IRQ_EL1_ENABLE: 
             irq_el1_enable ();
@@ -65,13 +67,19 @@ void exec_controller_el2 ( SYS_CALL x0 )
         case IRQ_EL1_DISABLE: 
             irq_el1_disable ();
             break;
+        case CORE_TIMER_ENABLE:
+            core_timer_enable ();
+            break;
+        case CORE_TIMER_DISABLE:
+            core_timer_disable ();
+            break;
         default:
-            print_exec_info ( elr, esr );
+            print_exec_info ( EL2, elr, esr );
             break;
     }
 }
 
-void print_exec_info ( uint64_t elr, uint64_t esr )
+void print_exec_info ( EL el, uint64_t elr, uint64_t esr )
 {
     uint32_t ec, iss;
 
@@ -79,6 +87,7 @@ void print_exec_info ( uint64_t elr, uint64_t esr )
     // int il = (((uint32_t)esr)>>25) & 0x1 ;
     iss = (((uint32_t)esr)) & 0x00FFFFFF;
 
+    uart_printf("Current Exception Level: %d\n", el);
     uart_printf("Exception return address: %x\n", elr);
     uart_printf("Exception clss (EC): %x\n", ec);
     uart_printf("Instruction specific syndrome (ISS): %x\n", iss);

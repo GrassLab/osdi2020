@@ -12,8 +12,9 @@ void command_vc_base_addr();
 void command_board_revision();
 void command_load_image ();
 void command_svc_exception_trap ();
+void command_hvc_exception_trap ();
 void command_brk_exception_trap ();
-void command_irq_exception_enable ();
-void command_irq_exception_disable ();
+void command_timer_exception_enable ();
+void command_timer_exception_disable ();
 
 #endif

@@ -32,17 +32,12 @@ void core_timer_enable ()
 // need to run in EL1
 void core_timer_disable ()
 {
-    // enable timer
-    // CNTP_CTL_EL0: Control register for the EL1 physical timer.
-    // bit[0]: ENABLE
-    // bit[1]: IMASK
-    // bit[2]: ISTATUS
     asm volatile (
         "mov x0, xzr;"
         "msr CNTP_CTL_EL0, x0;"
     );
 
-    *CORE0_TIMER_IRQ_CTRL = 0b00000000;
+    *CORE0_TIMER_IRQ_CTRL = 0b00;
 }
 
 // need to run in EL1

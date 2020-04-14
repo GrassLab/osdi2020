@@ -4,8 +4,8 @@ float get_current_timestamp ( )
     unsigned long int cnt_freq, cnt_tpct;    
 
     asm volatile(
-        "mrs %0, cntfrq_el0 \n\t"
-        "mrs %1, cntpct_el0 \n\t"
+        "mrs %0, CNTFRQ_EL0 \n\t"
+        "mrs %1, CNTPCT_EL0 \n\t"
         : "=r" (cnt_freq),  "=r" (cnt_tpct)
         :
     );
@@ -29,16 +29,16 @@ void wait_msec(unsigned int n)
     register unsigned long f, t, r;
     
     // get the current counter frequency
-    asm volatile ("mrs %0, cntfrq_el0" : "=r"(f));
+    asm volatile ("mrs %0, CNTFRQ_EL0" : "=r"(f));
     
     // read the current counter
-    asm volatile ("mrs %0, cntpct_el0" : "=r"(t));
+    asm volatile ("mrs %0, CNTPCT_EL0" : "=r"(t));
     
     // calculate expire value for counter
     t+=((f/1000)*n)/1000;
     do {
     
-        asm volatile ("mrs %0, cntpct_el0" : "=r"(r));
+        asm volatile ("mrs %0, CNTPCT_EL0" : "=r"(r));
     
     } while( r < t );
 }

@@ -108,76 +108,6 @@ void command_vc_base_addr()
     }
 }
 
-void command_load_image ()
-{
-    int32_t size = 0;
-    int32_t is_receive_success = 0;
-    char output_buffer[20];
-    char *load_address;
-    char *address_counter;
-
-    uart_puts("Start Loading Kernel Image...\n");
-    uart_puts("Please input kernel load address in decimal.(defualt: 0x80000): ");
-    load_address = (char *)((unsigned long)uart_getint());
-    uart_puts("Please send kernel image from UART now:\n");
-
-    wait_cycles(5000);
-
-    if ( load_address == 0 )
-        load_address = (char *)0x80000;
-
-    do {
-
-        // start signal to receive image
-        uart_send(3);
-        uart_send(3);
-        uart_send(3);
-
-        // read the kernel's size
-        size  = uart_getc();
-        size |= uart_getc() << 8;
-        size |= uart_getc() << 16;
-        size |= uart_getc() << 24;
-
-        // send negative or positive acknowledge
-        if(size<64 || size>1024*1024)
-        {
-            // size error
-            uart_send('S');
-            uart_send('E');            
-            
-            continue;
-        }
-        uart_send('O');
-        uart_send('K');
-
-        address_counter = load_address;
-        
-        // 從0x80000開始放
-        while ( size-- ) 
-        {
-            *address_counter++ = uart_getc();
-        }
-
-        is_receive_success = 1;
-
-        uart_puts("Kernel Loaded address: ");
-        itohex_str( (uint64_t)load_address, sizeof(char *), output_buffer );
-        uart_puts(output_buffer);
-        uart_send('\n');
-
-        wait_cycles(5000);
-
-    } while ( !is_receive_success );
-   
-    // restore arguments and jump to the new kernel.
-    asm volatile (
-        // we must force an absolute address to branch to
-        "mov x30, 0x80000;"
-        "ret"
-    );
-}
-
 void command_svc_exception_trap ()
 {
     asm volatile ( 
@@ -188,24 +118,24 @@ void command_svc_exception_trap ()
     );
 }
 
+void command_hvc_exception_trap ()
+{
+    asm volatile ( 
+        "mov    x0, %0;"
+        "svc    #1;"
+        :
+        : "r"(TEST_HVC)
+    );
+}
+
 void command_brk_exception_trap ()
 {
     asm volatile ( "brk #1;" );
 }
 
-void command_irq_exception_enable ()
+void command_timer_exception_enable ()
 {
-    // enable irq in el1
-    // it will always be enable
-    // asm volatile ( 
-    //     "mov    x0, %0;"
-    //     "svc    #1;"
-    //     :
-    //     : "r"(IRQ_EL1_ENABLE)
-    // );
-    // uart_printf("[IRQ Enable]\n");
-
-    // move core timer enable to sys call
+    // core timer enable need to be done in el1
     asm volatile ( 
         "mov    x0, %0;"
         "svc    #1;"
@@ -218,17 +148,17 @@ void command_irq_exception_enable ()
     uart_printf("[Local Timer Enable]\n");
 }
 
-void command_irq_exception_disable ()
+void command_timer_exception_disable ()
 {
-    // disable irq in el2
+    // core timer disable need to be done in el1
     asm volatile ( 
         "mov    x0, %0;"
         "svc    #1;"
         :
         : "r"(CORE_TIMER_DISABLE)
     );
+    uart_printf("[Core Timer Disable]\n");
 
-    // irq_el1_disable();
     local_timer_disable ();
-    uart_printf("[IRQ Disable]\n");
+    uart_printf("[Local Timer Disable]\n");
 }

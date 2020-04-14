@@ -100,12 +100,12 @@ exception_table_el1:
 
     # Synchronous
     # branch to a handler function.
-    b   _exception__handler_el1
+    b   _not_implemented
     # entry size is 0x80, .align will pad 0
     .align 7
 
     # IRQ
-    b   _irq__handler_el1
+    b   _not_implemented
     .align 7
     
     # FIQ
@@ -120,11 +120,11 @@ exception_table_el1:
     # Exception from the current EL while using SP_ELx
     # ==================================================
     # Synchronous
-    b   _exception__handler_el1
+    b   _not_implemented
     .align 7
 
     # IRQ
-    b   _irq__handler_el1
+    b   _not_implemented
     .align 7
     
     # FIQ
@@ -184,12 +184,12 @@ exception_table_el2:
 
     # Synchronous
     # branch to a handler function.
-    b   _exception__handler_el2
+    b   _not_implemented
     # entry size is 0x80, .align will pad 0
     .align 7
 
     # IRQ
-    b   _irq__handler_el2
+    b   _not_implemented
     .align 7
     
     # FIQ
@@ -204,11 +204,11 @@ exception_table_el2:
     # Exception from the current EL while using SP_ELx
     # ==================================================
     # Synchronous
-    b   _exception__handler_el2
+    b   _not_implemented
     .align 7
 
     # IRQ
-    b   _irq__handler_el2
+    b   _not_implemented
     .align 7
     
     # FIQ
