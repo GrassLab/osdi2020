@@ -9,7 +9,7 @@ exception_table:
     .align 7 // entry size is 0x80, .align will pad 0
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b irq_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
@@ -43,7 +43,7 @@ exception_table:
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b irq_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
@@ -60,7 +60,7 @@ exception_table:
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b irq_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]

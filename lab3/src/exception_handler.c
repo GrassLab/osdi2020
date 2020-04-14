@@ -7,8 +7,8 @@ void handler(){
     unsigned long long esr;
     char res[30];
 
-    asm volatile("mrs %0, ELR_EL2" : "=r"(elr));
-    asm volatile("mrs %0, ESR_EL2" : "=r"(esr));
+    asm volatile("mrs %0, ELR_EL1" : "=r"(elr));
+    asm volatile("mrs %0, ESR_EL1" : "=r"(esr));
 
     unsign_itohexa(elr, res);
     uart_puts("Exception return address: 0x");

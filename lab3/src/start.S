@@ -15,16 +15,33 @@ init_bss:
     cmp x0, x1
     ble init_bss
 
-    // load exception_table to VBAR_EL2
+// load exception_table to VBAR_EL1
     ldr x0, =exception_table
-    msr VBAR_EL2, x0
-    mrs x0, HCR_EL2
-    orr x0, x0, 16
+    msr VBAR_EL1, x0
+// from el2 to el1
+    mov x0, (1 << 31)
     msr HCR_EL2, x0
-    msr DAIFClr, 0xf
+    mov x0, 0x3c5
+    msr SPSR_EL2, x0
+    adr x0, from_el1_to_el0
+    msr ELR_EL2, x0
+    ldr x0, =_start
+    msr SP_EL1, x0
+    eret
 
-	ldr x0, = _start
-    mov sp, x0
-    bl main
+from_el1_to_el0:
+    mov x0, 0x1000
+    msr SP_EL0, x0
+    mov x0, 0 // EL0 with interrupt enabled
+    msr SPSR_EL1, x0
+    adr x0, main // return to shell run in EL0
+    msr elr_el1, x0
+    msr DAIFClr, 0xf
+    eret
+
+//rest_initialization:
+    //ldr x0, =_start
+    //mov sp, x0
+    //bl main
 1:
     b 1b
