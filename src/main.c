@@ -8,6 +8,15 @@
 #include "../include/interrupt.h"
 //#include "../include/exception.h"
 
+#define WELCOME \
+    "                                                 \n" \
+    "   ____   _____ _____ _____ ___   ___ ___   ___  \n" \
+    "  / __ \\ / ____|  __ \\_   _|__ \\ / _ \\__ \\ / _ \\ \n" \
+    " | |  | | (___ | |  | || |    ) | | | | ) | | | |\n" \
+    " | |  | |\\___ \\| |  | || |   / /| | | |/ /| | | |\n" \
+    " | |__| |____) | |__| || |_ / /_| |_| / /_| |_| |\n" \
+    "  \\____/|_____/|_____/_____|____|\\___/____|\\___/ \n" \
+    "                                                 \n"
 
 int SPLASH_ON = 0;
 int LOADIMG = 0;
@@ -19,6 +28,7 @@ void main()
 {
     // set up serial console and linear frame buffer
     uart_init();
+    uart_puts(WELCOME);
     // char *int1 = 0;
     // uart_atoi(int1, 123456);
     // uart_puts(int1);
