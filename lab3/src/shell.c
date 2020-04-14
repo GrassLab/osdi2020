@@ -100,9 +100,13 @@ int shell_execute(char *cmd){
     }
 #endif
     else if(EQS("exc", cmd)){
+
+#if defined(RUN_ON_EL1) || defined(RUN_ON_EL2)
         unsigned long current_el;
         __asm__ volatile("mrs %0, CurrentEL\n\t" : "=r" (current_el) : : "memory");
         printf("currentEL: %d" NEWLINE, current_el >> 2);
+#endif
+
 #if 1
         int *sp; 
         __asm__ volatile ("mov %0, sp" : "=r"(sp));
@@ -143,7 +147,7 @@ int shell_execute(char *cmd){
         puts("ret from brk");
     }
     else if(EQS("irq", cmd)){
-        sys_timer_init();
+        //sys_timer_init();
         local_timer_init();
         core_timer_init();
     }

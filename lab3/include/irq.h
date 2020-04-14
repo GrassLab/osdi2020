@@ -24,4 +24,15 @@
 
 #define AUX_IRQ (1 << 29)
 
+/* void enable_interrupt_controller( void ); */
+void irq_handler();
+
+/* irq.S */
+void init_irq();
+void disable_irq();
+void enable_irq();
+
+/* irq.c */
+void init_uart_irq();
+
 #endif  /*_P_IRQ_H */

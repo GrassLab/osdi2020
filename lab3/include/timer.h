@@ -10,4 +10,6 @@ void sys_timer_handler();
 void core_timer_init();
 void core_timer_handler();
 
+void sys_core_timer_enable();
+
 #endif

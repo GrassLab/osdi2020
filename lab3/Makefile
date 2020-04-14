@@ -3,8 +3,9 @@ ARMGNU ?= aarch64-linux-gnu
 ASMOPS = -fPIC -Iinclude -g
 COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g
 
-#COPS += -DRUN_ON_EL2
-#ASMOPS += -DRUN_ON_EL2
+EL=-DRUN_ON_EL0
+COPS += $(EL)
+ASMOPS += $(EL) 
 
 QEMU     = qemu-system-aarch64
 

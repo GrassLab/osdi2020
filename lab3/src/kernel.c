@@ -35,23 +35,15 @@ void init_interrupt(){
     __asm__ volatile ("msr hcr_el2, %0" :: "r"(hcr));
 #endif
     *ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ);
-    __asm__ volatile ("msr  daifclr, #2 ");
+    __asm__ volatile ("msr  daifclr, #2");
 }
 
+#include "mm.h"
 int main(void){
 
     uart_init();
-
-    puts("HELLO SUCCESSFULLY");
-
-    unsigned long current_el;
-    __asm__ volatile("mrs %0, CurrentEL\n\t" : "=r" (current_el) : : "memory");
-    printf("currentEL: %d" NEWLINE, current_el >> 2);
-
     lfb_init();
     lfb_showpicture();
-
-    init_interrupt();
 
 #ifdef TEST
     puts("");
@@ -59,6 +51,7 @@ int main(void){
     ASSERT((unsigned long long)stack_pointer() < (unsigned long long)0x80000);
 #endif
 
+    puts("HELLO SUCCESSFULLY");
     while(1){
 #ifdef BUGGY
         println(NEWLINE, welcome);

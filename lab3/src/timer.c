@@ -41,19 +41,28 @@ void sys_timer_handler(){
 #define CORE0_TIMER_IRQ_CTRL "0x40000040"
 
 void core_timer_init(){
+#if defined(RUN_ON_EL1) || defined(RUN_ON_EL2)
     puts("Init core timer, done");
-    __asm__ volatile ("mov x0, 1");
-    __asm__ volatile ("msr cntp_ctl_el0, x0"); // enable timer
-    __asm__ volatile ("mov x0, 2");
-    __asm__ volatile ("ldr x1, =" CORE0_TIMER_IRQ_CTRL);
-    __asm__ volatile ("str x0, [x1]"); // enable timer interrupt
+    __asm__ volatile("mov x0, 1");
+    __asm__ volatile("msr cntp_ctl_el0, x0"); // enable timer
+    __asm__ volatile("mov x0, 2");
+    __asm__ volatile("ldr x1, =" CORE0_TIMER_IRQ_CTRL);
+    __asm__ volatile("str x0, [x1]"); // enable timer interrupt
+    __asm__ volatile("mrs x0, cntfrq_el0");
+    __asm__ volatile("msr cntp_tval_el0, x0");
+#else
+    __asm__ volatile("stp x8, x9, [sp, #-16]!");
+    __asm__ volatile("mov x8, #0");
+    __asm__ volatile("svc #0");
+    __asm__ volatile("ldp x8, x9, [sp], #16");
+#endif
 }
 
 #define EXPIRE_PERIOD "0x1ffffff"
 void core_timer_handler(){
     static unsigned int jiffies = 0;
-    //__asm__ volatile ("mov x0, " EXPIRE_PERIOD);
-    __asm__ volatile ("mrs x0, cntfrq_el0");
-    __asm__ volatile ("msr cntp_tval_el0, x0");
+    //__asm__ volatile("mov x0, " EXPIRE_PERIOD);
+    __asm__ volatile("mrs x0, cntfrq_el0");
+    __asm__ volatile("msr cntp_tval_el0, x0");
     printf("Core timer interrupt, %d" NEWLINE, jiffies++);
 }

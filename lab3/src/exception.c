@@ -1,44 +1,89 @@
 #include "io.h"
 #include "map.h"
-#define nb8p(bytes, n, p) (((1 << n) - 1) & (bytes >> (p)))
+#include "time.h"
+#include "timer.h"
 
-  
-void exception_handler(){
-    //char *ret;
-    //unsigned long long esr;
-    //__asm__ volatile ("mrs %0, ELR_EL2 " : "=r"(ret));
-    //printf("exc ret adr = 0x%x" NEWLINE, ret);
-    //__asm__ volatile ("mrs %0, ESR_EL2 " : "=r"(esr));
-    //printf("esr reg val = 0x%x" NEWLINE, esr);
-    puts("Exceptions Handler");
+const char *entry_error_messages[] = {
+    "SYNC_INVALID_EL1t",
+    "IRQ_INVALID_EL1t",
+    "FIQ_INVALID_EL1t",
+    "ERROR_INVALID_EL1T",
+
+    "SYNC_INVALID_EL1h",
+    "IRQ_INVALID_EL1h",
+    "FIQ_INVALID_EL1h",
+    "ERROR_INVALID_EL1h",
+
+    "SYNC_INVALID_EL0_64",
+    "IRQ_INVALID_EL0_64",
+    "FIQ_INVALID_EL0_64",
+    "ERROR_INVALID_EL0_64",
+
+    "SYNC_INVALID_EL0_32",
+    "IRQ_INVALID_EL0_32",
+    "FIQ_INVALID_EL0_32",
+    "ERROR_INVALID_EL0_32"
+};
+
+void show_invalid_entry_message(int type,
+        unsigned long esr,
+        unsigned long elr) {
+    if (type != -1)
+        printf("Type: %s" NEWLINE, entry_error_messages[type]);
+    printf("Exception return address 0x%x" NEWLINE
+            "Exception class (EC) 0x%x" NEWLINE
+            "Instruction specific syndrome (ISS) 0x%x" NEWLINE,
+            elr , esr>>26, esr & 0xfff);
+    return;
 }
 
-void synchronous_exceptions(){
-    char *ret;
-    unsigned long esr;
-    unsigned long current_el;
-    __asm__ volatile("mrs %0, CurrentEL\n\t" : "=r" (current_el) : : "memory");
-    printf("currentEL: %d" NEWLINE, current_el >> 2);
+void syscall(unsigned int code, long x0, long x1, long x2, long x3,
+        long x4, long x5) {
+    printf("syscall: %d" NEWLINE, code);
+    switch (code) {
+        case 0:
+            sys_core_timer_enable();
+            __asm__ volatile("mov x0, #0");
+            break;
+        case 1:
+            sys_timestamp(); 
+            __asm__ volatile("mov x0, #0");
+            break;
+        default:
+            __asm__ volatile("mov x0, #1");
+            break;
+    }
+    return;
+}
 
-#ifdef RUN_ON_EL2
-    __asm__ volatile ("mrs %0, ELR_EL2" : "=r"(ret));
-    __asm__ volatile ("mrs %0, ESR_EL2" : "=r"(esr));
-#else
-    __asm__ volatile ("mrs %0, ELR_EL1" : "=r"(ret));
-    __asm__ volatile ("mrs %0, ESR_EL1" : "=r"(esr));
-#endif
+void exception_handler(long x0, long x1, long x2, long x3, long x4, long x5) {
+    unsigned long elr, esr, code, ret = 1;
 
-    printf("Exception return address 0x%x" NEWLINE, ret);
-    printf("Exception class (EC) 0x%x" NEWLINE, nb8p(esr, 6, 26));
-    printf("Instruction spepcfic syndrome (ISS) 0x%x" NEWLINE, nb8p(esr, 25, 0));
-    puts("Synchronous Exceptions");
-    int *sp;
-    __asm__ volatile ("mov %0, sp" : "=r"(sp));
-    printf("sp = 0x%x" NEWLINE, sp);
+    __asm__ volatile("mov %0, x8\n"
+            "mrs %1, elr_el1\n"
+            "mrs %2, esr_el1" :
+            "=r"(code), "=r"(elr), "=r"(esr));
 
-#define MOV_GPR(x) __asm__ volatile ("mov x" #x ", #9487");
+    unsigned int ec  = esr >> 26;
+    unsigned int iss = esr & 0xfff;
 
-    MAP(MOV_GPR, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-        20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30);
+    switch (ec) {
+        case 0x15:
+            if (iss == 0) {
+                puts("===================");
+                printf("syscall code: %d" NEWLINE , code);
+
+                syscall(code, x0, x1, x2, x3, x4, x5);
+                __asm__ volatile("mov %0, x0" : "=r"(ret));
+                /* the return value will stored in x0 register */
+                printf("syscall return value %d" NEWLINE, ret);
+                puts("===================");
+                if (ret == 0) return;
+                printf("syscall failed with code number: %d" NEWLINE, code);
+            }
+            break;
+        default:
+            break;
+    }
+    show_invalid_entry_message(-1, esr, elr);
 }

@@ -5,7 +5,7 @@
 
 void handle_uart_irq( void ){
 	// There may be more than one byte in the FIFO.
-	//while((get32(AUX_MU_IIR_REG) & IIR_REG_REC_NON_EMPTY) ==
+	//while((*(AUX_MU_IIR_REG) & IIR_REG_REC_NON_EMPTY) ==
 	//      IIR_REG_REC_NON_EMPTY) {
 	//	uart_send(uart_recv()); 
 	//}

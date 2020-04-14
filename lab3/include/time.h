@@ -5,5 +5,6 @@
 void wait_msec(unsigned int n);
 #define dps 100000000
 void timestamp();
+void sys_timestamp();
 
 #endif
