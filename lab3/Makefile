@@ -40,7 +40,7 @@ COPS += -DMINIUART
 
 # enable uart interrupt
 COPS += -DUARTINT
-
+ASMOPS += -DUARTINT
 
 all : $(IMG)
 

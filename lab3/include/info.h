@@ -5,5 +5,6 @@
 int get_board_revision();
 int get_arm_memaddr();
 int get_vc_memaddr();
+void get_current_el();
 
 #endif

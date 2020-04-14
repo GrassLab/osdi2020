@@ -23,22 +23,10 @@ char *welcome =
 char *_kend, *_kbeg;
 #endif
 
-#define HCR_RW	    			(1 << 31)
-#define HCR_VALUE			HCR_RW
-
-void init_interrupt(){
-
-#ifdef RUN_ON_EL2
-    unsigned long hcr;
-    __asm__ volatile ("mrs %0, hcr_el2" : "=r"(hcr));
-    hcr |= 1 << 4; //IMO
-    __asm__ volatile ("msr hcr_el2, %0" :: "r"(hcr));
-#endif
-    *ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
-    __asm__ volatile ("msr  daifclr, #2");
-}
-
 #include "mm.h"
+
+extern char *exec_ptr;
+
 int main(void){
 
     uart_init();
@@ -51,7 +39,7 @@ int main(void){
     ASSERT((unsigned long long)stack_pointer() < (unsigned long long)0x80000);
 #endif
 
-    puts("HELLO SUCCESSFULLY");
+    puts("HELLO WORLD SUCCESSFULLY");
 
     while(1){
 #ifdef BUGGY
@@ -83,7 +71,14 @@ int main(void){
         flush();
 
 #ifdef UARTINT
-        while(1);
+        print("# ");
+        while(1){
+            if(exec_ptr){
+                shell_execute(exec_ptr); 
+                exec_ptr = 0;
+                print("# ");
+            }
+        }
 #else
         shell_loop(); 
 #endif

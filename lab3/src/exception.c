@@ -1,5 +1,6 @@
 #include "io.h"
 #include "map.h"
+#include "info.h"
 #include "time.h"
 #include "timer.h"
 
@@ -66,6 +67,8 @@ void exception_handler(long x0, long x1, long x2, long x3, long x4, long x5) {
 
     unsigned int ec  = esr >> 26;
     unsigned int iss = esr & 0xfff;
+
+    get_current_el();
 
     switch (ec) {
         case 0x15:

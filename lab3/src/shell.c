@@ -12,7 +12,10 @@
 #include "loadimg.h"
 #endif
 
-char buffer[1024];
+#define BUFFER_SIZE 1024
+char buffer[BUFFER_SIZE];
+
+char *exec_ptr = 0;
 
 char *shell_read_line(char *ptr){
     print("# ");
@@ -102,9 +105,7 @@ int shell_execute(char *cmd){
     else if(EQS("exc", cmd)){
 
 #if defined(RUN_ON_EL1) || defined(RUN_ON_EL2)
-        unsigned long current_el;
-        __asm__ volatile("mrs %0, CurrentEL\n\t" : "=r" (current_el) : : "memory");
-        printf("currentEL: %d" NEWLINE, current_el >> 2);
+        get_current_el();
 #endif
 
 #if 1
@@ -147,9 +148,9 @@ int shell_execute(char *cmd){
         puts("ret from brk");
     }
     else if(EQS("irq", cmd)){
-        sys_timer_init();
+        //sys_timer_init();
         local_timer_init();
-        core_timer_init();
+        //core_timer_init();
     }
     else if(EQS("board", cmd)){
         if(get_board_revision())
@@ -181,6 +182,61 @@ int shell_execute(char *cmd){
     }
     return 0;
 }
+
+void shell_stuff_line(char c){
+    static char *ptr = buffer - 1;
+
+    *(++ptr) = c;
+    switch(*ptr){
+        case 4:
+            ptr = buffer + 1;
+            *ptr = '\r';
+            *buffer = 4;
+            break;
+        case 8:
+        case 127:
+            ptr--;
+            if(ptr >= buffer){
+                ptr--;
+                print("\b \b");
+            }
+            break;
+        case 12:
+            *ptr = 0;
+            ptr--;
+            print("\e[1;1H\e[2J");
+            print("# ", buffer);
+            break;
+        case 21:
+            ptr--;
+            while(ptr >= buffer){
+                if(*ptr == '\t')
+                    print("\b\b\b\b\b\b");
+                else
+                    print("\b \b");
+                ptr--;
+            }
+            break;
+        default:
+            putchar(*ptr);
+    }
+
+    if(ptr >= buffer && strchr("\r\n", *ptr)){
+        exec_ptr = buffer;
+        while(ptr >= buffer && strchr(" \r\t", *ptr)) ptr--;
+        *(++ptr) = 0; puts("");
+        while(exec_ptr < ptr && strchr(" \r\t\n", *exec_ptr)) exec_ptr++;
+        ptr = buffer - 1;
+        //shell_execute(beg);
+        //exec_shell = 1;
+        //print("# ");
+    }
+    else if(ptr >= buffer + BUFFER_SIZE){
+        puts("buffer size isn't enough... cleared.");
+        ptr = buffer - 1;
+    } 
+}
+
 
 int shell_loop(){
     while(shell_execute(shell_read_line(buffer)) >= 0);

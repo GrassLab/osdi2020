@@ -98,7 +98,11 @@ error_invalid_el1t:
     handle_invalid_entry  ERROR_INVALID_EL1t
 
 sync_invalid_el1h:
+#ifdef UARTINT
+    exception_entry
+#else
     handle_invalid_entry  SYNC_INVALID_EL1h
+#endif
 irq_invalid_el1h:
 #ifdef RUN_ON_EL0
     handle_invalid_entry  IRQ_INVALID_EL1h

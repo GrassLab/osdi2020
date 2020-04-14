@@ -61,3 +61,9 @@ int get_clock(){
     mbox[7] = END_TAG; // tags end
     return mbox_call(MBOX_CH_PROP); 
 }
+
+void get_current_el(){
+    unsigned long current_el;
+    __asm__ volatile("mrs %0, CurrentEL\n\t" : "=r" (current_el) : : "memory");
+    printf("currentEL: %d" NEWLINE, current_el >> 2);
+}

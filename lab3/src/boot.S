@@ -25,14 +25,17 @@ continue:
 
 #ifdef RUN_ON_EL2
     // note this
-    bl init_interrupt
+    bl init_irq
     ldr x0, =exception_table
     msr vbar_el2, x0
     b kernel_entry
 #else
 #if defined(RUN_ON_EL0) || defined(RUN_ON_EL1)
+    //ldr x0, =exception_table
+    //msr vbar_el2, x0
+
     ldr	x0, =SCTLR_VALUE_MMU_DISABLED
-    msr	sctlr_el1, x0		
+    msr	sctlr_el1, x0
 
     ldr	x0, =HCR_VALUE
     msr	hcr_el2, x0
@@ -51,6 +54,9 @@ continue:
 
 el1_entry:
 
+    //mov	x0, #0x200000
+    //mov	sp, x0
+
     // need?
     ldr     x0, =__stack_top
     mov     sp, x0
@@ -58,7 +64,7 @@ el1_entry:
     ldr x0, =exception_table
     msr vbar_el1, x0
 
-    bl init_interrupt
+    bl init_irq
 
 #ifdef RUN_ON_EL1
     b kernel_entry
