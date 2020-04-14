@@ -5,4 +5,5 @@ Debug/*
 *build
 *.img
 *.elf
-src/linker.ld
+linker.ld
+

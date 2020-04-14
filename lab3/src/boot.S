@@ -30,6 +30,7 @@ continue:
     msr vbar_el2, x0
     b kernel_entry
 #else
+#if defined(RUN_ON_EL0) || defined(RUN_ON_EL1)
     ldr	x0, =SCTLR_VALUE_MMU_DISABLED
     msr	sctlr_el1, x0		
 
@@ -43,6 +44,9 @@ continue:
     msr	elr_el2, x0
 
     eret
+#else
+    b kernel_entry
+#endif
 #endif
 
 el1_entry:
@@ -54,8 +58,9 @@ el1_entry:
     ldr x0, =exception_table
     msr vbar_el1, x0
 
-#ifdef RUN_ON_EL1
     bl init_interrupt
+
+#ifdef RUN_ON_EL1
     b kernel_entry
 #endif
 
@@ -69,8 +74,7 @@ el1_entry:
     eret
 
 el0_entry:
-    // set stack
-    //ldr x0, #LOW_MEMORY
+
     mov x0, #LOW_MEMORY
     mov sp, x0 
 
