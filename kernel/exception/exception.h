@@ -3,6 +3,16 @@
 
 #include "lib/type.h"
 
+#define SYS_CALL_TEST_SVC               "svc #1;"
+#define SYS_CALL_TEST_HVC               "svc #2;"
+#define SYS_CALL_IRQ_EL1_ENABLE         "svc #3;"
+#define SYS_CALL_IRQ_EL1_DISABLE        "svc #4;"
+#define SYS_CALL_CORE_TIMER_ENABLE      "svc #5;"
+#define SYS_CALL_CORE_TIMER_DISABLE     "svc #6;"
+#define SYS_CALL_PRINT_TIMESTAMP_EL0    "svc #7;"
+
+#define LAUNCH_SYS_CALL(x) asm volatile ( x );  
+
 enum system_call {
     TEST_SVC = 1,
     TEST_HVC,
@@ -21,8 +31,8 @@ enum exception_level {
 typedef enum system_call SYS_CALL;
 typedef enum exception_level EL;
 
-
-void exec_controller_el1 ( SYS_CALL x0 );
+void exec_controller_el1 ( );
+void exec_controller_el2 ( );
 void print_exec_info ( EL el, uint64_t elr, uint64_t esr );
 
 #endif

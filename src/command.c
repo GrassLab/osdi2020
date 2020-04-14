@@ -41,12 +41,7 @@ void command_hello ()
 
 void command_timestamp ()
 {
-    asm volatile ( 
-        "mov    x0, %0;"
-        "svc    #1;"
-        :
-        : "r"(PRINT_TIMESTAMP_EL0)
-    );
+    LAUNCH_SYS_CALL ( SYS_CALL_PRINT_TIMESTAMP_EL0 );
 }
 
 void command_not_found (char * s) 
@@ -111,22 +106,12 @@ void command_vc_base_addr()
 
 void command_svc_exception_trap ()
 {
-    asm volatile ( 
-        "mov    x0, %0;"
-        "svc    #2;"
-        :
-        : "r"(TEST_SVC)
-    );
+    LAUNCH_SYS_CALL ( SYS_CALL_TEST_SVC );
 }
 
 void command_hvc_exception_trap ()
 {
-    asm volatile ( 
-        "mov    x0, %0;"
-        "svc    #1;"
-        :
-        : "r"(TEST_HVC)
-    );
+    LAUNCH_SYS_CALL ( SYS_CALL_TEST_HVC );
 }
 
 void command_brk_exception_trap ()
@@ -137,12 +122,7 @@ void command_brk_exception_trap ()
 void command_timer_exception_enable ()
 {
     // core timer enable need to be done in el1
-    asm volatile ( 
-        "mov    x0, %0;"
-        "svc    #1;"
-        :
-        : "r"(CORE_TIMER_ENABLE)
-    );
+    LAUNCH_SYS_CALL ( SYS_CALL_CORE_TIMER_ENABLE );
     uart_printf("[Core Timer Enable]\n");
 
     local_timer_enable();
@@ -152,12 +132,7 @@ void command_timer_exception_enable ()
 void command_timer_exception_disable ()
 {
     // core timer disable need to be done in el1
-    asm volatile ( 
-        "mov    x0, %0;"
-        "svc    #1;"
-        :
-        : "r"(CORE_TIMER_DISABLE)
-    );
+    LAUNCH_SYS_CALL ( SYS_CALL_CORE_TIMER_DISABLE );
     uart_printf("[Core Timer Disable]\n");
 
     local_timer_disable ();

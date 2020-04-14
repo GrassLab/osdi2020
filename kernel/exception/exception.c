@@ -6,9 +6,10 @@
 #include "irq.h"
 #include "timer.h"
 
-void exec_controller_el1 ( SYS_CALL x0 )
+void exec_controller_el1 ( )
 {
     uint64_t elr, esr;
+    uint32_t iss;
 
     asm volatile ( 
         "mrs     %0, ELR_EL1;"
@@ -16,8 +17,10 @@ void exec_controller_el1 ( SYS_CALL x0 )
         : "=r" ( elr ), "=r" ( esr )
         :
     );
+
+    iss = (((uint32_t)esr)) & 0x00FFFFFF;
     
-    switch ( x0 ) 
+    switch ( iss ) 
     {
         case TEST_SVC:
             print_exec_info ( EL1, elr, esr );
@@ -46,9 +49,10 @@ void exec_controller_el1 ( SYS_CALL x0 )
     }
 }
 
-void exec_controller_el2 ( SYS_CALL x0 )
+void exec_controller_el2 ( )
 {
     uint64_t elr, esr;    
+    uint32_t iss;
 
     asm volatile ( 
         "mrs     %0, ELR_EL2;"
@@ -56,8 +60,10 @@ void exec_controller_el2 ( SYS_CALL x0 )
         : "=r" ( elr ), "=r" ( esr )
         :
     );
+
+    iss = (((uint32_t)esr)) & 0x00FFFFFF;
     
-    switch ( x0 ) 
+    switch ( iss ) 
     {
         case TEST_SVC:
             print_exec_info ( EL2, elr, esr );
