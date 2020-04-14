@@ -1,17 +1,19 @@
 SECTIONS
 {
     . = 0x80000;
-    PROVIDE(__loader_start = .);
-    .text : { KEEP(*(.text.boot)) *(.text .text.*) }
-    .data : { *(.data .data.*) }
-    .bss : {
-        . = ALIGN(16);
-        __bss_start = .;
-        *(.bss .bss.*)
-        __bss_end = .;
+    .text : { *(.text) }
+    .data : { *(.data) }
+    .bss : { 
+        __bss_start = ALIGN(0x10); 
+        *(.bss); 
+        __bss_end = ALIGN(0x10); 
     }
-    __loader_end = .;
+    .bootloader : {
+        __bootloader_start = . ;
+        *(.bootloader);
+        __bootloader_end = . ;
+    }
 
 }
 __bss_size = (__bss_end - __bss_start)>>3;
-__loader_size = (__loader_end - __loader_start)>>3;
+__bootloader_size = (__bootloader_end - __bootloader_start)>>3;

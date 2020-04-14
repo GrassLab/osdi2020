@@ -1,21 +1,20 @@
 SRCS = $(wildcard src/*.c)
+ASMS = $(wildcard src/*.S)
 OBJS = $(SRCS:.c=.o)
 CC = aarch64-linux-gnu-gcc 
 CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
 
+.PHONY: all clean run gdb objdump readelf copy
+
 all: clean kernel8.img
 
-start.o: src/start.S
-	$(CC) $(CFLAGS) -c src/start.S -o src/start.o
-
-utils.o: src/utils.S
-	$(CC) $(CFLAGS) -c src/utils.S -o src/utils.o
-
-src/%.o: src/%.c
+src/%.o: src/%.c 
 	$(CC) $(CFLAGS) -c $< -o $@
 
-kernel8.img: src/start.o src/utils.o $(OBJS)
-	aarch64-linux-gnu-ld -nostdlib -nostartfiles src/start.o src/utils.o $(OBJS) -T src/link.ld -o kernel8.elf
+kernel8.elf: $(ASMS) $(OBJS)
+	aarch64-linux-gnu-gcc -nostdlib -nostartfiles $(ASMS) $(OBJS) -T src/link.ld -o kernel8.elf
+	
+kernel8.img: kernel8.elf
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
 
 clean:
@@ -23,11 +22,15 @@ clean:
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
+
 gdb:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -S -s
+
 objdump:
 	aarch64-linux-gnu-objdump -d kernel8.elf
+
 readelf:
 	aarch64-linux-gnu-readelf -a kernel8.elf
+	
 copy:
 	cp kernel8.img /media/hank0438/4DFF-0A36/

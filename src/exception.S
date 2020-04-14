@@ -1,13 +1,18 @@
-#include "../include/exception.h"
-#include "../include/interrupt.h"
-
-.section ".text.exception"
+.section ".text"
 /// Call the function provided by parameter `\handler` after saving the exception context.
 /// Provide the context as the first parameter to '\handler'.
-.macro EXCEPTION_ROUTINE num
-//__exception_store_context:
+
+.macro EXCEPTION_ROUTINE
+    b      __exception_routine
+.endm
+
+.macro INTERRUPT_ROUTINE 
+    b      __interrupt_routine
+.endm
+
+.macro STORE_CONTEXT
     // Make room on the stack for the exception context.
-    sub    sp,  sp,  #16 * 18
+    sub    sp,  sp,  #16 * 16
 
     // Store all general purpose registers on the stack.
     stp    x0,  x1,  [sp, #16 * 0]
@@ -25,27 +30,10 @@
     stp    x24, x25, [sp, #16 * 12]
     stp    x26, x27, [sp, #16 * 13]
     stp    x28, x29, [sp, #16 * 14]
-    str    w30,      [sp, #16 * 15]
+    str    x30,      [sp, #16 * 15]
+.endm
 
-    mrs     x2, elr_el2
-    mrs     x3, spsr_el2
-
-    // store PC and PSTATE
-    stp     lr,  x2,  [sp, #16 * 16]
-    str     w3,       [sp, #16 * 17]
-
-    mov    x0, \num
-    bl      exc_handler
-
-//__exception_load_context:
-    // load PC and PSTATE
-    ldr    w19,      [sp, #16 * 17]
-    ldp    lr,  x20, [sp, #16 * 16]
-    ldr    w30,      [sp, #16 * 15]
-
-    msr    spsr_el2, x19
-    msr    elr_el2,  x20
-
+.macro LOAD_CONTEXT
     ldp    x0,  x1,  [sp, #16 * 0]
     ldp    x2,  x3,  [sp, #16 * 1]
     ldp    x4,  x5,  [sp, #16 * 2]
@@ -61,107 +49,82 @@
     ldp    x24, x25, [sp, #16 * 12]
     ldp    x26, x27, [sp, #16 * 13]
     ldp    x28, x29, [sp, #16 * 14]
+    ldr    x30,      [sp, #16 * 15]
 
-    add    sp,  sp,  #16 * 17
-    
-    eret
+    add    sp,  sp,  #16 * 16
 .endm
 
-__interrupt_handler:
-    //EXCEPTION_ROUTINE #1
-    bl handle_timer_irq
+
+__exception_routine:
+    STORE_CONTEXT
+    bl      exception_handler
+    LOAD_CONTEXT
     eret
 
-#define HCR_RW	    (1 << 31)
-#define HCR_VALUE	HCR_RW
 
-.global set_HCR_EL2_IMO
-set_HCR_EL2_IMO:
-    ldr	    x0, =HCR_VALUE
-	msr	    hcr_el2, x0
-    ret
-
-#define CORE0_TIMER_IRQ_CTRL 0x40000040
-
-.global core_timer_enable
-core_timer_enable:
-    mov x0, 1
-    msr cntp_ctl_el0, x0 // enable timer
-    mov x0, 2
-    ldr x1, =CORE0_TIMER_IRQ_CTRL
-    str x0, [x1] // enable timer interrupt
-    ret
+__interrupt_routine:
+    //bl      disable_irq
+    STORE_CONTEXT
+    bl      debug
+    bl      interrupt_handler
+    LOAD_CONTEXT
+    //bl      enable_irq
+    eret
+    
 
 .align 11
 .global _exception_table
 _exception_table:
-// Current exception level with SP_EL0.
-    // synchronous
-    .align 7 //  0x000
-    EXCEPTION_ROUTINE #0
+    // Current exception level with SP_EL0.
+    .align 7 // synchronous //  0x000
+    b exception_not_implement
 
-    // IRQ
-    .align 7 //  0x080
-    EXCEPTION_ROUTINE #1
+    .align 7 // IRQ //  0x080
+    b exception_not_implement
+    
+    .align 7 // FIQ //  0x100
+    b exception_not_implement
 
-    // FIQ
-    .align 7 //  0x100
-    EXCEPTION_ROUTINE #2
-
-    // SError
-    .align 7 //  0x180
-    EXCEPTION_ROUTINE #3
+    .align 7 // SError //  0x180
+    b exception_not_implement
 
     // Current exception level with SP_ELx, x > 0.
-    // synchronous
-    .align 7 //  0x200
-    EXCEPTION_ROUTINE #0
+    .align 7 // synchronous //  0x200
+    EXCEPTION_ROUTINE
 
-    // IRQ
-    .align 7 //  0x280
-    //EXCEPTION_ROUTINE #1
-    b   __interrupt_handler
+    .align 7 // IRQ //  0x280
+    INTERRUPT_ROUTINE
 
-    // FIQ
-    .align 7 //  0x300
-    EXCEPTION_ROUTINE #2
+    .align 7 // FIQ //  0x300
+    b exception_not_implement
 
-    // SError
-    .align 7 //  0x380
-    EXCEPTION_ROUTINE #3
+    .align 7 // SError //  0x380
+    b exception_not_implement
 
     // Lower exception level, AArch64
-    // synchronous
-    .align 7 //  0x400
-    EXCEPTION_ROUTINE #0
+    .align 7 // synchronous //  0x400
+    EXCEPTION_ROUTINE
+    
+    .align 7 // IRQ //  0x480
+    INTERRUPT_ROUTINE
 
-    // IRQ
-    .align 7 //  0x480
-    EXCEPTION_ROUTINE #1
+    .align 7 // FIQ //  0x500
+    b exception_not_implement
 
-    // FIQ
-    .align 7 //  0x500
-    EXCEPTION_ROUTINE #2
-
-    // SError
-    .align 7 //  0x580
-    EXCEPTION_ROUTINE #3
+    .align 7 // SError //  0x580
+    b exception_not_implement
 
     // Lower exception level, AArch32
-    // synchronous
-    .align 7 //  0x600
-    EXCEPTION_ROUTINE #0
+    .align 7 // synchronous //  0x600
+    b exception_not_implement
 
-    // IRQ
-    .align 7 //  0x680
-    EXCEPTION_ROUTINE #1
+    .align 7 // IRQ //  0x680
+    b exception_not_implement
 
-    // FIQ
-    .align 7 //  0x700
-    EXCEPTION_ROUTINE #2
+    .align 7 // FIQ //  0x700
+    b exception_not_implement
 
-    // SError
-    .align 7 //  0x780
-    EXCEPTION_ROUTINE #3
+    .align 7 // SError //  0x780
+    b exception_not_implement
 
     .align 7 //  0x800
