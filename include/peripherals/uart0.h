@@ -12,6 +12,8 @@
 #define UART0_LCRH      ((unsigned int*)(UART0_BASE + 0x2C))
 #define UART0_CR        ((unsigned int*)(UART0_BASE + 0x30))
 #define UART0_IMSC      ((unsigned int*)(UART0_BASE + 0x38))
+#define UART0_RIS       ((unsigned int*)(UART0_BASE + 0x3C))
+#define UART0_MIS       ((unsigned int*)(UART0_BASE + 0x40))
 #define UART0_ICR       ((unsigned int*)(UART0_BASE + 0x44))
 
 #endif

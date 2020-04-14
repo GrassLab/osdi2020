@@ -1,5 +1,8 @@
 #include "uart0.h"
+#include "queue.h"
+#include "peripherals/uart0.h"
 #include "peripherals/timer.h"
+#include "peripherals/irq.h"
 
 void irq_init() {
     // Enable IMO
@@ -52,14 +55,36 @@ unsigned long long arm_core_timer_jiffies = 0;
 unsigned long long arm_local_timer_jiffies = 0;
 
 void irq_el2h_router() {
+    unsigned int irq_basic_pending = *IRQ_BASIC_PENDING;
     unsigned int core0_intr_src = *CORE0_INTR_SRC;
 
-    if (core0_intr_src & (1 << 1)) { // ARM Core Timer Interrupt
+    // GPU IRQ 57: UART Interrupt
+    if (irq_basic_pending & (1 << 19)) {
+        if (*UART0_MIS & 0x10) { // UARTTXINTR
+            while (!(*UART0_FR & 0x10)) { // RX FIFO not empty
+                char r = (char)(*UART0_DR);
+                queue_push(&read_buf, r);
+            }
+            *UART0_ICR = 1 << 4;
+        }
+        else if (*UART0_MIS & 0x20) { // UARTRTINTR
+            while (!queue_empty(&write_buf)) { // flush buffer to TX
+                while (*UART0_FR & 0x20) { // TX FIFO is full
+                    asm volatile("nop");
+                }
+                *UART0_DR = queue_pop(&write_buf);
+            }
+            *UART0_ICR = 2 << 4;
+        }
+    }
+    // ARM Core Timer Interrupt
+    else if (core0_intr_src & (1 << 1)) {
         register unsigned int expire_period = EXPRIED_PERIOD;
         asm volatile ("msr cntp_tval_el0, %0" : : "r" (expire_period));
         uart_printf("Core timer interrupt, jiffies %d\n", ++arm_core_timer_jiffies);
     }
-    else if (core0_intr_src & (1 << 11)) { // ARM Local Timer Interrupt
+    // ARM Local Timer Interrupt
+    else if (core0_intr_src & (1 << 11)) {
         *LOCAL_TIMER_IRQ_CLR = 0b11 << 30;
         uart_printf("Local timer interrupt, jiffies %d\n", ++arm_local_timer_jiffies);
     }
