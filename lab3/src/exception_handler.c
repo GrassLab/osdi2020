@@ -34,3 +34,20 @@ void handler(){
 
     return;
 }
+
+void isr(){
+    static int jiffies=0;
+    char res[10];
+
+    jiffies++;
+    unsign_itoa(jiffies, res);
+    uart_puts("Core timer interrupt, jiffies ");
+    uart_puts(res);
+    uart_puts("\n");
+    asm(
+        "mrs x0, cntfrq_el0;"
+        "msr cntp_tval_el0, x0;"
+    );
+
+    return;
+}

@@ -18,6 +18,10 @@ init_bss:
     // load exception_table to VBAR_EL2
     ldr x0, =exception_table
     msr VBAR_EL2, x0
+    mrs x0, HCR_EL2
+    orr x0, x0, 16
+    msr HCR_EL2, x0
+    msr DAIFClr, 0xf
 
 	ldr x0, = _start
     mov sp, x0

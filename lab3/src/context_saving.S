@@ -44,3 +44,9 @@ test_handler:
     save_all
     bl handler
     load_all
+
+.global irq_handler
+irq_handler:
+    save_all
+    bl isr
+    load_all

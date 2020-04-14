@@ -50,6 +50,9 @@ void run(char *command){
     else if (!strcmp(command, "exc")){
         exc();
     }
+    else if (!strcmp(command, "irq")){
+        irq();
+    }
     else {
         uart_puts("Error: command not found, try <help>.\n");
     }
@@ -67,6 +70,8 @@ void help(){
     uart_puts("<loadimg>: load kernel image and run.\n");
     uart_puts("---\n");
     uart_puts("<exc>: take a exception by \"svc 1\".\n");
+    uart_puts("---\n");
+    uart_puts("<irq>: enable timer interrupt.\n");
     uart_puts("---\n");
     uart_puts("<help>: print all available commands.\n");
 }
@@ -174,4 +179,17 @@ void loadimg(){
 
 void exc(){
     asm volatile ("svc 1");
+}
+
+void irq(){
+    asm(
+        "mov x0, 1;"
+        "msr cntp_ctl_el0, x0;"
+        "mrs x0, cntfrq_el0;"
+        "msr cntp_tval_el0, x0;"
+        //"mov x0, 2;"
+        //"ldr x1, =0x40000040;"
+        //"str x0, [x1];"
+    );
+    *CORE0_TIMER_IRQ_CTRL = 2;
 }

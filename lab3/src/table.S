@@ -26,7 +26,7 @@ exception_table:
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b irq_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]

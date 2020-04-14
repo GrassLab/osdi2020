@@ -3,4 +3,6 @@
 
 void handler();
 
+void isr();
+
 #endif
