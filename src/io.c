@@ -1,6 +1,23 @@
 #include "ftoa.h"
-#include "input.h"
+#include "io.h"
 #include "uart.h"
+
+int atoi(char *s) {
+    int acum = 0;
+    int factor = 1;
+
+    if (*s == '-') {
+        factor = -1;
+        s++;
+    }
+
+    while ((*s >= '0') && (*s <= '9')) {
+        acum = acum * 10;
+        acum = acum + (*s - 48);
+        s++;
+    }
+    return (factor * acum);
+}
 
 unsigned long long int hex2int(char *hex) {
     unsigned long long int val = 0;
@@ -30,11 +47,11 @@ char read_b() { return uart_getb(); }
 char *read_s(char *str, int max_size) {
     for (int i = 0; i < max_size; i++) {
         str[i] = read_c();
-        print("%c", str[i]);
+        print_c(str[i]);
         if (str[i] == 127) {  // delete
             i--;
             if (i >= 0) {
-                print("\b \b");
+                print_s("\b \b");
                 i--;
             }
         }
@@ -48,18 +65,33 @@ char *read_s(char *str, int max_size) {
 }
 
 int read_i() {
-    int x = 0, f = 0;
-    char ch = 0;
-    while (!check_digit(ch)) {
-        f |= ch == '-';
-        ch = read_c();
-    }
-    while (check_digit(ch)) x = (x << 3) + (x << 1) + (ch ^ 48), ch = read_c();
-    return f ? -x : x;
+    char str[50];
+    char *value = read_s(str, 50);
+    return atoi(value);
 }
 
 unsigned long long int read_h() {
     char str[50];
     char *value = read_s(str, 50);
     return hex2int(value + 2);
+}
+
+void print_s(char *ch) { uart_puts(ch); }
+
+void print_c(char ch) { uart_send(ch); }
+
+void print_i(int x) {
+    if (x < 0) {
+        print_c('-');
+        x = -x;
+    }
+    if (x >= 10) print_i(x / 10);
+    print_c(x % 10 + '0');
+}
+
+void print_h(int x) { uart_hex(x); }
+
+void print_d(double x) {
+    char ans[30];
+    print_s(ftoa(x, ans, 5));
 }

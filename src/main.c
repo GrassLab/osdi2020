@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "input.h"
+#include "io.h"
 #include "lfb.h"
 #include "mbox.h"
 #include "reset.h"
@@ -21,18 +21,8 @@ extern volatile unsigned int _boot_start;
 extern volatile unsigned int _end;
 
 void run() {
-    while (1) {
-        shell();
-    }
-}
-
-int main() {
-    // set up serial console
-    uart_init();
-    lfb_init();
-    lfb_showpicture();
-    print("\033[2J\033[1;1H");
-    print(
+    print_s("\033[2J\033[1;1H");
+    print_s(
         "██████╗  ██████╗  ██████╗ ████████╗██╗      ██████╗  █████╗ ██████╗ "
         "███████╗██████╗ \r\n"
         "██╔══██╗██╔═══██╗██╔═══██╗╚══██╔══╝██║     "
@@ -45,6 +35,17 @@ int main() {
         "██║██████╔╝███████╗██║  ██║\r\n"
         "╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ "
         "╚══════╝╚═╝  ╚═╝\r\n");
+    while (1) {
+        shell();
+    }
+}
+
+int main() {
+    // set up serial console
+    uart_init();
+    lfb_init();
+    lfb_showpicture();
+
     /* long boot_start = (long)&_boot_start; */
     /* long boot_end = (long)&_end; */
     /* char *base = (char *)0xB000000; */

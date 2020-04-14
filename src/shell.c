@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "input.h"
+#include "io.h"
 #include "lfb.h"
 #include "mbox.h"
 #include "reset.h"
@@ -17,7 +17,7 @@
 #define GET_VC_MEMORY 0x00010006
 #define UART_ID 0x000000002
 
-extern void core_timer_enable();
+extern void core_timer_enable(int a);
 
 void get_board_revision() {
     mbox[0] = 7 * 4;  // buffer size in bytes
@@ -34,7 +34,9 @@ void get_board_revision() {
         MBOX_CH_PROP);  // message passing procedure call, you should implement
                         // it following the 6 steps provided above.
 
-    print("Board revision: %x\n", mbox[5]);
+    print_s("Board revision: 0x");
+    print_h(mbox[5]);
+    print_s("\n");
 }
 
 void get_vc_base() {
@@ -53,8 +55,12 @@ void get_vc_base() {
         MBOX_CH_PROP);  // message passing procedure call, you should implement
                         // it following the 6 steps provided above.
 
-    print("VC core base address: %x\n", mbox[5]);
-    print("VC core base size: %x\n", mbox[6]);
+    print_s("VC core base address: 0x");
+    print_h(mbox[5]);
+    print_s("\n");
+    print_s("VC core base size: 0x");
+    print_h(mbox[6]);
+    print_s("\n");
 }
 
 int strcmp(const char *p1, const char *p2) {
@@ -77,35 +83,35 @@ void read_cmd(char *cmd) {
         if (now == 127) {  // delete
             now_cur -= 1;
             if (now_cur >= 0) {
-                print("\b \b");
+                print_s("\b \b");
                 now_cur -= 1;
             }
         } else {
             cmd[now_cur] = now;
-            print("%c", now);
+            print_c(now);
         }
         now_cur++;
     }
-    print("\n");
+    print_s("\n");
     cmd[now_cur] = 0;
 }
 
 void loadimg(long long num, int img_size) {
-    print("Please send the image with UART.\r\n");
+    print_s("Please send the image with UART.\r\n");
     char *base_addr = (char *)num;
     for (int i = 0; i < img_size; i++) {
         *(base_addr + i) = read_b();
     }
-    print("Down");
+    print_s("Down");
     ((void (*)())num)();
 }
 
 void shell() {
-    print("# ");
+    print_s("# ");
     char cmd[256];
     read_cmd(cmd);
     if (!strcmp(cmd, "help")) {
-        print(
+        print_s(
             "help      : print this help menu\n"
             "hello     : print Hello World!\n"
             "timestamp : print system timestamp\n"
@@ -113,30 +119,30 @@ void shell() {
             "clear     : clear screen\n"
             "reboot    : reboot the device\r\n");
     } else if (!strcmp(cmd, "hello")) {
-        print("Hello World!\r\n");
+        print_s("Hello World!\r\n");
     } else if (!strcmp(cmd, "timestamp")) {
         uint64_t frq, ct;
         asm volatile("mrs %0, cntpct_el0" : "=r"(ct));
         asm volatile("mrs %0, cntfrq_el0" : "=r"(frq));
         double frq_f = frq, ct_f = ct;
-        print("%d", ct_f / frq_f);
-        print("\r\n");
+        print_i(ct_f / frq_f);
+        print_s("\r\n");
     } else if (!strcmp(cmd, "reboot")) {
         reset(10);
     } else if (!strcmp(cmd, "clear")) {
-        print("\033[2J\033[1;1H");
+        print_s("\033[2J\033[1;1H");
     } else if (!strcmp(cmd, "hw")) {
         get_board_revision();
         get_vc_base();
     } else if (!strcmp(cmd, "loadimg")) {
-        print("Please input the address: ");
+        print_s("Please input the address: ");
         long long int num = read_h();
-        print("\r");
+        print_s("\r");
 
-        print("Image size: ");
+        print_s("Image size: ");
         int img_size = read_i();
-        print("%d", img_size);
-        print("\r");
+        print_i(img_size);
+        print_s("\r");
 
         /* long boot_start = (long)&_boot_start; */
         /* long boot_end = (long)&_end; */
@@ -151,12 +157,14 @@ void shell() {
         loadimg(num, img_size);
 
     } else if (!strcmp(cmd, "addr")) {
-        print("%x", (long)loadimg);
+        print_h((long)loadimg);
     } else if (!strcmp(cmd, "exc")) {
         asm volatile("exc:");
         asm volatile("svc #1");
     } else if (!strcmp(cmd, "irq")) {
-        core_timer_enable();
+        asm volatile("svc #2");
+        /* int wait = read_i(); */
+        /* core_timer_enable(0xffffff); */
     } else {
         /* print_s("command not found: "); */
         /* print_s(cmd); */
