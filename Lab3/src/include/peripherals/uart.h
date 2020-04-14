@@ -11,6 +11,7 @@
 #define UART0_LCRH      (PBASE+0x0020102C) //Line Control register
 #define UART0_CR        (PBASE+0x00201030) //Control register
 #define UART0_IMSC      (PBASE+0x00201038) //Interrupt Mask set Clear Register
-#define UART0_ICR       (PBASE+0x00201044) //Interrupt Clear register:
+#define UART0_MIS       (PBASE+0x00201040) //Masked Interupt Status Register 
+#define UART0_ICR       (PBASE+0x00201044) //Interrupt Clear register
 
 #endif /*P_UART_H */

@@ -62,21 +62,22 @@ int check_string(char * str){
 		return 1;	
 	}
 	else if(strcmp(str,cmd_exc)==0){		
-		
+		uart_send_string("\r\n");
+			
 		// issue exception                	
-		asm volatile(
-			"mov w8,#2;" // invalid system call will return back
+		/*asm volatile(
+			"mov x8,#10;" // invalid system call will return back
 			"svc #1;"
-    		);
+    		);*/
 
+		asm volatile(
+			"brk #1;"
+		);
 	}
 	else if(strcmp(str,cmd_irq)==0){
-		int retval;
-		retval = call_core_timer();
-		uart_send_string("\r\nGet return value:");
-		uart_hex(retval);
 		uart_send_string("\r\n");
-		call_sys_timer();
+		call_core_timer();
+		sys_timer_init();//don't need system call for this!
 	}
 	else{
 		uart_send_string("\r\nErr:command ");
@@ -135,7 +136,7 @@ void get_VC_core_base_addr(){
 void kernel_main(void)
 {	
     uart_init();  
-
+    
     uart_send_string("Hello, world!\r\n");
 /*
     unsigned long el;
@@ -151,7 +152,7 @@ void kernel_main(void)
                            // Do not set HCR_EL2.IMO if you want your interrupt directly goto kernel in EL1 
 
     //enable_irq();        //clear PSTATE.DAIF
-
+    
     //fb_init();
     //fb_show();
    

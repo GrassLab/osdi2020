@@ -22,7 +22,6 @@ master:
     // set stack before our code
     ldr     x1, =_start
     
-
     /*** Now return from el2 to el1 ***/ 
     mov x0,0xF0000 //Hey, you gonna set a different memory for stack
     msr sp_el1,x0  //set stack pointer
@@ -41,7 +40,7 @@ master:
     mov x2, #0b0101 //selcet stack pointer for EL1h
     msr spsr_el2,x2
     
-    adr x2,el1_entry
+    adr x2,el1_entry /**/
     msr elr_el2,x2
     eret
 

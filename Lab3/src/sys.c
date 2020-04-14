@@ -1,19 +1,18 @@
 #include "include/timer.h"
 #include "include/uart.h"
-
-void print_this(unsigned int x){
-	uart_send_string("trigger");
-	uart_hex(x);
-	uart_send_string("\r\n");
-}
+#include "include/irq.h"
 
 int core_timer(){
 	core_timer_enable();
 	return 10;
 }
 
-void sys_timer(){
-	sys_timer_init();
+void daif(){
+	unsigned int daif;
+        asm volatile ("mrs %0, daif" : "=r" (daif)); 
+        uart_send_string("DAIF is: ");
+        uart_hex(daif);
+        uart_send_string("\r\n");
 }
 
-void * const sys_call_table[] = {core_timer,sys_timer};
+void * const sys_call_table[] = {core_timer,daif};

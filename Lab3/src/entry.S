@@ -102,9 +102,9 @@ after_push_el1_irq:
 
 // Lower EL using AArch64
     // Synchronous 0x400
-    .align 7  
+    .align 7 
     b push_reg_el0
-after_push_el0:    
+after_push_el0:
     mrs	x25, esr_el1				// read the syndrome register
     lsr	x24, x25, #26		// exception class
     cmp	x24, #0x15			// SVC in 64-bit state
@@ -113,9 +113,9 @@ after_push_el0:
   
 
     // IRQ 0x0480
-    .align  7 
+    .align  7
     b push_reg_el0_irq //so stupid...right?
-after_push_el0_irq:        
+after_push_el0_irq:
     bl      irq_handler
     b pop_reg_el0
     
@@ -186,22 +186,24 @@ el0_svc:
 	adr	x27, sys_call_table	// load syscall table pointer
 	uxtw	x26, w8			// syscall number in w8
         mov	x25, #__NR_syscalls
+	
 	bl	enable_irq
+	
 	cmp     x26, x25                // check upper syscall limit	 	
 	b.hs	ni_sys
 
 	ldr	x16, [x27, x26, lsl #3] // address in the syscall table
 	blr	x16			// call sys_* routine
 	b	ret_from_syscall
-ni_sys:
+ni_sys:	
 	mov     x0, #4
     	mrs     x1, esr_el1
     	mrs     x2, elr_el1
     	bl      exception_handler
     	b err_hang
 
-ret_from_syscall:
-        bl disable_irq
+ret_from_syscall: 
+        bl disable_irq // disable interrupts before pulling preserved data off the stack
 	str	x0, [sp, #0] // save x0 on stack for return
         b pop_reg_el0
 
@@ -228,13 +230,14 @@ push_reg_el0:
 	stp	x24, x25, [sp, #16 * 12]
 	stp	x26, x27, [sp, #16 * 13]
 	stp	x28, x29, [sp, #16 * 14]
-	
-	mrs	x21, sp_el0
+
+        mrs	x21, sp_el0
 	mrs	x22, elr_el1
 	mrs	x23, spsr_el1
-	
-    	stp     x30, x21, [sp, #16 * 15] 
-    	stp     x22, x23, [sp, #16 * 16]        
+    
+	stp     x30, x21, [sp, #16 * 15] 
+	stp     x22, x23, [sp, #16 * 16]        
+		
 	b after_push_el0
 
 pop_reg_el0:
@@ -278,8 +281,8 @@ push_reg_el0_irq:
 	stp	x24, x25, [sp, #16 * 12]
 	stp	x26, x27, [sp, #16 * 13]
 	stp	x28, x29, [sp, #16 * 14]
-	
-	mrs	x21, sp_el0
+
+	mrs	x21, sp_el0 
 	mrs	x22, elr_el1
 	mrs	x23, spsr_el1
 	

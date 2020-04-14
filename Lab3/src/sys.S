@@ -6,8 +6,9 @@ call_core_timer:
         svc #0
         ret
 
-.global call_sys_timer
-call_sys_timer:
-	mov x8,SYS_TIMER
-        svc #0
-        ret
+.global call_daif
+call_daif:
+	mov x8,DAIF
+	svc #0
+	ret
+

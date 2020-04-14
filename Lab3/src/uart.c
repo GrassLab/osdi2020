@@ -3,6 +3,8 @@
 #include "include/peripherals/gpio.h"
 #include "include/utils.h"
 
+#define IRQ_ENABLE1 0x3f00b214
+
 void uart_init(){
 
     /* initialize UART */
@@ -35,12 +37,18 @@ void uart_init(){
     delay(150);
     put32(GPPUDCLK0,0);
 
+ 
     put32(UART0_ICR,0x7FF); //clear interrupt
+    // init uart0 interrupt
+    put32(UART0_IMSC,0x30); // interrupt mask
+    put32(IRQ_ENABLE1,1<<25);
+    
     put32(UART0_IBRD,2); // (4 × 10^6) / (16 × 115200) = 2.17
     put32(UART0_FBRD,0xB); // int((0.17 × 64) + 0.5) = 11
     put32(UART0_LCRH,0b11<<5); //word length = 8bits
     put32(UART0_CR,0x301); // enable Tx,Rx,FIFO    
-} 
+}
+
 
 void uart_send ( char c )
 {
@@ -77,4 +85,15 @@ void uart_hex(unsigned int d) {
     }
 }
 
+void uart_IRQhandler(){
+	unsigned int status = get32(UART0_MIS);	
+	
+	if(status&0x10){ // for receive
 
+		put32(UART0_ICR,status); //clear interrupt
+
+	}
+	else{	
+		put32(UART0_ICR,status); //clear interrupt
+	}
+}

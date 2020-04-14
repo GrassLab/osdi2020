@@ -4,9 +4,6 @@
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
         
-	uart_send_string("\r\n");	
-	uart_hex(get_reg());
-
 	switch(type){
 		case 0:uart_send_string("\r\nSynchronous");break;
 		case 1:uart_send_string("\r\nIRQ");break;
@@ -26,7 +23,7 @@ void exception_handler(unsigned long type,unsigned long esr, \
        		case 0b100100: uart_send_string("Data abort, lower EL"); break;
                 case 0b100101: uart_send_string("Data abort, same EL"); break;
 		case 0b011000: uart_send_string("Exception from MSR, MRS, or System instruction execution in AArch64 state");
-			       
+		case 0b111100: uart_send_string("BRK instruction execution in AArch64 state");break;			       
 	 	default: uart_send_string("Unknown...?"); break;
         }
         

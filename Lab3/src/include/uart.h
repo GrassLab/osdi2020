@@ -6,5 +6,6 @@ void uart_send(char c);
 char uart_recv();
 void uart_send_string(char *str);
 void uart_hex(unsigned int d);
+void uart_IRQhandler();
 
 #endif /*_UART_H */
