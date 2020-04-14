@@ -32,15 +32,24 @@ void curr_el_spx_sync_handler(void) {
   uint64_t iss = syndrome & 0x01ffffff;
 
   char buf[32];
-  mini_uart_puts("Exception return address 0x");
-  mini_uart_puts(uitos_generic(address, 16, buf));
-  mini_uart_puts(EOL);
-  mini_uart_puts("Exception class (EC) 0x");
-  mini_uart_puts(uitos_generic(ec, 16, buf));
-  mini_uart_puts(EOL);
-  mini_uart_puts("Instruction specific syndrome (ISS) 0x");
-  mini_uart_puts(uitos_generic(iss, 16, buf));
-  mini_uart_puts(EOL);
+  if (ec == 0x15) {
+    switch (iss) {
+      case 1:
+        mini_uart_puts("Exception return address 0x");
+        mini_uart_puts(uitos_generic(address, 16, buf));
+        mini_uart_puts(EOL);
+        mini_uart_puts("Exception class (EC) 0x");
+        mini_uart_puts(uitos_generic(ec, 16, buf));
+        mini_uart_puts(EOL);
+        mini_uart_puts("Instruction specific syndrome (ISS) 0x");
+        mini_uart_puts(uitos_generic(iss, 16, buf));
+        mini_uart_puts(EOL);
+        break;
+      case 2:
+        core_timer_enable();
+        break;
+    }
+  }
 }
 
 static uint64_t jiffie = 0;

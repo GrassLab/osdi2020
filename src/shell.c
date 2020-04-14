@@ -187,6 +187,7 @@ void shell(void) {
   mini_uart_puts(" \\___/|___/\\__,_|_| |___/_| |_|\\___|_|_|" EOL);
   mini_uart_puts(EOL);
 
+
   while (true) {
     mini_uart_puts("# ");
     char buf[MAX_CMD_LEN];
@@ -201,7 +202,8 @@ void shell(void) {
       } else if (!strcmp(cmd, "hello")) {
         hello();
       } else if (!strcmp(cmd, "irq")) {
-        core_timer_enable();
+        //core_timer_enable();
+        asm("svc #2");
       } else if (!strcmp(cmd, "loadimg")) {
         loadimg();
       } else if (!strcmp(cmd, "lshw")) {
