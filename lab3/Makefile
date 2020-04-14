@@ -23,24 +23,27 @@
 #
 #
 
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
+C_SRCS = $(wildcard *.c)
+C_OBJS = $(C_SRCS:.c=.o)
+S_SRCS = $(wildcard *.S)
+S_OBJS = $(S_SRCS:.S=.s.o)
 CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles 
 
 all: clean kernel8.img
 
-start.o: start.S
-	aarch64-linux-gnu-gcc $(CFLAGS) -c start.S -o start.o
+%.s.o: %.S
+	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
 %.o: %.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
-kernel8.img: start.o $(OBJS)
-	aarch64-linux-gnu-ld -nostdlib -nostartfiles start.o $(OBJS) -T link.ld -o kernel8.elf
+kernel8.img: $(S_OBJS) $(C_OBJS)
+	aarch64-linux-gnu-ld -nostdlib -nostartfiles $(S_OBJS) $(C_OBJS) -T link.ld -o kernel8.elf
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
 
 clean:
 	rm kernel8.elf *.o >/dev/null 2>/dev/null || true
+	rm kernel8.elf *.s.o >/dev/null 2>/dev/null || true
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio

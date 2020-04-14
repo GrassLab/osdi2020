@@ -27,6 +27,7 @@
 #include "mystd.h"
 #include "timer.h"
 #include "exc.h"
+#include "irq.h"
 
 #define CMDSIZE 64
 char cmd[CMDSIZE] = {0};
@@ -38,14 +39,15 @@ void cmd_process(){
     uart_puts("\r");
 
     if(strcmp(cmd, "exc")){
-        supervisor_call();
+        sysCall_print_esr_elr();
     }else if(strcmp(cmd, "brk")){
         brk_instr();
-    }else if(strcmp(cmd, "irq")){
-        enable_interrupt();
-
-        core_timer_enable();
-        arm_local_timer_init();
+    }else if(strcmp(cmd, "timer")){
+        sysCall_set_timer();
+    }else if(strcmp(cmd, "distimer")){
+        sysCall_unset_timer();
+    }else if(strcmp(cmd, "el")){
+        show_currentEL();
     }else if(strcmp(cmd, "help")){
         uart_puts("command: \"help\" Description: \"print all available commands\"  \n");
         uart_puts("command: \"exc\" Description: \"\"exception handler should print the return address, EC field, and ISS field.\n");
@@ -86,8 +88,6 @@ void main()
 
 
     uart_init();
-
-    show_currentEL();
 
     uart_puts("\r\n# ");
 

@@ -35,4 +35,3 @@ void core_timer_enable(){
 
 	*CORE0_TIMER_IRQ_CTRL = 0b10;
 }
-

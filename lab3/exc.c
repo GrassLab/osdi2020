@@ -25,83 +25,13 @@
 
 #include "uart.h"
 #include "timer.h"
+#include "irq.h"
 
 #define CORE0_IRQ_SOURCE ((volatile unsigned int*)0x40000060)
 #define ARM_LOCAL_TIMER_IRQ 0b100000000000
 #define ARM_CORE_TIMER_IRQ 0b10
 
-inline void kernel_entry(){
-    asm volatile(
-        "sub    sp, sp, #8 * 32;"
-        "stp x0, x1, [sp, #16 * 0];"
-        "stp x2, x3, [sp, #16 * 1];"
-        "stp x4, x5, [sp, #16 * 2];"
-        "stp x6, x7, [sp, #16 * 3];"
-        "stp x8, x9, [sp, #16 * 4];"
-        "stp x10, x11, [sp, #16 * 5];"
-        "stp x12, x13, [sp, #16 * 6];"
-        "stp x14, x15, [sp, #16 * 7];"
-        "stp x16, x17, [sp, #16 * 8];"
-        "stp x18, x19, [sp, #16 * 9];"
-        "stp x20, x21, [sp, #16 * 10];"
-        "stp x22, x23, [sp, #16 * 11];"
-        "stp x24, x25, [sp, #16 * 12];"
-        "stp x26, x27, [sp, #16 * 13];"
-        "stp x28, x29, [sp, #16 * 14];"
-        "str x30, [sp, #16 * 15];"
-
-        :::
-    );
-}
-
-inline void kernel_exit(){
-    asm volatile(
-        "ldp x0, x1, [sp, #16 * 0];"
-        "ldp x2, x3, [sp, #16 * 1];"
-        "ldp x4, x5, [sp, #16 * 2];"
-        "ldp x6, x7, [sp, #16 * 3];"
-        "ldp x8, x9, [sp, #16 * 4];"
-        "ldp x10, x11, [sp, #16 * 5];"
-        "ldp x12, x13, [sp, #16 * 6];"
-        "ldp x14, x15, [sp, #16 * 7];"
-        "ldp x16, x17, [sp, #16 * 8];"
-        "ldp x18, x19, [sp, #16 * 9];"
-        "ldp x20, x21, [sp, #16 * 10];"
-        "ldp x22, x23, [sp, #16 * 11];"
-        "ldp x24, x25, [sp, #16 * 12];"
-        "ldp x26, x27, [sp, #16 * 13];"
-        "ldp x28, x29, [sp, #16 * 14];"
-        "ldr x30, [sp, #16 * 15];"
-        "add sp, sp, #8 * 32;"
-        "eret;"
-
-        :::
-
-    );
-}
-
-void enable_interrupt(){
-    asm volatile( 
-        "mrs     x0, hcr_el2;"
-        "orr     x0, x0, 0b10000;"   // IMO physical IRQ Routing
-        "msr     hcr_el2, x0;"
-
-        "msr     DAIF, xzr;"
-
-        ::: 
-    );
-}
-
-void disable_interrupt(){
-    asm volatile( 
-        "mov    x0, 0x3C0;"
-        "msr    DAIF, x0;" 
-
-        ::: 
-    );
-}
-
-void show_currentEL(){
+int get_currentEL(){
     int el;
 
     asm volatile(
@@ -111,36 +41,19 @@ void show_currentEL(){
         ::
     );
 
+    return el>>2;
+}
+
+void show_currentEL(){
+    int el = get_currentEL();
+
     uart_puts("CurrentEL: ");
-    uart_hex(el>>2);
+    uart_hex(el);
     uart_puts("\n");
 }
 
-void supervisor_call(){
-    asm volatile( "svc #1;" :::);
-}
-
-void brk_instr(){
-    asm volatile( "brk #1;" :::);
-}
-
-
-
-void sync_exc_handler(){
-    kernel_entry();
-
-    show_currentEL();
-    unsigned long esr, elr;
-
-    asm volatile(
-        "mrs %[esr], esr_el2;"
-        "mrs %[elr], elr_el2;"
-
-        : [esr] "=r" (esr), [elr] "=r" (elr)
-        ::
-    );
-
-
+void show_esr_elr(unsigned long esr, unsigned long elr){
+    uart_puts("sync_exc1_handler\n");
     uart_puts("***Exception type: Synchronous***\n");
 
     uart_puts("Exception return adress 0x");
@@ -155,31 +68,107 @@ void sync_exc_handler(){
     uart_puts("Instruction Specific Syndrome (ISS) 0x");
     uart_hex(esr&0x1FFFFFF);
     uart_puts("\n");
-
-    kernel_exit();
 }
 
-void irq_exc_handler(){
-    kernel_entry();
+void sysCall_print_esr_elr(){
+    supervisor_call_1();
+}
 
+void sysCall_set_timer(){
+    supervisor_call_2();
+}
+
+void sysCall_unset_timer(){
+    supervisor_call_3();
+}
+
+void sysCall_handler_el0(int num){
+    switch(num){
+        case 1:
+            uart_puts("sys 1 \n");
+            break;
+        case 2:
+            enable_interrupt();
+
+            core_timer_enable();
+            arm_local_timer_init();
+            break;
+        case 3:
+            disable_interrupt();
+            break;
+        
+        default:
+            uart_puts("system call ");
+            uart_hex(num);
+            uart_puts(" not exist \n");
+            break;
+    }
+}
+
+void sync_exc0_handler(){
+    unsigned long esr, elr;
+    asm volatile(
+        "mrs %[esr], esr_el1;"
+        "mrs %[elr], elr_el1;"
+
+        : [esr] "=r" (esr), [elr] "=r" (elr)
+        ::
+    );
+
+    if(esr>>26 == 0x15){
+        int supervisorCallNum = esr & 0x1FFFFFF;
+        sysCall_handler_el0( supervisorCallNum );
+    }else{
+        show_esr_elr(esr, elr);
+    }
+}
+
+void sync_exc1_handler(){
+    show_currentEL();
+    unsigned long esr, elr;
+
+    asm volatile(
+        "mrs %[esr], esr_el1;"
+        "mrs %[elr], elr_el1;"
+
+        : [esr] "=r" (esr), [elr] "=r" (elr)
+        ::
+    );    
+    
+    show_esr_elr(esr, elr);
+}
+
+void sync_exc2_handler(){
+    show_currentEL();
+    unsigned long esr, elr;
+
+    asm volatile(
+        "mrs %[esr], esr_el2;"
+        "mrs %[elr], elr_el2;"
+
+        : [esr] "=r" (esr), [elr] "=r" (elr)
+        ::
+    );
+    
+   show_esr_elr(esr, elr);
+}
+
+
+void irq_exc_handler(){
     uart_puts("irq_exc_handler\n");
     unsigned int irq_status = *CORE0_IRQ_SOURCE;
 
-    if( (irq_status & ARM_CORE_TIMER_IRQ) > 0){
+    if( irq_status & ARM_CORE_TIMER_IRQ){
         uart_puts("ARM_CORE_TIMER_IRQ\n");
         core_timer_handler();
     }
 
-    if( (irq_status & ARM_LOCAL_TIMER_IRQ) > 0) {
+    if( irq_status & ARM_LOCAL_TIMER_IRQ) {
         uart_puts("ARM_LOCAL_TIMER_IRQ\n");
         arm_local_timer_handler();
     }
-
-    
-
-    kernel_exit();
 }
 
-void SError_handler(){
+void SError_handler(){   
     uart_puts("SError\n");
 }
