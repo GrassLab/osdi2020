@@ -83,12 +83,12 @@ void uart_init(void)
    * b01 = 6 bits
    * b00 = 5 bits.
    *
-   * FEN[4]
+   * FEN[4] DONT USE NOT WORK AS INTEDED
    * 1 enable fifo
    *
    */
-  //*UART_LCRH = 3 << 5;
-  *UART_LCRH = 0x70;
+  *UART_LCRH = 3 << 5;
+  //*UART_LCRH = 0x70;
 
 
   /* interrupt occurred when fifo has 1/8 of space */
