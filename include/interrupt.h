@@ -11,6 +11,7 @@ void local_timer_handler();
 
 // core_timer 
 void core_timer_enable();
+void core_timer_enable_user();
 void core_timer_counter();
 void core_timer_handler(); // define in start.S
 

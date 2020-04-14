@@ -1,2 +1,3 @@
-void exc_not_implement();
-void exc_handler(unsigned long type);
+void exception_not_implement();
+void exception_handler(unsigned long type);
+void decode_exception();

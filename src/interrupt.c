@@ -57,6 +57,11 @@ void core_timer_enable()
     //asm volatile("msr cntp_tval_el0, %0" :: "r" (val));
 }
 
+void core_timer_enable_user()
+{
+    asm volatile("mov x0, #0\n" "svc #0\n");
+}
+
 #define EXPIRE_PERIOD 0xffffff
 void core_timer_handler()
 {

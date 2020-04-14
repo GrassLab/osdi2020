@@ -37,9 +37,12 @@ void main()
     get_board_revision();
     get_vccore_addr();
     
-    int level = get_exception_level();
-    if (level == 2) set_HCR_EL2_IMO();
-    enable_irq();
+    // uart_puts("Exception Level: ");
+    // uart_puts(level);
+    // uart_puts("\n");
+    //int level = get_exception_level();
+    //if (level == 2) set_HCR_EL2_IMO();
+    //enable_irq();
 
     while (1) { 
 
@@ -123,7 +126,8 @@ void main()
          */
         else if (uart_strncmp(user_input, "irq_core", 8) == 0) {
             uart_puts("enable core timer.\n");
-            core_timer_enable();
+            //core_timer_enable();
+            core_timer_enable_user();
         }
         else if (uart_strncmp(user_input, "irq_local", 9) == 0) {
             uart_puts("enable local timer.\n");
@@ -139,17 +143,17 @@ void main()
         }
     }
     if (LOADIMG == 1) {
-        unsigned int stack_pointer;; 
-        asm volatile ("mov %0, sp" : "=r"(stack_pointer));
-        uart_puts("stack pointer: 0x");
-        uart_hex(stack_pointer);
-        uart_puts("\n");
+        // unsigned int stack_pointer;; 
+        // asm volatile ("mov %0, sp" : "=r"(stack_pointer));
+        // uart_puts("stack pointer: 0x");
+        // uart_hex(stack_pointer);
+        // uart_puts("\n");
 
-        unsigned int program_counter;; 
-        asm volatile ("mov %0, x30" : "=r"(program_counter));
-        uart_puts("program counter: 0x");
-        uart_hex(program_counter);
-        uart_puts("\n");
+        // unsigned int program_counter;; 
+        // asm volatile ("mov %0, x30" : "=r"(program_counter));
+        // uart_puts("program counter: 0x");
+        // uart_hex(program_counter);
+        // uart_puts("\n");
         /*
         ** Start to load image
         */
