@@ -22,7 +22,7 @@
 // See BCM2537 ARM Periphera(volatile unsigned int*)ls p113 at 
 // https://github.com/raspbe(volatile unsigned int*)rrypi/documentation/files/1888662/BCM2837-ARM-Peripherals.-.Revised.-.V2-1.pdf 
 
-#define AUX_IRQ (1 << 29)
+#define AUX_IRQ_MSK (1 << 29)
 
 /* void enable_interrupt_controller( void ); */
 void irq_handler();

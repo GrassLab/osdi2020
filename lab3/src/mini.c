@@ -1,20 +1,10 @@
 
 #ifdef MINIUART
 #include "gpio.h"
+#include "uart.h"
 #include "util.h"
 
-#define AUXENB          ((volatile unsigned int*)(MMIO_BASE + 0x00215004))
-#define AUX_MU_CNTL_REG ((volatile unsigned int*)(MMIO_BASE + 0x00215060))
-#define AUX_MU_IER_REG  ((volatile unsigned int*)(MMIO_BASE + 0x00215044))
-#define AUX_MU_LCR_REG  ((volatile unsigned int*)(MMIO_BASE + 0x0021504C))
-#define AUX_MU_MCR_REG  ((volatile unsigned int*)(MMIO_BASE + 0x00215050))
-#define AUX_MU_BAUD_REG ((volatile unsigned int*)(MMIO_BASE + 0x00215068))
-#define AUX_MU_IIR_REG  ((volatile unsigned int*)(MMIO_BASE + 0x00215048))
-#define AUX_MU_CNTL_REG ((volatile unsigned int*)(MMIO_BASE + 0x00215060))
-#define AUX_MU_IO_REG   ((volatile unsigned int*)(MMIO_BASE + 0x00215040))
-#define AUX_MU_LSR_REG  ((volatile unsigned int*)(MMIO_BASE + 0x00215054))
-
-void uart_send(char c){
+void uart_send(unsigned int c){
     while(!(*(AUX_MU_LSR_REG) & 0x20)) __asm__ volatile("nop");
 	*(AUX_MU_IO_REG) = c;
 }
@@ -47,12 +37,22 @@ void uart_init(void){
 	*(GPPUDCLK0) = (1<<14) | (1<<15);
 	delay(150);
 	*(GPPUDCLK0) = 0;
-    *(AUXENB) = 1;                   
+    *(AUX_ENABLES) = 1;                   
 	*(AUX_MU_CNTL_REG) = 0;               
-	*(AUX_MU_IER_REG) = 0;                
+
+#ifdef UARTINT
+	*(AUX_MU_IER_REG) = IER_REG_VALUE;   //Enable receive interrupts
+#else
+	*(AUX_MU_IER_REG) = 0;
+#endif
+
 	*(AUX_MU_LCR_REG) = 3;                
 	*(AUX_MU_MCR_REG) = 0;                
 	*(AUX_MU_BAUD_REG) = 270;             
 	*(AUX_MU_CNTL_REG) = 3;               
 }
+
+
+
+
 #endif

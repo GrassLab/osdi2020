@@ -147,7 +147,7 @@ int shell_execute(char *cmd){
         puts("ret from brk");
     }
     else if(EQS("irq", cmd)){
-        //sys_timer_init();
+        sys_timer_init();
         local_timer_init();
         core_timer_init();
     }

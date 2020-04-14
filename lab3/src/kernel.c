@@ -34,7 +34,7 @@ void init_interrupt(){
     hcr |= 1 << 4; //IMO
     __asm__ volatile ("msr hcr_el2, %0" :: "r"(hcr));
 #endif
-    *ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ);
+    *ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
     __asm__ volatile ("msr  daifclr, #2");
 }
 
@@ -52,6 +52,7 @@ int main(void){
 #endif
 
     puts("HELLO SUCCESSFULLY");
+
     while(1){
 #ifdef BUGGY
         println(NEWLINE, welcome);
@@ -80,7 +81,12 @@ int main(void){
         if(get_vc_memaddr()) printf("VC Core base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
         puts("");
         flush();
+
+#ifdef UARTINT
+        while(1);
+#else
         shell_loop(); 
+#endif
     }
     return 0;
 }
