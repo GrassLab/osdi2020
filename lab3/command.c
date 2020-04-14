@@ -11,10 +11,8 @@ unsigned long start_addr = 0x80000;
 extern char _end[];
 
 void ellevel() {
-  unsigned int el = 0;
-  asm volatile("MRS %[result], CurrentEL" : [result] "=r"(el));
-  el >>= 2;
-  printf("Exception level: %d \r\n", el);
+  asm volatile("mov x0, #2");
+  asm volatile("svc #0");
 }
 void execpt() { asm volatile("svc #1"); }
 void reboot() {
@@ -114,16 +112,4 @@ void loadimg() {
     asm volatile("mov sp, %0" ::"r"(load_address));
     ((void (*)(void))(load_address))();
   }
-}
-
-unsigned int get_system_frequency() {
-  unsigned int res = 0;
-  asm volatile("MRS %[result], CNTFRQ_EL0" : [result] "=r"(res));
-  return res;
-}
-
-unsigned int get_system_count() {
-  unsigned int res = 0;
-  asm volatile("MRS %[result],  CNTPCT_EL0" : [result] "=r"(res));
-  return res;
 }

@@ -27,11 +27,8 @@ void compair(char *buf) {
     printf("version : show board revision \n");
     printf("vc_addr : show vc base address \n");
   } else if (strcpy(buf, "timestamp")) {
-    long countertimer = get_system_count();
-    long frequency = get_system_frequency();
-    countertimer = countertimer * 1000;
-    long result = countertimer / frequency;
-    printf("%d ms\n", result);
+    asm volatile("mov x0, #1");
+    asm volatile("svc #0");
   } else if (strcpy(buf, "reboot")) {
     reboot();
   } else if (strcpy(buf, "loadimg")) {

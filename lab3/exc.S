@@ -43,7 +43,7 @@ re_reg:
 .global exception_handler
 exception_handler:
     save_reg
-    bl show_exec
+    bl exception_router
     re_reg
     eret
 
