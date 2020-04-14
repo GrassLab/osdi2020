@@ -6,5 +6,6 @@ int main(void) {
   gpio_init();
   mini_uart_init();
   exception_init();
+  el1_to_el0();
   shell();
 }

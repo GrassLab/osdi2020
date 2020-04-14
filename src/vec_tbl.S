@@ -72,8 +72,8 @@ vector_table:
   vec_entry not_implemented
   vec_entry not_implemented
 
-  vec_entry not_implemented
-  vec_entry not_implemented
+  vec_entry curr_el_spx_sync
+  vec_entry curr_el_spx_irq
   vec_entry not_implemented
   vec_entry not_implemented
 
