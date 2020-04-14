@@ -25,11 +25,13 @@ void exception_handler (void)
             uart_puts("enable time\n");
             core_timer_enable();
             local_timer_init ();
+        }else{
+            uart_puts("unknown system call\n");
         }
     }
 }
 void not_implemented ()
 {
-  uart_puts ("kernel panic - function not implemented!\n");
+  uart_puts ("function not implemented!\n");
   while (1);
 }

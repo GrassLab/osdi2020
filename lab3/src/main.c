@@ -11,9 +11,6 @@ void main(){
     get_arm_information();
     get_serial();
     get_board_revision();
-    
-    //init_irq ();
-    //enable_irq ();
 
     print_hello();    
     uart_puts("# ");
