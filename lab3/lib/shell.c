@@ -83,6 +83,8 @@ static void parseCommand(char *buffer) {
         loadimg();
     } else if (compareString("exc", buffer) == 0) {
         asm volatile("svc #1");
+    } else if (compareString("irq", buffer) == 0) {
+        _enable_core_timer();
     } else {
         sendStringUART("command not found: ");
         sendStringUART(buffer);

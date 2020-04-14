@@ -20,7 +20,7 @@ _exception_table:
 
     b _exception_handler
     .align 7
-    b _exception_handler
+    b _irq_handler
     .align 7
     b _exception_handler
     .align 7
@@ -118,6 +118,16 @@ _exception_handler:
     bl sendHexUART
     mov x0, #10
     bl sendUART
+
+    _kernel_exit
+
+    eret
+
+.global _irq_handler
+_irq_handler:
+    _kernel_entry
+
+    bl irq_handler
 
     _kernel_exit
 

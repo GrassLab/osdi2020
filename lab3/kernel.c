@@ -1,9 +1,11 @@
 #include "MiniUart.h"
 #include "shell.h"
 #include "mailbox.h"
+#include "exception/irq.h"
 
 void kernel_main(void) {
     initUART();
+    enable_irq();
     sendStringUART("Hello World!\n");
 
     sendStringUART("Board Revision: ");
