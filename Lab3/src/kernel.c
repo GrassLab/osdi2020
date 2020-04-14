@@ -11,7 +11,6 @@
 int check_string(char * str){
 	char* cmd_help = "help";
 	char* cmd_hello = "hello";
-	char* cmd_time = "timestamp";
 	char* cmd_reboot = "reboot";
 	char* cmd_exc = "exc";
 	char* cmd_irq = "irq";
@@ -20,41 +19,13 @@ int check_string(char * str){
 	// print all available commands
 		uart_send_string("\r\nhello : print Hello World!\r\n");
 		uart_send_string("help : help\r\n");
-		uart_send_string("timestamp: get current timestamp\r\n");
+		uart_send_string("exc: trigger an exception instruction\r\n");
+		uart_send_string("irq: enable core timer and system timer\r\n");
 		uart_send_string("reboot: reboot rpi3\r\n");
 	}
 	else if(strcmp(str,cmd_hello)==0){
 	// print hello
 		uart_send_string("\r\nHello World!\r\n");
-	}
-	else if(strcmp(str,cmd_time)==0){
-		unsigned long long freq = get_timer_freq();
-		unsigned long long counts = get_timer_counts();
-		unsigned long long timestamp = counts/freq;
-	        	
-		float temp = (float)(counts%freq)/freq;
-		temp*=10000; //scale to int place
-		int timestamp_fraction = temp + .5f; //add 0.5 to cause rounding		
-	        uart_send_string("\r\n[");
-		
-		char timestamp_buffer[128];
-		itos(timestamp,timestamp_buffer,10);
-		uart_send_string(timestamp_buffer);
-		uart_send_string(".");
-		
-		char timestamp_fraction_buffer[128];
-	
-		if(timestamp_fraction<1000)
-			uart_send_string("0");
-		if(timestamp_fraction<100)
-			uart_send_string("0");
-		if(timestamp_fraction<10)
-			uart_send_string("0");
-		
-		itos(timestamp_fraction,timestamp_fraction_buffer,10);
-		uart_send_string(timestamp_fraction_buffer);
-	
-		uart_send_string("]\r\n");
 	}
 	else if(strcmp(str,cmd_reboot)==0){
 		uart_send_string("\r\nBooting......\r\n");
@@ -164,33 +135,10 @@ void kernel_main(void)
 
     // simple shell implement
     char str[128];
-    char i=0;
-    int check = 0;
-    char recv_char;
-
-    *(str) = '\0';
-    uart_send_string(">>");
     
     while (1) {
-	recv_char = uart_recv();
-    	uart_send(recv_char);
-	
-	if(recv_char>32 && recv_char<127){
-		*(str+i)=recv_char;
-		i++;
-	}
-
-	else if  (recv_char =='\n' || recv_char == '\r'){
-		*(str+i) = '\0';		
-		check = check_string(str); 
-		
-		if (check ==0){	
-			i=0;
-			*(str) = '\0'; //reset what it will output
-			uart_send_string(">>");
-		}	
-
-	}			
-	 
+    	uart_send_string(">>");
+	uart_recv_string(128,str);	
+	check_string(str); 
     }
 }
