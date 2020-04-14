@@ -1,15 +1,8 @@
+#include "../include/peripheral.h"
 #include "../include/gpio.h"
 #include "../include/mailbox.h"
 
-/* PL011 UART registers */
-#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
-#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
-#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024))
-#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028))
-#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
-#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
-#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
-#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
+
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -47,8 +40,25 @@ void uart_init()
     *UART0_ICR = 0x7FF;    // clear interrupts
     *UART0_IBRD = 2;       // 115200 baud
     *UART0_FBRD = 0xB;
-    *UART0_LCRH = 0b11<<5; // 8n1
-    *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
+    *UART0_LCRH = 0b110<<4; // 8n1, enable FIFO
+    /*
+     Program the control registers as follows:
+        1. Disable the UART.
+        2. Wait for the end of transmission or reception of the current character.
+        3. Flush the transmit FIFO by setting the FEN bit to 0 in the Line Control
+        Register, UART_LCRH.
+        4. Reprogram the Control Register, UART_CR.
+        5. Enable the UART.
+     */
+    *UART0_CR = 0x301;     // enable Tx, Rx, UART
+
+    // enable interrupt
+    *UART0_IMSC = 0b11 << 4;		// Tx, Rx
+    // init uart buf
+    read_buf.head = 0;
+    read_buf.tail = 0;
+    write_buf.head = 0;
+    write_buf.tail = 0;
 }
 
 /**
@@ -56,10 +66,46 @@ void uart_init()
  */
 void uart_send(unsigned int c) {
     /* wait until we can send */
-    do{asm volatile("nop");}while(*UART0_FR&0x20);
+    do{ asm volatile("nop"); } while(*UART0_FR&0x20); // RX is BUSY
     /* write the character to the buffer */
     *UART0_DR=c;
 }
+// void uart_send(char c)
+// {
+//     char r;
+//     if (*UART0_FR & 0x80) {
+//         // // we need to send one character to trigger interrupt.
+//         // // because the interrupt only set after data transmitted
+//         // if (QUEUE_EMPTY (write_buf)) { // queue is empty
+//         //     *UART0_DR = c;
+//         // } 
+//         // else { 
+//         //     r = QUEUE_GET (write_buf);
+//         //     QUEUE_POP (write_buf);
+//         //     QUEUE_SET (write_buf, c);
+//         //     QUEUE_PUSH (write_buf);
+//         //     *UART0_DR = r;
+//         // }
+//         if (BUF[0]) {
+//             *UART0_DR = c;
+//         } else {
+//             BUF[0] = 0;
+//             BUF[0] = r;
+//             *UART0_DR = r;
+//         }
+//     } 
+//     else {
+//     //     // Raspberry PI is toooooo slow
+//     //     // We need push the data into queue
+//     //     // if (!QUEUE_FULL (write_buf)) { 
+//     //     //     QUEUE_SET (write_buf, c);
+//     //     //     QUEUE_PUSH (write_buf);
+//     //     // }
+//     //     // else: drop that :(
+//         BUF[0] = r;
+//     }
+//     return;
+// }
 
 /**
  * Receive a character
@@ -67,13 +113,21 @@ void uart_send(unsigned int c) {
 char uart_getc() {
     char r;
     /* wait until something is in the buffer */
-    do{asm volatile("nop");}while(*UART0_FR&0x10);
+    do{ asm volatile("nop"); } while(*UART0_FR&0x10); // TX FIFO is empty
     /* read it and return */
     r=(char)(*UART0_DR);
     /* convert carrige return to newline */
     return r=='\r'?'\n':r;
 }
+// char uart_getc() 
+// {
+//     char r;
 
+//     while (QUEUE_EMPTY (read_buf)) asm volatile ("wfi");
+//     r = QUEUE_GET (read_buf);
+//     QUEUE_POP (read_buf);
+//     return r == '\r' ? '\n' : r;
+// }
 /**
  * Display a string
  */

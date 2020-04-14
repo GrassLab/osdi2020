@@ -9,7 +9,7 @@
 #define TAG_REQUEST_CODE    0x00000000
 #define END_TAG             0x00000000
 
-void get_vccore_addr()
+void show_vccore_addr()
 {
     //unsigned int mailbox[7];
     mbox[0] = 8 * 4; // buffer size in bytes
@@ -34,7 +34,7 @@ void get_vccore_addr()
     uart_puts("\n");
 }
 
-void get_board_revision()
+void show_board_revision()
 {
     //unsigned int mailbox[7];
     mbox[0] = 7 * 4; // buffer size in bytes
@@ -56,7 +56,7 @@ void get_board_revision()
     uart_puts("\n");
 }
 
-void get_serial()
+void show_serial()
 {
     // get the board's unique serial number with a mailbox call
     mbox[0] = 8*4;                  // length of the message
@@ -81,7 +81,7 @@ void get_serial()
     }
 }
 
-int get_exception_level()
+int show_exception_level()
 {
     //  check exception level
     int el;

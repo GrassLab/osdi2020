@@ -59,7 +59,7 @@ void exception_handler(unsigned int x0, unsigned int x1, unsigned int x2, unsign
     unsigned long esr, elr, spsr; 
 
     //  check exception level
-    int level = get_exception_level();
+    int level = show_exception_level();
     switch(level) {
         case 1: 
             asm volatile ("mrs %0, esr_el1" : "=r"(esr));

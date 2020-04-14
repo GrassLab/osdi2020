@@ -65,7 +65,8 @@ __exception_routine:
 __interrupt_routine:
     //bl      disable_irq
     STORE_CONTEXT
-    bl      debug
+    //bl      debug
+    //bl      exception_handler
     bl      interrupt_handler
     LOAD_CONTEXT
     //bl      enable_irq

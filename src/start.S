@@ -58,7 +58,7 @@ _el2_to_el1:
     // spsr_el1 clear daif and switch to EL0
     mov     x1, 0x0
     msr     spsr_el1, x1
-    adr     x1, _el1_to_el0
+    adr     x1, main
     msr     elr_el1, x1
     eret
 

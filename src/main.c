@@ -24,9 +24,21 @@ unsigned int KERNEL_ADDR = 0x100000;
 unsigned int CORE_TIMER_COUNT = 0;
 unsigned int LOCAL_TIMER_COUNT = 0;
 
+void main123()
+{
+    uart_irq_enable();
+    uart_init();
+    for (int i=0; i<16; i++)
+        uart_send('a');
+    uart_send('\r');
+    uart_send('\n');
+    while(1);
+}
+
 void main()
 {
     // set up serial console and linear frame buffer
+    uart_irq_enable();
     uart_init();
     uart_puts(WELCOME);
     // char *int1 = 0;
@@ -43,19 +55,11 @@ void main()
     }   
 
     // get hardware info
-    get_serial();
-    get_board_revision();
-    get_vccore_addr();
-    
-    // uart_puts("Exception Level: ");
-    // uart_puts(level);
-    // uart_puts("\n");
-    //int level = get_exception_level();
-    //if (level == 2) set_HCR_EL2_IMO();
-    //enable_irq();
+    show_serial();
+    show_board_revision();
+    show_vccore_addr();
 
     while (1) { 
-
         // get user input
         // command line
         char user_input[256];
