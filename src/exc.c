@@ -3,23 +3,23 @@
 /**
  * common exception handler
  */
-void exc_handler(unsigned long type, unsigned long esr, unsigned long elr,
-                 unsigned long spsr, unsigned long far) {
+void exception_handler(unsigned long type, unsigned long esr, unsigned long elr,
+                       unsigned long spsr, unsigned long far) {
     switch (type) {
         case 0:
-            print("Synchronous");
+            print("Synchronous\n");
             break;
         case 1:
-            print("IRQ");
+            print("IRQ\n");
             break;
         case 2:
-            print("FIQ");
+            print("FIQ\n");
             break;
         case 3:
-            print("SError");
+            print("SError\n");
             break;
     }
-    print("Exception return address: %x", elr);
-    print("Exception class (EC): %x", elr >> 26);
-    print("Instruction specific syndrome (ISS): %x", esr & ((1 << 24) - 1));
+    print("Exception return address: %x\n", elr);
+    print("Exception class (EC): %x\n", elr >> 26);
+    print("Instruction specific syndrome (ISS): %x\n", esr & ((1 << 24) - 1));
 }

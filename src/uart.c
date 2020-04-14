@@ -1,5 +1,6 @@
 #include "gpio.h"
 #include "mbox.h"
+#include "sprintf.h"
 
 /* PL011 UART registers */
 #define UART0_DR ((volatile unsigned int *)(MMIO_BASE + 0x00201000))
@@ -130,5 +131,24 @@ void uart_hex(unsigned int d) {
 void uart_flush() {
     while (*UART0_FR & 0x10) {
         *UART0_DR;
+    }
+}
+
+/**
+ * Display a string
+ */
+void print(char *fmt, ...) {
+    __builtin_va_list args;
+    __builtin_va_start(args, fmt);
+    // we don't have memory allocation yet, so we
+    // simply place our string after our code
+    char *s = (char *)&_end;
+    // use sprintf to format our string
+    vsprintf(s, fmt, args);
+    // print out as usual
+    while (*s) {
+        /* convert newline to carrige return + newline */
+        if (*s == '\n') uart_send('\r');
+        uart_send(*s++);
     }
 }

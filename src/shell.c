@@ -17,6 +17,8 @@
 #define GET_VC_MEMORY 0x00010006
 #define UART_ID 0x000000002
 
+extern void core_timer_enable();
+
 void get_board_revision() {
     mbox[0] = 7 * 4;  // buffer size in bytes
     mbox[1] = REQUEST_CODE;
@@ -153,6 +155,8 @@ void shell() {
     } else if (!strcmp(cmd, "exc")) {
         asm volatile("exc:");
         asm volatile("svc #1");
+    } else if (!strcmp(cmd, "irq")) {
+        core_timer_enable();
     } else {
         /* print_s("command not found: "); */
         /* print_s(cmd); */

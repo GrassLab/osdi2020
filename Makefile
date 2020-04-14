@@ -9,7 +9,7 @@ CFLAGS = -Wall -I $(IDIR) -O0
 OBJCOPY = $(ARM)-objcopy
 S_SRCS = $(wildcard $(SDIR)/*.S)
 C_SRCS = $(wildcard $(SDIR)/*.c)
-S_OBJS = $(S_SRCS:$(SDIR)/%.S=$(BDIR)/%.o)
+S_OBJS = $(S_SRCS:$(SDIR)/%.S=$(BDIR)/%.asmo)
 C_OBJS = $(C_SRCS:$(SDIR)/%.c=$(BDIR)/%.o)
 
 all: clean kernel8.img
@@ -20,14 +20,14 @@ kernel8.img: kernel8.elf
 kernel8.elf: $(S_OBJS) linker.ld $(C_OBJS)
 	$(LD) -T linker.ld -o kernel8.elf $(S_OBJS) $(C_OBJS)
 
-$(C_OBJS): $(C_SRCS)
+$(BDIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(S_OBJS): $(S_SRCS)
+$(BDIR)/%.asmo: $(SDIR)/%.S
 	$(CC) -c $< -o $@
 
 clean:
-	rm -f $(BDIR)/*.o kernel8.elf kernel8.img
+	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img
 
 run: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial mon:stdio

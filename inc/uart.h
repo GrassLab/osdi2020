@@ -5,4 +5,4 @@ char uart_getc();
 void uart_puts(const char *s);
 void uart_hex(unsigned int d);
 void uart_flush();
-int print(char *fmt, ...);
+void print(char *fmt, ...);
