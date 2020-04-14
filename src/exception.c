@@ -3,12 +3,7 @@
 #include "shell.h"
 
 void exception_init(void) {
-  asm("msr vbar_el2, %0" : : "r"(vector_table));
-
-  // Set HCR_EL2.IMO, bit [4] to 1
-  asm("mrs x0, hcr_el2");
-  asm("orr x0, x0, #16");
-  asm("msr hcr_el2, x0");
+  asm("msr vbar_el1, %0" : : "r"(vector_table));
 
   // Enable interrupt
   asm("msr daifclr, #0xf");
@@ -28,8 +23,8 @@ void core_timer_enable(void) {
 
 void curr_el_spx_sync_handler(void) {
   uint64_t address, syndrome;
-  asm("mrs %0, elr_el2" : "=r"(address));
-  asm("mrs %0, esr_el2" : "=r"(syndrome));
+  asm("mrs %0, elr_el1" : "=r"(address));
+  asm("mrs %0, esr_el1" : "=r"(syndrome));
 
   // EC, bits [31:26]
   // ISS, bits [24:0]
