@@ -27,6 +27,7 @@
 
 #include "gpio.h"
 #include "libc.h"
+#include "miniuart.h"
 #include <stdarg.h>
 
 #define AUX_IRQ_REG     ((volatile unsigned int*)(MMIO_BASE+0x00215000))
@@ -179,12 +180,45 @@ void uart_puts(char *s) {
     }
 }
 
+/* Buffer queue */
+
+void buf_push(char c);
+char buf_pop();
+int  buf_is_full();
+int  buf_is_empty();
+
+static int front = -1, back = -1;
+static int capacity = BUF_SIZE;
+void buf_push(char c) {
+  while (buf_is_full()) ;
+  uart_buffer[++back] = c;
+}
+
+char buf_pop() {
+  while (buf_is_empty()) ;
+  front++;
+  return uart_buffer[front];
+}
+
+int buf_is_full() {
+  return ((back + 1)%capacity == front);
+}
+
+int buf_is_empty() {
+  return (front == back);
+}
+
+
+char getc() {
+  return buf_pop();
+}
+
 void uart_irq_handler() {
-    char c = uart_getc();
-    uart_println("mini uart interrupted, received: %c", c);
+    /* char c = uart_getc(); */
+    /* uart_println("mini uart interrupted, received: %c", c); */
 
     /* There may be more than one byte in the FIFO */
-    /* while ((*AUX_MU_IIR & IIR_REG_REC_NON_EMPTY) == IIR_REG_REC_NON_EMPTY) { */
-    /*     uart_send(uart_getc()); */
-    /* } */
+    while ((*AUX_MU_IIR & IIR_REG_REC_NON_EMPTY) == IIR_REG_REC_NON_EMPTY) {
+        buf_push(uart_getc());
+    }
 }

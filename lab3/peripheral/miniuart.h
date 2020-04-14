@@ -36,8 +36,15 @@
 
 #pragma once
 
+#define BUF_SIZE 1024
+char uart_buffer[BUF_SIZE];
+
+
 void uart_init();
 void uart_send(unsigned int c);
 char uart_getc();
 void uart_puts(char *s);
 void uart_flush(void);
+
+
+char getc();

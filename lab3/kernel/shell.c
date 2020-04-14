@@ -197,7 +197,7 @@ int getcmd(char *buf, int nbuf) {
 
   /* read from uart to buf until newline */
   char c;
-  while ((c = uart_getc()) != '\r') {
+  while ((c = getc()) != '\r') {
     if (c == 127 || c == 8) { /* backspace or delete */
       /* display */
       if (p_buf != buf) {
