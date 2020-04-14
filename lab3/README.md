@@ -27,11 +27,11 @@ it will create infinite loop
 - [ ] `question 3` What will happen if you don’t clear peripherals’ interrupt signal?
 
 ### Timer interrupt
-- [ ] `required 3-1` Implement IRQ handler for IRQ Exception from the current EL while using SP_ELx. (offset 0x280-0x300 in the vector table)
+- [x] `required 3-1` Implement IRQ handler for IRQ Exception from the current EL while using SP_ELx. (offset 0x280-0x300 in the vector table)
 
-- [ ] `required 3-2` Implement the arm core timer handler. Add `irq` command to the shell to enable timer.
+- [x] `required 3-2` Implement the arm core timer handler. Add `irq` command to the shell to enable timer.
 
-- [ ] `elective 1` Pick another timer and implement its handler.
+- [x] `elective 1` Pick another timer and implement its handler.
 
 ### UART interrupt
 

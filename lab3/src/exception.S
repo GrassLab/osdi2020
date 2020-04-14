@@ -77,5 +77,7 @@ el1_exception:
 
 irq_handler:
 	kernel_entry
+	bl disable_irq
 	bl irq_router
+	bl enable_irq
 	kernel_exit

@@ -5,7 +5,7 @@ ASMFALG = -fPIC -Iinclude
 SRC_DIR = src
 BUILD_DIR = build
 
-all: clean kernel8.img
+all: kernel8.img
 
 
 $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c

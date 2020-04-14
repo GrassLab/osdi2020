@@ -1,33 +1,20 @@
 .section ".text"
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
+
 .global core_timer_enable
 core_timer_enable:
-    stp x29, x30, [sp, #-16]!
-    mov x29, sp
-
-    bl delay
-    mov x0, #1
-    msr cntp_ctl_el0, x0 // enable timer
-    mov x0, #2
+    mov x0, 1
+    msr cntp_ctl_el0, x0 // enable timer ENABLE, bit [0]
+    mrs x0, cntfrq_el0
+    msr cntp_tval_el0, x0 // set expired time
+    mov x0, 2
     ldr x1, =CORE0_TIMER_IRQ_CTRL
-    str x0, [x1] // enable timer interrupt
-
-    ldp x29, x30, [sp], #16
+    str x0, [x1] // enable timer interrupt    
     ret
 
-#define EXPIRE_PERIOD 0xfffffff
+
 .global core_timer_handler
 core_timer_handler:
-    stp x29, x30, [sp, #-16]!
-    mov x29, sp
-
-    bl delay
-
-    ldp x29, x30, [sp], #16
-    ret
-
-delay:
-    // delay a second
-    mrs x0, CNTFRQ_EL0
-    msr CNTP_TVAL_EL0, x0
+    mrs x0, cntfrq_el0
+    msr cntp_tval_el0, x0
     ret
