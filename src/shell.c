@@ -4,16 +4,11 @@
 #include "mbox.h"
 #include "string.h"
 #include "lfb.h"
+#include "msg.h"
 
 // say hello
 void shell_welcome_msg() {
-	uart_puts("\n\n\n");
-	uart_puts("                                        |\\__/,|   (`\\  \n");
-	uart_puts("                                      _.|o o  |_   ) ) \n");
-	uart_puts("|************************************(((***(((********|\n");
-    uart_puts("|* Hello World! This is OSDI Lab 2 from Waylon Shih! *|\n");
-	uart_puts("|*****************************************************|\n");
-    uart_puts("\n\n# ");
+	uart_puts(welcome_msg);
 }
 	
 // simple shell
@@ -72,20 +67,22 @@ void shell_start() {
 // handle commands
 void cmdSwitch(char* buf) {
 
-	if(!cmpstr(buf, "help"))
+	if (!cmpstr(buf, "help"))
 		cmd_help();
-	else if(!cmpstr(buf, "hello"))
+	else if( !cmpstr(buf, "hello"))
 		uart_puts("Hello world!\n");
-	else if(!cmpstr(buf, "timestamp"))
+	else if (!cmpstr(buf, "timestamp"))
 		cmd_time();
-	else if(!cmpstr(buf, "reboot"))
+	else if (!cmpstr(buf, "reboot"))
 		cmd_reboot();
-	else if(!cmpstr(buf, "loadimg"))
+	else if (!cmpstr(buf, "loadimg"))
 		cmd_load();
-	else if(!cmpstr(buf, "hwinfo"))
+	else if (!cmpstr(buf, "hwinfo"))
 		cmd_hardwareInfo();
-	else if(!cmpstr(buf, "framebuf"))
+	else if (!cmpstr(buf, "framebuf"))
 		cmd_framebuf();
+	else if (!cmpstr(buf, "exc"))
+		asm("svc 0x1");
 
 	else if(!cmpstr(buf, "")) ;
 	else
@@ -95,13 +92,7 @@ void cmdSwitch(char* buf) {
 
 /* simple shell functions */
 void cmd_help() {
-	uart_puts("hello     : print Hello world!\n");
-	uart_puts("help      : help\n");
-	uart_puts("reboot    : reboot rpi3\n");
-	uart_puts("timestamp : get current timestamp\n");
-	uart_puts("\n");
-	uart_puts("hwinfo    : print hardware info\n");
-	uart_puts("framebuf  : framebuffer\n");
+	uart_puts(help_msg);
 }
 
 // DONE!!!!!!!!!!
@@ -133,16 +124,7 @@ void cmd_reboot() {
 }
 
 void cmd_load() {
-	char tmp[100];
-	// send the message to the GPU and receive answer
-    if (mbox_call(MBOX_CH_PROP)) {
-        uart_puts("My serial number is: ");
-        uart_puts(itoa(mbox[6], tmp));
-        uart_puts(itoa(mbox[5], tmp));
-        uart_puts("\n");
-    } else {
-        uart_puts("Unable to query serial!\n");
-    }	
+	
 }
 
 void cmd_hardwareInfo() {
@@ -194,6 +176,16 @@ void cmd_framebuf() {
 	lfb_init();
 	uart_puts("Showing image...\n");
 	lfb_showpicture();
+}
+
+void cmd_exc() {
+	unsigned long el;
+	asm volatile ("mrs %0, CurrentEL" : "=r" (el));
+
+	uart_puts("Current EL is: ");
+	uart_hex((el>>2)&3);
+	uart_puts("\n");
+
 }
 
 void cmd_err(char* buf) {

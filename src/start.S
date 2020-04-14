@@ -49,8 +49,11 @@ _start:
     sub     w2, w2, #1
     cbnz    w2, 3b
 
+    // move exception_table to vbar_el2
+4:  ldr     x0, =exception_table
+    msr     VBAR_EL2, x0
     // jump to C code, should not return
-4:  bl      main
+    bl      main
     // for failsafe, halt this core too
     b       1b
 

@@ -7,5 +7,6 @@ void cmd_reboot();
 void cmd_hardwareInfo();
 void cmd_framebuf();
 void cmd_load();
+void cmd_exc();
 void cmd_err(char* buf);
 void cmd_debug(char* buf);
