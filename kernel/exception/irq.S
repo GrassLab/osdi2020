@@ -9,20 +9,33 @@
 
 # irq enable in EL1
 irq_el1_enable:
-    
+
+    # Approach 1
+    # mov x0, #0b1111000000
+    msr DAIF, x0
+
+    # Approach 2
+    # msr DAIFClr, 0xf
+
+    # Approach 3
     # EL0 with interrupt enabled
     # SPSR_EL1: DAIF[4]: SPSR_EL1[9:6]
-    mov x0, #0
+    # mov x0, #0
     # mrs x0, SPSR_EL1
     # and x0, x0, 0b00001111111
-    msr SPSR_EL1, x0
+    # msr SPSR_EL1, x0
     ret
 
 # irq disable in EL1
 irq_el1_disable:
-    mrs x0, SPSR_EL1
-    orr x0, x0, 0b11110000000
-    msr SPSR_EL1, x0
+    # Approach 1
+    msr DAIFSet, 0xf
+
+    # Approach 2
+    # mov x0, #0x60000000
+    # mrs x0, SPSR_EL1
+    # orr x0, x0, 0b11110000000
+    # msr SPSR_EL1, x0
     ret
 
 # irq setup in EL2

@@ -195,7 +195,15 @@ void command_brk_exception_trap ()
 
 void command_irq_exception_enable ()
 {
-    uart_printf("[IRQ Enable]\n");
+    // enable irq in el1
+    // it will always be enable
+    // asm volatile ( 
+    //     "mov    x0, %0;"
+    //     "svc    #1;"
+    //     :
+    //     : "r"(IRQ_EL1_ENABLE)
+    // );
+    // uart_printf("[IRQ Enable]\n");
 
     // move core timer enable to sys call
     asm volatile ( 
@@ -204,17 +212,23 @@ void command_irq_exception_enable ()
         :
         : "r"(CORE_TIMER_ENABLE)
     );
-
-    // core_timer_enable();
     uart_printf("[Core Timer Enable]\n");
 
-    local_timer_reload();
     local_timer_enable();
     uart_printf("[Local Timer Enable]\n");
 }
 
 void command_irq_exception_disable ()
 {
+    // disable irq in el2
+    asm volatile ( 
+        "mov    x0, %0;"
+        "svc    #1;"
+        :
+        : "r"(CORE_TIMER_DISABLE)
+    );
+
     // irq_el1_disable();
+    local_timer_disable ();
     uart_printf("[IRQ Disable]\n");
 }

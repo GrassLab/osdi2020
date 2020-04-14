@@ -2,7 +2,8 @@
 
 .global save_reg
 .global load_reg
-.global exception_table
+.global exception_table_el1
+.global exception_table_el2
 
 # save general registers to stack
 .macro save_reg
@@ -51,7 +52,18 @@
 
 .endm
 
-_exception__handler:
+_exception__handler_el1:
+    save_reg
+    bl      exec_controller_el1
+    load_reg
+
+_irq__handler_el1:
+    # how to make macro gloabl?
+    save_reg
+    bl      irq_controller_el1
+    load_reg
+
+_exception__handler_el2:
 
     # ESR_EL2:  Holds syndrome information for an exception taken to EL2.
     # ELR_EL2:  When taking an exception to EL2, holds the address to return to.
@@ -59,64 +71,68 @@ _exception__handler:
     # FAR_EL2:  Holds the faulting Virtual Address for all synchronous Instruction or Data Abort, PC alignment fault and Watchpoint exceptions that are taken to EL2.
 
     save_reg
-    # mrs     x0, ELR_EL1
-    # mrs     x1, ESR_EL1
-    # mrs     x2, spsr_el2
-    # mrs     x3, far_el2
-    bl      exec_controller
+    # mrs     x0, ELR_EL2
+    # mrs     x1, ESR_EL2
+    # mrs     x2, SPSR_EL2
+    # mrs     x3, FAR_EL2
+    bl      exec_controller_el2
     load_reg
 
-_irq__handler:
-    # how to make macro gloabl?
+_irq__handler_el2:
     save_reg
-    bl      irq_controller
+    bl      irq_controller_el2
+    load_reg
+
+_not_implemented:
+    save_reg
+    bl      exception_not_implemented
     load_reg
 
 # Simple vector table
 
 # vector table should be aligned to 0x800
 .align 11
-exception_table:
+exception_table_el1:
 
     # ==================================================
-    # Exception from the current EL whild using SP_EL0
+    # Exception from the current EL while using SP_EL0
     # ==================================================
 
     # Synchronous
     # branch to a handler function.
-    b   _exception__handler
+    b   _exception__handler_el1
     # entry size is 0x80, .align will pad 0
     .align 7
 
     # IRQ
-    b   _exception__handler
+    b   _irq__handler_el1
     .align 7
     
     # FIQ
-    b   _exception__handler
+    b   _not_implemented
     .align 7
     
     # SError
-    b   _exception__handler
+    b   _not_implemented
     .align 7
 
     # ==================================================
-    # Exception from the current EL whild using SP_ELx
+    # Exception from the current EL while using SP_ELx
     # ==================================================
     # Synchronous
-    b   _exception__handler
+    b   _exception__handler_el1
     .align 7
 
     # IRQ
-    b   _irq__handler
+    b   _irq__handler_el1
     .align 7
     
     # FIQ
-    b   _exception__handler
+    b   _not_implemented
     .align 7
     
     # SError
-    b   _exception__handler
+    b   _not_implemented
     .align 7
 
 
@@ -124,36 +140,101 @@ exception_table:
     # Exception from a lower EL and at least one lower EL is AArch64
     # ==================================================
     # Synchronous
-    b   _exception__handler
+    b   _exception__handler_el1
     .align 7
 
     # IRQ
-    b   _irq__handler
+    b   _irq__handler_el1
     .align 7
     
     # FIQ
-    b   _exception__handler
+    b   _not_implemented
     .align 7
     
     # SError
-    b   _exception__handler
+    b   _not_implemented
     .align 7
 
     # ==================================================
     # Exception from a lower EL and at least one lower EL is AArch32
     # ==================================================
     # Synchronous
-    b   _exception__handler
+    b   _not_implemented
     .align 7
 
     # IRQ
-    b   _exception__handler
+    b   _not_implemented
     .align 7
     
     # FIQ
-    b   _exception__handler
+    b   _not_implemented
     .align 7
     
     # SError
-    b   _exception__handler
+    b   _not_implemented
+    .align 7
+
+
+.align 11
+exception_table_el2:
+
+    # ==================================================
+    # Exception from the current EL while using SP_EL0
+    # ==================================================
+
+    # Synchronous
+    # branch to a handler function.
+    b   _exception__handler_el2
+    # entry size is 0x80, .align will pad 0
+    .align 7
+
+    # IRQ
+    b   _irq__handler_el2
+    .align 7
+    
+    # FIQ
+    b   _not_implemented
+    .align 7
+    
+    # SError
+    b   _not_implemented
+    .align 7
+
+    # ==================================================
+    # Exception from the current EL while using SP_ELx
+    # ==================================================
+    # Synchronous
+    b   _exception__handler_el2
+    .align 7
+
+    # IRQ
+    b   _irq__handler_el2
+    .align 7
+    
+    # FIQ
+    b   _not_implemented
+    .align 7
+    
+    # SError
+    b   _not_implemented
+    .align 7
+
+
+    # ==================================================
+    # Exception from a lower EL and at least one lower EL is AArch64
+    # ==================================================
+    # Synchronous    
+    b   _exception__handler_el2
+    .align 7
+
+    # IRQ
+    b   _irq__handler_el2
+    .align 7
+    
+    # FIQ
+    b   _not_implemented
+    .align 7
+    
+    # SError
+    b   _not_implemented
     .align 7

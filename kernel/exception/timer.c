@@ -1,10 +1,8 @@
 #include "timer.h"
 
+// need to run in EL1
 void core_timer_enable ()
 {
-    // set init value of timer
-    core_timer_reload();
-    
     // enable timer
     // CNTP_CTL_EL0: Control register for the EL1 physical timer.
     // bit[0]: ENABLE
@@ -14,6 +12,9 @@ void core_timer_enable ()
         "mov x0, #1;"
         "msr CNTP_CTL_EL0, x0;"
     );
+
+    // set expired time
+    core_timer_reload();
     
     // Core Timer Interrupt
     // bit[0]: nCNTPSIRQ:    secure physical timer
@@ -28,6 +29,23 @@ void core_timer_enable ()
     *CORE0_TIMER_IRQ_CTRL = 0b00000010;
 }
 
+// need to run in EL1
+void core_timer_disable ()
+{
+    // enable timer
+    // CNTP_CTL_EL0: Control register for the EL1 physical timer.
+    // bit[0]: ENABLE
+    // bit[1]: IMASK
+    // bit[2]: ISTATUS
+    asm volatile (
+        "mov x0, xzr;"
+        "msr CNTP_CTL_EL0, x0;"
+    );
+
+    *CORE0_TIMER_IRQ_CTRL = 0b00000000;
+}
+
+// need to run in EL1
 void core_timer_reload ()
 {
     // CNTP_TVAL_EL0: Holds the timer value for the EL1 physical timer.
@@ -48,6 +66,11 @@ void local_timer_enable ()
     // bit[28]: Timer Enable
     // bit[0:27]: Re-load value
     *LOCAL_TIMER_CTRL = 0b00110101000000000000000000000000;
+}
+
+void local_timer_disable ()
+{
+    *LOCAL_TIMER_CTRL = 0b0;
 }
 
 void local_timer_reload()

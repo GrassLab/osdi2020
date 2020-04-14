@@ -37,8 +37,8 @@ _start:
     
 # stack_init:  
     # set stack before our code
-    # ldr     x1, =_start
-    # mov     sp, x1
+    ldr     x1, =_start
+    mov     sp, x1
 
 from_el2_to_el1:
 
@@ -53,13 +53,19 @@ from_el2_to_el1:
     mov     x0, 0b001111000101
     msr     SPSR_EL2, x0
 
-    # set up exception handler
-    ldr     x1, =exception_table
-    msr     VBAR_EL1, x1
+    # bl irq_el2_setup
+
+    # set up exception handler for el2
+    ldr     x1, =exception_table_el2
+    msr     VBAR_EL2, x1
     
+    # set up exception handler for el1
+    ldr     x1, =exception_table_el1
+    msr     VBAR_EL1, x1
+
     # init sp for EL1
-    adr x0, _start
-    msr SP_EL1, x0
+    sub x1, x1, #0x10000
+    msr SP_EL1, x1
 
     # load exception return address
     adr x0, return_to_el1
@@ -78,14 +84,10 @@ return_to_el1:
     msr CPACR_EL1, x0
 
     bl irq_el1_enable
-    # # EL0 with interrupt enabled
-    # mov x0, 0x0
-    # msr SPSR_EL1, x0
 
     # init sp for EL0
-    adr x0, _start
-    sub x0, x0, #0x10000
-    msr SP_EL0, x0
+    sub x1, x1, #0x10000
+    msr SP_EL0, x1
     
     # load exception return address
     adr x0, return_to_el0

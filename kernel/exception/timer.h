@@ -10,9 +10,11 @@
 #define LOCAL_TIMER_CLR  ((volatile unsigned int*)0x40000038)
 
 void core_timer_enable ();
+void core_timer_disable ();
 void core_timer_reload ();
 
 void local_timer_enable ();
+void local_timer_disable ();
 void local_timer_reload ();
 
 #endif
