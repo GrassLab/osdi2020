@@ -6,6 +6,9 @@
 extern unsigned vector_table[];
 
 void exception_init(void);
+void core_timer_enable(void);
 void curr_el_spx_sync_handler(void);
+void curr_el_spx_irq_handler(void);
+void not_implemented_handler(void);
 
 #endif // EXCEPTION_H_

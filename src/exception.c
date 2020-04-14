@@ -61,6 +61,6 @@ void curr_el_spx_irq_handler(void) {
   asm("msr cntp_tval_el0, x0");
 }
 
-void not_implemented(void) {
+void not_implemented_handler(void) {
   mini_uart_puts("This handler is not implemented yet" EOL);
 }

@@ -54,6 +54,11 @@ curr_el_spx_irq:
   bl curr_el_spx_irq_handler
   exception_epilogue
 
+not_implemented:
+  exception_prologue
+  bl not_implemented_handler
+  exception_epilogue
+
 .align 11 // vector table should be aligned to 0x800
 .global vector_table
 vector_table:
