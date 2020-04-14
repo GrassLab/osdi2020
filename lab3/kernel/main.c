@@ -1,3 +1,4 @@
+#include "shell.h"
 #include "miniuart.h"
 #include "framebuffer.h"
 #include "irq.h"
@@ -12,8 +13,8 @@ int main(int argc, char *argv[])
   lfb_init();
 
   /* start interactive shell */
-  while (1);
-  /* shell(); */
+  /* while (1); */
+  shell();
 
   return 0;
 }
