@@ -16,42 +16,36 @@ master:
     ldr     x0, =SCTLR_VALUE_MMU_DISABLED
     msr     sctlr_el1, x0
 
-    ldr     x0, =HCR_VALUE
+    ldr     x0, =HCR_EL2_VALUE    // set EL1 aarch
     msr     hcr_el2, x0
 
-	//ldr	    x0, =SCR_VALUE
-	//msr	    scr_el3, x0
-    
-    ldr     x0, =SPSR_VALUE
+    ldr     x0, =SPSR_EL2_VALUE   // set processor restore state after calling eret  
     msr     spsr_el2, x0
 
-    adr     x0, el1_entry
+    adr     x0, el1_entry         // eret return address
     msr     elr_el2, x0
 
-    // from el2 to el1
-    eret
+    ldr     x0, =EL1_LOW_MEMORY
+    msr     sp_el1, x0
+
+    eret                          // from el2 to el1
 
 el1_entry:
-//clear_bss:
-    ldr     w1, =__bss_size
+    ldr     w1, =__bss_size       // clear_bss
     cbz     w1, pseudo_main
     ldr     x0, =__bss_start
     bl      memzero
 
-    ldr     x0, =EL1_LOW_MEMORY 
-    mov     sp, x0
-
-    ldr     x0, =exception_table
+    ldr     x0, =exception_table  // set up el1 exception table
     msr     vbar_el1, x0
 
-    ldr     x0, 0
+    ldr     x0, SPSR_EL1_VALUE
     msr     spsr_el1, x0
 
     adr     x0, el0_entry
     msr     elr_el1, x0
 
-    // from el1 to el0
-    eret
+    eret                          // from el1 to el0
 
 el0_entry:
     ldr     x0, =EL0_LOW_MEMORY 

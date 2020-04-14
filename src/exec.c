@@ -50,7 +50,7 @@ void sync_svc_handler(unsigned long esr, unsigned long elr){
         case 2: //irq
             enable_irq();
             core_timer_enable();
-            // local_timer_init();
+            local_timer_init();
             uart_puts("timer interrupt enabled\n");
             break;
         case 3: //timestamp
@@ -86,7 +86,31 @@ void irq_router(){
         uart_puts(buff);
         core_cnt ++;
         // printf("Core timer interrupt, jiffies %d\n", core_cnt++);
+    } else if (src & (1<<11)){
+        local_timer_handler();
+        uart_puts("\nLocal timer interrupt, jiffies ");
+        unitoa(local_cnt, buff, 1);
+        uart_puts(buff);
+        local_cnt ++;
+    //     // printf("Local timer interrupt, jiffies %d\n", local_cnt++);
     } else {
         uart_puts("Unknown IRQ\n");
     }
 }
+
+// void enable_interrupt_controller()
+// {
+// 	*ENABLE_IRQS_1 |= IRQ_SYSTEM_TIMER_1;
+// }
+
+// void handle_irq()
+// {
+//     unsigned int pending = *IRQ_PENDING_1;
+//     switch (pending) {
+//         case (IRQ_SYSTEM_TIMER_1):
+//             handle_timer_irq();
+//             break;
+//         default:
+//             printf("Unknown pending irq: %x\r\n", pending);
+//     }
+// }
