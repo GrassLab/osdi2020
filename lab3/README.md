@@ -20,11 +20,13 @@ create infinite loop
 if we don't do kernel_entry and kernel_exit, the return address is 0x3F201000
 it will create infinite loop
 
-- [ ] `question 2` Do you need to save floating point SIMD registers in ISRs? Why or why not.
+- [x] `question 2` Do you need to save floating point SIMD registers in ISRs? Why or why not.
+在exception情況下無法回覆Pipeline的東西，所以存了也沒用
 
 ## Pi3’s interrupt
 ### Background
-- [ ] `question 3` What will happen if you don’t clear peripherals’ interrupt signal?
+- [x] `question 3` What will happen if you don’t clear peripherals’ interrupt signal?
+無法觸發
 
 ### Timer interrupt
 - [x] `required 3-1` Implement IRQ handler for IRQ Exception from the current EL while using SP_ELx. (offset 0x280-0x300 in the vector table)
