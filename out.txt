@@ -1,0 +1,4 @@
+rm -f build/*.o kernel8.elf kernel8.img
+aarch64-linux-gnu-gcc -c src/start.S -o build/start.o
+aarch64-linux-gnu-gcc -c src/start.S -o build/timer.o
+aarch64-linux-gnu-gcc -Wall -I inc -O0 -c src/exc.c -o build/exc.o
