@@ -46,6 +46,7 @@ void compair(char *buf) {
   } else {
     printf("unknow command %s\n", buf);
   }
+  return;
 }
 void main() {
   uart_init();

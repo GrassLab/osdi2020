@@ -3,6 +3,7 @@
 
 #define LOCAL_TIMER_CONTROL_REG (unsigned int *)0x40000034
 #define LOCAL_TIMER_IRQ_CLR (unsigned int *)0x40000038
+unsigned int core_jf = 0;
 
 void local_timer_init() {
   unsigned int flag = 0x30000000; // enable timer and interrupt.
@@ -16,18 +17,23 @@ void local_timer_handler() {
 }
 
 void irq() {
-  printf("put s to stop\n");
+  core_jf = 0;
   asm volatile("mov x0, #0\n"
                "svc #0\n");
-  while (1) {
-    char get = uart_getc();
-    if (get == 's') {
-      break;
-    }
-  }
 }
 
-void irq_router() {
-  core_timer_handler();
-  printf("time_inturrupt\n");
+void core_timer_handler() {
+  unsigned int val;
+  asm volatile("mrs %0, cntfrq_el0" : "=r"(val));   // read val
+  asm volatile("msr cntp_tval_el0, %0" ::"r"(val)); // write tval
+  asm volatile("msr DAIFClr, 0xf");
+  printf("arm core timer , %d \n", core_jf);
+  core_jf += 1;
+  if (core_jf == 3) {
+    core_timer_disable();
+    core_jf = 1;
+  }
+  return;
 }
+
+void irq_router() { core_timer_handler(); }

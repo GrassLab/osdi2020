@@ -8,18 +8,14 @@ core_timer_enable:
   mov x0, 2
   ldr x1, =CORE0_TIMER_IRQ_CTRL
   str x0, [x1] // enable timer interrupt
-
-.globl core_timer_handler
-    core_timer_handler:
-    mov x0, EXPIRE_PERIOD
-    msr cntp_tval_el0, x0
-
-.globl enable_irq
-enable_irq:
-	msr    daifclr, 0xf
 	ret
 
-.globl disable_irq
-disable_irq:
-	msr	daifset, 0xf
-	ret
+
+.globl core_timer_disable
+core_timer_disable:
+    mov x0, 0
+    msr cntp_ctl_el0, x0
+    mov x0, 0
+    ldr x1, =CORE0_TIMER_IRQ_CTRL
+    str x0, [x1]          // disable timer interrupt
+    ret

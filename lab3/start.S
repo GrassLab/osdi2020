@@ -49,6 +49,7 @@ from_el1_to_el0:
     msr elr_el1, x0
     eret
 jump_main:
+
     bl      main
 
 loop:
