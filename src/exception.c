@@ -4,7 +4,7 @@
 #include "queue.h"
 #include "uart0.h"
 
-void irq_init() {
+void irq_enable() {
     // Enable IMO
     register unsigned int hcr_el2_value;
     asm volatile("mrs %0, hcr_el2"
@@ -13,11 +13,8 @@ void irq_init() {
     asm volatile("msr hcr_el2, %0"
                  :
                  : "r"(hcr_el2_value));
-    // Unmask Interrupt
-    register unsigned int unmask = 0;
-    asm volatile("msr daif, %0"
-                 :
-                 : "r"(unmask));
+    // Unmask IRQ
+    asm volatile("msr daifclr, #2");
 }
 
 void arm_core_timer_enable() {
@@ -94,6 +91,11 @@ void irq_el2h_router() {
                      :
                      : "r"(expire_period));
         uart_printf("Core timer interrupt, jiffies %d\n", ++arm_core_timer_jiffies);
+        // bottom half simulation
+        // irq_enable();
+        // unsigned long long x = 100000000000;
+        // while (x--) {
+        // }
     }
     // ARM Local Timer Interrupt
     else if (core0_intr_src & (1 << 11)) {

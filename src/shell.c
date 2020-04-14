@@ -48,7 +48,7 @@ void shell_init() {
     uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
 
     // Initialize IRQ
-    irq_init();
+    irq_enable();
     uart_printf("\n[%f] Init IRQ done", get_timestamp());
 
     // Welcome Messages
