@@ -1,27 +1,36 @@
-#include "uart0.h"
-#include "queue.h"
-#include "peripherals/uart0.h"
-#include "peripherals/timer.h"
 #include "peripherals/irq.h"
+#include "peripherals/timer.h"
+#include "peripherals/uart0.h"
+#include "queue.h"
+#include "uart0.h"
 
 void irq_init() {
     // Enable IMO
     register unsigned int hcr_el2_value;
-    asm volatile ("mrs %0, hcr_el2" : "=r" (hcr_el2_value));
-    hcr_el2_value |= 1 << 4; // IMO
-    asm volatile ("msr hcr_el2, %0" : : "r" (hcr_el2_value));
+    asm volatile("mrs %0, hcr_el2"
+                 : "=r"(hcr_el2_value));
+    hcr_el2_value |= 1 << 4;  // IMO
+    asm volatile("msr hcr_el2, %0"
+                 :
+                 : "r"(hcr_el2_value));
     // Unmask Interrupt
     register unsigned int unmask = 0;
-    asm volatile ("msr daif, %0" : : "r" (unmask));
+    asm volatile("msr daif, %0"
+                 :
+                 : "r"(unmask));
 }
 
 void arm_core_timer_enable() {
     // enable timer
     register unsigned int enable = 1;
-    asm volatile ("msr cntp_ctl_el0, %0" : : "r" (enable));
+    asm volatile("msr cntp_ctl_el0, %0"
+                 :
+                 : "r"(enable));
     // set expired time
-    register unsigned int expire_period = EXPRIED_PERIOD;
-    asm volatile ("msr cntp_tval_el0, %0" : : "r" (expire_period));
+    register unsigned int expire_period = CORE_TIMER_EXPRIED_PERIOD;
+    asm volatile("msr cntp_tval_el0, %0"
+                 :
+                 : "r"(expire_period));
     // enable timer interrupt
     *CORE0_TIMER_IRQ_CTRL |= 1 << 1;
 }
@@ -29,20 +38,21 @@ void arm_core_timer_enable() {
 void arm_core_timer_disable() {
     // disable timer
     register unsigned int enable = 0;
-    asm volatile ("msr cntp_ctl_el0, %0" : : "r" (enable));
+    asm volatile("msr cntp_ctl_el0, %0"
+                 :
+                 : "r"(enable));
     // disable timer interrupt
     *CORE0_TIMER_IRQ_CTRL &= !(1 << 1);
 }
 
 void arm_local_timer_enable() {
-    unsigned int flag = 0x30000000; // enable timer and interrupt.
-    unsigned int reload = 0xfffffff / 10; // 0.14 Hz * 10
+    unsigned int flag = 0x30000000;        // enable timer and interrupt.
+    unsigned int reload = 0xfffffff / 10;  // 0.14 Hz * 10
     *LOCAL_TIMER_CTRL = flag | reload;
 }
 
 void arm_local_timer_disable() {
-    unsigned int flag = !(0b11 << 28); // disable timer and interrupt.
-    *LOCAL_TIMER_CTRL &= flag;
+    *LOCAL_TIMER_CTRL &= !(0b11 << 28);  // disable timer and interrupt.
 }
 
 void sync_el2h_router(unsigned long esr, unsigned long elr) {
@@ -60,16 +70,16 @@ void irq_el2h_router() {
 
     // GPU IRQ 57: UART Interrupt
     if (irq_basic_pending & (1 << 19)) {
-        if (*UART0_MIS & 0x10) { // UARTTXINTR
-            while (!(*UART0_FR & 0x10)) { // RX FIFO not empty
+        if (*UART0_MIS & 0x10) {           // UARTTXINTR
+            while (!(*UART0_FR & 0x10)) {  // RX FIFO not empty
                 char r = (char)(*UART0_DR);
                 queue_push(&read_buf, r);
             }
             *UART0_ICR = 1 << 4;
         }
-        else if (*UART0_MIS & 0x20) { // UARTRTINTR
-            while (!queue_empty(&write_buf)) { // flush buffer to TX
-                while (*UART0_FR & 0x20) { // TX FIFO is full
+        else if (*UART0_MIS & 0x20) {           // UARTRTINTR
+            while (!queue_empty(&write_buf)) {  // flush buffer to TX
+                while (*UART0_FR & 0x20) {      // TX FIFO is full
                     asm volatile("nop");
                 }
                 *UART0_DR = queue_pop(&write_buf);
@@ -79,8 +89,10 @@ void irq_el2h_router() {
     }
     // ARM Core Timer Interrupt
     else if (core0_intr_src & (1 << 1)) {
-        register unsigned int expire_period = EXPRIED_PERIOD;
-        asm volatile ("msr cntp_tval_el0, %0" : : "r" (expire_period));
+        register unsigned int expire_period = CORE_TIMER_EXPRIED_PERIOD;
+        asm volatile("msr cntp_tval_el0, %0"
+                     :
+                     : "r"(expire_period));
         uart_printf("Core timer interrupt, jiffies %d\n", ++arm_core_timer_jiffies);
     }
     // ARM Local Timer Interrupt
