@@ -32,7 +32,15 @@ IMG = $(DEFAULT_TARGET).img
 #STAMP_OPT= -DWITHOUT_LOADER -DMOVPI
 STAMP_OPT= -DNORPI -DNO_RELOC_SELF
 COPS += -DNORPI
-ASMOPS += -DNORPI
+
+# select uart flags
+# -DMINIUART  mini  UART
+# no flag     PL011 UART
+COPS += -DMINIUART
+
+# enable uart interrupt
+COPS += -DUARTINT
+
 
 all : $(IMG)
 

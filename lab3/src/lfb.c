@@ -30,7 +30,7 @@
 #include "homer.h"
 #elif defined MOVPI
 #include "movpi.h"
-#elif defined NORPI
+#elif defined(NORPI)
 // no extra boot image
 #else
 #include "raspi.h"
