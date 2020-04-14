@@ -1,5 +1,6 @@
 #include "timer.h"
-#include "uart.h"
+#include "miniuart.h"
+#include "libc.h"
 
 const unsigned int interval = 200000;
 unsigned int curVal = 0;

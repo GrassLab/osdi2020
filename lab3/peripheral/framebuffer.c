@@ -23,8 +23,9 @@
  *
  */
 
-#include "uart.h"
+#include "miniuart.h"
 #include "mbox.h"
+#include "libc.h"
 
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
 unsigned char *lfb;                         /* raw frame buffer address */

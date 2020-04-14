@@ -1,6 +1,7 @@
-#include "uart.h"
+#include "miniuart.h"
 #include "timer.h"
 #include "stdint.h"
+#include "libc.h"
 
 const char *entry_error_messages[] = {
     "SYNC_INVALID_EL1t",

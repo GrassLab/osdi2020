@@ -58,12 +58,19 @@ el1_entry:
     ldr     x0, =vectors
     msr     vbar_el1, x0
 
+    // enable interrupt
+    bl      enable_interrupt_controller
+    msr     daifclr, #0xf
+
     // el0 with interrupt enabled
     ldr     x0, 0
     msr     spsr_el1, x0
 
     adr     x0, el0_entry
     msr     elr_el1, x0
+
+
+
 
     // from el1 to el0
     eret

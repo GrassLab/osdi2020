@@ -1,4 +1,4 @@
-#include "uart.h"
+#include "miniuart.h"
 #include "libc.h"
 #include "mbox.h"
 #include "timer.h"

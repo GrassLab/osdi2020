@@ -4,14 +4,6 @@ extern void uart_puts(char *s);
 extern void uart_send(unsigned int c);
 extern void halt();
 
-int ceil(float num) {
-    int inum = (int)num;
-    if (num == (float)inum) {
-        return inum;
-    }
-    return inum + 1;
-}
-
 char *itoa(int val, int base) {
   static char buf[32] = {0};
   int i = 30;

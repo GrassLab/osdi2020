@@ -1,8 +1,9 @@
 #include "irq.h"
 #include "timer.h"
-#include "uart.h"
+#include "miniuart.h"
+#include "libc.h"
 
-void enable_interrupt_controller() { *(ENABLE_IRQS_1) = SYSTEM_TIMER_IRQ_1; }
+void enable_interrupt_controller() { *(ENABLE_IRQS_1) = AUX_IRQ; }
 
 unsigned long timer_read_counter(void) {
   unsigned long cntpct;
@@ -27,6 +28,7 @@ unsigned long lcnt = 1;
 
 void irq_handler() {
   unsigned int irq0 = *CORE0_IRQ_SRC;
+  unsigned int irqp = *IRQ_PENDING_1;
 
   do {
     IRQ_CHECK(irq0, 0x02, {
@@ -37,6 +39,11 @@ void irq_handler() {
     IRQ_CHECK(irq0, 0x800, {
       local_timer_handler();
       uart_println("Local timer interrupt, jiffies %d", lcnt++);
+    });
+
+    IRQ_CHECK(irqp, AUX_IRQ, {
+      uart_irq_handler();
+      irqp &= ~AUX_IRQ;
     });
 
     uart_println("Unknown pending irq: %x", irq0);

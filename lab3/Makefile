@@ -5,7 +5,7 @@ OBJCP = $(TOOLCHAIN_PREFIX)objcopy
 QEMU = qemu-system-aarch64
 LDSCRIPT = kernel/linker.ld
 LDFLAGS = -nostartfiles
-CFLAGS = -Wall -O2 -fPIC  -ffreestanding -nostdlib -nostartfiles -Iinclude -Ikernel -Iperipheral # -mgeneral-regs-only
+CFLAGS = -Wall -O2 -fPIC -ffreestanding -nostdlib -nostartfiles -Iinclude -Iperipheral -mgeneral-regs-only
 
 PeriDir   = peripheral
 KernelDir = kernel
@@ -26,16 +26,16 @@ all: $(TARGET)
 
 # create the object files
 build/%_c.o: %.c
-	mkdir -p $(@D)
+	@mkdir -p $(@D)
 	$(CC) $(TESTFLAGS) $(CFLAGS) -c $< -o $@
 
 build/%_s.o: %.S
-	mkdir -p $(@D)
+	@mkdir -p $(@D)
 	$(CC) $(TESTFLAGS) $(CFLAGS) -c $< -o $@
 
 # create image file from elf by using objcopy
 $(TARGET): $(ELF_TARGET)
-	mkdir -p $(@D)
+	@mkdir -p $(@D)
 	$(OBJCP) -O binary $(ELF_TARGET) $@
 
 # create the elf file
@@ -46,10 +46,10 @@ run: $(TARGET)
 	$(QEMU) -M raspi3 -kernel $(TARGET) -serial pty
 
 stdio: $(TARGET)
-	$(QEMU) -M raspi3 -kernel $(TARGET) -serial stdio
+	$(QEMU) -M raspi3 -kernel $(TARGET) -serial null -serial stdio
 
 stdio_int: $(TARGET)
-	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -serial stdio -d int
+	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -serial null -serial stdio -d int
 
 debug: $(TARGET)
 	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -S -s
