@@ -1,5 +1,7 @@
+#include "kernel/peripherals/uart.h"
 
-float get_current_timestamp ( )
+// this function should be done in el1
+void print_current_timestamp ( )
 {
     unsigned long int cnt_freq, cnt_tpct;    
 
@@ -10,7 +12,7 @@ float get_current_timestamp ( )
         :
     );
 
-    return ((float)cnt_tpct) / cnt_freq;
+    uart_printf("[%f]\n", ((float)cnt_tpct) / cnt_freq);
 }
 
 void wait_cycles ( unsigned int n )

@@ -25,6 +25,11 @@ void command_help ()
     uart_puts("\ttimestamp:\tprint current timestamp.\n");
     uart_puts("\tvc_base_addr:\tprint the VC core base address\n");
     uart_puts("\tboard_revision:\tprint the board revision.\n");
+    uart_puts("\texc:\t\tTrap into EL1.\n");
+    uart_puts("\thvc:\t\tTrap into EL2.\n");
+    uart_puts("\ttimer:\tEnable timer interrupt of core timer and local timer.\n");
+    uart_puts("\ttimer-stp:\tDisable timer interrupt of core timer and local timer.\n");
+
     uart_puts("\treboot:\t\treboot the raspi3.\n");
     uart_puts("\n");
 }
@@ -36,16 +41,12 @@ void command_hello ()
 
 void command_timestamp ()
 {
-    float timestamp;
-    char str[20];
-
-    timestamp = get_current_timestamp ( );
-
-    ftoa( timestamp, str, 6);
-
-    uart_send('[');
-    uart_puts(str);
-    uart_puts("]\n");
+    asm volatile ( 
+        "mov    x0, %0;"
+        "svc    #1;"
+        :
+        : "r"(PRINT_TIMESTAMP_EL0)
+    );
 }
 
 void command_not_found (char * s) 
@@ -112,7 +113,7 @@ void command_svc_exception_trap ()
 {
     asm volatile ( 
         "mov    x0, %0;"
-        "svc    #1;"
+        "svc    #2;"
         :
         : "r"(TEST_SVC)
     );

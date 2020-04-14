@@ -10,6 +10,7 @@ enum system_call {
     IRQ_EL1_DISABLE,
     CORE_TIMER_ENABLE,
     CORE_TIMER_DISABLE,
+    PRINT_TIMESTAMP_EL0,
 };
 
 enum exception_level {

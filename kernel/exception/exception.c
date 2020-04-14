@@ -1,4 +1,5 @@
 #include "lib/type.h"
+#include "kernel/peripherals/time.h"
 #include "kernel/peripherals/uart.h"
 
 #include "exception.h"
@@ -35,6 +36,9 @@ void exec_controller_el1 ( SYS_CALL x0 )
             break;
         case CORE_TIMER_DISABLE:
             core_timer_disable ();
+            break;
+        case PRINT_TIMESTAMP_EL0:
+            print_current_timestamp ();
             break;
         default:
             print_exec_info ( EL1, elr, esr );
