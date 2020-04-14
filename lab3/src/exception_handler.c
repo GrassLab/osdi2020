@@ -5,6 +5,8 @@
 void handler(){
     unsigned long long elr;
     unsigned long long esr;
+    int ec;
+    int iss;
     char res[30];
 
     asm volatile("mrs %0, ELR_EL1" : "=r"(elr));
@@ -15,23 +17,33 @@ void handler(){
     uart_puts(res);
     uart_puts("\n");
 
-    unsign_itohexa( (esr & 4227858432) >> 26, res);
+    ec = (esr & 4227858432) >> 26;
+    unsign_itohexa(ec , res);
     uart_puts("Exception class (EC): 0x");
     uart_puts(res);
     uart_puts("\n");
 
-    unsign_itohexa( (esr & 33554431), res);
+    iss = (esr & 33554431);
+    unsign_itohexa(iss , res);
     uart_puts("Exception specfic syndrome (ISS): 0x");
     uart_puts(res);
     uart_puts("\n");
 
-    /*unsigned long long sp;
-    asm volatile("mrs %0, SP_EL2" : "=r"(sp));
-    unsign_itohexa(sp, res);
-    uart_puts("SP_EL2: 0x");
-    uart_puts(res);
-    uart_puts("\n");*/
+    if (ec == 21 && iss == 0){
+        uart_puts("\n");
+        uart_puts("Enable system timer.\n");
 
+        asm(
+            "mov x0, 1;"
+            "msr cntp_ctl_el0, x0;"
+            "mrs x0, cntfrq_el0;"
+            "msr cntp_tval_el0, x0;"
+            "mov x0, 2;"
+            "ldr x1, =0x40000040;"
+            "str x0, [x1];"
+        );
+        *CORE0_TIMER_IRQ_CTRL = 2;
+    }
     return;
 }
 

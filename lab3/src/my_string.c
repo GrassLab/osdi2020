@@ -46,6 +46,11 @@ void reverse(char *x, char *y){
 }
 
 void itoa(long long x, char *res){
+    if (x == 0) {
+        res[0] = '0';
+        res[1] = '\0';
+        return;
+    }
     char buf[30];
     int i=0, j=0;
 
@@ -59,6 +64,11 @@ void itoa(long long x, char *res){
 }
 
 void unsign_itoa(unsigned long long x, char *res){
+    if (x == 0) {
+        res[0] = '0';
+        res[1] = '\0';
+        return;
+    }
     char buf[30];
     int i=0, j=0;
 
@@ -81,6 +91,11 @@ void ftoa(float x, char *i_res, char *f_res){
 }
 
 void unsign_itohexa(unsigned long long x, char *res){
+    if (x == 0) {
+        res[0] = '0';
+        res[1] = '\0';
+        return;
+    }
     char buf[20];
     int i=0;
     while(x != 0){

@@ -5,8 +5,6 @@
 #define PM_RSTC (volatile unsigned int*)0x3F10001c
 #define PM_WDOG (volatile unsigned int*)0x3F100024
 
-#define CORE0_TIMER_IRQ_CTRL (volatile unsigned int*)0x40000040
-
 // lab 1
 
 void welcome_msg();
