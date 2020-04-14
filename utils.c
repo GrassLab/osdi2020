@@ -32,6 +32,18 @@ void print_hex(int num){
     }
 }
 
+void print_dec(unsigned int num){
+	int i;
+	for(i=0;num!=0;i++){
+        buff[i]=num%10+'0';
+        num/=10;
+    }
+    while(i>0){
+        --i;
+        uart_write(buff[i]);
+    }
+}
+
 void init(){
     char c=8;
     uart_write(c);

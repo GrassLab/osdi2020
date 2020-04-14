@@ -56,6 +56,9 @@ void main(){
 			else if(strcmp(buff,"exc")){
 				asm("svc 1");
 			}
+			else if(strcmp(buff,"irq")){
+				core_timer_enable();
+			}
 			else print("Err, command not found, try <help>.\n\r");
 			for(i=0;i<50;i++)	buff[i]='\0';
 			count=0;

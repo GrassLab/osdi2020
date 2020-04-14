@@ -22,5 +22,9 @@ _clear_bss:
 _set_exc_table:
 	ldr x0, =exception_table	//set exception table
 	msr VBAR_EL2, x0
+_init_irq:
+	mrs x0, hcr_el2
+  	orr x0, x0, #16
+  	msr hcr_el2, x0
 _main:
 	bl main

@@ -18,7 +18,7 @@ exception_table:
 
   b exc_handler
   .align 7
-  b undefined_handler
+  b core_timer_handler
   .align 7
   b undefined_handler
   .align 7

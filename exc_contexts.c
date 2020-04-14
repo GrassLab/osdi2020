@@ -20,3 +20,13 @@ void exc_context(unsigned long x0,unsigned long x1,unsigned long x2,unsigned lon
 void undefined_context(){
 	print("undefined_excption\n\r");
 }
+
+void count_tick(){
+	static unsigned int tick;
+	int t1,t2;
+	print("Arm timer interrupt, jiffies ");
+	//asm("mrs %0, cntp_cval_el0\n"
+	//	"mrs %1, cntpct_el0":"=r"(t1),"=r"(t2));
+	print_dec(++tick);
+	print("\n\r");
+}
