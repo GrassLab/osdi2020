@@ -25,6 +25,10 @@
 #define UART_ITOP   ((uint32_t *)(USRT_BASE + 0x88))
 #define UART_TDR    ((uint32_t *)(USRT_BASE + 0x8c))
 
+#define INT_REG_BASE 0x7E00B000
+#define INT_BASIC_PENDING ((uint32_t *)PERIPHERAL_TO_PHYSICAL((INT_REG_BASE + 0x200)))
+#define IRQ_ENABLE_2 ((uint32_t *)PERIPHERAL_TO_PHYSICAL((INT_REG_BASE + 0x214)))
+
 void uart_init(void);
 char uart_getc(int echo);
 char uart_putc(const char c);

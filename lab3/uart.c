@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "mailbox.h"
 #include "gpio.h"
+#include "queue.h"
 
 void uart_init(void)
 {
@@ -57,8 +58,8 @@ void uart_init(void)
   /* 6. Write to GPPUDCLK0/1 to remove the clock */
   *GPPUDCLK0 = 0;
 
-  /* TODO: Diverge clear interrupt */
-  /**UART_ICR = 0x7FF;*/
+  /* Clear interrupt */
+  *UART_ICR = 0x7FF;
 
   /* Setup uart bauldrate
    *
@@ -82,14 +83,37 @@ void uart_init(void)
    * b01 = 6 bits
    * b00 = 5 bits.
    *
+   * FEN[4]
+   * 1 enable fifo
+   *
    */
-  *UART_LCRH = 3 << 5;
+  //*UART_LCRH = 3 << 5;
+  *UART_LCRH = 0x70;
+
+
+  /* interrupt occurred when fifo has 1/8 of space */
+  *UART_IFLS = 0;
+
+  /* enable [5] rx [4] tx interrupt, and mask other interrupt */
+  *UART_IMSC = 0x30;
 
   /* reenable cr
    * set bit rxe [9], txe[8], uarten[0]
    * which is 0x301
    */
   *UART_CR = 0x301;
+
+  /* enable interrupt in irq enable 2 */
+  /* uart_int is interrupt 57, 57 = 1 * 32 + 25 */
+  *IRQ_ENABLE_2 = 1 << 25;
+
+  QUEUE_INIT(rx_queue);
+  QUEUE_INIT(tx_queue);
+
+  /* send a null byte to prevent qemu bug*/
+  *UART_DR = 0;
+  /* wait until interrupt raised */
+  while(!CHECK_BIT(*UART_FR, 7)); /* Exit when iterrupt cleared and return txfe[7] should be set and the loop should be break */
 
   return;
 }
@@ -121,15 +145,28 @@ char uart_getc(int echo)
 /* put a character to uart, blocking io */
 char uart_putc(const char c)
 {
-  while(1)
+  if(CHECK_BIT(*UART_FR, 7)) /* If txfe [7] bit is set, fifo is empty */
   {
-    /* DIVERGE with repo */
-    if(CHECK_BIT(*UART_FR, 7)) /* If txfe [7] bit is set */
+    /* Ready to send */
+
+    if(QUEUE_EMPTY(tx_queue))
     {
       *UART_DR = (uint32_t)c;
-      return c;
+    }
+    else
+    {
+      char queue_c = QUEUE_POP(tx_queue);
+      QUEUE_PUSH(tx_queue, c);
+      *UART_DR = (uint32_t)queue_c;
     }
   }
+  else /* send in irq */
+  {
+    while(QUEUE_FULL(tx_queue)); /* busy waiting until queue is cleared by isr */
+
+    QUEUE_PUSH(tx_queue, c);
+  }
+  return c;
 }
 
 /* Write string to uart, blocking */

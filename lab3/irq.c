@@ -4,6 +4,7 @@
 #include "irq.h"
 #include "uart.h"
 #include "timer.h"
+#include "queue.h"
 
 void irq_el2_enable(void)
 {
@@ -29,6 +30,49 @@ void irq_el1_handler(void)
     {
       timer_disable_local_timer();
       local_timer_count = 0;
+    }
+  }
+  else if(CHECK_BIT(*INT_BASIC_PENDING, 19))
+  {
+    static int tx_bug_fix = 0;
+    // UART interrupt
+    // [19] is GPU IRQ 59 which is uart_int (59)
+    /* TX int: availible to write*/
+    if(CHECK_BIT(*UART_MIS, 5) & CHECK_BIT(*UART_RIS, 5))
+    {
+      if(!tx_bug_fix)
+      {
+        tx_bug_fix = 1;
+        /* clear intended interrupt */
+        *UART_ICR = 0x5;
+        return;
+      }
+
+      if(!QUEUE_EMPTY(tx_queue))
+      {
+        while(!CHECK_BIT(*UART_FR, 5)) /* while fifo is not full */
+        {
+          /* dump data */
+          if(!QUEUE_EMPTY(tx_queue))
+          {
+            *UART_DR = (uint32_t)QUEUE_POP(tx_queue);
+          }
+          else
+          {
+            break;
+          }
+        }
+      }
+      /* Nothing to do so clear tx interrupt */
+      *UART_ICR = 0x20;
+      return;
+    }
+    /* RX int */
+    if(CHECK_BIT(*UART_MIS, 4) & CHECK_BIT(*UART_RIS, 4))
+    {
+      /*uart_puts("Rx interrupt\n");*/
+      *UART_ICR = 0x4;
+      return;
     }
   }
   else

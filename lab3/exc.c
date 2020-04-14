@@ -77,8 +77,8 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(void)
 
   if(exception_class != 0x15) /* Not via aarch64 svc */
   {
-    uart_puts("Unhandled exception class\n");
-    return;
+    uart_puts("Unhandled exception class\nBusy while loop\n");
+    while(1);
   }
 
   switch(exception_imm)
