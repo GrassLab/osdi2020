@@ -72,9 +72,20 @@ void get_board_info(){
 
     // send the message to the GPU and receive answer
     if (mbox_call(MBOX_CH_PROPT_ARM_VC)) {
-        printf("Board revision: 0x%08X\n", mbox[5]);
-        printf("ARM address base: 0x%08X\tsize: 0x%08X\n", mbox[9], mbox[10]);
-        printf("VC  address base: 0x%08X\tsize: 0x%08X\n", mbox[14], mbox[15]);
+        // printf("Board revision: 0x%08X\n", mbox[5]);
+        // printf("ARM address base: 0x%08X\tsize: 0x%08X\n", mbox[9], mbox[10]);
+        // printf("VC  address base: 0x%08X\tsize: 0x%08X\n", mbox[14], mbox[15]);
+        uart_puts("Board revision:");
+        uart_hex(mbox[5]);
+        uart_puts("\nARM address base: ");
+        uart_hex(mbox[9]);
+        uart_puts("\tsize: ");
+        uart_hex(mbox[10]);
+        uart_puts("\nVC  address base: ");
+        uart_hex(mbox[14]);
+        uart_puts("\tsize: ");
+        uart_hex(mbox[15]);
+        uart_puts("\n");
     } else {
         uart_puts("Mailbox fail to query board info!\n");
     }

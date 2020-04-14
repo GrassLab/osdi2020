@@ -2,7 +2,7 @@
 
 #include "kernel_recv.h"
 #include "mm.h"
-#include "printf.h"
+// #include "printf.h"
 #include "string.h"
 #include "uart.h"
 
@@ -23,12 +23,13 @@ struct cmd
 };
 
 struct cmd cmdList[] = { 
-    { .name = "help",		.desc = "Show \"Hello World!\"",    .callback = cmd_help}, 
-    { .name = "hello", 		.desc = "Show commands available.", .callback = cmd_hello}, 
-    { .name = "timestamp", 	.desc = "Reboot device.", 			.callback = cmd_timestamp}, 
-    { .name = "reboot", 	.desc = "Get current timestamp.",   .callback = cmd_reboot}, 
-    { .name = "loadimg", 	.desc = "Load kernel by UART.",	 	.callback = cmd_loadimg}, 
-    { .name = "exc", 		.desc = "Issues \"svc #1\"",		.callback = cmd_exc}, 
+    { .name = "help",		.desc = "Show \"Hello World!\"",    .callback = cmd_help},
+    { .name = "hello", 		.desc = "Show commands available.", .callback = cmd_hello},
+    { .name = "timestamp", 	.desc = "Reboot device.",           .callback = cmd_timestamp},
+    { .name = "reboot", 	.desc = "Get current timestamp.",   .callback = cmd_reboot},
+    { .name = "loadimg", 	.desc = "Load kernel by UART.",     .callback = cmd_loadimg},
+    { .name = "exc", 		.desc = "Issues \"svc #1\"",        .callback = cmd_exc},
+    { .name = "irq", 		.desc = "Enable timer interrupt",   .callback = cmd_irq},
 };
 
 /* 
@@ -43,11 +44,17 @@ void run_shell()
 	while ((n=read_command(buff, MAX_COMMAND_LENGTH)) >= 0){
 		buff[n]='\0';
 		cmd_type = parse_command(buff);
-		if (cmd_type==-1)
-			printf("command '%s' not found, try <help>\n", buff);
-		else
+		if (cmd_type==-1){
+			uart_puts("command");
+			uart_puts(buff);
+			uart_puts(" not found, try <help>\n");
+			// printf("command '%s' not found, try <help>\n", buff);
+		}else{
 			cmdList[cmd_type].callback();
-    	printf("\n%s", promptStr);
+		}
+    	// printf("\n%s", promptStr);
+		uart_puts("\n");
+		uart_puts(promptStr);
 	}
 }
 
@@ -88,7 +95,11 @@ int parse_command(char *buff)
 void cmd_help()
 {
 	for(int i=0; i< NUM_COMMAND; i++){
-		printf("%s: %s\n",cmdList[i].name, cmdList[i].desc);
+		// printf("%s: %s\n",cmdList[i].name, cmdList[i].desc);
+		uart_puts(cmdList[i].name);
+		uart_puts(": ");
+		uart_puts(cmdList[i].desc);
+		uart_puts("\n");
 	}
 }
 
@@ -100,11 +111,7 @@ void cmd_hello()
 // TODO: hard-coding num_digit
 void cmd_timestamp()
 {
-	int time, time_count, time_freq;
-	asm volatile("mrs %0, cntpct_el0": "=r"(time_count)::); // read counts of core timer
-	asm volatile("mrs %0, cntfrq_el0": "=r"(time_freq)::); // read frequency of core timer
-	time = time_count / (time_freq / 100000);
-	printf("[ %d.%ds ]\n",time/100000, time%100000);
+	asm volatile("svc #3");
 }
 
 void _reboot(int tick){ // reboot after watchdog timer expire
@@ -149,4 +156,8 @@ void cmd_loadimg() {
 
 void cmd_exc(){
 	asm volatile("svc #1");
+}
+
+void cmd_irq(){
+	asm volatile("svc #2");
 }

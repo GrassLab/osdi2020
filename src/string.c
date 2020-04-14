@@ -8,6 +8,14 @@ int strcmp(const char* s1, const char* s2){
 	return *s1 - *s2;
 }
 
+void unitoa(unsigned num, char *buff, unsigned num_dig){
+	buff[num_dig] = '\0';
+	for(int i=num_dig-1; i>=0; i--){
+		buff[i] = (char)(num%10 + '0');
+		num = num / 10;
+	}
+}
+
 int atoi(char *ascii){
 	int num = 0;
 	char *c;

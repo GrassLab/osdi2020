@@ -4,7 +4,7 @@ import argparse
 from serial import Serial
 
 parser = argparse.ArgumentParser(description='NCTU.OSDI.Lab course')
-parser.add_argument('--filename', metavar='PATH', default='../kernel8.img', type=str, help='path to script')
+parser.add_argument('--filename', metavar='PATH', default='./kernel8.img', type=str, help='path to script')
 parser.add_argument('--device', metavar='TTY',default='/dev/ttyUSB0', type=str,  help='path to UART device')
 parser.add_argument('--baud', metavar='Hz',default=115200, type=int,  help='baud rate')
 parser.add_argument('--addr', metavar='s',default='0x80000', type=str,  help='load address')
