@@ -83,9 +83,18 @@ void sysCall_unset_timer(){
 }
 
 void sysCall_handler_el0(int num){
+    unsigned long esr, elr;
+    
     switch(num){
         case 1:
-            uart_puts("sys 1 \n");
+            asm volatile(
+                "mrs %[esr], esr_el1;"
+                "mrs %[elr], elr_el1;"
+
+                : [esr] "=r" (esr), [elr] "=r" (elr)
+                ::
+            );
+            show_esr_elr(esr, elr);
             break;
         case 2:
             enable_interrupt();
