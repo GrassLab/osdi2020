@@ -121,25 +121,35 @@ void uart_init(void)
 /* get a character from uart, blocking io */
 char uart_getc(int echo)
 {
-  while(1)
+  char c;
+  if(!QUEUE_EMPTY(rx_queue)) /* read from queue first */
   {
-    /* DIVERGE with repo */
-    if(CHECK_BIT(*UART_FR, 6)) /* If rxff [6] bit is set */
-    {
-      char c = (char)(*UART_DR);
-
-      /* Replace \r with \n */
-      if(c == '\r')
-        c = '\n';
-
-      if(echo)
-      {
-        return uart_putc(c);
-      }
-
-      return c;
-    }
+    c = QUEUE_POP(rx_queue);
   }
+  else if(!CHECK_BIT(*UART_FR, 4)) /* interrupt not triggered, and queue is empty. If rxfe [4] not set -> have data to read */
+  {
+    /* read will clear the interrupt */
+    c = (char)(*UART_DR);
+  }
+  else
+  {
+    /* other interrupt might exit lower power mode, make sure the queue is load by ISR */
+    while(QUEUE_EMPTY(rx_queue))
+    {
+      asm volatile("wfi"); /* Enter low power mode and let ISR handle the data */
+    }
+    /* ISR store the data in rx_queue */
+    c = QUEUE_POP(rx_queue);
+  }
+  /* Replace \r with \n */
+  if(c == '\r')
+    c = '\n';
+
+  if(echo)
+  {
+    return uart_putc(c);
+  }
+  return c;
 }
 
 /* put a character to uart, blocking io */
@@ -195,21 +205,5 @@ void uart_gets(char * string, char delimiter, unsigned length)
     }
   }
   string[idx + 1] = '\0';
-}
-
-void uart_getn(char * buffer, unsigned length)
-{
-  for(unsigned idx = 0; idx < length; ++idx)
-  {
-    while(1)
-    {
-      if(CHECK_BIT(*UART_FR, 6)) /* If rxff [6] bit is set */
-      {
-        buffer[idx] = (char)(*UART_DR);
-        break;
-      }
-    }
-  }
-  return;
 }
 

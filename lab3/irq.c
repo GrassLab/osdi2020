@@ -68,10 +68,22 @@ void irq_el1_handler(void)
       return;
     }
     /* RX int */
-    if(CHECK_BIT(*UART_MIS, 4) & CHECK_BIT(*UART_RIS, 4))
+    else if(CHECK_BIT(*UART_MIS, 4) & CHECK_BIT(*UART_RIS, 4))
     {
-      /*uart_puts("Rx interrupt\n");*/
-      *UART_ICR = 0x4;
+      while(!CHECK_BIT(*UART_FR, 4)) /* rxfe not set -> fifo is not empty -> move data into queue */
+      {
+        if(!QUEUE_FULL(rx_queue))
+        {
+          QUEUE_PUSH(rx_queue, (char)*UART_DR);
+        }
+        else
+        {
+          while(1);
+          /* There's nothing we can do for now, the program will hang. Try enlarge the queue */
+        }
+      }
+      /* Cleart interrupt for safety */
+      *UART_ICR = 0x10;
       return;
     }
   }
