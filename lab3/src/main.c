@@ -12,8 +12,8 @@ void main(){
     get_serial();
     get_board_revision();
     
-    init_irq ();
-    enable_irq ();
+    //init_irq ();
+    //enable_irq ();
 
     print_hello();    
     uart_puts("# ");

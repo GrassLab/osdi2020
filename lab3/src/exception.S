@@ -53,6 +53,11 @@ exception_table:
     ventry not_implemented
     ventry not_implemented
 
+    ventry not_implemented
+    ventry not_implemented
+    ventry not_implemented
+    ventry not_implemented
+
     ventry el1_exception
     ventry irq_handler
     ventry not_implemented
@@ -63,21 +68,15 @@ exception_table:
     ventry not_implemented
     ventry not_implemented
 
-    ventry not_implemented
-    ventry not_implemented
-    ventry not_implemented
-    ventry not_implemented
-
 el1_exception:
     kernel_entry
-    mrs x0, elr_el2
-    mrs x1, esr_el2
+	mov     x0, #0
+    mrs     x1, esr_el1
+    mrs     x2, elr_el1
     bl exception_handler
     kernel_exit
 
 irq_handler:
 	kernel_entry
-	bl disable_irq
 	bl irq_router
-	bl enable_irq
 	kernel_exit

@@ -118,9 +118,8 @@ void process_cmd(char * command){
         case 6:
             asm volatile ("svc #1");
             break;
-        case 7:            
-            core_timer_enable ();
-            local_timer_init ();
+        case 7:                       
+            asm volatile ("svc #2");
             break;
         default:
             uart_puts(command);

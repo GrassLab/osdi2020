@@ -1,3 +1,14 @@
+
+#define PAGE_SHIFT	 		12
+#define TABLE_SHIFT 			9
+#define SECTION_SHIFT			(PAGE_SHIFT + TABLE_SHIFT)
+
+#define PAGE_SIZE   			(1 << PAGE_SHIFT)	
+#define SECTION_SIZE			(1 << SECTION_SHIFT)	
+
+#define EL1_LOW_MEMORY              	(2 * SECTION_SIZE)
+#define EL0_LOW_MEMORY              (4 * SECTION_SIZE)
+
 .section ".text.boot"
 
 .global _start
@@ -5,47 +16,58 @@
 _start:
     mrs    x0, mpidr_el1
     and    x0, x0, #3 
-    cbz    x0, set_stack_bss //if x0 == 0 jump to forward of set_stack_bss
+    cbz    x0, master //if x0 == 0 jump to forward of set_stack_bss
     b      loop
 
 loop:  
     wfe
     b      loop //busy loop
 
-set_stack_bss:
-    //if cpuid == 0, set stack 
-    ldr    x0, =_start
-    mov    sp, x0
-    //clear bss
-    ldr    x0, =__bss_start
-    ldr    w1, =__bss_size
 
-clear_bss:  
-    //if w1 == 0,
-    cbz    w1, j_main
-    // move xzr to x0 addr and add x0 by 8
-    // set x0 to xzr(zero) and add by 9
-    str    xzr, [x0], #8
-    //sub bss_size until bss_size = 0
-    sub    w1, w1, #1
-    cbnz   w1, clear_bss
+master:
+    adr    x0, _start
+    msr    sp_el1, x0
+    # set RW (AArch64) The Execution state for EL1 is AArch64 When RW == 0b1
+    mov    x0, #(1 << 31)
+    msr    hcr_el2, x0
 
-check_EL2:
-    mrs    x0, CurrentEL
-    lsr    x0, x0, #2
-    cmp    x0, #2
-    bne    setup_msg_table
+    # switch to EL1
+    mov    x0, ((7 << 6) | (5 << 0))
+    msr    spsr_el2, x0
+    mov    x0, #0
+    msr    DAIF, x0
 
-setup_exception_vector_table:
+    adr    x0, el1_start
+    msr    elr_el2, x0
+    eret
+
+el1_start:
+    adr	x0, __bss_start
+	adr	x1, __bss_end
+	sub	x1, x1, x0
+	bl 	memzero
+	mov	sp, #EL1_LOW_MEMORY
+
     ldr    x0, =exception_table
-    msr    VBAR_EL2, x0
-    mov    x0, xzr
+    msr    VBAR_EL1, x0
+    
+    bl enable_irq
+    ldr x0, ((1 << 6) & ~(15 << 0))
+	msr spsr_el1, x0
 
-j_main:  
-    //jump to c code
-    bl     main
-    b      loop
+    adr	x0, el0_start		
+	msr	elr_el1, x0
+    eret
 
-setup_msg_table:
-    mov    x0, #1
-    b      j_main
+el0_start:
+    mov	sp, #EL0_LOW_MEMORY
+    bl	main
+	b 	loop	
+
+
+.globl memzero
+memzero:
+	str xzr, [x0], #8
+	subs x1, x1, #8
+	b.gt memzero
+	ret

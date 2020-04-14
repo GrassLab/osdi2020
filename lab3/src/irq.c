@@ -1,4 +1,6 @@
 #include "tools.h"
+int core_counter=0, local_counter=0;
+
 int is_local_timer ()
 {
   return *LOCAL_TIMER_CONTROL_REG & 0x80000000; //31 Interrupt flag (Read-Only)
@@ -14,16 +16,20 @@ void irq_router ()
 {
     if (is_core_timer ())
     {
-        uart_puts ("core timer\n");
+        uart_puts ("core timer: ");
+        uart_send_int (++core_counter);
+        uart_send ('\n');
         core_timer_handler ();
     }
     else if (is_local_timer ())
     {
-        uart_puts ("local timer\n");
+        uart_puts ("local timer: ");
+        uart_send_int (++local_counter);
+        uart_send ('\n');
         local_timer_handler ();
     }
     else
     {
-        uart_puts ("wtf? ghooooost IRQ\n");
+        uart_puts ("Unknown IRQ\n");
     }
 }

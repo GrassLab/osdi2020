@@ -45,14 +45,14 @@ it will create infinite loop
 
 ### From EL2 to EL1
 
-- [ ] `required 4-1` Return from EL2 to EL1 and set the corresponding handlers.
+- [x] `required 4-1` Return from EL2 to EL1 and set the corresponding handlers.
 
 ### EL1 to EL0
 
-- [ ] `required 4-2` Return from EL1 to EL0 and run shell in EL0.
+- [x] `required 4-2` Return from EL1 to EL0 and run shell in EL0.
 
 ### Basic System Call
 
-- [ ] `required 4-3` Reimplement `irq` command by system call.
+- [x] `required 4-3` Reimplement `irq` command by system call.
 
 
