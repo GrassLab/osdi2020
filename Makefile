@@ -8,13 +8,24 @@ INCLUDES = -Iinclude
 SRCDIR	 = src
 SRC		 = $(wildcard $(SRCDIR)/*.c)
 ASMSRC	 = $(wildcard $(SRCDIR)/*.S)
-OBJS	 = $(patsubst $(SRCDIR)/%.c,%.o,$(SRC)) \
+SRCOBJS	 = $(patsubst $(SRCDIR)/%.c,%.o,$(SRC)) \
 		   $(patsubst $(SRCDIR)/%.S,%.o,$(ASMSRC))
+IRQDIR	 = src/interrupt
+IRQ		 = $(wildcard $(IRQDIR)/*.c)
+ASMIRQ	 = $(wildcard $(IRQDIR)/*.S)
+IRQOBJS	 = $(patsubst $(IRQDIR)/%.c,%.o,$(IRQ)) \
+		   $(patsubst $(IRQDIR)/%.S,%.o,$(ASMIRQ))
+DVDIR	 = src/device
+DV		 = $(wildcard $(DVDIR)/*.c)
+DVOBJS	 = $(patsubst $(DVDIR)/%.c,%.o,$(DV)) \
+		   $(patsubst $(DVDIR)/%.S,%.o,$(ASMDV))
+
+OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS)
 
 LSCRIPT  = linker.ld
 KERNEL   = kernel8
 
-VPATH    = src
+VPATH    = $(SRCDIR) $(IRQDIR) $(DVDIR)
 
 all: $(KERNEL).img
 

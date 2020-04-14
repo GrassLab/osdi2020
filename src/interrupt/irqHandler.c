@@ -1,7 +1,7 @@
-#include "uart.h"
-#include "timer.h"
-#include "irqTable.h"
-#include "irq.h"
+#include "device/uart.h"
+#include "interrupt/timer.h"
+#include "interrupt/irqTable.h"
+#include "interrupt/irq.h"
 
 #define IRQ_BASIC   ((volatile unsigned int *)(0x3F00B200))
 #define IRQ_PEND1   ((volatile unsigned int *)(0x3F00B204))

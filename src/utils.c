@@ -1,5 +1,5 @@
 #include "type.h"
-#include "uart.h"
+#include "device/uart.h"
 
 bool strcmp(const char *s1, const char *s2)
 {

@@ -1,10 +1,10 @@
 #include "type.h"
-#include "uart.h"
-#include "time.h"
-#include "timer.h"
-#include "power.h"
-#include "mbox.h"
 #include "utils.h"
+#include "device/time.h"
+#include "device/power.h"
+#include "device/mbox.h"
+#include "device/uart.h"
+#include "interrupt/timer.h"
 
 const static unsigned int MAX_BUFFER_SIZE = 512;
 

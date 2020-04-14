@@ -45,21 +45,17 @@ irqVectorInit:
     ret
 
 handle_exc:
-    msr DAIFSet, 0xf
     save_reg
     mrs     x0, ESR_EL1
     mrs     x1, ELR_EL1
     bl       excHandler
     load_reg
-    msr DAIFClr, 0xf
     eret
 
 handle_irq:
-    msr DAIFSet, 0xf
     save_reg
     bl       irqHandler
     load_reg
-    msr DAIFClr, 0xf
     eret
 
 // Simple vector table

@@ -23,8 +23,8 @@
  *
  */
 
-#include "gpio.h"
-#include "mbox.h"
+#include "device/gpio.h"
+#include "device/mbox.h"
 
 /* PL011 UART registers */
 #define UART0_DR ((volatile unsigned int *)(MMIO_BASE + 0x00201000))

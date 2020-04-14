@@ -23,9 +23,8 @@
  *
  */
 
-#include "uart.h"
-#include "irqTable.h"
 #include "shell.h"
+#include "device/uart.h"
 
 void main()
 {
