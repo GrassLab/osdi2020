@@ -47,7 +47,7 @@ master:
     /*** Then, return from el1 to el0 ***/
 
 el1_entry:
-    
+
     /*** Now return from el2 to el1 ***/
     msr sp_el0,x1  //set stack pointer
 

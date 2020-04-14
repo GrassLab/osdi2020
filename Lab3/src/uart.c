@@ -8,7 +8,9 @@
 #define IRQ_ENABLE1 0x3f00b214
 
 void uart_init(){
-
+    //init uart irq
+    put32(IRQ_ENABLE1,1<<25);
+    
     /* initialize UART */
     put32(UART0_CR,0);         // turn off UART0
 
@@ -47,10 +49,8 @@ void uart_init(){
     put32(UART0_LCRH,0b11<<5); //word length = 8bits
     put32(UART0_CR,0x301); // enable Tx,Rx,FIFO   
 
-
     // init uart0 interrupt
     put32(UART0_IMSC,0x30); // interrupt mask
-    put32(IRQ_ENABLE1,1<<25);
 
     // init buffer for handling interrupt
     read_buf_head = 0;
@@ -61,7 +61,13 @@ void uart_init(){
 
 
 void uart_send ( char c )
-{
+{	
+	/*
+	while(get32(UART0_FR)&0x20){
+	}
+	put32(UART0_DR,c);
+	*/
+
 	char tmp;
 
 	if(get32(UART0_FR)&0x80){ //transmit FIFO empty
@@ -82,7 +88,6 @@ void uart_send ( char c )
 		// If FIFO, also the queue if full, then char will be 
 		// dropped...
 	}
-
 }
 
 char uart_recv ()
@@ -135,9 +140,10 @@ void uart_IRQhandler(){
 	unsigned int status = get32(UART0_MIS);	
 	char c;
 	if(status&0x10){ // for receive
-
+		
 		while(get32(UART0_FR)&0x40){//receive FIFO full
 			c = get32(UART0_DR)&0xFF;
+			
 			if(!isfull(read_buf_head,read_buf_tail)){
 				push(read_buf,&read_buf_tail,c);
 			}
@@ -149,7 +155,7 @@ void uart_IRQhandler(){
 		while(!isempty(write_buf_head,write_buf_tail)){
 			c = pop(write_buf,&write_buf_head);
 
-			while(get32(UART0_FR)); //transmit FIFO full
+			while(get32(UART0_FR)&0x20); //transmit FIFO full
 			put32(UART0_DR,c);
 		}
 		put32(UART0_ICR,status); //clear interrupt
