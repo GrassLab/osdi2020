@@ -99,12 +99,21 @@ void uart_puts(char *s) {
 
 void uart_hex(unsigned int d) {
     unsigned int n;
-    int c;
+    int c, zero_flag = 1;
+    uart_puts("0x");
     for(c=28;c>=0;c-=4) {
+
         // get highest tetrad
         n=(d>>c)&0xF;
+
+        if (zero_flag) {
+          if (n == 0)
+            continue;
+          zero_flag = 0;
+        }
         // 0-9 => '0'-'9', 10-15 => 'A'-'F'
         n+=n>9?0x37:0x30;
+
         uart_send(n);
     }
 }
