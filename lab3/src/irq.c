@@ -57,18 +57,27 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 
 void handle_el0_sync(unsigned long esr, unsigned long address)
 {
-	printf("Exception return address 0x%x \n",address);
-	printf("Exception class (EC) 0x%x \n",esr >> 26);
-	printf("EInstruction  specific syndrome (ISS) 0x%x \n",esr & 0xffffff);
+	printf("Exception return address 0x%x \r\n",address);
+	printf("Exception class (EC) 0x%x \r\n",esr >> 26);
+	printf("EInstruction  specific syndrome (ISS) 0x%x \r\n",esr & 0xffffff);
 
 	int num = (esr & 0xffffff);
 	if (num == 1){
-		printf("[info] svc command\n");
+		printf("[info] svc command \r\n");
 	}
 	else if(num == 2){
-		printf("[info] enable timer interrupt\n");
+		printf("[info] enable timer interrupt \r\n");
+
+		enable_interrupt_controller();
 		local_timer_init();
-    	core_timer_enable();
+
+		unsigned int cntfrq;
+        unsigned int val;
+		cntfrq = read_cntfrq();
+        write_cntp_tval(cntfrq);  
+        val = read_cntp_tval();    
+		
+		core_timer_enable();
 	}
 	else if(num == 3){
 		disable_all_timer();
@@ -77,8 +86,6 @@ void handle_el0_sync(unsigned long esr, unsigned long address)
 		timestamp_handler();
 	}
 }
-
-
 
 void timestamp_handler(){
 	unsigned int time, timer_counter, timer_freq;
@@ -99,7 +106,7 @@ void timestamp_handler(){
 }
 
 void local_timer_handler(){
-	printf("Local timer interrupt, jiffies %d \n",local_timer_count);
+	printf("Local timer interrupt, jiffies %d \r\n",local_timer_count);
 	local_timer_count += 1;
 	*LOCAL_TIMER_IRQ_CLR = (0xc0000000);// clear interrupt and reload.
 	return;
@@ -107,7 +114,7 @@ void local_timer_handler(){
 
 void core_timer_handler() 
 {
-	printf("Arm core timer interrupt, jiffies %d \n",core_timer_count);
+	printf("Arm core timer interrupt, jiffies %d \r\n",core_timer_count);
 	core_timer_count += 1;
 	clean_core_timer();
 	return;

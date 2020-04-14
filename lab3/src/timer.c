@@ -9,7 +9,7 @@ const unsigned int interval = 20000000;
 unsigned int sys_timer_count = 0;
 unsigned int curVal = 0;
 
-void timer_init ()
+void timer_init()
 {
 	curVal = get32(TIMER_CLO);
 	curVal += interval;
@@ -34,7 +34,8 @@ void local_timer_init()
 	*LOCAL_TIMER_CONTROL_REG = (flag | reload);
 }
 
-void disable_all_timer(){
+void disable_all_timer()
+{
 	core_timer_disable();
 	put32(TIMER_C1, 0xffffffff);
 	put32(TIMER_CS, TIMER_CS_M1); 
@@ -45,6 +46,27 @@ void disable_timer_controller()
 {
 	put32(DISABLE_IRQS_1, 1 << 1);
 	return;
+}
+
+
+unsigned int read_cntfrq(void)
+{
+    unsigned int val;
+	asm volatile ("mrs %0, cntfrq_el0" : "=r" (val));
+    return val;
+}
+
+void write_cntp_tval(unsigned int val)
+{
+	asm volatile ("msr cntp_tval_el0, %0" :: "r" (val));
+    return;
+}
+
+unsigned int read_cntp_tval(void)
+{
+    unsigned int val;
+	asm volatile ("mrs %0, cntp_tval_el0" : "=r" (val));
+    return val;
 }
 
 

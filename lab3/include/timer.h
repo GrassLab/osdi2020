@@ -28,5 +28,8 @@ void clean_core_timer();
 void core_timer_disable();
 void disable_timer_controller();
 void disable_all_timer();
+void write_cntp_tval(unsigned int val);
+unsigned int read_cntfrq(void);
+unsigned int read_cntp_tval(void);
 
 #endif  /*_TIMER_H */
