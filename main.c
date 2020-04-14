@@ -36,9 +36,9 @@ void bottom_half_0()
         uart_puts(".");
         // very very very slow in real rpi3, but very very very fast in qemu
         asm volatile(
-            "mov  x0, #0xffffff\n"
-            "bottom_half_0_l: subs  x0, x0, #1\n"
-            "bne   bottom_half_0_l\n");
+            "mov  x0, #0xfffff\n"
+            "loop_bottom_half_0: subs  x0, x0, #1\n"
+            "bne   loop_bottom_half_0\n");
     }
     uart_send('\n');
 }

@@ -77,7 +77,7 @@ void syscall_delay_without_bottom_half()
         uart_puts(".");
         // very very very slow in real rpi3, but very very very fast in qemu
         asm volatile(
-            "mov  x0, #0xffffff\n"
+            "mov  x0, #0xfffff\n"
             "bottom_half_0_l: subs  x0, x0, #1\n"
             "bne   bottom_half_0_l\n");
     }

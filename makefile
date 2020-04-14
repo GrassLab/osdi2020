@@ -7,7 +7,7 @@ HEADER := $(wildcard *.h)
 SRC := $(wildcard *.c)
 OBJECTS := $(patsubst %.c,%.o,$(SRC))
 ASM := $(wildcard *.S)
-CFLAGS = -fpie -pie -fno-stack-protector -nostdlib -nostartfiles -ffreestanding
+CFLAGS = -fPIC -fno-stack-protector -nostdlib -nostartfiles -ffreestanding
 
 .PHONY: all clean qemu debug indent
 
