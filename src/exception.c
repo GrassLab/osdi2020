@@ -19,6 +19,10 @@ void core_timer_enable(void) {
   asm("mov x0, 1");
   asm("msr cntp_ctl_el0, x0");
 
+  // Set the interval to be approximately 1 second
+  asm("mrs x0, cntfrq_el0");
+  asm("msr cntp_tval_el0, x0");
+
   *CORE0_TIMER_IRQ_CTRL = 2;
 }
 
