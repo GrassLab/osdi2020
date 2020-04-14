@@ -44,11 +44,12 @@ void compair(char *buf) {
     vc_base_address();
   } else if (strcpy(buf, "irq")) {
     irq();
+  } else if (strcpy(buf, "lv")) {
+    ellevel();
   } else {
     printf("unknow command %s\n", buf);
   }
 }
-
 void main() {
   uart_init();
   // wait_cycles(10000);
@@ -58,7 +59,7 @@ void main() {
   // lfb_showpicture();
   // wait_cycles(10000);
 
-  printf(welcome);
+  uart_puts(welcome);
   printf("# ");
 
   char commandbuf[100];

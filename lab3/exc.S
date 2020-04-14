@@ -65,16 +65,16 @@ exception_table:
     b irq_router
     .align 7
     b exception_handler
-        .align 7
+    .align 7
     b exception_handler
     .align 7
 
     b exception_handler
     .align 7
-    b exception_handler
+    b irq_router
     .align 7
     b exception_handler
-    .align 7
+        .align 7
     b exception_handler
     .align 7
 

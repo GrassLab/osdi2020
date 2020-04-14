@@ -1,3 +1,5 @@
+#define USER_STACK 0x1000
+
 .section ".text"
 _start:
     mrs x0, mpidr_el1
@@ -6,6 +8,7 @@ _start:
 
     ldr x0, = _start
     mov sp, x0
+initial_bss:
     ldr     x1, =__bss_start
     ldr x2, =__bss_end
 	b cmp_adr
@@ -16,16 +19,27 @@ cmp_adr:
     cmp x2, x1
     bhi set_zero
 
-    // load exception_table to vbar_el2
-    ldr x0, =exception_table
-    msr vbar_el2, x0
-
-    // enable interrupt
-    mrs x0, hcr_el2
-    orr x0, x0, #(1 << 4)
+setup_EL1:
+    mov x0, (1 << 31) // EL1 use aarch64
     msr hcr_el2, x0
+    mov x0, 0x3c5 // EL1h (SPSel = 1) with interrupt disabled
+    msr spsr_el2, x0
+
+    adr x0, jump_main
+    msr elr_el2, x0
+
+    # setup EL1 stack
+    adr x0, _start
+    msr sp_el1, x0
+    // let va_list can use
+    mrs x0, CPACR_EL1
+    orr x0, x0, #(3 << 20)
+    msr CPACR_EL1, x0
+    eret
 
 jump_main:
+    ldr x0, =exception_table
+    msr vbar_el1, x0
     bl      main
 
 loop:
