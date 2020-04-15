@@ -196,7 +196,14 @@ void sync_el0_64_handler(int x0, int x1, int x2, int x3, int x4, int x5){
 	asm volatile("mov %0, x8\n" : "=r"(syscall_number));	// system call number is saved in x8 register
 
 	if(( (esr_el1 & 0xFC000000) >> 26) == 0x15){	// SVC instruction execution in AArch64 state
-		if(!(esr_el1 & 0x00000FFF)){	// 
+		
+		//uart_puts("esr_el1: ");
+		//uart_hex(esr_el1);
+		//uart_puts("\n");
+
+		// svc #0: 0x56000000
+		// svc #1: 0x56000001
+		if((esr_el1 == 0x56000000)){ 
 			system_call(syscall_number);
 			return;
 		}else{
