@@ -2,6 +2,7 @@
 #include "timer.h"
 
 #define CORE0_IRQ_SOURCE              ((volatile unsigned int*)0x40000060)
+#define IRQ_BASIC_PENDING             ((volatile unsigned int*)(MMIO_BASE+0x0000b200))
 
 void exception_handler(unsigned long esr, unsigned long elr)
 {
@@ -30,6 +31,18 @@ void irq_handler()
     else if (*CORE0_IRQ_SOURCE & (1 << 11)){
         uart_puts("local timer interrupt\n");
         set_local_timer_control();
+    }
+    else if(*IRQ_BASIC_PENDING & (1 << 19)){
+        if (*UART0_MIS & (1 << 4)){
+            // uart_puts("uart0 recieve interrupt\n");
+            
+            *UART0_ICR = 1 << 4;
+        }
+        else if (*UART0_MIS & (1 << 5)){
+            // uart_puts("uart0 send interrupt\n");
+
+            *UART0_ICR = 1 << 5;
+        }
     }
 }
 

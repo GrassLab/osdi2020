@@ -1,29 +1,6 @@
 #include "gpio.h"
 #include "mbox.h"
-
-/* Auxilary mini UART registers */
-#define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
-#define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
-#define AUX_MU_IER      ((volatile unsigned int*)(MMIO_BASE+0x00215044))
-#define AUX_MU_IIR      ((volatile unsigned int*)(MMIO_BASE+0x00215048))
-#define AUX_MU_LCR      ((volatile unsigned int*)(MMIO_BASE+0x0021504C))
-#define AUX_MU_MCR      ((volatile unsigned int*)(MMIO_BASE+0x00215050))
-#define AUX_MU_LSR      ((volatile unsigned int*)(MMIO_BASE+0x00215054))
-#define AUX_MU_MSR      ((volatile unsigned int*)(MMIO_BASE+0x00215058))
-#define AUX_MU_SCRATCH  ((volatile unsigned int*)(MMIO_BASE+0x0021505C))
-#define AUX_MU_CNTL     ((volatile unsigned int*)(MMIO_BASE+0x00215060))
-#define AUX_MU_STAT     ((volatile unsigned int*)(MMIO_BASE+0x00215064))
-#define AUX_MU_BAUD     ((volatile unsigned int*)(MMIO_BASE+0x00215068))
-
-/* PL011 UART registers */
-#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
-#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
-#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024))
-#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028))
-#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
-#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
-#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
-#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
+#include "uart.h"
 
 void mini_uart_send(unsigned int c);
 void PL011_uart_send(unsigned int c);
@@ -31,6 +8,7 @@ char mini_uart_getc();
 char PL011_uart_getc();
 void (*uart_send)(unsigned int);
 char (*uart_getc)();
+int uart0_irq_enable = 0;
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -119,10 +97,15 @@ void mini_uart_send(unsigned int c) {
  * Send a character
  */
 void PL011_uart_send(unsigned int c) {
-    /* wait until we can send */
-    do{asm volatile("nop");}while(*UART0_FR&0x20);
-    /* write the character to the buffer */
-    *UART0_DR=c;
+    if(uart0_irq_enable){
+        do{asm volatile("nop");}while(*UART0_FR&0x20);
+        *UART0_DR=c;
+    }else{
+        /* wait until we can send */
+        do{asm volatile("nop");}while(*UART0_FR&0x20);
+        /* write the character to the buffer */
+        *UART0_DR=c;
+    }
 }
 
 /**
@@ -143,10 +126,15 @@ char mini_uart_getc() {
  */
 char PL011_uart_getc() {
     char r;
-    /* wait until something is in the buffer */
-    do{asm volatile("nop");}while(*UART0_FR&0x10);
-    /* read it and return */
-    r=(char)(*UART0_DR);
+    if(uart0_irq_enable){
+        do{asm volatile("nop");}while(*UART0_FR&0x10);
+        r=(char)(*UART0_DR);
+    }else{
+        /* wait until something is in the buffer */
+        do{asm volatile("nop");}while(*UART0_FR&0x10);
+        /* read it and return */
+        r=(char)(*UART0_DR);
+    }
     /* convert carrige return to newline */
     return r=='\r'?'\n':r;
 }
@@ -211,3 +199,8 @@ void uart_double(double time){
     uart_dec(t2);
 }
 
+void enable_uart0_irq(){
+    *UART0_IMSC = 3 << 4;
+    *IRQ2_EN = 1 << 25;
+    uart0_irq_enable = 1;
+}

@@ -28,7 +28,8 @@ void main()
                     "framebuffer: show a splash image\n"
                     "loadimg: load kernel image to specified address\n"
                     "exc: issues svc #1\n"
-                    "irq: enable timer\n");
+                    "irq_timer: enable timer interrupt\n"
+                    "irq_uart0: enable PL011 UART interrupt\n");
         else if (strcmp(command, "timestamp")){
           uart_puts("[");
           uart_double(get_time());
@@ -60,8 +61,10 @@ void main()
             load_kernel_img();
         else if(strcmp(command, "exc"))
             asm volatile ("svc #1");
-        else if(strcmp(command, "irq"))
+        else if(strcmp(command, "irq_timer"))
             asm volatile ("svc #2");
+        else if(strcmp(command, "irq_uart0"))
+            enable_uart0_irq();
         else if (*command)
             uart_puts("error: command not found,  try <help>\n");
     }
