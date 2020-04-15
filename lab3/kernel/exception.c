@@ -66,6 +66,7 @@ void syscall(unsigned int code, int64_t x0, int64_t x1, int64_t x2, int64_t x3,
     bottom_half_enable();
     /* sys_core_timer_enable(); */
     asm volatile("mov x0, #0");
+    break;
   default:
     asm volatile("mov x0, #1");
     break;
