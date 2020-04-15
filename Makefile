@@ -1,5 +1,5 @@
 TOOLCHAIN_PREFIX = aarch64-linux-gnu
-CFLAGS = -Wall -g -nostdlib -nostartfiles -ffreestanding -Iinc
+CFLAGS = -Wall -g -nostdlib -nostartfiles -ffreestanding -Iinc -mgeneral-regs-only
 
 S_SRCS = $(wildcard src/*.S)
 C_SRCS = $(wildcard src/*.c)

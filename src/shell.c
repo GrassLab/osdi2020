@@ -7,10 +7,10 @@
 #include "uart.h"
 
 
-#define PM_RSTC      ((volatile unsigned int*)(0x3F10001C))
-#define PM_WDOG      ((volatile unsigned int*)(0x3F100024))
-#define PM_RSTC_WRCFG_FULL_RESET  0x00000020
-#define PM_PASSWORD  0x5A000000
+#define PM_RSTC      					((volatile unsigned int*)(0x3F10001C))
+#define PM_WDOG      					((volatile unsigned int*)(0x3F100024))
+#define PM_RSTC_WRCFG_FULL_RESET  		0x00000020
+#define PM_PASSWORD  					0x5A000000
 
 
 char *promptStr="simple shell> ";
@@ -91,7 +91,6 @@ int parse_command(char *buff)
 	return i;
 }
 
-// TODO: formate string
 void cmd_help()
 {
 	for(int i=0; i< NUM_COMMAND; i++){
@@ -108,18 +107,19 @@ void cmd_hello()
     uart_puts("Hello world!\n");
 }
 
-// TODO: hard-coding num_digit
 void cmd_timestamp()
 {
 	asm volatile("svc #3");
 }
 
-void _reboot(int tick){ // reboot after watchdog timer expire
+void _reboot(int tick)
+{ // reboot after watchdog timer expire
 	*PM_RSTC = PM_PASSWORD | PM_RSTC_WRCFG_FULL_RESET;// full reset
 	*PM_WDOG = PM_PASSWORD | tick;// number of watchdog tick
 }
 
-void _cancel_reboot() {
+void _cancel_reboot()
+{
 	*PM_RSTC = PM_PASSWORD | 0; // full reset
 	*PM_WDOG = PM_PASSWORD | 0; // number of watchdog tick
 }
@@ -131,7 +131,8 @@ void cmd_reboot()
 	while(1);
 }
 
-void cmd_loadimg() {
+void cmd_loadimg()
+{
 	unsigned int n, size;
 	void *load_addr;
 	char buff[MAX_COMMAND_LENGTH];
@@ -154,10 +155,12 @@ void cmd_loadimg() {
 	}
 }
 
-void cmd_exc(){
+void cmd_exc()
+{
 	asm volatile("svc #1");
 }
 
-void cmd_irq(){
+void cmd_irq()
+{
 	asm volatile("svc #2");
 }

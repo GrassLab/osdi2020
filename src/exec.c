@@ -48,9 +48,8 @@ void sync_svc_handler(unsigned long esr, unsigned long elr){
             // printf("Exception (ISS): 0x%06X\n", esr&0xFFFFFF);
             break;
         case 2: //irq
-            enable_irq();
-            core_timer_enable();
             local_timer_init();
+            core_timer_enable();
             uart_puts("timer interrupt enabled\n");
             break;
         case 3: //timestamp
