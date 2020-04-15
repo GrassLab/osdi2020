@@ -2,9 +2,11 @@
 #include "miniuart.h"
 #include "framebuffer.h"
 #include "irq.h"
+#include "bh.h"
 
 int main(int argc, char *argv[])
 {
+  bh_mod_mask = 0;
 
   /* initialize uart with default clock & baud rate */
   uart_init();

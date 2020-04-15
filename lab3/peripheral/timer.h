@@ -22,8 +22,11 @@ void sys_print_time();
 
 /* core timer */
 void core_timer_enable ();
+void core_timer_enable_w4sec ();
 void core_timer_handler ();
 void sys_core_timer_enable();
 
 void local_timer_init ();
 void local_timer_handler ();
+void local_timer_display_handler();
+void clear_local_timer_interrupt();

@@ -3,6 +3,8 @@
 #include "mbox.h"
 #include "timer.h"
 #include "framebuffer.h"
+#include "bh.h"
+
 
 int getcmd(char *buf, int nbuf);
 
@@ -24,7 +26,11 @@ void help() {
             "  getel      Display the current exception level.\r\n"
             "  exc        Issue svc #1.\r\n"
             "  irq        Core/Local timer interrupt.\r\n"
-            "  reboot     Reboot.\r\n");
+            "  coretime   Core timer interrupt.\r\n"
+            "  localtime  Local timer interrupt.\r\n"
+            "  reboot     Reboot.\r\n"
+            "  bhmode     enable bottom half mode.\r\n"
+            );
 }
 
 /* hello: display hello world */
@@ -88,6 +94,20 @@ void svc1() { asm volatile("svc #1"); }
 void timer_interrupt() {
   local_timer_init();
   core_timer_enable();
+}
+
+void core_timer_interrupt() {
+  core_timer_enable();
+}
+
+void local_timer_interrupt() {
+  local_timer_init();
+}
+
+
+void bottom_half_mode() {
+  bh_mod_mask = 1;
+  core_timer_enable_w4sec();
 }
 
 /* get the information of the cpu */
@@ -184,6 +204,9 @@ void shell() {
     SWITCH_CONTINUE(buf, "getel",     get_current_el);
     SWITCH_CONTINUE(buf, "exc",       svc1);
     SWITCH_CONTINUE(buf, "irq",       timer_interrupt);
+    SWITCH_CONTINUE(buf, "coretime",  core_timer_interrupt);
+    SWITCH_CONTINUE(buf, "localtime", local_timer_interrupt);
+    SWITCH_CONTINUE(buf, "bhmode",    bottom_half_mode);
 
     uart_println("[ERR] command `%s` not found", buf);
   }

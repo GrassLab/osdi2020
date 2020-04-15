@@ -40,6 +40,13 @@ void core_timer_enable() {
   asm volatile("ldp x8, x9, [sp], #16");
 }
 
+void core_timer_enable_w4sec() {
+  asm volatile("stp x8, x9, [sp, #-16]!");
+  asm volatile("mov x8, #2");   /* 2 for core timer 2 sec*/
+  asm volatile("svc     #0");
+  asm volatile("ldp x8, x9, [sp], #16");
+}
+
 
 /* local timer */
 #define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int *)0x40000034)
@@ -54,4 +61,15 @@ void local_timer_init(){
 
 void local_timer_handler(){
   *LOCAL_TIMER_IRQ_CLR = 0xc0000000; // clear interrupt and reload.
+}
+
+void clear_local_timer_interrupt() {
+  *LOCAL_TIMER_IRQ_CLR = 0x80000000; // clear interrupt
+}
+
+
+void local_timer_display_handler() {
+  static unsigned long lcnt = 1;
+  *LOCAL_TIMER_IRQ_CLR = 0xc0000000; // clear interrupt and reload.
+  uart_println("Local timer interrupt, jiffies %d", lcnt++);
 }

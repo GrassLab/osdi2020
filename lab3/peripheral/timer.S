@@ -19,3 +19,10 @@ core_timer_handler:
   mrs x0, cntfrq_el0
   msr cntp_tval_el0, x0
   ret
+
+#define EXPIRE_PERIOD 0x8f00000
+.global bh_core_timer_handler
+bh_core_timer_handler:
+  mov x0, EXPIRE_PERIOD
+  msr cntp_tval_el0, x0
+  ret

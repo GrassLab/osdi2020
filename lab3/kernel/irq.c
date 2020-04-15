@@ -2,6 +2,7 @@
 #include "libc.h"
 #include "miniuart.h"
 #include "timer.h"
+#include "bh.h"
 
 void enable_interrupt_controller() { *(ENABLE_IRQS_1) = AUX_IRQ; }
 
@@ -26,6 +27,7 @@ unsigned long lcnt = 1;
     }                                                                          \
   }
 
+
 void irq_handler() {
   unsigned int irq0 = *CORE0_IRQ_SRC;
   unsigned int irqp = *IRQ_PENDING_1;
@@ -35,13 +37,30 @@ void irq_handler() {
     flag = 1;
 
     IRQ_CHECK(irq0, 0x02, {
-      core_timer_handler();
-      uart_println("Core timer interrupt, jiffies %d", ccnt++);
+      if (bh_mod_mask == 1) {
+        bh_core_timer_handler();
+        /* extract a job from bh_base */
+        bh_handler job = extract_bh_handler();
+        if (job) {
+          uart_println("\e[0;31m[!] Bh Core timer interrupt, doing a job\e[0m");
+          job();
+        } else {
+          uart_println("\e[0;32m[?] Bh Core timer interrupt, without job\e[0m");
+        }
+      } else {
+        core_timer_handler();
+        uart_println("Core timer interrupt, jiffies %d", ccnt++);
+      }
     });
 
     IRQ_CHECK(irq0, 0x800, {
-      local_timer_handler();
-      uart_println("Local timer interrupt, jiffies %d", lcnt++);
+      if (bh_mod_mask == 1) {
+        push_bh_handle(local_timer_display_handler, 0);
+        clear_local_timer_interrupt();
+      } else {
+        local_timer_handler();
+        uart_println("Local timer interrupt, jiffies %d", lcnt++);
+      }
     });
 
     IRQ_CHECK(irqp, AUX_IRQ, {

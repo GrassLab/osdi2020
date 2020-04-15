@@ -2,6 +2,7 @@
 #include "timer.h"
 #include "stdint.h"
 #include "libc.h"
+#include "bh.h"
 
 const char *entry_error_messages[] = {
     "SYNC_INVALID_EL1t",
@@ -60,6 +61,11 @@ void syscall(unsigned int code, int64_t x0, int64_t x1, int64_t x2, int64_t x3,
     uart_puts("\r\n");
     asm volatile("mov x0, #0");
     break;
+  case 2:
+    /* this will enable bottom half mode */
+    bottom_half_enable();
+    /* sys_core_timer_enable(); */
+    asm volatile("mov x0, #0");
   default:
     asm volatile("mov x0, #1");
     break;
