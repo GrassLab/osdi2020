@@ -183,13 +183,13 @@ exception_table:
     // 0x200 - 0x400 // 
 
     // synchronous
-    b   handle_unknown
-    //b   exception_entry_el1
+    //b   handle_unknown
+    b   exception_entry_el1
     .align 7
 
     // IRQ
-    b   handle_unknown
-    //b   irq_entry
+    //b   handle_unknown
+    b   irq_entry
     .align 7
 
     // FIQ

@@ -8,10 +8,14 @@ extern void core_timer_handler();
 
 extern void enable_irq();
 
+extern void disable_irq();
+
 extern void init_irq();
 
 void handle_unknown() {
-    printf("Unkown exception\r\n");
+    unsigned int el;
+    asm volatile("mrs %0, CurrentEL; lsr %0, %0, 2" : "=r"(el));
+    printf("Unkown exception from EL%d \r\n", el);
 }
 
 void irq_handler() {
@@ -78,13 +82,14 @@ void exception_handler(unsigned long x0, unsigned long x1, unsigned long x2, uns
 // (xO, x1), (x2, x3), (x4, x5) used for parameters, x8 for the syscall id
 // source: linux kernel tree
 void syscall(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3, unsigned long x4, unsigned long x5, unsigned long x8) {
-    switch(x8) {
-        case 0:
+    switch(x0) {
+        case 1:
             get_timestamp((float *) x1); 
             break;
-        case 1:
-            enable_irq();
+        case 0:
+            //enable_irq();
             core_timer_enable();
+            //disable_irq();
             break;
         default:
             printf("Unknown syscall\r\n");
