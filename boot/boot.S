@@ -2,7 +2,7 @@
 _start:                     // entry point for the linker
     mrs    x1, mpidr_el1    // load the multiprocessor affinity register
     and    x1, x1, #3       // OxFF mask to get the cpu id
-    cbz    x1, mem_setup    // if cpuid is 0, start the booting process
+    cbz    x1, setup_el2    // if cpuid is 0, start the booting process
 
 /* 
  * Enter into low power standby mode.
@@ -17,28 +17,64 @@ busy_loop:
     wfe
     b       busy_loop	    // branch back into busy_loop to make the cpu idle forever
 
-mem_setup:
-    ldr     x1, = _start
-    mov     sp, x1          // set the stack pointer to 0x80000
+setup_bss:
     ldr     x1, = __bss_start
     ldr     w2, = __bss_size
 
 mem_zero:
-    cbz     w2, exception_setup 
+    cbz     w2, setup_el2 
     str     xzr, [x1], #8
     sub     w2, w2, #1
     cbnz    w2, mem_zero
 
-check_exception_level:
-    mrs     x1, CurrentEL
-    lsr     x1, x1, #2
-    cmp     x1, #2
-    b.ne    start_main
-    bl      exception_setup
+setup_el2:
 
-exception_setup:
+    // setup the exception table in el1
     ldr     x1, = exception_table
-    msr     VBAR_EL2, x1
+    msr     VBAR_EL1, x1
+
+    msr     SCTLR_EL1, xzr
+
+    // enable HCR_EL2.RW (bit 31) for aarch64
+    mrs     x0, HCR_EL2
+    orr     x0, x0, #(1 << 31)
+    msr     HCR_EL2, x0
+    
+    // reset DAIF
+    mov     x0, #0b00101
+    msr     SPSR_EL2, x0
+
+    // return address
+    adr     x0, setup_el1 
+    msr     ELR_EL2, x0
+
+    // el1 stack pointer
+    ldr x1, =_start
+    msr SP_EL1, x1
+    
+    // return to el1
+    eret
+ 
+setup_el1:
+
+    mov     x0, 0x10000
+    msr     SP_EL0, x0
+
+    // Disable SMID
+    mrs x0, CPACR_EL1
+    orr x0, x0, #(3 << 20)
+    msr CPACR_EL1, x0
+
+    // enable EL0
+    mov     x0, #0b00000
+    msr     SPSR_EL1, x0
+
+    // return address
+    adr     x0, start_main
+    msr     ELR_EL1, x0
+    
+    // return to el0
+    eret
 
 start_main:
     bl      ker_main        // branch and link to the C code
@@ -90,11 +126,18 @@ irq_entry:
     bl      irq_handler
     kernel_exit
 
-exception_entry:
+exception_entry_el2:
     kernel_entry
-    mov     x0, #2
-    mrs     x1, esr_el2
-    mrs     x2, elr_el2
+    bl      exception_handler
+    kernel_exit
+
+exception_entry_el1:
+    kernel_entry
+    bl      exception_handler
+    kernel_exit
+
+exception_entry_el0:
+    kernel_entry
     bl      exception_handler
     kernel_exit
 
@@ -118,6 +161,8 @@ disable_irq:
 .align 11
 .global exception_table
 exception_table:
+
+    // 0x000 - 0x200
     
     // synchronous
     b   handle_unknown
@@ -135,12 +180,16 @@ exception_table:
     b   handle_unknown
     .align 7
 
+    // 0x200 - 0x400 // 
+
     // synchronous
-    b   exception_entry
+    b   handle_unknown
+    //b   exception_entry_el1
     .align 7
 
     // IRQ
-    b   irq_entry
+    b   handle_unknown
+    //b   irq_entry
     .align 7
 
     // FIQ
@@ -151,12 +200,15 @@ exception_table:
     b   handle_unknown
     .align 7
 
+    // 0x400 - 0x600
+
      // synchronous
-    b   handle_unknown
+    b   exception_entry_el0
     .align 7
 
     // IRQ
-    b   handle_unknown
+    //b   handle_unknown
+    b   irq_entry
     .align 7
 
     // FIQ

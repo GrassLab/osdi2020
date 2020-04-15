@@ -19,12 +19,14 @@ enum {
 
 };
 
-void exception_handler(unsigned short level, unsigned long esr, unsigned long elr); 
+void exception_handler(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3, unsigned long x4, unsigned long x5, unsigned long x8); 
 
 void enable_interrupt_controller();
 
 void handle_unknown();
 
 void irq_handler();
+
+void syscall(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3, unsigned long x4, unsigned long x5, unsigned long x8);
 
 #endif

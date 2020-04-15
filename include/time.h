@@ -22,6 +22,10 @@ void local_timer_handler();
 
 void delay(int32_t count);
 
-float get_timestamp();
+void get_timestamp(float *t);
+
+float get_time();
+
+void timed_delay();
 
 #endif

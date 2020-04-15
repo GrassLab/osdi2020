@@ -25,8 +25,18 @@ static uint64_t mm_ticks() {
     return cntpct_el0;
 }
 
-float get_timestamp() {
-    return mm_ticks()/(float)mm_freq();
+void get_timestamp(float *t) {
+    *t = mm_ticks()/(float)mm_freq();
+}
+
+float get_time() {
+   float t;
+   asm volatile ("mov x0, #0; mov x1, %0; mov x8, #0; svc #0"::"r" (&t));
+   return t;
+}
+
+void timed_delay() {
+    asm volatile ("mov x8, #1; svc #0");
 }
 
 void core_timer_enable() {

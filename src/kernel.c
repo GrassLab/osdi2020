@@ -12,7 +12,7 @@
 #include "time.h"
 
 void ker_main() {
-
+    printf("Hello from kernel\r\n");
     uart_setup();
     init_framebuffer(1280, 720);
     color_fill(COLOR_SPLASH);

@@ -96,7 +96,7 @@ void shell_start()
         if (!strcmp(line, shell_cmds[0][0])) {
             uart_puts("world");
         } else if (!strcmp(line, shell_cmds[1][0])) {
-            printf("%f", get_timestamp());
+            printf("%f", get_time());
         } else if (!strcmp(line, shell_cmds[2][0])) {
             reboot();
         } else if (!strcmp(line, shell_cmds[3][0])) {
@@ -132,10 +132,11 @@ void shell_start()
             asm volatile("svc #1");
             //asm volatile("brk #1");
         } else if (!strcmp(line, shell_cmds[6][0])){
-            init_irq();
-            enable_irq();
+            //init_irq();
+            //enable_irq();
             //local_timer_init();
-            core_timer_enable();
+            //core_timer_enable();
+            timed_delay();
         } else if (!strcmp(line, shell_cmds[7][0])) {
             for(size_t i = 0; i < sizeof(shell_cmds) / sizeof(shell_cmds[0]); i++)
                 printf("%s : %s \r\n", shell_cmds[i][0], shell_cmds[i][1]);

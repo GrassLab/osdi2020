@@ -97,5 +97,6 @@ void uart_log(log_level_t level, const char *message) {
         default:
             strcpy(level_str, "WTF");
     }
-    printf("[%f][%s]%s\r\n", get_timestamp(), level_str, message);
+    //printf("[%f][%s]%s\r\n", get_timestamp(), level_str, message);
+    printf("[%s]%s\r\n", level_str, message);
 }
