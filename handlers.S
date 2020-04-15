@@ -59,8 +59,8 @@ undefined_handler:
 //	bl core_timer_enable
 //	load_all
 
-.global core_timer_handler
-core_timer_handler:
+.global timer_handler
+timer_handler:
 	save_all
 	bl core_timer_context
 	load_all

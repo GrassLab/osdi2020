@@ -54,10 +54,11 @@ void main(){
 			}
 			*/
 			else if(strcmp(buff,"exc")){
-				asm("svc 1");
+				asm("svc #1");
 			}
 			else if(strcmp(buff,"irq")){
-				core_timer_enable();
+				//core_timer_enable();
+				asm("svc #0");
 			}
 			else print("Err, command not found, try <help>.\n\r");
 			for(i=0;i<50;i++)	buff[i]='\0';
