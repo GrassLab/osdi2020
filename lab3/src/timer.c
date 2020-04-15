@@ -20,5 +20,7 @@ void local_timer_init(){
 
 void local_timer_handler(){
 	// clear interrupt and reload.
+	// set bit 31: Interrupt flag clear when written as 1
+	// set bit 30: Local timer-reloaded when written as 1
 	*((volatile unsigned int *)LOCAL_TIMER_IRQ_CLR) =  0xc0000000;
 }

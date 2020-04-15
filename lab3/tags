@@ -7,22 +7,25 @@
 ARMGNU	Makefile	/^ARMGNU ?= aarch64-linux-gnu$/;"	m
 ASMOPS	Makefile	/^ASMOPS = -ggdb -fPIC -Iinclude -Wno-unused-variable$/;"	m
 ASM_FILES	Makefile	/^ASM_FILES = $(wildcard $(SRC_DIR)\/*.S) $/;"	m
-AUX_ENABLES	include/peripherals.h	78;"	d
-AUX_MU_BAUD_REG	include/peripherals.h	89;"	d
-AUX_MU_CNTL_REG	include/peripherals.h	87;"	d
-AUX_MU_IER_REG	include/peripherals.h	80;"	d
-AUX_MU_IIR_REG	include/peripherals.h	81;"	d
-AUX_MU_IO_REG	include/peripherals.h	79;"	d
-AUX_MU_LCR_REG	include/peripherals.h	82;"	d
-AUX_MU_LSR_REG	include/peripherals.h	84;"	d
-AUX_MU_MCR_REG	include/peripherals.h	83;"	d
-AUX_MU_MSR_REG	include/peripherals.h	85;"	d
-AUX_MU_SCRATCH	include/peripherals.h	86;"	d
-AUX_MU_STAT_REG	include/peripherals.h	88;"	d
+AUX_ENABLES	include/peripherals.h	83;"	d
+AUX_MU_BAUD_REG	include/peripherals.h	94;"	d
+AUX_MU_CNTL_REG	include/peripherals.h	92;"	d
+AUX_MU_IER_REG	include/peripherals.h	85;"	d
+AUX_MU_IIR_REG	include/peripherals.h	86;"	d
+AUX_MU_IO_REG	include/peripherals.h	84;"	d
+AUX_MU_LCR_REG	include/peripherals.h	87;"	d
+AUX_MU_LSR_REG	include/peripherals.h	89;"	d
+AUX_MU_MCR_REG	include/peripherals.h	88;"	d
+AUX_MU_MSR_REG	include/peripherals.h	90;"	d
+AUX_MU_SCRATCH	include/peripherals.h	91;"	d
+AUX_MU_STAT_REG	include/peripherals.h	93;"	d
 BUILD_DIR	Makefile	/^BUILD_DIR = build$/;"	m
 COPS	Makefile	/^COPS = -ggdb -fPIC -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -Wno-unused-variable$/;"	m
-CORE0_IRQ_SOURCE	include/peripherals.h	74;"	d
+CORE0_IRQ_SOURCE	include/peripherals.h	75;"	d
 CORE0_TIMER_IRQ_CTRL	src/timer.S	/^#define CORE0_TIMER_IRQ_CTRL 0x40000040$/;"	d
+CORE1_IRQ_SOURCE	include/peripherals.h	76;"	d
+CORE2_IRQ_SOURCE	include/peripherals.h	77;"	d
+CORE3_IRQ_SOURCE	include/peripherals.h	78;"	d
 C_FILES	Makefile	/^C_FILES = $(wildcard $(SRC_DIR)\/*.c) $/;"	m
 DEP_FILES	Makefile	/^DEP_FILES = $(OBJ_FILES:%.o=%.d)$/;"	m
 DISABLE_BASIC_IRQS	include/peripherals.h	67;"	d
@@ -70,7 +73,7 @@ IRQ_INVALID_EL1t	include/entry.h	7;"	d
 IRQ_PENDING_1	include/peripherals.h	59;"	d
 IRQ_PENDING_2	include/peripherals.h	60;"	d
 LFB_H	include/lfb.h	2;"	d
-LOCAL_TIMER_CONTROL_REG	src/timer.c	5;"	d	file:
+LOCAL_TIMER_CONTROL_AND_STATUS	src/timer.c	5;"	d	file:
 LOCAL_TIMER_IRQ_CLR	src/timer.c	6;"	d	file:
 LOW_MEMORY	include/mm.h	11;"	d
 MBOX_CH_BTNS	include/mbox.h	15;"	d
@@ -134,17 +137,17 @@ SYSTEM_TIMER_IRQ_2	include/peripherals.h	71;"	d
 SYSTEM_TIMER_IRQ_3	include/peripherals.h	72;"	d
 S_FRAME_SIZE	include/entry.h	4;"	d
 TABLE_SHIFT	include/mm.h	5;"	d
-TIMER_C0	include/peripherals.h	96;"	d
-TIMER_C1	include/peripherals.h	97;"	d
-TIMER_C2	include/peripherals.h	98;"	d
-TIMER_C3	include/peripherals.h	99;"	d
-TIMER_CHI	include/peripherals.h	95;"	d
-TIMER_CLO	include/peripherals.h	94;"	d
-TIMER_CS	include/peripherals.h	93;"	d
-TIMER_CS_M0	include/peripherals.h	101;"	d
-TIMER_CS_M1	include/peripherals.h	102;"	d
-TIMER_CS_M2	include/peripherals.h	103;"	d
-TIMER_CS_M3	include/peripherals.h	104;"	d
+TIMER_C0	include/peripherals.h	101;"	d
+TIMER_C1	include/peripherals.h	102;"	d
+TIMER_C2	include/peripherals.h	103;"	d
+TIMER_C3	include/peripherals.h	104;"	d
+TIMER_CHI	include/peripherals.h	100;"	d
+TIMER_CLO	include/peripherals.h	99;"	d
+TIMER_CS	include/peripherals.h	98;"	d
+TIMER_CS_M0	include/peripherals.h	106;"	d
+TIMER_CS_M1	include/peripherals.h	107;"	d
+TIMER_CS_M2	include/peripherals.h	108;"	d
+TIMER_CS_M3	include/peripherals.h	109;"	d
 TOOLS_H	include/tools.h	2;"	d
 UART0_CR	src/uart.c	12;"	d	file:
 UART0_DR	src/uart.c	7;"	d	file:

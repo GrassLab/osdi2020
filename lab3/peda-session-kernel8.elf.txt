@@ -1,3 +1,2 @@
-break el0_entry
-
+break main:10
 

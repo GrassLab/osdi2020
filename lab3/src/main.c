@@ -76,7 +76,9 @@ void main()
 	// UART0 initialization
     uart_init();
 	uart_puts("\n");
-
+	
+	//asm volatile("svc #1");
+	//asm volatile("brk #1");
 /* 
  * get the current exception level
  * print current exception level
@@ -171,6 +173,9 @@ void main()
 			command_not_found = 0;
 		}else if(!strcmp(buffer, "sysreg")){
 			sysreg_command();
+			command_not_found = 0;
+		}else if(!strcmp(buffer, "brk")){
+			asm volatile("brk #1");
 			command_not_found = 0;
 		}
 		if(command_not_found == 1 && sizeof_current_line>0) {
