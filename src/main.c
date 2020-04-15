@@ -1,17 +1,17 @@
-#include "frame_buffer.h"
+#include "exce.h"
 #include "mailbox.h"
-#include "simple_shell.h"
+#include "printf.h"
+#include "shell.h"
 #include "uart.h"
-#include "string.h"
 
 int main()
 {
-    int r=15000000; while(r--) { asm volatile("nop"); }
-    uart_init();    
-    fbuff_init();
+    // unsigned long el;
+    uart_init();
+    init_printf(0, uart_putc);  
     get_board_info();
-    // // display a pixmap
-    fbuff_showBitmap();
+    // asm volatile ("mrs %0, CurrentEL" : "=r" (el));
+    // printf("Current EL is: %u\n", (el>>2)&3);
 
     run_shell();
     return -1;

@@ -1,5 +1,5 @@
 TOOLCHAIN_PREFIX = aarch64-linux-gnu
-CFLAGS = -Wall -g -nostdlib -nostartfiles -ffreestanding -Iinc
+CFLAGS = -Wall -g -nostdlib -nostartfiles -ffreestanding -Iinc -mgeneral-regs-only
 
 S_SRCS = $(wildcard src/*.S)
 C_SRCS = $(wildcard src/*.c)
@@ -24,7 +24,7 @@ clean:
 	rm kernel8.elf build/* >/dev/null 2>/dev/null || true
 
 run:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display gtk -serial stdio
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
 
 debug:
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -s -S
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -d int -s -S

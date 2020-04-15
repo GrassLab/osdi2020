@@ -34,7 +34,10 @@ void uart_init(void);
 void uart_send(char c);
 char uart_recv(void);
 char uart_getc(void);
-void uart_putc(char c);
+void uart_putc(void* p, char c);
 void uart_puts(char *s);
+
+
+void uart_hex(unsigned int d);
 
 #endif//_UART_H

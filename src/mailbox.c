@@ -2,7 +2,7 @@
 #include "peri_base.h"
 #include "string.h"
 #include "uart.h"
-
+#include "printf.h"
 
 static struct _MBOX_REG
 {
@@ -72,22 +72,19 @@ void get_board_info(){
 
     // send the message to the GPU and receive answer
     if (mbox_call(MBOX_CH_PROPT_ARM_VC)) {
-        char buff[11];
+        // printf("Board revision: 0x%08X\n", mbox[5]);
+        // printf("ARM address base: 0x%08X\tsize: 0x%08X\n", mbox[9], mbox[10]);
+        // printf("VC  address base: 0x%08X\tsize: 0x%08X\n", mbox[14], mbox[15]);
         uart_puts("Board revision:");
-        bin2hex(mbox[5], buff);
-        uart_puts(buff);
+        uart_hex(mbox[5]);
         uart_puts("\nARM address base: ");
-        bin2hex(mbox[9], buff);
-        uart_puts(buff);
+        uart_hex(mbox[9]);
         uart_puts("\tsize: ");
-        bin2hex(mbox[10], buff);
-        uart_puts(buff);
+        uart_hex(mbox[10]);
         uart_puts("\nVC  address base: ");
-        bin2hex(mbox[14], buff);
-        uart_puts(buff);
+        uart_hex(mbox[14]);
         uart_puts("\tsize: ");
-        bin2hex(mbox[15], buff);
-        uart_puts(buff);
+        uart_hex(mbox[15]);
         uart_puts("\n");
     } else {
         uart_puts("Mailbox fail to query board info!\n");
