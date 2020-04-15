@@ -1,9 +1,10 @@
 #include "type.h"
-#include "uart.h"
-#include "time.h"
-#include "power.h"
-#include "mbox.h"
 #include "utils.h"
+#include "device/time.h"
+#include "device/power.h"
+#include "device/mbox.h"
+#include "device/uart.h"
+#include "interrupt/timer.h"
 
 const static unsigned int MAX_BUFFER_SIZE = 512;
 
@@ -15,6 +16,8 @@ static inline void helpCmd()
     uartPuts("    timestamp          get current timestamp\n");
     uartPuts("    reboot             reboot rpi3\n");
     uartPuts("    hardware           print hardware information\n");
+    uartPuts("    exc                supervisor call #1\n");
+    uartPuts("    irq                enable core timer\n");
 }
 
 static inline void helloCmd()
@@ -27,7 +30,7 @@ static inline void timestampCmd()
     double t = getTime();
 
     uartPuts("[");
-    printFloat(t);
+    uartFloat(t);
     uartPuts("]\n");
 }
 
@@ -42,6 +45,16 @@ static inline void hardwareInfoCmd()
 {
     getBoardRevision();
     getVCMemory();
+}
+
+static inline void excCmd()
+{
+    asm volatile("svc #1");
+}
+
+static inline void irqCmd()
+{
+    asm volatile("svc #2");
 }
 
 static inline void noneCmd(const char *input)
@@ -63,6 +76,10 @@ command_t checkCmdType(const char *input)
         return reboot;
     else if (strcmp(input, "hardware"))
         return hardwareInfo;
+    else if (strcmp(input, "exc"))
+        return exc;
+    else if (strcmp(input, "irq"))
+        return irq;
 
     return none;
 }
@@ -88,6 +105,12 @@ void processCmd(const char *input)
         break;
     case hardwareInfo:
         hardwareInfoCmd();
+        break;
+    case exc:
+        excCmd();
+        break;
+    case irq:
+        irqCmd();
         break;
     default:
         noneCmd(input);

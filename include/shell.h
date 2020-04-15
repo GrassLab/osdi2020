@@ -1,5 +1,5 @@
-#ifndef CMD_H
-#define CMD_H
+#ifndef _SHELL_H
+#define _SHELL_H
 
 void runShell();
 

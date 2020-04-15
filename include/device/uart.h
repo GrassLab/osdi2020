@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef UART_H
-#define UART_H
+#ifndef _UART_H
+#define _UART_H
 
 void uartInit();
 void uartSend(unsigned int c);
@@ -32,5 +32,7 @@ char uartGetc();
 char uartGetcWithCR();
 void uartPuts(const char *s);
 void uartHex(unsigned int d);
+void uartInt(unsigned int i);
+void uartFloat(double f);
 
 #endif

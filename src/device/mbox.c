@@ -23,9 +23,9 @@
  *
  */
 
-#include "gpio.h"
-#include "uart.h"
-#include "mbox.h"
+#include "device/gpio.h"
+#include "device/uart.h"
+#include "device/mbox.h"
 
 /* mailbox message buffer */
 volatile unsigned int __attribute__((aligned(16))) mbox[36];

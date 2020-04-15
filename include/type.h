@@ -1,5 +1,5 @@
-#ifndef TYPE_H
-#define TYPE_H
+#ifndef _TYPE_H
+#define _TYPE_H
 
 typedef enum
 {
@@ -14,7 +14,8 @@ typedef enum
     timestamp,
     reboot,
     hardwareInfo,
-    loadImg,
+    exc,
+    irq,
     none
 } command_t;
 

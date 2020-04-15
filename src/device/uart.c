@@ -23,8 +23,8 @@
  *
  */
 
-#include "gpio.h"
-#include "mbox.h"
+#include "device/gpio.h"
+#include "device/mbox.h"
 
 /* PL011 UART registers */
 #define UART0_DR ((volatile unsigned int *)(MMIO_BASE + 0x00201000))
@@ -106,6 +106,23 @@ char uartGetc()
 }
 
 /**
+ * Receive a character without converting carrige return
+ */
+char uartGetcWithCR()
+{
+    char r;
+    /* wait until something is in the buffer */
+    do
+    {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x10);
+    /* read it and return */
+    r = (char)(*UART0_DR);
+    /* convert carrige return to newline */
+    return r;
+}
+
+/**
  * Display a string
  */
 void uartPuts(char *s)
@@ -134,4 +151,33 @@ void uartHex(unsigned int d)
         n += n > 9 ? 0x37 : 0x30;
         uartSend(n);
     }
+}
+
+void uartInt(unsigned int i)
+{
+    char buf[256];
+    int buf_ptr = 0;
+    while (i > 0)
+    {
+        buf[buf_ptr++] = (i % 10) + '0';
+        i = i / 10;
+    }
+    buf[buf_ptr] = '\0';
+    for (int e = buf_ptr - 1, s = 0, half = (buf_ptr - 1) / 2; e > half; --e, ++s)
+    {
+        char tmp = buf[s];
+        buf[s] = buf[e];
+        buf[e] = tmp;
+    }
+
+    uartPuts(buf);
+}
+
+void uartFloat(double f)
+{
+    int i = (int)f;
+    int frac = (int)((f - (double)i) * 100000);
+    uartInt(i);
+    uartPuts(".");
+    uartInt(frac);
 }

@@ -7,12 +7,25 @@ INCLUDES = -Iinclude
 
 SRCDIR	 = src
 SRC		 = $(wildcard $(SRCDIR)/*.c)
-OBJS	 = $(patsubst $(SRCDIR)/%.c,%.o,$(SRC))
+ASMSRC	 = $(wildcard $(SRCDIR)/*.S)
+SRCOBJS	 = $(patsubst $(SRCDIR)/%.c,%.o,$(SRC)) \
+		   $(patsubst $(SRCDIR)/%.S,%.o,$(ASMSRC))
+IRQDIR	 = src/interrupt
+IRQ		 = $(wildcard $(IRQDIR)/*.c)
+ASMIRQ	 = $(wildcard $(IRQDIR)/*.S)
+IRQOBJS	 = $(patsubst $(IRQDIR)/%.c,%.o,$(IRQ)) \
+		   $(patsubst $(IRQDIR)/%.S,%.o,$(ASMIRQ))
+DVDIR	 = src/device
+DV		 = $(wildcard $(DVDIR)/*.c)
+DVOBJS	 = $(patsubst $(DVDIR)/%.c,%.o,$(DV)) \
+		   $(patsubst $(DVDIR)/%.S,%.o,$(ASMDV))
+
+OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS)
 
 LSCRIPT  = linker.ld
 KERNEL   = kernel8
 
-VPATH    = src
+VPATH    = $(SRCDIR) $(IRQDIR) $(DVDIR)
 
 all: $(KERNEL).img
 
@@ -25,7 +38,7 @@ $(KERNEL).elf: start.o $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-start.o: start.S
+%.o: %.S
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 .PHONY: clean test debug monitor

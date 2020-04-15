@@ -23,8 +23,8 @@
  *
  */
 
-#include "uart.h"
 #include "shell.h"
+#include "device/uart.h"
 
 void main()
 {
