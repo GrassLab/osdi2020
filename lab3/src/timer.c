@@ -4,18 +4,26 @@ unsigned int CORE0_TIMER_IRQ_CTRL = 0x40000040;
 unsigned int EXPIRE_PERIOD = 0xfffffff;
 
 void core_timer_enable(){
-    // can't use x0 because CORE0_TIMER_IRQ_CTRL is assigned to it by the compiler
+    // can't use x0, x1 because CORE0_TIMER_IRQ_CTRL, EXPIRE_PERIOD will be assigned to them by the compiler
+    // don't overwirte them
     asm volatile (
+                  // can solve above situation by moving variables into register first 
+                  // because the compiler won't optimize the inline asm
+                  "mov x0, %0;"
+                  "mov x1, %1;"
+
                   // enable core timer
-                  "mov x1, 1;"
-                  "msr cntp_ctl_el0, x1;"
-                  "mov x1, 2;"
+                  "mov x2, 1;"
+                  "msr cntp_ctl_el0, x2;"
+
+                  // set expired time
+                  "msr cntp_tval_el0, x0;"
 
                   // enable timer interrupt 
+                  "mov x2, x1;"
                   "mov x1, 2;"
-                  "mov x2, %0;"
                   "str x1, [x2]"
-                  ::"r"(CORE0_TIMER_IRQ_CTRL)
+                  ::"r"(EXPIRE_PERIOD), "r"(CORE0_TIMER_IRQ_CTRL)
                  );
 }
 
