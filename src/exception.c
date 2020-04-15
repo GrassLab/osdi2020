@@ -83,13 +83,14 @@ void exception_handler(unsigned long x0, unsigned long x1, unsigned long x2, uns
 // source: linux kernel tree
 void syscall(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3, unsigned long x4, unsigned long x5, unsigned long x8) {
     switch(x0) {
-        case 1:
+        case 0x0:
             get_timestamp((float *) x1); 
             break;
-        case 0:
-            //enable_irq();
+        case 0x1:
             core_timer_enable();
-            //disable_irq();
+            break;
+        case 0x2:
+            local_timer_init();
             break;
         default:
             printf("Unknown syscall\r\n");

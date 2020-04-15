@@ -126,17 +126,7 @@ irq_entry:
     bl      irq_handler
     kernel_exit
 
-exception_entry_el2:
-    kernel_entry
-    bl      exception_handler
-    kernel_exit
-
-exception_entry_el1:
-    kernel_entry
-    bl      exception_handler
-    kernel_exit
-
-exception_entry_el0:
+exception_entry:
     kernel_entry
     bl      exception_handler
     kernel_exit
@@ -183,13 +173,13 @@ exception_table:
     // 0x200 - 0x400 // 
 
     // synchronous
-    //b   handle_unknown
-    b   exception_entry_el1
+    b   handle_unknown
+    //b   exception_entry
     .align 7
 
     // IRQ
-    //b   handle_unknown
-    b   irq_entry
+    b   handle_unknown
+    //b   irq_entry
     .align 7
 
     // FIQ
@@ -203,7 +193,7 @@ exception_table:
     // 0x400 - 0x600
 
      // synchronous
-    b   exception_entry_el0
+    b   exception_entry
     .align 7
 
     // IRQ

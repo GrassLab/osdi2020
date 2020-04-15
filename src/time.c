@@ -31,12 +31,16 @@ void get_timestamp(float *t) {
 
 float get_time() {
    float t;
-   asm volatile ("mov x0, #0; mov x1, %0; mov x8, #0; svc #0"::"r" (&t));
+   asm volatile ("mov x0, #0 \t\n mov x1, %0 \t\n svc #0"::"r" (&t));
    return t;
 }
 
 void timed_delay() {
-    asm volatile ("mov x8, #1; svc #0");
+    asm volatile ("mov x0, #1 \t\n svc #0");
+}
+
+void local_timed_delay() {
+    asm volatile ("mov x0, #2 \t\n svc #0");
 }
 
 void core_timer_enable() {
@@ -61,7 +65,7 @@ void core_timer_handler() {
 
 void local_timer_init() {
     unsigned int flag = 0x30000000; // enable timer and interrupt.
-    unsigned int reload = 3840000; // 2*19.2 MHz for 1 second delay
+    unsigned int reload = 38400000; // 2*19.2 MHz for 1 second delay
     local_timer = 0;
     mm_write(LOCAL_TIMER_CONTROL_REG, flag | reload);
     uart_log(LOG_WARNING, "Local timer initialized");

@@ -28,4 +28,6 @@ float get_time();
 
 void timed_delay();
 
+void local_timed_delay();
+
 #endif
