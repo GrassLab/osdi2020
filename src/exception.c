@@ -21,6 +21,12 @@ void core_timer_enable(void) {
   *CORE0_TIMER_IRQ_CTRL = 2;
 }
 
+void system_timer_enable(void) {
+  // Set the interval to be approximately 3 seconds
+  *SYSTEM_TIMER_C1 = *SYSTEM_TIMER_CL0 + 3 * SYSTEM_TIMER_FREQUENCY;
+  *IRQ_ENABLE1 = 1 << 1;
+}
+
 void curr_el_spx_sync_handler(void) {
   uint64_t address, syndrome;
   asm("mrs %0, elr_el1" : "=r"(address));
@@ -47,22 +53,42 @@ void curr_el_spx_sync_handler(void) {
         break;
       case 2:
         core_timer_enable();
+        system_timer_enable();
         break;
     }
   }
 }
 
-static uint64_t jiffie = 0;
+static uint64_t core_timer_jiffie = 0;
+static uint64_t system_timer_jiffie = 0;
 
 void curr_el_spx_irq_handler(void) {
   char buf[32];
-  mini_uart_puts("Core timer interrupt, jiffies ");
-  mini_uart_puts(uitos(++jiffie, buf));
-  mini_uart_puts(EOL);
+  uint32_t pending;
 
-  // Set the interval to be approximately 1 second
-  asm("mrs x0, cntfrq_el0");
-  asm("msr cntp_tval_el0, x0");
+  asm("mrs %0, cntp_ctl_el0" : "=r"(pending));
+  if (pending & (1 << 2) != 0) {
+    mini_uart_puts("Core timer interrupt, jiffies ");
+    mini_uart_puts(uitos(++core_timer_jiffie, buf));
+    mini_uart_puts(EOL);
+
+    // Set the interval to be approximately 1 second
+    asm("mrs x0, cntfrq_el0");
+    asm("msr cntp_tval_el0, x0");
+  }
+
+  pending = *IRQ_PENDING1;
+  if (pending == 2) {
+    mini_uart_puts("System timer interrupt, jiffies ");
+    mini_uart_puts(uitos(++system_timer_jiffie, buf));
+    mini_uart_puts(EOL);
+
+    // Set the interval to be approximately 3 seconds
+    *SYSTEM_TIMER_C1 = *SYSTEM_TIMER_CL0 + 3 * SYSTEM_TIMER_FREQUENCY;
+    *IRQ_ENABLE1 = 1 << 1;
+    // Clear the match detect status bit and the corresponding interrupt request line.
+    *SYSTEM_TIMER_CS = 0xf;
+  }
 }
 
 void not_implemented_handler(void) {
