@@ -72,7 +72,7 @@ void uart_send(unsigned int c) {
 char uart_getc() {
     char r;
     while( !(rec_buf.tail - rec_buf.head) )
-        asm volatile("nop");
+        asm volatile("wfi");
     if( (rec_buf.tail - rec_buf.head) > 0)
     {
         r = rec_buf.buf[rec_buf.head++];
