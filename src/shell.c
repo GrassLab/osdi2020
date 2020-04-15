@@ -4,6 +4,7 @@
 #include "lfb.h"
 #include "mbox.h"
 #include "reset.h"
+#include "shell.h"
 #include "uart.h"
 
 #define GET_BOARD_REVISION 0x00010002
@@ -16,8 +17,8 @@
 #define GET_VC_MEMORY 0x00010006
 #define UART_ID 0x000000002
 
-extern volatile unsigned int _boot_start;
-extern volatile unsigned int _end;
+extern void core_timer_enable(int a);
+char cmd[200];
 
 void get_board_revision() {
     mbox[0] = 7 * 4;  // buffer size in bytes
@@ -34,7 +35,7 @@ void get_board_revision() {
         MBOX_CH_PROP);  // message passing procedure call, you should implement
                         // it following the 6 steps provided above.
 
-    print_s("Board revision: ");
+    print_s("Board revision: 0x");
     print_h(mbox[5]);
     print_s("\n");
 }
@@ -55,10 +56,10 @@ void get_vc_base() {
         MBOX_CH_PROP);  // message passing procedure call, you should implement
                         // it following the 6 steps provided above.
 
-    print_s("VC core base address: ");
+    print_s("VC core base address: 0x");
     print_h(mbox[5]);
     print_s("\n");
-    print_s("VC core base size: ");
+    print_s("VC core base size: 0x");
     print_h(mbox[6]);
     print_s("\n");
 }
@@ -75,9 +76,8 @@ int strcmp(const char *p1, const char *p2) {
     return c1 - c2;
 }
 
-void read_cmd(char *cmd) {
+void read_cmd() {
     char now;
-    cmd[0] = 0;
     int now_cur = 0;
     while ((now = read_c()) != '\n') {
         if (now == 127) {  // delete
@@ -108,8 +108,7 @@ void loadimg(long long num, int img_size) {
 
 void shell() {
     print_s("# ");
-    char cmd[256];
-    read_cmd(cmd);
+    read_cmd();
     if (!strcmp(cmd, "help")) {
         print_s(
             "help      : print this help menu\n"
@@ -125,7 +124,7 @@ void shell() {
         asm volatile("mrs %0, cntpct_el0" : "=r"(ct));
         asm volatile("mrs %0, cntfrq_el0" : "=r"(frq));
         double frq_f = frq, ct_f = ct;
-        print_d(ct_f / frq_f);
+        print_i(ct_f / frq_f);
         print_s("\r\n");
     } else if (!strcmp(cmd, "reboot")) {
         reset(10);
@@ -137,66 +136,27 @@ void shell() {
     } else if (!strcmp(cmd, "loadimg")) {
         print_s("Please input the address: ");
         long long int num = read_h();
-        print_c('\r');
+        print_s("\r");
 
         print_s("Image size: ");
         int img_size = read_i();
         print_i(img_size);
-        print_c('\r');
+        print_s("\r");
 
-        /* long boot_start = (long)&_boot_start; */
-        /* long boot_end = (long)&_end; */
-        /* char *base = (char *)num + img_size + 0x100; */
-        /* for (int i = 0; i < boot_end - boot_start; i++) { */
-        /* *(base + i) = *(char *)(boot_start + i); */
-        /* } */
-
-        /* ((void (*)(long long, int))((long)*loadimg + num + img_size + 0x100 -
-         */
-        /* boot_start))(num, img_size); */
         loadimg(num, img_size);
 
     } else if (!strcmp(cmd, "addr")) {
         print_h((long)loadimg);
+    } else if (!strcmp(cmd, "exc")) {
+        asm volatile("exc:");
+        asm volatile("svc #1");
+    } else if (!strcmp(cmd, "irq")) {
+        asm volatile("svc #2");
+        /* int wait = read_i(); */
+        /* core_timer_enable(0xffffff); */
     } else {
         /* print_s("command not found: "); */
         /* print_s(cmd); */
         /* print_s("\r\n"); */
     }
-}
-
-void run() {
-    while (1) {
-        shell();
-    }
-}
-
-int main() {
-    // set up serial console
-    uart_init();
-    lfb_init();
-    lfb_showpicture();
-    print_s("\033[2J\033[1;1H");
-    print_s(
-        "██████╗  ██████╗  ██████╗ ████████╗██╗      ██████╗  █████╗ ██████╗ "
-        "███████╗██████╗ \r\n"
-        "██╔══██╗██╔═══██╗██╔═══██╗╚══██╔══╝██║     "
-        "██╔═══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗\r\n"
-        "██████╔╝██║   ██║██║   ██║   ██║   ██║     ██║   ██║███████║██║  "
-        "██║█████╗  ██████╔╝\r\n"
-        "██╔══██╗██║   ██║██║   ██║   ██║   ██║     ██║   ██║██╔══██║██║  "
-        "██║██╔══╝  ██╔══██╗\r\n"
-        "██████╔╝╚██████╔╝╚██████╔╝   ██║   ███████╗╚██████╔╝██║  "
-        "██║██████╔╝███████╗██║  ██║\r\n"
-        "╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ "
-        "╚══════╝╚═╝  ╚═╝\r\n");
-    long boot_start = (long)&_boot_start;
-    long boot_end = (long)&_end;
-    char *base = (char *)0xB000000;
-    for (int i = 0; i < boot_end - boot_start; i++) {
-        *(base + i) = *(char *)(boot_start + i);
-    }
-
-    ((void (*)())((long)*run + base - boot_start))();
-    /* run(); */
 }

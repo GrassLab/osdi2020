@@ -2,6 +2,23 @@
 #include "io.h"
 #include "uart.h"
 
+int atoi(char *s) {
+    int acum = 0;
+    int factor = 1;
+
+    if (*s == '-') {
+        factor = -1;
+        s++;
+    }
+
+    while ((*s >= '0') && (*s <= '9')) {
+        acum = acum * 10;
+        acum = acum + (*s - 48);
+        s++;
+    }
+    return (factor * acum);
+}
+
 unsigned long long int hex2int(char *hex) {
     unsigned long long int val = 0;
     while (*hex) {
@@ -48,14 +65,9 @@ char *read_s(char *str, int max_size) {
 }
 
 int read_i() {
-    int x = 0, f = 0;
-    char ch = 0;
-    while (!check_digit(ch)) {
-        f |= ch == '-';
-        ch = read_c();
-    }
-    while (check_digit(ch)) x = (x << 3) + (x << 1) + (ch ^ 48), ch = read_c();
-    return f ? -x : x;
+    char str[50];
+    char *value = read_s(str, 50);
+    return atoi(value);
 }
 
 unsigned long long int read_h() {
