@@ -20,7 +20,7 @@ void exception_handler()
     }
     ec = esr >> (32-6);
     iss = esr & (0xffffff);
-    retaddr = elr >> 32;
+    retaddr = elr;
 
     if (iss == SYSCALL_ENABLE_IRQ) {
         __enable_irq();

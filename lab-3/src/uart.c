@@ -41,6 +41,8 @@ void uart_init()
     setRegister(UART0_FBRD, 0xB);
     setRegister(UART0_LCRH, 0b11<<5);
     setRegister(UART0_CR, 0x301);
+    // setRegister(UART0_IMSC, 3 << 4);
+    // setRegister(IRQ_ENABLE_REGISTER_2, 1 << 25);
 }
 
 /**
