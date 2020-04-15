@@ -1,9 +1,14 @@
-#include "peripherals/uart0.h"
+#include "uart0.h"
 
 #include "mbox.h"
 #include "my_string.h"
+#include "queue.h"
+#include "shared_variables.h"
 #include "peripherals/gpio.h"
+#include "peripherals/irq.h"
 #include "peripherals/mbox.h"
+#include "peripherals/uart0.h"
+
 
 void uart_init() {
     *UART0_CR = 0;  // turn off UART0
@@ -53,28 +58,36 @@ void uart_init() {
     *UART0_LCRH = 0b11 << 5;  // Set word length to 8-bits
     *UART0_ICR = 0x7FF;       // Clear Interrupts
 
+    /* Setup Interrupt */
+    *UART0_IMSC = 0b11 << 4;   // Enable Tx, Rx Interrupt
+    *IRQ_ENABLE_2 |= 1 << 25;  // Enable UART Interrupt
+
     /* Enable UART */
     *UART0_CR = 0x301;
 }
 
 char uart_read() {
-    // Check data ready field
-    do {
-        asm volatile("nop");
-    } while (*UART0_FR & 0x10);
-    // Read
-    char r = (char)(*UART0_DR);
-    // Convert carrige return to newline
+    while (queue_empty(&read_buf)) {
+        asm volatile ("nop");
+    }
+    char r = queue_pop(&read_buf);
     return r == '\r' ? '\n' : r;
 }
 
-void uart_write(unsigned int c) {
-    // Check transmitter idle field
-    do {
-        asm volatile("nop");
-    } while (*UART0_FR & 0x20);
-    // Write
-    *UART0_DR = c;
+void uart_write(char c) {
+    if (*UART0_FR & 0x80) { // TX FIFO Empty
+        // trigger interrupt by sending one character
+        if (queue_empty(&write_buf)) {
+            *UART0_DR = c;
+        }
+        else {
+            queue_push(&write_buf, c);
+            *UART0_DR = queue_pop(&write_buf);
+        }
+    }
+    else {
+        queue_push(&write_buf, c); // push to write queue, drop if buffer full
+    }
 }
 
 void uart_printf(char* fmt, ...) {
