@@ -1,6 +1,7 @@
 import argparse
 import serial
 import os
+import sys
 import numpy as np
 
 parser = argparse.ArgumentParser()
@@ -32,16 +33,19 @@ def main():
     ser.write(file_size.to_bytes(4, byteorder="big"))
     ser.write(file_checksum.to_bytes(4, byteorder="big"))
 
+    print(f"Image Size: {file_size}, Checksum: {file_checksum}")
+
     per_chunk = 128
-    chunk_count = file_size // per_chunk + 1 if file_size % per_chunk else file_size // per_chunk
+    chunk_count = file_size // per_chunk
+    chunk_count = chunk_count + 1 if file_size % per_chunk else chunk_count
 
     for i in range(chunk_count):
-        ser.write(bytecodes[i * per_chunk : (i+1) * per_chunk])
+        sys.stdout.write('\r')
+        sys.stdout.write("%d/%d" % (i + 1, chunk_count))
+        sys.stdout.flush()
+        ser.write(bytecodes[i * per_chunk: (i+1) * per_chunk])
         while not ser.writable():
             pass
-
-
-    print(f"Image Size: {file_size}, Checksum: {file_checksum}")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,8 @@
 #include "uart0.h"
 #include "utli.h"
 #include "frame_buffer.h"
+#include "exception.h"
+#include "shared_variables.h"
 
 enum ANSI_ESC {
     Unknown,
@@ -37,13 +39,26 @@ enum ANSI_ESC decode_ansi_escape() {
 }
 
 void shell_init() {
+    shared_variables_init();
+
+    // Initialize UART
     uart_init();
     uart_flush();
+    uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
+
+    // Initialize Frame Buffer
     fb_init();
-    fb_showpicture();
-    uart_printf("\n\nHello From RPI3\n");
+    uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
+
+    // Welcome Messages
+    // fb_splash();
+    uart_printf("\n\n _  _  ___ _____ _   _  ___  ___ ___ ___ \n");
+    uart_printf("| \\| |/ __|_   _| | | |/ _ \\/ __|   \\_ _|\n");
+    uart_printf("| .` | (__  | | | |_| | (_) \\__ \\ |) | | \n");
+    uart_printf("|_|\\_|\\___| |_|  \\___/ \\___/|___/___/___|\n\n");
     mbox_board_revision();
     mbox_vc_memory();
+    uart_printf("\n");
 }
 
 void shell_input(char* cmd) {
@@ -119,6 +134,16 @@ void shell_controller(char* cmd) {
         uart_printf("hello: print Hello World!\n");
         uart_printf("timestamp: get current timestamp\n");
         uart_printf("reboot: reboot pi\n");
+        uart_printf("exc: run svc #1\n");
+        uart_printf("irq: test timer interrupt\n");
+    }
+    else if (!strcmp(cmd, "exc")) {
+        asm volatile("svc #1");
+    }
+    else if (!strcmp(cmd, "irq")) {
+        asm volatile("svc #2");
+        uart_read();
+        asm volatile("svc #3");
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");
@@ -129,8 +154,7 @@ void shell_controller(char* cmd) {
     else if (!strcmp(cmd, "reboot")) {
         uart_printf("Rebooting...");
         reset();
-        while (1) {  // hang until reboot
-        }
+        while (1);  // hang until reboot
     }
     else {
         uart_printf("shell: command not found: %s\n", cmd);
