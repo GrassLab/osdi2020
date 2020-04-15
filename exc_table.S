@@ -18,7 +18,7 @@ exception_table_el1:
 
   b undefined_handler
   .align 7
-  b undefined_handler
+  b timer_handler
   .align 7
   b undefined_handler
   .align 7
@@ -58,7 +58,7 @@ exception_table_el2:
 
   b undefined_handler
   .align 7
-  b undefined_handler
+  b timer_handler
   .align 7
   b undefined_handler
   .align 7

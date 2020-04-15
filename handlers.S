@@ -62,5 +62,5 @@ undefined_handler:
 .global timer_handler
 timer_handler:
 	save_all
-	bl core_timer_context
+	bl timer_context
 	load_all

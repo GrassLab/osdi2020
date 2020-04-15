@@ -1,6 +1,12 @@
 #include "uart.h"
 #include "utils.h"
 
+#define ARM_TIMER_LOAD 		((volatile unsigned int*)0x3f00b400)
+#define ARM_TIMER_CONTROL 	((volatile unsigned int*)0x3f00b408)
+#define ARM_TIMER_RAW_IRQ	((volatile unsigned int*)0x3f00b410)
+#define ARM_TIMER_IRQ_CLR 	((volatile unsigned int*)0x3f00b40c)
+#define IRQ_ENABLE2 		((volatile unsigned int*)0x3f00b218)
+
 //extern void enable_core_timer();
 void exc_context(unsigned long x0,unsigned long x1,unsigned long x2,unsigned long x3){
 	unsigned long elr_el1, esr_el1;
@@ -24,12 +30,31 @@ void exc_context(unsigned long x0,unsigned long x1,unsigned long x2,unsigned lon
 }
 
 void undefined_context(){
-	print("undefined_excption\n\r");
+	int cel;
+	asm("mrs %0,currentEL":"=r"(cel));
+	print_dec(cel);
+	print("\n\r");
+}
+
+void side_timer_enable(){
+	*ARM_TIMER_CONTROL=(1<<7)|(1<<5)|(1<<1);
+	*ARM_TIMER_LOAD=500000;
+	*IRQ_ENABLE2=1;
 }
 
 void count_tick(){
-	static unsigned int tick;
-	print("Arm timer interrupt, jiffies ");
-	print_dec(++tick);
-	print("\n\r");
+	static unsigned int core_tick,side_tick;
+	if(*ARM_TIMER_RAW_IRQ){
+		*ARM_TIMER_IRQ_CLR=1;
+		print("Side timer interrupt, jiffies ");
+		print_dec(++side_tick);
+		print("\n\r");
+	}
+	else{
+		asm("mov x0, #0xffffff\n"
+    		 "msr cntp_tval_el0, x0");
+		print("Arm timer interrupt, jiffies ");
+		print_dec(++core_tick);
+		print("\n\r");
+	}
 }
