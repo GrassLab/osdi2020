@@ -25,7 +25,7 @@
 #ifndef MAIL_BOX
 #define MAIL_BOX
 
-#include "mm.h"
+#include <mm.h>
 
 #define MBOX_REQUEST    0
 

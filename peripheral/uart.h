@@ -1,7 +1,7 @@
 #ifndef UART
 #define UART
 
-#include "mm.h"
+#include <mm.h>
 
 /* Mini UART registers */
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
@@ -25,13 +25,28 @@
 #define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
 #define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
 #define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
+#define UART0_RIS       ((volatile unsigned int*)(MMIO_BASE+0x0020103c))
 #define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
+
+#define UARTBUF_SIZE 0x400
+#define QUEUE_EMPTY(q) (q.tail == q.head)
+#define QUEUE_FULL(q) ((q.tail + 1) % UARTBUF_SIZE == q.head)
+#define QUEUE_POP(q) (q.head = (q.head + 1) % UARTBUF_SIZE)
+#define QUEUE_PUSH(q) (q.tail = (q.tail + 1) % UARTBUF_SIZE)
+#define QUEUE_GET(q) (q.buf[q.head])
+#define QUEUE_SET(q, val) (q.buf[q.tail] = val)
+
+struct uart_buf
+{
+  int head;
+  int tail;
+  char buf[UARTBUF_SIZE];
+} read_buf, write_buf;
 
 void uart_init ();
 void uart_send (char c);
 void uart_puts (char *s);
-char uart_getc ()
-  __attribute__ ((section (".bootloader")));
+char uart_getc () __attribute__ ((section (".bootloader")));
 int uart_readline (int size, char *buf);
 void uart_hex (unsigned int d);
 void uart_read (char *buf, unsigned long count)
