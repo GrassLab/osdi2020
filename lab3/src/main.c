@@ -85,7 +85,12 @@ void main(){
 
     // say hello
     uart_puts("Hello World!\n");
-    
+
+    // init irq
+    init_irq();
+    enable_irq();
+    init_uart_irq();
+
     // echo everything back
     while(1) {
         char str[S_MAX] = {0};
@@ -102,9 +107,8 @@ void main(){
             printf("helloooo\n");
         }else if(strcmp(str,"irq")==0){
             printf("irq in main\n");
-            init_irq();
-            enable_irq();
-            // asm volatile("svc #0x104");
+            
+            // asm volatile("svc 0");
             core_timer_enable();
             local_timer_init();
         }else if(strcmp(str,"timestamp")==0){

@@ -7,22 +7,45 @@ unsigned int core_jf = 1;
 unsigned int local_jf = 1;
 
 void irq(){
-    if(is_core_timer()){
-        handle_core_timer_irq();     
-    }else if(is_local_timer()){
+    unsigned int arm = *IRQ_BASIC_PENDING;
+    unsigned int arm_local = *CORE0_INTERRUPT_SOURCE;
+
+    char r;
+    if(arm & 0x80000){
+        // uart interrupt
+        //uart_puts("uart interrupt\n");
+
+        if(*UART0_RIS & 0x10){
+            while(*UART0_FR & 0x40){
+                r =  (char)(*UART0_DR);
+                if(!QUEUE_FULL(read_buf)){
+                    QUEUE_SET(read_buf, r);
+                    QUEUE_PUSH(read_buf);
+                }
+            }
+            *UART0_ICR = 1<<4;
+        }else if(*UART0_RIS & 0x20){
+            while(!QUEUE_EMPTY(write_buf)){
+                r = QUEUE_GET(write_buf);
+                QUEUE_POP(write_buf);
+                while(*UART0_FR & 0x20){
+                    asm volatile ("nop");
+                }
+                *UART0_DR = r;
+            }
+            *UART0_ICR = 2<<4;
+        }
+        
+    }else if(arm_local & 0x800){
+        // local timer interrupt
         handle_local_timer_irq();
+    }else if(arm_local & 0x2){
+        // core timer interrupt
+        handle_core_timer_irq();
     }else{
         uart_puts("Exist a bug ><");
     }
-    
-    // unsigned int first_level_irq = getRegister(CORE0_INTERRUPT_SOURCE);
-    // unsigned int second_level_irq = getRegister(IRQ_PENDING_1);
-    // if(first_level_irq == 2) {
-    //     core_timer_handler();
-    // }else{
-    //     local_timer_handler();
-    // }
-    // core_timer_handler ();
+    return;
 }
 
 int is_local_timer(){
@@ -57,5 +80,10 @@ void handle_local_timer_irq(){
         // disable local timer
         local_jf = 1;
     }
+    return;
+}
+
+void init_uart_irq(){
+    *ENABLE_IRQS_2 = (1 << 25);
     return;
 }
