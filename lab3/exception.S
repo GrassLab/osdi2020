@@ -46,8 +46,6 @@ eret
 
 exception_handler:
     kernel_entry
-    mrs x0, elr_el2
-    mrs x1, esr_el2
     bl exc
     kernel_exit
  

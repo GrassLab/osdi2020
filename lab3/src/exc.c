@@ -34,15 +34,43 @@ void exc_not_implement(){
 
 void exc (void)
 {
-  unsigned long elr_el2, esr_el2;
-  asm volatile (
-    "mrs %0, elr_el2\n"
-    "mrs %1, esr_el2\n"
-    :"=r" (elr_el2), "=r" (esr_el2)
-  );
-  printf ("Exception return address 0x%x\r\n", (void *) elr_el2);
-  printf ("Exception class (EC) 0x%x\r\n", esr_el2 >> 26);
-  printf ("Instruction specific syndrome (ISS) 0x%x\r\n", esr_el2 & 0xffffff);
+    // get el level
+    unsigned int el;
+    asm volatile (
+        "mrs %0, CurrentEL\n"
+        :"=r" (el)
+    );
+    el = el >> 2;
+
+    unsigned long elr_elx = 0;
+    unsigned long esr_elx = 0;
+    switch(el){
+        case 1:
+            uart_puts("Exception Level 1\n");
+            asm volatile (
+                "mrs %0, elr_el1\n"
+                "mrs %1, esr_el1\n"
+                :"=r" (elr_elx), "=r" (esr_elx)
+            );
+            break;
+        case 2:
+            uart_puts("Exception Level 2\n");
+            asm volatile (
+                "mrs %0, elr_el2\n"
+                "mrs %1, esr_el2\n"
+                :"=r" (elr_elx), "=r" (esr_elx)
+            );
+            break;
+        default:
+            uart_puts("Unknown Exception Level\n");
+            return;
+    }
+
+    
+    
+    printf ("Exception return address 0x%x\r\n", (void *) elr_elx);
+    printf ("Exception class (EC) 0x%x\r\n", esr_elx >> 26);
+    printf ("Instruction specific syndrome (ISS) 0x%x\r\n", esr_elx & 0xffffff);
 }
 
 /**
