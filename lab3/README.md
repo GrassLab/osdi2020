@@ -15,16 +15,11 @@ make
 ## How to run
 
 ```
-make
+make run
 ```
 
 ## How to burn it into pi3
 
 ```
 make update
-```
-
-## Directory structure
-
-```
 ```
