@@ -1,14 +1,22 @@
-
 // Ref: https://developer.arm.com/docs/100933/0100/example-exception-handlers
 // Note: x30 is link register, crucial to preserve
 // Note: The macro is more than 0x80 bytes, you should branch it first
 .macro ENTER_DISPATCHER
   stp x0, x1,   [sp, #-16]!
   stp x29, x30, [sp, #-16]!
+  mrs x0, spsr_el1
+  str x0,       [sp, #-16]!
+  mrs x0, elr_el1
+  str x0,       [sp, #-16]!
+
   eor x0, x0, x0
 .endm
 
 .macro LEAVE_DISPATCHER
+  ldr x0,       [sp], #16
+  msr elr_el1, x0
+  ldr x0,       [sp], #16
+  msr spsr_el1, x0
   ldp x29, x30, [sp], #16
   ldp x0, x1,   [sp], #16
   eret

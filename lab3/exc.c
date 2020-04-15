@@ -13,12 +13,17 @@ void exc_dispatcher(uint64_t identifier)
   switch(level)
   {
   case 3:
+    exc_not_implemented(identifier);
     break;
   case 2:
+    exc_not_implemented(identifier);
     break;
   case 1:
     switch(type)
     {
+    case 5:
+      exc_EL1_same_level_EL_SP_EL1_irq();
+      return;
     case 8:
       exc_EL1_lower_aa64_EL_SP_EL1_sync();
       return;
@@ -27,11 +32,11 @@ void exc_dispatcher(uint64_t identifier)
       return;
     default:
       exc_not_implemented(identifier);
-      return;
     }
     break;
   case 0: /* EL 0 */
   default:
+    exc_not_implemented(identifier);
     break;
   }
   return;
@@ -59,6 +64,12 @@ void exc_not_implemented(uint64_t code)
 
   uart_puts("Enter busy infinite loop for debug purpose\n");
   while(1);
+  return;
+}
+
+void exc_EL1_same_level_EL_SP_EL1_irq(void)
+{
+  irq_el1_handler();
   return;
 }
 

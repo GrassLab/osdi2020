@@ -18,6 +18,10 @@ const char * shell_command_list[] = {
   "txt",
   "exc",
   "irq",
+  "defer",
+  "nodefer",
+  "isrirqint",
+  "noisrirqint",
   0x0
 };
 
@@ -31,6 +35,10 @@ const char * shell_command_descriptions[] = {
   "Show .text location",
   "Issue same EL synchronous exception",
   "Enable timer interrupt",
+  "Start deferring core timer",
+  "Stop deferring core timer",
+  "Enable IRQ interrupt in core timer interrupt handler",
+  "Disable IRQ interrupt in core timer interrupt handler",
   0x0
 };
 
@@ -44,9 +52,12 @@ int (*shell_command_function_ptr[])(char *) = {
   shell_show_text_location,
   shell_exc,
   shell_irq,
+  shell_defer,
+  shell_nodefer,
+  shell_isrirqint,
+  shell_noisrirqint,
   0x0
 };
-
 
 char pikachu0[] =
   ""ANSI_BG_GREEN".......***.................................................."ANSI_RESET"\n"
@@ -156,14 +167,15 @@ int shell_hello(char * string_buffer)
 
 int shell_help(char * string_buffer)
 {
-  UNUSED(string_buffer);
+  string_buffer[0] = '\0';
   for(int command_idx = 0; shell_command_list[command_idx] != 0x0; ++command_idx)
   {
-    uart_puts(shell_command_list[command_idx]);
-    uart_puts(": ");
-    uart_puts(shell_command_descriptions[command_idx]);
-    uart_putc('\n');
+    string_concat(string_buffer, shell_command_list[command_idx]);
+    string_concat(string_buffer, ": ");
+    string_concat(string_buffer, shell_command_descriptions[command_idx]);
+    string_concat(string_buffer, "\n");
   }
+  uart_puts(string_buffer);
   return 0;
 }
 
@@ -250,6 +262,34 @@ int shell_irq(char * string_buffer)
 {
   UNUSED(string_buffer);
   asm volatile("svc #2");
+  return 0;
+}
+
+int shell_defer(char* string_buffer)
+{
+  UNUSED(string_buffer);
+  defer_mode = 1;
+  return 0;
+}
+
+int shell_nodefer(char* string_buffer)
+{
+  UNUSED(string_buffer);
+  defer_mode = 0;
+  return 0;
+}
+
+int shell_isrirqint(char * string_buffer)
+{
+  UNUSED(string_buffer);
+  isr_int_enable = 1;
+  return 0;
+}
+
+int shell_noisrirqint(char * string_buffer)
+{
+  UNUSED(string_buffer);
+  isr_int_enable = 0;
   return 0;
 }
 

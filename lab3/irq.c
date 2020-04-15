@@ -6,16 +6,24 @@
 #include "timer.h"
 #include "queue.h"
 
-void irq_el2_enable(void)
+int defer_mode = 0;
+int isr_int_enable = 0;
+
+void irq_int_enable(void)
 {
   // Clear interrupt mask for d, a, (i), f
   asm volatile("msr daifclr, #0x2");
 }
 
+void irq_int_disable(void)
+{
+  // Set interrupt mask for d, a, (i), f
+  asm volatile("msr daifset, #0x2");
+}
+
 void irq_el1_handler(void)
 {
-#define DISABLE_TIMER_COUNT 5
-  char string_buff[0x10];
+  char string_buff[0x100];
   static int core_timer_count = 0;
   static int local_timer_count = 0;
   if(CHECK_BIT(*LOCAL_TIMER_CONTROL_REG, 31))
@@ -90,10 +98,6 @@ void irq_el1_handler(void)
   else
   {
     ++core_timer_count;
-    uart_puts("ARM core time interrupt \"");
-    string_longlong_to_char(string_buff, core_timer_count);
-    uart_puts(string_buff);
-    uart_puts("\" received\n");
     if(core_timer_count == DISABLE_TIMER_COUNT)
     {
       timer_expire_core_timer();
@@ -101,7 +105,41 @@ void irq_el1_handler(void)
     }
     else
     {
-    timer_set_core_timer(1);
+      timer_set_core_timer(CORE_TIMER_SECS);
+    }
+    /* Start of bottom half */
+    if(isr_int_enable)
+    {
+      irq_int_enable();
+    }
+
+    string_buff[0] = '\0';
+    string_concat(string_buff, "ARM core time interrupt \"");
+    {
+      char id[4];
+      if(core_timer_count == 0)
+      {
+        string_longlong_to_char(id, DISABLE_TIMER_COUNT);
+      }
+      else
+      {
+        string_longlong_to_char(id, core_timer_count);
+      }
+      string_concat(string_buff, id);
+    }
+    string_concat(string_buff, "\" received\n");
+    for(int i = 0; i < string_length(string_buff); ++i)
+    {
+      uart_putc(string_buff[i]);
+      if(defer_mode)
+      {
+        /* busy waiting */
+        for(int defer_cycle = 0; defer_cycle < PI_DEFER_CYCLE; ++defer_cycle){char c = 0; ++c;}
+      }
+    }
+    if(isr_int_enable)
+    {
+      irq_int_disable();
     }
   }
   return;

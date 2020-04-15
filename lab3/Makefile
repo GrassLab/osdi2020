@@ -17,6 +17,7 @@ kernel8.img: kernel8.elf
 	${OBJCOPY} -O binary kernel8.elf kernel8.img
 
 kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES}
+	@echo "Make sure .text in os.ld is at 0x80000"
 	${LD} -T kernel.ld ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} -o kernel8.elf
 
 %.o: %.c
@@ -29,12 +30,10 @@ debug: GENERAL_FLAGS += -DDEBUG -g3
 debug: all
 
 qemu: all
-	@echo "Make sure .text in os.ld is at 0x80000"
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -vnc :0 -serial stdio
 
 .PHONY: qemu_dbg
 qemu_dbg: debug
-	@echo "Make sure .text in os.ld is at 0x80000"
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -vnc :0 -s -S -serial pty
 
 .PHONY: clean
