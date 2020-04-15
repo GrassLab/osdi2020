@@ -1,15 +1,7 @@
-#include "gpio.h"
+#include "uart.h"
 #include "mailbox.h"
 
 /* PL011 UART registers */
-#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
-#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
-#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024))
-#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028))
-#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
-#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
-#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
-#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -17,21 +9,22 @@
 void uart_init()
 {
     register unsigned int r;
+    
+    *ENABLE_IRQ2 = 1 << 25; //enable uart irq
 
     /* initialize UART */
     *UART0_CR = 0;         // turn off UART0
-    volatile unsigned int  __attribute__((aligned(16))) mbox[10];
     /* set up clock for consistent divisor values */
-    mbox[0] = 9*4;
-    mbox[1] = MBOX_REQUEST;
-    mbox[2] = MBOX_TAG_SETCLKRATE; // set clock rate
-    mbox[3] = 12;
-    mbox[4] = 8;
-    mbox[5] = 2;           // UART clock
-    mbox[6] = 4000000;     // 4Mhz
-    mbox[7] = 0;           // clear turbo
-    mbox[8] = MBOX_TAG_LAST;
-    mbox_call(mbox, MBOX_CH_PROP);
+    _mbox[0] = 9*4;
+    _mbox[1] = MBOX_REQUEST;
+    _mbox[2] = MBOX_TAG_SETCLKRATE; // set clock rate
+    _mbox[3] = 12;
+    _mbox[4] = 8;
+    _mbox[5] = 2;           // UART clock
+    _mbox[6] = 4000000;     // 4Mhz
+    _mbox[7] = 0;           // clear turbo
+    _mbox[8] = MBOX_TAG_LAST;
+    mbox_call(MBOX_CH_PROP);
 
     /* map UART0 to GPIO pins */
     r=*GPFSEL1;
@@ -47,31 +40,54 @@ void uart_init()
     *UART0_ICR = 0x7FF;    // clear interrupts
     *UART0_IBRD = 2;       // 115200 baud
     *UART0_FBRD = 0xB;
-    *UART0_LCRH = 0b11<<5; // 8n1
+    *UART0_LCRH = 6<<4; // 8n1 Enable FIFO, now is not enable.
     *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
+
+    *UART0_IMSC = 3 << 4; //bit 4,5 enable mask interrupt of Tx Rx
+    //*UART0_IFLS = 0x9; //UART 16*8 transmit and 16*12 recive -> here we set 1/2 full for both Transmit and Recive p.175 187
+    rec_buf.head=0;
+    rec_buf.tail=0;
+    tran_buf.head=0;
+    tran_buf.tail=0;
 }
 
 /**
  * Send a character
  */
 void uart_send(unsigned int c) {
-    /* wait until we can send */
-    do{asm volatile("nop");}while(*UART0_FR&0x20);
-    /* write the character to the buffer */
-    *UART0_DR=c;
+    if(*UART0_FR&0x20)
+    {
+        //tran_buf.tail++;
+        tran_buf.buf[tran_buf.tail++] = c;
+    }
+    else
+    {
+        *UART0_DR=c;
+    }
 }
-
+ 
 /**
  * Receive a character
  */
 char uart_getc() {
     char r;
-    /* wait until something is in the buffer */
-    do{asm volatile("nop");}while(*UART0_FR&0x10);
-    /* read it and return */
-    r=(char)(*UART0_DR);
-    /* convert carrige return to newline */
-    return r=='\r'?'\n':r;
+    while( !(rec_buf.tail - rec_buf.head) )
+        asm volatile("nop");
+    if( (rec_buf.tail - rec_buf.head) > 0)
+    {
+        r = rec_buf.buf[rec_buf.head++];
+        if((rec_buf.tail - rec_buf.head) == 0)
+        {
+            tran_buf.tail = 0;
+            tran_buf.head = 0;
+        }
+        return r == '\r' ? '\n' : r;
+    }
+    else
+    {
+        return 0;        
+    }
+    //while(1){asm volatile("nop");}
 }
 
 /**

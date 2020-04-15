@@ -1,4 +1,4 @@
-//extern volatile unsigned int mailbox[36];
+extern volatile unsigned int _mbox[36];
 
 #define MBOX_REQUEST    0
 
@@ -25,5 +25,5 @@
 #define END_TAG             0x00000000
 
 
-int mbox_call(unsigned int *mailbox, unsigned char ch);
+int mbox_call(unsigned char ch);
 //int mailbox_call(unsigned char ch);

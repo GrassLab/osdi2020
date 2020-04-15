@@ -73,7 +73,7 @@ again:
     unsigned long end_addr = addr + size;
     int check = 0;
 
-    if((end_addr <= (unsigned long)&_end) && (end_addr >= (unsigned long)&_code))
+    /*if((end_addr <= (unsigned long)&_end) && (end_addr >= (unsigned long)&_code))
     {
         check = 1;
     }
@@ -84,7 +84,7 @@ again:
     if((addr <= (unsigned long)&_code) && (end_addr >= (unsigned long)&_end))
     {
         check = 1;
-    }
+    }*/
 
     void (*ptr)(unsigned long, unsigned long);
     if(check)
