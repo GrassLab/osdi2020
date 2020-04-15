@@ -1,4 +1,4 @@
-push_gr:
+.macro kernel_entry
     str   x0, [sp, #-16]!
     str   x1, [sp, #-16]!
     str   x2, [sp, #-16]!
@@ -29,9 +29,11 @@ push_gr:
     str   x27, [sp, #-16]!
     str   x28, [sp, #-16]!
     str   x29, [sp, #-16]!
-    ret
+    str   x30, [sp, #-16]!
+  .endm
 
-pop_gr:
+.macro kernel_exit
+    ldr   x30, [sp], #16  
     ldr   x29, [sp], #16  
     ldr   x28, [sp], #16  
     ldr   x27, [sp], #16  
@@ -61,55 +63,87 @@ pop_gr:
     ldr   x3, [sp], #16  
     ldr   x2, [sp], #16  
     ldr   x1, [sp], #16  
-    ldr   x0, [sp], #16  
-    ret
-
-// Simple vector table
-.align 11 // vector table should be aligned to 0x800
-.global exception_table
-exception_table:
-  b exception_handler // branch to a handler function.
-  .align 7 // entry size is 0x80, .align will pad 0
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-
-  b exception_handler
-  .align 7
-  bl push_gr
-  bl core_timer_handler
-  bl pop_gr
+    ldr   x0, [sp], #16
   eret
-  .align 7
-  bl exception_handler
-  .align 7
-  bl exception_handler
-  .align 7
+.endm
 
-  bl push_gr
+_exc_handler:
+  kernel_entry
   mov     x0, #0
   mrs     x1, esr_el1
   mrs     x2, elr_el1
   bl exception_handler
-  bl pop_gr
-  eret
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
+  kernel_exit
 
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
+_synchronous_handler:
+  kernel_entry
+  mov     x0, #0
+  mrs     x1, esr_el1
+  mrs     x2, elr_el1
+  bl exception_handler
+  kernel_exit
 
+
+_irq_handler:
+  kernel_entry
+  bl irq_handler
+  kernel_exit
+
+// exception
+    // important, code has to be properly aligned
+.align 11
+.global exception_table
+exception_table:
+    // synchronous
+    .align  7
+    b       _exc_handler
+    // IRQ
+    .align  7
+    b       _exc_handler
+    // FIQ
+    .align  7
+    b       _exc_handler
+    // SError
+    .align  7
+    b       _exc_handler
+
+    // synchronous
+    .align  7
+    b       _exc_handler
+    // IRQ
+    .align  7
+    b       _irq_handler
+    // FIQ
+    .align  7
+    b       _exc_handler
+    // SError
+    .align  7
+    b       _exc_handler
+
+
+    // synchronous
+    .align  7
+    b       _synchronous_handler
+    // IRQ
+    .align  7
+    b       _irq_handler
+    // FIQ
+    .align  7
+    b       _exc_handler
+    // SError
+    .align  7
+    b       _exc_handler
+
+
+    // synchronous
+    .align  7
+    b       _exc_handler
+    // IRQ
+    .align  7
+    b       _exc_handler
+    // FIQ
+    .align  7
+    b       _exc_handler
+    // SError
+    .align  7
+    b       _exc_handler

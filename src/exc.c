@@ -37,5 +37,11 @@ void exception_handler(unsigned long type, unsigned long esr,
     } else if (iss == 2) {
         asm volatile("ti:");
         core_timer_enable();
+    } else {
+        print_s("Exception return address: 0x");
+        print_h(elr);
+        print_s("\n");
     }
 }
+
+void irq_handler() { core_timer_handler(); }
