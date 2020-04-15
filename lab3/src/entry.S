@@ -6,8 +6,9 @@
 	mrs	x1, esr_el1
 	mrs	x2, elr_el1
 	bl	show_invalid_entry_message
+	b err_hang
 	kernel_exit
-	//b	err_hang
+
 	.endm
 
 	.macro	ventry	label

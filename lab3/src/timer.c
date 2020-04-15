@@ -12,7 +12,6 @@ void local_timer_init(){
 	*((volatile unsigned int *)LOCAL_TIMER_CONTROL_REG) =  flag | reload;
 }
 
-
 void local_timer_handler(){
 	// clear interrupt and reload.
 	*((volatile unsigned int *)LOCAL_TIMER_IRQ_CLR) =  0xc0000000;

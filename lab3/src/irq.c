@@ -106,9 +106,10 @@ void system_call(unsigned int syscall_number){
 	}else{
 		uart_puts("no such system call number!\n");
 	}
+	return;
 }
 
-// src/entry.S	.vector
+// src/entry.S	vector entry 9th
 void sync_el0_64_handler(int x0, int x1, int x2, int x3, int x4, int x5){
 	
 	unsigned int elr_el1;
@@ -124,16 +125,17 @@ void sync_el0_64_handler(int x0, int x1, int x2, int x3, int x4, int x5){
 		if(!(esr_el1 & 0x00000FFF)){	// 
 			system_call(syscall_number);
 			return;
+		}else{
+			show_invalid_entry_message(-1, esr_el1, elr_el1);
 		}
 	}else{
 		// pass
 	}
 
-	show_invalid_entry_message(-1, esr_el1, elr_el1);
-	return;
 }
 
  
+// src/entry.S	vector entry 10th
 void irq_el0_64_handler(){
 
 	static unsigned long core_timer_number = 1;
@@ -142,30 +144,33 @@ void irq_el0_64_handler(){
 	char buf_core_timer_number[1000];
 	char buf_local_timer_number[1000];
 
-	unsigned int irq0 = *((volatile unsigned int*)CORE0_IRQ_SOURCE);
+	unsigned int IRQ_SOURCE = *((volatile unsigned int*)CORE0_IRQ_SOURCE);
 	
-	if(irq0 & 0x00000002){	// core timer 
+		if(IRQ_SOURCE == 0x00000002){	// core timer 
 		
-		core_timer_handler();
+			core_timer_handler();
 		
-		uart_puts("Core timer interrupt, jiffies ");
-		itoa(core_timer_number, buf_core_timer_number, 10);
-		uart_puts(buf_core_timer_number);
-		uart_puts("\n");
+			uart_puts("Core timer interrupt, jiffies ");
+			itoa(core_timer_number, buf_core_timer_number, 10);
+			uart_puts(buf_core_timer_number);
+			uart_puts("\n");
 
-		core_timer_number++;
-
-	}else if(irq0 & 0x00000800){
+			core_timer_number++;
+			
+			return;	
+		}
+	
+		if(IRQ_SOURCE == 0x00000800){
+			
+			local_timer_handler();
+   	   	
+			uart_puts("Local timer interrupt, jiffies ");
+			itoa(local_timer_number, buf_local_timer_number, 10);
+			uart_puts(buf_local_timer_number);
+			uart_puts("\n");
 		
-		local_timer_handler();
-      	
-		uart_puts("Local timer interrupt, jiffies ");
-		itoa(local_timer_number++, buf_local_timer_number, 10);
-		uart_puts(buf_local_timer_number);
-		uart_puts("\n");
-		
-		local_timer_number++;
-
-	}
-
+			local_timer_number++;
+			
+			return;
+		}
 }

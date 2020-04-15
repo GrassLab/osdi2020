@@ -170,10 +170,6 @@ a2d	src/printf.c	/^static int a2d(char ch)$/;"	f	file:
 a2i	src/printf.c	/^static char a2i(char ch, char** src,int base,int* nump)$/;"	f	file:
 atoulli	src/tools.c	/^unsigned long long int atoulli(char* str){ $/;"	f
 branch_to_address	src/utils.S	/^branch_to_address:$/;"	l
-buf_ccnt	src/irq.c	/^char buf_ccnt[1000];$/;"	v
-buf_irq0	src/irq.c	/^char buf_irq0[1000];$/;"	v
-buf_lcnt	src/irq.c	/^char buf_lcnt[1000];$/;"	v
-ccnt	src/irq.c	/^unsigned long ccnt = 1;$/;"	v
 char_buffer	pyserial_screen_loadimg.py	/^                char_buffer = fp.read(1)$/;"	v
 clear_bbs	src/start.S	/^clear_bbs:$/;"	l
 core_timer_enable	src/timer.S	/^core_timer_enable:$/;"	l
@@ -189,7 +185,6 @@ disable_irq	src/irq.S	/^disable_irq:$/;"	l
 el1_irq	src/entry.S	/^el1_irq:$/;"	l
 el1_to_el0	src/start.S	/^el1_to_el0:$/;"	l
 el2_to_el1	src/start.S	/^el2_to_el1:$/;"	l
-enable_core_timer_via_system_call	src/timer.c	/^void enable_core_timer_via_system_call(){$/;"	f
 enable_irq	src/irq.S	/^enable_irq:$/;"	l
 enable_timer1_interrupt_controller	src/irq.c	/^void enable_timer1_interrupt_controller(){$/;"	f
 entry_error_messages	src/irq.c	/^const char *entry_error_messages[] = {$/;"	v
@@ -222,7 +217,6 @@ irq_invalid_el1t	src/entry.S	/^irq_invalid_el1t:$/;"	l
 irq_vector_init	src/irq.S	/^irq_vector_init:$/;"	l
 isrgb	src/lfb.c	/^unsigned int width, height, pitch, isrgb;   \/* dimensions and channel order *\/$/;"	v
 itoa	src/tools.c	/^char* itoa(unsigned long long int num, char* str, unsigned long long int base) { $/;"	f
-lcnt	src/irq.c	/^unsigned long lcnt = 1;$/;"	v
 lfb	src/lfb.c	/^unsigned char *lfb;                         \/* raw frame buffer address *\/$/;"	v
 lfb_init	src/lfb.c	/^void lfb_init()$/;"	f
 lfb_showpicture	src/lfb.c	/^void lfb_showpicture()$/;"	f
@@ -264,7 +258,8 @@ sync_invalid_el0_32	src/entry.S	/^sync_invalid_el0_32:$/;"	l
 sync_invalid_el0_64	src/entry.S	/^sync_invalid_el0_64:$/;"	l
 sync_invalid_el1h	src/entry.S	/^sync_invalid_el1h:$/;"	l
 sync_invalid_el1t	src/entry.S	/^sync_invalid_el1t:$/;"	l
-syscall	src/irq.c	/^void syscall(unsigned int code){$/;"	f
+syscall2_command	src/main.c	/^void syscall2_command(){$/;"	f
+system_call	src/irq.c	/^void system_call(unsigned int syscall_number){$/;"	f
 tdata	pyserial_screen.py	/^            tdata = ser.read()$/;"	v
 tdata	pyserial_screen.py	/^            tdata = tdata + ser.read(data_left)$/;"	v
 tdata	pyserial_screen.py	/^        tdata = ser.read(data_left)$/;"	v
