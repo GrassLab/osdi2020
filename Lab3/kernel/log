@@ -1,0 +1,8 @@
+0000000000080cc8 <require>:
+   80cc8:       a9be7bfd        stp     x29, x30, [sp, #-32]!
+   80ccc:       910003fd        mov     x29, sp
+   80cd0:       d53c5200        mrs     x0, esr_el2
+   80cd4:       f9000fe0        str     x0, [sp, #24]
+   80cd8:       f9400fe0        ldr     x0, [sp, #24]
+   80cdc:       940003ba        bl      81bc4 <uart_hex>
+   80ce0:       14000000        b       80ce0 <require+0x18>

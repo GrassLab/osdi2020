@@ -1,0 +1,4 @@
+file kernel8.elf
+target remote :1234
+display/10i $pc
+b main
