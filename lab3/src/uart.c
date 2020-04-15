@@ -1,6 +1,7 @@
 #include "gpio.h"
 #include "mbox.h"
 #include "uart.h"
+#include "mystd.h"
 
 void mini_uart_send(unsigned int c);
 void PL011_uart_send(unsigned int c);
@@ -106,6 +107,7 @@ char mini_uart_getc() {
     /* convert carrige return to newline */
     return r=='\r'?'\n':r;
 }
+
 
 int queue_empty(struct uart_buf *queue){
     return queue->head == queue->tail;

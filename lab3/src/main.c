@@ -4,6 +4,7 @@
 #include "lfb.h"
 #include "kernel.h"
 #include "timer.h"
+#include "rpifunc.h"
 
 #define CMDMAX 32
 
