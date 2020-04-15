@@ -19,7 +19,8 @@ void core_timer_enable() {
         "mov x0, 2;"
         "ldr x1, =0x40000040;"
         "str x0, [x1];"  // enable timer interrupt
-        "msr daifclr, #2;");
+        /* "msr daifclr, #2;" */
+    );
 }
 
 void core_timer_handler() {
@@ -52,4 +53,9 @@ void local_timer_handler() {
     print_i(local_time_c);
     print_s("\n");
     set(LOCAL_TIMER_IRQ_CLR, 0xc0000000);  // clear interrupt and reload.
+    int k = 214143141;
+    asm volatile("msr daifclr, #2;");
+    while (k--) {
+        asm volatile("nop");
+    }
 }

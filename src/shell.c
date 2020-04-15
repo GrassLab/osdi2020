@@ -18,6 +18,7 @@
 #define UART_ID 0x000000002
 
 extern void core_timer_enable(int a);
+char cmd[200];
 
 void get_board_revision() {
     mbox[0] = 7 * 4;  // buffer size in bytes
@@ -75,9 +76,8 @@ int strcmp(const char *p1, const char *p2) {
     return c1 - c2;
 }
 
-void read_cmd(char *cmd) {
+void read_cmd() {
     char now;
-    cmd[0] = 0;
     int now_cur = 0;
     while ((now = read_c()) != '\n') {
         if (now == 127) {  // delete
@@ -108,8 +108,7 @@ void loadimg(long long num, int img_size) {
 
 void shell() {
     print_s("# ");
-    char cmd[256];
-    read_cmd(cmd);
+    read_cmd();
     if (!strcmp(cmd, "help")) {
         print_s(
             "help      : print this help menu\n"
@@ -144,16 +143,6 @@ void shell() {
         print_i(img_size);
         print_s("\r");
 
-        /* long boot_start = (long)&_boot_start; */
-        /* long boot_end = (long)&_end; */
-        /* char *base = (char *)num + img_size + 0x100; */
-        /* for (int i = 0; i < boot_end - boot_start; i++) { */
-        /* *(base + i) = *(char *)(boot_start + i); */
-        /* } */
-
-        /* ((void (*)(long long, int))((long)*loadimg + num + img_size + 0x100 -
-         */
-        /* boot_start))(num, img_size); */
         loadimg(num, img_size);
 
     } else if (!strcmp(cmd, "addr")) {

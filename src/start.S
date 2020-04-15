@@ -59,6 +59,9 @@ el1_entry:
 
     adr     x0, el0_entry
     msr     elr_el1, x0
+
+    bl      set_aux
+
     eret
 
 el0_entry:

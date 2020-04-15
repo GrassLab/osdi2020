@@ -75,7 +75,7 @@ _exc_handler:
   bl exception_handler
   kernel_exit
 
-_synchronous_handler:
+_syn_handler:
   kernel_entry
   mov     x0, #0
   mrs     x1, esr_el1
@@ -89,61 +89,43 @@ _irq_handler:
   bl irq_handler
   kernel_exit
 
-// exception
-    // important, code has to be properly aligned
 .align 11
 .global exception_table
 exception_table:
-    // synchronous
     .align  7
     b       _exc_handler
-    // IRQ
     .align  7
     b       _exc_handler
-    // FIQ
     .align  7
     b       _exc_handler
-    // SError
     .align  7
     b       _exc_handler
 
-    // synchronous
     .align  7
     b       _exc_handler
-    // IRQ
     .align  7
     b       _irq_handler
-    // FIQ
     .align  7
     b       _exc_handler
-    // SError
     .align  7
     b       _exc_handler
 
 
-    // synchronous
     .align  7
-    b       _synchronous_handler
-    // IRQ
+    b       _syn_handler
     .align  7
     b       _irq_handler
-    // FIQ
     .align  7
     b       _exc_handler
-    // SError
     .align  7
     b       _exc_handler
 
 
-    // synchronous
     .align  7
     b       _exc_handler
-    // IRQ
     .align  7
     b       _exc_handler
-    // FIQ
     .align  7
     b       _exc_handler
-    // SError
     .align  7
     b       _exc_handler
