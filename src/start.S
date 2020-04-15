@@ -16,20 +16,44 @@ _id0:
     // set stack before our code
     ldr     x1, =_start
     mov     sp, x1
+
+from_el2_to_el1:
+  adr x0, _start // init sp for el1 option 1
+  msr sp_el1, x0
+  mov x0, (1 << 31) // EL1 use aarch64
+  msr hcr_el2, x0
+  mov x0, 0x3c5 // EL1h (SPSel = 1) with interrupt disabled
+  msr spsr_el2, x0
+  adr x0, exception_table
+  msr vbar_el1, x0
+  adr x0, rest_initialization// load exception return address
+  msr elr_el2, x0
+  eret // return to EL1
+
+rest_initialization:
+  adr x0, _start// init sp for el1 option 2
+  mov sp, x0
+
+
+#define USER_STACK 0x1000
+
+from_el1_to_el0:
+  mov x0, USER_STACK
+  msr sp_el0, x0
+  mov x0, 0 // EL0 with interrupt enabled
+  msr spsr_el1, x0
+  adr x0, _shell // return to shell run in EL0
+  msr elr_el1, x0
+  eret
+
+_clear_bss:
     // clear bss
     ldr     x1, =__bss_start
     ldr     x2, =__bss_size
-
-_clear_bss:
-    ;cbz     x2, _set_exc_table
+    cbz     x2, _shell 
     str     xzr, [x1], #8
     sub     x2, x2, #1
     cbnz    x2, _clear_bss
-
-_set_exc_table:
-	ldr x0, =exception_table	//set exception table
-	msr vbar_el2, x0
-    mov    x0, xzr
 
 _shell:
     // jump to relocated C code, should not return

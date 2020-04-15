@@ -62,8 +62,8 @@ exception_table:
     ventry undefined_handler
     ventry undefined_handler
 
-    ventry undefined_handler
-    ventry undefined_handler
+    ventry el2_exc
+    ventry el2_irq
     ventry undefined_handler
     ventry undefined_handler
 

@@ -19,18 +19,6 @@ void core_timer_enable() {
     asm volatile("mov x0, 0xfffffff");
     asm volatile("msr cntp_tval_el0, x0");
     uart_puts("core timer setup\n");
-    while (b > 0) {
-    asm volatile ("mrs %0, cntp_ctl_el0" : "=r"(a));
-    asm volatile ("mrs %0, cntp_tval_el0" : "=r"(b));
-    asm volatile ("mrs %0, cntp_cval_el0" : "=r"(c));
-    uart_puts("ctl_el0: ");
-    uart_hex(a);
-    uart_puts("\ntval_el0: ");
-    uart_hex(b);
-    uart_puts("\ncval_el0: ");
-    uart_hex(c);
-    uart_puts("\n");
-    }
 }
 
 void core_timer_handler() {

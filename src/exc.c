@@ -1,11 +1,10 @@
 #include "uart.h"
-//#include "timer.h"
 
-void exc_function(){
+void exc_function() {
 	unsigned long esr_el2, elr_el2;
   	unsigned int ec, iss;
-    asm volatile ("mrs %0, ESR_EL2\n": "=r" (esr_el2));
-	asm volatile ("mrs %0, ELR_EL2\n": "=r" (elr_el2));
+    asm volatile ("mrs %0, ESR_EL1\n": "=r" (esr_el2));
+	asm volatile ("mrs %0, ELR_EL1\n": "=r" (elr_el2));
 	ec = esr_el2 >> 26;
   	iss = esr_el2 & 0xFFFFFF;
     if (iss == 1) {
@@ -18,7 +17,7 @@ void exc_function(){
 	    uart_puts("\n\r");
     } else if (iss == 2) {
         uart_puts("enable time\n");
-        init_irq();
+        //init_irq();
         enable_irq();
         core_timer_enable();
         local_timer_enable();
