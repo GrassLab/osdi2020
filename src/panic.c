@@ -24,8 +24,7 @@ const char *entry_error_messages[] = {
 
 void not_implemented() {
     uart_printf("kenel panic because of not implemented function...\n");
-    while (1) {
-    }
+    while (1);
 }
 
 void show_exception_status(int type, unsigned long esr, unsigned long address) {

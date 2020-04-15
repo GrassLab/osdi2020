@@ -65,13 +65,13 @@ exception_table:
     ventry fiq_invalid_el1t        // FIQ EL1t
     ventry error_invalid_el1t      // Error EL1t
 
-    ventry sync_el1h_handler       // Synchronous EL1h
-    ventry irq_el1h_handler        // IRQ EL1h
+    ventry sync_exc_handler        // Synchronous EL1h
+    ventry irq_exc_handler         // IRQ EL1h
     ventry fiq_invalid_el1h        // FIQ EL1h
     ventry error_invalid_el1h      // Error EL1h
 
-    ventry sync_el1h_handler       // Synchronous 64-bit EL0
-    ventry irq_el1h_handler        // IRQ 64-bit EL0
+    ventry sync_exc_handler        // Synchronous 64-bit EL0
+    ventry irq_exc_handler         // IRQ 64-bit EL0
     ventry fiq_invalid_el0_64      // FIQ 64-bit EL0
     ventry error_invalid_el0_64    // Error 64-bit EL0
 
@@ -125,14 +125,14 @@ fiq_invalid_el0_32:
 error_invalid_el0_32:
     handle_invalid_entry  ERROR_INVALID_EL0_32
 
-sync_el1h_handler:
+sync_exc_handler:
     kernel_entry
     mrs x0, esr_el1
     mrs x1, elr_el1
-    bl  sync_el1h_router
+    bl  sync_exc_router
     kernel_exit
 
-irq_el1h_handler:
+irq_exc_handler:
     kernel_entry
-    bl  irq_el1h_router
+    bl  irq_exc_router
     kernel_exit

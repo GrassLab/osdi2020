@@ -151,8 +151,7 @@ void shell_controller(char* cmd) {
     else if (!strcmp(cmd, "reboot")) {
         uart_printf("Rebooting...");
         reset();
-        while (1) {  // hang until reboot
-        }
+        while (1);  // hang until reboot
     }
     else {
         uart_printf("shell: command not found: %s\n", cmd);

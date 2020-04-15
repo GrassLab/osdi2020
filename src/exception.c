@@ -1,6 +1,7 @@
 #include "peripherals/irq.h"
-#include "peripherals/timer.h"
 #include "peripherals/uart0.h"
+#include "peripherals/timer.h"
+#include "timer.h"
 #include "queue.h"
 #include "uart0.h"
 
@@ -8,40 +9,11 @@ void irq_enable() {
     asm volatile("msr daifclr, #2");
 }
 
-void arm_core_timer_enable() {
-    // enable timer
-    register unsigned int enable = 1;
-    asm volatile("msr cntp_ctl_el0, %0" : : "r"(enable));
-    // set expired time
-    register unsigned int expire_period = CORE_TIMER_EXPRIED_PERIOD;
-    asm volatile("msr cntp_tval_el0, %0" : : "r"(expire_period));
-    // enable timer interrupt
-    *CORE0_TIMER_IRQ_CTRL |= 1 << 1;
-}
-
-void arm_core_timer_disable() {
-    // disable timer
-    register unsigned int enable = 0;
-    asm volatile("msr cntp_ctl_el0, %0" : : "r"(enable));
-    // disable timer interrupt
-    *CORE0_TIMER_IRQ_CTRL &= !(1 << 1);
-}
-
-void arm_local_timer_enable() {
-    unsigned int flag = 0x30000000;        // enable timer and interrupt.
-    unsigned int reload = 0xfffffff / 10;  // 0.14 Hz * 10
-    *LOCAL_TIMER_CTRL = flag | reload;
-}
-
-void arm_local_timer_disable() {
-    *LOCAL_TIMER_CTRL &= !(0b11 << 28);  // disable timer and interrupt.
-}
-
 /*
  * Synchronous Exception
  */
 
-void sync_el1h_router(unsigned long esr, unsigned long elr) {
+void sync_exc_router(unsigned long esr, unsigned long elr) {
     int ec = (esr >> 26) & 0b111111;
     int iss = esr & 0x1FFFFFF;
     if (ec == 0b010101) {  // system call
@@ -112,7 +84,7 @@ void arm_local_timer_intr_handler() {
     uart_printf("Local timer interrupt, jiffies %d\n", ++arm_local_timer_jiffies);
 }
 
-void irq_el1h_router() {
+void irq_exc_router() {
     unsigned int irq_basic_pending = *IRQ_BASIC_PENDING;
     unsigned int core0_intr_src = *CORE0_INTR_SRC;
 
