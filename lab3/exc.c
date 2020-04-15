@@ -84,6 +84,10 @@ void sysCall_unset_timer(){
     supervisor_call_3();
 }
 
+void sysCall_miniUART_irq(){
+    supervisor_call_4();
+}
+
 void sysCall_handler_el0(int num){
     unsigned long esr, elr;
 
@@ -100,16 +104,18 @@ void sysCall_handler_el0(int num){
             break;
         case 2:
             enable_interrupt();
-
-            enable_miniUART_interrupt();
-
             core_timer_enable();
             arm_local_timer_init();
             break;
         case 3:
-            disable_interrupt();
+            arm_local_timer_cancel();
+            core_timer_cancel();
             break;
-        
+        case 4:
+            enable_interrupt();
+            enable_miniUART_interrupt();
+            break;
+
         default:
             uart_puts("system call ");
             uart_hex(num);

@@ -12,16 +12,19 @@ void arm_local_timer_handler(){
   *LOCAL_TIMER_IRQ_CLR = 0xc0000000;
 }
 
+void arm_local_timer_cancel(){
+	*LOCAL_TIMER_CONTROL_REG = 0;
+}
 
 /*=================== arm core timer ===================*/
 #define CORE0_TIMER_IRQ_CTRL ((volatile unsigned int*)0x40000040)
 
 void core_timer_handler(){
 	asm volatile(
-		"mov 	x0, %0;" //EXPIRE_PERIOD
+		"mov 	x0, %[period];" //EXPIRE_PERIOD
 		"msr 	cntp_tval_el0, x0;"
 		:
-		: "r" (0x5ffffff)
+		: [period] "r" (0x5ffffff)
 		:
 	);
 }
@@ -31,7 +34,13 @@ void core_timer_enable(){
 	asm volatile(
 		"mov 	x0, 1;"
 		"msr	cntp_ctl_el0, x0;"
+
+		:::
 	);
 
 	*CORE0_TIMER_IRQ_CTRL = 0b10;
+}
+
+void core_timer_cancel(){
+	*CORE0_TIMER_IRQ_CTRL = 0;
 }

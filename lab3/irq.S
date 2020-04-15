@@ -5,6 +5,7 @@
 .global supervisor_call_1
 .global supervisor_call_2
 .global supervisor_call_3
+.global supervisor_call_4
 .global brk_instr
 .global get_sync_exc_param_el1
 
@@ -34,6 +35,10 @@ supervisor_call_2:
 
 supervisor_call_3:
 	svc 	3
+	ret
+
+supervisor_call_4:
+	svc 	4
 	ret
 
 brk_instr:

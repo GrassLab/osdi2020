@@ -46,6 +46,8 @@ void cmd_process(){
         sysCall_set_timer();
     }else if(strcmp(cmd, "distimer")){
         sysCall_unset_timer();
+    }else if(strcmp(cmd, "uartirq")){
+        sysCall_miniUART_irq();
     }else if(strcmp(cmd, "el")){
         show_currentEL();
     }else if(strcmp(cmd, "help")){
@@ -53,6 +55,7 @@ void cmd_process(){
         uart_puts("command: \"exc\" Description: \"\"exception handler should print the return address, EC field, and ISS field.\n");
         uart_puts("command: \"timer\" Description: \"enable timer irq\"  \n");
         uart_puts("command: \"distimer\" Description: \"disable timer irq\"  \n");
+        uart_puts("command: \"uartirq\" Description: \"enable mini uart irq\"  \n");
         uart_puts("command: \"el\" Description: \"print current exception level, not allow in el0\"  \n");
     } else if(strlen(cmd) != 0){
         uart_puts("command \"");
