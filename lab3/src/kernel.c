@@ -26,6 +26,7 @@ char *_kend, *_kbeg;
 #include "mm.h"
 
 extern char *exec_ptr;
+extern char stuff_enable;
 extern unsigned int task_ptr;
 
 int main(void){
@@ -73,6 +74,7 @@ int main(void){
 
 #ifdef UARTINT
         print("# ");
+        stuff_enable = 1;
         while(1){
             if(exec_ptr){
                 shell_execute(exec_ptr); 

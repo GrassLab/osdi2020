@@ -155,9 +155,9 @@ int shell_execute(char *cmd){
         puts("ret from brk");
     }
     else if(EQS("irq", cmd)){
-        //sys_timer_init();
+        sys_timer_init();
         local_timer_init();
-        //core_timer_init();
+        core_timer_init();
     }
     else if(EQS("board", cmd)){
         if(get_board_revision())
@@ -190,7 +190,11 @@ int shell_execute(char *cmd){
     return 0;
 }
 
+char stuff_enable = 0;
 void shell_stuff_line(char c){
+
+    if(!stuff_enable) return;
+
     static char *ptr = buffer - 1;
 
     *(++ptr) = c;
@@ -234,7 +238,6 @@ void shell_stuff_line(char c){
         *(++ptr) = 0; puts("");
         while(exec_ptr < ptr && strchr(" \r\t\n", *exec_ptr)) exec_ptr++;
         ptr = buffer - 1;
-        puts("wait to exec");
         //shell_execute(beg);
         //exec_shell = 1;
         //print("# ");

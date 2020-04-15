@@ -22,7 +22,12 @@ void (*pop_deffered(void))(){
 }
 
 void bottom_half(void){
+    //puts("doing bottom_half...");
+#ifdef ON_QEMU
     delay(500000000);
+#else
+    delay(5000000);
+#endif
     puts(NEWLINE "isr rest done.");
 }
 
@@ -70,11 +75,13 @@ void irq_handler(){
     __asm__ volatile("mrs %0, elr_el1": "=r"(elr));
     //printf("pre elr = %x" NEWLINE, elr);
 
+#ifdef BOTTOM_HALF
 #ifdef DEFFERED
     push_deffered(bottom_half); 
     enable_irq();
 #else
     bottom_half();
+#endif
 #endif
     
     __asm__ volatile("mrs %0, elr_el1": "=r"(nelr));

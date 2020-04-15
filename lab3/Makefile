@@ -38,13 +38,21 @@ COPS += -DNORPI
 # no flag     PL011 UART
 COPS += -DMINIUART
 
+# elective 2
 # enable uart interrupt
 COPS += -DUARTINT
 ASMOPS += -DUARTINT
 
+# elective 3
 # enable deffered interrupt handle
-COPS += -DDEFFERED
-ASMOPS += -DDEFFERED
+#COPS += -DBOTTOM_HALF
+#ASMOPS += -DBOTTOM_HALF
+#COPS += -DDEFFERED
+#ASMOPS += -DDEFFERED
+
+# longer bottom half delay if on qemu
+#COPS += -DON_QEMU
+#ASMOPS += -DON_QEMU
 
 all : $(IMG)
 
