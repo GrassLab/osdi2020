@@ -5,7 +5,7 @@
 #define PM_WDOG         ((volatile unsigned int*)0x3F100024)
 
 float get_timestamp() {
-    asm volatile ("svc #5");
+    asm volatile ("svc #4");
     return (float) cntpct_el0 / cntfrq_el0;
 }
 

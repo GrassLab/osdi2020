@@ -23,18 +23,16 @@ void sync_exc_router(unsigned long esr, unsigned long elr) {
                 uart_printf("Exception return address 0x%x\n", elr);
                 uart_printf("Exception class (EC) 0x%x\n", ec);
                 uart_printf("Instruction specific syndrome (ISS) 0x%x\n", iss);
-            case 2:
-                asm volatile("wfi");
                 break;
-            case 3:
+            case 2:
                 arm_core_timer_enable();
                 arm_local_timer_enable();
                 break;
-            case 4:
+            case 3:
                 arm_core_timer_disable();
                 arm_local_timer_disable();
                 break;
-            case 5:
+            case 4:
                 asm volatile ("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0)); // get current counter frequency
                 asm volatile ("mrs %0, cntpct_el0" : "=r" (cntpct_el0)); // read current counter
                 break;

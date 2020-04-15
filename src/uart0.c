@@ -68,7 +68,7 @@ void uart_init() {
 
 char uart_read() {
     while (queue_empty(&read_buf)) {
-        asm volatile ("svc #2");
+        asm volatile ("nop");
     }
     char r = queue_pop(&read_buf);
     return r == '\r' ? '\n' : r;

@@ -141,9 +141,9 @@ void shell_controller(char* cmd) {
         asm volatile("svc #1");
     }
     else if (!strcmp(cmd, "irq")) {
-        asm volatile("svc #3");
+        asm volatile("svc #2");
         uart_read();
-        asm volatile("svc #4");
+        asm volatile("svc #3");
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");
