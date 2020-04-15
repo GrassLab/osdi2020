@@ -41,15 +41,17 @@ qemu_bl: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
 
 qemu_bl_pty: all
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -vnc :0 -serial pty
 
 qemu_bl_dbg: debug
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -s -S -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -vnc :0 -s -S -serial pty
 
 qemu_os: all
+	@echo "Make sure .text in os.ld is at 0x80000"
 	qemu-system-aarch64 -M raspi3 -kernel os.img -vnc :0 -serial stdio
 
 qemu_os_dbg: debug
+	@echo "Make sure .text in os.ld is at 0x80000"
 	qemu-system-aarch64 -M raspi3 -kernel os.img -vnc :0 -s -S -serial pty
 
 .PHONY: clean
