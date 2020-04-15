@@ -57,7 +57,7 @@ void lfb_init()
     mbox[15] = 0;           //FrameBufferInfo.x_offset
     mbox[16] = 0;           //FrameBufferInfo.y.offset
 
-    mbox[17] = 0x48005;     //set depth
+    mbox[17] = 0x48005;     //set depth: number of bits in every pixel
     mbox[18] = 4;
     mbox[19] = 4;
     mbox[20] = 32;          //FrameBufferInfo.depth
@@ -73,7 +73,7 @@ void lfb_init()
     mbox[28] = 4096;        //FrameBufferInfo.pointer
     mbox[29] = 0;           //FrameBufferInfo.size
 
-    mbox[30] = 0x40008;     //get pitch
+    mbox[30] = 0x40008;     //get pitch: simply the number of bytes that are in each row on screen
     mbox[31] = 4;
     mbox[32] = 4;
     mbox[33] = 0;           //FrameBufferInfo.pitch
