@@ -3,8 +3,7 @@ COPS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -g
 INCLUDE = /usr/aarch64-linux-gnu/include
 SRCS = $(wildcard *.c)
 LIB_ASM = $(wildcard *.s)
-OBJS = $(SRCS:.c=.o) \
-       $(LIB_ASM:.s=.o)
+OBJS = $(SRCS:.c=.o) $(LIB_ASM:.s=.o)
 
 .PHONY:
 	clean all run
@@ -15,7 +14,7 @@ start.o: start.S
 	$(ARMGNU)-gcc -I $(COPS) -MMD -c $< -o $@
 
 %.o: %.s
-	$(ARMGNU)-gcc -o $@ -c $<
+	$(ARMGNU)-gcc -I $(COPS) -o $@ -c $<
 
 %.o: %.c
 	$(ARMGNU)-gcc $(COPS) -MMD -c $< -o $@
@@ -28,8 +27,8 @@ clean:
 	rm *.o *.d
 	rm kernel8.*
 
-run_d:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty -S -s
+run_n:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -d int

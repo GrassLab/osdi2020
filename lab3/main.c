@@ -2,6 +2,10 @@
 #include "util.h"
 #include "uart.h"
 #include "mbox.h"
+#include "loadimg.h"
+#include "timer.h"
+#include "irq.h"
+#include "asm.h"
 
 #define	CMD_HELP	"help"
 #define	CMD_HELLO	"hello"
@@ -9,61 +13,11 @@
 #define	CMD_REBOOT	"reboot"
 #define CMD_LOADIMG	"loadimg"
 #define CMD_PICTURE "picture"
+#define CMD_EXC		"exc"
+#define CMD_IRQ		"irq"
+#define CMD_BRK		"brk"
 
 void get_timestamp();
-
-void load_image(char *input_address) {
-	uart_puts("[rpi3]\tSet load address 0x");
-	uart_puts(input_address);
-	uart_puts("\r\n");
-	uart_puts("[rpi3]\tPlease send kernel image from UART now...\r\n");
-
-	
-	
-	char *load_address;
-	int address_int = hex2int(input_address);
-
-	void (* new_kernel)(void) = address_int;
-	// new_kernel = (void (*)(void)) 0x80000;
-	
-
-	load_address = address_int;
-	char *load_address_s;
-	int kernel_size = uart_read_int();
-	char *kernel_size_s;
-	uart_puts("Kernel size: ");
-	uart_puts(itoa(kernel_size, kernel_size_s, 10));
-	uart_puts("\t");
-	uart_puts("Load address: 0x");
-	uart_puts(itoa(address_int, kernel_size_s, 16));
-	uart_puts("\r\n");
-
-	for(int i=0; i<kernel_size; i++) {
-		unsigned char c = uart_getc();
-		*load_address = c;
-		uart_send(*load_address);
-		load_address++;
-	}
-	unsigned char c = uart_getc();
-	*load_address = c;
-	uart_send(*load_address);
-	uart_puts("done");
-	// branchAddr(0x40000);
-	
-	uart_puts("[rpi3]\tDONE!\r\n");
-	// TODO: jump to new kernel
-	// waiting
-	char read_buf[1024];
-	uart_read_line(read_buf);
-	// asm volatile("mov sp, %0" :: "r"(address_int));
-	// void (* new_kernel)(void) = address_int;
-	// new_kernel = (void (*)(void)) 0x80000;
-	// for(int i=0; i<10000000; i++) {}
-	// register unsigned int r;
-	// r=5000; while(r--) { asm volatile("nop"); }
-	// uart_puts("[rpi3]\tDONE!\r\n");
-	new_kernel();
-}
 
 void main()
 {
@@ -74,6 +28,7 @@ void main()
 
 	get_board_revision();
 	get_vc_core_base_addr();
+	//local_timer_init();
 
 	while(1) {
 		uart_puts("#");
@@ -86,6 +41,7 @@ void main()
 			char *timestamp = "timestamp:\t get current timestamp";
 			char *reboot = "reboot:\t\t reboot rpi3";
 			char *loadimg = "loadimg:\t load image to rpi3";
+			char *exc = "exc:\t\t svc #1";
 			uart_puts(help);
 			uart_puts("\r\n");
 			uart_puts(hello);
@@ -95,6 +51,8 @@ void main()
 			uart_puts(reboot);
 			uart_puts("\r\n");
 			uart_puts(loadimg);
+			uart_puts("\r\n");
+			uart_puts(exc);
 		} else if(strcmp(command, CMD_HELLO)) {
 			uart_puts("Hello World!");
 		} else if(strcmp(command, CMD_LOADIMG)) {
@@ -115,6 +73,24 @@ void main()
 		}  else if(strcmp(command, CMD_PICTURE)) {
 			lfb_init();
 			lfb_showpicture();
+		} else if(strcmp(command, CMD_EXC)) {
+			//int i = get_el();
+			//uart_print_int(i);
+			asm volatile ("svc	#1");
+			//i = get_el();
+			//uart_print_int(i);
+		} else if(strcmp(command, CMD_BRK)) {
+			//int i = get_el();
+			//uart_print_int(i);
+			asm volatile ("brk	#1");
+			//i = get_el();
+			//uart_print_int(i);
+		} else if(strcmp(command, CMD_IRQ)) {
+			// asm volatile(" mov     x0, #0");
+			// asm volatile("msr     DAIF, x0");
+			// local_timer_init();
+			// core_timer_init();
+			asm volatile ("mov x0, #0\n" "svc #0\n");
 		} else {
 			uart_puts("ERROR: ");
 			uart_puts(command);
