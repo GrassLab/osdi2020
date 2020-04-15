@@ -40,12 +40,17 @@ _start:
     eret
 
 el1_start:
-    adr     x0, el0_start
-    msr     elr_el1, x0
+    // change exception level to EL0
+    mov     x0, USER_STACK
+    msr     sp_el0, x0
+    mov     x0, 0 // EL0 with interrupt enabled
+    msr     spsr_el1, x0
+    adr	    x0, el0_start
+	msr	    elr_el1, x0
     eret
 
 el0_start:
-    mov     sp, x1 
+    // mov     sp, x1 
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
