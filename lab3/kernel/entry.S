@@ -111,9 +111,9 @@ sync_invalid_el0_64:
     exception_entry
 irq_invalid_el0_64:
     kernel_entry
-    bl disable_irq
+    // bl disable_irq
     bl irq_handler
-    bl enable_irq
+    // bl enable_irq
     kernel_exit
 fiq_invalid_el0_64:
     handle_invalid_entry  FIQ_INVALID_EL0_64
