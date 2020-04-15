@@ -19,7 +19,7 @@ _start:
 
     msr     sp_el1, x1
 
-    // hcr_el2
+    // hcr_el2 to AArch64
     ldr     x0, =HCR_VALUE
     msr     hcr_el2, x0
 

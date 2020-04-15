@@ -15,6 +15,7 @@
 #define CMD_PICTURE "picture"
 #define CMD_EXC		"exc"
 #define CMD_IRQ		"irq"
+#define CMD_BRK		"brk"
 
 void get_timestamp();
 
@@ -76,6 +77,12 @@ void main()
 			//int i = get_el();
 			//uart_print_int(i);
 			asm volatile ("svc	#1");
+			//i = get_el();
+			//uart_print_int(i);
+		} else if(strcmp(command, CMD_BRK)) {
+			//int i = get_el();
+			//uart_print_int(i);
+			asm volatile ("brk	#1");
 			//i = get_el();
 			//uart_print_int(i);
 		} else if(strcmp(command, CMD_IRQ)) {

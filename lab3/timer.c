@@ -31,6 +31,8 @@ void core_timer_init()
     // asm_delay();
     asm volatile("mov x0, 1");
     asm volatile("msr cntp_ctl_el0, x0");
+    asm volatile("mov x0, 0xffffffff");
+    asm volatile("msr cntp_tval_el0, x0");
     asm volatile("mov x0, 2");
     asm volatile("ldr x1, =0x40000040");
     asm volatile("str x0, [x1]");
