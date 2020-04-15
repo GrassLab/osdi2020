@@ -4,7 +4,7 @@
 
 | 學號 | GitHub 帳號 | 姓名 | Email |
 | --- | ----------- | --- | --- |
-|`0756110`| `csielee` | `李東霖` | lee097019@gmail.com |
+|`0516024`| `sylu43` | `呂孰右` | iliveidie.cs05@nctu.edu.tw |
 
 ## How to build
 
