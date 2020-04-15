@@ -7,6 +7,7 @@
 #include "info.h"
 #include "map.h"
 #include "timer.h"
+#include "irq.h"
 
 #ifndef WITHOUT_LOADER
 #include "loadimg.h"
@@ -92,6 +93,12 @@ int shell_execute(char *cmd){
         return -1;
     }
     else if(EQS("exit", cmd) || cmd[0] == 4){
+        //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
+        //__asm__ volatile ("msr daifset, #0xf":::"memory");
+        __asm__ volatile("stp x8, x9, [sp, #-16]!");
+        __asm__ volatile("mov x8, #2");
+        __asm__ volatile("svc #0");
+        __asm__ volatile("ldp x8, x9, [sp], #16");
         return -1;
     }
     else if(EQS("clear", cmd)){
@@ -227,9 +234,14 @@ void shell_stuff_line(char c){
         *(++ptr) = 0; puts("");
         while(exec_ptr < ptr && strchr(" \r\t\n", *exec_ptr)) exec_ptr++;
         ptr = buffer - 1;
+        puts("wait to exec");
         //shell_execute(beg);
         //exec_shell = 1;
         //print("# ");
+        //__asm__ volatile("stp x8, x9, [sp, #-16]!");
+        //__asm__ volatile("mov x8, #4");
+        //__asm__ volatile("svc #0");
+        //__asm__ volatile("ldp x8, x9, [sp], #16");
     }
     else if(ptr >= buffer + BUFFER_SIZE){
         puts("buffer size isn't enough... cleared.");

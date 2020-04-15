@@ -104,7 +104,7 @@ sync_invalid_el1h:
     handle_invalid_entry  SYNC_INVALID_EL1h
 #endif
 irq_invalid_el1h:
-#ifdef RUN_ON_EL0
+#if defined(RUN_ON_EL0) && !defined(UARTINT)
     handle_invalid_entry  IRQ_INVALID_EL1h
 #else
     kernel_entry

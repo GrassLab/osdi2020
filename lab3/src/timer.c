@@ -1,5 +1,7 @@
 
 #include "io.h"
+#include "irq.h"
+
 #define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int*)(0x40000034))
 #define LOCAL_TIMER_IRQ_CLR     ((volatile unsigned int*)(0x40000038))
 
@@ -19,14 +21,13 @@ void local_timer_handler(){
 #define SYSTEM_TIMER_COMPARE1  ((volatile unsigned int*)(0x3f003010))
 #define SYSTEM_TIMER_CLO       ((volatile unsigned int*)(0x3f003004))
 #define SYSTEM_TIMER_CS        ((volatile unsigned int*)(0x3f003000))
-#define IRQ_ENABLE0            ((volatile unsigned int*)(0x3f00b210))
 
 void sys_timer_init(){
     puts("Init system timer, done");
     unsigned int t;
     t = *SYSTEM_TIMER_CLO;
     *(SYSTEM_TIMER_COMPARE1) = t + 2500000;
-    *(IRQ_ENABLE0) = 1 << 1;
+    *(ENABLE_IRQS_1) = SYSTEM_TIMER_IRQ_1;
 }
 
 void sys_timer_handler(){

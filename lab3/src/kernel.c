@@ -78,6 +78,7 @@ int main(void){
                 exec_ptr = 0;
                 print("# ");
             }
+            //else  puts("hee");
         }
 #else
         shell_loop(); 

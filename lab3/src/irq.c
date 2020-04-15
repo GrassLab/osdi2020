@@ -1,5 +1,6 @@
 #include "io.h"
 #include "irq.h"
+#include "info.h"
 #include "uart.h"
 #include "util.h"
 #include "timer.h"
@@ -21,7 +22,10 @@ void handle_uart_irq( void ){
 #define miniUART_IRQ		(1 << 0)
 void irq_handler(){
     unsigned int irq = *(IRQ_PENDING_1);
-	unsigned int aux_irq = *(AUX_IRQ);
+	//unsigned int aux_irq = *(AUX_IRQ);
+    //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
+
+    //get_current_el();
     
     if(nb8p(*LOCAL_TIMER_CONTROL_REG, 1, 31))
         local_timer_handler();
@@ -39,12 +43,26 @@ void irq_handler(){
             irq &= ~AUX_IRQ_MSK;
         }
         else {
-            printf("Unknown pending irq: %x\r\n", irq);
+            printf("Unknown pending irq: %x" NEWLINE, irq);
             irq = 0;
         }
     } 
 
-    delay(50000000);
+    unsigned long elr, nelr; 
+    __asm__ volatile("mrs %0, elr_el1": "=r"(elr));
+    //printf("pre elr = %x" NEWLINE, elr);
+
+    enable_irq();
+    delay(500000000);
+    
+    __asm__ volatile("mrs %0, elr_el1": "=r"(nelr));
+    //printf("%x vs %x" NEWLINE, elr, nelr);
+    if(elr != nelr){
+        __asm__ volatile("msr elr_el1, %0":: "r"(elr));
+    }
+    //delay(5000000000);
+    //printf("b");
+
 }
 
 void init_irq(){
@@ -55,15 +73,21 @@ void init_irq(){
     hcr |= 1 << 4; //IMO
     __asm__ volatile ("msr hcr_el2, %0" :: "r"(hcr));
 #endif
+    //__asm__ volatile ("msr  daifclr, #2");
     *ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
-    __asm__ volatile ("msr  daifclr, #2");
+    __asm__ volatile ("msr daifclr, #0xf":::"memory");
+    //__asm__ volatile ("msr daifset, #2":::"memory");
 }
 
 void enable_irq(){
-    *ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
-    __asm__ volatile ("msr daifclr, #0xf");
+    //delay(50000000);
+    //*ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
+    __asm__ volatile ("msr daifclr, #2":::"memory");
 }
 
 void disable_irq(){
-    __asm__ volatile ("msr daifset, #0xf");
+    //get_current_el();
+    //delay(500000000);
+    //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
+    __asm__ volatile ("msr daifset, #2":::"memory");
 }

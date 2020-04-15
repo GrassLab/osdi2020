@@ -1,5 +1,6 @@
 #include "io.h"
 #include "map.h"
+#include "irq.h"
 #include "info.h"
 #include "time.h"
 #include "timer.h"
@@ -48,6 +49,17 @@ void syscall(unsigned int code, long x0, long x1, long x2, long x3,
             break;
         case 1:
             sys_timestamp(); 
+            __asm__ volatile("mov x0, #0");
+            break;
+        case 2:
+            get_current_el();
+            puts("interrupt disabled");
+            //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
+            __asm__ volatile ("msr daifclr, #0x2");
+            __asm__ volatile("mov x0, #0");
+            break;
+        case 4:
+            puts("system shell call");
             __asm__ volatile("mov x0, #0");
             break;
         default:
