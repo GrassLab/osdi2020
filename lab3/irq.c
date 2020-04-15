@@ -24,16 +24,15 @@ void irq() {
 
 void core_timer_handler() {
   unsigned int val;
+  printf("arm core timer , %d \n", core_jf);
   asm volatile("mrs %0, cntfrq_el0" : "=r"(val));   // read val
   asm volatile("msr cntp_tval_el0, %0" ::"r"(val)); // write tval
-  asm volatile("msr DAIFClr, 0xf");
-  printf("arm core timer , %d \n", core_jf);
   core_jf += 1;
-  if (core_jf == 3) {
+  if (core_jf == 10) {
     core_timer_disable();
     core_jf = 1;
   }
   return;
 }
 
-void irq_router() { core_timer_handler(); }
+void irq_router_do() { core_timer_handler(); }

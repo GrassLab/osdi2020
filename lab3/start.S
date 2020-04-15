@@ -18,6 +18,7 @@ set_zero:
 cmp_adr:
     cmp x2, x1
     bhi set_zero
+    msr DAIFClr, 0xf
 
 setup_EL1:
     ldr x0, =exception_table

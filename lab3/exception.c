@@ -33,6 +33,7 @@ void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
   switch (x0) {
   case 0:
     core_timer_enable();
+    printf("start timer\n");
     break;
   case 1:
     print_time();
@@ -52,12 +53,14 @@ void exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
   ec = esr_el1 >> 26;
   iss = esr_el1 & 0xffffff;
   if (ec == 0x15) {
-    if (iss == 0)
+    if (iss == 0) {
       syscall(x0, x1, x2, x3);
-    else {
+    } else {
       printf("Exception return address 0x%x\r\n", elr_el1);
       printf("Exception class (EC) 0x%x\r\n", ec);
       printf("Instruction specific syndrome (ISS) 0x%x\r\n", iss);
     }
+  } else {
+    printf("OMG");
   }
 }

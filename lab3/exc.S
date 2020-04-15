@@ -1,5 +1,4 @@
 .macro save_reg
-save_reg:
     sub sp, sp, 32 * 8
     stp x0, x1, [sp ,16 * 0]
     stp x2, x3, [sp ,16 * 1]
@@ -20,7 +19,6 @@ save_reg:
 .endm
 
 .macro re_reg
-re_reg:
     ldp x0, x1, [sp ,16 * 0]
     ldp x2, x3, [sp ,16 * 1]
     ldp x4, x5, [sp ,16 * 2]
@@ -47,13 +45,20 @@ exception_handler:
     re_reg
     eret
 
+.global irq_router
+irq_router:
+    save_reg
+    bl irq_router_do
+    re_reg
+    eret
+
 // Simple vector table
 .align 11               // vector table should be aligned to 0x800
 .global exception_table
 exception_table:
     b exception_handler // branch to a handler function.
     .align 7 // entry size is 0x80, .align will pad 0
-    b exception_handler
+    b irq_router
     .align 7
     b exception_handler
     .align 7
@@ -80,7 +85,7 @@ exception_table:
 
     b exception_handler
     .align 7
-    b exception_handler
+    b irq_router
     .align 7
     b exception_handler
     .align 7
