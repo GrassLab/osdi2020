@@ -6,12 +6,23 @@ void irq_enable(void);
 
 void exception_handler(void)
 {
-  unsigned long esr,elr;
+  unsigned long esr,elr,el;
   unsigned int  ec,iss;
-  asm volatile ("mrs %0, elr_el2\n\t"
-		"mrs %1, esr_el2\n\t"
-		:"=r"(elr),"=r"(esr)
-		);
+  asm volatile ("mrs %0, CurrentEL" : "=r" (el));
+  el = (el>>2)&3;
+  if(el == 2){
+  	asm volatile ("mrs %0, elr_el2\n\t"
+			"mrs %1, esr_el2\n\t"
+			:"=r"(elr),"=r"(esr)
+		     );
+  }
+  else if(el == 1){
+  	asm volatile ("mrs %0, elr_el1\n\t"
+			"mrs %1, esr_el1\n\t"
+			:"=r"(elr),"=r"(esr)
+		     );
+  
+  }
   ec = esr>>26;
   iss= esr&0xffffff;
   if(iss){	  
@@ -29,15 +40,13 @@ void exception_handler(void)
   }
   else{
       irq_enable();
+  	uart_puts(" core time\n");
       core_timer_enable();
+  	uart_puts(" core timer \n");
   }
 }
 void irq_enable(){
-	asm volatile ("mrs     x0,hcr_el2\n\t"
-		      "orr     x0, x0, #(1 << 4)\n\t"
-    		      "msr     hcr_el2, x0\n\t"
-		      "msr     daif, xzr\n\t"
-		     );
+	asm volatile ("msr     daif, xzr\n\t");
 }
 /*void irq_disable(){
 	asm volatile ("mrs     x0,hcr_el2\n\t"

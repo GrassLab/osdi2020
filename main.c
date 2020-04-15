@@ -76,15 +76,15 @@ void main()
 {
 	char s[input_buffer_Max];
 	int i=0,j;
-	unsigned long el;
+	//unsigned long el;
 
 	uart_init();
 	// read the current level from system register
-	asm volatile ("mrs %0, CurrentEL" : "=r" (el));
+	//asm volatile ("mrs %0, CurrentEL" : "=r" (el));
 
-	uart_puts("Current EL is: ");
-	uart_hex((el>>2)&3);
-	uart_puts("\n");
+	//uart_puts("Current EL is: ");
+	//uart_hex((el>>2)&3);
+	//uart_puts("\n");
 	
 	uart_puts("# ");
 	while(1){
