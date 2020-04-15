@@ -2,7 +2,8 @@
 SECTIONS
 {
     . = 0x80000;
-    .text : {*(.text.boot)}
+    .text : {KEEP(*(.text.boot)) *(.text .text.*)}
+    . = ALIGN(4096);
     .data : { *(.data) } 
     .bss : {
         . = ALIGN(16);
