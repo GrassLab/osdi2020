@@ -1,6 +1,6 @@
 #include "uart.h"
 #include "mailbox.h"
-
+#include "time.h"
 #define input_buffer_Max 64
 
 
@@ -24,6 +24,7 @@ void help_cmd(void)
 	uart_puts(" timestamp - print current timestamp\n");
 	uart_puts(" hwinfo    - print hardware infomation\n");
 	uart_puts(" exc       - issue [svc #1] and print return address,EC and ISS\n");
+	uart_puts(" exc       - issue [svc #0] to init irq and core timer\n");
 }
 
 void hardware_info(void)
@@ -75,8 +76,15 @@ void main()
 {
 	char s[input_buffer_Max];
 	int i=0,j;
+	unsigned long el;
 
 	uart_init();
+	// read the current level from system register
+	asm volatile ("mrs %0, CurrentEL" : "=r" (el));
+
+	uart_puts("Current EL is: ");
+	uart_hex((el>>2)&3);
+	uart_puts("\n");
 	
 	uart_puts("# ");
 	while(1){
@@ -89,6 +97,8 @@ void main()
 				uart_puts(" Hello World! \n");
 			else if(strcmp("exc", s) == 0)
 				asm volatile ("svc #1");
+			else if(strcmp("irq", s) == 0)
+				asm volatile ("svc #0");
 			else if(strcmp("timestamp", s) == 0)
 			{
 				timestamp();
@@ -96,8 +106,6 @@ void main()
 			}
 			else if(strcmp("hwinfo", s) == 0)
 				hardware_info();
-			//else if(strcmp("loadimg", s) == 0)
-			//	loadimg();
 			else{
 				s[i-1]='\0';
 				uart_puts(" Error:command '");

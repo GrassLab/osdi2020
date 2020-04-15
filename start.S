@@ -1,6 +1,3 @@
-#include "sysregs.h"
-
-#include "mm.h"
 .section ".text.boot"
 
 .global _start
@@ -49,7 +46,6 @@ _start:
     msr     cntvoff_el2, xzr
     // enable AArch64 in EL1
     mov     x0, #(1 << 31)      // AArch64
-    orr     x0, x0, #(1 << 1)   // SWIO hardwired on Pi3
     msr     hcr_el2, x0
     mrs     x0, hcr_el2
     // Setup SCTLR access
@@ -120,41 +116,40 @@ _start:
   .align 11
 .global _vectors
 _vectors:
-  b exception_handler // branch to a handler function.
+  b no_implement // branch to a handler function.
   .align 7 // entry size is 0x80, .align will pad 0
-  b exception_handler
+  b no_implement
   .align 7
-  b exception_handler
+  b no_implement
   .align 7
-  b exception_handler
+  b no_implement
   .align 7
 
-  //b exception_handler
   b synchronous_EL2
   .align 7
-  b exception_handler
+  b irq_EL2
   .align 7
-  b exception_handler
+  b no_implement
   .align 7
-  b exception_handler
-  .align 7
-
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
+  b no_implement
   .align 7
 
-  b exception_handler
+  b no_implement
   .align 7
-  b exception_handler
+  b no_implement
   .align 7
-  b exception_handler
+  b no_implement
   .align 7
-  b exception_handler
+  b no_implement
+  .align 7
+
+  b no_implement
+  .align 7
+  b no_implement
+  .align 7
+  b no_implement
+  .align 7
+  b no_implement
   .align 7
 
 synchronous_EL2:
@@ -162,7 +157,15 @@ synchronous_EL2:
 	bl	exception_handler
 	kernel_exit 
 
+irq_EL2:
+	kernel_entry 
+	bl	irq_handler
+	kernel_exit 
 
+no_implement:
+	kernel_entry
+	kernel_exit
+	
 gtime_frq:
 	mrs x0, cntfrq_el0
 	ret 
