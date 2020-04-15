@@ -31,6 +31,8 @@
 #define ARM_LOCAL_TIMER_IRQ 0b100000000000
 #define ARM_CORE_TIMER_IRQ 0b10
 
+#define IRQ_PENDIGN_1 ((volatile unsigned int*)0x3F00B204)
+
 int get_currentEL(){
     int el;
 
@@ -84,7 +86,7 @@ void sysCall_unset_timer(){
 
 void sysCall_handler_el0(int num){
     unsigned long esr, elr;
-    
+
     switch(num){
         case 1:
             asm volatile(
@@ -98,6 +100,8 @@ void sysCall_handler_el0(int num){
             break;
         case 2:
             enable_interrupt();
+
+            enable_miniUART_interrupt();
 
             core_timer_enable();
             arm_local_timer_init();
@@ -164,18 +168,30 @@ void sync_exc2_handler(){
 
 
 void irq_exc_handler(){
-    uart_puts("irq_exc_handler\n");
     unsigned int irq_status = *CORE0_IRQ_SOURCE;
 
     if( irq_status & ARM_CORE_TIMER_IRQ){
         uart_puts("ARM_CORE_TIMER_IRQ\n");
         core_timer_handler();
+        return;
     }
 
     if( irq_status & ARM_LOCAL_TIMER_IRQ) {
         uart_puts("ARM_LOCAL_TIMER_IRQ\n");
         arm_local_timer_handler();
+        return;
     }
+
+    unsigned int IRQ_pending = *IRQ_PENDIGN_1;
+    if(IRQ_pending & 1<<29){
+        show_interrupt_status();
+        return;
+    }
+        
+    uart_puts("irq_exc_handler\n");
+    
+
+    
 }
 
 void SError_handler(){   

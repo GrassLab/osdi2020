@@ -81,7 +81,7 @@ boot:
 EL2_to_El1:
     /*
         exception level switch to El0
-    */
+    */    
     mov     x0, 0x3c0               // DAIF & El0
     msr     spsr_el1, x0
     adr     x0, rest_initialization // load exception return address

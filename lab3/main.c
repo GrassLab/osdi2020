@@ -51,6 +51,9 @@ void cmd_process(){
     }else if(strcmp(cmd, "help")){
         uart_puts("command: \"help\" Description: \"print all available commands\"  \n");
         uart_puts("command: \"exc\" Description: \"\"exception handler should print the return address, EC field, and ISS field.\n");
+        uart_puts("command: \"timer\" Description: \"enable timer irq\"  \n");
+        uart_puts("command: \"distimer\" Description: \"disable timer irq\"  \n");
+        uart_puts("command: \"el\" Description: \"print current exception level, not allow in el0\"  \n");
     } else if(strlen(cmd) != 0){
         uart_puts("command \"");
         uart_puts(cmd);

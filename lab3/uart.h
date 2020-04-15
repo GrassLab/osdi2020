@@ -31,5 +31,8 @@ void uart_send(unsigned int c);
 char uart_getc();
 void uart_puts(char *s);
 void uart_hex(unsigned int d);
+void enable_miniUART_interrupt( void );
+void disable_miniUART_interrupt( void );
+void show_interrupt_status( void );
 
 #endif

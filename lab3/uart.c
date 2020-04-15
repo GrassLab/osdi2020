@@ -39,6 +39,9 @@
 #define AUX_MU_STAT     ((volatile unsigned int*)(MMIO_BASE+0x00215064))
 #define AUX_MU_BAUD     ((volatile unsigned int*)(MMIO_BASE+0x00215068))
 
+#define INTERRUPT_ENABLE_REG_1 ((volatile unsigned int*)(MMIO_BASE+0xB210))
+#define INTERRUPT_DISABLE_REG_1 ((volatile unsigned int*)(MMIO_BASE+0xB21C))
+
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
@@ -51,7 +54,7 @@ void uart_init()
     *AUX_MU_CNTL = 0;
     *AUX_MU_LCR = 3;       // 8 bits
     *AUX_MU_MCR = 0;
-    *AUX_MU_IER = 0;
+    *AUX_MU_IER = 0xFF;    // DLAB=0 enable tx/rx interrupt
     *AUX_MU_IIR = 0xc6;    // disable interrupts
     *AUX_MU_BAUD = 270;    // 115200 baud
     /* map UART1 to GPIO pins */
@@ -65,7 +68,6 @@ void uart_init()
     r=150; while(r--) { asm volatile("nop"); }
     *GPPUDCLK0 = 0;        // flush GPIO setup
     *AUX_MU_CNTL = 3;      // enable Tx, Rx
-
 }
 
 /**
@@ -116,4 +118,32 @@ void uart_hex(unsigned int d) {
         n+=n>9?0x37:0x30;
         uart_send(n);
     }
+}
+
+void enable_miniUART_interrupt(){
+    unsigned int miniUART = *INTERRUPT_ENABLE_REG_1;
+    miniUART |= 1<<29;
+    *INTERRUPT_ENABLE_REG_1 = miniUART; //miniUART
+}
+
+void disable_miniUART_interrupt(){
+    unsigned int miniUART = *INTERRUPT_DISABLE_REG_1;
+    miniUART |= 1<<29;
+    *INTERRUPT_DISABLE_REG_1 = miniUART; //miniUART
+}
+
+void show_interrupt_status(){
+    unsigned int status = *AUX_MU_IIR;
+
+    if(status & 1) return;
+
+    uart_puts("\nmini UART interrupt\n");
+    if(status == 0xC2){
+        uart_puts("Transmit holding register empty\n");    
+    }else if(status == 0xC4){
+        uart_puts(" Receiver holds valid byte \n");
+    }
+
+    disable_miniUART_interrupt();
+        
 }
