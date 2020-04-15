@@ -1,10 +1,15 @@
-.globl sync_vector_init
-sync_vector_init:
-	adr x0, vectors
-	msr vbar_el2, x0
-	ret
-
-.globl sync_call
-sync_call:
+#include "sys.h"
+.globl sync_call_time
+sync_call_time:
     svc #1
+    ret
+
+.globl sync_call_exc
+sync_call_exc:
+    svc #2
+    ret
+
+.globl sync_call_uart
+sync_call_uart:
+    svc #3
     ret

@@ -1,3 +1,4 @@
+.PHONY: gdb 
 ARMGNU ?= aarch64-linux-gnu
 
 COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
@@ -5,6 +6,7 @@ ASMOPS = -Iinclude
 
 BUILD_DIR = build
 SRC_DIR = src
+
 
 all : kernel8.img
 
@@ -32,3 +34,6 @@ kernel8.img: $(SRC_DIR)/linker.ld $(OBJ_FILES)
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial pty
+
+gdb:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial pty -S -s
