@@ -19,7 +19,7 @@ void __local_timer_init()
 
 void local_timer_handler()
 {
-    uart_puts("[info] Local timer interrupt, repeat ");
+    uart_puts("[timer] Local timer interrupt, repeat ");
     uart_print_int(local_timer_counter++);
     uart_puts(" times\n");
     setRegister(LOCAL_TIMER_IRQ_CLR, 0xc0000000);
@@ -60,7 +60,7 @@ void __core_timer_init()
 
 void core_timer_handler()
 {
-    uart_puts("[info] Core timer interrupt, ");
+    uart_puts("[timer] Core timer interrupt, ");
     uart_print_int(core_timer_counter++);
     uart_puts(" times\n");
     asm volatile("mov x0, 0xfffffff");

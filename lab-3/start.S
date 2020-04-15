@@ -53,13 +53,16 @@ _start:
     mrs     x1, mpidr_el1
     and     x1, x1, #3
     cbz     x1, 2f
+
     // cpu id > 0, stop
 1:  wfe
     b       1b
-2:  // cpu id == 0
+
+2:  // b el2_setting
+    // cpu id == 0
+    // El2 to El1
     // set stack before our code
     ldr     x1, =_start
-
     msr     sp_el1, x1
     // set hcr_el2
     ldr     x0, =HCR_VALUE
@@ -73,21 +76,39 @@ _start:
     ldr     x2, =exception_table_el2
     msr     vbar_el2, x2
     // jump to el1_start when call eret
-    adr	    x0, el1_start		
+    adr	    x0, el1_to_el0		
 	msr	    elr_el2, x0
     eret
+
+el2_setting:
+    // set HCR_EL2.IMO
+    mrs     x0, hcr_el2
+    orr     x0, x0, #(1 << 4)
+    msr     hcr_el2, x0
+    // clear PSTATE.DAIF
+    mov     x0, #0
+    msr     DAIF, x0
+    // set up exception table
+    ldr     x2, =exception_table_el1
+    msr     vbar_el1, x2
+    ldr     x2, =exception_table_el2
+    msr     vbar_el2, x2
+    // set stack
+    ldr     x1, =_start
+    mov     sp, x1
+    b main_start
     
-el1_start: 
+el1_to_el0: 
     // change exception level to EL0
-    mov	    sp, #EL1_LOW_MEMORY
-    ldr	    x0, =EL1_SPSR_VALUE
-	msr	    spsr_el1, x0 
-    adr	    x0, el0_start
+    mov     x0, USER_STACK
+    msr     sp_el0, x0
+    mov     x0, 0 // EL0 with interrupt enabled
+    msr     spsr_el1, x0
+    adr	    x0, main_start
 	msr	    elr_el1, x0
     eret
     
-el0_start:
-    mov     sp, x1 
+main_start:
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
