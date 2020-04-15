@@ -15,15 +15,15 @@
 #define AUX_MU_BAUD     ((volatile unsigned int*)(MMIO_BASE+0x00215068))
 
 /* PL011 UART registers */
-#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
-#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
-#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024))
-#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028))
-#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C))
-#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030))
-#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038))
-#define UART0_RIS       ((volatile unsigned int*)(MMIO_BASE+0x0020103c))
-#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044))
+#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000)) // data register
+#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018)) // flag register
+#define UART0_IBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201024)) // Integer Baud rate divisor
+#define UART0_FBRD      ((volatile unsigned int*)(MMIO_BASE+0x00201028)) // Fractional Baud rate divisor
+#define UART0_LCRH      ((volatile unsigned int*)(MMIO_BASE+0x0020102C)) // Line Control register
+#define UART0_CR        ((volatile unsigned int*)(MMIO_BASE+0x00201030)) // Control register
+#define UART0_IMSC      ((volatile unsigned int*)(MMIO_BASE+0x00201038)) // Interupt Mask Set Clear Register
+#define UART0_RIS       ((volatile unsigned int*)(MMIO_BASE+0x0020103c)) // Raw Interupt Status Register
+#define UART0_ICR       ((volatile unsigned int*)(MMIO_BASE+0x00201044)) // Interupt Clear Register
 
 #define UARTBUF_SIZE 0x100
 #define QUEUE_EMPTY(q) (q.tail == q.head)
