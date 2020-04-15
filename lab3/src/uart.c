@@ -93,20 +93,6 @@ void mini_uart_send(unsigned int c) {
     *AUX_MU_IO=c;
 }
 
-/**
- * Send a character
- */
-void PL011_uart_send(unsigned int c) {
-    if(uart0_irq_enable){
-        do{asm volatile("nop");}while(*UART0_FR&0x20);
-        *UART0_DR=c;
-    }else{
-        /* wait until we can send */
-        do{asm volatile("nop");}while(*UART0_FR&0x20);
-        /* write the character to the buffer */
-        *UART0_DR=c;
-    }
-}
 
 /**
  * Receive a character
@@ -121,14 +107,47 @@ char mini_uart_getc() {
     return r=='\r'?'\n':r;
 }
 
+int queue_empty(struct uart_buf *queue){
+    return queue->head == queue->tail;
+}
+int queue_full (struct uart_buf *queue){
+    return queue->head == (queue->tail + 1) % UARTBUF_SIZE;
+}
+void enqueue(struct uart_buf *queue, char c){
+    queue->buf[queue->tail] = c;
+    queue->tail = (queue->tail + 1) % UARTBUF_SIZE;
+}
+char dequeue(struct uart_buf *queue){
+    char head = queue->buf[queue->head];
+    queue->head = (queue->head + 1) % UARTBUF_SIZE;
+    return head;
+}
+
+/**
+ * Send a character
+ */
+void PL011_uart_send(unsigned int c) {
+    if(uart0_irq_enable){
+        while (queue_full(&read_buf))
+            asm volatile ("nop");
+        enqueue(&write_buf, c);
+    }else{
+        /* wait until we can send */
+        do{asm volatile("nop");}while(*UART0_FR&0x20);
+        /* write the character to the buffer */
+        *UART0_DR=c;
+    }
+}
+
 /**
  * Receive a character
  */
 char PL011_uart_getc() {
     char r;
     if(uart0_irq_enable){
-        do{asm volatile("nop");}while(*UART0_FR&0x10);
-        r=(char)(*UART0_DR);
+        while (queue_empty(&read_buf))
+            asm volatile("nop");
+        r = dequeue(&read_buf);
     }else{
         /* wait until something is in the buffer */
         do{asm volatile("nop");}while(*UART0_FR&0x10);
@@ -203,4 +222,8 @@ void enable_uart0_irq(){
     *UART0_IMSC = 3 << 4;
     *IRQ2_EN = 1 << 25;
     uart0_irq_enable = 1;
+    read_buf.head = 0;
+    read_buf.tail = 0;
+    write_buf.head = 0;
+    write_buf.tail = 0;
 }

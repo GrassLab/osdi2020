@@ -3,11 +3,11 @@ import time
 import os
 
 s = serial.Serial(
-   port='/dev/pts/8',\
+   port='/dev/ttyUSB0',\
    baudrate=115200
    )
 
-kernel = "kernel8.img"
+kernel = "../kernel8.img"
 size = os.path.getsize(kernel)
 
 s.write(size.to_bytes(4, 'little'))
