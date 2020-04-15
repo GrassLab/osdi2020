@@ -41,15 +41,11 @@ void shell_init() {
     // Initialize UART
     uart_init();
     uart_flush();
-    uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
+    // uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
 
     // Initialize Frame Buffer
     fb_init();
-    uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
-
-    // Initialize IRQ
-    irq_enable();
-    uart_printf("\n[%f] Init IRQ done", get_timestamp());
+    // uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
 
     // Welcome Messages
     // fb_splash();
@@ -142,11 +138,9 @@ void shell_controller(char* cmd) {
         asm volatile("svc #1");
     }
     else if (!strcmp(cmd, "irq")) {
-        arm_core_timer_enable();
-        arm_local_timer_enable();
+        asm volatile("svc #3");
         uart_read();
-        arm_core_timer_disable();
-        arm_local_timer_disable();
+        asm volatile("svc #4");
     }
     else if (!strcmp(cmd, "hello")) {
         uart_printf("Hello World!\n");

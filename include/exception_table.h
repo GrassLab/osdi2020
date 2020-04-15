@@ -1,15 +1,15 @@
 #ifndef VECTOR_TABLE_H
 #define VECTOR_TABLE_H
 
-#define SYNC_INVALID_EL2t       0
-#define IRQ_INVALID_EL2t        1
-#define FIQ_INVALID_EL2t        2
-#define ERROR_INVALID_EL2t      3
+#define SYNC_INVALID_EL1t       0
+#define IRQ_INVALID_EL1t        1
+#define FIQ_INVALID_EL1t        2
+#define ERROR_INVALID_EL1t      3
 
-#define SYNC_INVALID_EL2h       4
-#define IRQ_INVALID_EL2h        5
-#define FIQ_INVALID_EL2h        6
-#define ERROR_INVALID_EL2h      7
+#define SYNC_INVALID_EL1h       4
+#define IRQ_INVALID_EL1h        5
+#define FIQ_INVALID_EL1h        6
+#define ERROR_INVALID_EL1h      7
 
 #define SYNC_INVALID_EL0_64	    8
 #define IRQ_INVALID_EL0_64      9

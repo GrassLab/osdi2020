@@ -3,8 +3,8 @@
     .macro handle_invalid_entry type
     kernel_entry
     mov x0, #\type
-    mrs x1, esr_el2
-    mrs x2, elr_el2
+    mrs x1, esr_el1
+    mrs x2, elr_el1
     bl  show_exception_status
     b   not_implemented
     .endm
@@ -60,18 +60,18 @@
 .align 11 // vector table should be aligned to 0x800
 .global exception_table
 exception_table:
-    ventry sync_invalid_el2t       // Synchronous EL2t
-    ventry irq_invalid_el2t        // IRQ EL2t
-    ventry fiq_invalid_el2t        // FIQ EL2t
-    ventry error_invalid_el2t      // Error EL2t
+    ventry sync_invalid_el1t       // Synchronous EL1t
+    ventry irq_invalid_el1t        // IRQ EL1t
+    ventry fiq_invalid_el1t        // FIQ EL1t
+    ventry error_invalid_el1t      // Error EL1t
 
-    ventry sync_el2h_handler       // Synchronous EL2h
-    ventry irq_el2h_handler        // IRQ EL2h
-    ventry fiq_invalid_el2h        // FIQ EL2h
-    ventry error_invalid_el2h      // Error EL2h
+    ventry sync_el1h_handler       // Synchronous EL1h
+    ventry irq_el1h_handler        // IRQ EL1h
+    ventry fiq_invalid_el1h        // FIQ EL1h
+    ventry error_invalid_el1h      // Error EL1h
 
-    ventry sync_invalid_el0_64     // Synchronous 64-bit EL0
-    ventry irq_invalid_el0_64      // IRQ 64-bit EL0
+    ventry sync_el1h_handler       // Synchronous 64-bit EL0
+    ventry irq_el1h_handler        // IRQ 64-bit EL0
     ventry fiq_invalid_el0_64      // FIQ 64-bit EL0
     ventry error_invalid_el0_64    // Error 64-bit EL0
 
@@ -80,23 +80,26 @@ exception_table:
     ventry fiq_invalid_el0_32      // FIQ 32-bit EL0
     ventry error_invalid_el0_32    // Error 32-bit EL0
 
-sync_invalid_el2t:
-    handle_invalid_entry  SYNC_INVALID_EL2t
+sync_invalid_el1t:
+    handle_invalid_entry  SYNC_INVALID_EL1t
 
-irq_invalid_el2t:
-    handle_invalid_entry  IRQ_INVALID_EL2t
+irq_invalid_el1t:
+    handle_invalid_entry  IRQ_INVALID_EL1t
 
-fiq_invalid_el2t:
-    handle_invalid_entry  FIQ_INVALID_EL2t
+fiq_invalid_el1t:
+    handle_invalid_entry  FIQ_INVALID_EL1t
 
-error_invalid_el2t:
-    handle_invalid_entry  ERROR_INVALID_EL2t
+error_invalid_el1t:
+    handle_invalid_entry  ERROR_INVALID_EL1t
 
-fiq_invalid_el2h:
-    handle_invalid_entry  FIQ_INVALID_EL2h
+sync_invalid_el1h:
+    handle_invalid_entry  SYNC_INVALID_EL1h
 
-error_invalid_el2h:
-    handle_invalid_entry  ERROR_INVALID_EL2h
+fiq_invalid_el1h:
+    handle_invalid_entry  FIQ_INVALID_EL1h
+
+error_invalid_el1h:
+    handle_invalid_entry  ERROR_INVALID_EL1h
 
 sync_invalid_el0_64:
     handle_invalid_entry  SYNC_INVALID_EL0_64
@@ -122,14 +125,14 @@ fiq_invalid_el0_32:
 error_invalid_el0_32:
     handle_invalid_entry  ERROR_INVALID_EL0_32
 
-sync_el2h_handler:
+sync_el1h_handler:
     kernel_entry
-    mrs x0, esr_el2
-    mrs x1, elr_el2
-    bl  sync_el2h_router
+    mrs x0, esr_el1
+    mrs x1, elr_el1
+    bl  sync_el1h_router
     kernel_exit
 
-irq_el2h_handler:
+irq_el1h_handler:
     kernel_entry
-    bl  irq_el2h_router
+    bl  irq_el1h_router
     kernel_exit
