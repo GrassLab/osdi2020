@@ -1,6 +1,6 @@
 #include "uart.h"
 #include "mailbox.h"
-
+#include "time.h"
 #define input_buffer_Max 64
 
 
@@ -16,14 +16,17 @@ int strcmp(char *a, char *b)
 	}
 	return 0;
 }
+
 void help_cmd(void)
 {
-	uart_puts(" help  - print all available commands\n");
-	uart_puts(" hello - print Hello World!\n");
+	uart_puts(" help      - print all available commands\n");
+	uart_puts(" hello     - print Hello World!\n");
 	uart_puts(" timestamp - print current timestamp\n");
-	uart_puts(" hwinfo - print hardware infomation\n");
-	//uart_puts(" loadimg - load kernel image by UART\n");
+	uart_puts(" hwinfo    - print hardware infomation\n");
+	uart_puts(" exc       - issue [svc #1] and print return address,EC and ISS\n");
+	uart_puts(" exc       - issue [svc #0] to init irq and core timer\n");
 }
+
 void hardware_info(void)
 {
 
@@ -65,59 +68,24 @@ void timestamp(void)
 	}
 	c[i]='\0';
 
-	uart_puts("[");
+	uart_send('[');
 	uart_puts(c);
-	uart_puts("]\n");
+	uart_send(']');
 }
-/*
-void loadimg()
-{
-    int size=0;
-    char *kernel=(char*)0x80000;
-    uart_puts("start load image\n");
-again:
-    // notify raspbootcom to send the kernel
-    uart_send(3);
-    uart_send(3);
-    uart_send(3);
-
-    // read the kernel's size
-    size=uart_getc();
-    size|=uart_getc()<<8;
-    size|=uart_getc()<<16;
-    size|=uart_getc()<<24;
-
-    // send negative or positive acknowledge
-    if(size<64 || size>1024*1024) {
-	uart_send('S');
-        uart_send('E');
-	goto again;
-    }
-
-    uart_send('O');
-    uart_send('K');
-    
-    // read the kernel
-    while(size--) *kernel++ = uart_getc();
-
-    // restore arguments and jump to the new kernel.
-    asm volatile (
-        "mov x0, x10;"
-        "mov x1, x11;"
-        "mov x2, x12;"
-        "mov x3, x13;"
-        // we must force an absolute address to branch to
-        "mov x30, 0x80000; ret"
-    );
-}*/
 void main()
 {
 	char s[input_buffer_Max];
 	int i=0,j;
+	//unsigned long el;
 
 	uart_init();
+	// read the current level from system register
+	//asm volatile ("mrs %0, CurrentEL" : "=r" (el));
+
+	//uart_puts("Current EL is: ");
+	//uart_hex((el>>2)&3);
+	//uart_puts("\n");
 	
-	hardware_info();	
 	uart_puts("# ");
 	while(1){
 		if(i==input_buffer_Max || s[i-1]=='\n'){
@@ -127,12 +95,17 @@ void main()
 				help_cmd();
 			else if(strcmp("hello", s) == 0)
 				uart_puts(" Hello World! \n");
+			else if(strcmp("exc", s) == 0)
+				asm volatile ("svc #1");
+			else if(strcmp("irq", s) == 0)
+				asm volatile ("svc #0");
 			else if(strcmp("timestamp", s) == 0)
+			{
 				timestamp();
+				uart_send('\n');
+			}
 			else if(strcmp("hwinfo", s) == 0)
 				hardware_info();
-			//else if(strcmp("loadimg", s) == 0)
-			//	loadimg();
 			else{
 				s[i-1]='\0';
 				uart_puts(" Error:command '");
