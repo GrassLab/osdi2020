@@ -1,4 +1,5 @@
 #include "uart.h"
+//#include "timer.h"
 
 void exc_function(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3){
 	unsigned long esr_el2, elr_el2;
@@ -14,6 +15,12 @@ void exc_function(unsigned long x0, unsigned long x1, unsigned long x2, unsigned
  	uart_puts("\n\rInstruction specific syndrome (ISS) ");
 	uart_hex(iss);
 	uart_puts("\n\r");
+    if (iss == 2) {
+        uart_puts("enable time\n");
+        core_timer_enable();
+        local_timer_enable();
+        enable_irq();
+    }
 }
 
 void undefined_function(){

@@ -97,10 +97,34 @@ void uart_puts(char *s) {
     }
 }
 
+void uart_int(unsigned int i)
+{
+    char buf[256];
+    int buf_ptr = 0;
+    while (i > 0)
+    {
+        buf[buf_ptr++] = (i % 10) + '0';
+        i = i / 10;
+    }
+    buf[buf_ptr] = '\0';
+    for (int e = buf_ptr - 1, s = 0, half = (buf_ptr - 1) / 2; e > half; --e, ++s)
+    {
+        char tmp = buf[s];
+        buf[s] = buf[e];
+        buf[e] = tmp;
+    }
+
+    uart_puts(buf);
+}
+
 void uart_hex(unsigned int d) {
     unsigned int n;
     int c, zero_flag = 1;
     uart_puts("0x");
+    if (d == 0) {
+      uart_send('0');
+      return;
+    }
     for(c=28;c>=0;c-=4) {
 
         // get highest tetrad
