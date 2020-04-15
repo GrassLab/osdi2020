@@ -36,6 +36,12 @@ void local_timer_init(){
   *LOCAL_TIMER_CONTROL_REG = flag | reload;
 }
 
+void local_timer_disable()
+{
+  *LOCAL_TIMER_CONTROL_REG = 0x0;
+}
+
+
 void local_timer_handler(){
   *LOCAL_TIMER_IRQ_CLR = 0xc0000000; // clear interrupt and reload.
 }

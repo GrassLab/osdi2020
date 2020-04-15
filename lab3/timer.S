@@ -25,11 +25,11 @@ core_timer_enable:
 .global core_timer_disable
 core_timer_disable:
   // disable timer
-  mov x0, 0
+  mov x0, #0
   msr cntp_ctl_el0, x0
 
-  // enable timer interrupt
-  mov x0, #2
+  // disable timer interrupt
+  mov x0, #0
   ldr x1, =CORE0_TIMER_IRQ_CTRL
   str x0, [x1] 
 

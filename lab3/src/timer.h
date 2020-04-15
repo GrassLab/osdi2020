@@ -24,6 +24,7 @@ void sys_timer_handler();
 void arm_timer_init();
 void arm_timer_hanler();
 void local_timer_init();
+void local_timer_disable();
 void local_timer_handler();
 
 #endif

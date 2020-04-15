@@ -78,6 +78,7 @@ void handle_local_timer_irq(){
     local_jf += 1;
     if(local_jf == 10){
         // disable local timer
+        local_timer_disable();
         local_jf = 1;
     }
     return;
