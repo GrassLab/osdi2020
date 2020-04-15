@@ -29,7 +29,7 @@ _exception_table:
 
     b _exception_handler
     .align 7
-    b _exception_handler
+    b _irq_handler
     .align 7
     b _exception_handler
     .align 7
@@ -95,14 +95,14 @@ _exception_handler:
 
     ldr x0, =_exception_ret_addr
     bl sendStringUART
-    mrs x0, ELR_EL2
+    mrs x0, ELR_EL1
     bl sendHexUART
     mov x0, #10
     bl sendUART
 
     ldr x0, =_exception_class
     bl sendStringUART
-    mrs x0, ESR_EL2
+    mrs x0, ESR_EL1
     // logical shift right
     // EC: [31:26]
     lsr x0, x0, #26
@@ -112,13 +112,22 @@ _exception_handler:
 
     ldr x0, =_exception_iss
     bl sendStringUART
-    mrs x0, ESR_EL2
+    mrs x0, ESR_EL1
     // ISS: [24:0], 0x1ffffff (2**25 - 1)
     and x0, x0, #0x1ffffff
     bl sendHexUART
     mov x0, #10
     bl sendUART
 
+    mrs x0, ESR_EL1
+    and x0, x0, #0x1ffffff
+    cmp x0, #1  // 1 for exc, 2 for irq
+    b.eq leave
+
+    bl enable_irq
+    bl _enable_core_timer
+
+leave:
     _kernel_exit
 
     eret

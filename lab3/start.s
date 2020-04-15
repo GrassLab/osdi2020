@@ -23,9 +23,9 @@ master:
 
     mov sp, #0x400000
 
-    // setup exception table
+    // setup exception table for EL1
     ldr x0, =_exception_table
-    msr VBAR_EL2, x0
+    msr VBAR_EL1, x0
 
     // setup HCR_EL2.RW to 1 bc we're running 64 bit kernel
     mrs x0, HCR_EL2
