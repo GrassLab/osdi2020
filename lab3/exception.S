@@ -1,5 +1,7 @@
 .section ".text"
 
+// store exception context
+// store all general purpose registers on the stack
 .macro kernel_entry
 sub	sp, sp, #256
 stp	x0, x1, [sp, #16 * 0]
@@ -20,6 +22,7 @@ stp	x28, x29, [sp, #16 * 14]
 str	x30, [sp, #16 * 15] 
 .endm
 
+// load exception context
 .macro kernel_exit
 ldp	x0, x1, [sp, #16 * 0]
 ldp	x2, x3, [sp, #16 * 1]
@@ -58,38 +61,42 @@ irq_handler:
 .align 11 // vector table should be aligned to 0x800
 .global exception_table
 exception_table:
-  b exception_handler // branch to a handler function.
+  // Current exception level with SP_EL0
+  b exc_not_implement    // 0x000 synchronous
   .align 7 // entry size is 0x80, .align will pad 0
-  b exception_handler
+  b exc_not_implement    // 0x080 IRQ
   .align 7
-  b exception_handler
+  b exc_not_implement    // 0x100 FIQ
   .align 7
-  b exception_handler
-  .align 7
-
-  b exception_handler
-  .align 7
-  b irq_handler
-  .align 7
-  b exception_handler
-  .align 7
-  b exception_handler
+  b exc_not_implement    // 0x180 SError
   .align 7
 
-  b exception_handler
+  // Current exception level with SP_ELx, x > 0
+  b exception_handler    // 0x200 synchronous
   .align 7
-  b exception_handler
+  b irq_handler          // 0x280 IRQ
   .align 7
-  b exception_handler
+  b exc_not_implement    // 0x300 FIQ
   .align 7
-  b exception_handler
+  b exc_not_implement    // 0x380 SError
   .align 7
 
-  b exception_handler
+  // Lower exception level using AArch64
+  b exception_handler    // 0x400 synchronous
   .align 7
-  b exception_handler
+  b irq_handler          // 0x480 IRQ
   .align 7
-  b exception_handler
+  b exc_not_implement    // 0x500 FIQ
   .align 7
-  b exception_handler
+  b exc_not_implement    // 0x580 SError
+  .align 7
+
+  // Lower exception level using AArch32
+  b exc_not_implement    // 0x600 synchronous
+  .align 7
+  b exc_not_implement    // 0x680 IRQ
+  .align 7
+  b exc_not_implement    // 0x700 FIQ
+  .align 7
+  b exc_not_implement    // 0x780 SError
   .align 7

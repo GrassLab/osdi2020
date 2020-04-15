@@ -16,18 +16,44 @@ loop:
   ldr x1, = _start
 
 check_el2:
-  
   // check el2
   mrs     x0, CurrentEL
   and     x0, x0, #2 // clear reserved bits
   cmp     x0, #2
 
 setup_exception_table:
+  // setup exception table before switch el
+  // ldr     x0, =exception_table_el2
+  // msr     vbar_EL2, x0
   ldr     x0, =exception_table
   msr     vbar_EL2, x0
 
-to_main:
+/*
+el2_entry:
+  // setup el1 stack
+  adr     x0, _start
+  msr     sp_el1, x0
+
+  // initialize hypervisor configuration register
+  // RW=1, execution state of el1 is AArch64
+  mov x0, #(1 << 31)
+  msr hcr_el2, x0
+  mrs x0, hcr_el2
+
+  // setup spsr_el2
+  mov x0, 0x5
+  msr spsr_el2, x0
+
+  // switch execution level from el2 to el1
+  adr x0, el1_entry
+  msr elr_el2, x0
+
+  eret  
+ 
+el1_entry:
+ */
   mov sp, x1
+  //mov x0, xzr
 
   // clear bss
   ldr     x1, =__bss_start

@@ -26,6 +26,11 @@
 #include "uart.h"
 #include "printf.h"
 
+void exc_not_implement(){
+    uart_puts("Exception not implement\n");
+    while(1);
+}
+
 
 void exc (void)
 {
