@@ -1,7 +1,8 @@
-#include "shell.h"
-#include "string.h"
+#include "kernel/peripherals/uart.h"
+#include "lib/string.h"
+
 #include "command.h"
-#include "uart.h"
+#include "shell.h"
 
 void shell_start () 
 {
@@ -72,6 +73,13 @@ void command_controller ( enum SPECIAL_CHARACTER input_parse, char c, char buffe
             else if ( !strcmp(buffer, "reboot"          ) ) command_reboot();
             else if ( !strcmp(buffer, "vc_base_addr"    ) ) command_vc_base_addr();
             else if ( !strcmp(buffer, "board_revision"  ) ) command_board_revision();
+            else if ( !strcmp(buffer, "exc"             ) ) command_svc_exception_trap();
+            else if ( !strcmp(buffer, "hvc"             ) ) command_hvc_exception_trap();
+            else if ( !strcmp(buffer, "exc_brk"         ) ) command_brk_exception_trap();
+            else if ( !strcmp(buffer, "timer"           ) ) command_timer_exception_enable();
+            else if ( !strcmp(buffer, "timer-stp"       ) ) command_timer_exception_disable();
+            else if ( !strcmp(buffer, "irq"             ) ) command_irq_exception_enable();
+            else if ( !strcmp(buffer, "irq-stp"         ) ) command_irq_exception_disable();
             else                                            command_not_found(buffer);
         }
             

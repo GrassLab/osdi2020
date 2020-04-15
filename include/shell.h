@@ -14,7 +14,6 @@ enum SPECIAL_CHARACTER
     NEW_LINE = 1001,
     
     UNKNOWN = -1,
-
 };
 
 void shell_start () ;
