@@ -46,5 +46,5 @@ char uart_getc();
 void uart_puts(char *s);
 void uart_flush(void);
 
-
+void uart_irq_handler();
 char getc();
