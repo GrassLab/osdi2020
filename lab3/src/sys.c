@@ -67,9 +67,5 @@ void handle_el0_sync(unsigned long esr, unsigned long address)
         enable_uart_interrupt();
         enable_irq();
     }
-    if (imm_value == SYS_NDIRQ) {
-        uart_send_string("no deffered interrupt\r\n");
-        delay(3000000);
-    }
     return;
 }

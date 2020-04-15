@@ -59,20 +59,8 @@ void kernel_main(void)
 			cmd_flag = 0;
 			uart_send_string("# ");
 		}
-		else if (cmd_flag == 1 && strcmp(cmd_buffer, "level") == 0) {
-			int el = get_el();
-			uart_send_int(el);
-			cmd_buffer[0] = '\0';
-			cmd_flag = 0;
-			uart_send_string("# ");
-		}
 		else if (cmd_flag == 1 && strcmp(cmd_buffer, "irq") == 0) {
 			sync_call_time();
-			cmd_buffer[0] = '\0';
-			cmd_flag = 0;
-		}
-		else if (cmd_flag == 1 && strcmp(cmd_buffer, "no_defint") == 0) {
-			sync_call_nodefint();
 			cmd_buffer[0] = '\0';
 			cmd_flag = 0;
 		}
