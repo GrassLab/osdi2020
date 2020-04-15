@@ -1,7 +1,7 @@
 #include "timer.h"
 // #include "printf.h"
 
-// #define TIME_INTERVAL 2500000
+#define TIME_INTERVAL 2500000
 
 // void sys_timer_init ()
 // {
@@ -21,16 +21,15 @@
 
 
 /* local timer */
-#define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int*)0x40000034)
-
-void local_timer_init(){
-    unsigned int flag = 0x30000000; // enable timer and interrupt.
-    unsigned int reload = 25000000;
-    *LOCAL_TIMER_CONTROL_REG = (flag|reload);
+void local_timer_enable(){
+    *LOCAL_TIMER_CTRL_REG = (LOCAL_TIMER_CTRL_FLAG | TIME_INTERVAL);
 }
 
-#define LOCAL_TIMER_IRQ_CLR ((volatile unsigned int*)0x40000038)
+void local_timer_disable(){
+    *LOCAL_TIMER_CTRL_REG &= ~(LOCAL_TIMER_CTRL_FLAG);
+}
+
 
 void local_timer_handler(){
-    *LOCAL_TIMER_IRQ_CLR = 0xc0000000; // clear interrupt and reload.
+    *LOCAL_TIMER_IRQ_CLR_REG = 0xc0000000; // clear interrupt and reload.
 }

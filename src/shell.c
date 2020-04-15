@@ -30,6 +30,7 @@ struct cmd cmdList[] = {
     { .name = "loadimg", 	.desc = "Load kernel by UART.",     .callback = cmd_loadimg},
     { .name = "exc", 		.desc = "Issues \"svc #1\"",        .callback = cmd_exc},
     { .name = "irq", 		.desc = "Enable timer interrupt",   .callback = cmd_irq},
+    { .name = "end", 		.desc = "Disable timer interrupt",  .callback = cmd_end},
 };
 
 /* 
@@ -109,7 +110,7 @@ void cmd_hello()
 
 void cmd_timestamp()
 {
-	asm volatile("svc #3");
+	asm volatile("svc #4");
 }
 
 void _reboot(int tick)
@@ -163,4 +164,9 @@ void cmd_exc()
 void cmd_irq()
 {
 	asm volatile("svc #2");
+}
+
+void cmd_end()
+{
+	asm volatile("svc #3");
 }
