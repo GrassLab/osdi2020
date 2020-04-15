@@ -1,4 +1,4 @@
-CFLAGS = -ffreestanding -nostartfiles -nostdlib
+CFLAGS = -ffreestanding -nostartfiles -nostdlib -g
 
 ASM_FILES = $(wildcard src/*.S)
 C_FILES = $(wildcard src/*.c)
@@ -21,6 +21,9 @@ kernel8.img: $(OBJS)
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial pty
+
+debug:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s -serial null -serial stdio
 
 clean:
 	@rm src/*.o kernel8.*

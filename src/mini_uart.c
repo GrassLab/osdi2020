@@ -45,7 +45,7 @@ void mini_uart_init(void) {
 }
 
 uint8_t mini_uart_getc(bool verbose) {
-  while ((*AUX_MU_LSR_REG & 1) == 0);
+  while ((*AUX_MU_LSR_REG & 1) == 0) {}
   uint8_t c = *AUX_MU_IO_REG & 0xff;
   if (verbose) {
     mini_uart_putc(c);
@@ -69,7 +69,7 @@ void mini_uart_gets(char *buf) {
 }
 
 void mini_uart_putc(uint8_t c) {
-  while ((*AUX_MU_LSR_REG & (1 << 5)) == 0);
+  while ((*AUX_MU_LSR_REG & (1 << 5)) == 0) {}
   *AUX_MU_IO_REG = c;
 }
 

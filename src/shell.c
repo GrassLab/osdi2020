@@ -114,7 +114,7 @@ load:
   mini_uart_getn(false, (uint8_t *)&size, sizeof(size));
   mini_uart_getn(false, (uint8_t *)&checksum, sizeof(checksum));
 
-  uint8_t begin = base, end = begin + size;
+  uint8_t *begin = base, end = begin + size;
   if ((end >= __text_start && end < __text_end) ||
       (begin >= __text_start && begin < __text_end) ||
       (begin <= __text_start && end > __text_end)) {
@@ -176,7 +176,7 @@ void reboot(void) {
   // full reset
   *PM_RSTC = PM_PASSWORD | 0x20;
   mini_uart_puts("Reboot..." EOL);
-  while (true);
+  while (true) {}
 }
 
 void shell(void) {
@@ -187,6 +187,7 @@ void shell(void) {
   mini_uart_puts(" \\___/|___/\\__,_|_| |___/_| |_|\\___|_|_|" EOL);
   mini_uart_puts(EOL);
 
+
   while (true) {
     mini_uart_puts("# ");
     char buf[MAX_CMD_LEN];
@@ -196,8 +197,12 @@ void shell(void) {
     if (strlen(cmd) != 0) {
       if (!strcmp(cmd, "help")) {
         help();
+      } else if (!strcmp(cmd, "exc")) {
+        asm("svc #1");
       } else if (!strcmp(cmd, "hello")) {
         hello();
+      } else if (!strcmp(cmd, "irq")) {
+        asm("svc #2");
       } else if (!strcmp(cmd, "loadimg")) {
         loadimg();
       } else if (!strcmp(cmd, "lshw")) {
@@ -206,15 +211,6 @@ void shell(void) {
         reboot();
       } else if (!strcmp(cmd, "timestamp")) {
         timestamp();
-      } else if (!strcmp(cmd, "test")) {
-          char buf[32];
-          while (true) {
-            while ((*AUX_MU_LSR_REG & 1) == 0);
-            uint8_t c = *AUX_MU_IO_REG & 0xff;
-            mini_uart_puts("0x");
-            mini_uart_puts(uitos_generic(c, 16, buf));
-            mini_uart_puts(EOL);
-          }
       } else {
         mini_uart_puts("Error: command ");
         mini_uart_puts(cmd);
