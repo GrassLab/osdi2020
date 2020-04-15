@@ -1,8 +1,9 @@
 *.json
 Debug/*
 .ccls-cache/*
-.clangd/*
-*build/*
+.clangd
+*build
 *.img
 *.elf
-src/linker.ld
+linker.ld
+

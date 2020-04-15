@@ -2,7 +2,10 @@ ARMGNU ?= aarch64-linux-gnu
 
 ASMOPS = -fPIC -Iinclude -g
 COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g
-#COPS += -DMINIUART
+
+EL=-DRUN_ON_EL0
+COPS += $(EL)
+ASMOPS += $(EL) 
 
 QEMU     = qemu-system-aarch64
 
@@ -28,6 +31,28 @@ IMG = $(DEFAULT_TARGET).img
 # no flag   RPI logo
 #STAMP_OPT= -DWITHOUT_LOADER -DMOVPI
 STAMP_OPT= -DNORPI -DNO_RELOC_SELF
+COPS += -DNORPI
+
+# select uart flags
+# -DMINIUART  mini  UART
+# no flag     PL011 UART
+COPS += -DMINIUART
+
+# elective 2
+# enable uart interrupt
+COPS += -DUARTINT
+ASMOPS += -DUARTINT
+
+# elective 3
+# enable deffered interrupt handle
+#COPS += -DBOTTOM_HALF
+#ASMOPS += -DBOTTOM_HALF
+#COPS += -DDEFFERED
+#ASMOPS += -DDEFFERED
+
+# longer bottom half delay if on qemu
+#COPS += -DON_QEMU
+#ASMOPS += -DON_QEMU
 
 all : $(IMG)
 
@@ -70,7 +95,7 @@ runmini: $(IMG)
 	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
 
 run: $(IMG)
-	@$(QEMU) -serial stdio -M raspi3 -kernel $(IMG)
+	@$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none
 
 runt: stamp.img
 	@$(QEMU) -serial stdio -M raspi3 -kernel stamp.img
@@ -90,7 +115,7 @@ ttyt: stamp.img
 gdb: $(IMG)
 	$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none -S -s
 
-update: $(IMG)
+update:
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt && sudo umount /mnt
 
 clean :
