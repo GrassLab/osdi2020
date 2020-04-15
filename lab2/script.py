@@ -14,8 +14,6 @@ def shell(ser):
             print('Pi:', data, end = '')
 
 def loadimg(ser):
-    #data = ser.read_until(terminator = b']').decode()
-    #print('entry:', data, end='')
     print('wait pi response')
     print('Pi:', ser.read_until(terminator=b'PleaseLoadimg').decode())
     
@@ -32,16 +30,24 @@ def loadimg(ser):
    
     #read file
     data = list()
+    i = 0
     with open(sys.argv[1], 'rb') as f:
         while True:
             b = f.read(1)
             if not b:
                 break
             else:
+                i += 1
                 data.append(b) 
+                if i%128 == 0:
+                    ser.write(b''.join(data))
+                    print('wait pi response')
+                    print('Pi:', ser.read_until(terminator = b'RecvChunckImgDone').decode())
+                    data.clear()
     #send file
-    ser.write(b''.join(data))
-
+    if data:
+        ser.write(b''.join(data))
+    
     print('wait pi response')
     print('Pi:', ser.read_until(terminator = b'RecvImgDone').decode())
     
