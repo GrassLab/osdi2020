@@ -4,6 +4,7 @@
 #include "timer.h"
 #include "queue.h"
 #include "uart0.h"
+#include "shared_variables.h"
 
 void irq_enable() {
     asm volatile("msr daifclr, #2");
@@ -33,6 +34,10 @@ void sync_exc_router(unsigned long esr, unsigned long elr) {
                 arm_core_timer_disable();
                 arm_local_timer_disable();
                 break;
+            case 5:
+                asm volatile ("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0)); // get current counter frequency
+                asm volatile ("mrs %0, cntpct_el0" : "=r" (cntpct_el0)); // read current counter
+                break;
         }
     }
     else {
@@ -45,9 +50,6 @@ void sync_exc_router(unsigned long esr, unsigned long elr) {
 /*
  * IRQ Exception
  */
-
-unsigned long long arm_core_timer_jiffies = 0;
-unsigned long long arm_local_timer_jiffies = 0;
 
 void uart_intr_handler() {
     if (*UART0_MIS & 0x10) {           // UARTTXINTR

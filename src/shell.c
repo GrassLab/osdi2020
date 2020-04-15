@@ -4,6 +4,7 @@
 #include "utli.h"
 #include "frame_buffer.h"
 #include "exception.h"
+#include "shared_variables.h"
 
 enum ANSI_ESC {
     Unknown,
@@ -38,14 +39,16 @@ enum ANSI_ESC decode_ansi_escape() {
 }
 
 void shell_init() {
+    shared_variables_init();
+
     // Initialize UART
     uart_init();
     uart_flush();
-    // uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
+    uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
 
     // Initialize Frame Buffer
     fb_init();
-    // uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
+    uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
 
     // Welcome Messages
     // fb_splash();
