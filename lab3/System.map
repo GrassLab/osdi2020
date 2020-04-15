@@ -43,47 +43,49 @@ Linker script and memory map
                 0x00000000000819c4                uart_puts
                 0x0000000000081a1c                uart_hex
                 0x0000000000081a98                putc
- .text          0x0000000000081abc      0x34c build/irq_c.o
+ .text          0x0000000000081abc      0x4d0 build/irq_c.o
                 0x0000000000081abc                enable_timer1_interrupt_controller
                 0x0000000000081ae0                show_invalid_entry_message
-                0x0000000000081bac                handle_irq
-                0x0000000000081bf8                test_handler_sync_invalid_el0_64
-                0x0000000000081c18                test_handler_irq_invalid_el0_64
-                0x0000000000081c38                system_call
-                0x0000000000081c8c                sync_el0_64_handler
-                0x0000000000081d10                irq_el0_64_handler
- .text          0x0000000000081e08      0x53c build/tools_c.o
-                0x0000000000081e08                reverse
-                0x0000000000081ea4                itoa
-                0x0000000000081fd8                atoulli
-                0x0000000000082054                strcmp
-                0x00000000000820cc                strlen
-                0x000000000008210c                hexChar2int
-                0x0000000000082224                timestamp
-                0x00000000000822d4                memcpy
- .text          0x0000000000082344      0x334 build/main_c.o
-                0x0000000000082344                irq_command
-                0x0000000000082374                syscall2_command
-                0x0000000000082394                main
- .text          0x0000000000082678       0x54 build/timer_c.o
-                0x0000000000082678                local_timer_init
-                0x00000000000826b4                local_timer_handler
- .text          0x00000000000826cc      0x340 build/mbox_c.o
-                0x00000000000826cc                mbox_call
-                0x0000000000082770                get_serial_number
-                0x0000000000082850                get_board_revision
-                0x0000000000082914                get_VC_memory
- .text          0x0000000000082a0c        0x0 build/start_s.o
- *fill*         0x0000000000082a0c        0x4 
- .text          0x0000000000082a10       0x38 build/timer_s.o
-                0x0000000000082a10                core_timer_enable
-                0x0000000000082a30                core_timer_handler
- .text          0x0000000000082a48       0x20 build/irq_s.o
-                0x0000000000082a48                irq_vector_init
-                0x0000000000082a54                enable_irq
-                0x0000000000082a5c                disable_irq
-                0x0000000000082a64                svc_call_1
- *fill*         0x0000000000082a68      0x598 
+                0x0000000000081bac                print_system_registers
+                0x0000000000081d1c                handle_irq
+                0x0000000000081d68                test_handler_sync_invalid_el0_64
+                0x0000000000081d88                test_handler_irq_invalid_el0_64
+                0x0000000000081da8                system_call
+                0x0000000000081e10                sync_el0_64_handler
+                0x0000000000081e94                irq_el0_64_handler
+ .text          0x0000000000081f8c      0x53c build/tools_c.o
+                0x0000000000081f8c                reverse
+                0x0000000000082028                itoa
+                0x000000000008215c                atoulli
+                0x00000000000821d8                strcmp
+                0x0000000000082250                strlen
+                0x0000000000082290                hexChar2int
+                0x00000000000823a8                timestamp
+                0x0000000000082458                memcpy
+ .text          0x00000000000824c8      0x378 build/main_c.o
+                0x00000000000824c8                irq_command
+                0x00000000000824f8                syscall2_command
+                0x0000000000082518                sysreg_command
+                0x0000000000082538                main
+ .text          0x0000000000082840       0x54 build/timer_c.o
+                0x0000000000082840                local_timer_init
+                0x000000000008287c                local_timer_handler
+ .text          0x0000000000082894      0x340 build/mbox_c.o
+                0x0000000000082894                mbox_call
+                0x0000000000082938                get_serial_number
+                0x0000000000082a18                get_board_revision
+                0x0000000000082adc                get_VC_memory
+ .text          0x0000000000082bd4        0x0 build/start_s.o
+ *fill*         0x0000000000082bd4        0x4 
+ .text          0x0000000000082bd8       0x38 build/timer_s.o
+                0x0000000000082bd8                core_timer_enable
+                0x0000000000082bf8                core_timer_handler
+ .text          0x0000000000082c10       0x20 build/irq_s.o
+                0x0000000000082c10                irq_vector_init
+                0x0000000000082c1c                enable_irq
+                0x0000000000082c24                disable_irq
+                0x0000000000082c2c                svc_call_1
+ *fill*         0x0000000000082c30      0x3d0 
  .text          0x0000000000083000     0x1200 build/entry_s.o
                 0x0000000000083000                vectors
                 0x00000000000841fc                err_hang
@@ -98,82 +100,82 @@ Linker script and memory map
 .iplt           0x000000000008423c        0x0
  .iplt          0x000000000008423c        0x0 build/printf_c.o
 
-.rodata         0x0000000000084240      0x5f4
+.rodata         0x0000000000084240      0x654
  *(.rodata)
  .rodata        0x0000000000084240       0x4b build/lfb_c.o
  *fill*         0x000000000008428b        0x5 
  .rodata        0x0000000000084290        0xb build/uart_c.o
  *fill*         0x000000000008429b        0x5 
- .rodata        0x00000000000842a0      0x2c8 build/irq_c.o
- .rodata        0x0000000000084568      0x1eb build/main_c.o
- *fill*         0x0000000000084753        0x5 
- .rodata        0x0000000000084758       0xdc build/mbox_c.o
+ .rodata        0x00000000000842a0      0x320 build/irq_c.o
+ .rodata        0x00000000000845c0      0x1f3 build/main_c.o
+ *fill*         0x00000000000847b3        0x5 
+ .rodata        0x00000000000847b8       0xdc build/mbox_c.o
 
-.rela.dyn       0x0000000000084838        0x0
- .rela.iplt     0x0000000000084838        0x0 build/printf_c.o
- .rela.got      0x0000000000084838        0x0 build/printf_c.o
+.rela.dyn       0x0000000000084898        0x0
+ .rela.iplt     0x0000000000084898        0x0 build/printf_c.o
+ .rela.got      0x0000000000084898        0x0 build/printf_c.o
  .rela.text.boot
-                0x0000000000084838        0x0 build/printf_c.o
+                0x0000000000084898        0x0 build/printf_c.o
 
-.data           0x0000000000084838       0x10
+.data           0x0000000000084898       0x10
  *(.data)
- .data          0x0000000000084838        0x0 build/printf_c.o
- .data          0x0000000000084838        0x0 build/lfb_c.o
- .data          0x0000000000084838        0x0 build/uart_c.o
- .data          0x0000000000084838       0x10 build/irq_c.o
- .data          0x0000000000084848        0x0 build/tools_c.o
- .data          0x0000000000084848        0x0 build/main_c.o
- .data          0x0000000000084848        0x0 build/timer_c.o
- .data          0x0000000000084848        0x0 build/mbox_c.o
- .data          0x0000000000084848        0x0 build/start_s.o
- .data          0x0000000000084848        0x0 build/timer_s.o
- .data          0x0000000000084848        0x0 build/irq_s.o
- .data          0x0000000000084848        0x0 build/entry_s.o
- .data          0x0000000000084848        0x0 build/utils_s.o
+ .data          0x0000000000084898        0x0 build/printf_c.o
+ .data          0x0000000000084898        0x0 build/lfb_c.o
+ .data          0x0000000000084898        0x0 build/uart_c.o
+ .data          0x0000000000084898       0x10 build/irq_c.o
+ .data          0x00000000000848a8        0x0 build/tools_c.o
+ .data          0x00000000000848a8        0x0 build/main_c.o
+ .data          0x00000000000848a8        0x0 build/timer_c.o
+ .data          0x00000000000848a8        0x0 build/mbox_c.o
+ .data          0x00000000000848a8        0x0 build/start_s.o
+ .data          0x00000000000848a8        0x0 build/timer_s.o
+ .data          0x00000000000848a8        0x0 build/irq_s.o
+ .data          0x00000000000848a8        0x0 build/entry_s.o
+ .data          0x00000000000848a8        0x0 build/utils_s.o
 
-.igot.plt       0x0000000000084848        0x0
- .igot.plt      0x0000000000084848        0x0 build/printf_c.o
+.igot.plt       0x00000000000848a8        0x0
+ .igot.plt      0x00000000000848a8        0x0 build/printf_c.o
 
-.got            0x0000000000084848       0x38
- .got           0x0000000000084848       0x38 build/printf_c.o
-                0x0000000000084848                _GLOBAL_OFFSET_TABLE_
+.got            0x00000000000848a8       0x38
+ .got           0x00000000000848a8       0x38 build/printf_c.o
+                0x00000000000848a8                _GLOBAL_OFFSET_TABLE_
 
-.got.plt        0x0000000000084880       0x18
- .got.plt       0x0000000000084880       0x18 build/printf_c.o
+.got.plt        0x00000000000848e0       0x18
+ .got.plt       0x00000000000848e0       0x18 build/printf_c.o
 
 .data.rel.local
-                0x0000000000084898       0x80
+                0x00000000000848f8       0x80
  .data.rel.local
-                0x0000000000084898       0x80 build/irq_c.o
-                0x0000000000084898                entry_error_messages
-                0x0000000000084918                . = ALIGN (0x8)
-                0x0000000000084918                __bss_start = .
+                0x00000000000848f8       0x80 build/irq_c.o
+                0x00000000000848f8                entry_error_messages
+                0x0000000000084978                . = ALIGN (0x8)
+                0x0000000000084978                __bss_start = .
 
-.bss            0x0000000000084920       0xc0
+.bss            0x0000000000084980       0xc0
  *(.bss*)
- .bss           0x0000000000084920       0x10 build/printf_c.o
- .bss           0x0000000000084930        0x0 build/lfb_c.o
- .bss           0x0000000000084930        0x0 build/uart_c.o
- .bss           0x0000000000084930        0x0 build/irq_c.o
- .bss           0x0000000000084930        0x0 build/tools_c.o
- .bss           0x0000000000084930        0x0 build/main_c.o
- .bss           0x0000000000084930        0x0 build/timer_c.o
- .bss           0x0000000000084930        0x0 build/mbox_c.o
- .bss           0x0000000000084930        0x0 build/start_s.o
- .bss           0x0000000000084930        0x0 build/timer_s.o
- .bss           0x0000000000084930        0x0 build/irq_s.o
- .bss           0x0000000000084930        0x0 build/entry_s.o
- .bss           0x0000000000084930        0x0 build/utils_s.o
- COMMON         0x0000000000084930       0x1c build/lfb_c.o
-                0x0000000000084930                isrgb
-                0x0000000000084938                lfb
-                0x0000000000084940                pitch
-                0x0000000000084944                height
-                0x0000000000084948                width
- *fill*         0x000000000008494c        0x4 
- COMMON         0x0000000000084950       0x90 build/mbox_c.o
-                0x0000000000084950                mbox
-                0x00000000000849e0                __bss_end = .
+ .bss           0x0000000000084980       0x10 build/printf_c.o
+ .bss           0x0000000000084990        0x0 build/lfb_c.o
+ .bss           0x0000000000084990        0x0 build/uart_c.o
+ .bss           0x0000000000084990        0x0 build/irq_c.o
+ .bss           0x0000000000084990        0x0 build/tools_c.o
+ .bss           0x0000000000084990        0x0 build/main_c.o
+ .bss           0x0000000000084990        0x0 build/timer_c.o
+ .bss           0x0000000000084990        0x0 build/mbox_c.o
+ .bss           0x0000000000084990        0x0 build/start_s.o
+ .bss           0x0000000000084990        0x0 build/timer_s.o
+ .bss           0x0000000000084990        0x0 build/irq_s.o
+ .bss           0x0000000000084990        0x0 build/entry_s.o
+ .bss           0x0000000000084990        0x0 build/utils_s.o
+ COMMON         0x0000000000084990       0x1c build/lfb_c.o
+                0x0000000000084990                isrgb
+                0x0000000000084998                lfb
+                0x00000000000849a0                pitch
+                0x00000000000849a4                height
+                0x00000000000849a8                width
+ *fill*         0x00000000000849ac        0x4 
+ COMMON         0x00000000000849b0       0x90 build/mbox_c.o
+                0x00000000000849b0                mbox
+                0x0000000000084a40                __bss_end = .
 LOAD build/printf_c.o
 LOAD build/lfb_c.o
 LOAD build/uart_c.o
@@ -189,35 +191,35 @@ LOAD build/entry_s.o
 LOAD build/utils_s.o
 OUTPUT(build/kernel8.elf elf64-littleaarch64)
 
-.debug_info     0x0000000000000000     0x131a
+.debug_info     0x0000000000000000     0x13e0
  .debug_info    0x0000000000000000      0x49a build/printf_c.o
  .debug_info    0x000000000000049a      0x1b9 build/lfb_c.o
  .debug_info    0x0000000000000653      0x233 build/uart_c.o
- .debug_info    0x0000000000000886      0x2c0 build/irq_c.o
- .debug_info    0x0000000000000b46      0x38c build/tools_c.o
- .debug_info    0x0000000000000ed2      0x1cd build/main_c.o
- .debug_info    0x000000000000109f       0x8f build/timer_c.o
- .debug_info    0x000000000000112e      0x106 build/mbox_c.o
- .debug_info    0x0000000000001234       0x2e build/start_s.o
- .debug_info    0x0000000000001262       0x2e build/timer_s.o
- .debug_info    0x0000000000001290       0x2e build/irq_s.o
- .debug_info    0x00000000000012be       0x2e build/entry_s.o
- .debug_info    0x00000000000012ec       0x2e build/utils_s.o
+ .debug_info    0x0000000000000886      0x36d build/irq_c.o
+ .debug_info    0x0000000000000bf3      0x38c build/tools_c.o
+ .debug_info    0x0000000000000f7f      0x1e6 build/main_c.o
+ .debug_info    0x0000000000001165       0x8f build/timer_c.o
+ .debug_info    0x00000000000011f4      0x106 build/mbox_c.o
+ .debug_info    0x00000000000012fa       0x2e build/start_s.o
+ .debug_info    0x0000000000001328       0x2e build/timer_s.o
+ .debug_info    0x0000000000001356       0x2e build/irq_s.o
+ .debug_info    0x0000000000001384       0x2e build/entry_s.o
+ .debug_info    0x00000000000013b2       0x2e build/utils_s.o
 
-.debug_abbrev   0x0000000000000000      0x7a3
+.debug_abbrev   0x0000000000000000      0x7b0
  .debug_abbrev  0x0000000000000000      0x193 build/printf_c.o
  .debug_abbrev  0x0000000000000193       0xe1 build/lfb_c.o
  .debug_abbrev  0x0000000000000274       0xfe build/uart_c.o
- .debug_abbrev  0x0000000000000372       0xec build/irq_c.o
- .debug_abbrev  0x000000000000045e       0xf0 build/tools_c.o
- .debug_abbrev  0x000000000000054e       0xd9 build/main_c.o
- .debug_abbrev  0x0000000000000627       0x67 build/timer_c.o
- .debug_abbrev  0x000000000000068e       0xb1 build/mbox_c.o
- .debug_abbrev  0x000000000000073f       0x14 build/start_s.o
- .debug_abbrev  0x0000000000000753       0x14 build/timer_s.o
- .debug_abbrev  0x0000000000000767       0x14 build/irq_s.o
- .debug_abbrev  0x000000000000077b       0x14 build/entry_s.o
- .debug_abbrev  0x000000000000078f       0x14 build/utils_s.o
+ .debug_abbrev  0x0000000000000372       0xf9 build/irq_c.o
+ .debug_abbrev  0x000000000000046b       0xf0 build/tools_c.o
+ .debug_abbrev  0x000000000000055b       0xd9 build/main_c.o
+ .debug_abbrev  0x0000000000000634       0x67 build/timer_c.o
+ .debug_abbrev  0x000000000000069b       0xb1 build/mbox_c.o
+ .debug_abbrev  0x000000000000074c       0x14 build/start_s.o
+ .debug_abbrev  0x0000000000000760       0x14 build/timer_s.o
+ .debug_abbrev  0x0000000000000774       0x14 build/irq_s.o
+ .debug_abbrev  0x0000000000000788       0x14 build/entry_s.o
+ .debug_abbrev  0x000000000000079c       0x14 build/utils_s.o
 
 .debug_aranges  0x0000000000000000      0x270
  .debug_aranges
@@ -250,47 +252,47 @@ OUTPUT(build/kernel8.elf elf64-littleaarch64)
 .debug_ranges   0x0000000000000000       0x30
  .debug_ranges  0x0000000000000000       0x30 build/printf_c.o
 
-.debug_line     0x0000000000000000      0x7f5
+.debug_line     0x0000000000000000      0x82a
  .debug_line    0x0000000000000000      0x17f build/printf_c.o
  .debug_line    0x000000000000017f       0xc6 build/lfb_c.o
  .debug_line    0x0000000000000245      0x10b build/uart_c.o
- .debug_line    0x0000000000000350       0x83 build/irq_c.o
- .debug_line    0x00000000000003d3       0xd5 build/tools_c.o
- .debug_line    0x00000000000004a8       0xa5 build/main_c.o
- .debug_line    0x000000000000054d       0x44 build/timer_c.o
- .debug_line    0x0000000000000591       0x92 build/mbox_c.o
- .debug_line    0x0000000000000623       0x5e build/start_s.o
- .debug_line    0x0000000000000681       0x49 build/timer_s.o
- .debug_line    0x00000000000006ca       0x42 build/irq_s.o
- .debug_line    0x000000000000070c       0x9e build/entry_s.o
- .debug_line    0x00000000000007aa       0x4b build/utils_s.o
+ .debug_line    0x0000000000000350       0xad build/irq_c.o
+ .debug_line    0x00000000000003fd       0xd5 build/tools_c.o
+ .debug_line    0x00000000000004d2       0xb0 build/main_c.o
+ .debug_line    0x0000000000000582       0x44 build/timer_c.o
+ .debug_line    0x00000000000005c6       0x92 build/mbox_c.o
+ .debug_line    0x0000000000000658       0x5e build/start_s.o
+ .debug_line    0x00000000000006b6       0x49 build/timer_s.o
+ .debug_line    0x00000000000006ff       0x42 build/irq_s.o
+ .debug_line    0x0000000000000741       0x9e build/entry_s.o
+ .debug_line    0x00000000000007df       0x4b build/utils_s.o
 
-.debug_str      0x0000000000000000      0x5a7
+.debug_str      0x0000000000000000      0x607
  .debug_str     0x0000000000000000      0x125 build/printf_c.o
                                         0x15b (size before relaxing)
  .debug_str     0x0000000000000125       0x6b build/lfb_c.o
                                          0xec (size before relaxing)
  .debug_str     0x0000000000000190       0x70 build/uart_c.o
                                          0xf6 (size before relaxing)
- .debug_str     0x0000000000000200      0x153 build/irq_c.o
-                                        0x201 (size before relaxing)
- .debug_str     0x0000000000000353       0xd8 build/tools_c.o
+ .debug_str     0x0000000000000200      0x1a4 build/irq_c.o
+                                        0x252 (size before relaxing)
+ .debug_str     0x00000000000003a4       0xd8 build/tools_c.o
                                         0x159 (size before relaxing)
- .debug_str     0x000000000000042b       0xb1 build/main_c.o
-                                        0x179 (size before relaxing)
- .debug_str     0x00000000000004dc       0x3d build/timer_c.o
+ .debug_str     0x000000000000047c       0xc0 build/main_c.o
+                                        0x188 (size before relaxing)
+ .debug_str     0x000000000000053c       0x3d build/timer_c.o
                                          0xa7 (size before relaxing)
- .debug_str     0x0000000000000519       0x48 build/mbox_c.o
+ .debug_str     0x0000000000000579       0x48 build/mbox_c.o
                                          0xd7 (size before relaxing)
- .debug_str     0x0000000000000561       0x18 build/start_s.o
+ .debug_str     0x00000000000005c1       0x18 build/start_s.o
                                          0x31 (size before relaxing)
- .debug_str     0x0000000000000579        0xc build/timer_s.o
+ .debug_str     0x00000000000005d9        0xc build/timer_s.o
                                          0x31 (size before relaxing)
- .debug_str     0x0000000000000585        0xa build/irq_s.o
+ .debug_str     0x00000000000005e5        0xa build/irq_s.o
                                          0x2f (size before relaxing)
- .debug_str     0x000000000000058f        0xc build/entry_s.o
+ .debug_str     0x00000000000005ef        0xc build/entry_s.o
                                          0x31 (size before relaxing)
- .debug_str     0x000000000000059b        0xc build/utils_s.o
+ .debug_str     0x00000000000005fb        0xc build/utils_s.o
                                          0x31 (size before relaxing)
 
 .comment        0x0000000000000000       0x30
@@ -323,12 +325,12 @@ OUTPUT(build/kernel8.elf elf64-littleaarch64)
  .note.GNU-stack
                 0x0000000000000000        0x0 build/mbox_c.o
 
-.debug_frame    0x0000000000000000      0x748
+.debug_frame    0x0000000000000000      0x790
  .debug_frame   0x0000000000000000      0x198 build/printf_c.o
  .debug_frame   0x0000000000000198       0x70 build/lfb_c.o
  .debug_frame   0x0000000000000208      0x158 build/uart_c.o
- .debug_frame   0x0000000000000360      0x160 build/irq_c.o
- .debug_frame   0x00000000000004c0      0x120 build/tools_c.o
- .debug_frame   0x00000000000005e0       0x78 build/main_c.o
- .debug_frame   0x0000000000000658       0x48 build/timer_c.o
- .debug_frame   0x00000000000006a0       0xa8 build/mbox_c.o
+ .debug_frame   0x0000000000000360      0x190 build/irq_c.o
+ .debug_frame   0x00000000000004f0      0x120 build/tools_c.o
+ .debug_frame   0x0000000000000610       0x90 build/main_c.o
+ .debug_frame   0x00000000000006a0       0x48 build/timer_c.o
+ .debug_frame   0x00000000000006e8       0xa8 build/mbox_c.o

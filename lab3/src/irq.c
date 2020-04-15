@@ -73,6 +73,79 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 
 }
 
+void print_system_registers(){
+	unsigned int elr_el1, elr_el2, elr_el3;
+	unsigned int esr_el1, esr_el2, esr_el3;
+	unsigned int currentel, daif, nzcv, spsel;	
+
+
+	char buf[100];
+	
+	asm volatile("mrs %0, elr_el1\n" : "=r"(elr_el1));
+	itoa(elr_el1, buf, 10);
+	uart_puts("ELR_EL1: 0x");
+	//uart_puts(buf);
+	uart_hex(elr_el1);
+	uart_puts("\n");
+/*
+	asm volatile("mrs %0, elr_el2\n" : "=r"(elr_el2));
+	itoa(elr_el2, buf, 10);
+	uart_puts("ELR_EL2: ");
+	uart_puts(buf);
+	uart_puts("\n");
+	
+	asm volatile("mrs %0, elr_el3\n" : "=r"(elr_el3));
+	itoa(elr_el3, buf, 10);
+	uart_puts("ELR_EL3: ");
+	uart_puts(buf);
+	uart_puts("\n");
+*/
+	asm volatile("mrs %0, esr_el1\n" : "=r"(esr_el1));
+	itoa(esr_el1, buf, 10);
+	uart_puts("ESR_EL1: 0x");
+	//uart_puts(buf);
+	uart_hex(esr_el1);
+	uart_puts("\n");
+/*
+	asm volatile("mrs %0, esr_el2\n" : "=r"(esr_el2));
+	itoa(esr_el2, buf, 10);
+	uart_puts("ESR_EL2: ");
+	uart_puts(buf);
+	uart_puts("\n");
+	
+	asm volatile("mrs %0, esr_el3\n" : "=r"(esr_el3));
+	itoa(esr_el3, buf, 10);
+	uart_puts("ESR_EL3: ");
+	uart_puts(buf);
+	uart_puts("\n");
+*/
+	asm volatile("mrs %0, CurrentEL\n" : "=r"(currentel));
+	currentel = currentel >> 2;
+	itoa(currentel, buf, 10);
+	uart_puts("CURRENT EXCEPTION LEVEL: ");
+	uart_puts(buf);
+	uart_puts("\n");
+
+	asm volatile("mrs %0, DAIF\n" : "=r"(daif));
+	itoa(daif, buf, 10);
+	uart_puts("DAIF: ");
+	uart_puts(buf);
+	uart_puts("\n");
+
+	asm volatile("mrs %0, NZCV\n" : "=r"(nzcv));
+	itoa(nzcv, buf, 10);
+	uart_puts("NZCV: ");
+	uart_puts(buf);
+	uart_puts("\n");
+
+	asm volatile("mrs %0, SPSel\n" : "=r"(spsel));
+	itoa(spsel, buf, 10);
+	uart_puts("SPSEL: ");
+	uart_puts(buf);
+	uart_puts("\n");
+
+}
+
 // src/entry.S : el1_irq
 void handle_irq(void){
 
@@ -87,12 +160,12 @@ void handle_irq(void){
 	}
 }
 
-// src/entry.S	.vector
+// src/entry.S	vector
 void test_handler_sync_invalid_el0_64(void){
 	uart_puts("sync invalid el0 64\n");
 }
 
-// src/entry.S	.vector
+// src/entry.S	vector
 void test_handler_irq_invalid_el0_64(void){
 	uart_puts("irq invalid el0 64\n");
 }
@@ -103,6 +176,8 @@ void system_call(unsigned int syscall_number){
 		core_timer_enable();
 	}else if(syscall_number == 2){
 		uart_puts("system call 2 test\n");	
+	}else if(syscall_number == 3){
+		print_system_registers();
 	}else{
 		uart_puts("no such system call number!\n");
 	}
@@ -146,31 +221,31 @@ void irq_el0_64_handler(){
 
 	unsigned int IRQ_SOURCE = *((volatile unsigned int*)CORE0_IRQ_SOURCE);
 	
-		if(IRQ_SOURCE == 0x00000002){	// core timer 
+	if(IRQ_SOURCE == 0x00000002){	// core timer IRQ_SOURCE: 2
 		
-			core_timer_handler();
+		core_timer_handler();
 		
-			uart_puts("Core timer interrupt, jiffies ");
-			itoa(core_timer_number, buf_core_timer_number, 10);
-			uart_puts(buf_core_timer_number);
-			uart_puts("\n");
+		uart_puts("Core timer interrupt, jiffies ");
+		itoa(core_timer_number, buf_core_timer_number, 10);
+		uart_puts(buf_core_timer_number);
+		uart_puts("\n");
 
-			core_timer_number++;
+		core_timer_number++;
 			
-			return;	
-		}
+		return;	
+	}
 	
-		if(IRQ_SOURCE == 0x00000800){
+	if(IRQ_SOURCE == 0x00000800){	// local timer IRQ_SOURCE: 2048
 			
-			local_timer_handler();
+		local_timer_handler();
    	   	
-			uart_puts("Local timer interrupt, jiffies ");
-			itoa(local_timer_number, buf_local_timer_number, 10);
-			uart_puts(buf_local_timer_number);
-			uart_puts("\n");
-		
-			local_timer_number++;
+		uart_puts("Local timer interrupt, jiffies ");
+		itoa(local_timer_number, buf_local_timer_number, 10);
+		uart_puts(buf_local_timer_number);
+		uart_puts("\n");
+	
+		local_timer_number++;
 			
-			return;
-		}
+		return;
+	}
 }

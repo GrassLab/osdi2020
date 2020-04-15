@@ -54,6 +54,16 @@ void syscall2_command(){
 	asm volatile("add sp, sp, 8");
 }
 
+void sysreg_command(){
+
+	asm volatile("sub sp, sp, 8");
+	asm volatile("str x8, [sp, #8]");
+	asm volatile("mov x8, #3");
+	asm volatile("svc #0");	// arm system call
+	asm volatile("ldr x8, [sp, #8]");
+	asm volatile("add sp, sp, 8");
+}
+
 void main()
 {
 	// Declaration
@@ -156,6 +166,9 @@ void main()
 			command_not_found = 0;
 		}else if(!strcmp(buffer, "syscall2")){
 			syscall2_command();
+			command_not_found = 0;
+		}else if(!strcmp(buffer, "sysreg")){
+			sysreg_command();
 			command_not_found = 0;
 		}
 		if(command_not_found == 1 && sizeof_current_line>0) {

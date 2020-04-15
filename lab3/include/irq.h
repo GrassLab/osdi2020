@@ -8,7 +8,8 @@ void test_handler_irq_invalid_el0_64(void);
 void sync_el0_64_handler(int x0, int x1, int x2, int x3, int x4, int x5);
 void show_invalid_entry_message(int type, unsigned long esr, unsigned long address);
 void handle_irq(void);
-void syscall(unsigned int code);
+void system_call(unsigned int syscall_number);
+void print_system_registers(void);
 
 // src/irq.S
 void irq_vector_init(void);
