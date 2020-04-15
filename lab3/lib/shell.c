@@ -1,6 +1,8 @@
 #include "MiniUart.h"
 #include "StringUtils.h"
 #include "utils.h"
+#include "exception/irq.h"
+#include "exception/timer.h"
 
 #include <stddef.h>
 
@@ -84,6 +86,7 @@ static void parseCommand(char *buffer) {
     } else if (compareString("exc", buffer) == 0) {
         asm volatile("svc #1");
     } else if (compareString("irq", buffer) == 0) {
+        enable_irq();
         _enable_core_timer();
     } else {
         sendStringUART("command not found: ");
