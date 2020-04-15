@@ -252,7 +252,7 @@ OUTPUT(build/kernel8.elf elf64-littleaarch64)
 .debug_ranges   0x0000000000000000       0x30
  .debug_ranges  0x0000000000000000       0x30 build/printf_c.o
 
-.debug_line     0x0000000000000000      0x82b
+.debug_line     0x0000000000000000      0x82f
  .debug_line    0x0000000000000000      0x17f build/printf_c.o
  .debug_line    0x000000000000017f       0xc6 build/lfb_c.o
  .debug_line    0x0000000000000245      0x10b build/uart_c.o
@@ -263,9 +263,9 @@ OUTPUT(build/kernel8.elf elf64-littleaarch64)
  .debug_line    0x00000000000005c6       0x92 build/mbox_c.o
  .debug_line    0x0000000000000658       0x5e build/start_s.o
  .debug_line    0x00000000000006b6       0x4a build/timer_s.o
- .debug_line    0x0000000000000700       0x42 build/irq_s.o
- .debug_line    0x0000000000000742       0x9e build/entry_s.o
- .debug_line    0x00000000000007e0       0x4b build/utils_s.o
+ .debug_line    0x0000000000000700       0x46 build/irq_s.o
+ .debug_line    0x0000000000000746       0x9e build/entry_s.o
+ .debug_line    0x00000000000007e4       0x4b build/utils_s.o
 
 .debug_str      0x0000000000000000      0x607
  .debug_str     0x0000000000000000      0x125 build/printf_c.o
