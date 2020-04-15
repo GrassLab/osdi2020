@@ -13,12 +13,11 @@
 svc: 0x00081344
 because we setup elr_el2 register, so it will retrun to previous work.
 brk: 0x00081ED8
+return from register X30 is used to return from subroutines
 create infinite loop
-
+[ref](https://developer.arm.com/docs/100933/0100/returning-from-an-exception)
 ### Context saving
 - [x] `required 2` Remove the infinite loop in exception_handler function and add `eret` at the end of ISRs. Observe the difference between saving and not saving general registers.
-if we don't do kernel_entry and kernel_exit, the return address is 0x3F201000
-it will create infinite loop
 
 - [x] `question 2` Do you need to save floating point SIMD registers in ISRs? Why or why not.
 在exception情況下無法回覆Pipeline的東西，所以存了也沒用
@@ -27,6 +26,7 @@ it will create infinite loop
 ### Background
 - [x] `question 3` What will happen if you don’t clear peripherals’ interrupt signal?
 無法觸發
+The interrupt from a core’s timer can only be delivered to that core. This means that the timer of one core cannot be used to generate an interrupt that targets a different core.
 
 ### Timer interrupt
 - [x] `required 3-1` Implement IRQ handler for IRQ Exception from the current EL while using SP_ELx. (offset 0x280-0x300 in the vector table)
