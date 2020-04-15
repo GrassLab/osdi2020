@@ -52,41 +52,25 @@
 .align 11 // vector table should be aligned to 0x800
 .global exception_table
 exception_table:
-    b el2_exc				// Synchronous EL1t
-    .align  7
-	b el2_irq				// IRQ EL1t
-    .align  7
-	b el2_irq				// FIQ EL1t
-    .align  7
-	b el2_irq				// Error EL1t
-    .align  7
+    ventry undefined_handler
+    ventry undefined_handler
+    ventry undefined_handler
+    ventry undefined_handler
 
-	b el2_exc				// Synchronous EL1h
-    .align  7
-	b el2_irq 				// IRQ EL1h
-    .align  7
-	b el2_irq 				// FIQ EL1h
-    .align  7
-	b el2_irq				// Error EL1h
-    .align  7
+    ventry el2_exc
+    ventry el2_irq
+    ventry undefined_handler
+    ventry undefined_handler
 
-	b el2_exc				// Synchronous 64-bit EL0
-    .align  7
-	b el2_irq 				// IRQ 64-bit EL0
-    .align  7
-	b el2_irq 				// FIQ 64-bit EL0
-    .align  7
-	b el2_irq				// Error 64-bit EL0
-    .align  7
+    ventry undefined_handler
+    ventry undefined_handler
+    ventry undefined_handler
+    ventry undefined_handler
 
-	b el2_exc				// Synchronous 32-bit EL0
-    .align  7
-	b el2_irq				// IRQ 32-bit EL0
-    .align  7
-	b el2_irq				// FIQ 32-bit EL0
-    .align  7
-	b el2_irq				// Error 32-bit EL0
-    .align  7
+    ventry undefined_handler
+    ventry undefined_handler
+    ventry undefined_handler
+    ventry undefined_handler
 
 
 .global el2_exc 
@@ -98,7 +82,7 @@ el2_exc:
 .global el2_irq
 el2_irq:
     save_all
-    bl local_timer_handler 
+    bl irq_router
     load_all
 
 .global undefined_handler
