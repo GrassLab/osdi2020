@@ -10,7 +10,7 @@ SRCS = $(wildcard $(DIR)/*.c)
 OBJS = $(SRCS:.c=.o)
 ASMS = a.S timer.S irq.S exception.S 
 ASMS-OBJS = $(ASMS:.S=.o)
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -g
+CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -g -mgeneral-regs-only 
 
 
 .PHONY: clean
@@ -45,4 +45,5 @@ debug: kernel8
 	$(QEMU) -M raspi3 -kernel kernel8.img -serial stdio -S -s
 
 run:
-	$(QEMU) -M raspi3 -kernel kernel8.img -serial stdio -d int
+	$(QEMU) -M raspi3 -kernel kernel8.img -serial stdio 
+	#$(QEMU) -M raspi3 -kernel kernel8.img -serial stdio -d int

@@ -23,8 +23,6 @@ check_el2:
 
 setup_exception_table:
   // setup exception table before switch el
-  // ldr     x0, =exception_table_el2
-  // msr     vbar_EL2, x0
   ldr     x0, =exception_table
   msr     vbar_EL2, x0
 

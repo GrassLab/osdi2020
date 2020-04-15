@@ -76,7 +76,7 @@ void reset()
 
 void svc1(){
     asm volatile("svc #1");
-    // asm volatile("brk #1");
+    //asm volatile("brk #1");
 }
 
 void main(){
@@ -101,7 +101,7 @@ void main(){
         if(strcmp(str,"")==0){
             ;
         }else if(strcmp(str,"exc")==0){
-            printf("exccc\n");
+            printf("exc in main\n");
             svc1();
         }else if(strcmp(str,"hello")==0){
             printf("helloooo\n");
