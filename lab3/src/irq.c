@@ -8,7 +8,25 @@
 
 #define nb8p(bytes, n, p) (((1 << n) - 1) & (bytes >> (p)))
 
-void handle_uart_irq( void ){
+#define task_size 32
+
+unsigned int task_ptr = 0;
+void (*task_queue[task_size])(void);
+
+void push_deffered(void (*task)(void)){
+    task_queue[task_ptr++] = task;
+}
+
+void (*pop_deffered(void))(){
+    return task_queue[--task_ptr];
+}
+
+void bottom_half(void){
+    delay(500000000);
+    puts(NEWLINE "isr rest done.");
+}
+
+void handle_uart_irq(void){
 	// There may be more than one byte in the FIFO.
 	while((*(AUX_MU_IIR_REG) & IIR_REG_REC_NON_EMPTY) ==
 	      IIR_REG_REC_NON_EMPTY) {
@@ -52,8 +70,12 @@ void irq_handler(){
     __asm__ volatile("mrs %0, elr_el1": "=r"(elr));
     //printf("pre elr = %x" NEWLINE, elr);
 
+#ifdef DEFFERED
+    push_deffered(bottom_half); 
     enable_irq();
-    delay(500000000);
+#else
+    bottom_half();
+#endif
     
     __asm__ volatile("mrs %0, elr_el1": "=r"(nelr));
     //printf("%x vs %x" NEWLINE, elr, nelr);

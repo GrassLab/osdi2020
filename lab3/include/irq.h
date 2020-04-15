@@ -35,4 +35,6 @@ void enable_irq();
 /* irq.c */
 void init_uart_irq();
 
+void (*pop_deffered(void))();
+
 #endif  /*_P_IRQ_H */

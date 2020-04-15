@@ -42,6 +42,10 @@ COPS += -DMINIUART
 COPS += -DUARTINT
 ASMOPS += -DUARTINT
 
+# enable deffered interrupt handle
+COPS += -DDEFFERED
+ASMOPS += -DDEFFERED
+
 all : $(IMG)
 
 test:

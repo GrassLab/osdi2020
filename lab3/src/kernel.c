@@ -26,6 +26,7 @@ char *_kend, *_kbeg;
 #include "mm.h"
 
 extern char *exec_ptr;
+extern unsigned int task_ptr;
 
 int main(void){
 
@@ -77,6 +78,12 @@ int main(void){
                 shell_execute(exec_ptr); 
                 exec_ptr = 0;
                 print("# ");
+            }
+            else if(task_ptr){
+                __asm__ volatile("stp x8, x9, [sp, #-16]!");
+                __asm__ volatile("mov x8, #4");
+                __asm__ volatile("svc #0");
+                __asm__ volatile("ldp x8, x9, [sp], #16");
             }
             //else  puts("hee");
         }

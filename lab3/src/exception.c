@@ -5,6 +5,9 @@
 #include "time.h"
 #include "timer.h"
 
+extern char *exec_ptr;
+extern unsigned int task_ptr;
+
 const char *entry_error_messages[] = {
     "SYNC_INVALID_EL1t",
     "IRQ_INVALID_EL1t",
@@ -41,7 +44,7 @@ void show_invalid_entry_message(int type,
 
 void syscall(unsigned int code, long x0, long x1, long x2, long x3,
         long x4, long x5) {
-    printf("syscall: %d" NEWLINE, code);
+    //printf("syscall: %d" NEWLINE, code);
     switch (code) {
         case 0:
             sys_core_timer_enable();
@@ -59,7 +62,27 @@ void syscall(unsigned int code, long x0, long x1, long x2, long x3,
             __asm__ volatile("mov x0, #0");
             break;
         case 4:
-            puts("system shell call");
+            enable_irq();
+            while(task_ptr && !exec_ptr){
+#define record_elr
+#ifdef record_elr
+                unsigned long elr, nelr; 
+                __asm__ volatile("mrs %0, elr_el1": "=r"(elr));
+#endif
+
+                void (*task)(void) = pop_deffered();
+                //printf("task addr %x" NEWLINE, task);
+                task();  
+
+#ifdef record_elr
+                __asm__ volatile("mrs %0, elr_el1": "=r"(nelr));
+                //printf("%x vs %x" NEWLINE, elr, nelr);
+                if(elr != nelr){
+                    //puts(NEWLINE NEWLINE "BOTTOM DIFFERENCE!!" NEWLINE NEWLINE);
+                    __asm__ volatile("msr elr_el1, %0":: "r"(elr));
+                }
+#endif 
+            }
             __asm__ volatile("mov x0, #0");
             break;
         default:
@@ -80,19 +103,19 @@ void exception_handler(long x0, long x1, long x2, long x3, long x4, long x5) {
     unsigned int ec  = esr >> 26;
     unsigned int iss = esr & 0xfff;
 
-    get_current_el();
+    //get_current_el();
 
     switch (ec) {
         case 0x15:
             if (iss == 0) {
-                puts("===================");
-                printf("syscall code: %d" NEWLINE , code);
+                //puts("===================");
+                //printf("syscall code: %d" NEWLINE , code);
 
                 syscall(code, x0, x1, x2, x3, x4, x5);
                 __asm__ volatile("mov %0, x0" : "=r"(ret));
                 /* the return value will stored in x0 register */
-                printf("syscall return value %d" NEWLINE, ret);
-                puts("===================");
+                //printf("syscall return value %d" NEWLINE, ret);
+                //puts("===================");
                 if (ret == 0) return;
                 printf("syscall failed with code number: %d" NEWLINE, code);
             }
