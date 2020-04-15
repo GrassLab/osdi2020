@@ -1,0 +1,13 @@
+osdi lab3 0516001
+- [x] required 1-0
+- [x] required 1-1
+- [x] required 1-2
+- [x] required 2
+- [x] required 3-1
+- [x] required 3-2
+- [x] elective 1
+- [ ] elective 2
+- [ ] elective 3
+- [x] required 4-1
+- [x] required 4-2
+- [x] required 4-3
