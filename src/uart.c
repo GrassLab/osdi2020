@@ -30,7 +30,7 @@ void uart_init() {
     }
     *GPPUDCLK0 = 0;  // flush GPIO setup
 
-    *AUX_MU_IER = IER_REG_VALUE;  // enable Tx, Rx
+    *AUX_MU_IER = IER_REG_VALUE;  // enable interrupt
 
     *AUX_MU_LCR = 3;  // 8 bits
     *AUX_MU_MCR = 0;

@@ -19,8 +19,7 @@ void core_timer_enable() {
         "mov x0, 2;"
         "ldr x1, =0x40000040;"
         "str x0, [x1];"  // enable timer interrupt
-        /* "msr daifclr, #2;" */
-    );
+        "msr daifclr, #2;");
 }
 
 void core_timer_handler() {
