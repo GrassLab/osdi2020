@@ -45,3 +45,13 @@ void count() {
     uart_puts("\n");
     counter += 1;
 }
+
+int handle_sync_excpetion_el0_64(unsigned long esr, unsigned long address) {
+    unsigned long iss = (esr & 0x1ffffff);
+    uart_hex(iss);
+    if (iss == 2) {
+        core_timer_enable();
+        return 0;
+    }
+    return -1;
+} 

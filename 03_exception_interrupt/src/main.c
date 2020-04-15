@@ -47,6 +47,7 @@ void help() {
     uart_puts("  timestamp\n\tAlias of uptime\n");
     uart_puts("  dmidecode\n\tShow hardware info\n");
     uart_puts("  loadimg\n\tLoadimg from PC [Only support pc.py]\n");
+    uart_puts("  exc\n\tException test\n");
 }
 
 int strcmp(char* a, char* b) {

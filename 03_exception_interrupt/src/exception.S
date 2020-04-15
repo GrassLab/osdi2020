@@ -153,11 +153,13 @@ exception_table_el1:
 
 sync_exception_el0_64:
     kernel_entry
-    bl core_timer_enable
-    // handle_invalid_entry    1   8
-    // mov x0, #\type
-    // mrs x1, esr_el\el
-    // mrs x2, elr_el\el
+    mrs x0, esr_el1
+    mrs x1, elr_el1
+    bl handle_sync_excpetion_el0_64
+    cbnz x0, _unknown_exception 
+    kernel_exit
+_unknown_exception:
+    handle_invalid_entry    1   8
     kernel_exit
 
 NotImplementedHandler_el1:
