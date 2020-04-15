@@ -100,9 +100,8 @@ void interrupt_handler()
     //if (arm & 0x80000) {
     if (interrupt_src & (1<<8)) {
         // uart interrupt
-        if (*UART0_RIS & 0x10) {	// UARTRXINTR - uart_getc()
-            // while(1);
-            // while (*UART0_FR & 0x40) {
+        if (*UART0_RIS & (1<<4)) {	// UARTRXINTR - uart_getc()
+            // while (RX_FIFO_FULL) {
             //     // receive
             //     r = (char) (*UART0_DR);
             //     if (!QUEUE_FULL (read_buf)) {
@@ -110,21 +109,32 @@ void interrupt_handler()
             //         QUEUE_PUSH (read_buf);
             //     }
             // }
-            while (*UART0_FR & 0x10) asm volatile ("nop");
-            *UART0_ICR = 1 << 4; // Clears the UARTTXINTR interrupt.
+	        // *UART0_ICR = 1 << 4;
+            while (RX_FIFO_FULL) { RX_BUF[0] = (char)(*UART0_DR); }
+            *UART0_ICR = 1<<4; // Clears the UARTTXINTR interrupt.
 
-	    } else if (*UART0_RIS & 0x20)	{// UARTTXINTR - uart_send()
+	    } else if (*UART0_RIS & (1<<5))	{// UARTTXINTR - uart_send()
+            
             // while (!QUEUE_EMPTY (write_buf)) {
             //     r = QUEUE_GET (write_buf);
             //     QUEUE_POP (write_buf);
-            // while (!BUF[0]) {
-            //     r = BUF[0];
-            //     BUF[0] = 0;
-            //     while (*UART0_FR & 0x20) asm volatile ("nop");
+            //     while (TX_FIFO_FULL) asm volatile ("nop");
             //     *UART0_DR = r;
             // }
-            while (*UART0_FR & 0x20) asm volatile ("nop");
-	        *UART0_ICR = 1<<5; // Clears the UARTRTINTR interrupt.
+            // *UART0_ICR = 1<<5;
+
+
+	        while (!(TX_BUF[0] == 0)) {
+                r = TX_BUF[0];
+                TX_BUF[0] = 0;
+                while (TX_FIFO_FULL) asm volatile ("nop");
+                *UART0_DR = r;
+            }
+            *UART0_ICR = 1<<5; // Clears the UARTRTINTR interrupt.
+
+
+            // while (TX_FIFO_FULL) asm volatile ("nop");
+            // *UART0_ICR = 1<<5; // Clears the UARTRTINTR interrupt.
 	    }
     }
     // local timer interrupt

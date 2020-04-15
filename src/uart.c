@@ -64,60 +64,74 @@ void uart_init()
 /**
  * Send a character
  */
-void uart_send(unsigned int c) {
-    /* wait until we can send */
-    do{ asm volatile("nop"); } while(*UART0_FR&0x20); // RX is BUSY
-    /* write the character to the buffer */
-    *UART0_DR=c;
+// void uart_send(unsigned int c) {
+//     /* wait until we can send */
+//     do{ asm volatile("nop"); } while(TX_FIFO_FULL); // TX FIFO is full
+//     /* write the character to the buffer */
+//     *UART0_DR=c;
+// }
+void uart_send(unsigned int c) { 
+    char a;
+    TX_BUF[0] = 0;
+    while (TX_FIFO_FULL) { asm volatile("nop"); } // TX FIFO is empty
+    if (TX_BUF[0] == 0) {
+        *UART0_DR = c;
+    } else {
+        a = TX_BUF[0]; 
+        TX_BUF[0] = c; 
+        *UART0_DR = a;
+    }
+    
 }
 // void uart_send(char c)
 // {
 //     char r;
-//     if (*UART0_FR & 0x80) {
-//         // // we need to send one character to trigger interrupt.
-//         // // because the interrupt only set after data transmitted
-//         // if (QUEUE_EMPTY (write_buf)) { // queue is empty
-//         //     *UART0_DR = c;
-//         // } 
-//         // else { 
-//         //     r = QUEUE_GET (write_buf);
-//         //     QUEUE_POP (write_buf);
-//         //     QUEUE_SET (write_buf, c);
-//         //     QUEUE_PUSH (write_buf);
-//         //     *UART0_DR = r;
-//         // }
-//         if (BUF[0]) {
+//     if (TX_FIFO_EMPTY)
+//     {
+//         // we need to send one character to trigger interrupt.
+//         // because the interrupt only set after data transmitted
+//         if (QUEUE_EMPTY (write_buf)) {
 //             *UART0_DR = c;
 //         } else {
-//             BUF[0] = 0;
-//             BUF[0] = r;
+//             r = QUEUE_GET (write_buf);
+//             QUEUE_POP (write_buf);
+//             QUEUE_SET (write_buf, c);
+//             QUEUE_PUSH (write_buf);
 //             *UART0_DR = r;
 //         }
-//     } 
-//     else {
-//     //     // Raspberry PI is toooooo slow
-//     //     // We need push the data into queue
-//     //     // if (!QUEUE_FULL (write_buf)) { 
-//     //     //     QUEUE_SET (write_buf, c);
-//     //     //     QUEUE_PUSH (write_buf);
-//     //     // }
-//     //     // else: drop that :(
-//         BUF[0] = r;
+//     } else {
+//         // Raspberry PI is toooooo slow
+//         // We need push the data into queue
+//         if (!QUEUE_FULL (write_buf)) {
+//             QUEUE_SET (write_buf, c);
+//             QUEUE_PUSH (write_buf);
+//         }
+//         // else: drop that :(
 //     }
-//     return;
 // }
 
 /**
  * Receive a character
  */
-char uart_getc() {
-    char r;
-    /* wait until something is in the buffer */
-    do{ asm volatile("nop"); } while(*UART0_FR&0x10); // TX FIFO is empty
-    /* read it and return */
-    r=(char)(*UART0_DR);
-    /* convert carrige return to newline */
-    return r=='\r'?'\n':r;
+// char uart_getc() {
+//     char r;
+//     /* wait until something is in the buffer */
+//     do{ asm volatile("nop"); } while(*UART0_FR&0x10); // RX FIFO is empty
+//     /* read it and return */
+//     r=(char)(*UART0_DR);
+//     /* convert carrige return to newline */
+//     return r=='\r'?'\n':r;
+// }
+char uart_getc() 
+{
+    RX_BUF[0] = 0;
+    char a;
+    while(RX_BUF[0] == 0) { asm volatile ("wfi"); }
+    //if(BUF[0]){
+    a = RX_BUF[0]; //GET
+    RX_BUF[0] = 0; //POP
+    return a=='\r'?'\n':a;
+    //}
 }
 // char uart_getc() 
 // {

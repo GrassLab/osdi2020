@@ -75,5 +75,5 @@ _el1_to_el0:
 loop:  
     // for failsafe, halt this core too
     // cpu id > 0, stop
-    wfe
+    wfe             // wait for event 
     b       loop

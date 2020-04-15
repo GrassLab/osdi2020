@@ -19,10 +19,10 @@
 #define QUEUE_GET(q) (q.buf[q.head])
 #define QUEUE_SET(q, val) (q.buf[q.tail] = val)
 
-// #define STACK_POP(S) 
-// #define STACK_PUSH(S)
-// #define STACK_EMPTY(S)
-// #define STACK_FULL(S)
+#define TX_FIFO_FULL    (*UART0_FR & (1<<5))
+#define TX_FIFO_EMPTY   (*UART0_FR & (1<<7))
+#define RX_FIFO_FULL    (*UART0_FR & (1<<6))
+#define RX_FIFO_EMPTY   (*UART0_FR & (1<<4))
 
 struct uart_buf
 {
@@ -31,4 +31,5 @@ struct uart_buf
     char buf[UARTBUF_SIZE];
 } read_buf, write_buf;
 
-char BUF[0x10];
+char TX_BUF[0x10];
+char RX_BUF[0x10];
