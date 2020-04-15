@@ -44,3 +44,14 @@ void local_timer_init(){
 void set_local_timer_control(){
     *LOCAL_TIMER_IRQ_CLR = 0xc0000000; // clear interrupt and reload.
 }
+
+void core_timer_disable(){
+    asm volatile (
+                  "mov x2, 0;"
+                  "msr cntp_ctl_el0, x2;"
+                 );
+}
+
+void local_timer_disable(){
+    *LOCAL_TIMER_CONTROL_REG = 0;
+}

@@ -30,6 +30,7 @@ void main()
                     "loadimg: load kernel image to specified address\n"
                     "exc: issues svc #1\n"
                     "irq_timer: enable timer interrupt\n"
+                    "dti: disable timer interrupt\n"
                     "irq_uart0: enable PL011 UART interrupt\n");
         else if (strcmp(command, "timestamp")){
           uart_puts("[");
@@ -64,6 +65,8 @@ void main()
             asm volatile ("svc #1");
         else if(strcmp(command, "irq_timer"))
             asm volatile ("svc #2");
+        else if(strcmp(command, "dti"))
+            asm volatile ("svc #3");
         else if(strcmp(command, "irq_uart0"))
             enable_uart0_irq();
         else if (*command)

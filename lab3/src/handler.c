@@ -19,6 +19,10 @@ void exception_handler(unsigned long esr, unsigned long elr)
         core_timer_enable();
         local_timer_init();
     }
+    else if(svc_type == 3){
+        core_timer_disable();
+        local_timer_disable();
+    }
 }
 
 void irq_handler()
