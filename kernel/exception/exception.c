@@ -26,7 +26,7 @@ void exec_controller_el1 ( )
             print_exec_info ( EL1, elr, esr );
             break;
         case TEST_HVC:
-            asm volatile ( "hvc #1" );
+            LAUNCH_SYS_CALL ( HYPERVISORE_CALL_TEST_HVC );
             break;
         case IRQ_EL1_ENABLE:
             irq_el1_enable ();
@@ -65,23 +65,8 @@ void exec_controller_el2 ( )
     
     switch ( iss ) 
     {
-        case TEST_SVC:
-            print_exec_info ( EL2, elr, esr );
-            break;
         case TEST_HVC:
             uart_printf ( "Here, I am in EL2\n" );
-            break;
-        case IRQ_EL1_ENABLE: 
-            irq_el1_enable ();
-            break;
-        case IRQ_EL1_DISABLE: 
-            irq_el1_disable ();
-            break;
-        case CORE_TIMER_ENABLE:
-            core_timer_enable ();
-            break;
-        case CORE_TIMER_DISABLE:
-            core_timer_disable ();
             break;
         default:
             print_exec_info ( EL2, elr, esr );

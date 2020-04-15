@@ -78,6 +78,8 @@ void command_controller ( enum SPECIAL_CHARACTER input_parse, char c, char buffe
             else if ( !strcmp(buffer, "exc_brk"         ) ) command_brk_exception_trap();
             else if ( !strcmp(buffer, "timer"           ) ) command_timer_exception_enable();
             else if ( !strcmp(buffer, "timer-stp"       ) ) command_timer_exception_disable();
+            else if ( !strcmp(buffer, "irq"             ) ) command_irq_exception_enable();
+            else if ( !strcmp(buffer, "irq-stp"         ) ) command_irq_exception_disable();
             else                                            command_not_found(buffer);
         }
             

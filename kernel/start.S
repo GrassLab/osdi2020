@@ -81,7 +81,9 @@ return_to_el1:
     orr x1, x1, #0b1100000000000000000000
     msr CPACR_EL1, x1
 
-    bl irq_el1_enable
+    # disable interrupt in el1
+    mov     x1, 0x3C0
+    msr     SPSR_EL1, x1
 
     # init sp for EL0
     sub x0, x0, #0x10000

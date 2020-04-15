@@ -10,9 +10,11 @@
 # irq enable in EL1
 irq_el1_enable:
 
-    # Approach 1
-    mov x1, #0b1111000000
-    msr DAIF, x1
+    # Approach 1: This is not an appropriate approach, 
+    # this would copy to the daif field in the exception level, 
+    # which trap into the current el.
+    # mov x1, #0b1111000000
+    # msr DAIF, x1
 
     # Approach 2
     # msr DAIFClr, 0xf
@@ -20,23 +22,23 @@ irq_el1_enable:
     # Approach 3
     # EL0 with interrupt enabled
     # SPSR_EL1: DAIF[4]: SPSR_EL1[9:6]
-    # mov x1, #0
-    # mrs x1, SPSR_EL1
-    # and x1, x1, 0b00001111111
-    # msr SPSR_EL1, x1
+    mrs x1, SPSR_EL1
+    # 0b1111110000111111‬
+    ldr x2, =0xFC3F
+    and x1, x1, x2
+    msr SPSR_EL1, x1
     ret
 
 # irq disable in EL1
 irq_el1_disable:
 
-    # Approach 1
-    msr DAIFSet, 0xf
+    # Approach 1  # This is not an appropriate approach, 
+    # msr DAIFSet, 0xf
 
     # Approach 2
-    # mov x1, #0x60000000
-    # mrs x1, SPSR_EL1
-    # orr x1, x1, 0b11110000000
-    # msr SPSR_EL1, x1
+    mrs x1, SPSR_EL1
+    orr x1, x1, 0x3c0
+    msr SPSR_EL1, x1
     ret
 
 # irq setup in EL2

@@ -27,8 +27,10 @@ void command_help ()
     uart_puts("\tboard_revision:\tprint the board revision.\n");
     uart_puts("\texc:\t\tTrap into EL1.\n");
     uart_puts("\thvc:\t\tTrap into EL2.\n");
-    uart_puts("\ttimer:\tEnable timer interrupt of core timer and local timer.\n");
+    uart_puts("\ttimer:\t\tEnable timer interrupt of core timer and local timer.\n");
     uart_puts("\ttimer-stp:\tDisable timer interrupt of core timer and local timer.\n");
+    uart_puts("\tirq:\tEnable interrupt.\n");
+    uart_puts("\tirq:\tDisable interrupt.\n");
 
     uart_puts("\treboot:\t\treboot the raspi3.\n");
     uart_puts("\n");
@@ -121,20 +123,37 @@ void command_brk_exception_trap ()
 
 void command_timer_exception_enable ()
 {
-    // core timer enable need to be done in el1
+    // enable irq in el1
+    LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_ENABLE );
+    uart_printf("[IRQ Enable]\n");
+    
+    // enable core timer in el1
     LAUNCH_SYS_CALL ( SYS_CALL_CORE_TIMER_ENABLE );
     uart_printf("[Core Timer Enable]\n");
 
+    // enable local timer
     local_timer_enable();
     uart_printf("[Local Timer Enable]\n");
 }
 
 void command_timer_exception_disable ()
-{
+{   
     // core timer disable need to be done in el1
     LAUNCH_SYS_CALL ( SYS_CALL_CORE_TIMER_DISABLE );
     uart_printf("[Core Timer Disable]\n");
 
     local_timer_disable ();
     uart_printf("[Local Timer Disable]\n");
+}
+
+void command_irq_exception_enable ()
+{
+    LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_ENABLE );
+    uart_printf("[IRQ Enable]\n");
+}
+
+void command_irq_exception_disable ()
+{
+    LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_DISABLE );
+    uart_printf("[IRQ Disable]\n");
 }

@@ -11,8 +11,11 @@
 #define SYS_CALL_CORE_TIMER_DISABLE     "svc #6;"
 #define SYS_CALL_PRINT_TIMESTAMP_EL0    "svc #7;"
 
+#define HYPERVISORE_CALL_TEST_HVC       "hvc #2;"
+
 #define LAUNCH_SYS_CALL(x) asm volatile ( x );  
 
+// used by both sys call and hypervisor call
 enum system_call {
     TEST_SVC = 1,
     TEST_HVC,

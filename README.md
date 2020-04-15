@@ -31,6 +31,8 @@ make run
 | hvc           | trap into el2                     |
 | timer         | enable core and local timer intr  |
 | timer-stp     | disable core and local timer intr |
+| irq           | enable interrupt                  |
+| irq-stp       | disable all interrupt             |
 
 ## Directory structure
 
