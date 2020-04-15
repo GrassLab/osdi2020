@@ -79,7 +79,7 @@ Linker script and memory map
  *fill*         0x0000000000082bd4        0x4 
  .text          0x0000000000082bd8       0x38 build/timer_s.o
                 0x0000000000082bd8                core_timer_enable
-                0x0000000000082bf8                core_timer_handler
+                0x0000000000082bfc                core_timer_handler
  .text          0x0000000000082c10       0x20 build/irq_s.o
                 0x0000000000082c10                irq_vector_init
                 0x0000000000082c1c                enable_irq
@@ -252,7 +252,7 @@ OUTPUT(build/kernel8.elf elf64-littleaarch64)
 .debug_ranges   0x0000000000000000       0x30
  .debug_ranges  0x0000000000000000       0x30 build/printf_c.o
 
-.debug_line     0x0000000000000000      0x82a
+.debug_line     0x0000000000000000      0x82b
  .debug_line    0x0000000000000000      0x17f build/printf_c.o
  .debug_line    0x000000000000017f       0xc6 build/lfb_c.o
  .debug_line    0x0000000000000245      0x10b build/uart_c.o
@@ -262,10 +262,10 @@ OUTPUT(build/kernel8.elf elf64-littleaarch64)
  .debug_line    0x0000000000000582       0x44 build/timer_c.o
  .debug_line    0x00000000000005c6       0x92 build/mbox_c.o
  .debug_line    0x0000000000000658       0x5e build/start_s.o
- .debug_line    0x00000000000006b6       0x49 build/timer_s.o
- .debug_line    0x00000000000006ff       0x42 build/irq_s.o
- .debug_line    0x0000000000000741       0x9e build/entry_s.o
- .debug_line    0x00000000000007df       0x4b build/utils_s.o
+ .debug_line    0x00000000000006b6       0x4a build/timer_s.o
+ .debug_line    0x0000000000000700       0x42 build/irq_s.o
+ .debug_line    0x0000000000000742       0x9e build/entry_s.o
+ .debug_line    0x00000000000007e0       0x4b build/utils_s.o
 
 .debug_str      0x0000000000000000      0x607
  .debug_str     0x0000000000000000      0x125 build/printf_c.o

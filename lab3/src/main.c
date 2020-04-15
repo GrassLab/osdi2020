@@ -33,22 +33,24 @@ extern unsigned int width, height, pitch, isrgb;
 extern unsigned char *lfb;
 
 void irq_command(){
+
 	// local timer init
 	local_timer_init();
+	
 	// core timer init using system call
 	asm volatile("sub sp, sp, 8");
 	asm volatile("str x8, [sp, #8]");
-	asm volatile("mov x8, #1");
+	asm volatile("mov x8, #1");	// #1
 	asm volatile("svc #0");	// arm system call
 	asm volatile("ldr x8, [sp, #8]");
 	asm volatile("add sp, sp, 8");
 }
 
-void syscall2_command(){
+void syscall2_command(){	// just a test
 
 	asm volatile("sub sp, sp, 8");
 	asm volatile("str x8, [sp, #8]");
-	asm volatile("mov x8, #2");
+	asm volatile("mov x8, #2");	// #2
 	asm volatile("svc #0");	// arm system call
 	asm volatile("ldr x8, [sp, #8]");
 	asm volatile("add sp, sp, 8");
@@ -58,7 +60,7 @@ void sysreg_command(){
 
 	asm volatile("sub sp, sp, 8");
 	asm volatile("str x8, [sp, #8]");
-	asm volatile("mov x8, #3");
+	asm volatile("mov x8, #3");	// #3
 	asm volatile("svc #0");	// arm system call
 	asm volatile("ldr x8, [sp, #8]");
 	asm volatile("add sp, sp, 8");

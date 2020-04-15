@@ -38,11 +38,11 @@ void enable_timer1_interrupt_controller(){
 
 // src/entry.S : handle_invalid_entry_type
 void show_invalid_entry_message(int type, unsigned long esr, unsigned long address){
-	
+
 	char buf_address[100];
 	char buf_ec[100];
 	char buf_iss[100];
-	
+
 	itoa(address, buf_address, 10);
     uart_puts("Exception return address: 0x");
     //uart_puts(buf_address);
@@ -78,9 +78,8 @@ void print_system_registers(){
 	unsigned int esr_el1, esr_el2, esr_el3;
 	unsigned int currentel, daif, nzcv, spsel;	
 
-
 	char buf[100];
-	
+
 	asm volatile("mrs %0, elr_el1\n" : "=r"(elr_el1));
 	itoa(elr_el1, buf, 10);
 	uart_puts("ELR_EL1: 0x");
@@ -186,16 +185,16 @@ void system_call(unsigned int syscall_number){
 
 // src/entry.S	vector entry 9th
 void sync_el0_64_handler(int x0, int x1, int x2, int x3, int x4, int x5){
-	
+
 	unsigned int elr_el1;
 	unsigned int esr_el1;
 	unsigned int syscall_number;
-	
+
 	// read the system call number
 	asm volatile("mrs %0, elr_el1\n" : "=r"(elr_el1));	// exception return address
 	asm volatile("mrs %0, esr_el1\n" : "=r"(esr_el1));	// read the exception class
 	asm volatile("mov %0, x8\n" : "=r"(syscall_number));	// system call number is saved in x8 register
-	
+
 	if(( (esr_el1 & 0xFC000000) >> 26) == 0x15){	// SVC instruction execution in AArch64 state
 		if(!(esr_el1 & 0x00000FFF)){	// 
 			system_call(syscall_number);
@@ -206,7 +205,6 @@ void sync_el0_64_handler(int x0, int x1, int x2, int x3, int x4, int x5){
 	}else{
 		// pass
 	}
-
 }
 
  
@@ -220,32 +218,34 @@ void irq_el0_64_handler(){
 	char buf_local_timer_number[1000];
 
 	unsigned int IRQ_SOURCE = *((volatile unsigned int*)CORE0_IRQ_SOURCE);
-	
+
+	// bit 1: CNTPNSIRQ interrupt
 	if(IRQ_SOURCE == 0x00000002){	// core timer IRQ_SOURCE: 2
-		
+
 		core_timer_handler();
-		
+
 		uart_puts("Core timer interrupt, jiffies ");
 		itoa(core_timer_number, buf_core_timer_number, 10);
 		uart_puts(buf_core_timer_number);
 		uart_puts("\n");
 
 		core_timer_number++;
-			
+
 		return;	
 	}
-	
+
+	// bit 11: Local timer interrupt
 	if(IRQ_SOURCE == 0x00000800){	// local timer IRQ_SOURCE: 2048
 			
 		local_timer_handler();
-   	   	
+	
 		uart_puts("Local timer interrupt, jiffies ");
 		itoa(local_timer_number, buf_local_timer_number, 10);
 		uart_puts(buf_local_timer_number);
 		uart_puts("\n");
-	
+
 		local_timer_number++;
-			
+
 		return;
 	}
 }

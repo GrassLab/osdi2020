@@ -234,6 +234,7 @@ mbox_call	src/mbox.c	/^int mbox_call(unsigned char ch)$/;"	f
 memcpy	src/tools.c	/^void memcpy(void *destt, void *sourcet, int size){$/;"	f
 memzero	src/utils.S	/^memzero:$/;"	l
 pitch	src/lfb.c	/^unsigned int width, height, pitch, isrgb;   \/* dimensions and channel order *\/$/;"	v
+print_system_registers	src/irq.c	/^void print_system_registers(){$/;"	f
 printf	include/printf.h	13;"	d
 proc_hang	src/start.S	/^proc_hang: $/;"	l
 put32	src/utils.S	/^put32:$/;"	l
@@ -258,7 +259,8 @@ sync_invalid_el0_32	src/entry.S	/^sync_invalid_el0_32:$/;"	l
 sync_invalid_el0_64	src/entry.S	/^sync_invalid_el0_64:$/;"	l
 sync_invalid_el1h	src/entry.S	/^sync_invalid_el1h:$/;"	l
 sync_invalid_el1t	src/entry.S	/^sync_invalid_el1t:$/;"	l
-syscall2_command	src/main.c	/^void syscall2_command(){$/;"	f
+syscall2_command	src/main.c	/^void syscall2_command(){	\/\/ just a test$/;"	f
+sysreg_command	src/main.c	/^void sysreg_command(){$/;"	f
 system_call	src/irq.c	/^void system_call(unsigned int syscall_number){$/;"	f
 tdata	pyserial_screen.py	/^            tdata = ser.read()$/;"	v
 tdata	pyserial_screen.py	/^            tdata = tdata + ser.read(data_left)$/;"	v
