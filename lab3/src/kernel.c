@@ -27,14 +27,11 @@ unsigned long calc_loader_copy_addr(unsigned long load_kernel_addr){
     return copy_addr;
 }
 
-// use inline asm to modify x30 in function recieve_kernel and copy_loader_and_jumpor 
-// should not include any function call in them 
-// or the compiler generated code would not be as expected(due to the stack operation)
 void recieve_kernel(unsigned long load_addr, unsigned int size){
     // uart_puts("recieve start...\n");
     char *kernel=(char*)load_addr;
     
-    // important!!! the ori *uart_getc would be overwirte, too
+    // important!!! the ori uart_getc would be overwirte, too
     char (*uart_getc_copied)() = calc_loader_copy_addr(load_addr) + (uart_getc - LOADER_START_ADDR); 
     
     while(size--) 
@@ -69,39 +66,9 @@ void copy_loader_and_jump(char *copy_addr, char *load_kernel_addr, unsigned int 
     sp = new_stack + 1;
     asm volatile ("mov sp, %0" ::"r"(sp));
     
-    // jump to copied loader 
-    // when the x30 is determined, below should not enclude any function call!!
-    // no problem, but contain magic number... 
-    // unsigned int next_instr_in_copy = (unsigned long)copy_addr + 0x84c; //magic number...-> offset to next instrc(objdump). 
-    // asm volatile ("mov x30, %0" ::"r"(next_instr_in_copy));
-
-
-    // when using inline asm, becareful of the register to write!!! 
-    // ex: below will cause error, due to x0 save the copy_addr value!!!
-    // then the result will be very unstable
-    /*uart_puts("loader backup done\n");
-      asm volatile ("ldr x0, =0x10000; sub x30, x30, x0");*/
-    //I made a stuuuuuupid mistake -> asm volatile ("sub x30, x30, #0x10000"); 
     asm volatile ("sub x30, x30, #0x80000;"
                   "add x30, x30, %0"::"r"(copy_addr)); 
-    
-    // unsigned long lr;
-    // asm volatile ("mov %0, x30" :"=r"(lr));
-    // uart_hex(lr); uart_puts("\n");
-    // uart_hex((unsigned long)copy_addr); uart_puts("\n");
-    // uart_hex( lr - (unsigned long)copy_addr); uart_puts("\n");
 
-     //note: stack operation is restricted when using inline asm
-
-    // the function pointer also needs to points to the copied function
-    /*uart_getc = (unsigned long)copy_addr + (uart_getc - LOADER_START_ADDR);
-      uart_send = (unsigned long)copy_addr + (uart_send - LOADER_START_ADDR);*/ 
-    // the function pointer its self should not be overwrite aswell!!
-    // there is no way to modified a object address (&uart_getc = &uart_getc - LOADER_SIZE_MAX)
-    // uart_hex(&uart_getc); uart_puts("\n");
-    // uart_hex(uart_getc); uart_puts("\n");
-    // uart_hex(*((volatile unsigned int*)(0x00087118))); uart_puts("\n");
-    // uart_hex(*((volatile unsigned int*)(0x00077118))); uart_puts("\n");
 }
 
 void load_kernel_img(){

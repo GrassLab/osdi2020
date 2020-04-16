@@ -23,11 +23,5 @@
  *
  */
 
-void uart_init();
-void uart_send(unsigned int c);
-char uart_getc();
-void uart_puts(char *s);
-char uart_gets(char *s);
-void uart_dec(unsigned long i);
-void uart_double(double time);
-
+void lfb_init();
+void lfb_showpicture();

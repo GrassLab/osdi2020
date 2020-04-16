@@ -38,7 +38,6 @@ char (*uart_getc)();
 void mini_uart_init()
 {
     register unsigned int r;
-
     /* initialize UART */
     *AUX_ENABLE |=1;       // enable UART1, AUX mini uart
     *AUX_MU_CNTL = 0;

@@ -3,6 +3,7 @@
 #include "hwinfo.h"
 #include "lfb.h"
 #include "kernel.h"
+#include "timer.h"
 
 #define CMDMAX 32
 
@@ -25,7 +26,9 @@ void main()
                     "uart_clock_rate: get uart clock rate\n"
                     "hw_info: get board revision, VC Core base address\n"
                     "framebuffer: show a splash image\n"
-                    "loadimg: load kernel image to specified address\n");
+                    "loadimg: load kernel image to specified address\n"
+                    "exc: issues svc #1\n"
+                    "irq: enable timer\n");
         else if (strcmp(command, "timestamp")){
           uart_puts("[");
           uart_double(get_time());
@@ -55,6 +58,10 @@ void main()
         }
         else if (strcmp(command, "loadimg"))
             load_kernel_img();
+        else if(strcmp(command, "exc"))
+            asm volatile ("svc #1");
+        else if(strcmp(command, "irq"))
+            asm volatile ("svc #2");
         else if (*command)
             uart_puts("error: command not found,  try <help>\n");
     }
