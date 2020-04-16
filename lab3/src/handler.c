@@ -39,7 +39,7 @@ void irq_handler()
     else if(*IRQ_BASIC_PENDING & (1 << 19)){
         char r;
         if (*UART0_MIS & (1 << 4)){
-            // uart_puts("uart0 recieve interrupt\n");
+            uart_puts("uart0 recieve interrupt\n");
             while (*UART0_FR & 0x40){
                 r = (char) (*UART0_DR);
                 while (queue_full(&read_buf))
@@ -49,7 +49,7 @@ void irq_handler()
             *UART0_ICR = 1 << 4;
         }
         else if (*UART0_MIS & (1 << 5)){
-            // uart_puts("uart0 send interrupt\n");
+            uart_puts("uart0 send interrupt\n");
             while (!queue_empty(&write_buf)){
                 r = dequeue(&write_buf);
                 while (*UART0_FR & 0x20)
@@ -57,6 +57,7 @@ void irq_handler()
                 *UART0_DR = r;
             }
             *UART0_ICR = 1 << 5;
+            *UART0_IMSC = 1 << 4;
         }
     }
 }

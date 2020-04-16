@@ -133,6 +133,7 @@ void PL011_uart_send(unsigned int c) {
         while (queue_full(&read_buf))
             asm volatile ("nop");
         enqueue(&write_buf, c);
+        *UART0_IMSC = 3 << 4;
     }else{
         /* wait until we can send */
         do{asm volatile("nop");}while(*UART0_FR&0x20);
@@ -221,7 +222,7 @@ void uart_double(double time){
 }
 
 void enable_uart0_irq(){
-    *UART0_IMSC = 3 << 4;
+    *UART0_IMSC = 1 << 4;
     *IRQ2_EN = 1 << 25;
     uart0_irq_enable = 1;
     read_buf.head = 0;
