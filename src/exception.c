@@ -59,36 +59,77 @@ void curr_el_spx_sync_handler(void) {
   }
 }
 
+void curr_el_spx_irq_handler(void) {
+//  char buf[32];
+//  mini_uart_puts("basic pending: ");
+//  mini_uart_puts(uitos(*IRQ_BASIC_PENDING, buf));
+//  mini_uart_puts(EOL);
+//  mini_uart_puts("pending 1: ");
+//  mini_uart_puts(uitos(*IRQ_PENDING1, buf));
+//  mini_uart_puts(EOL);
+//  mini_uart_puts("pending 2: ");
+//  mini_uart_puts(uitos(*IRQ_PENDING2, buf));
+//  mini_uart_puts(EOL);
+//  mini_uart_puts("core 0 interrupt source: ");
+//  mini_uart_puts(uitos(*CORE0_INTERRUPT_SRC, buf));
+//  mini_uart_puts(EOL);
+
+  uint32_t irq_src = *CORE0_INTERRUPT_SRC;
+  while (irq_src != 0) {
+    uint8_t src = 31 - __builtin_clz(irq_src);
+
+    switch (src) {
+      case 1:
+        core_timer_handler();
+        break;
+      case 8:
+        gpu_interrupt_handler();
+        break;
+    }
+
+    irq_src &= ~(1 << src);
+  }
+}
+
 static uint64_t core_timer_jiffie = 0;
 static uint64_t system_timer_jiffie = 0;
 
-void curr_el_spx_irq_handler(void) {
+void core_timer_handler(void) {
   char buf[32];
-  uint32_t pending;
+  mini_uart_puts("Core timer interrupt, jiffies ");
+  mini_uart_puts(uitos(++core_timer_jiffie, buf));
+  mini_uart_puts(EOL);
 
-  asm("mrs %0, cntp_ctl_el0" : "=r"(pending));
-  if (pending & (1 << 2) != 0) {
-    mini_uart_puts("Core timer interrupt, jiffies ");
-    mini_uart_puts(uitos(++core_timer_jiffie, buf));
-    mini_uart_puts(EOL);
+  // Set the interval to be approximately 1 second
+  asm("mrs x0, cntfrq_el0");
+  asm("msr cntp_tval_el0, x0");
+}
 
-    // Set the interval to be approximately 1 second
-    asm("mrs x0, cntfrq_el0");
-    asm("msr cntp_tval_el0, x0");
+void gpu_interrupt_handler(void) {
+  uint32_t irq_src = *IRQ_PENDING1;
+  while (irq_src != 0) {
+    uint8_t src = 31 - __builtin_clz(irq_src);
+
+    switch (src) {
+      case 1:
+        system_timer_handler();
+        break;
+    }
+
+    irq_src &= ~(1 << src);
   }
+}
 
-  pending = *IRQ_PENDING1;
-  if (pending == 2) {
-    mini_uart_puts("System timer interrupt, jiffies ");
-    mini_uart_puts(uitos(++system_timer_jiffie, buf));
-    mini_uart_puts(EOL);
+void system_timer_handler(void) {
+  char buf[32];
+  mini_uart_puts("System timer interrupt, jiffies ");
+  mini_uart_puts(uitos(++system_timer_jiffie, buf));
+  mini_uart_puts(EOL);
 
-    // Set the interval to be approximately 3 seconds
-    *SYSTEM_TIMER_C1 = *SYSTEM_TIMER_CL0 + 3 * SYSTEM_TIMER_FREQUENCY;
-    *IRQ_ENABLE1 = 1 << 1;
-    // Clear the match detect status bit and the corresponding interrupt request line.
-    *SYSTEM_TIMER_CS = 0xf;
-  }
+  // Set the interval to be approximately 3 seconds
+  *SYSTEM_TIMER_C1 = *SYSTEM_TIMER_CL0 + 3 * SYSTEM_TIMER_FREQUENCY;
+  // Clear the match detect status bit and the corresponding interrupt request line.
+  *SYSTEM_TIMER_CS = 0xf;
 }
 
 void not_implemented_handler(void) {

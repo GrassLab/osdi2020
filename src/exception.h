@@ -11,9 +11,10 @@
 #define IRQ_PENDING1 ((volatile uint32_t *)0x3f00b204)
 #define IRQ_PENDING2 ((volatile uint32_t *)0x3f00b208)
 #define IRQ_ENABLE1 ((volatile uint32_t *)0x3f00b210)
-#define IRQ_ENABLE2 ((volatile uint32_t *)0x3f00b214)
 
+// https://github.com/raspberrypi/documentation/blob/master/hardware/raspberrypi/bcm2836/QA7_rev3.4.pdf
 #define CORE0_TIMER_IRQ_CTRL ((volatile uint32_t *)0x40000040)
+#define CORE0_INTERRUPT_SRC ((volatile uint32_t *)0x40000060)
 
 extern unsigned vector_table[];
 
@@ -21,6 +22,9 @@ void exception_init(void);
 void core_timer_enable(void);
 void curr_el_spx_sync_handler(void);
 void curr_el_spx_irq_handler(void);
+void core_timer_handler(void);
+void gpu_interrupt_handler(void);
+void system_timer_handler(void);
 void not_implemented_handler(void);
 
 #endif // EXCEPTION_H_
