@@ -26,6 +26,10 @@ clean:
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 
+debug: CFLAGS += -ggdb -Og
+debug: all
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -gdb tcp::8888 -S
+
 # Transfer img file to shared folder
 teleport:
 	cp kernel8.img /media/sf_TELEPORT/kernel8.img

@@ -81,8 +81,12 @@ void cmdSwitch(char* buf) {
 		cmd_hardwareInfo();
 	else if (!cmpstr(buf, "framebuf"))
 		cmd_framebuf();
+	else if (!cmpstr(buf, "getpel"))
+		cmd_getEl();
 	else if (!cmpstr(buf, "exc"))
 		asm("svc 0x1");
+	else if (!cmpstr(buf, "irq"))
+		cmd_irq();
 
 	else if(!cmpstr(buf, "")) ;
 	else
@@ -178,13 +182,17 @@ void cmd_framebuf() {
 	lfb_showpicture();
 }
 
-void cmd_exc() {
+void cmd_getEl() {
 	unsigned long el;
 	asm volatile ("mrs %0, CurrentEL" : "=r" (el));
 
 	uart_puts("Current EL is: ");
 	uart_hex((el>>2)&3);
 	uart_puts("\n");
+
+}
+
+void cmd_irq() {
 
 }
 

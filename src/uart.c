@@ -183,8 +183,8 @@ int mode() {
  */
 void uart_hex(unsigned int d) {
     unsigned int n;
-    int c;
 	int flag = 0;
+    int c;
     for(c=28;c>=0;c-=4) {
         // get highest tetrad
         n=(d>>c)&0xF;

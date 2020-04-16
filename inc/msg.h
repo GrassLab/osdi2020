@@ -1,20 +1,21 @@
 static char* welcome_msg =
 	"\n\n\n"
-	"                                        |\\__/,|   (`\\  \n" 
-	"                                      _.|o o  |_   ) ) \n"
-	"|************************************(((***(((********|\n"
-	"|* Hello World! This is OSDI Lab 3 from Waylon Shih! *|\n"
-	"|*****************************************************|\n"
+	"\t                                        |\\__/,|   (`\\  \n" 
+	"\t                                      _.|o o  |_   ) ) \n"
+	"\t|************************************(((***(((********|\n"
+	"\t|* Hello World! This is OSDI Lab 3 from Waylon Shih! *|\n"
+	"\t|*****************************************************|\n"
 	"\n\n# ";
 
 static char* help_msg =
-	"hello     : print Hello world!\n"
-	"help      : help\n"
-	"reboot    : reboot rpi3\n"
-	"timestamp : get current timestamp\n"
+	"\thello     : print Hello world!\n"
+	"\thelp      : help\n"
+	"\treboot    : reboot rpi3\n"
+	"\ttimestamp : get current timestamp\n"
 	"\n"
-	"hwinfo    : print hardware info\n"
-	"framebuf  : framebuffer\n"
-	"loadimg   : [not finished]\n"
+	"\thwinfo    : print hardware info\n"
+	"\tframebuf  : framebuffer\n"
+	"\tloadimg   : [not finished]\n"
 	"\n"
-	"exc       : issue exception and print info\n";
+	"\texc       : issue exception and print info\n"
+	"\n";
