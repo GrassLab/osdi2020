@@ -46,9 +46,7 @@
 
 .macro handle_sp exc_handler
 	kernel_entry
-	bl disable_interrupt
 	bl \exc_handler
-	bl enable_interrupt
 	kernel_exit
 .endm
 

@@ -33,6 +33,12 @@
 
 #define IRQ_PENDIGN_1 ((volatile unsigned int*)0x3F00B204)
 
+int core_timer_irq_queue = 0;
+int local_timer_irq_queue = 0;
+
+
+
+
 int get_currentEL(){
     int el;
 
@@ -72,6 +78,9 @@ void show_esr_elr(unsigned long esr, unsigned long elr){
     uart_puts("\n");
 }
 
+
+/* ========================= system call ========================= */
+
 void sysCall_print_esr_elr(){
     supervisor_call_1();
 }
@@ -86,6 +95,14 @@ void sysCall_unset_timer(){
 
 void sysCall_miniUART_irq(){
     supervisor_call_4();
+}
+
+void dequeue_core_timer_bottom_half(){
+    supervisor_call_5();
+}
+
+void dequeue_local_timer_bottom_half(){
+    supervisor_call_6();
 }
 
 void sysCall_handler_el0(int num){
@@ -103,7 +120,6 @@ void sysCall_handler_el0(int num){
             show_esr_elr(esr, elr);
             break;
         case 2:
-            enable_interrupt();
             core_timer_enable();
             arm_local_timer_init();
             break;
@@ -112,8 +128,13 @@ void sysCall_handler_el0(int num){
             core_timer_cancel();
             break;
         case 4:
-            enable_interrupt();
             enable_miniUART_interrupt();
+            break;
+        case 5:
+            core_timer_irq_queue = 0;
+            break;
+        case 6:
+            local_timer_irq_queue = 0;
             break;
 
         default:
@@ -123,6 +144,7 @@ void sysCall_handler_el0(int num){
             break;
     }
 }
+
 
 void sync_exc0_handler(){
     unsigned long esr, elr;
@@ -172,6 +194,17 @@ void sync_exc2_handler(){
    show_esr_elr(esr, elr);
 }
 
+void core_timer_irq_bottom_half(){
+    uart_puts("start arm core bottom half\n");
+    simulate_bottom_half();
+    uart_puts("finish arm core bottom half\n");
+}
+
+void local_timer_irq_bottom_half(){
+    uart_puts("start arm local bottom half\n");
+    simulate_bottom_half();
+    uart_puts("finish arm local bottom half\n");
+}
 
 void irq_exc_handler(){
     unsigned int irq_status = *CORE0_IRQ_SOURCE;
@@ -179,12 +212,19 @@ void irq_exc_handler(){
     if( irq_status & ARM_CORE_TIMER_IRQ){
         uart_puts("ARM_CORE_TIMER_IRQ\n");
         core_timer_handler();
+        core_timer_irq_queue = 1;
+        
+
+        // core_timer_irq_bottom_half();
         return;
     }
 
     if( irq_status & ARM_LOCAL_TIMER_IRQ) {
         uart_puts("ARM_LOCAL_TIMER_IRQ\n");
         arm_local_timer_handler();
+        local_timer_irq_queue = 1;
+
+        // local_timer_irq_bottom_half();
         return;
     }
 
@@ -195,11 +235,25 @@ void irq_exc_handler(){
     }
         
     uart_puts("irq_exc_handler\n");
-    
-
-    
 }
 
 void SError_handler(){   
     uart_puts("SError\n");
 }
+
+void bottom_half_check(){
+    if(core_timer_irq_queue) {
+        core_timer_irq_bottom_half();
+        dequeue_core_timer_bottom_half();
+    }
+    if(local_timer_irq_queue) {
+        local_timer_irq_bottom_half();
+        dequeue_local_timer_bottom_half();
+    }
+}
+
+
+
+
+
+

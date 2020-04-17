@@ -89,9 +89,13 @@ EL2_to_El1:
     adr     x0, _start              // init sp for el1 option 1
     sub     x0, x0, 0x1000
     msr     sp_el0, x0
+
+    bl      enable_interrupt
+
     eret
 
 rest_initialization:
+
     /*
         clear bss
     */

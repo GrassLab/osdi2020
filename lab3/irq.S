@@ -2,12 +2,9 @@
 
 .global enable_interrupt
 .global disable_interrupt
-.global supervisor_call_1
-.global supervisor_call_2
-.global supervisor_call_3
-.global supervisor_call_4
 .global brk_instr
 .global get_sync_exc_param_el1
+.global simulate_bottom_half
 
 
 
@@ -23,22 +20,6 @@ disable_interrupt:
 	ldr 	x1, =0x03C0
 	orr 	x0, x0, x1
 	msr 	spsr_el1, x0
-	ret
-
-supervisor_call_1:
-	svc 	1
-	ret
-
-supervisor_call_2:
-	svc 	2
-	ret
-
-supervisor_call_3:
-	svc 	3
-	ret
-
-supervisor_call_4:
-	svc 	4
 	ret
 
 brk_instr:
@@ -58,3 +39,24 @@ get_sync_exc_param_el1:
 	add  	sp, sp, #8 * 3
 	ret
 
+simulate_bottom_half:
+	ldr 	x0, =0x1FFFFFF
+loop:
+	sub 	x0, x0, 1
+	cbnz 	x0, loop
+	ret
+
+
+.macro SVC_DECLARE svcNum
+.global supervisor_call_\svcNum
+supervisor_call_\svcNum :
+	svc 	\svcNum
+	ret
+.endm
+
+SVC_DECLARE 1
+SVC_DECLARE 2
+SVC_DECLARE 3
+SVC_DECLARE 4
+SVC_DECLARE 5
+SVC_DECLARE 6
