@@ -11,12 +11,7 @@
 
 void show_invalid_entry_message(unsigned long esr, unsigned long address)
 {
-    uart_puts("ESR: 0x");
-    uart_hex(esr);
-    uart_puts(", address: 0x");
-    uart_hex(address);
-    uart_puts("\n");
-	// printf("ESR: %x, address: %x\n", esr, address);
+	printf("ESR: %x, address: %x\n", esr, address);
 }
 
 /*

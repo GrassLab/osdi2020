@@ -46,9 +46,9 @@ void run_shell()
 		buff[n]='\0';
 		cmd_type = parse_command(buff);
 		if (cmd_type==-1){
-			uart_puts("command");
+			uart_puts("command \"");
 			uart_puts(buff);
-			uart_puts(" not found, try <help>\n");
+			uart_puts("\" not found, try <help>\n");
 			// printf("command '%s' not found, try <help>\n", buff);
 		}else{
 			cmdList[cmd_type].callback();
