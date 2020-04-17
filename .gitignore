@@ -1,6 +1,7 @@
 /Lab1/build/
 /Lab2/build/
 /Lab3/build/
+/Lab4/build/
 
 *.elf
 *.img
