@@ -84,7 +84,7 @@ void cmdSwitch(char* buf) {
 	else if (!cmpstr(buf, "getpel"))
 		cmd_getEl();
 	else if (!cmpstr(buf, "exc"))
-		asm("svc 0x1");
+		asm("svc #1");
 	else if (!cmpstr(buf, "irq"))
 		cmd_irq();
 
@@ -193,6 +193,8 @@ void cmd_getEl() {
 }
 
 void cmd_irq() {
+	asm volatile ("mov x8, #0"); // system call number
+	asm volatile ("svc #0"); // system call
 
 }
 

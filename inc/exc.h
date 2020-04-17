@@ -1,1 +1,0 @@
-void handler_exc();

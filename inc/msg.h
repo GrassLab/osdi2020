@@ -17,5 +17,6 @@ static char* help_msg =
 	"\tframebuf  : framebuffer\n"
 	"\tloadimg   : [not finished]\n"
 	"\n"
-	"\texc       : issue exception and print info\n"
+	"\texc       : issue SVC and print exception info\n"
+	"\tirq       : enable timer interrupts\n"
 	"\n";

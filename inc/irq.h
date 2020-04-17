@@ -1,1 +1,1 @@
-void irq_handler();
+void handler_lower_el_aarch64_irq();

@@ -64,12 +64,12 @@ vector_table:
     ventry  lower_el_aarch64_sync   // 0x400
     ventry  lower_el_aarch64_irq    // 0x480
     ventry  lower_el_aarch64_fiq    // 0x500
-    ventry  lower_el_aarch64_sync   // 0x580
+    ventry  lower_el_aarch64_serror // 0x580
 
     ventry  lower_el_aarch64_sync   // 0x600
     ventry  lower_el_aarch64_irq    // 0x680
     ventry  lower_el_aarch64_fiq    // 0x700
-    ventry  lower_el_aarch64_sync   // 0x780
+    ventry  lower_el_aarch64_serror // 0x780
 
 /**
  * Exception from the current EL while using SP_EL0
@@ -105,14 +105,14 @@ curr_el_spx_serror:
  */
 lower_el_aarch64_sync:
     store_all
-    bl handler_exc
+    bl      handler_lower_el_aarch64_sync
     load_all
     eret
                          
 lower_el_aarch64_irq:
     store_all
     bl      irq_mask
-    bl      irq_handler
+    bl      handler_lower_el_aarch64_irq
     bl      irq_unmask
     load_all
     eret
