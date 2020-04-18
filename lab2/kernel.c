@@ -15,19 +15,27 @@ unsigned int get_kernel_size(){
     return size;
 }
 
+#define MMIO_BASE       0x3F000000
+#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
+#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
 void recieve_kernel(char *load_addr, unsigned int size, unsigned long copy_addr){
     char *kernel = load_addr;
     
     char (*uart_getc_copied)() = copy_addr + (uart_getc - LOADER_START_ADDR); 
     
     uart_puts("\nloading kernel image...\n\n\n");
-    while(size--) 
-        *kernel++ = uart_getc_copied();
+
+    // while(size--) 
+    //     *kernel++ = uart_getc_copied(); //pointless, the function pointer copy itself whould be overwirte, too 
+    while(size--){
+        do{asm volatile("nop");} while(*UART0_FR&0x10);
+        *kernel++ = (char)(*UART0_DR); 
+    }
    
     asm volatile ("mov x30, %0; ret" ::"r"(load_addr)); 
 }
 
-void copy_loader(char *copy_addr, unsigned int kernel_size){
+void copy_loader(char *copy_addr){
     //copy loader
     char *loader_old_base = (char*)LOADER_START_ADDR;
     char *loader_new_base = copy_addr;
@@ -63,7 +71,7 @@ void load_kernel_img(){
 
     unsigned long loader_copy_addr;
     loader_copy_addr = load_addr_ul - LOADER_SIZE_MAX;
-    copy_loader((char*)loader_copy_addr, kernel_size);
+    copy_loader((char*)loader_copy_addr);
 
     void (*recieve_kernel_copied)(char*, unsigned int, unsigned long) =  loader_copy_addr + (recieve_kernel - LOADER_START_ADDR);
     recieve_kernel_copied((char*)load_addr_ul, kernel_size, loader_copy_addr);
