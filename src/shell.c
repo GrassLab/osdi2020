@@ -5,6 +5,7 @@
 #include "string.h"
 #include "lfb.h"
 #include "msg.h"
+#include "irq.h"
 
 // say hello
 void shell_welcome_msg() {
@@ -193,9 +194,16 @@ void cmd_getEl() {
 }
 
 void cmd_irq() {
+	timer_irq_print(1);
+
+	// enable timer irq
 	asm volatile ("mov x8, #0"); // system call number
 	asm volatile ("svc #0"); // system call
 
+	// run until press ENTER
+	while(uart_getc() != '\n');
+
+	timer_irq_print(0);
 }
 
 void cmd_err(char* buf) {

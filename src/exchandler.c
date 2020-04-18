@@ -18,7 +18,7 @@ void syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4, lon
 void sys_timer() {
 	uart_puts("sys_timer\n");
 	local_timer_init();
-	//core_timer_init();
+	core_timer_init();
 }
 
 void sys_undef(unsigned int code) {

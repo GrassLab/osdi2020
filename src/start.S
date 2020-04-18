@@ -44,8 +44,8 @@ _start:
     // --------------------debug--------------------- //
     mrs     x0, CurrentEL
     lsr     x0, x0, #2
-    // enable AArch64 in EL1
-    mov     x2, #(1 << 31)      // AArch64
+    // EL2, Hypervisor configure
+    mov     x2, #(1 << 31)      // set EL1 exceution state to AArch64
     msr     hcr_el2, x2
     mrs     x2, hcr_el2
 

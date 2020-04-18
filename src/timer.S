@@ -8,6 +8,7 @@ core_timer_init:
     mov     x0, 2
     ldr     x1, =CORE0_TIMER_IRQ_CTRL
     str     x0, [x1] // enable timer interrupt
+	ret
 
 #define EXPIRE_PERIOD 0xfffffff
 
