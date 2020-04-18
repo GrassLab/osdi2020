@@ -37,19 +37,12 @@ void curr_el_spx_sync_handler(void) {
   uint64_t ec = (syndrome & 0xfc000000) >> 26;
   uint64_t iss = syndrome & 0x01ffffff;
 
-  char buf[32];
   if (ec == 0x15) {
     switch (iss) {
       case 1:
-        mini_uart_puts("Exception return address 0x");
-        mini_uart_puts(uitos_generic(address, 16, buf));
-        mini_uart_puts(EOL);
-        mini_uart_puts("Exception class (EC) 0x");
-        mini_uart_puts(uitos_generic(ec, 16, buf));
-        mini_uart_puts(EOL);
-        mini_uart_puts("Instruction specific syndrome (ISS) 0x");
-        mini_uart_puts(uitos_generic(iss, 16, buf));
-        mini_uart_puts(EOL);
+        printf("Exception return address %#x" EOL, address);
+        printf("Exception class (EC) %#x" EOL, ec);
+        printf("Instruction specific syndrome (ISS) %#x" EOL, iss);
         break;
       case 2:
         core_timer_enable();
@@ -95,10 +88,7 @@ static uint64_t core_timer_jiffie = 0;
 static uint64_t system_timer_jiffie = 0;
 
 void core_timer_handler(void) {
-  char buf[32];
-  mini_uart_puts("Core timer interrupt, jiffies ");
-  mini_uart_puts(uitos(++core_timer_jiffie, buf));
-  mini_uart_puts(EOL);
+  printf("Core timer interrupt, jiffies %u" EOL, ++core_timer_jiffie);
 
   // Set the interval to be approximately 1 second
   asm("mrs x0, cntfrq_el0");
@@ -121,10 +111,7 @@ void gpu_interrupt_handler(void) {
 }
 
 void system_timer_handler(void) {
-  char buf[32];
-  mini_uart_puts("System timer interrupt, jiffies ");
-  mini_uart_puts(uitos(++system_timer_jiffie, buf));
-  mini_uart_puts(EOL);
+  printf("System timer interrupt, jiffies %u" EOL, ++system_timer_jiffie);
 
   // Set the interval to be approximately 3 seconds
   *SYSTEM_TIMER_C1 = *SYSTEM_TIMER_CL0 + 3 * SYSTEM_TIMER_FREQUENCY;

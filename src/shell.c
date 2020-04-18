@@ -99,11 +99,10 @@ void hello(void) {
 
 void loadimg(void) {
   const uint64_t default_base = 0x90000;
-  char buf[32];
   mini_uart_puts("Start Loading kernel image..." EOL);
-  mini_uart_puts("Please input kernel load address (default: 0x");
-  mini_uart_puts(uitos_generic(default_base, 16, buf));
-  mini_uart_puts("): ");
+  printf("Please input kernel load address (default: %#x): ", default_base);
+
+  char buf[32];
   mini_uart_gets(buf);
   uint64_t base = strlen(buf) == 0 ? default_base : stoui(buf, 16);
 
@@ -123,11 +122,7 @@ load:
     base = default_base;
   }
 
-  mini_uart_puts("Kernel Image Size: ");
-  mini_uart_puts(uitos(size, buf));
-  mini_uart_puts(", Load Addr: 0x");
-  mini_uart_puts(uitos_generic(base, 16, buf));
-  mini_uart_puts(EOL);
+  printf("Kernel Image Size: %u, Load Addr: %#x" EOL, size, base);
 
   uint32_t chk = 0;
   for (uint32_t i = 0; i < size; ++i) {
@@ -145,16 +140,8 @@ load:
 }
 
 void lshw(void) {
-  char buf[32];
-  mini_uart_puts("Board revision: ");
-  mini_uart_puts("0x");
-  mini_uart_puts(uitos_generic(get_board_revision(), 16, buf));
-  mini_uart_puts(EOL);
-
-  mini_uart_puts("VC core address: ");
-  mini_uart_puts("0x");
-  mini_uart_puts(uitos_generic(get_vc_memory(), 16, buf));
-  mini_uart_puts(EOL);
+  printf("Board revision: %#x" EOL, get_board_revision());
+  printf("VC core address: %#x" EOL, get_vc_memory());
 }
 
 void timestamp(void) {
@@ -164,12 +151,7 @@ void timestamp(void) {
   uint64_t time_int = count / frequency;
   uint64_t time_fra = (count * 1000000 / frequency) % 1000000;
 
-  char buf[32];
-  mini_uart_puts("[");
-  mini_uart_puts(uitos(time_int, buf));
-  mini_uart_puts(".");
-  mini_uart_puts(uitos(time_fra, buf));
-  mini_uart_puts("]" EOL);
+  printf("[%u.%u]" EOL, time_int, time_fra);
 }
 
 void reboot(void) {
@@ -186,7 +168,6 @@ void shell(void) {
   mini_uart_puts("| (_) \\__ \\ (_| | | \\__ \\ | | |  __/ | |" EOL);
   mini_uart_puts(" \\___/|___/\\__,_|_| |___/_| |_|\\___|_|_|" EOL);
   mini_uart_puts(EOL);
-
 
   while (true) {
     mini_uart_puts("# ");
@@ -212,9 +193,7 @@ void shell(void) {
       } else if (!strcmp(cmd, "timestamp")) {
         timestamp();
       } else {
-        mini_uart_puts("Error: command ");
-        mini_uart_puts(cmd);
-        mini_uart_puts(" not found, try <help>" EOL);
+        printf("Error: command %s not found, try <help>" EOL, cmd);
       }
     }
   }
