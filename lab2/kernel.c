@@ -15,8 +15,8 @@ unsigned int get_kernel_size(){
     return size;
 }
 
-void recieve_kernel(unsigned long load_addr, unsigned int size, unsigned long copy_addr){
-    char *kernel=(char*)load_addr;
+void recieve_kernel(char *load_addr, unsigned int size, unsigned long copy_addr){
+    char *kernel = load_addr;
     
     char (*uart_getc_copied)() = copy_addr + (uart_getc - LOADER_START_ADDR); 
     
@@ -27,7 +27,7 @@ void recieve_kernel(unsigned long load_addr, unsigned int size, unsigned long co
     asm volatile ("mov x30, %0; ret" ::"r"(load_addr)); 
 }
 
-void copy_loader_and_jump(char *copy_addr, char *load_kernel_addr, unsigned int kernel_size){
+void copy_loader(char *copy_addr, unsigned int kernel_size){
     //copy loader
     char *loader_old_base = (char*)LOADER_START_ADDR;
     char *loader_new_base = copy_addr;
@@ -35,18 +35,15 @@ void copy_loader_and_jump(char *copy_addr, char *load_kernel_addr, unsigned int 
     while(loader_byte--)
         *loader_new_base++ = *loader_old_base++;
 
-    //copy stack
-    char *old_stack = (char*)LOADER_START_ADDR-1;
-    char *new_stack = copy_addr-1;
-    char* sp;
-    asm volatile ("mov %0, sp" :"=r"(sp));
-    while(old_stack >= sp)
-        *new_stack-- = *old_stack--;
-    sp = new_stack + 1;
-    asm volatile ("mov sp, %0" ::"r"(sp));
-    
-    void (*recieve_kernel_copied)(unsigned long, unsigned int, unsigned long) =  (unsigned long )copy_addr + (recieve_kernel - LOADER_START_ADDR);
-    recieve_kernel_copied((unsigned long)load_kernel_addr, kernel_size, (unsigned long)copy_addr);
+    //copy stack?
+    // char *old_stack = (char*)LOADER_START_ADDR-1;
+    // char *new_stack = copy_addr-1;
+    // char* sp;
+    // asm volatile ("mov %0, sp" :"=r"(sp));
+    // while(old_stack >= sp)
+    //     *new_stack-- = *old_stack--;
+    // sp = new_stack + 1;
+    // asm volatile ("mov sp, %0" ::"r"(sp));
 }
 
 void load_kernel_img(){
@@ -66,5 +63,8 @@ void load_kernel_img(){
 
     unsigned long loader_copy_addr;
     loader_copy_addr = load_addr_ul - LOADER_SIZE_MAX;
-    copy_loader_and_jump((char*)loader_copy_addr, (char*)load_addr_ul, kernel_size);
+    copy_loader((char*)loader_copy_addr, kernel_size);
+
+    void (*recieve_kernel_copied)(char*, unsigned int, unsigned long) =  loader_copy_addr + (recieve_kernel - LOADER_START_ADDR);
+    recieve_kernel_copied((char*)load_addr_ul, kernel_size, loader_copy_addr);
 }
