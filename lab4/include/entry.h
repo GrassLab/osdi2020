@@ -21,3 +21,9 @@
 #define IRQ_INVALID_EL0_32		13
 #define FIQ_INVALID_EL0_32		14
 #define ERROR_INVALID_EL0_32	15
+
+#ifndef __ASSEMBLER__
+
+void ret_from_fork();
+
+#endif

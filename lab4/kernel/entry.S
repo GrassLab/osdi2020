@@ -89,19 +89,26 @@ vectors:
     ventry	error_invalid_el0_32        // Error 32-bit EL0
 
 sync_invalid_el1t:
-    //exception_entry
-    handle_invalid_entry  SYNC_INVALID_EL1t
+    exception_entry
 irq_invalid_el1t:
-    handle_invalid_entry  IRQ_INVALID_EL1t
+    kernel_entry
+    bl disable_irq
+    bl irq_handler
+    bl enable_irq
+    kernel_exit
 fiq_invalid_el1t:
     handle_invalid_entry  FIQ_INVALID_EL1t
 error_invalid_el1t:
     handle_invalid_entry  ERROR_INVALID_EL1t
 
 sync_invalid_el1h:
-    handle_invalid_entry  SYNC_INVALID_EL1h
+    exception_entry
 irq_invalid_el1h:
-    handle_invalid_entry  IRQ_INVALID_EL1h
+    kernel_entry
+    bl disable_irq
+    bl irq_handler
+    bl enable_irq
+    kernel_exit
 fiq_invalid_el1h:
     handle_invalid_entry  FIQ_INVALID_EL1h
 error_invalid_el1h:
@@ -111,9 +118,9 @@ sync_invalid_el0_64:
     exception_entry
 irq_invalid_el0_64:
     kernel_entry
-    // bl disable_irq
+    bl disable_irq
     bl irq_handler
-    // bl enable_irq
+    bl enable_irq
     kernel_exit
 fiq_invalid_el0_64:
     handle_invalid_entry  FIQ_INVALID_EL0_64
@@ -128,6 +135,13 @@ fiq_invalid_el0_32:
     handle_invalid_entry  FIQ_INVALID_EL0_32
 error_invalid_el0_32:
     handle_invalid_entry  ERROR_INVALID_EL0_32
+
+
+.globl ret_from_fork
+ret_from_fork:
+    bl	schedule_tail
+    mov	x0, x20
+    blr	x19         //should never return
 
 .globl err_hang
 err_hang: b err_hang
