@@ -3,12 +3,23 @@
 #include "framebuffer.h"
 #include "irq.h"
 #include "bh.h"
+#include "sched.h"
+
+void first_func() {
+
+}
 
 void el1_main()
 {
   uart_init();
 
   /* stay at interrupt disabled here */
+  int ret = privilege_task_create(first_func);
+  ret = privilege_task_create(first_func);
+
+  if (ret != 0) {
+    /* error */
+  }
 
 }
 
