@@ -50,3 +50,9 @@ cpu_switch_to2:
 get_current:
   mrs x0, tpidr_el1
   ret
+
+.globl delay
+delay:
+    subs x0, x0, #1
+    bne delay
+    ret

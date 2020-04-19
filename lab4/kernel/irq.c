@@ -59,7 +59,7 @@ void irq_handler() {
         clear_local_timer_interrupt();
       } else {
         local_timer_handler();
-        uart_println("Local timer interrupt, jiffies %d", lcnt++);
+        /* uart_println("Local timer interrupt, jiffies %d", lcnt++); */
       }
     });
 

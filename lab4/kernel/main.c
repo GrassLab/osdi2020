@@ -5,6 +5,7 @@
 #include "miniuart.h"
 #include "sched.h"
 #include "shell.h"
+#include "timer.h"
 
 void wait_msec(unsigned int n) {
   register unsigned long f, t, r;
@@ -20,23 +21,33 @@ void wait_msec(unsigned int n) {
 }
 
 void first_func() {
-  while (1) {
-    uart_println("(1) first function ...");
-    wait_msec(600000);
-    context_switch(task[0]);
+  while(1) {
+    delay(100000);
+    /* context_switch(task[0]); */
   }
+  /* while (1){ */
+  /*   uart_println("(1) first function ..."); */
+  /*   wait_msec(600000); */
+  /*   context_switch(task[0]); */
+  /* } */
 }
 
 void second_func() {
-  while (1) {
-    uart_println("(2) second function ...");
-    wait_msec(600000);
-    context_switch(task[0]);
+  while(1) {
+    delay(100000);
+    /* context_switch(task[0]); */
   }
+  /* while (1) { */
+  /*   uart_println("(2) second function ..."); */
+  /*   wait_msec(600000); */
+  /*   context_switch(task[0]); */
+  /* } */
 }
 
 void el1_main() {
   uart_init();
+
+  local_timer_init();
 
   /* stay at interrupt disabled here */
   privilege_task_create(first_func, 0);
@@ -44,8 +55,11 @@ void el1_main() {
 
   int i = 0;
   while (1) {
-    context_switch(task[i++%2+1]);
+    schedule();
   }
+  /* while (1) { */
+  /*   schedule(); */
+  /* } */
 }
 
 int main(int argc, char *argv[]) {

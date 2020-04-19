@@ -1,6 +1,7 @@
 #include "timer.h"
 #include "miniuart.h"
 #include "libc.h"
+#include "sched.h"
 
 const unsigned int interval = 200000;
 unsigned int curVal = 0;
@@ -53,7 +54,7 @@ void core_timer_enable_w4sec() {
 
 void local_timer_init(){
   unsigned int flag = 0x30000000; // enable timer and interrupt.
-  unsigned int reload = 25000000;
+  unsigned int reload = 1200000;
   *LOCAL_TIMER_CONTROL_REG = flag | reload;
 }
 
@@ -61,6 +62,7 @@ void local_timer_init(){
 
 void local_timer_handler(){
   *LOCAL_TIMER_IRQ_CLR = 0xc0000000; // clear interrupt and reload.
+  timer_tick();
 }
 
 void clear_local_timer_interrupt() {

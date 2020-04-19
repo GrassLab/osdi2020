@@ -58,10 +58,6 @@ el1_entry:
     ldr     x0, =vectors
     msr     vbar_el1, x0
 
-    // Lab4. start from el1_main
-    bl      el1_main
-    b       halt
-
     // enable interrupt
     bl      enable_interrupt_controller
     msr     daifclr, #0xf
@@ -69,6 +65,12 @@ el1_entry:
     // el0 with interrupt enabled
     ldr     x0, 0
     msr     spsr_el1, x0
+
+    // Lab4. start from el1_main
+    bl      el1_main
+    b       halt
+
+
 
     adr     x0, el0_entry
     msr     elr_el1, x0
