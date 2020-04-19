@@ -196,6 +196,7 @@ void uart_gets(char *s){
     while((c = uart_getc()) != '\n'){
         uart_send(c);
         s[i++] = c;
+        // uart_send(s[0]); debug
     }
     s[i] = '\0';
     uart_send('\r');

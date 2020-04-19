@@ -2,7 +2,7 @@
 #include "mystd.h"
 #include "hwinfo.h"
 #include "lfb.h"
-#include "kernel.h"
+#include "bootloader.h"
 #include "timer.h"
 #include "rpifunc.h"
 
@@ -27,7 +27,7 @@ void main()
                     "uart_clock_rate: get uart clock rate\n"
                     "hw_info: get board revision, VC Core base address\n"
                     "framebuffer: show a splash image\n"
-                    "loadimg: load kernel image to specified address\n"
+                    "loadimg: load kernel image to specified address(PL011 UART)\n"
                     "exc: issues svc #1\n"
                     "irq_timer: enable timer interrupt\n"
                     "dti: disable timer interrupt\n"
