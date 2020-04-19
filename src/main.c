@@ -1,10 +1,11 @@
-#include "uart.h"
-#include "shell.h"
+#include <uart.h>
+#include <shell.h>
+#include <irq.h>
 
 void main()
 {
-    // set up serial console, UART0
-    uart0_init(0);
+    uart0_init();   // set up serial console, UART0
+	irq_init();     // enable uart_int 
 
 	shell_start();
 

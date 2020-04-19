@@ -92,7 +92,9 @@ curr_el_sp0_serror:
 curr_el_spx_sync:
     eret                     
 curr_el_spx_irq:
+    b       lower_el_aarch64_irq
     eret
+
 curr_el_spx_fiq:
     eret
 
