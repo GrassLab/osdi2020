@@ -8,6 +8,8 @@
 
 #define CMDMAX 32
 
+extern void el2_to_el0();
+
 void main()
 {
     // mini_uart_init();
@@ -28,6 +30,8 @@ void main()
                     "hw_info: get board revision, VC Core base address\n"
                     "framebuffer: show a splash image\n"
                     "loadimg: load kernel image to specified address(PL011 UART)\n"
+                    "usrmode: swith to el0 from el2\n"
+                    "----- below command only support in user mode-----\n"
                     "exc: issues svc #1\n"
                     "irq_timer: enable timer interrupt\n"
                     "dti: disable timer interrupt\n"
@@ -61,6 +65,10 @@ void main()
         }
         else if (strcmp(command, "loadimg"))
             load_kernel_img();
+        else if (strcmp(command, "usrmode")){
+            asm volatile ("bl el2_to_el0");
+            uart_puts("swith to user mode\n");
+        }
         else if(strcmp(command, "exc"))
             asm volatile ("svc #1");
         else if(strcmp(command, "irq_timer"))
@@ -71,5 +79,7 @@ void main()
             enable_uart0_irq();
         else if (*command)
             uart_puts("error: command not found,  try <help>\n");
+        else
+            asm volatile ("svc #3");
     }
 }
