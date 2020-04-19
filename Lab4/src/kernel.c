@@ -106,20 +106,22 @@ void get_VC_core_base_addr(){
   }
 }
 
-void process(int key)
+void process(void)
 {
 	while (1){
-		uart_hex(key);
+		uart_hex(current->pid);
 		uart_send_string("...\n");
 		delay(100000000);	
 		// After process finish, tell scheduler that     you are done
-		schedule(); 
+		//schedule(); // If trigger schedule in interrput
+			      // You can also schedule without this!  
 	}
 }
 
 void kernel_main(void)
 {	
-    uart_init();      
+    uart_init();  
+    
     uart_hex(get_reg());
     uart_send_string("Hello, world!\r\n");
 
@@ -134,7 +136,8 @@ void kernel_main(void)
                            // Do not set HCR_EL2.IMO if you want your interrupt directly goto kernel in EL1 
 
     enable_irq();        //clear PSTATE.DAIF
-    
+    core_timer_enable(); //enable core timer
+
     //fb_init();
     //fb_show();
    
@@ -142,16 +145,13 @@ void kernel_main(void)
     get_board_revision_info();
     get_VC_core_base_addr();
    
-   
-    int res = privilege_task_create(process,(unsigned long)1);
-    if (res != 0) {
-        uart_send_string("error while starting process 1");
-        return;
-    }
-    res = privilege_task_create(process,(unsigned long)2);
-    if (res != 0) {
-        uart_send_string("error while starting process 2");
-        return;
+    init_runQ(); 
+    for (int task_num=0;task_num<3;task_num++){
+    	int res = privilege_task_create(process,1);
+    	if (res != 0) {
+        	uart_send_string("error while starting process");
+        	return;
+    	}
     }
 
    

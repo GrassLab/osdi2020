@@ -332,5 +332,6 @@ pop_reg_el1:
 
 .global ret_from_fork
 ret_from_fork:
+	bl schedule_tail //enable preeption
 	mov x0,x20
 	blr x19         //should never return

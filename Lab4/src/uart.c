@@ -7,6 +7,8 @@
 
 #define IRQ_ENABLE1 0x3f00b214
 
+extern volatile unsigned char _end;
+
 void uart_init(){
     //init uart irq
     put32(IRQ_ENABLE1,1<<25);
@@ -161,3 +163,4 @@ void uart_IRQhandler(){
 		put32(UART0_ICR,status); //clear interrupt
 	}
 }
+

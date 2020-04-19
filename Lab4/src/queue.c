@@ -20,3 +20,14 @@ void push(char* q,int* tail,char c){ //tail call by reference since we want to c
 	*tail = ((*tail)+1)%BUF_SIZE;
 }
 
+int runQ_pop(int* q,int* head){ //head call by reference since we want to change its value
+	char tmp;
+	tmp = q[*head];
+	*head = ((*head)+1)%BUF_SIZE;
+	return tmp;
+}
+
+void runQ_push(int* q,int* tail,int c){ //tail call by reference since we want to change its value
+	q[*tail] = c;
+	*tail = ((*tail)+1)%BUF_SIZE;
+}

@@ -40,8 +40,7 @@ master:
     msr elr_el2,x2
     eret
 
-el1_entry:
-
+el1_entry: 
     // clear bss
     ldr     x1, =_bss_begin
     ldr     w2, =__bss_size
