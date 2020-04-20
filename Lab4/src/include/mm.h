@@ -8,7 +8,7 @@
 #define SECTION_SHIFT		(PAGE_SHIFT + TABLE_SHIFT)
 
 #define PAGE_SIZE   		(1 << PAGE_SHIFT)  //2^12	
-#define SECTION_SIZE		(1 << SECTION_SHIFT) 
+#define SECTION_SIZE		(1 << SECTION_SHIFT) //2^21 
 
 #define HIGH_MEMORY             PBASE // 0x3F00 0000
 #define LOW_MEMORY              (2 * SECTION_SIZE) //2^22 = 4M 
@@ -19,6 +19,8 @@
 
 #ifndef __ASSEMBLER__
 unsigned long get_free_page();
+void memzero(unsigned long src, unsigned long n);
+void free_page(unsigned long p);
 #endif
 
 #endif  /*_MM_H */

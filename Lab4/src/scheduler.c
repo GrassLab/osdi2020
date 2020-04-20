@@ -1,6 +1,8 @@
 #include "include/scheduler.h"
 #include "include/queue.h"
 #include "include/irq.h"
+#include "include/string.h"
+#include "include/mm.h"
 
 static struct task_struct init_task = IDLE_TASK;
 struct task_struct *current = &(init_task);
@@ -38,15 +40,17 @@ void _schedule(void)
 			// That might be something wrong
 		}
 			
-		// If runQ empty, give those runnable task timeslice
+		// If runQ empty, give exist task timeslice and keep waiting
 		else {
 			for (int i = 0; i < NR_TASKS; i++) {
 				p = task[i];
-				if (p && p->state==TASK_RUNNING) {
+				if (p) {
 					flag = 1;
-					// set timeslice and put back to queue
 					p->counter = p->priority;
-					runQ_push(runQ,&runQ_tail,i);
+				// push a running state task back to queue
+				// It might be push in other place, but now I just leave it here 
+					if(p->state==TASK_RUNNING)
+						runQ_push(runQ,&runQ_tail,i);
 				}
 			}
 
@@ -95,11 +99,29 @@ void timer_tick(){
 		return;
 	}
 	current->counter=0;
+	char buffer[4];
 	uart_send_string("Task pid: "); 
-	uart_hex(current->pid);
+	itos(current->pid,buffer,10);
+	uart_send_string(buffer);
 	uart_send_string(" reschedule\r\n");
 	
-	enable_irq();
+	enable_irq(); //have to enable irq in schedule state!
 	_schedule();
 	disable_irq();
+}
+
+void exit_process(){
+	preempt_disable();
+	for (int i = 0; i < NR_TASKS; i++){
+		if (task[i] == current) {
+			task[i]->state = TASK_ZOMBIE;
+			break;
+		}
+	}
+
+	if (current->stack) {
+		free_page(current->stack);
+	}
+	preempt_enable();
+	schedule();
 }

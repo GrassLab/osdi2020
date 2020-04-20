@@ -106,16 +106,54 @@ void get_VC_core_base_addr(){
   }
 }
 
-void process(void)
-{
-	while (1){
-		uart_hex(current->pid);
-		uart_send_string("...\n");
-		delay(100000000);	
-		// After process finish, tell scheduler that     you are done
-		//schedule(); // If trigger schedule in interrput
-			      // You can also schedule without this!  
+
+void foo(unsigned int a){
+	  
+	while(1) {
+    		uart_send_string("Task id: ");
+    		char buffer[4];
+    		itos(current->pid,buffer,10);
+    		uart_send_string(buffer);
+    		uart_send_string("\r\n");
+    		
+		delay(100000000);
+    		//schedule();
+  	}
+}
+
+void idle(){
+  while(1){
+    schedule();
+    delay(1000000);
+  }
+}
+
+void user_process(){
+	unsigned long stack = call_sys_malloc();
+	if (stack < 0) {
+		uart_send_string("Error while allocating stack for process 1\n\r");
+		return;
 	}
+	int err = call_sys_clone((unsigned long)&foo, 11, stack);
+	if (err < 0){
+		uart_send_string("Error while clonning process 1\n\r");
+		return;
+	}
+	
+	call_sys_exit();
+}
+
+void kernel_process(){
+    	uart_send_string("Kernel Process Init/ EL is: ");
+    	char buffer[4];
+	itos(get_el(),buffer,10);
+	uart_send_string(buffer);
+    	uart_send_string("\r\n");
+    		
+	int err = do_exec((unsigned long)&user_process);
+    	if (err < 0){
+        	uart_send_string("Error while moving process to user mode\r\n");
+    	}
 }
 
 void kernel_main(void)
@@ -146,18 +184,16 @@ void kernel_main(void)
     get_VC_core_base_addr();
    
     init_runQ(); 
-    for (int task_num=0;task_num<3;task_num++){
-    	int res = privilege_task_create(process,1);
-    	if (res != 0) {
+   
+    for(int num=0;num<2;num++){ 
+    	int res = privilege_task_create(kernel_process, 0);
+    	if (res < 0) {
         	uart_send_string("error while starting process");
         	return;
     	}
-    }
-
+    }	
    
-    while (1){
-        schedule();
-    }
+    idle();
     
     /*
     // simple shell implement

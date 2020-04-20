@@ -8,6 +8,7 @@
 #define THREAD_SIZE  4096
 
 #define TASK_RUNNING	0
+#define TASK_ZOMBIE     1
 
 extern struct task_struct *current;
 extern struct task_struct *task[NR_TASKS];
@@ -41,6 +42,7 @@ struct task_struct{
 	long priority;
 	long counter;
 	long preempt_lock;
+	unsigned long stack;
 };
 
 extern void schedule(void);
@@ -52,8 +54,9 @@ extern void preempt_disable(void);
 extern void preempt_enable(void);
 extern void schedule_tail(void);
 extern void timer_tick();
+extern void exit_process();
 
-#define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, 0,0,1,0,0} 
+#define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, 0,0,1,0,0,0} 
 
 #endif
 #endif /*_SCHEDULER_H */

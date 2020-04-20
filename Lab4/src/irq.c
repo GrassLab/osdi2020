@@ -40,8 +40,7 @@ void irq_handler()
 		
 	else if(irq_zero==2){
 		core_timer_handler();
-		
-		/*
+		/*	
 		if (core_timer_jiffies>0){
 			uart_send_string("Core timer interrupt, jiffies, ");
 			char buffer[16];
@@ -57,6 +56,5 @@ void irq_handler()
 	else{
 		uart_send_string("Unknown IRQ\r\n");
 	}
-	
-	//delay(10000000);	
+		
 }
