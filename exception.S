@@ -83,10 +83,10 @@ _exception_vector:
 
     // synchronous
     .align  7
-    b       _exc_handler
+    b       _synchronous_handler
     // IRQ
     .align  7
-    b       _exc_handler
+    b       _irq_handler
     // FIQ
     .align  7
     b       _exc_handler

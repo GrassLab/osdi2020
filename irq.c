@@ -35,11 +35,13 @@ void irq()
     // CNTPNSIRQ interrupt
     else if ((*CORE0_IRQ_SOURCE) & (1 << 1))
     {
-        unsigned int delay_time = 1; // second
+        unsigned int delay_time = 1; // miilisecond
         // core timer interrupt
+        /*
         uart_puts("arm core timer: dalay ");
         uart_send_int(delay_time);
         uart_puts(" s\n");
+        */
         _core_timer_handler(delay_time);
     }
 }

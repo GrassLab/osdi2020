@@ -3,29 +3,17 @@
 #include "timer.h"
 #include "bottom_half.h"
 
-void svc(int num)
-{
-    //asm volatile("svc %0" :"=r"(num));
-    asm volatile("svc #1");
-}
-
-void brk(int num)
-{
-    //asm volatile("svc %0" :"=r"(num));
-    asm volatile("brk #1");
-}
-
 void syscall_core_timer(int enable)
 {
-    uart_puts("core timer: ");
+    // uart_puts("core timer: ");
     if (enable == 0)
     {
-        uart_puts("core timer disable");
+        // uart_puts("core timer disable");
         _core_timer_disable();
     }
     else
     {
-        uart_puts("core timer enable");
+        // uart_puts("core timer enable");
         _core_timer_enable();
     }
 }

@@ -8,7 +8,9 @@ _core_timer_enable:
   mov x29, sp
 
   // delay (x0) second
-  mrs x1, CNTFRQ_EL0
+  // CNTFRQ_EL0 = 62500000
+  // mrs x1, CNTFRQ_EL0
+  mov x1, #62500
   mul x0, x0, x1
   msr CNTP_TVAL_EL0, x0
 
@@ -46,9 +48,17 @@ _core_timer_handler:
   mov x29, sp
 
   // delay (x0) second
-  mrs x1, CNTFRQ_EL0
+  // CNTFRQ_EL0 = 62500000
+  mov x1, #62500
   mul x0, x0, x1
   msr CNTP_TVAL_EL0, x0
+
+  // for schedule
+  // add schedule counter
+  ldr x1, =schedule_cnt
+  ldr x0, schedule_cnt
+  add x0, x0, #1
+  str x0, [x1]
 
 /* 
   mov x0, EXPIRE_PERIOD

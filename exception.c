@@ -269,7 +269,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
 
 void irq_handler()
 {
-    uart_puts("*Interrput*: <IRQ>\n");
+    // uart_puts("*Interrput*: <IRQ>\n");
 
     irq();
 }

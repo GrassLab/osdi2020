@@ -41,7 +41,6 @@ check_EL2:
   msr elr_el2, x0
   eret
 
-
 ret2EL1:
   # disable exception of access SIMD register in EL1
   mrs x0, CPACR_EL1
@@ -51,6 +50,7 @@ ret2EL1:
   adr x0, _start
   sub x0, x0, #0x10000
   msr sp_el0, x0
+/*
   # switch to EL0
   # spsr_el1 clear daif and switch to EL0
   mov x0, 0x0
@@ -62,6 +62,7 @@ ret2EL1:
 
 ret2EL0:
   mov x0, xzr
+*/
 
 
 b main

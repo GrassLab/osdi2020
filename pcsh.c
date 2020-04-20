@@ -181,7 +181,7 @@ int symbol()
     uart_send('>');
 }
 
-int pcsh()
+void pcsh()
 {
     char cmd[INPUT_BUFFER_SIZE];
     int x = 0;
@@ -208,6 +208,4 @@ int pcsh()
         // I don't have scheduler, so i implement bottom half here
         bottom_half_router();
     }
-
-    return 0;
 }

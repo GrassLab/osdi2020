@@ -26,7 +26,7 @@ int symbol();
 
 int sh_default_command(char *);
 
-int pcsh();
+void pcsh();
 
 static cmd_t default_cmd_arr[];
 
