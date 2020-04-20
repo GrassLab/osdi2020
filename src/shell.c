@@ -141,7 +141,11 @@ load:
 
 void lshw(void) {
   printf("Board revision: %#x" EOL, get_board_revision());
-  printf("VC core address: %#x" EOL, get_vc_memory());
+
+  uint64_t data = get_vc_memory();
+  uint32_t base = data & 0xffffffff;
+  uint32_t size = data >> 32;
+  printf("VC core address: %#x-%#x (%#x bytes)" EOL, base, base + size - 1, size);
 }
 
 void timestamp(void) {

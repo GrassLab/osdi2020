@@ -12,7 +12,7 @@
 #define MAILBOX_FULL 0x80000000
 
 uint32_t get_board_revision(void);
-uint32_t get_vc_memory(void);
+uint64_t get_vc_memory(void);
 void mailbox_call(uint32_t *mailbox);
 
 #endif // MAILBOX_H_
