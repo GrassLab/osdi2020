@@ -30,6 +30,7 @@ struct task_struct {
   unsigned long counter;
   unsigned long priority;
   unsigned long preempt_count;
+  unsigned long need_reched;
 };
 
 /* sched.c */
@@ -51,6 +52,6 @@ void delay(unsigned long);
 
 #define INIT_TASK                                                       \
   /*cpu_context*/ { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},            \
-  /* state etc */   0, 0, 0, 1, 0 }
+      /* state etc */   0, 0, 0, 1, 0, 0 }
 
 #endif

@@ -1,13 +1,13 @@
 #include "sched.h"
 #include "entry.h"
+#include "irq.h"
 #include "libc.h"
 #include "mm.h"
-#include "irq.h"
 #include "sched.h"
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
-struct task_struct *task[NR_TASKS] = { &(init_task) };
+struct task_struct *task[NR_TASKS] = {&(init_task)};
 unsigned long nr_tasks = 1;
 
 unsigned long unique_id() { return nr_tasks++; }
@@ -22,15 +22,16 @@ struct task_struct *privilege_task_create(void (*func)(), unsigned long num) {
 
   p->cpu_context.x19 = (unsigned long)func; /* hold the funtion pointer */
   p->cpu_context.x20 = (unsigned long)num;  /* hold the argument */
-  p->cpu_context.pc  = (unsigned long)ret_from_fork;
-  p->cpu_context.sp  = (unsigned long)p + THREAD_SIZE;
+  p->cpu_context.pc = (unsigned long)ret_from_fork;
+  p->cpu_context.sp = (unsigned long)p + THREAD_SIZE;
 
   /* indicate the state of the task */
-  p->pid = unique_id();                     /* create a unique id */
-  p->priority      = current->priority;
-  p->state         = TASK_RUNNING;
-  p->counter       = p->priority;
-  p->preempt_count = 1; //disable preemtion until schedule_tail
+  p->pid = unique_id(); /* create a unique id */
+  p->priority = current->priority;
+  p->state = TASK_RUNNING;
+  p->counter = p->priority;
+  p->preempt_count = 1; // disable preemtion until schedule_tail
+  p->need_reched = 0;
 
   /* store the task_struct into task[] */
   task[p->pid] = p;
@@ -46,14 +47,9 @@ struct task_struct *privilege_task_create(void (*func)(), unsigned long num) {
   return p;
 }
 
+void preempt_disable() { current->preempt_count++; }
 
-void preempt_disable() {
-    current->preempt_count++;
-}
-
-void preempt_enable() {
-    current->preempt_count--;
-}
+void preempt_enable() { current->preempt_count--; }
 
 /* internal scheduler */
 void _schedule() {
@@ -89,15 +85,24 @@ void _schedule() {
   preempt_enable();
 }
 
-void schedule_tail() {
-  preempt_enable();
-}
+void schedule_tail() { preempt_enable(); }
 
 void schedule() {
-  current->counter = 0;
-  _schedule();
-}
+  struct task_struct *p = current;
+  if (p->pid) {
+    if (p->need_reched && p->preempt_count <= 0) {
+      p->need_reched = 0;
+      p->counter = 0;
 
+      /* enable_irq(); */
+      _schedule();
+      /* disable_irq(); */
+    }
+  } else {
+    _schedule();
+  }
+
+}
 
 /* #define current get_current() */
 
@@ -119,13 +124,30 @@ void context_switch(struct task_struct *next) {
 }
 
 void timer_tick() {
+  struct task_struct *p = current;
+
+  /* if (p->pid) { */
+  /*   if (--p->counter <= 0) { */
+  /*     /\* p->counter = 0; *\/ */
+
+  /*     /\* just set the need_reched flag *\/ */
+  /*     p->need_reched = 1; */
+  /*   } */
+  /* } */
+
   --current->counter;
+
+  /* epoch not used up or the current task can not be premmpt */
   if (current->counter > 0 || current->preempt_count > 0) {
     return;
   }
+
+  /* /\* used up its epoch *\/ */
+  /* /\* set the need_reched flag *\/ */
+  current->need_reched = 1;
   current->counter = 0;
 
-  enable_irq();
-  _schedule();
-  disable_irq();
+  /* enable_irq(); */
+  /* _schedule(); */
+  /* disable_irq(); */
 }

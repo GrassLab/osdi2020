@@ -44,19 +44,39 @@ void second_func() {
   /* } */
 }
 
+void foo(){
+  while(1) {
+    /* uart_println("Task id: %d\n", current->pid); */
+    delay(1000000);
+    schedule();
+  }
+}
+
+void idle(){
+  while(1){
+    schedule();
+    delay(1000000);
+  }
+}
+
 void init() {
   uart_init();
 
   /* local_timer_init(); */
   sys_core_timer_enable();
 
-  /* stay at interrupt disabled here */
-  privilege_task_create(first_func, 0);
-  privilege_task_create(second_func, 0);
-
-  while (1) {
-    schedule();
+  const int  N = 10;
+  for(int i = 0; i < N; ++i) { // N should > 2
+    privilege_task_create(foo, 0);
   }
+
+  // privilege_task_create(first_func, 0);
+  // privilege_task_create(second_func, 0);
+
+  idle();
+  /* while (1) { */
+  /*   schedule(); */
+  /* } */
 }
 
 void el1_main() {
