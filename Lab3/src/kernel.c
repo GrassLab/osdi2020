@@ -4,61 +4,51 @@
 #include "include/string.h"
 #include "include/mbox.h"
 #include "include/framebuffer.h"
+#include "include/irq.h"
+#include "include/timer.h"
+#include "include/sys.h"
 
 int check_string(char * str){
 	char* cmd_help = "help";
 	char* cmd_hello = "hello";
-	char* cmd_time = "timestamp";
 	char* cmd_reboot = "reboot";
-	char* cmd_loadimg = "loadimg";
+	char* cmd_exc = "exc";
+	char* cmd_irq = "irq";
 
 	if(strcmp(str,cmd_help)==0){
 	// print all available commands
 		uart_send_string("\r\nhello : print Hello World!\r\n");
 		uart_send_string("help : help\r\n");
-		uart_send_string("timestamp: get current timestamp\r\n");
+		uart_send_string("exc: trigger an exception instruction\r\n");
+		uart_send_string("irq: enable core timer and system timer\r\n");
 		uart_send_string("reboot: reboot rpi3\r\n");
 	}
 	else if(strcmp(str,cmd_hello)==0){
 	// print hello
 		uart_send_string("\r\nHello World!\r\n");
 	}
-	else if(strcmp(str,cmd_time)==0){
-		unsigned long long freq = get_timer_freq();
-		unsigned long long counts = get_timer_counts();
-		unsigned long long timestamp = counts/freq;
-	        	
-		float temp = (float)(counts%freq)/freq;
-		temp*=10000; //scale to int place
-		int timestamp_fraction = temp + .5f; //add 0.5 to cause rounding		
-	        uart_send_string("\r\n[");
-		
-		char timestamp_buffer[128];
-		itos(timestamp,timestamp_buffer,10);
-		uart_send_string(timestamp_buffer);
-		uart_send_string(".");
-		
-		char timestamp_fraction_buffer[128];
-	
-		if(timestamp_fraction<1000)
-			uart_send_string("0");
-		if(timestamp_fraction<100)
-			uart_send_string("0");
-		if(timestamp_fraction<10)
-			uart_send_string("0");
-		
-		itos(timestamp_fraction,timestamp_fraction_buffer,10);
-		uart_send_string(timestamp_fraction_buffer);
-	
-		uart_send_string("]\r\n");
-	}
 	else if(strcmp(str,cmd_reboot)==0){
 		uart_send_string("\r\nBooting......\r\n");
 		reset(10000);
 		return 1;	
 	}
-	else if(strcmp(str,cmd_loadimg)==0){
-	
+	else if(strcmp(str,cmd_exc)==0){		
+		uart_send_string("\r\n");
+			
+		// issue exception                	
+		/*asm volatile(
+			"mov x8,#10;" // invalid system call will return back
+			"svc #1;"
+    		);*/
+
+		asm volatile(
+			"brk #1;"
+		);
+	}
+	else if(strcmp(str,cmd_irq)==0){
+		uart_send_string("\r\n");
+		call_core_timer();
+		sys_timer_init();//don't need system call for this!
 	}
 	else{
 		uart_send_string("\r\nErr:command ");
@@ -80,7 +70,7 @@ void get_board_revision_info(){
   mbox[6] = END_TAG;
 
   if(mbox_call(8)){
-	 uart_send_string("Board Revision:"); 
+	 uart_send_string("### Board Revision:"); 
  	 uart_hex(mbox[5]); // it should be 0xa020d3 for rpi3 b+
   	 uart_send_string("\r\n");
   }
@@ -103,7 +93,7 @@ void get_VC_core_base_addr(){
   mbox[7] = END_TAG;
 
   if(mbox_call(8)){
-	 uart_send_string("VC core base address:"); 
+	 uart_send_string("### VC core base address:"); 
 	 uart_hex(mbox[5]); //base address in bytes:3B400000
 	 uart_send_string(", size ");
 	 uart_hex(mbox[6]); //size:4C00000
@@ -116,13 +106,28 @@ void get_VC_core_base_addr(){
 
 void kernel_main(void)
 {	
-    uart_init();
-    fb_init();
-    fb_show();
+    uart_init();  
     
     uart_send_string("Hello, world!\r\n");
-    
+/*
+    unsigned long el;
 
+    // read the current level from system register
+    asm volatile ("mrs %0, CurrentEL" : "=r" (el));
+
+    uart_send_string("Current EL is: ");
+    uart_hex((el>>2)&3);
+    uart_send_string("\r\n");
+*/
+    //async_exc_routing(); //set HCR_EL2.IMO
+                           // Do not set HCR_EL2.IMO if you want your interrupt directly goto kernel in EL1 
+
+    //enable_irq();        //clear PSTATE.DAIF
+    
+    //fb_init();
+    //fb_show();
+   
+    
     //get hardware information by mailbox
     get_board_revision_info();
     get_VC_core_base_addr();
@@ -130,33 +135,10 @@ void kernel_main(void)
 
     // simple shell implement
     char str[128];
-    char i=0;
-    int check = 0;
-    char recv_char;
-
-    *(str) = '\0';
-    uart_send_string(">>");
     
     while (1) {
-	recv_char = uart_recv();
-    	uart_send(recv_char);
-	
-	if(recv_char>32 && recv_char<127){
-		*(str+i)=recv_char;
-		i++;
-	}
-
-	else if  (recv_char =='\n' || recv_char == '\r'){
-		*(str+i) = '\0';		
-		check = check_string(str); 
-		
-		if (check ==0){	
-			i=0;
-			*(str) = '\0'; //reset what it will output
-			uart_send_string(">>");
-		}	
-
-	}			
-	 
+    	uart_send_string(">>");
+	uart_recv_string(128,str);	
+	check_string(str); 
     }
 }
