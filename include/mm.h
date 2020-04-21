@@ -22,7 +22,10 @@ enum {
     GPSET0          = (MMIO_BASE+0x0020001C),
     GPCLR0          = (MMIO_BASE+0x00200028),
     GPPUD           = (MMIO_BASE+0x00200094),
-    GPPUDCLK0       = (MMIO_BASE+0x00200098)
+    GPPUDCLK0       = (MMIO_BASE+0x00200098),
+
+    HCR_IMO         = (1 << 4),
+    HCR_RW          = (1 << 31)
 };
 
 #include "types.h"

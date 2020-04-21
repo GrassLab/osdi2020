@@ -6,13 +6,18 @@
 #include "uart.h"
 #include "framebuffer.h"
 #include "shell.h"
-#include "splash.h"
+#include "printf.h"
+#include "math.h"
+#include "exception.h"
+#include "time.h"
 
 void ker_main() {
-
+    printf("Hello from kernel\r\n");
     uart_setup();
-    init_framebuffer();
-    color_fill(40, 30, 35);
-    draw_picture(_acsg_logo_i, 400, 385);
+    init_framebuffer(1280, 720);
+    color_fill(COLOR_SPLASH);
+    position_t p1 = {0, 400};
+    position_t p2 = {1280, 600};
+    draw_line(p1, p2, 20, COLOR_WHITE);
     shell_start();
 }

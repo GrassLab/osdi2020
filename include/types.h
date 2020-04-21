@@ -1,8 +1,11 @@
 #ifndef __TYPES_H_
 #define __TYPES_H_
 
+#define bool unsigned char
 #define true 1
 #define false 0
+
+#define DBL_MAX      1.79769313486231470e+308
 
 typedef signed char int8_t;
 typedef short int16_t;
@@ -13,7 +16,9 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned long uint32_t;
 typedef unsigned long long uint64_t;
+
 typedef unsigned short int size_t;
+typedef signed short int ptrdiff_t;
 
 typedef signed char int_least8_t;
 typedef short int_least16_t;

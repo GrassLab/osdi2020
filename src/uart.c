@@ -8,6 +8,7 @@
 #include "string.h"
 #include "mailbox.h"
 #include "time.h"
+#include "printf.h"
 
 enum {
     UART0_DR        = (MMIO_BASE+0x00201000),
@@ -81,39 +82,21 @@ void uart_puts(const char *str) {
         uart_putc((uint8_t)str[i]);
 }
 
-void uart_hex(const unsigned int d) {
-    unsigned int n;
-    int c;
-    for(c=28;c>=0;c-=4) {
-        // get highest tetrad
-        n=(d>>c)&0xF;
-        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
-        n+=n>9?0x37:0x30;
-        uart_putc(n);
-    }
-}
-
 void uart_log(log_level_t level, const char *message) {
-    char time_buffer[11];
-    get_timestamp(time_buffer);
-    uart_putc('[');
-    uart_puts(time_buffer);
-    uart_putc(']');
-    uart_putc('[');
+    char level_str[8];
     switch (level) {
         case LOG_INFO:
-            uart_puts("INFO");
+            strcpy(level_str, "INFO");
             break;
         case LOG_WARNING:
-            uart_puts("WARNING");
+            strcpy(level_str, "WARNING");
             break;
         case LOG_ERROR:
-            uart_puts("ERROR");
+            strcpy(level_str, "ERROR");
             break;
         default:
-            uart_puts("WTF");
+            strcpy(level_str, "WTF");
     }
-    uart_putc(']');
-    uart_puts(message);
-    uart_puts("\r\n");
+    //printf("[%f][%s]%s\r\n", get_timestamp(), level_str, message);
+    printf("[%s]%s\r\n", level_str, message);
 }

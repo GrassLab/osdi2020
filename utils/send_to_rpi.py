@@ -17,20 +17,17 @@ try:
         bytesize=serial.EIGHTBITS,
         timeout=1
     )
-
-    with open("kernel8.img", 'rb') as file:
-        position = 0
-        size = file.tell()
-        byte = file.read(1)
-        while byte != b"":
-            #for line in file:
-            #line = line.replace(b'\n', b'\r')
-            file.seek(position, 0)
-            byte = file.read(1)
-            print(f"Sending : {byte}")
-            s.write(byte)
-            position = position + 1
-            #time.sleep(1)
+   
+    s.flush()
+    s.flushInput()
+    s.flushOutput()
+    path = "./output/kernel8.img"
+    size = os.path.getsize(path)
+    print(f"image size: {size}")
+    s.write(size.to_bytes(4, 'big'))
+    with open(path, 'rb') as file:
+        s.write(file.read())
+        exit()
 
 except Exception as e:
     print(f"[EXCEPTION] {e}")
