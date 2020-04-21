@@ -38,6 +38,8 @@ void put_shell() {
   char *board = "board revision";
   char *vc= "VC base";
   char *loadimage = "loadimg";
+  char *exc = "exc";
+  char *irq = "irq";
 
   char str[100];
   int p = 0;
@@ -121,9 +123,14 @@ void put_shell() {
     reset(0);
   else if (strcmp(str, loadimage) == 0)
     loadimg();
+  else if (strcmp(str, exc) == 0)
+    asm("svc 1");
+  else if (strcmp(str, irq) == 0)
+    asm("svc 2");
+    //core_timer_enable();
   else {
     uart_puts("command not found: ");
     uart_puts(str);
-    uart_puts("\n");
+    uart_puts(", try <help>.\n");
   }
 }
