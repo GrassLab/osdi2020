@@ -8,14 +8,6 @@ char *my_strcat(char *dest, const char *src);
 
 void *memset(void *str, int c, size_t n);
 
-void reverse(char str[], int length);
-  
-char* itoa(int num, char* str, int base);
-
-int atoi(const char* str);
-
-void ftoa(float n, char* res, int afterpoint);
-
-void memcpy(void *dest, void *src, size_t n);
+void * memcpy (void *dest, const void *src, size_t len);
 
 #endif

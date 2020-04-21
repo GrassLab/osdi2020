@@ -1,33 +1,44 @@
 #include "uart.h"
-#include "pcsh.h"
-#include "screen.h"
 #include "string.h"
+#include "bootloader.h"
+#define INPUT_BUFFER_SIZE 64
 
-
-void system_start(){
-    uart_print("-------------------------\n");
-    uart_print("Raspberry Pi 3B+ is start\n");
-    uart_print("-------------------------\n");
+void system_start()
+{
+    uart_puts("---------------------------\n");
+    uart_puts("Raspberry Pi 3B+ Bootloader\n");
+    uart_puts("---------------------------\n");
 }
 
-int main(){
-
+int main()
+{
     // set uart
     uart_init();
 
     system_start();
 
-    get_board_revision();
-    get_vc_memory();
-    
-    get_frame_buffer();
+    char cmd[INPUT_BUFFER_SIZE];
+    while (1)
+    {
+        uart_puts("\r# ");
+        
+        memset(cmd, 0, INPUT_BUFFER_SIZE);
+        uart_gets(cmd, INPUT_BUFFER_SIZE);
+        
+        uart_send('\r');
+        uart_send('\n');
 
-    showpicture();
-
-
-
-    // call simple shell
-    pcsh();
+        if (strcmp(cmd, "") == 0)
+            continue;
+        else if(strcmp(cmd, "hello") == 0)
+            uart_puts("Hello World!\n");
+        else if(strcmp(cmd, "load_images") == 0){
+            loadimg();
+        }
+        else{
+            uart_puts("Not find\n");
+        }
+    }
 
     return 0;
 }

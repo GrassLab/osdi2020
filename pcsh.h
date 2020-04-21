@@ -15,13 +15,18 @@ int cmd_hello(int);
 int cmd_reboot(int);
 int cmd_timestamp(int);
 int cmd_load_images(int);
+int cmd_exc(int);
+int cmd_brk(int);
+int cmd_irq(int);
+int cmd_delay(int);
+int cmd_delay_without_bottom_half(int);
 int cmd_not_find(int);
 
 int symbol();
 
 int sh_default_command(char *);
 
-int pcsh();
+void pcsh();
 
 static cmd_t default_cmd_arr[];
 

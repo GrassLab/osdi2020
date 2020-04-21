@@ -10,28 +10,31 @@ pc means Po-Chun, NOT personal computer
 #include "system.h"
 #include "bootloader.h"
 #include "pcsh.h"
+#include "timer.h"
+
+#include "bottom_half.h"
 
 #define INPUT_BUFFER_SIZE 256
 
 extern char __bss_end[];
 
-static cmd_t default_cmd_arr[8] = {
-        {"exit", "exit shell", cmd_exit},
-        {"help", "show all command", cmd_help},
-        {"hello", "uart_print Hello World!", cmd_hello},
-        {"reboot", "reboot system", cmd_reboot},
-        {"timestamp", "system running time", cmd_timestamp},
-        {"load_images", "load images from UART", cmd_load_images},
-        {NULL, NULL, cmd_not_find}};
-
-int cmd_init()
-{
-
-}
+static cmd_t default_cmd_arr[] = {
+    {"exit", "exit shell", cmd_exit},
+    {"help", "show all command", cmd_help},
+    {"hello", "print Hello World!", cmd_hello},
+    {"reboot", "reboot system", cmd_reboot},
+    {"timestamp", "system running time", cmd_timestamp},
+    {"load_images", "load images from UART", cmd_load_images},
+    {"exc", "svc #1", cmd_exc},
+    {"brk", "brk #1", cmd_brk},
+    {"irq", "start irq", cmd_irq},
+    {"delay", "delay and print ....", cmd_delay},
+    {"delay_x", "delay and print ....(in exception)", cmd_delay_without_bottom_half},
+    {NULL, NULL, cmd_not_find}};
 
 int cmd_exit(int i)
 {
-    return 0;
+    return -1;
 }
 
 int cmd_help(int i)
@@ -55,6 +58,7 @@ int cmd_help(int i)
 int cmd_hello(int i)
 {
     uart_print("Hello World!\n");
+    return 0;
 }
 
 int cmd_reboot(int i)
@@ -64,38 +68,95 @@ int cmd_reboot(int i)
 
 int cmd_timestamp(int i)
 {
-    float t = gettime();
-    uart_send_float(t, 4);
+    double t;
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #2\n"
+                 "svc #0x80\n" ::"r"(&t));
+    uart_send_float((float)t, 4);
     uart_send('\n');
+    return 0;
+
+    // can't run in el0
+    /*
+    float t = gettime();
+    */
 }
 
 int cmd_load_images(int i)
 {
-    uart_puts("Input kernel size: ");
-    char cmd[INPUT_BUFFER_SIZE];
-    // memset(cmd, 0, INPUT_BUFFER_SIZE);
+    loadimg();
+    /*
+    asm volatile("mov x0, #3");
+    asm volatile("svc #0x80");
+    */
+}
 
-    uart_gets(cmd, INPUT_BUFFER_SIZE);
-    int image_size = atoi(cmd);
-    uart_puts("Kernel size is: ");
-    uart_send_int(image_size);
-    uart_send('\n');
+int cmd_exc(int i)
+{
+    asm volatile("svc #1");
+    return 0;
+}
 
-    uart_puts("Input Kernel load address: ");
-    uart_gets(cmd, INPUT_BUFFER_SIZE);
-    int address = atoi(cmd);
-    uart_puts("Kernel load address is: ");
-    uart_send_hex(address);
-    uart_send('\n');
+int cmd_brk(int i)
+{
+    asm volatile("brk #1");
+    return 0;
+}
 
-    loadimg(address, image_size);
-    // copy_kernel_and_load_images((void *)(long)address, image_size);
-    // load_images((char *)(long)address, image_size);
+static int timer_enable = 0;
+int cmd_irq(int i)
+{
+    if (timer_enable)
+    {
+        // core timer
+        uart_puts("timer disable\n");
+        //_core_timer_disable();
+        asm volatile("mov x0, #0");
+        asm volatile("mov x1, #0");
+        asm volatile("svc #0x80");
+
+        // local timer
+        asm volatile("mov x0, #1");
+        asm volatile("mov x1, #0");
+        asm volatile("svc #0x80");
+        timer_enable = 0;
+    }
+    else
+    {
+        uart_puts("timer enable\n");
+        //_core_timer_enable();
+        asm volatile("mov x0, #0");
+        asm volatile("mov x1, #1");
+        asm volatile("svc #0x80");
+
+        // local timer
+        asm volatile("mov x0, #1");
+        asm volatile("mov x1, #1");
+        asm volatile("svc #0x80");
+
+        timer_enable = 1;
+    }
+    return 0;
+}
+
+int cmd_delay(int i)
+{
+    asm volatile("mov x0, #0x100");
+    asm volatile("svc #0x80");
+    return 0;
+}
+
+int cmd_delay_without_bottom_half(int i)
+{
+    asm volatile("mov x0, #0x101");
+    asm volatile("svc #0x80");
+    return 0;
 }
 
 int cmd_not_find(int i)
 {
     uart_print("Command not find, Try 'help'\n");
+    return 0;
 }
 
 int sh_default_command(char *cmd)
@@ -105,14 +166,13 @@ int sh_default_command(char *cmd)
     {
         if (strcmp(ptr->name, cmd) == 0)
         {
-            ptr->func(0);
-            return 0;
+            return ptr->func(0);
         }
         ptr++;
     }
-    ptr->func(0);
+    cmd_not_find(0);
 
-    return -1;
+    return 0;
 }
 
 int symbol()
@@ -121,12 +181,13 @@ int symbol()
     uart_send('>');
 }
 
-int pcsh()
+void pcsh()
 {
     char cmd[INPUT_BUFFER_SIZE];
-    
+    int x = 0;
+
     // main loop
-    while (1)
+    while (x != -1)
     {
         symbol();
 
@@ -141,12 +202,10 @@ int pcsh()
             continue;
 
         // default command
-        sh_default_command(cmd);
+        x = sh_default_command(cmd);
 
-
-        // other program
+        // bottom half
+        // I don't have scheduler, so i implement bottom half here
+        bottom_half_router();
     }
-    uart_puts("Shell End\n");
-
-    return 0;
 }

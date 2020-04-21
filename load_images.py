@@ -3,11 +3,18 @@ import serial
 import time
 import os
 from array import array
+import argparse
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--port")
+parser.add_argument("--kernel")
+args = parser.parse_args()
+print(args)
 
 PORT = '/dev/ttyUSB0'
-#PORT = '/dev/pts/21'
+PORT = '/dev/pts/2'
+PORT = args.port
 
 BAUD_RATES = 115200
 
@@ -18,7 +25,9 @@ ser.flushInput()
 ser.flushOutput()
 
 kernel_path = './other_kernels/kernel8.img'
+kernel_path = args.kernel
 #kernel_path = './other_kernels/kernel8_2.img'
+#kernel_path = './kernel8.img'
 kernel_size = os.path.getsize(kernel_path)
 # 0x80000 = 524288
 content = ["load_images\n", str(kernel_size)+"\n", "524288\n"]
@@ -59,12 +68,12 @@ try:
             ser.write(byte)
             byte = f.read(1)
 
-            time.sleep(0.0001)
+            time.sleep(1e-5)
             # check recv
             count = ser.in_waiting
             if count != 0:
                 data_raw = ser.read(count)
-                print("=", data_raw.decode())
+                print("=", data_raw)
 
     
     time.sleep(3)
@@ -72,7 +81,7 @@ try:
     count = ser.in_waiting
     if count != 0:
         data_raw = ser.read(count)
-        print(data_raw.decode())
+        print(data_raw)
     
     ser.flush()
     ser.flushInput()

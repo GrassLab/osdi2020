@@ -7,7 +7,7 @@ from array import array
 
 
 PORT = '/dev/ttyUSB0'
-PORT = '/dev/pts/21'
+PORT = '/dev/pts/2'
 
 BAUD_RATES = 115200
 
@@ -53,14 +53,11 @@ try:
     ser.flushOutput()
 
     index = 1
-    checksum = 0
     with open(kernel_path, "rb") as f:
         byte = f.read(1)
         while byte:
-            checksum += int.from_bytes(byte, byteorder='big')
             print(str(index))
             index += 1
-            ser.write(byte)
             byte = f.read(1)
 
             time.sleep(0.0001)

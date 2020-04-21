@@ -12,13 +12,13 @@ int strcmp(const char *s1, const char *s2)
     return *(const unsigned char*)s1 - *(const unsigned char*)s2;
 }
 
-void memcpy(void *dest, void *src, size_t n)
+void * memcpy (void *dest, const void *src, size_t len)
 {
-    char *csrc = (char *)src;
-    char *cdest = (char *)dest;
-
-    for (int i=0; i<n; i++)
-        cdest[i] = csrc[i];
+  char *d = dest;
+  const char *s = src;
+  while (len--)
+    *d++ = *s++;
+  return dest;
 }
 
 char *my_strcat(char *dest, const char *src)
