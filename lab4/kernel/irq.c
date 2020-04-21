@@ -48,8 +48,8 @@ void irq_handler() {
           uart_println("\e[0;32m[?] Bh Core timer interrupt, without job\e[0m");
         }
       } else {
-        core_timer_handler();
-        uart_println("Core timer interrupt, jiffies %d", ccnt++);
+        sched_core_timer_handler();
+        /* uart_println("Core timer interrupt, jiffies %d", ccnt++); */
       }
     });
 

@@ -33,7 +33,7 @@ struct task_struct {
 };
 
 /* sched.c */
-struct task_struct *privilege_task_create(void (*func)(), unsigned long next);
+struct task_struct *privilege_task_create(void (*func)(), unsigned long num);
 void context_switch(struct task_struct *next);
 void schedule();
 void timer_tick();
@@ -47,6 +47,7 @@ extern unsigned long nr_tasks;
 /* sched.S */
 void cpu_switch_to(struct task_struct *, struct task_struct *);
 struct task_struct *get_current();
+void delay(unsigned long);
 
 #define INIT_TASK                                                       \
   /*cpu_context*/ { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},            \

@@ -48,6 +48,12 @@ void core_timer_enable_w4sec() {
   asm volatile("ldp x8, x9, [sp], #16");
 }
 
+void sched_core_timer_handler() {
+  unsigned long r;
+  asm volatile ("mov %0, #0x300000" : "=r"(r));
+  asm volatile ("msr cntp_tval_el0, %0" : "=r"(r));
+  timer_tick();
+}
 
 /* local timer */
 #define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int *)0x40000034)

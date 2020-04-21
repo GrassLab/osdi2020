@@ -44,22 +44,23 @@ void second_func() {
   /* } */
 }
 
-void el1_main() {
+void init() {
   uart_init();
 
-  local_timer_init();
+  /* local_timer_init(); */
+  sys_core_timer_enable();
 
   /* stay at interrupt disabled here */
   privilege_task_create(first_func, 0);
   privilege_task_create(second_func, 0);
 
-  int i = 0;
   while (1) {
     schedule();
   }
-  /* while (1) { */
-  /*   schedule(); */
-  /* } */
+}
+
+void el1_main() {
+  init();
 }
 
 int main(int argc, char *argv[]) {

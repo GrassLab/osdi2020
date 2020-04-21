@@ -7,12 +7,12 @@
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
-struct task_struct *task[NR_TASKS] = {&(init_task),};
+struct task_struct *task[NR_TASKS] = { &(init_task) };
 unsigned long nr_tasks = 1;
 
 unsigned long unique_id() { return nr_tasks++; }
 
-struct task_struct *privilege_task_create(void (*func)(), unsigned long arg) {
+struct task_struct *privilege_task_create(void (*func)(), unsigned long num) {
   preempt_disable();
 
   /* allocate a task struct */
@@ -21,7 +21,7 @@ struct task_struct *privilege_task_create(void (*func)(), unsigned long arg) {
     return p;
 
   p->cpu_context.x19 = (unsigned long)func; /* hold the funtion pointer */
-  p->cpu_context.x20 = (unsigned long)arg;  /* hold the argument */
+  p->cpu_context.x20 = (unsigned long)num;  /* hold the argument */
   p->cpu_context.pc  = (unsigned long)ret_from_fork;
   p->cpu_context.sp  = (unsigned long)p + THREAD_SIZE;
 
@@ -117,7 +117,6 @@ void context_switch(struct task_struct *next) {
   /* switch to the next */
   cpu_switch_to(prev, next);
 }
-
 
 void timer_tick() {
   --current->counter;
