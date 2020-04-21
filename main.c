@@ -130,9 +130,11 @@ int main()
     // core timer enable, every 1ms 
     syscall1(0, 1);
 
-    privilege_task_create(task_1);
-    privilege_task_create(task_2);
-    privilege_task_create(task_3);
+
+    task_init();
+    privilege_task_create((unsigned long)&task_1, (unsigned long)"12345");
+    privilege_task_create((unsigned long)&task_2, (unsigned long)"ccc");
+    privilege_task_create((unsigned long)&task_3, (unsigned long)"aaa");
 
     schedule();
 
