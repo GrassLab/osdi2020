@@ -45,8 +45,8 @@ void bottom_half_0()
     uart_send('\n');
 }
 
-
-void task_1(){
+void task_1()
+{
     // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
     for (int i = 0; i < 10000; i++)
     {
@@ -57,12 +57,13 @@ void task_1(){
             "loop_task_1_0: subs  x0, x0, #1\n"
             "bne   loop_task_1_0\n");
 
-        if(check_reschedule())
+        if (check_reschedule())
             schedule();
     }
 }
 
-void task_2(){
+void task_2()
+{
     // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
     for (int i = 0; i < 10000; i++)
     {
@@ -72,12 +73,13 @@ void task_2(){
             "mov  x0, #0xffffff\n"
             "loop_task_2_0: subs  x0, x0, #1\n"
             "bne   loop_task_2_0\n");
-        if(check_reschedule())
+        if (check_reschedule())
             schedule();
     }
 }
 
-void task_3(){
+void user_task_3()
+{
     // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
     for (int i = 0; i < 10000; i++)
     {
@@ -87,10 +89,14 @@ void task_3(){
             "mov  x0, #0xffffff\n"
             "loop_task_3_0: subs  x0, x0, #1\n"
             "bne   loop_task_3_0\n");
-
-        if(check_reschedule())
-            schedule();
     }
+}
+
+void task_3()
+{
+    move_to_user_mode(user_task_3);
+    if (check_reschedule())
+        schedule();
 }
 
 int main()
@@ -117,7 +123,8 @@ int main()
     bottom_half_enroll(n);
 
     unsigned long t;
-    asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(t));
+    asm volatile("mrs %0, CNTFRQ_EL0"
+                 : "=r"(t));
     uart_send_int(t);
 
     /* You can't know Current EL, if you in EL0 */
@@ -127,19 +134,19 @@ int main()
     uart_puts("\n");
     */
 
-    // core timer enable, every 1ms 
+    // core timer enable, every 1ms
     syscall1(0, 1);
-
 
     task_init();
     privilege_task_create((unsigned long)&task_1, (unsigned long)"12345");
     privilege_task_create((unsigned long)&task_2, (unsigned long)"ccc");
     privilege_task_create((unsigned long)&task_3, (unsigned long)"aaa");
 
+    //privilege_task_create((unsigned long)&pcsh, (unsigned long)"pcsh");
+
     schedule();
 
-
-/*
+    /*
     while (1)
     {
         uart_puts("=Shell Start=\n");

@@ -1,8 +1,8 @@
 #ifndef _IRQ_H
 #define _IRQ_H
 
-extern void _irq_init();
-extern void _irq_end();
+extern void enable_irq();
+extern void disable_irq();
 
 extern void irq();
 

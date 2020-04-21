@@ -33,10 +33,3 @@ get_current:
 set_current:
   msr tpidr_el1, x0
   ret
-
-.globl ret_from_fork
-ret_from_fork:
-    // bl  schedule_tail
-    mov x0, x20
-    blr x19         //should never return
-
