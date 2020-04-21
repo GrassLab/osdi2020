@@ -1,4 +1,4 @@
-# My OSDI 2020
+# My OSDI 2020 lab1
 
 ## Author
 
@@ -8,12 +8,10 @@
 
 ## How to build
 
-cd lab${num}  
 make
 
 ## How to run
 
-cd lab${num}  
 make run
 
 ## How to burn it into pi3

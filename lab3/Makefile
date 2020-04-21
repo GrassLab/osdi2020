@@ -1,8 +1,8 @@
 ARMGNU ?= aarch64-linux-gnu
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFLAGS = -fPIC -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
-ASMOPS = -fPIC -Iinclude
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
+ASMOPS = -Iinclude
 BUILD_DIR = build
 SRC_DIR = src
 
@@ -33,13 +33,14 @@ clean:
 	rm kernel8.elf *.o >/dev/null 2>/dev/null || true
 
 run:
+	make all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none
 
 pipe:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial  pipe:/tmp/guest -S -s
 
 debug: 
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -S -s
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -S -s -d int
 
 gtk:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img

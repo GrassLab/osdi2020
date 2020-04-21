@@ -8,10 +8,10 @@ extern struct cmd
 };
 
 extern struct cmd cmd_list[5] = { 
-    { .name = "hello", .description = " Show commands available.", .callback = exec_hello}, 
-    { .name = "help", .description = " Show \"Hello World!\"", .callback = exec_help}, 
-    { .name = "boot", .description = " Get current timestamp.", .callback = exec_boot}, 
-    { .name = "timestamp", .description = " Reboot device.", .callback = exec_timestamp}, 
+    { .name = "hello", .description = " Show \"Hello World!\"", .callback = exec_hello}, 
+    { .name = "help", .description =  " Show commands available.", .callback = exec_help}, 
+    { .name = "boot", .description = " Reboot device.", .callback = exec_boot}, 
+    { .name = "timestamp", .description = " Get current timestamp.", .callback = exec_timestamp}, 
     { .name = "send", .description = " send kernel img to raspi", .callback = copy_self_kernel}, 
 };
 

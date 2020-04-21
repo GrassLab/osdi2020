@@ -25,7 +25,7 @@
 
 #include "uart.h"
 #include "mbox.h"
-#include "homer.h"
+#include "../include/homer.h"
 
 
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
