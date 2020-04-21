@@ -55,34 +55,35 @@ void uart_init()
     // enable interrupt
     *UART0_IMSC = 0b11 << 4;		// Tx, Rx
     // init uart buf
-    read_buf.head = 0;
-    read_buf.tail = 0;
-    write_buf.head = 0;
-    write_buf.tail = 0;
+    // read_buf.head = 0;
+    // read_buf.tail = 0;
+    // write_buf.head = 0;
+    // write_buf.tail = 0;
 }
 
 /**
  * Send a character
  */
-// void uart_send(unsigned int c) {
-//     /* wait until we can send */
-//     do{ asm volatile("nop"); } while(TX_FIFO_FULL); // TX FIFO is full
-//     /* write the character to the buffer */
-//     *UART0_DR=c;
-// }
-void uart_send(unsigned int c) { 
-    char a;
-    TX_BUF[0] = 0;
-    while (TX_FIFO_FULL) { asm volatile("nop"); } // TX FIFO is empty
-    if (TX_BUF[0] == 0) {
-        *UART0_DR = c;
-    } else {
-        a = TX_BUF[0]; 
-        TX_BUF[0] = c; 
-        *UART0_DR = a;
-    }
-    
+void uart_send(unsigned int c) {
+    /* wait until we can send */
+    do{ asm volatile("nop"); } while(TX_FIFO_FULL); // TX FIFO is full
+    /* write the character to the buffer */
+    *UART0_DR=c;
 }
+// void uart_send(unsigned int c) { 
+//     char a;
+//     TX_BUF[0] = 0;
+//     while (TX_FIFO_FULL) { asm volatile("nop"); } // TX FIFO is empty
+//     //*UART0_IMSC = 0b10 << 4; // enable Tx
+//     if (TX_BUF[0] == 0) {
+//         *UART0_DR = c;
+//     } else {
+//         a = TX_BUF[0]; 
+//         TX_BUF[0] = c; 
+//         *UART0_DR = a;
+//     }
+    
+// }
 // void uart_send(char c)
 // {
 //     char r;
@@ -113,26 +114,27 @@ void uart_send(unsigned int c) {
 /**
  * Receive a character
  */
-// char uart_getc() {
-//     char r;
-//     /* wait until something is in the buffer */
-//     do{ asm volatile("nop"); } while(*UART0_FR&0x10); // RX FIFO is empty
-//     /* read it and return */
-//     r=(char)(*UART0_DR);
-//     /* convert carrige return to newline */
-//     return r=='\r'?'\n':r;
-// }
-char uart_getc() 
-{
-    RX_BUF[0] = 0;
-    char a;
-    while(RX_BUF[0] == 0) { asm volatile ("wfi"); }
-    //if(BUF[0]){
-    a = RX_BUF[0]; //GET
-    RX_BUF[0] = 0; //POP
-    return a=='\r'?'\n':a;
-    //}
+char uart_getc() {
+    char r;
+    /* wait until something is in the buffer */
+    do{ asm volatile("nop"); } while(*UART0_FR&0x10); // RX FIFO is empty
+    /* read it and return */
+    r=(char)(*UART0_DR);
+    /* convert carrige return to newline */
+    return r=='\r'?'\n':r;
 }
+// char uart_getc() 
+// {
+//     RX_BUF[0] = 0;
+//     char a;
+//     //*UART0_IMSC = 0b01 << 4; // enable Rx
+//     while(RX_BUF[0] == 0) { asm volatile ("wfi"); } // if BUF is empty, wait for interrupt
+//     //if(BUF[0]){
+//     a = RX_BUF[0]; 
+//     RX_BUF[0] = 0; 
+//     return a=='\r'?'\n':a;
+//     //}
+// }
 // char uart_getc() 
 // {
 //     char r;
@@ -197,7 +199,7 @@ int uart_strncmp(const char *cs, const char *ct, int len)
 /**
  * Copy memory by address and size
  */ 
-void *uart_memcpy (const void *src, void *dst, int len)
+void uart_memcpy (const void *src, void *dst, int len)
 {
     const char *s = src;
     char *d = dst;
@@ -205,7 +207,6 @@ void *uart_memcpy (const void *src, void *dst, int len)
         *d++ = *s++;
         //if (*s == 0) break;
     }
-    return dst;
 }
 /**
  * Transfer string to int
@@ -242,4 +243,12 @@ int uart_atoi(char *dst, int d)
     uart_memcpy(&tmpstr[i], dst, 18-i);
     dst[18-i] = 0;
     return 18-i;
+}
+
+void uart_memset (void *dst, char s, int len)
+{
+    char *d = dst;
+    while (len--) {
+        *d++ = s;
+    }
 }

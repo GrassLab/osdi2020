@@ -6,7 +6,7 @@
 #include "../include/loadimg.h"
 #include "../include/cmdline.h"
 #include "../include/interrupt.h"
-//#include "../include/exception.h"
+#include "../include/task.h"
 
 #define WELCOME \
     "                                                 \n" \
@@ -24,21 +24,24 @@ unsigned int KERNEL_ADDR = 0x100000;
 unsigned int CORE_TIMER_COUNT = 0;
 unsigned int LOCAL_TIMER_COUNT = 0;
 
-void main123()
-{
-    uart_irq_enable();
-    uart_init();
-    for (int i=0; i<16; i++)
-        uart_send('a');
-    uart_send('\r');
-    uart_send('\n');
-    while(1);
-}
+// void main()
+// {
+//     uart_irq_enable();
+//     uart_init();
+//     for (int i=0; i<16; i++)
+//         uart_send('a');
+//     uart_send('\r');
+//     uart_send('\n');
+//     while(1);
+// }
 
+extern void switch_to(struct task* prev, struct task* next);
+
+void shell();
 void main()
 {
     // set up serial console and linear frame buffer
-    uart_irq_enable();
+    // uart_irq_enable();
     uart_init();
     uart_puts(WELCOME);
     // char *int1 = 0;
@@ -49,15 +52,40 @@ void main()
     // uart_puts(int1);
 
     // display a pixmap
-    if (SPLASH_ON == 1) {
-        lfb_init();
-        lfb_showpicture();
-    }   
+    // if (SPLASH_ON == 1) {
+    //     lfb_init();
+    //     lfb_showpicture();
+    // }   
 
     // get hardware info
-    show_serial();
-    show_board_revision();
-    show_vccore_addr();
+    // show_serial();
+    // show_board_revision();
+    // show_vccore_addr();
+
+    // shell();
+
+    task_manager_init();
+    for(int i = 0; i < N; ++i) { // N should > 2
+        privilege_task_create(foo);
+    }
+
+    // struct task* task0 = &TaskManager.task_pool[0];
+    // uart_puts("\n");
+    // uart_hex(task0->task_id);
+    // uart_puts("\n");
+    // struct task* task1 = &TaskManager.task_pool[1];
+    // uart_hex(task1->task_id);
+    // uart_puts("\n");
+
+
+    // context_switch(task0);
+
+    idle();
+    
+}
+
+void shell()
+{
 
     while (1) { 
         // get user input
@@ -140,8 +168,8 @@ void main()
          */
         else if (uart_strncmp(user_input, "irq_core", 8) == 0) {
             uart_puts("enable core timer.\n");
-            //core_timer_enable();
-            core_timer_enable_user();
+            core_timer_enable();            /* interrupt */
+            // core_timer_enable_user();        /* syscall */
         }
         else if (uart_strncmp(user_input, "irq_local", 9) == 0) {
             uart_puts("enable local timer.\n");
@@ -176,5 +204,4 @@ void main()
             "mov x30, %0; ret" :: "r"(KERNEL_ADDR)
         );
     }
-    
 }

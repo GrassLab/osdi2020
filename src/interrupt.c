@@ -84,7 +84,7 @@ void local_timer_counter()
 }
 
 #define LOCAL_TIMER_IRQ_CLR (unsigned int* )0x40000038
-#define LOCAL_TIMER_RELOAD (unsigned int* )0xc0000000//0xc0000000
+#define LOCAL_TIMER_RELOAD 0xc0000000//0xc0000000
 void local_timer_handler()
 {
     *LOCAL_TIMER_IRQ_CLR = LOCAL_TIMER_RELOAD; // clear interrupt and reload.
