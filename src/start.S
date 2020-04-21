@@ -41,6 +41,49 @@ _start:
     ldr     x1, =_start
     mov     sp, x1
 
+    // --------------------debug--------------------- //
+    mrs     x0, CurrentEL
+    lsr     x0, x0, #2
+    // EL2, Hypervisor configure
+    mov     x2, #(1 << 31)      // set EL1 exceution state to AArch64
+    msr     hcr_el2, x2
+    mrs     x2, hcr_el2
+
+    // set EL1 stack
+    msr     sp_el1, x1
+    
+	// change execution level to EL1
+    mov     x2, #0x5     // EL1h, using SP_EL1
+    msr     spsr_el2, x2
+    adr     x2, 5f
+    msr     elr_el2, x2
+    eret
+
+    // set exception vector table
+5:  ldr     x2, =vector_table
+    msr     VBAR_EL1, x2
+
+    // --------------------debug-------------------- //
+    mrs     x0, CurrentEL
+    lsr     x0, x0, #2
+    // disable exception of access SIMD register in EL1
+    mrs     x2, CPACR_EL1
+    orr     x2, x2, #(3 << 20)
+    msr     CPACR_EL1, x2
+
+    // set EL0 stack
+    sub     x1, x1, #0x10000
+    msr     sp_el0, x1
+
+    // change execution level to EL0
+    mov     x2, #0      // EL0t, using SP_EL0
+    msr     spsr_el1, x2
+    adr     x2, 5f
+    msr     elr_el1, x2
+    eret
+5:
+
+
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
@@ -49,8 +92,9 @@ _start:
     sub     w2, w2, #1
     cbnz    w2, 3b
 
+4: 
     // jump to C code, should not return
-4:  bl      main
+    bl      main
     // for failsafe, halt this core too
     b       1b
 

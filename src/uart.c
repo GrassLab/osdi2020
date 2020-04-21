@@ -116,11 +116,19 @@ void uart0_init()
 	r=150; while(r--) { asm volatile("nop"); }
 	*GPPUDCLK0 = 0;        // flush GPIO setup
 
+	*UART0_IMSC = (1<<4);     // set Rx interrupt masks
 	*UART0_ICR = 0x7FF;    // clear interrupts
 	*UART0_IBRD = 2;       // 115200 baud
 	*UART0_FBRD = 0xB;
 	*UART0_LCRH = 0b11<<5; // 8n1
 	*UART0_CR = 0x301;     // enable Tx, Rx, FIFO
+}
+
+/**
+ * uart0 interrupt handler
+ */
+void uart0_handler() {
+	*UART0_ICR = 0x7FF;  // clear irq
 }
 
 /**
@@ -183,12 +191,17 @@ int mode() {
  */
 void uart_hex(unsigned int d) {
     unsigned int n;
+	int flag = 0;
     int c;
     for(c=28;c>=0;c-=4) {
         // get highest tetrad
         n=(d>>c)&0xF;
-        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
-        n+=n>9?0x37:0x30;
-        uart_send(n);
+		if(!flag && n > 0)
+			flag = 1;
+		if(flag || c == 0) {
+			// 0-9 => '0'-'9', 10-15 => 'A'-'F'
+			n+=n>9?0x37:0x30;
+			uart_send(n);
+		}
     }
 }
