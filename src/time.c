@@ -1,5 +1,5 @@
-#include "include/gpio.h"
-#include "include/uart.h"
+#include "../include/gpio.h"
+#include "../include/uart.h"
 
 #define SYSTMR_LO        ((volatile unsigned int*)(MMIO_BASE+0x00003004))
 #define SYSTMR_HI        ((volatile unsigned int*)(MMIO_BASE+0x00003008))
@@ -40,6 +40,7 @@ unsigned long get_timer_counter()
     register unsigned long t;
     // read the current counter
     asm volatile ("mrs %0, cntpct_el0" : "=r"(t));
+    uart_hex(t);
     return t;
 }
 

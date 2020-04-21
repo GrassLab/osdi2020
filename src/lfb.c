@@ -1,6 +1,6 @@
-#include "uart.h"
-#include "mbox.h"
-#include "homer.h"
+#include "../include/uart.h"
+#include "../include/mailbox.h"
+//#include "include/homer.h"
 
 unsigned int width, height, pitch, isrgb;   /* dimensions and channel order */
 unsigned char *lfb;                         /* raw frame buffer address */
@@ -75,6 +75,8 @@ void lfb_showpicture()
 {
     int x,y;
     unsigned char *ptr=lfb;
+
+    /*
     char *data=homer_data, pixel[4];
 
     ptr += (height-homer_height)/2*pitch + (width-homer_width)*2;
@@ -88,4 +90,25 @@ void lfb_showpicture()
         }
         ptr+=pitch-homer_width*4;
     }
+    */
+    
+    unsigned int splash_height = 1024;
+    unsigned int splash_width = 768;
+    char bright_pixel[4] = {255, 255, 255, 255};
+    //char shallow_pixel[4] = {0, 0, 0, 0}; /* black */
+    char shallow_pixel[4] = {133, 55, 126, 0}; /* red */
+    //char shallow_pixel[4] = {55, 145, 198, 0}; /* blue */
+    //char shallow_pixel[4] = {123, 145, 55, 0}; /* green */
+    
+    /* Generate splash */ 
+    for(y=0;y<splash_height;y++) {
+        for(x=0;x<splash_width;x++) {
+            if( ((x/32)%2==0 && (y/24)%2==0) || ((x/32)%2==1 && (y/24)%2==1))
+                *((unsigned int*)ptr) = isrgb ? *((unsigned int *)&bright_pixel) : (unsigned int)(bright_pixel[0]<<16 | bright_pixel[1]<<8 | bright_pixel[2]);
+            else
+                *((unsigned int*)ptr) = isrgb ? *((unsigned int *)&shallow_pixel) : (unsigned int)(shallow_pixel[0]<<16 | shallow_pixel[1]<<8 | shallow_pixel[2]);
+            ptr+=4;
+        }
+    }
+    
 }

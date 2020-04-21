@@ -1,5 +1,5 @@
-#include "include/uart.h"
-#include "include/mailbox.h"
+#include "../include/uart.h"
+#include "../include/mailbox.h"
 
 #define GET_VCCORE_ADDR     0x00010006
 #define GET_BOARD_REVISION  0x00010002
@@ -9,7 +9,7 @@
 #define TAG_REQUEST_CODE    0x00000000
 #define END_TAG             0x00000000
 
-void get_vccore_addr()
+void show_vccore_addr()
 {
     //unsigned int mailbox[7];
     mbox[0] = 8 * 4; // buffer size in bytes
@@ -34,7 +34,7 @@ void get_vccore_addr()
     uart_puts("\n");
 }
 
-void get_board_revision()
+void show_board_revision()
 {
     //unsigned int mailbox[7];
     mbox[0] = 7 * 4; // buffer size in bytes
@@ -56,7 +56,7 @@ void get_board_revision()
     uart_puts("\n");
 }
 
-void get_serial()
+void show_serial()
 {
     // get the board's unique serial number with a mailbox call
     mbox[0] = 8*4;                  // length of the message
@@ -79,4 +79,21 @@ void get_serial()
     } else {
         uart_puts("Unable to query serial!\n");
     }
+}
+
+int show_exception_level()
+{
+    //  check exception level
+    int el;
+    asm volatile ("mrs %0, CurrentEL" : "=r"(el));
+    char *level = 0;
+    el = el >> 2;
+    uart_atoi(level, el);
+
+    uart_puts("Exception Level: ");
+    //uart_hex(el);
+    //uart_puts("     ");
+    uart_puts(level);
+    uart_puts("\n");
+    return el;
 }

@@ -1,5 +1,4 @@
 #include "uart.h"
-#include "lfb.h"
 
 void main()
 {
@@ -9,10 +8,6 @@ void main()
 
     // set up serial console and linear frame buffer
     uart_init();
-    lfb_init();
-
-    // display a pixmap
-    lfb_showpicture();
 
 again:
     // magic number
