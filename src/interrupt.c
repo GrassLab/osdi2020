@@ -1,10 +1,9 @@
 #include "../include/gpio.h"
-// #include "../include/mailbox.h"
-// #include "../include/utils.h"
-
 
 #include "../include/uart.h"
 #include "../include/peripheral.h"
+
+#include "../include/task.h"
 
 
 extern unsigned int CORE_TIMER_COUNT;
@@ -38,6 +37,7 @@ void core_timer_counter()
     uart_puts("Core Timer interrupt received ");
     uart_hex(CORE_TIMER_COUNT++);
     uart_puts("\n");
+    timer_tick();
 }
 
 #define CORE0_TIMER_IRQ_CTRL (unsigned int* )0x40000040
@@ -156,4 +156,11 @@ void uart_irq_enable()
     *UART_ENABLE_IRQ = (1 << 25);
 }
 
-
+void timer_tick()
+{
+    struct task* current = get_current();
+    --current->counter;
+	if (current->counter == 0) {
+	    current->reschedule_flag = 1;
+    }
+}

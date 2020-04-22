@@ -1,6 +1,8 @@
 #include "../include/uart.h"
 #include "../include/time.h"
 #include "../include/task.h"
+#include "../include/queue.h"
+
 
 
 #define INIT_TASK \
@@ -31,14 +33,19 @@ void privilege_task_create(void(*func)())
     unsigned int task_id = TaskManager.task_num;
 
     struct task* new_task = &TaskManager.task_pool[task_id]; 
-    uart_hex((unsigned long) new_task);
+    // uart_hex((unsigned long) new_task);
     new_task->cpu_context.x19 = (unsigned long) func;
-    uart_hex((unsigned long) func);
+    new_task->cpu_context.x20 = task_id;
+    // uart_hex((unsigned long) func);
     new_task->cpu_context.pc = (unsigned long)ret_from_fork;
     new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id];
     new_task->task_id = task_id;
+    new_task->reschedule_flag = 0;
     TaskManager.task_num++;
+
     // put the task into the runqueue
+    // QUEUE_SET(RunQueue, (unsigned long) new_task);
+    // QUEUE_PUSH(RunQueue);
 }
 
 
@@ -51,24 +58,21 @@ void context_switch(struct task* next)
 
 void schedule()
 {
-    // int idx = 0;
-    // while (1) {
-    //     struct task* next = &TaskManager.task_pool[idx];
-    //     context_switch(next);
-    //     idx = (idx+1) % TaskManager.task_num;
-    // }
-
-    // struct task* task0 = &TaskManager.task_pool[0];
-    // struct task* task1 = &TaskManager.task_pool[1];
-    // context_switch(task0);
-    // context_switch(task1);
-
-
     for(int i = 0; i < N; ++i) { // N should > 2
         struct task* next = &TaskManager.task_pool[i];
+        next->counter = 3;
         context_switch(next);
     }
-    
+    // while (!QUEUE_EMPTY(RunQueue)) {
+    //     struct task* next = QUEUE_GET(RunQueue);
+    //     QUEUE_POP(RunQueue);
+
+    //     QUEUE_SET(RunQueue, (unsigned long) next);
+    //     QUEUE_PUSH(RunQueue);
+
+    //     context_switch(next);
+    // }
+
     return;
 }
 
@@ -76,18 +80,22 @@ void schedule()
 /* 
  ** porcess for test
  */
-void foo()
+void foo(unsigned int task_id)
 {
     while(1) {
         struct task* current = get_current();
         uart_puts("Task_id: ");
-        uart_hex(current->task_id);
+        // uart_hex(current->task_id);
+        uart_hex(task_id);
         uart_puts("\n");
             
         // delay(1000000);
         wait_cycles(1000000);
-        schedule();
-            // idle();
+        if (current->reschedule_flag == 1) {
+            uart_puts("reschedule...\n");
+            current->reschedule_flag = 0;
+            schedule();
+        }
     }
 }
 

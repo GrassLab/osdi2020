@@ -1,6 +1,7 @@
 void disable_irq();
 void enable_irq();
 void set_HCR_EL2_IMO();
+
 void uart_irq_enable();
 
 void interrupt_handler();
@@ -16,5 +17,5 @@ void core_timer_enable_user();
 void core_timer_counter();
 void core_timer_handler(); // define in start.S
 
-
-//void timer_irq_setup();
+// scheduler timer
+void timer_tick();

@@ -1,3 +1,5 @@
+
+// the cpu_context's order must be the same as switch_to
 struct cpu_context {
     unsigned long x19;
     unsigned long x20;
@@ -21,6 +23,7 @@ struct task {
     long priority;
     long preempt_count;
     unsigned long task_id;
+    int reschedule_flag;
 };
 
 struct task_manager {
@@ -41,4 +44,5 @@ void schedule();
 void foo();
 void idle();
 
-#define N 10
+#define N 5
+

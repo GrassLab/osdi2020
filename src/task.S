@@ -21,6 +21,7 @@ switch_to:
     msr tpidr_el1, x1   // set_current
     ret
 
+
 .global get_current
 get_current:
     mrs x0, tpidr_el1

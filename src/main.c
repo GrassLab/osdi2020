@@ -18,7 +18,9 @@
     "  \\____/|_____/|_____/_____|____|\\___/____|\\___/ \n" \
     "                                                 \n"
 
-int SPLASH_ON = 0;
+#define SPLASH_ON 0
+#define HW_INFO_ON 0
+
 int LOADIMG = 0;
 unsigned int KERNEL_ADDR = 0x100000;
 unsigned int CORE_TIMER_COUNT = 0;
@@ -34,7 +36,6 @@ unsigned int LOCAL_TIMER_COUNT = 0;
 //     uart_send('\n');
 //     while(1);
 // }
-
 extern void switch_to(struct task* prev, struct task* next);
 
 void shell();
@@ -44,41 +45,28 @@ void main()
     // uart_irq_enable();
     uart_init();
     uart_puts(WELCOME);
-    // char *int1 = 0;
-    // uart_atoi(int1, 123456);
-    // uart_puts(int1);
-    // char *int2 = 0;
-    // uart_atoi(int2, -13456);
-    // uart_puts(int1);
 
     // display a pixmap
-    // if (SPLASH_ON == 1) {
-    //     lfb_init();
-    //     lfb_showpicture();
-    // }   
+    # if SPLASH_ON
+        lfb_init();
+        lfb_showpicture();
+    # endif
 
     // get hardware info
-    // show_serial();
-    // show_board_revision();
-    // show_vccore_addr();
-
+    # if HW_INFO_ON
+        show_serial();
+        show_board_revision();
+        show_vccore_addr();
+    # endif
+    
     // shell();
 
     task_manager_init();
+    core_timer_enable();
     for(int i = 0; i < N; ++i) { // N should > 2
         privilege_task_create(foo);
     }
 
-    // struct task* task0 = &TaskManager.task_pool[0];
-    // uart_puts("\n");
-    // uart_hex(task0->task_id);
-    // uart_puts("\n");
-    // struct task* task1 = &TaskManager.task_pool[1];
-    // uart_hex(task1->task_id);
-    // uart_puts("\n");
-
-
-    // context_switch(task0);
 
     idle();
     
