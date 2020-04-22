@@ -105,11 +105,13 @@ after_push_el1_irq:
     .align 7 
     b push_reg_el0
 after_push_el0:
+    mov x2, x8 //set up argument 
     mrs	x25, esr_el1		// read the syndrome register
     lsr	x24, x25, #26		// exception class
     cmp	x24, #0x15		// SVC in 64-bit state
-    b.eq	el0_svc
-    b          ni_sys
+    b.ne   not_syscall
+    bl	el0_svc_handler
+    b   ret_from_syscall
   
 
     // IRQ 0x0480
@@ -177,25 +179,7 @@ after_push_el0_irq:
     
     .align 7
 
-/***** for el0 svc *****/
-//x25: number of system calls
-//x26: syscall number
-//x27: syscall table pointer
-
-el0_svc:
-	adr	x27, sys_call_table	// load syscall table pointer
-	uxtw	x26, w8			// syscall number in w8
-        mov	x25, #__NR_syscalls
-	
-	bl	enable_irq
-	
-	cmp     x26, x25                // check upper syscall limit	 	
-	b.hs	ni_sys
-
-	ldr	x16, [x27, x26, lsl #3] // address in the syscall table
-	blr	x16			// call sys_* routine
-	b	ret_from_syscall
-ni_sys:	
+not_syscall:	
 	mov     x0, #4
     	mrs     x1, esr_el1
     	mrs     x2, elr_el1
@@ -345,7 +329,6 @@ pop_reg_el1:
 ret_from_fork:
 	bl schedule_tail //enable preeption
 	cbz x19, ret_to_user //if x19==0 -> return to el0
-	mov x0,x20
 	blr x19         
 ret_to_user: //after a kernel thread finishes, the execution goes to the ret_to_user
 	bl disable_irq

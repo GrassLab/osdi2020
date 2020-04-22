@@ -41,6 +41,11 @@ master:
     eret
 
 el1_entry: 
+    //disable exception of access SIMD register in EL1(for printf)
+    mrs x0, CPACR_EL1
+    orr x0, x0, #(3 << 20)
+    msr CPACR_EL1, x0
+
     // clear bss
     ldr     x1, =_bss_begin
     ldr     w2, =__bss_size

@@ -12,7 +12,6 @@
 
 extern struct task_struct *current;
 extern struct task_struct *task[NR_TASKS];
-extern int nr_tasks;
 
 //for runQ 
 int runQ_head;

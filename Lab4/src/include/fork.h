@@ -3,12 +3,13 @@
 
 #include "scheduler.h"
 
-int privilege_task_create(void(* func),unsigned long arg);
-int fork(unsigned long stack);
-int do_exec(unsigned long pc);
-struct pt_regs * task_pt_regs(struct task_struct *tsk);
+int get_availible_pid();
+int privilege_task_create(void(* func));
+int user_task_create();
+int do_exec(void(* func));
+struct trapframe* get_task_trapframe(struct task_struct *task);
 
-struct pt_regs{
+struct trapframe{
 	unsigned long regs[31];
 	unsigned long sp;
 	unsigned long elr_el1;

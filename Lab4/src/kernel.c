@@ -9,6 +9,7 @@
 #include "include/sys.h"
 #include "include/fork.h"
 #include "include/scheduler.h"
+#include "include/printf.h"
 
 int check_string(char * str){
 	char* cmd_help = "help";
@@ -107,72 +108,58 @@ void get_VC_core_base_addr(){
 }
 
 
-void foo(unsigned int a){
-	  
-	while(1) {
-    		uart_send_string("Task id: ");
-    		char buffer[4];
-    		itos(current->pid,buffer,10);
-    		uart_send_string(buffer);
-    		uart_send_string("\r\n");
-    		
-		delay(100000000);
-    		//schedule();
-  	}
+void foo(){
+  int tmp = 5;
+  printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+  exit(0);
 }
 
 void idle(){
   while(1){
-    schedule();
-    delay(1000000);
+    	schedule();
+    	delay(1000000);
   }
+  printf("Test finished\n");
+  while(1);
 }
 
-void user_process(){
-	unsigned long stack = call_sys_malloc();
-	if (stack < 0) {
-		uart_send_string("Error while allocating stack for process 1\n\r");
-		return;
-	}
-	int err = call_sys_clone((unsigned long)&foo, 11, stack);
-	if (err < 0){
-		uart_send_string("Error while clonning process 1\n\r");
-		return;
-	}
-	
-	call_sys_exit();
+void test() {
+  	int cnt = 1;
+  	if (fork() == 0) {
+    		fork();
+    		delay(100000);
+    		fork();
+
+    		while(cnt < 10) {
+      			printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+      			delay(100000);
+      			++cnt;
+    		}
+   	 	exit(0);
+    		printf("Should not be printed\n");
+  	} else {
+    		printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
+    		exec(foo);
+  	}	
 }
 
-void kernel_process(){
-    	uart_send_string("Kernel Process Init/ EL is: ");
-    	char buffer[4];
-	itos(get_el(),buffer,10);
-	uart_send_string(buffer);
-    	uart_send_string("\r\n");
-    		
-	int err = do_exec((unsigned long)&user_process);
+void kernel_process(){	
+	int err = do_exec(test);
     	if (err < 0){
-        	uart_send_string("Error while moving process to user mode\r\n");
+        	printf("Error while moving process to user mode\r\n");
     	}
 }
 
 void kernel_main(void)
 {	
     uart_init();  
+    init_printf(0, putc);
     
-    uart_hex(get_reg());
-    uart_send_string("Hello, world!\r\n");
-
-    unsigned long el;
-    // read the current level from system register
-    asm volatile ("mrs %0, CurrentEL" : "=r" (el));
-    uart_send_string("Current EL is: ");
-    uart_hex((el>>2)&3);
-    uart_send_string("\r\n");
+    printf("Hello, world!\r\n");
 
     //async_exc_routing(); //set HCR_EL2.IMO
                            // Do not set HCR_EL2.IMO if you want your interrupt directly goto kernel in EL1 
-
+   
     enable_irq();        //clear PSTATE.DAIF
     core_timer_enable(); //enable core timer
 
@@ -185,10 +172,10 @@ void kernel_main(void)
    
     init_runQ(); 
    
-    for(int num=0;num<2;num++){ 
-    	int res = privilege_task_create(kernel_process, 0);
+    for(int num=0;num<1;num++){ 
+    	int res = privilege_task_create(kernel_process);
     	if (res < 0) {
-        	uart_send_string("error while starting process");
+        	printf("error while starting process");
         	return;
     	}
     }	

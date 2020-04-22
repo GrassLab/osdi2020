@@ -3,11 +3,13 @@
 #include "include/irq.h"
 #include "include/string.h"
 #include "include/mm.h"
+#include "include/utils.h"
+#include "include/printf.h"
 
 static struct task_struct init_task = IDLE_TASK;
+
 struct task_struct *current = &(init_task);
 struct task_struct * task[NR_TASKS] = {&(init_task), };
-int nr_tasks = 1;
 
 void preempt_disable(void){
 	current->preempt_lock++;
@@ -18,9 +20,8 @@ void preempt_enable(void){
 }
 
 void _schedule(void)
-{
+{       // Note that you are in El1 in scheduler
 	preempt_disable();
-
 	int next;
 	int flag;
 
@@ -42,15 +43,13 @@ void _schedule(void)
 			
 		// If runQ empty, give exist task timeslice and keep waiting
 		else {
-			for (int i = 0; i < NR_TASKS; i++) {
+			//give timeslice except pid 0
+			for (int i = 1; i < NR_TASKS; i++) {
 				p = task[i];
-				if (p) {
+				if (p && p->state==TASK_RUNNING) {
 					flag = 1;
 					p->counter = p->priority;
-				// push a running state task back to queue
-				// It might be push in other place, but now I just leave it here 
-					if(p->state==TASK_RUNNING)
-						runQ_push(runQ,&runQ_tail,i);
+					runQ_push(runQ,&runQ_tail,i);
 				}
 			}
 
@@ -98,6 +97,7 @@ void timer_tick(){
 	if (current->counter>0 || current->preempt_lock >0) {
 		return;
 	}
+	// If counter <=0, it means reschedule flag set.
 	current->counter=0;
 	char buffer[4];
 	uart_send_string("Task pid: "); 
@@ -105,7 +105,8 @@ void timer_tick(){
 	uart_send_string(buffer);
 	uart_send_string(" reschedule\r\n");
 	
-	enable_irq(); //have to enable irq in schedule state!
+	enable_irq(); //you have to enable irq in schedule state when in EL1
+			//When in EL0, it's not neccessary but need to protect kernel preemption
 	_schedule();
 	disable_irq();
 }

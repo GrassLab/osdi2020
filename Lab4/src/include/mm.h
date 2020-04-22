@@ -15,7 +15,7 @@
 						   //= 0x40 0000
 
 #define PAGING_MEMORY           (HIGH_MEMORY - LOW_MEMORY)
-#define PAGING_PAGES            (PAGING_MEMORY/PAGE_SIZE)
+#define PAGING_PAGES            (PAGING_MEMORY/PAGE_SIZE) 
 
 #ifndef __ASSEMBLER__
 unsigned long get_free_page();
