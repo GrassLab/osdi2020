@@ -111,6 +111,12 @@ I didn't do this.
 printf 在 el1 會爆炸
 Solution => 在 makefile 裡的 CFLAG 加上 `-mgeneral-regs-only`，避免改動到一些 FLAG
 
+- Registers
+	- SPSR_ELx
+		- Holds the saved process state when an exception is taken to ELx.
+	- VBAR_ELx (Vector Base Address Register)
+		- Holds the vector base address for any exception that is taken to ELx.
+
 ### Reference
 - [arm Developer Document](https://developer.arm.com/docs/100026/0102/introduction)
 - [Application Note / Bare-metal Boot Code for ARMv8-A Processors / Version 1.0]()
