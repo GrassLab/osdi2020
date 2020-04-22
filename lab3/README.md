@@ -1,6 +1,3 @@
-OSDI LAB3
-===
-
 Lab3
 ===
 #### `R1-0` Set up the exception vector table.
