@@ -48,7 +48,12 @@ void curr_el_spx_sync_handler(void) {
         core_timer_enable();
         system_timer_enable();
         break;
+      default:
+        printf("[ERROR] Unknown system call number %u" EOL, iss);
+        break;
     }
+  } else {
+    printf("[ERROR] Handler for EC %u isn't implemented yet" EOL, ec);
   }
 }
 
