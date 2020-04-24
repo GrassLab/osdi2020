@@ -1,6 +1,6 @@
 #include "exception.h"
+#include "ioutil.h"
 #include "types.h"
-#include "shell.h"
 
 void exception_init(void) {
   asm("msr vbar_el1, %0" : : "r"(vector_table));

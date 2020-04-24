@@ -1,21 +1,16 @@
 #include <stdarg.h>
+#include "mini_uart.h"
+#include "string.h"
 #include "types.h"
-
-char *strcpy(char *dest, const char *src) {
-  uint64_t i = 0;
-  for (; src[i] != '\0'; ++i) {
-    dest[i] = src[i];
-  }
-  dest[i] = src[i];
-  return dest;
-}
+#include "utils.h"
 
 int printf(const char *format, ...) {
   va_list ap;
   char buf[256];
   va_start(ap, format);
 
-  char *iter = format, *out = buf;
+  const char *iter = format;
+  char *out = buf;
   while (*iter != '\0') {
     if (*iter == '%') {
       while (true) {

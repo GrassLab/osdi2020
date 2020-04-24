@@ -5,4 +5,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define EOL "\n"
+
 #endif // TYPES_H_

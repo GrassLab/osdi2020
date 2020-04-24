@@ -5,7 +5,6 @@
 
 #define MAX_CMD_LEN 1024
 #define MAX_TIMER_FRACTION_LEN 6
-#define EOL "\n"
 
 extern char __text_start[];
 extern char __text_end[];
