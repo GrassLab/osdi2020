@@ -9,9 +9,9 @@
 #define QUEUE_SET(q, val)   (q.buf[q.tail] = val)
 
 struct runqueue {
-    int head;
-    int tail;
-    unsigned long buf[TASK_CAPACITY];
+    // int head;
+    // int tail;
+    // unsigned long buf[TASK_CAPACITY];
 };
 
 // struct runqueue RunQueue;

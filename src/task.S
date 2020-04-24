@@ -37,3 +37,33 @@ ret_from_fork:
     // bl    schedule_tail
     mov    x0, x20
     blr    x19         //should never return
+
+
+#define USER_STACK 0x1000
+
+.global _setup_user_content
+_setup_user_content:
+    // setup EL0 stack
+    mov     x1, USER_STACK
+    msr     sp_el0, x1
+    // switch to EL0
+    // spsr_el1 clear daif and switch to EL0
+    mov     x2, 0x0
+    msr     spsr_el1, x2
+    // from el1 return to el0
+    msr     elr_el1, x0  // void(*func)()
+    eret
+
+
+// .global _el0_to_el1
+// _el0_to_el1:
+//     // setup EL1 stack
+//     ldr     x1, =_start
+//     msr     sp_el1, x1
+//     // switch to EL0
+//     // spsr_el1 clear daif and switch to EL0
+//     mov     x0, 0x5//#0x3c4
+//     msr     spsr_el2, x0
+//     adr     x0, _run_main  // from el2 return to el1
+//     msr     elr_el2, x0
+//     eret

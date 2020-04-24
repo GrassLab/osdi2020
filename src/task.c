@@ -3,14 +3,15 @@
 #include "../include/task.h"
 #include "../include/queue.h"
 
-
+struct runqueue RunQueue;
 
 #define INIT_TASK \
 /*cpu_context*/	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-/* state etc */	0,0,1,0,0 \
+/* state etc */	0,0,0,0,0 \
 }
 
 struct task init_task = INIT_TASK;
+struct task_manager TaskManager;
 
 extern struct task* get_current();
 extern void set_current(struct task* task_struct);
@@ -78,9 +79,9 @@ void schedule()
 
 
 /* 
- ** porcess for test
+ ** kernel porcess for test
  */
-void foo(unsigned int task_id)
+void kernel_test(unsigned int task_id)
 {
     while(1) {
         struct task* current = get_current();
@@ -108,3 +109,55 @@ void idle()
         wait_cycles(1000000);
     }
 }
+
+
+
+void do_exec(void(*func)())
+{
+    // be triggered at the first time execute
+    struct task* current = get_current();
+    uart_puts("do_exec$ Task_id: ");
+    uart_hex(current->task_id);
+    uart_puts("\n");
+
+    // _setup_user_content(func);
+
+    unsigned long user_stack = &TaskManager.ustack_pool[current->task_id];
+    unsigned long zero_reg = 0x0;
+    asm volatile("msr sp_el0, %0" :: "r" (user_stack));
+    asm volatile("msr spsr_el1, %0" :: "r" (zero_reg));
+    asm volatile("msr elr_el1, %0" :: "r" (func));
+    if (current->reschedule_flag == 1) {
+        uart_puts("kernel routine reschedule...\n");
+        current->reschedule_flag = 0;
+        schedule();
+    }
+    asm volatile("eret");
+}
+
+void foo() // in el0
+{
+    while(1) {
+        uart_puts("foo\n");        
+        wait_cycles(100000000);
+    }
+}
+
+// void test() {
+//     int cnt = 1;
+//     if (fork() == 0) {
+//         fork();
+//         delay(100000);
+//         fork();
+//         while(cnt < 10) {
+//             printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+//             delay(100000);
+//             ++cnt;
+//         }
+//         exit(0);
+//         printf("Should not be printed\n");
+//     } else {
+//         printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
+//         exec(foo);
+//     }
+// }

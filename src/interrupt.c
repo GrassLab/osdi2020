@@ -37,7 +37,7 @@ void core_timer_counter()
     uart_puts("Core Timer interrupt received ");
     uart_hex(CORE_TIMER_COUNT++);
     uart_puts("\n");
-    timer_tick();
+    timer_tick();  // set reschedule_flag
 }
 
 #define CORE0_TIMER_IRQ_CTRL (unsigned int* )0x40000040
@@ -147,6 +147,15 @@ void interrupt_handler()
     }
     else {
         uart_puts("interrupt_handler error.\n");
+    }
+
+
+    struct task* current = get_current();
+    if (current->reschedule_flag == 1) {
+        uart_puts("IRQ reschedule...\n");
+        uart_hex(current->task_id);
+        current->reschedule_flag = 0;
+        schedule();
     }
 }
 

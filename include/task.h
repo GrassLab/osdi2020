@@ -21,7 +21,7 @@ struct task {
     long state;
     long counter;
     long priority;
-    long preempt_count;
+    // long preempt_count;
     unsigned long task_id;
     int reschedule_flag;
 };
@@ -29,11 +29,11 @@ struct task {
 struct task_manager {
     struct task task_pool[64];
     char kstack_pool[64][4096];
+    char ustack_pool[64][4096];
     unsigned int task_num;
     // struct task*(*current)();
 };
 
-struct task_manager TaskManager;
 
 void task_manager_init();
 void privilege_task_create(void(*func)());
@@ -41,8 +41,12 @@ void context_switch(struct task* next);
 struct task* get_current();
 void set_current(struct task* task_struct);
 void schedule();
-void foo();
+void kernel_test();
 void idle();
+void do_exec(void(*func)());
+void _setup_user_content(void(*func)());
+void foo();
 
-#define N 5
+
+#define N 3
 

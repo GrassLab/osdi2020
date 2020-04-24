@@ -39,6 +39,15 @@ unsigned int LOCAL_TIMER_COUNT = 0;
 extern void switch_to(struct task* prev, struct task* next);
 
 void shell();
+
+/* 
+ ** user porcess for test
+ */
+void user_test()
+{
+    do_exec(foo);
+}
+
 void main()
 {
     // set up serial console and linear frame buffer
@@ -61,20 +70,30 @@ void main()
     
     // shell();
 
+    /*
+     ** el1 task
+     */
+    // task_manager_init();
+    // core_timer_enable();
+    // for(int i = 0; i < N; ++i) { // N should > 2
+    //     privilege_task_create(kernel_test);
+    // }
+    // idle();
+
+    /*
+     ** el0 task
+     */
     task_manager_init();
     core_timer_enable();
     for(int i = 0; i < N; ++i) { // N should > 2
-        privilege_task_create(foo);
+        privilege_task_create(user_test);
     }
-
-
     idle();
-    
 }
 
 void shell()
 {
-
+    uart_puts("Staring shell...\n");
     while (1) { 
         // get user input
         // command line
@@ -156,8 +175,8 @@ void shell()
          */
         else if (uart_strncmp(user_input, "irq_core", 8) == 0) {
             uart_puts("enable core timer.\n");
-            core_timer_enable();            /* interrupt */
-            // core_timer_enable_user();        /* syscall */
+            // core_timer_enable();            /* interrupt */
+            core_timer_enable_user();        /* syscall */
         }
         else if (uart_strncmp(user_input, "irq_local", 9) == 0) {
             uart_puts("enable local timer.\n");
