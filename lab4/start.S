@@ -81,7 +81,7 @@ boot:
 EL2_to_El1:
     /*
         exception level switch to El0
-        
+    
     mov     x0, 0x3c0               // DAIF & El0
     msr     spsr_el1, x0
     adr     x0, rest_initialization // load exception return address
@@ -89,14 +89,14 @@ EL2_to_El1:
     adr     x0, _start              // init sp for el1 option 1
     sub     x0, x0, 0x1000
     msr     sp_el0, x0
-
     bl      enable_EL0_interrupt
 
     eret
     */
 rest_initialization:
 
-    bl      disable_interrupt
+    // bl      disable_interrupt
+     bl      enable_interrupt
 
     /*
         clear bss

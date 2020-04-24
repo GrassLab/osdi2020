@@ -4,46 +4,88 @@
 
 task_t task_pcb_pool[64];
 char kstack_pool[64][4096];
-int new_taskId=0;
+
+int new_taskId = 0;
+int ReSchedule = 0;
+queue_t runQueue;
+task_t *idle_pcb = &task_pcb_pool[0];
+
+/* ======================= queue =======================*/
+void init_Queue(queue_t *q){
+	q->front = 0;
+	q->rear = 0;
+	q->isFull = 0;
+}
+
+int isEmpty(queue_t *q){
+	return (q->front==q->rear && q->isFull==0);
+}
+
+void enQueue(queue_t *q, int num){
+	if(q->isFull) {
+		uart_puts("Queue is full! \n");
+		return;
+	}
+
+	q->rear = (q->rear+1)%MAX_QUEUE;
+	q->circular_queue[q->rear] = num;
+	if(q->front == q->rear) q->isFull=1;
+}
+
+int deQueue(queue_t *q){
+	if(isEmpty(q)){
+		uart_puts("Queue is empty! \n");
+		return -1;
+	}
+
+	
+	q->front = (q->front+1)%MAX_QUEUE;
+	q->isFull=0;
+
+	return q->circular_queue[q->front];
+
+}
+
+/* ======================= task =======================*/
 
 void privilege_task_create( void(*func)() ){
 	int cur_taskId = new_taskId;
 
 	task_pcb_pool[cur_taskId].taskId = cur_taskId;
+
 	task_pcb_pool[cur_taskId].context.lr = (unsigned long long *)func;
 	task_pcb_pool[cur_taskId].context.sp = (unsigned long long *)&kstack_pool[cur_taskId][0];
 
 	for(int i=0; i<4096; i++) kstack_pool[cur_taskId][i] = '\0';
 
+	enQueue(&runQueue, cur_taskId);
 	new_taskId++;
 }
 
 void context_switch(int next_taskId){
 	int cur_taskId = get_cur_taskId();
+	enQueue(&runQueue, cur_taskId);
 	set_cur_taskId(next_taskId);
 	switch_to(&task_pcb_pool[cur_taskId].context, &task_pcb_pool[next_taskId].context);
 }
 
-void task1(){
-	while(1){
-		uart_puts("1...\n");
-		sleep();
-		context_switch(1);
+void schedule(){
+	if(ReSchedule){
+		ReSchedule = 0;
+		int next_taskId = deQueue(&runQueue);
+		context_switch(next_taskId);
 	}
 }
 
-void task2(){
+//idle task
+void idle(){
 	while(1){
-		uart_puts("2...\n");
-		sleep();
-		context_switch(0);
+		int next_taskId = deQueue(&runQueue);
+		if(next_taskId != -1){
+			set_cur_taskId(next_taskId);
+			switch_to(&task_pcb_pool[0].context, &task_pcb_pool[next_taskId].context);
+		}else{
+			sleep();
+		}
 	}
-}
-
-void test(){
-	privilege_task_create(task1);
-	privilege_task_create(task2);
-
-	set_cur_taskId(0);
-	task1();
 }

@@ -28,3 +28,10 @@ get_cur_taskId:
 set_cur_taskId:
 	msr 	tpidr_el1, x0
 	ret
+
+.global go_to
+go_to:
+	ldp 	fp, lr, [x0, 16 * 5]
+	ldr 	x9, [x0, 16 * 6]
+	mov 	sp,  x9
+	ret

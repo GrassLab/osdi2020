@@ -25,6 +25,8 @@
 
 #include "uart.h"
 #include "irq.h"
+#include "timer.h"
+#include "task.h"
 
 #define CORE0_IRQ_SOURCE ((volatile unsigned int*)0x40000060)
 #define ARM_LOCAL_TIMER_IRQ 0b100000000000
@@ -88,21 +90,10 @@ void sysCall_set_timer(){
     supervisor_call_2();
 }
 
-void sysCall_unset_timer(){
+void sysCall_task_init(){
     supervisor_call_3();
 }
 
-void sysCall_miniUART_irq(){
-    supervisor_call_4();
-}
-
-void dequeue_core_timer_bottom_half(){
-    supervisor_call_5();
-}
-
-void dequeue_local_timer_bottom_half(){
-    supervisor_call_6();
-}
 
 void sysCall_handler_el0(int num){
     unsigned long esr, elr;
@@ -119,21 +110,10 @@ void sysCall_handler_el0(int num){
             show_esr_elr(esr, elr);
             break;
         case 2:
-            // core_timer_enable();
-            // arm_local_timer_init();
+            core_timer_enable();
             break;
         case 3:
-            // arm_local_timer_cancel();
-            // core_timer_cancel();
-            break;
-        case 4:
-            enable_miniUART_interrupt();
-            break;
-        case 5:
-            // core_timer_irq_queue = 0;
-            break;
-        case 6:
-            // local_timer_irq_queue = 0;
+            //test();
             break;
 
         default:
@@ -199,27 +179,10 @@ void irq_exc_handler(){
     unsigned int irq_status = *CORE0_IRQ_SOURCE;
 
     if( irq_status & ARM_CORE_TIMER_IRQ){
-        uart_puts("ARM_CORE_TIMER_IRQ\n");
-        // core_timer_handler();
-        // core_timer_irq_queue = 1;
-        
+        // uart_puts("ARM_CORE_TIMER_IRQ\n");
+        core_timer_handler();
+        ReSchedule = 1;
 
-        // core_timer_irq_bottom_half();
-        return;
-    }
-
-    if( irq_status & ARM_LOCAL_TIMER_IRQ) {
-        uart_puts("ARM_LOCAL_TIMER_IRQ\n");
-        // arm_local_timer_handler();
-        // local_timer_irq_queue = 1;
-
-        // local_timer_irq_bottom_half();
-        return;
-    }
-
-    unsigned int IRQ_pending = *IRQ_PENDIGN_1;
-    if(IRQ_pending & 1<<29){
-        show_interrupt_status();
         return;
     }
         

@@ -1,6 +1,7 @@
 #ifndef __TASK_H__
 #define __TASK_H__
 
+/* ===================== define ===================== */
 typedef struct context_def{
 	unsigned long long x19;
 	unsigned long long x20;
@@ -22,14 +23,32 @@ typedef struct task_def{
 	context_t context;
 }task_t;
 
-void test();
+#define MAX_QUEUE 5
+typedef struct queue_def{
+	int circular_queue[MAX_QUEUE];
+	int front;
+	int rear;
+	int isFull;
+}queue_t;
+
+
+/* ===================== outer file use ===================== */
+extern int ReSchedule;
+extern queue_t runQueue;
+extern task_t *idle_pcb;
+
+
 void privilege_task_create( void(*func)() );
+void schedule( void );
+void init_Queue(queue_t *q);
+void idle( void );
 
 
 /* ===================== task.S ===================== */
 void switch_to(context_t *prev, context_t *next);
-int get_cur_taskId(void);
+int get_cur_taskId( void );
 void set_cur_taskId(int taskId);
+void go_to(context_t *idle_context);
 
 
 

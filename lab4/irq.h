@@ -3,6 +3,8 @@
 
 void enable_interrupt( void );
 void disable_interrupt( void );
+void enable_EL0_interrupt( void );
+void disable_EL0_interrupt( void );
 void supervisor_call_1( void );
 void supervisor_call_2( void );
 void supervisor_call_3( void );
