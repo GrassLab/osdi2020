@@ -20,7 +20,6 @@ create infinite loop
 - [x] `required 2` Remove the infinite loop in exception_handler function and add `eret` at the end of ISRs. Observe the difference between saving and not saving general registers.
 
 - [x] `question 2` Do you need to save floating point SIMD registers in ISRs? Why or why not.
-在exception情況下無法回覆Pipeline的東西，所以存了也沒用
 
 ## Pi3’s interrupt
 ### Background
