@@ -4,7 +4,7 @@
 extern void enable_irq();
 extern void disable_irq();
 
-extern void irq();
+extern void irq_router();
 
 #define IRQ_BASIC_PENDING (volatile unsigned int *)(MMIO_BASE + 0xb200)
 #define ENABLE_IRQ2 (volatile unsigned int *)(MMIO_BASE + 0xb214)

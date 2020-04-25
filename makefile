@@ -22,7 +22,7 @@ kernel8.img: kernel8.elf
 	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
 
 send_kernel:
-	python load_images.py --port "/dev/ttyUSB0" --kernel "other_kernels/kernel8.img"
+	sudo python load_images.py --port "/dev/ttyUSB0" --kernel "other_kernels/kernel8.img"
 
 clean:
 	rm -f kernel8.elf kernel8.img $(patsubst %,%~*,$(SRC) $(HEADER)) $(OBJECTS)

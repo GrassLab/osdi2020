@@ -65,7 +65,7 @@ _core_timer_handler:
   msr CNTP_CTL_EL0, x0
   */
 
-  //bl timer_tick
+  bl timer_tick
 
 
   ldp x29, x30, [sp], #16

@@ -271,5 +271,5 @@ void irq_handler()
 {
     // uart_puts("*Interrput*: <IRQ>\n");
 
-    irq();
+    irq_router();
 }

@@ -27,7 +27,7 @@ ser.flushOutput()
 kernel_path = './other_kernels/kernel8.img'
 kernel_path = args.kernel
 #kernel_path = './other_kernels/kernel8_2.img'
-#kernel_path = './kernel8.img'
+kernel_path = './kernel8.img'
 kernel_size = os.path.getsize(kernel_path)
 # 0x80000 = 524288
 content = ["load_images\n", str(kernel_size)+"\n", "524288\n"]

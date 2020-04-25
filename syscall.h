@@ -7,6 +7,8 @@
 
 void syscall_router(unsigned long, unsigned long, unsigned long, unsigned long);
 
+double gettime();
+
 //void uart_send(unsigned int c);
 //char uart_recv() __attribute__((section(".bootloader")));
 #endif

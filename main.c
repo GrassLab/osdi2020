@@ -17,7 +17,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 3.1.0\n");
+    uart_print("Version : 4.0.2\n");
     uart_print("-------------------------\n");
 }
 
@@ -50,10 +50,10 @@ void task_1()
     // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
     for (int i = 0; i < 10000; i++)
     {
-        uart_puts("1...\n");
+        uart_puts("1");
         // very very very slow in real rpi3, but very very very fast in qemu
         asm volatile(
-            "mov  x0, #0xffffff\n"
+            "mov  x0, #0xfffff\n"
             "loop_task_1_0: subs  x0, x0, #1\n"
             "bne   loop_task_1_0\n");
 
@@ -67,10 +67,10 @@ void task_2()
     // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
     for (int i = 0; i < 10000; i++)
     {
-        uart_puts("2...\n");
+        uart_puts("2");
         // very very very slow in real rpi3, but very very very fast in qemu
         asm volatile(
-            "mov  x0, #0xffffff\n"
+            "mov  x0, #0xfffff\n"
             "loop_task_2_0: subs  x0, x0, #1\n"
             "bne   loop_task_2_0\n");
         if (check_reschedule())
@@ -83,10 +83,10 @@ void user_task_3()
     // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
     for (int i = 0; i < 10000; i++)
     {
-        uart_puts("3...\n");
+        uart_puts("3");
         // very very very slow in real rpi3, but very very very fast in qemu
         asm volatile(
-            "mov  x0, #0xffffff\n"
+            "mov  x0, #0xfffff\n"
             "loop_task_3_0: subs  x0, x0, #1\n"
             "bne   loop_task_3_0\n");
     }
@@ -94,7 +94,7 @@ void user_task_3()
 
 void task_3()
 {
-    move_to_user_mode((unsigned long)&user_task_3);
+    do_exec((unsigned long)&pcsh);
     if (check_reschedule())
         schedule();
 }
@@ -136,7 +136,8 @@ int main()
     task_init();
     privilege_task_create((unsigned long)&task_1, (unsigned long)"12345");
     privilege_task_create((unsigned long)&task_2, (unsigned long)"ccc");
-    privilege_task_create((unsigned long)&task_3, (unsigned long)"aaa");
+    //privilege_task_create((unsigned long)&task_3, (unsigned long)"aaa");
+    copy_process(PF_KTHREAD, (unsigned long)&task_3, 0, 0);
 
     //privilege_task_create((unsigned long)&pcsh, (unsigned long)"pcsh");
 

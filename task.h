@@ -8,6 +8,8 @@
 #define PSR_MODE_EL3t 0x0000000c
 #define PSR_MODE_EL3h 0x0000000d
 
+#define PF_KTHREAD 0x00000002
+#define PAGE_SIZE 1024
 typedef struct cpu_context_t
 {
     unsigned long x19;
@@ -42,40 +44,40 @@ typedef struct user_context_t
 
 typedef struct task_t
 {
-    /*
-    int id;
-    void (*func)();
-*/
     cpu_context_t cpu_context;
     long state;
     long counter;
     long priority;
     long preempt_count;
+    unsigned long stack;
+    unsigned long flags;
 } task_t;
+
+#define TASK_NUM 64
 
 #define TASK_IDLE 0
 #define TASK_RUNNING 1
 #define THREAD_SIZE 4096
 
-#define INIT_TASK                                \
-    /*cpu_context*/ {                            \
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \
-            /* state etc */ 0, 0, 1, 0           \
+#define INIT_TASK                                     \
+    /*cpu_context*/ {                                 \
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},      \
+            /* state etc */ 0, 0, 1, 0, 0, PF_KTHREAD \
     }
 
 static task_t *init_task = INIT_TASK;
 
-task_t *task_pool[64] = {
+task_t *task_pool[TASK_NUM] = {
     &(init_task),
 };
 
 static int task_pool_len = 0;
 
-static unsigned short kstack_pool[64][THREAD_SIZE] = {0};
+static unsigned short kstack_pool[TASK_NUM][THREAD_SIZE] = {0};
 
-static unsigned short ustack_pool[64][THREAD_SIZE] = {0};
+static unsigned short ustack_pool[TASK_NUM][THREAD_SIZE] = {0};
 
-static int runqueue[64];
+static int runqueue[TASK_NUM];
 
 static int runqueue_len = 0;
 
@@ -125,20 +127,32 @@ int privilege_task_create(unsigned long func, unsigned long arg)
     return task_id;
 }
 
+user_context_t *task_user_context(task_t *task)
+{
+    unsigned long p = (unsigned long)task + THREAD_SIZE - sizeof(user_context_t);
+    return (user_context_t *)p;
+}
+
 int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack)
 {
-    preempt_disable();
-    struct task_struct *p;
+    //preempt_disable();
 
-    p = (struct task_struct *)get_free_page();
+    task_t *current = task_pool[get_current()];
+    // preempt_disable();
+    task_t *p;
+
+    int task_id = task_pool_len;
+
+    p = (task_t *)&kstack_pool[task_id][0];
+
     if (!p)
     {
         return -1;
     }
 
-    user_context_t *childregs = task_pt_regs(p);
-    memzero((unsigned long)childregs, sizeof(user_context_t));
-    memzero((unsigned long)&p->cpu_context, sizeof(cpu_context_t));
+    user_context_t *childregs = task_user_context(p);
+    memset((char *)childregs, 0, sizeof(user_context_t));
+    memset((char *)&p->cpu_context, 0, sizeof(cpu_context_t));
 
     if (clone_flags & PF_KTHREAD)
     {
@@ -147,7 +161,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     }
     else
     {
-        struct pt_regs *cur_regs = task_pt_regs(current);
+        user_context_t *cur_regs = task_user_context(current);
         *childregs = *cur_regs;
         childregs->regs[0] = 0;
         childregs->sp = stack + PAGE_SIZE;
@@ -161,21 +175,14 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 
     p->cpu_context.pc = (unsigned long)ret_from_fork;
     p->cpu_context.sp = (unsigned long)childregs;
-    int pid = nr_tasks++;
-    task[pid] = p;
-    preempt_enable();
+
+    int pid = task_pool_len++;
+    task_pool[pid] = p;
+    //preempt_enable();
     return pid;
 }
 
-#define PAGE_SIZE 1024
-
-user_context_t *task_user_context(task_t *task)
-{
-    unsigned long p = (unsigned long)task + THREAD_SIZE - sizeof(user_context_t);
-    return (user_context_t *)p;
-}
-
-int move_to_user_mode(unsigned long pc)
+int do_exec(unsigned long pc)
 {
 
     user_context_t *regs = task_user_context(task_pool[get_current()]);
@@ -265,12 +272,8 @@ void timer_tick()
 {
     if (check_reschedule() == 1)
     {
-        disable_irq();
-        schedule();
         enable_irq();
+        schedule();
+        disable_irq();
     }
-}
-
-void do_exec(unsigned long func)
-{
 }
