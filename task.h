@@ -1,5 +1,13 @@
 #include "irq.h"
 
+#define PSR_MODE_EL0t 0x00000000
+#define PSR_MODE_EL1t 0x00000004
+#define PSR_MODE_EL1h 0x00000005
+#define PSR_MODE_EL2t 0x00000008
+#define PSR_MODE_EL2h 0x00000009
+#define PSR_MODE_EL3t 0x0000000c
+#define PSR_MODE_EL3h 0x0000000d
+
 typedef struct cpu_context_t
 {
     unsigned long x19;
@@ -17,6 +25,13 @@ typedef struct cpu_context_t
     unsigned long pc;
 } cpu_context_t;
 
+/*
+SP_EL0: The address of user mode’s stack pointer.
+
+ELR_EL1: The program counter of user mode’s procedure.
+
+SPSR_EL1: The CPU state of user mode.
+*/
 typedef struct user_context_t
 {
     unsigned long regs[31];
@@ -108,6 +123,48 @@ int privilege_task_create(unsigned long func, unsigned long arg)
 
     task_pool_len++;
     return task_id;
+}
+
+int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack)
+{
+    preempt_disable();
+    struct task_struct *p;
+
+    p = (struct task_struct *)get_free_page();
+    if (!p)
+    {
+        return -1;
+    }
+
+    user_context_t *childregs = task_pt_regs(p);
+    memzero((unsigned long)childregs, sizeof(user_context_t));
+    memzero((unsigned long)&p->cpu_context, sizeof(cpu_context_t));
+
+    if (clone_flags & PF_KTHREAD)
+    {
+        p->cpu_context.x19 = fn;
+        p->cpu_context.x20 = arg;
+    }
+    else
+    {
+        struct pt_regs *cur_regs = task_pt_regs(current);
+        *childregs = *cur_regs;
+        childregs->regs[0] = 0;
+        childregs->sp = stack + PAGE_SIZE;
+        p->stack = stack;
+    }
+    p->flags = clone_flags;
+    p->priority = current->priority;
+    p->state = TASK_RUNNING;
+    p->counter = p->priority;
+    p->preempt_count = 1; //disable preemtion until schedule_tail
+
+    p->cpu_context.pc = (unsigned long)ret_from_fork;
+    p->cpu_context.sp = (unsigned long)childregs;
+    int pid = nr_tasks++;
+    task[pid] = p;
+    preempt_enable();
+    return pid;
 }
 
 #define PAGE_SIZE 1024

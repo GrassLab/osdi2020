@@ -68,18 +68,9 @@ int cmd_reboot(int i)
 
 int cmd_timestamp(int i)
 {
-    double t;
-    asm volatile("mov x1, %0\n"
-                 "mov x0, #2\n"
-                 "svc #0x80\n" ::"r"(&t));
+    float t = gettime();
     uart_send_float((float)t, 4);
     uart_send('\n');
-    return 0;
-
-    // can't run in el0
-    /*
-    float t = gettime();
-    */
 }
 
 int cmd_load_images(int i)

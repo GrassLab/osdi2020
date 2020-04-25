@@ -1,6 +1,7 @@
+#define S_FRAME_SIZE 272
   .section ".text"
-    .macro  kernel_entry
-    sub sp, sp, #272
+    .macro  kernel_entry, el
+    sub sp, sp, #S_FRAME_SIZE
     stp x0, x1, [sp, #16 * 0]
     stp x2, x3, [sp, #16 * 1]
     stp x4, x5, [sp, #16 * 2]
@@ -17,19 +18,30 @@
     stp x26, x27, [sp, #16 * 13]
     stp x28, x29, [sp, #16 * 14]
 
+    .if \el == 0
+    mrs x21, sp_el0
+    .else
+    add x21, sp, #S_FRAME_SIZE
+    .endif /* \el == 0 */
+
     mrs x22, elr_el1
     mrs x23, spsr_el1
 
-    stp x30, x22, [sp, #16 * 15]
-    str x23, [sp, #16 * 16]
+    stp x30, x21, [sp, #16 * 15] 
+    stp x22, x23, [sp, #16 * 16]
     .endm
 
-    .macro  kernel_exit
-    ldr x23, [sp, #16 * 16]
-    ldp x30, x22, [sp, #16 * 15]
+    .macro  kernel_exit, el
+    ldp x22, x23, [sp, #16 * 16]
+    ldp x30, x21, [sp, #16 * 15] 
 
-    msr elr_el1, x22
+    .if \el == 0
+    msr sp_el0, x21
+    .endif /* \el == 0 */
+
+    msr elr_el1, x22            
     msr spsr_el1, x23
+
 
     ldp x0, x1, [sp, #16 * 0]
     ldp x2, x3, [sp, #16 * 1]
@@ -46,12 +58,12 @@
     ldp x24, x25, [sp, #16 * 12]
     ldp x26, x27, [sp, #16 * 13]
     ldp x28, x29, [sp, #16 * 14]
-    add sp, sp, #272
+    add sp, sp, #S_FRAME_SIZE       
     eret
     .endm
 
 _exc_handler:
-  kernel_entry
+  kernel_entry 1
   /*
     mov x0, #0
     mrs     x1, esr_el2
@@ -60,18 +72,18 @@ _exc_handler:
     mrs     x4, far_el2
     */
   bl exc_handler
-  kernel_exit
+  kernel_exit 1
 
 _synchronous_handler:
-  kernel_entry
+  kernel_entry 1
   bl synchronous_handler
-  kernel_exit
+  kernel_exit 1
 
 
 _irq_handler:
-  kernel_entry
+  kernel_entry 1
   bl irq_handler
-  kernel_exit
+  kernel_exit 1
 
 .global ret_from_fork
 ret_from_fork:
@@ -81,7 +93,7 @@ ret_from_fork:
     blr   x19
 ret_to_user:
     bl disable_irq
-    kernel_exit
+    kernel_exit 0
     // kernel_exit 0
 
 // exception

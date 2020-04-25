@@ -94,17 +94,13 @@ void user_task_3()
 
 void task_3()
 {
-    move_to_user_mode(user_task_3);
+    move_to_user_mode((unsigned long)&user_task_3);
     if (check_reschedule())
         schedule();
 }
 
 int main()
 {
-    //_irq_init();
-
-    *ENABLE_IRQ2 = 1 << 25;
-
     // set uart
     uart_init();
 
@@ -135,7 +131,7 @@ int main()
     */
 
     // core timer enable, every 1ms
-    syscall1(0, 1);
+    syscall_1(0, 1);
 
     task_init();
     privilege_task_create((unsigned long)&task_1, (unsigned long)"12345");

@@ -45,6 +45,28 @@ void syscall_gettime(double *t)
     *t = (double)ct / (double)freq;
 }
 
+void syscall_uart_send(char x1)
+{
+    /* wait until we can send */
+    do
+    {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x20);
+    /* write the character to the buffer */
+    *UART0_DR = x1;
+}
+
+void syscall_uart_recv(char *x1)
+{
+    /* wait until something is in the buffer */
+    do
+    {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x10);
+    /* read it and return */
+    *x1 = (char)(*UART0_DR);
+}
+
 /* Can't work */
 void syscall_load_images()
 {
@@ -91,6 +113,12 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
     case 0x3:
         syscall_load_images();
         break;
+    case 0x4:
+        syscall_uart_send(x1);
+        break;
+    case 0x5:
+        syscall_uart_recv((char *)x1);
+        break;
     // delay than print ...  (for test bottom half)
     case 0x100:
         syscall_delay();
@@ -107,3 +135,29 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
             ;
     }
 };
+
+/*
+void uart_send(unsigned int x1)
+{
+    syscall_1(0x4, x1);
+}
+
+char uart_recv()
+{
+    char x1;
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x05\n"
+                 "svc #0x80\n" ::"r"(&x1));
+    return x1;
+}
+*/
+
+double gettime()
+{
+    double t;
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x02\n"
+                 "svc #0x80\n" ::"r"(&t));
+
+    return t;
+}

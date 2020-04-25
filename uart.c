@@ -3,6 +3,7 @@
 #include "string.h"
 #include "mailbox.h"
 #include "uart.h"
+#include "syscall.h"
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -72,21 +73,6 @@ void uart_send(unsigned int c)
     *UART0_DR = c;
 }
 
-char uart_getc()
-{
-    char r;
-    /* wait until something is in the buffer */
-    do
-    {
-        asm volatile("nop");
-        // asm volatile("wfi");
-    } while (*UART0_FR & 0x10);
-    /* read it and return */
-    r = (char)(*UART0_DR);
-    /* convert carrige return to newline */
-    return r == '\r' ? '\n' : r;
-}
-
 char uart_recv()
 {
     /* wait until something is in the buffer */
@@ -96,6 +82,13 @@ char uart_recv()
     } while (*UART0_FR & 0x10);
     /* read it and return */
     return (char)(*UART0_DR);
+}
+
+char uart_getc()
+{
+    char r = uart_recv();
+    /* convert carrige return to newline */
+    return r == '\r' ? '\n' : r;
 }
 
 void uart_puts(char *s)
