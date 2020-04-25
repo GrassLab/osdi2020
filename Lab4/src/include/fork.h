@@ -4,6 +4,8 @@
 #include "scheduler.h"
 
 int get_availible_pid();
+void free_pid(int i);
+
 int privilege_task_create(void(* func));
 int user_task_create();
 int do_exec(void(* func));

@@ -10,7 +10,8 @@
 #define TASK_RUNNING	0
 #define TASK_ZOMBIE     1
 
-extern struct task_struct *current;
+#define current get_current()
+
 extern struct task_struct *task[NR_TASKS];
 
 //for runQ 
@@ -30,8 +31,8 @@ struct cpu_context {
     unsigned long x27;
     unsigned long x28;
     unsigned long fp;
-    unsigned long pc;
     unsigned long sp;
+    unsigned long pc;
 };
 
 struct task_struct{
@@ -44,10 +45,13 @@ struct task_struct{
 	unsigned long stack;
 };
 
+
+extern void switch_to(struct task_struct* prev, struct task_struct* next);
+extern struct task_struct* get_current();
+extern void init_idle_task(struct task_struct* task);
+
 extern void schedule(void);
 extern void context_switch(struct task_struct* next);
-extern void switch_to(struct task_struct* prev, struct task_struct* next);
-extern struct task* get_current();
 extern void init_runQ();
 extern void preempt_disable(void);
 extern void preempt_enable(void);
@@ -55,7 +59,8 @@ extern void schedule_tail(void);
 extern void timer_tick();
 extern void exit_process();
 
-#define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, 0,0,1,0,0,0} 
+#define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
+	0,0,1,0,0,0} 
 
 #endif
 #endif /*_SCHEDULER_H */

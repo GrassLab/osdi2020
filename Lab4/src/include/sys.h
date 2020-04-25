@@ -9,6 +9,7 @@
 #define SYS_EXIT 5
 #define SYS_GET_TASKID 6
 #define SYS_UART_WRITE 7
+#define SYS_UART_READ  8
 
 #ifndef __ASSEMBLER__
 int call_core_timer();
@@ -22,6 +23,8 @@ int exec(void(* func));
 void exit(int status);
 int get_taskid();
 size_t uart_write(const char buf[], size_t size);
+size_t uart_read(const char buf[],size_t size);
+
 #endif
 
 #endif  /*_SYS_H */

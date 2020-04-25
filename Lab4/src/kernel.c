@@ -8,58 +8,9 @@
 #include "include/timer.h"
 #include "include/sys.h"
 #include "include/fork.h"
+#include "include/mm.h"
 #include "include/scheduler.h"
 #include "include/printf.h"
-
-int check_string(char * str){
-	char* cmd_help = "help";
-	char* cmd_hello = "hello";
-	char* cmd_reboot = "reboot";
-	char* cmd_exc = "exc";
-	char* cmd_irq = "irq";
-
-	if(strcmp(str,cmd_help)==0){
-	// print all available commands
-		uart_send_string("\r\nhello : print Hello World!\r\n");
-		uart_send_string("help : help\r\n");
-		uart_send_string("exc: trigger an exception instruction\r\n");
-		uart_send_string("irq: enable core timer and system timer\r\n");
-		uart_send_string("reboot: reboot rpi3\r\n");
-	}
-	else if(strcmp(str,cmd_hello)==0){
-	// print hello
-		uart_send_string("\r\nHello World!\r\n");
-	}
-	else if(strcmp(str,cmd_reboot)==0){
-		uart_send_string("\r\nBooting......\r\n");
-		reset(10000);
-		return 1;	
-	}
-	else if(strcmp(str,cmd_exc)==0){		
-		uart_send_string("\r\n");
-		// issue exception                	
-		asm volatile(
-			"mov x8,#10;" // invalid system call will return back
-			"svc #1;"
-    		);
-
-		/*
-		asm volatile(
-			"brk #1;"
-		);*/
-	}
-	else if(strcmp(str,cmd_irq)==0){
-		uart_send_string("\r\n");	
-		call_core_timer();
-		sys_timer_init();//don't need system call for this!
-	}
-	else{
-		uart_send_string("\r\nErr:command ");
-		uart_send_string(str);
-		uart_send_string(" not found, try <help>\r\n");
-	}
-	return 0;
-}
 
 void get_board_revision_info(){
   mbox[0] = 7 * 4; // buffer size in bytes
@@ -107,7 +58,6 @@ void get_VC_core_base_addr(){
   }
 }
 
-
 void foo(){
   int tmp = 5;
   printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
@@ -117,30 +67,68 @@ void foo(){
 void idle(){
   while(1){
     	schedule();
-    	delay(1000000);
+    	delay(100000);
   }
   printf("Test finished\n");
   while(1);
 }
 
-void test() {
-  	int cnt = 1;
-  	if (fork() == 0) {
-    		fork();
-    		delay(100000);
-    		fork();
 
-    		while(cnt < 10) {
-      			printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+void mytest(){
+	/* uart_write test
+	char buffer[64]="Word in buffer\r\n";
+	int success_write;
+	success_write = uart_write(buffer,sizeof(buffer));
+	printf("Write byte: %d\r\n",success_write);*/
+
+	/* uart_read test
+	char buffer[4];
+	int success_read;
+	printf(">>");
+	success_read = uart_read(buffer,sizeof(buffer));
+	printf("\r\nRead byte %d: ", success_read);
+	for(int i=0;i<sizeof(buffer);i++)
+		printf("%c",buffer[i]);
+	printf("\r\n");*/
+
+	fork();
+	int cnt = 1;	
+	//printf("Doing: %d, and cnt now %d\r\n",get_taskid(),cnt);
+	printf("cnt at 0x%x \r\n",&cnt);
+	while(cnt < 10) {
+		printf("Task id: %d, cnt addr: 0x%x, value: %d\n", get_taskid(), &cnt, cnt);
+		delay(100000000);
+		++cnt;
+	}
+	printf("\r\n");
+	exit(0);
+}
+
+void test() {	
+	printf("Before fork SP: 0x%x\r\n",get_SP());
+  	int cnt = 1; //share?
+	if (fork() == 0) {
+    		//fork();
+    		//delay(100000);
+		
+    		fork();
+		printf("SP: 0x%x\r\n",get_SP());
+		int cnt = 1;	
+		printf("Doing: %d, and cnt now %d\r\n",get_taskid(),cnt);
+    		printf("cnt at 0x%x \r\n",&cnt);
+		while(cnt < 10) {
+      			printf("Task id: %d, cnt addr: 0x%x, value: %d\n", get_taskid(), &cnt, cnt);
       			delay(100000);
       			++cnt;
     		}
    	 	exit(0);
     		printf("Should not be printed\n");
   	} else {
+		
     		printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
     		exec(foo);
-  	}	
+  	}
+	exit(0);	
 }
 
 void kernel_process(){	
@@ -150,28 +138,49 @@ void kernel_process(){
     	}
 }
 
+void zombie_reaper(){
+	while(1){
+		struct task_struct *p;
+		for (int i=0; i < NR_TASKS;i++){
+			p = task[i];
+			if(p && p->state==TASK_ZOMBIE){
+				//reclaim the resource
+				// 1. pid
+				free_pid(i);
+				// 2.kernel_stack(memory)	
+				free_page((unsigned long)p);
+				task[i] = 0;
+			}
+		}
+	}
+}
+
+
 void kernel_main(void)
 {	
     uart_init();  
     init_printf(0, putc);
     
     printf("Hello, world!\r\n");
-
-    //async_exc_routing(); //set HCR_EL2.IMO
-                           // Do not set HCR_EL2.IMO if you want your interrupt directly goto kernel in EL1 
-   
+ 
     enable_irq();        //clear PSTATE.DAIF
     core_timer_enable(); //enable core timer
-
-    //fb_init();
-    //fb_show();
    
     //get hardware information by mailbox
     get_board_revision_info();
     get_VC_core_base_addr();
-   
+ 
     init_runQ(); 
+    init_idle_task(task[0]); // must init 'current' as idle task first 
    
+
+    // Here init a task being zombie reaper
+    int res = privilege_task_create(zombie_reaper);
+    if (res < 0) {
+        	printf("error while starting process");
+        	return;
+    }
+
     for(int num=0;num<1;num++){ 
     	int res = privilege_task_create(kernel_process);
     	if (res < 0) {
@@ -179,17 +188,6 @@ void kernel_main(void)
         	return;
     	}
     }	
-   
+    
     idle();
-    
-    /*
-    // simple shell implement
-    char str[128];
-    
-    while (1) {
-    	uart_send_string(">>");
-	uart_recv_string(128,str);	
-	check_string(str); 
-    }
-    */
 }

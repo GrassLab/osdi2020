@@ -328,8 +328,8 @@ pop_reg_el1:
 .global ret_from_fork
 ret_from_fork:
 	bl schedule_tail //enable preeption
-	cbz x19, ret_to_user //if x19==0 -> return to el0
-	blr x19         
-ret_to_user: //after a kernel thread finishes, the execution goes to the ret_to_user
-	bl disable_irq
+	cbz	x19, ret_to_user			// not a kernel thread
+	blr	x19 //after kernel thread finish, go to ret_to_user
+ret_to_user:
+	bl disable_irq				
 	b pop_reg_el0

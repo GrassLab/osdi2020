@@ -62,14 +62,8 @@ void uart_init(){
 }
 
 
-void uart_send ( char c )
+int uart_send ( char c ) // If fail to send, return -1 
 {	
-	/*
-	while(get32(UART0_FR)&0x20){
-	}
-	put32(UART0_DR,c);
-	*/
-
 	char tmp;
 
 	if(get32(UART0_FR)&0x80){ //transmit FIFO empty
@@ -87,9 +81,13 @@ void uart_send ( char c )
 		if(!isfull(write_buf_head,write_buf_tail)){
 			push(write_buf,&write_buf_tail,c);
 		}
+		else{
 		// If FIFO, also the queue if full, then char will be 
 		// dropped...
+			return -1;
+		}
 	}
+	return 0;
 }
 
 char uart_recv ()

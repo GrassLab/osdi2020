@@ -6,6 +6,7 @@
 #include "include/scheduler.h"
 #include "include/fork.h"
 #include "include/printf.h"
+#include "include/irq.h"
 
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
@@ -102,9 +103,31 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			return current->pid;
 		}
 		case 7:{
-			printf((char*)arg0);
-		 	return 0;	
+			int success = 0;
+			int ret = 0;
+			
+			for(int i=0; i<arg1;i++){
+				ret = uart_send(((char*)arg0)[i]);
+				if(ret==0)
+					++success;
+			}
+		 	return success;	
 		}
+		case 8:{
+			char recv_char;
+			int i = 0;
+			enable_irq(); // Enable irq here for read
+			for(;i<arg1;i++){
+				recv_char = uart_recv();
+				uart_send(recv_char);
+
+				((char*)arg0)[i] = recv_char;
+			}
+			disable_irq(); // Disable for safety...?
+		 		
+			return i;	
+		}
+
 	}
 	// Not here if no bug happened!
 	return -1;

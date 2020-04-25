@@ -24,9 +24,14 @@ get_timer_counts:
 	mrs x0, cntpct_el0
 	ret
 
-.global get_reg
-get_reg: 
-        mov x0, SP
+.global get_SP
+get_SP:
+	mov x0, SP
+	ret
+
+.global get_FP
+get_FP: 
+        mov x0, x29
 	ret
 
 .global get_el

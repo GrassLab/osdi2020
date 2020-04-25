@@ -3,7 +3,7 @@
 #include "include/entry.h"
 #include "include/scheduler.h"
 #include "include/queue.h"
-
+#include "include/printf.h"
 static unsigned short pid_map[64] = {0,};
 
 int get_availible_pid(){
@@ -15,6 +15,10 @@ int get_availible_pid(){
 		}
 	}
 	return -1;
+}
+
+void free_pid(int i){
+	pid_map[i]=0;
 }
 
 int privilege_task_create(void(* fn)){
@@ -38,6 +42,7 @@ int privilege_task_create(void(* fn)){
 
 	p->cpu_context.pc = (unsigned long)ret_from_fork;
 	p->cpu_context.sp = (unsigned long)childregs; 
+
 	int pid = get_availible_pid();
 	task[pid] = p;	
 	p->pid = pid;
@@ -60,13 +65,19 @@ int user_task_create()
 	struct trapframe *childregs = get_task_trapframe(p);
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
-	
-	
+		
 	struct trapframe * cur_regs = get_task_trapframe(current);
 	*childregs = *cur_regs; //copy content of parent register
 	childregs->regs[0] = 0; //x0 in the new state is set to 0, because x0 will be interpreted by the caller as a return value of the syscall.
-	
-	p->cpu_context.x19 = 0; // set this for return to user in entry.S for safety		
+
+	unsigned long stack = get_free_page(); 
+	if (!stack) {
+		return -1;
+	}
+	childregs->sp = stack + PAGE_SIZE;
+	p->stack=stack;
+
+	p->cpu_context.x19 = 0; 
 	p->priority = current->priority;
 	p->state = TASK_RUNNING;
 	p->counter = p->priority;
@@ -78,6 +89,7 @@ int user_task_create()
 	task[pid] = p;
 	p->pid = pid;
 
+	//printf("pid %d:p stack:%0x parent stack:%0x\r\n",pid,childregs->sp,cur_regs->sp);
 	runQ_push(runQ,&runQ_tail,pid);
 	preempt_enable();
 	return pid;
@@ -94,16 +106,16 @@ int do_exec(void(*func))
 {
 	struct trapframe *regs = get_task_trapframe(current);
 	memzero((unsigned long)regs, sizeof(*regs));
-
+	
 	regs->elr_el1 = (unsigned long)func;             // copy to elr_el1 
 	regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0 
 	
-	unsigned long stack = get_free_page(); //allocate new user stack
+	unsigned long stack = get_free_page(); 
 	if (!stack) {
 		return -1;
 	}
-	regs->sp = stack + PAGE_SIZE;
-
+	regs->sp = stack + PAGE_SIZE;	
 	current->stack = stack;
+	printf("Exec init stack: 0x%x\r\n",regs->sp);	
 	return 0;
 }

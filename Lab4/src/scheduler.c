@@ -5,11 +5,10 @@
 #include "include/mm.h"
 #include "include/utils.h"
 #include "include/printf.h"
+#include "include/fork.h"
 
-static struct task_struct init_task = IDLE_TASK;
-
-struct task_struct *current = &(init_task);
-struct task_struct * task[NR_TASKS] = {&(init_task), };
+static struct task_struct idle_task = IDLE_TASK;
+struct task_struct * task[NR_TASKS] = {&(idle_task), };
 
 void preempt_disable(void){
 	current->preempt_lock++;
@@ -62,6 +61,8 @@ void _schedule(void)
 			}
 		}
 	}
+	printf("Next: 0x%x\r\n",next);	
+	
 	context_switch(task[next]);
 	preempt_enable();
 }
@@ -77,7 +78,6 @@ void context_switch(struct task_struct * next)
 	if (current == next)
 		return;
 	struct task_struct * prev = current;
-	current = next;
 	switch_to(prev, next);
 }
 
@@ -99,11 +99,7 @@ void timer_tick(){
 	}
 	// If counter <=0, it means reschedule flag set.
 	current->counter=0;
-	char buffer[4];
-	uart_send_string("Task pid: "); 
-	itos(current->pid,buffer,10);
-	uart_send_string(buffer);
-	uart_send_string(" reschedule\r\n");
+	//printf("Reschedule pid %d\r\n",current->pid);
 	
 	enable_irq(); //you have to enable irq in schedule state when in EL1
 			//When in EL0, it's not neccessary but need to protect kernel preemption
