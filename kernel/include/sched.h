@@ -5,6 +5,7 @@
 
 #define MAX_TASK_NUM 64
 #define MAX_STACK_SIZE 4096
+#define DEFAULT_TIMESLICE 2
 
 struct task_context {
   /* Callee saved registers */
@@ -27,6 +28,7 @@ struct task_context {
 struct task {
   struct task_context context;
   uint32_t id;
+  uint32_t timeslice;
 };
 
 struct queue runqueue;

@@ -1,6 +1,7 @@
 #include "exception.h"
 #include "ioutil.h"
 #include "types.h"
+#include "sched.h"
 
 void exception_init(void) {
   asm("msr vbar_el1, %0" : : "r"(vector_table));
@@ -94,6 +95,8 @@ static uint64_t system_timer_jiffie = 0;
 
 void core_timer_handler(void) {
   printf("Core timer interrupt, jiffies %u" EOL, ++core_timer_jiffie);
+
+  get_current_task()->timeslice -= 1;
 
   // Set the interval to be approximately 1 second
   asm("mrs x0, cntfrq_el0");

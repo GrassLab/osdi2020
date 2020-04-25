@@ -9,6 +9,7 @@
 void idle_task_init() {
   task_inuse[0] = true;
   task_pool[0].id = 0;
+  task_pool[0].timeslice = DEFAULT_TIMESLICE;
   asm volatile("msr tpidr_el1, %0" : : "r"(&task_pool[0]));
 }
 
@@ -17,11 +18,13 @@ void privilege_task_create(void(*func)(void)) {
   for (; id < MAX_TASK_NUM && task_inuse[id]; ++id) {}
   if (id >= MAX_TASK_NUM) {
     mini_uart_puts("[ERROR] Can't create more tasks" EOL);
-  } else {
-    task_inuse[id] = true;
+    return;
   }
 
+  task_inuse[id] = true;
   task_pool[id].id = id;
+  task_pool[id].timeslice = DEFAULT_TIMESLICE;
+
   task_pool[id].context.lr = (uint64_t)func;
   /* "+1" because stack grows toward lower address. */
   task_pool[id].context.fp = (uint64_t)kstack_pool[id + 1];
