@@ -1,4 +1,7 @@
 #include "uart.h"
+#include "task.h"
+
+
 #define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int*)0x40000034)
 #define LOCAL_TIMER_IRQ_CLR ((volatile unsigned int*)0x40000038)
 #define SYSTEM_TIMER_COMPARE1 ((volatile unsigned int*)0x3f003010)
@@ -17,13 +20,15 @@
 #define PM_RSTC ((volatile unsigned int*)0x3F10001c)
 #define PM_WDOG ((volatile unsigned int*)0x3F100024)
 
+
+
 #define set(a, b) (*a = b)
 #define get(a, b) (b = *a)
 
 
 void _core_timer_enable();
 void reset();
-
+void _local_timer_handler();
 
 void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
 {
@@ -35,14 +40,16 @@ void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, 
     unsigned int ISS_bit = esr&0x1FFFFFF;
 
     if(exc_class == 0x3C) // brk instruction require+4
-    {    asm volatile("msr elr_el1, %0"::"r"(elr+4):);}
+    {    
+        asm volatile("msr elr_el1, %0"::"r"(elr+4):);
+    }
     else if(exc_class == 0x15) // if svc call
     {
         if(ISS_bit == 0)
         {
             if(x0 == 0) //core timer enable
             {
-                //uart_puts("core timer interrupt on \r\n");
+                uart_puts("core timer interrupt on \r\n");
                 _core_timer_enable();
             }
             else if(x0 == 1) //show time stamp
@@ -64,8 +71,10 @@ void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, 
         }
         else if(ISS_bit == 1) //show svc info 
         {
-            asm volatile("mrs %0,CurrentEL":"=r"(currentEL));
+            asm volatile("msr daifclr, 0x2");
+            asm volatile("mrs %0,daif":"=r"(currentEL));
             asm volatile("mov %0,sp":"=r"(currentSP));
+
             *((unsigned int*)x1) = (unsigned int)exc_class;
             *((unsigned int*)x1 + 1) = esr&0x1FFFFFF;
             *((unsigned int*)x1 + 2) = elr;
@@ -85,8 +94,10 @@ void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, 
 
 void irq_hanlder()
 {
-    static unsigned int core_count = 0, local_count = 0;
+    static unsigned long long core_count = 0, local_count = 0;;
     unsigned int c0_source = *CORE0_IRQ_SRC;
+    
+    
     //uart_hex(c0_source);
     //uart_puts("\r\n");
 
@@ -98,11 +109,23 @@ void irq_hanlder()
         uart_hex(local_count);
     }
     else if(c0_source & 0x00000002)  // core timer handler (CNTPNSIRQ interrupt)
-    {
-        asm volatile("msr cntp_tval_el0, %0"::"r"(EXPIRE_PERIOD):);
+    { 
+        //task *current_task;
+        //asm volatile("mrs %0, tpidr_el1":"=r"(current_task)::);
+
         core_count++;
-        uart_puts("\r\nCore timer interrupt: ");
+        //uart_puts("\r\nCore timer interrupt: ");
+        
         uart_hex(core_count);
+        uart_puts("\r\n");
+        //_global_coretimer = core_count;
+
+        /*if( (((core_count - current_task->start_coretime) > 2) || ((core_count - current_task->start_coretime) < 0 )) &&  (current_task != 0))
+            current_task->reschedule = 1;*/
+
+        asm volatile("msr cntp_tval_el0, %0"::"r"(EXPIRE_PERIOD):);
+        /*asm volatile("msr DAIFclr, 0xf");
+        while(1){asm volatile("nop");}*/
     }
     else if(c0_source & 0x00000100) //GPU interrupt ///*IRQ_BASIC_PENDING & 0x80000
     {
@@ -120,12 +143,10 @@ void irq_hanlder()
         }
         else if(*UART0_RIS & 0x20) //bit 5 TX interrupt status  FR in p.181
         {
-            //static int count = 0;
-            //count++;  
-            //do{asm volatile("nop");}while(*UART0_FR&0x20);
-            do{asm volatile("nop");}while(!(*UART0_FR&0x80));//p.181 FR register
-            //*UART0_DR='a';
-            *UART0_ICR = 2 << 4;
+            //if( *UART0_ICR & (2<<4))
+            //*TMP_SOR = *TMP_SOR+1;
+
+            /*------------------*/
             if( (tran_buf.tail - tran_buf.head) > 0)
             {
                 *UART0_DR=tran_buf.buf[tran_buf.head++];
@@ -135,6 +156,7 @@ void irq_hanlder()
                 tran_buf.tail=0;
                 tran_buf.head=0;
             }
+            *UART0_ICR = 2 << 4;
         }
     }
     else
@@ -193,6 +215,17 @@ void cancel_reset() {
 	set(PM_WDOG, PM_PASSWORD | 0); // number of watchdog tick*/
 }
 
+void _local_timer_handler()
+{
+    static unsigned int local_count = 0;
+    unsigned int size = 2147483647; 
+    while(size--)
+        asm volatile("nop");
+    set(LOCAL_TIMER_IRQ_CLR, 0xc0000000);
+    local_count++;
+    uart_puts("\r\nLocal timer interrupt: ");
+    uart_hex(local_count);
+}
 
 
 

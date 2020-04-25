@@ -4,6 +4,7 @@
 #include "lfb.h"
 #include "exc.h"
 #include "syscall.h"
+#include "task.h"
 
 
 void myreadline(char *str, int max_size)
@@ -85,9 +86,9 @@ void help()
 
 void main()
 {
-	
     // set up serial console
     uart_init();
+	
 	uart_puts("Hello~~ try 'help' \n");
 	
 	char *command[12] = {"help", "hello", "timestamp", "reboot", "vcb", "brv", "lfb", "address", "exc_svc", "exc_brk","irq", 0};
@@ -147,9 +148,10 @@ sunnn:
 		}
 		else if(my_strcmp(input, command[10], my_strlen(input)) == 0)  //irq core timer and local timer enable
 		{
+			core_time_enable();
 			local_timer_init();
 			//asm volatile("svc #0");
-			core_time_enable();
+			
 		}
 		else
 		{
@@ -161,3 +163,82 @@ sunnn:
 	}
 	
 }
+
+void task1()
+{
+	uart_puts("haha1\r\n");
+	unsigned long long int sp, size;
+	task *current_task;
+here:
+	size = 0x0066666;
+	asm volatile("mrs %0,tpidr_el1":"=r"(current_task)::);
+	asm volatile("mov %0,sp":"=r"(sp)::);
+	uart_hex((unsigned long long int)current_task);
+	uart_puts(",");
+	uart_hex(sp);
+	uart_puts("....1\r\n");
+	task_schedule(0);
+	while(size--){
+		asm volatile("nop");
+	}
+
+	uart_puts("flag done....1\r\n");
+	
+	//context_switch(&task_pool[3]);
+	goto here;
+}
+
+void task2()
+{
+	uart_puts("haha2\r\n");
+	unsigned long long int sp, size;
+	task *current_task;
+here2:
+	size = 0x0066666;
+	asm volatile("mrs %0,tpidr_el1":"=r"(current_task)::);
+	asm volatile("mov %0,sp":"=r"(sp)::);
+	uart_hex((unsigned long long int)current_task);
+	uart_puts(",");
+	uart_hex(sp);
+	uart_puts(" ....2\r\n");
+	task_schedule(0);
+	while( size-- ){asm volatile("nop");}
+
+
+	uart_puts("flag done ....2\r\n");
+	
+	//context_switch(&task_pool[2]);
+	goto here2;
+}
+
+void idle()
+{
+	while(1){
+		//uart_puts("idle now");
+		task_schedule(0);
+	}
+}
+
+void kernel_init()
+{
+	//_global_coretimer = 0;
+	task_struct_init();
+
+	int idleid = privilege_task_create(idle);
+	privilege_task_create(task1);
+	privilege_task_create(task2);
+
+	//unsigned long long addrrr = &task_pool[t1];
+	
+	//core_time_enable();
+	local_timer_init();
+
+	asm volatile("msr tpidr_el1, %0"::"r"(&task_pool[idleid]):);
+	idle();
+
+	//task_schedule(0);
+	//task1(); //80d60
+}
+	
+	
+

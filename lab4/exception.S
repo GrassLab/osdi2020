@@ -52,9 +52,9 @@
         b _other_exc_handler
         .align 7
 
-        b _other_exc_handler //0x200-0x280
+        b _EL1_sync_handler //0x200-0x280
         .align 7
-        b _other_exc_handler
+        b _ELx_IRQ_handler
         .align 7
         b _other_exc_handler
         .align 7
@@ -101,3 +101,4 @@ _EL1_sync_handler:
     bl sync_el1_exc_handler
     LOAD_REG
     eret
+

@@ -3,6 +3,7 @@
 
 
 
+
 void cal_time(unsigned long long int time_FRQ, unsigned long long int time_CT, char *char_time)
 {
 	int tmp,count=0;

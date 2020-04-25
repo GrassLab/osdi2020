@@ -26,4 +26,6 @@ run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
 debug:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s -serial pty
+send:
+	./auto_script.py kernel8.img /dev/ttyUSB0
 
