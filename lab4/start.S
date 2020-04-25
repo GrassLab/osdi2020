@@ -16,7 +16,7 @@ _start:
     ldr x0, =exception_table
     msr vbar_el1, x0
 
-    ldr x1, =0x100000 // init sp for el1 option 1 (kernel stack)
+    ldr x1, =0x180000 // init sp for el1 option 1 (kernel stack)
     msr sp_el1, x1
 
     mov x0, (1 << 31) // EL1 use aarch64
@@ -43,7 +43,7 @@ rest_initialization:
 
 4:  
 
-    ldr x0, =0x200000 //(user stack)
+    ldr x0, =0x280000 //(user stack)
     msr sp_el0, x0
     mov x0, 0
     msr spsr_el1, x0

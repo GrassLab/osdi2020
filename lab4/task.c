@@ -3,6 +3,12 @@
 //extern struct task task_pool[64];
 //extern char kstack_pool[64][4096];
 
+//__attribute__((section(".userspace"))) char kstack_pool[64][4096];
+char kstack_pool[64][4096];
+task task_pool[64];
+task_queue runqueue;
+
+
 int privilege_task_create(void(*func)())
 {
     int task_id=0;

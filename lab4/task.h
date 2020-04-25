@@ -17,19 +17,20 @@ typedef struct task{
     /*char reschedule;
     unsigned long long int start_coretime;*/
 } task;
-task task_pool[64];
 
-struct task_queue{
+extern task task_pool[64];
+
+typedef struct task_queue{
     int head;
     int tail;
     int now;
     struct task *taskq[64];
-} runqueue;
+} task_queue;
 
-//__attribute__ ((section (".userspace")));
-char kstack_pool[64][4096];
-//__attribute__ ((section (".userspace")));
-
+    
+//__attribute__ ((section (".userspace"))); char kstack_pool[64][4096];
+extern char kstack_pool[64][4096];
+extern task_queue runqueue;
 
 //unsigned long long _global_coretimer;
 

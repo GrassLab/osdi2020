@@ -6,6 +6,7 @@
 #include "syscall.h"
 #include "task.h"
 
+#define Idle_size 0x0ffffff;
 
 void myreadline(char *str, int max_size)
 {
@@ -166,11 +167,11 @@ sunnn:
 
 void task1()
 {
-	uart_puts("haha1\r\n");
+	//uart_puts("haha1\r\n");
 	unsigned long long int sp, size;
 	task *current_task;
 here:
-	size = 0x0066666;
+	size = Idle_size;
 	asm volatile("mrs %0,tpidr_el1":"=r"(current_task)::);
 	asm volatile("mov %0,sp":"=r"(sp)::);
 	uart_hex((unsigned long long int)current_task);
@@ -190,11 +191,11 @@ here:
 
 void task2()
 {
-	uart_puts("haha2\r\n");
+	//uart_puts("haha2\r\n");
 	unsigned long long int sp, size;
 	task *current_task;
 here2:
-	size = 0x0066666;
+	size = Idle_size;
 	asm volatile("mrs %0,tpidr_el1":"=r"(current_task)::);
 	asm volatile("mov %0,sp":"=r"(sp)::);
 	uart_hex((unsigned long long int)current_task);
@@ -221,6 +222,13 @@ void idle()
 
 void kernel_init()
 {
+	//kstack_pool = (char*)0x280000;
+	uart_init();
+	unsigned long long int tmp;
+	asm volatile("mov %0, sp":"=r"(tmp)::);
+	uart_puts("spppppp: ");
+	uart_hex(tmp);
+    uart_puts("\r\n");
 	//_global_coretimer = 0;
 	task_struct_init();
 
@@ -230,8 +238,8 @@ void kernel_init()
 
 	//unsigned long long addrrr = &task_pool[t1];
 	
-	//core_time_enable();
-	local_timer_init();
+	core_time_enable();
+	//local_timer_init();
 
 	asm volatile("msr tpidr_el1, %0"::"r"(&task_pool[idleid]):);
 	idle();
