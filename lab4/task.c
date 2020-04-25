@@ -1,13 +1,12 @@
 #include "task.h"
 #include "uart.h"
-//extern struct task task_pool[64];
-//extern char kstack_pool[64][4096];
+
 
 //__attribute__((section(".userspace"))) char kstack_pool[64][4096];
-char kstack_pool[64][4096];
+char *kstack_pool;
 task task_pool[64];
 task_queue runqueue;
-
+unsigned long long _global_coretimer;
 
 int privilege_task_create(void(*func)())
 {
@@ -21,10 +20,10 @@ int privilege_task_create(void(*func)())
         }
     }
     task_pool[task_id].id = task_id;
-    task_pool[task_id].sp = kstack_pool[task_id];
+    task_pool[task_id].sp = kstack_pool+(task_id*8192);
     task_pool[task_id].usage = 1;
     task_pool[task_id].rip = func;
-    //task_pool[task_id].start_coretime = _global_coretimer;
+    task_pool[task_id].start_coretime = _global_coretimer;
     runqueue_push(&task_pool[task_id]);
     //task_pool[task_id].alive = 1;
     return task_id;
@@ -46,8 +45,8 @@ void task_struct_init()
     for(int i=0;i<64;i++){
         task_pool[i].usage =0;
         task_pool[i].alive = 0;
-        //task_pool[i].reschedule = 0;
-        //task_pool[i].start_coretime = 0;
+        task_pool[i].reschedule = 0;
+        task_pool[i].start_coretime = 0;
     }
 }
 
@@ -88,8 +87,9 @@ void task_schedule(unsigned long long rip)
     {
         
         asm volatile("mov %0, x30":"=r"(rip)::);
-        /*uart_puts("rip 0: ");
-        uart_hex(rip);
+
+        //uart_puts("rip 0: ");
+        /*uart_hex(rip);
         uart_send('\n');*/
     }
     if(current == 0)
@@ -104,25 +104,60 @@ void task_schedule(unsigned long long rip)
         
         runqueue.now++;
         next = runqueue.taskq[runqueue.now];
-        /*uart_puts("now+1: ");
-        uart_hex(next);
+        //uart_puts("now+1: ");
+        /*uart_hex(next);
         uart_send('\n');*/
     }
     else
     {
         runqueue.now = runqueue.head;
         next = runqueue.taskq[runqueue.head];
-        /*uart_puts("now else\n");
-        uart_hex(next);
+        //uart_puts("now else\n");
+        /*uart_hex(next);
         uart_send('\n');*/
     }
-    /*uart_hex(current->rip);
-    uart_puts("\r\n");
-    uart_hex(next->rip);*/
     if(current != next)
     {
+        //uart_puts("current!=next\n");
+        /*uart_puts("note: ");
+        uart_hex(current->rip);
+        uart_puts("\r\n");
+        uart_hex(next->rip);
+        uart_puts("\r\n");*/
+
+        next->start_coretime = _global_coretimer;
         current->rip = rip;
-        asm volatile("mov sp, %0"::"r"(sp-8):);
-        switch_to(current, next);
+        asm volatile("mov sp, %0"::"r"(sp-16):);
+
+        asm volatile(
+            "stp x19, x20, [%0, 16 * 0]\n"
+            "stp x21, x22, [%0, 16 * 1]\n"
+            "stp x23, x24, [%0, 16 * 2]\n"
+            "stp x25, x26, [%0, 16 * 3]\n"
+            "stp x27, x28, [%0, 16 * 4]\n"
+            "stp fp, lr, [%0, 16 * 5]\n"
+            "mov x9, sp\n"
+            "str x9, [%0, 16 * 6]\n"
+            ::"r"(current):
+        );
+
+        asm volatile(
+            "ldp x19, x20, [%0, 16 * 0]\n"
+            "ldp x21, x22, [%0, 16 * 1]\n"
+            "ldp x23, x24, [%0, 16 * 2]\n"
+            "ldp x25, x26, [%0, 16 * 3]\n"
+            "ldp x27, x28, [%0, 16 * 4]\n"
+            "ldp fp, lr, [%0, 16 * 5]\n"
+            "ldp x9, x30, [%0, 16 * 6]\n"
+            "mov sp,  x9\n"
+            "msr tpidr_el1, %0\n"
+            "ret"
+            ::"r"(next):
+        );
+        //asm volatile("mov %0, x30":"=r"(tmp)::);
+        //uart_hex(tmp);
+        //asm volatile("ret");
+        //switch_to(current, next);
     }
 }
+

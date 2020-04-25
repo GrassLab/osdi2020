@@ -14,7 +14,7 @@
 #define IRQ_ENABLE2 ((volatile unsigned int*)0x3f00b218)
 #define CORE0_TIMER_IRQ_CTRL ((volatile unsigned int*)0x40000040)
 #define CORE0_IRQ_SRC ((volatile unsigned int*)0x40000060)
-#define EXPIRE_PERIOD ((volatile unsigned int*)0xfffffff)
+#define EXPIRE_PERIOD ((volatile unsigned int*)0x05fffff)
 #define IRQ_BASIC_PENDING ((volatile unsigned int*)(MMIO_BASE + 0xb200))
 #define PM_PASSWORD 0x5a000000
 #define PM_RSTC ((volatile unsigned int*)0x3F10001c)
@@ -94,14 +94,15 @@ void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, 
 
 void irq_hanlder()
 {
-    unsigned long long tmp2;
+    /*unsigned long long tmp2;
     asm volatile("mov %0, sp":"=r"(tmp2)::);
-    asm volatile("mov sp, %0"::"r"(0x100000):);
+    asm volatile("mov sp, %0"::"r"(0x100000):);*/
+
     static unsigned long long core_count = 0, local_count = 0;;
     unsigned int c0_source = *CORE0_IRQ_SRC;
     unsigned long long tmp;
     //uart_hex(c0_source);
-    //uart_puts("\r\n");
+    //uart_puts("irq\r\n");
 
     if(c0_source & 0x00000800) //Local timer interrupt handler p.16
     {
@@ -112,18 +113,23 @@ void irq_hanlder()
     }
     else if(c0_source & 0x00000002)  // core timer handler (CNTPNSIRQ interrupt)
     { 
-        //task *current_task;
+        task *current_task;
+        asm volatile("mrs %0, tpidr_el1":"=r"(current_task)::);
         asm volatile("mov %0, sp":"=r"(tmp)::);
-
+        /*uart_puts("\r\nsp: ");
+        uart_hex(tmp);*/
         core_count++;
-        //uart_puts("\r\nCore timer interrupt: ");
-        uart_hex(tmp);
-        uart_puts("\r\n");
+        /*uart_puts("\r\nCore timer interrupt: ");
+        uart_hex(current_task->rip);*/
+        //uart_puts("\r\n");
         //uart_puts("interrupt\r\n");
-        //_global_coretimer = core_count;
+        _global_coretimer = core_count;
 
-        /*if( (((core_count - current_task->start_coretime) > 2) || ((core_count - current_task->start_coretime) < 0 )) &&  (current_task != 0))
-            current_task->reschedule = 1;*/
+        if( ((core_count - current_task->start_coretime) > 2) || ((core_count - current_task->start_coretime) < 0 ) ){
+            //uart_puts("\r\nset");
+            current_task->reschedule = 1;
+        }
+            
 
         asm volatile("msr cntp_tval_el0, %0"::"r"(EXPIRE_PERIOD):);
         /*asm volatile("msr DAIFclr, 0xf");
@@ -165,7 +171,8 @@ void irq_hanlder()
     {
         uart_puts("unknown irq interrupt\r\n");
     }
-    asm volatile("mov sp, %0"::"r"(tmp2):);
+
+    //asm volatile("mov sp, %0"::"r"(tmp2):);
 }
 
 void local_timer_init(){

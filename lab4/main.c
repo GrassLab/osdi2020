@@ -168,7 +168,8 @@ sunnn:
 void task1()
 {
 	//uart_puts("haha1\r\n");
-	unsigned long long int sp, size;
+	unsigned long long int sp;
+	unsigned long long int size;
 	task *current_task;
 here:
 	size = Idle_size;
@@ -178,13 +179,14 @@ here:
 	uart_puts(",");
 	uart_hex(sp);
 	uart_puts("....1\r\n");
-	task_schedule(0);
-	while(size--){
-		asm volatile("nop");
-	}
+	//task_schedule(0);
+	while(!current_task->reschedule){asm volatile("nop");}
+	//while(size--){asm volatile("nop");}
 
+	current_task->reschedule = 0;
 	uart_puts("flag done....1\r\n");
-	
+	task_schedule(0);
+
 	//context_switch(&task_pool[3]);
 	goto here;
 }
@@ -192,7 +194,8 @@ here:
 void task2()
 {
 	//uart_puts("haha2\r\n");
-	unsigned long long int sp, size;
+	unsigned long long int sp;
+	unsigned long long int size;
 	task *current_task;
 here2:
 	size = Idle_size;
@@ -202,12 +205,13 @@ here2:
 	uart_puts(",");
 	uart_hex(sp);
 	uart_puts(" ....2\r\n");
-	task_schedule(0);
-	while( size-- ){asm volatile("nop");}
+	//task_schedule(0);
+	while(!current_task->reschedule){asm volatile("nop");}
+	//while(size--){asm volatile("nop");}
 
-
+	current_task->reschedule = 0;
 	uart_puts("flag done ....2\r\n");
-	
+	task_schedule(0);
 	//context_switch(&task_pool[2]);
 	goto here2;
 }
@@ -215,21 +219,22 @@ here2:
 void idle()
 {
 	while(1){
-		//uart_puts("idle now");
+		uart_puts("idle now\r\n");
 		task_schedule(0);
 	}
 }
 
 void kernel_init()
 {
-	//kstack_pool = (char*)0x280000;
+	kstack_pool = (char*)0x280000;
 	uart_init();
-	unsigned long long int tmp;
+	/*unsigned long long int tmp;
 	asm volatile("mov %0, sp":"=r"(tmp)::);
 	uart_puts("spppppp: ");
 	uart_hex(tmp);
-    uart_puts("\r\n");
-	//_global_coretimer = 0;
+    uart_puts("\r\n");*/
+
+	_global_coretimer = 0;
 	task_struct_init();
 
 	int idleid = privilege_task_create(idle);

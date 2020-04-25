@@ -14,8 +14,8 @@ typedef struct task{
     int priority;
     char alive;
     char usage;
-    /*char reschedule;
-    unsigned long long int start_coretime;*/
+    char reschedule;
+    unsigned long long int start_coretime;
 } task;
 
 extern task task_pool[64];
@@ -29,10 +29,10 @@ typedef struct task_queue{
 
     
 //__attribute__ ((section (".userspace"))); char kstack_pool[64][4096];
-extern char kstack_pool[64][4096];
+extern char *kstack_pool;
 extern task_queue runqueue;
 
-//unsigned long long _global_coretimer;
+extern unsigned long long _global_coretimer;
 
 int privilege_task_create(void(*func)());
 void context_switch(struct task* next);

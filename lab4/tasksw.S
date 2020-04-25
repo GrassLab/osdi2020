@@ -2,6 +2,7 @@
 
 .global switch_to //no store rip
 switch_to:
+
   stp x19, x20, [x0, 16 * 0]
   stp x21, x22, [x0, 16 * 1]
   stp x23, x24, [x0, 16 * 2]
@@ -20,7 +21,7 @@ switch_to:
   ldp x9, x30, [x1, 16 * 6]
   mov sp,  x9
   msr tpidr_el1, x1
-
+  
   ret
 
 .global get_current
