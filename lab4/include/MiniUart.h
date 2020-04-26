@@ -6,5 +6,6 @@ void sendUART(char c);
 char recvUART(void);
 void sendStringUART(const char *str);
 void sendHexUART(unsigned int hex);
+void delay(unsigned int clock);
 
 #endif
