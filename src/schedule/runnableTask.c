@@ -1,3 +1,6 @@
+#include "type.h"
+#include "schedule/schedule.h"
+
 void idleTask()
 {
 	while (1)
@@ -10,12 +13,17 @@ void task1()
 {
     while (1)
     {
-        uartInt(1);
-        uartPuts("...\n");
-        schedule();
-        for (int i = 0; i < 15000000; ++i)
+        if (current->re_schedule == true)
         {
-            asm volatile("nop");
+            uartPuts("task1... issue reschedule\n");
+
+            current->re_schedule = false;
+            schedule();
+
+            // for (int i = 0; i < 15000000; ++i)
+            // {
+            //     asm volatile("nop");
+            // }
         }
     }
 }
@@ -24,12 +32,17 @@ void task2()
 {
     while (1)
     {
-        uartInt(2);
-        uartPuts("...\n");
-        schedule();
-        for (int i = 0; i < 15000000; ++i)
+        if (current->re_schedule == true)
         {
-            asm volatile("nop");
+            uartPuts("task2... issue reschedule\n");
+
+            current->re_schedule = false;
+            schedule();
+
+            // for (int i = 0; i < 15000000; ++i)
+            // {
+            //     asm volatile("nop");
+            // }
         }
     }
 }

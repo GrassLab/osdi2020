@@ -41,8 +41,14 @@ void main()
     int idle_tid = createPrivilegeTask(&idleTask, 0);
     int t1_tid = createPrivilegeTask(&task1, 1);
     int t2_tid = createPrivilegeTask(&task2, 1); 
+
+    // Create a null init task
     struct task init_task = INIT_TASK;
     current = &init_task;
+
+    // Enable core timer
+    asm volatile("svc #2");
+
     schedule();
 
     // runShell();

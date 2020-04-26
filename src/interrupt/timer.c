@@ -1,4 +1,6 @@
+#include "type.h"
 #include "device/uart.h"
+#include "schedule/schedule.h"
 
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
 #define EXPIRE_PERIOD 0xfffffff
@@ -23,12 +25,14 @@ void enableCoreTimer()
 
 void coreTimerHandler()
 {
-    core_timer_count++;
-    uartPuts("Core timer interrupt, jiffies ");
-    uartInt(core_timer_count);
-    uartPuts("\n");
+    // core_timer_count++;
+    // uartPuts("Core timer interrupt, jiffies ");
+    // uartInt(core_timer_count);
+    // uartPuts("\n");
   
-    asm volatile("mov x0, 0xffffff");
+    current->re_schedule = true;
+
+    asm volatile("mov x0, 0x1ffffff");
     asm volatile("msr cntp_tval_el0, x0");
 
     return;

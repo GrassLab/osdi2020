@@ -1,6 +1,8 @@
 #ifndef _TASK_H
 #define _TASK_H
 
+#include "type.h"
+
 struct cpu_context 
 {
 	unsigned long x19;
@@ -31,6 +33,7 @@ struct task
 	int task_id;
 	int priority;
 	state task_state;
+	bool re_schedule;
 };
 
 #endif

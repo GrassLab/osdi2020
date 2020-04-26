@@ -33,7 +33,7 @@ void excHandler(unsigned long esr, unsigned long elr)
     {
         uartPuts("Enable timer \n");
         enableCoreTimer();
-        localTimerInit();
+        // localTimerInit();
         enableIrq();
     }
 

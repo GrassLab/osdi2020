@@ -1,3 +1,4 @@
+#include "type.h"
 #include "schedule/task.h"
 #include "schedule/switch.h"
 
@@ -14,6 +15,7 @@ int createPrivilegeTask(void(*func)(), int priority)
 	task_pool[task_num].task_id = task_num;
 	task_pool[task_num].priority = priority;
 	task_pool[task_num].task_state = ready;
+	task_pool[task_num].re_schedule = false;
 	task_num++;
 
 	return task_num-1;
