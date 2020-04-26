@@ -3,7 +3,7 @@
 
 #define CORE_TIMER    0   // syscal numbers
 #define DAIF     1
-#define SYS_MALLOC 2
+#define UNKNOWN 2
 #define SYS_FORK 3
 #define SYS_EXEC 4
 #define SYS_EXIT 5
@@ -14,7 +14,7 @@
 #ifndef __ASSEMBLER__
 int call_core_timer();
 void call_daif();
-unsigned long call_sys_malloc();
+unsigned long call_dumpmem();
 void call_sys_exit();
 
 //Required system call

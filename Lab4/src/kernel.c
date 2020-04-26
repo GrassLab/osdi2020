@@ -91,36 +91,32 @@ void mytest(){
 		printf("%c",buffer[i]);
 	printf("\r\n");*/
 
+	int cnt = 2;
 	fork();
-	int cnt = 1;	
-	//printf("Doing: %d, and cnt now %d\r\n",get_taskid(),cnt);
-	printf("cnt at 0x%x \r\n",&cnt);
+	
 	while(cnt < 10) {
 		printf("Task id: %d, cnt addr: 0x%x, value: %d\n", get_taskid(), &cnt, cnt);
-		delay(100000000);
+		delay(1000000);
 		++cnt;
 	}
+	printf("Task id: %d, cnt addr: 0x%x, value: %d\n", get_taskid(), &cnt, cnt);
 	printf("\r\n");
 	exit(0);
 }
 
 void test() {	
-	printf("Before fork SP: 0x%x\r\n",get_SP());
-  	int cnt = 1; //share?
+  	int cnt = 1; 
 	if (fork() == 0) {
-    		//fork();
-    		//delay(100000);
-		
     		fork();
-		printf("SP: 0x%x\r\n",get_SP());
-		int cnt = 1;	
-		printf("Doing: %d, and cnt now %d\r\n",get_taskid(),cnt);
-    		printf("cnt at 0x%x \r\n",&cnt);
+    		delay(100000);	
+    		fork();
+
 		while(cnt < 10) {
       			printf("Task id: %d, cnt addr: 0x%x, value: %d\n", get_taskid(), &cnt, cnt);
       			delay(100000);
       			++cnt;
     		}
+		printf("\r\n");
    	 	exit(0);
     		printf("Should not be printed\n");
   	} else {
@@ -131,7 +127,7 @@ void test() {
 	exit(0);	
 }
 
-void kernel_process(){	
+void kernel_process(){
 	int err = do_exec(test);
     	if (err < 0){
         	printf("Error while moving process to user mode\r\n");
@@ -139,6 +135,7 @@ void kernel_process(){
 }
 
 void zombie_reaper(){
+	printf("### Init zombie_reaper process...... \r\n");	
 	while(1){
 		struct task_struct *p;
 		for (int i=0; i < NR_TASKS;i++){

@@ -4,6 +4,8 @@
 #include "include/scheduler.h"
 #include "include/queue.h"
 #include "include/printf.h"
+#include "include/mm.h"
+
 static unsigned short pid_map[64] = {0,};
 
 int get_availible_pid(){
@@ -70,12 +72,19 @@ int user_task_create()
 	*childregs = *cur_regs; //copy content of parent register
 	childregs->regs[0] = 0; //x0 in the new state is set to 0, because x0 will be interpreted by the caller as a return value of the syscall.
 
+	int copy_byte = (current->stack+PAGE_SIZE) - cur_regs->regs[29];
+	
 	unsigned long stack = get_free_page(); 
 	if (!stack) {
 		return -1;
 	}
-	childregs->sp = stack + PAGE_SIZE;
+	//childregs->sp = stack + PAGE_SIZE;
+	childregs->regs[29] = (stack+PAGE_SIZE) - copy_byte;
+	childregs->sp = childregs->regs[29];
+	
 	p->stack=stack;
+
+	fork_memcpy((void *)childregs->regs[29],(void *)cur_regs->regs[29],copy_byte);
 
 	p->cpu_context.x19 = 0; 
 	p->priority = current->priority;
@@ -89,7 +98,8 @@ int user_task_create()
 	task[pid] = p;
 	p->pid = pid;
 
-	//printf("pid %d:p stack:%0x parent stack:%0x\r\n",pid,childregs->sp,cur_regs->sp);
+	//dump_mem((void *)childregs->regs[29],copy_byte);
+	
 	runQ_push(runQ,&runQ_tail,pid);
 	preempt_enable();
 	return pid;
@@ -116,6 +126,5 @@ int do_exec(void(*func))
 	}
 	regs->sp = stack + PAGE_SIZE;	
 	current->stack = stack;
-	printf("Exec init stack: 0x%x\r\n",regs->sp);	
 	return 0;
 }

@@ -20,6 +20,9 @@
 #ifndef __ASSEMBLER__
 unsigned long get_free_page();
 void memzero(unsigned long src, unsigned long n);
+void fork_memcpy(void *dest, const void *src, unsigned long len);
+
+void dump_mem(void *src,unsigned long len);
 void free_page(unsigned long p);
 #endif
 

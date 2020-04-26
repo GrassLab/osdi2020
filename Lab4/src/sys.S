@@ -12,9 +12,9 @@ call_daif:
 	svc #0
 	ret
 
-.global call_sys_malloc
-call_sys_malloc:
-	mov x8,SYS_MALLOC
+.global unknown
+unknown:
+	mov x8,UNKNOWN
 	svc #0
 	ret
 

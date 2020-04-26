@@ -17,7 +17,22 @@ unsigned long get_free_page()
 }
 
 void free_page(unsigned long p){
-	printf("Free Page %d\r\n",(p - LOW_MEMORY) / PAGE_SIZE);
+	//printf("Free Page %d\r\n",(p - LOW_MEMORY) / PAGE_SIZE);
 	mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
 }
- 
+
+void fork_memcpy (void *dest, const void *src, unsigned long len)
+{
+  	char *d = dest;
+  	const char *s = src;
+  	while (len--)
+    		*d++ = *s++;
+}
+
+void dump_mem(void *src,unsigned long len){
+	const char *s = src;
+	while (len--){
+		printf("0x%x: %x\r\n",s,*s);
+		s++;
+	}
+}

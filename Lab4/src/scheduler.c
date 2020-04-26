@@ -61,7 +61,7 @@ void _schedule(void)
 			}
 		}
 	}
-	printf("Next: 0x%x\r\n",next);	
+	//printf("Next: 0x%x\r\n",next);	
 	
 	context_switch(task[next]);
 	preempt_enable();

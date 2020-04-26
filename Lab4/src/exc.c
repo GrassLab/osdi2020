@@ -83,11 +83,7 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			return 0;
 		}
 		case 2:{
- 			unsigned long addr = get_free_page();
-          		if(!addr){
-                  		return -1;
-          		}
-          		return addr;
+			//??
 		}
 		case 3:{
 			return user_task_create();
