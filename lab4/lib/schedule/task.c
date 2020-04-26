@@ -13,8 +13,10 @@ Queue running_queue = {.buffer = (void **)queue_buffer,
                        .back = 0u};
 
 void initIdleTaskState() {
-    task_pool[0].in_use = true;
     task_pool[0].id = 0u;
+    task_pool[0].counter = 5u;
+    task_pool[0].reschedule_flag = false;
+    task_pool[0].in_use = true;
     asm volatile("msr tpidr_el1, %0"
                  : /* output operands */
                  : "r"(&task_pool[0]) /* input operands */
@@ -26,6 +28,8 @@ int createPrivilegeTask(void (*func)()) {
         if (task_pool[i].in_use == false) {
             task_pool[i].in_use = true;
             task_pool[i].id = i;
+            task_pool[i].counter = 10u;
+            task_pool[i].reschedule_flag = false;
 
             task_pool[i].cpu_context.lr = (uint64_t)func;
 
@@ -43,11 +47,13 @@ int createPrivilegeTask(void (*func)()) {
 }
 
 void fooTask(void) {
+    TaskStruct *cur_task = getCurrentTask();
     sendStringUART("Hi, I'm ");
-    sendHexUART(getCurrentTask()->id);
+    sendHexUART(cur_task->id);
     sendStringUART("...\n");
 
-    delay(0x3000000u);
+    while (cur_task->reschedule_flag == false)
+        ;
 
     schedule();
 }

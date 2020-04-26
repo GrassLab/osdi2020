@@ -7,6 +7,7 @@ void schedule(void) {
 
     if (next_task == NULL) {
         // enter idle state
+        task_pool[0].counter = 5u;
         switchContext(task_pool + 0u);
         return;
     }
@@ -17,5 +18,9 @@ void schedule(void) {
     if (cur_task != task_pool + 0u) {
         pushQueue(&running_queue, cur_task);
     }
+
+    // allocate resource to next task
+    next_task->counter = 10u;
+    next_task->reschedule_flag = false;
     switchContext(next_task);
 }

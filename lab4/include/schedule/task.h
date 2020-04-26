@@ -27,7 +27,9 @@ typedef struct __CpuContext {
 typedef struct __TaskStruct {
     CpuContext cpu_context;
     uint32_t id;
+    uint32_t counter;
     bool in_use;
+    bool reschedule_flag;
 } TaskStruct;
 
 extern TaskStruct task_pool[MAX_TASK_NUM] __attribute__((aligned(16u)));

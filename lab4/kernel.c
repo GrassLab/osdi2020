@@ -1,13 +1,13 @@
 #include "MiniUart.h"
 #include "shell.h"
 #include "mailbox.h"
+#include "exception/timer.h"
 #include "schedule/task.h"
 #include "schedule/schedule.h"
 
 void idle(void) {
     while (1) {
         sendStringUART("Enter idle state ...\n");
-        delay(0x3000000u);
         schedule();
     }
 }
@@ -28,6 +28,8 @@ void kernel_main(void) {
     sendUART(recvUART());
 
     initIdleTaskState();
+
+    _enable_core_timer();
 
     for (uint32_t i = 0; i < 3; ++i) {
         createPrivilegeTask(fooTask);
