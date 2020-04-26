@@ -1,4 +1,5 @@
 #include "kernel/peripherals/uart.h"
+#include "kernel/task/task.h"
 
 #include "irq.h"
 #include "timer.h"
@@ -12,6 +13,8 @@ void irq_controller_el1 ( )
     {
         uart_printf("Core Timer Interrupt\n");
         core_timer_reload ();
+
+        schedule ( );
 
         deal = 1;
     }

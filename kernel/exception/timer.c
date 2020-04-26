@@ -49,7 +49,7 @@ void core_timer_reload ()
         "mov x0, %0;"
         "msr CNTP_TVAL_EL0, x0;"
         :
-        : "r" (0xFFFFFFF)
+        : "r" (0x3FFFFFF)
     );
 }
 

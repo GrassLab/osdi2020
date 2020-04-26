@@ -27,18 +27,23 @@ typedef struct {
 
 typedef struct {
     
-    context_t cpu_context;
-    task_state_t state;
+    context_t cpu_context;    
     
     uint64_t task_id;
+    task_state_t state;
     void (*func)();
     char * stack;
 
+    uint64_t counter;
+    uint64_t priority;  /* at this time, all task has the same priority */
+
 } task_t;
 
+void idle ( );
 int privilege_task_create ( void(*func)() );
 int find_usable_in_pool ();
 void context_switch ( task_t * next );
+void schedule ( );
 
 /* defined in task.S */
 extern void switch_to ( task_t *, task_t * );

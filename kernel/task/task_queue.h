@@ -11,11 +11,9 @@ typedef enum {
     QUEUE_EMPTY = -2,
     UNKNOWN = -3,
 
-} TASK_QUEUE_STATE;
+} task_queue_state_t;
 
-void task_queue_init ( );
-TASK_QUEUE_STATE task_enqueue ( task_t * task );
+task_queue_state_t task_enqueue ( task_t * task );
 task_t * task_dequeue ( );
-void schedule ( );
 
 #endif

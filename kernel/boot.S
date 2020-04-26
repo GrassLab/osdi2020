@@ -34,8 +34,20 @@ _start:
     
     # cpu id > 0, stop
     cbnz     x1, loop
+
+
+clear_bss:
+    # clear bss
+    ldr     x1, =__bss_start
+    ldr     x2, =__bss_size
     
-# stack_init:  
+cmp_addr: 
+    cbz     x2, stack_init
+    str     xzr, [x1], #8
+    sub     x2, x2, #1
+    cbnz    x2, cmp_addr
+    
+stack_init:  
     # set stack before our code
     ldr     x0, =_start
     mov     sp, x0
@@ -78,7 +90,8 @@ return_to_el1:
     # CPACR_EL1: Controls access to trace, SVE, Advanced SIMD and floating-point functionality.
     # FPEN, bits[21:20]: Traps EL0 and EL1 accesses to the SVE, Advanced SIMD, and floating-point registers to EL1, or to EL2 when it is implemented and enabled for the current Security state and HCR_EL2.TGE is 1, from both Execution states.
     mrs x1, CPACR_EL1
-    orr x1, x1, #0b1100000000000000000000
+    orr x1, x1, (3 << 20) // # #0b1100110000000000000000
+    # orr x1, x1, (1 << 16) 
     msr CPACR_EL1, x1
 
     # disable interrupt in el1
@@ -101,16 +114,6 @@ return_to_el1:
     eret
 
 return_to_el0: 
-
-    # clear bss
-    ldr     x1, =__bss_start
-    ldr     x2, =__bss_size
-    
-cmp_addr: 
-    cbz     x2, jmp_main
-    str     xzr, [x1], #8
-    sub     x2, x2, #1
-    cbnz    x2, cmp_addr
     
 jmp_main:  
     

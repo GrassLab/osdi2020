@@ -120,11 +120,11 @@ exception_table_el1:
     # Exception from the current EL while using SP_ELx
     # ==================================================
     # Synchronous
-    b   _not_implemented
+    b   _exception__handler_el1
     .align 7
 
     # IRQ
-    b   _not_implemented
+    b   _irq__handler_el1
     .align 7
     
     # FIQ

@@ -8,14 +8,7 @@ int el1_main ()
 {
     uart_init ( );
 
-    uart_printf("Hello World!!\n");
-
-    privilege_task_create ( task_1 );
-    privilege_task_create ( task_2 );    
-
-    task_switch_test ();
-
-    // shell_start();
+    task_schedule_test ();
 
     return 0;
 }
