@@ -6,14 +6,13 @@
 
 #include "kernel/peripherals/uart.h"
 
-const task_t INIT = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, 1, 0, 0, 0};
+static task_t INIT = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, 1, 0, 0, 0};
 task_t * CURRENT_TASK = &INIT;
 
-task_t * task_pool[NUM_THREADS] = { &INIT, };
-
+task_t * TASK_POOL[NUM_THREADS] = { &INIT, };
 
 /* 64 bit to maintain which one can use */
-uint64_t task_pool_usage = 1;
+uint64_t TASK_POOL_USAGE = 1;
 
 int privilege_task_create ( void(*func)() )
 {
@@ -23,18 +22,23 @@ int privilege_task_create ( void(*func)() )
     if ( task_id == -1 )
         return -1;
     
-    task_pool_usage |= ( 0b1 << task_id );
+    TASK_POOL_USAGE |= ( 0b1 << task_id );
 
     /* allocate TCB in kernel space */
     task_t * new_task = ( task_t * ) ( ( LOW_MEM ) +  ( THREAD_SIZE * task_id) );
-
+ 
     /* init a task */
     new_task -> task_id = task_id;
     new_task -> state = RUNNING;
     new_task -> func = func;
+    new_task -> stack = ((char *)new_task) + THREAD_SIZE;
 
     (new_task -> cpu_context).x19 = (unsigned long)func;
-    (new_task -> cpu_context).sp = (unsigned long)(new_task + THREAD_SIZE);
+    (new_task -> cpu_context).lr = (unsigned long)default_task_start;
+    (new_task -> cpu_context).sp = (unsigned long)(((char *)new_task) + THREAD_SIZE);
+
+    /* save it into the pool */
+    TASK_POOL[task_id] = new_task;
 
     return task_id;
 }
@@ -45,7 +49,7 @@ int find_usable_in_pool ()
 
     for ( i = 0; i < 64; i++ )
     {
-        if ( (task_pool_usage & (0b1 << i)) == 0 )
+        if ( (TASK_POOL_USAGE & (0b1 << i)) == 0 )
         {
             return i;
         }
@@ -56,7 +60,7 @@ int find_usable_in_pool ()
 
 void context_switch ( task_t * next )
 {
-    // if the next one is the same as the current, do nothing
+    /* if the next one is the same as the current, do nothing */
     if ( CURRENT_TASK == next )
         return ;
 

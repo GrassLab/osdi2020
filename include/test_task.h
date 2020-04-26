@@ -3,6 +3,7 @@
 
 void task_1 ();
 void task_2 ();
+void task_switch_test ();
 
 
 #endif

@@ -20,8 +20,8 @@ typedef struct {
     unsigned long x27;
     unsigned long x28;
     unsigned long fp;   // x29
-    unsigned long sp;   // x30
-    unsigned long pc;
+    unsigned long lr;   // x30
+    unsigned long sp;
 
 } context_t;
 
@@ -38,10 +38,11 @@ typedef struct {
 
 int privilege_task_create ( void(*func)() );
 int find_usable_in_pool ();
+void context_switch ( task_t * next );
 
 /* defined in task.S */
 extern void switch_to ( task_t *, task_t * );
 extern task_t* get_current_task ();
-
+extern void default_task_start();
 
 #endif

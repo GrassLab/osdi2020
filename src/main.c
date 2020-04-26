@@ -13,6 +13,8 @@ int el1_main ()
     privilege_task_create ( task_1 );
     privilege_task_create ( task_2 );    
 
+    task_switch_test ();
+
     // shell_start();
 
     return 0;
