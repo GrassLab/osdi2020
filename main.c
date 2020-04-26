@@ -21,7 +21,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 4.2.1\n");
+    uart_print("Version : 4.3.1\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -65,9 +65,26 @@ void user_task_3()
     delay('3');
 }
 
+void user_task_4()
+{
+    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
+    delay('4');
+}
+
 void user_syscall_test()
 {
-    exec((unsigned long)pcsh);
+    int pid = fork();
+    //int pid = 0;
+    if (pid == 0)
+    {
+        printf("\nPID: %d\n", pid);
+        exec((unsigned long)user_task_4);
+    }
+    else
+    {
+        printf("\nPID: %d\n", pid);
+        exec((unsigned long)pcsh);
+    }
 }
 
 /* Kernel task */
@@ -79,12 +96,24 @@ void task_1()
 void task_2()
 {
     do_exec((unsigned long)user_syscall_test);
+    if (check_reschedule())
+        schedule();
 }
 
 void task_3()
 {
     do_exec((unsigned long)user_task_3);
     //do_exec((unsigned long)&pcsh);
+    if (check_reschedule())
+        schedule();
+}
+
+void task_4()
+{
+    while (1)
+    {
+        bottom_half_router();
+    }
     if (check_reschedule())
         schedule();
 }
@@ -116,9 +145,10 @@ int main()
     //syscall_1(0, 1);
 
     task_init();
-    copy_process(PF_KTHREAD, (unsigned long)task_1, (unsigned long)"aaa", 0);
-    copy_process(PF_KTHREAD, (unsigned long)task_2, (unsigned long)"ccc", 0);
+    copy_process(PF_KTHREAD, (unsigned long)task_1, 0, 0);
+    copy_process(PF_KTHREAD, (unsigned long)task_2, 0, 0);
     copy_process(PF_KTHREAD, (unsigned long)task_3, 0, 0);
+    copy_process(PF_KTHREAD, (unsigned long)task_4, 0, 0);
 
     //privilege_task_create((unsigned long)&pcsh, (unsigned long)"pcsh");
 

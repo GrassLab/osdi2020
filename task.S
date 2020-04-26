@@ -33,3 +33,18 @@ get_current:
 set_current:
   msr tpidr_el1, x0
   ret
+
+
+.global thread_start
+thread_start:
+	mov	x29, 0
+
+	/* Pick the function arg and execute.  */
+	mov	x0, x11
+	blr	x10
+
+	/* We are done, pass the return value through x0.  */
+	mov	x0, 0x32
+	svc	0x80
+  ret 
+

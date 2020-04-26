@@ -3,40 +3,44 @@
 #include "timer.h"
 #include "bottom_half.h"
 #include "task.h"
+#include "printf.h"
+#include "debug.h"
 
 void syscall_core_timer(int enable)
 {
-    uart_puts("core timer: ");
+    DEBUG_LOG_SYSCALL(("core timer: "));
     if (enable == 0)
     {
-        uart_puts("core timer disable");
+        DEBUG_LOG_SYSCALL(("core timer disable"));
         _core_timer_disable();
     }
     else
     {
-        uart_puts("core timer enable");
+        DEBUG_LOG_SYSCALL(("core timer enable"));
         _core_timer_enable();
     }
+    DEBUG_LOG_SYSCALL(("\n"));
 }
 
 void syscall_local_timer(int enable)
 {
-    uart_puts("local timer: ");
+    DEBUG_LOG_SYSCALL(("local timer: "));
     if (enable == 0)
     {
-        uart_puts("local timer disable");
+        DEBUG_LOG_SYSCALL(("local timer disable"));
         local_timer_disable();
     }
     else
     {
-        uart_puts("local timer enable");
+        DEBUG_LOG_SYSCALL(("local timer enable"));
         local_timer_enable();
     }
+    DEBUG_LOG_SYSCALL(("\n"));
 }
 
 void syscall_gettime(double *t)
 {
-    uart_puts("get time: ");
+    DEBUG_LOG_SYSCALL(("get time: "));
     register unsigned long freq;
     register unsigned long ct;
 
@@ -44,6 +48,7 @@ void syscall_gettime(double *t)
                  "mrs %1, CNTPCT_EL0\n"
                  : "=r"(freq), "=r"(ct));
     *t = (double)ct / (double)freq;
+    DEBUG_LOG_SYSCALL(("\n"));
 }
 
 void syscall_uart_send(char x1)
@@ -70,11 +75,18 @@ void syscall_uart_recv(char *x1)
 
 void syscall_fork(int *x1)
 {
+    *x1 = do_fork();
+    printf("==%d==", *x1);
 }
 
 void syscall_exec(unsigned long x1)
 {
     do_exec(x1);
+}
+
+void syscall_exit(int *x1)
+{
+    exit_process();
 }
 
 /* Can't work */
@@ -85,23 +97,25 @@ void syscall_load_images()
 
 void syscall_delay()
 {
-    uart_puts("syscall_delay");
+    DEBUG_LOG_SYSCALL(("syscall_delay"));
+    DEBUG_LOG_SYSCALL(("\n"));
     bottom_half_set(0x0);
 }
 
 void syscall_delay_without_bottom_half()
 {
-    uart_puts("syscall_delay_without_bottom_half");
+    DEBUG_LOG_SYSCALL(("syscall_delay_without_bottom_half"));
     for (int i = 0; i < 5; i++)
     {
-        uart_puts(".");
+        DEBUG_LOG_SYSCALL(("."));
         // very very very slow in real rpi3, but very very very fast in qemu
         asm volatile(
             "mov  x0, #0xfffff\n"
             "bottom_half_0_l: subs  x0, x0, #1\n"
             "bne   bottom_half_0_l\n");
     }
-    uart_send('\n');
+    uart_send('n');
+    DEBUG_LOG_SYSCALL(("\n"));
 }
 
 void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
@@ -135,6 +149,9 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
     case 0x31:
         syscall_exec((unsigned long)x1);
         break;
+    case 0x32:
+        syscall_exit((int *)x1);
+        break;
     // delay than print ...  (for test bottom half)
     case 0x100:
         syscall_delay();
@@ -145,10 +162,11 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         break;
     // not this syscall
     default:
-        uart_puts("Can find this system call");
+        DEBUG_LOG_SYSCALL(("Can find this system call"));
 
         while (1)
-            ;
+        {
+        };
     }
 };
 
@@ -161,9 +179,9 @@ void uart_send(unsigned int x1)
 char uart_recv()
 {
     char x1;
-    asm volatile("mov x1, %0\n"
-                 "mov x0, #0x05\n"
-                 "svc #0x80\n" ::"r"(&x1));
+    asm volatile("mov x1, %0\\n"
+                 "mov x0, #0x05\\n"
+                 "svc #0x80\\n" ::"r"(&x1));
     return x1;
 }
 */
@@ -187,6 +205,20 @@ double gettime()
 
 int fork()
 {
+    int return_value;
+    asm volatile("mov x10, x0\n"
+                 "mov x11, x1\n"
+                 "mov x12, x2\n");
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x30\n"
+                 "svc #0x80\n" ::"r"(&return_value));
+    /*
+    if (return_value == 0)
+    {
+        thread_start();
+    }
+    */
+    return return_value;
 }
 
 int exec(unsigned int func)
@@ -194,4 +226,8 @@ int exec(unsigned int func)
     asm volatile("mov x1, %0\n"
                  "mov x0, #0x31\n"
                  "svc #0x80\n" ::"r"(func));
+}
+
+int exit()
+{
 }

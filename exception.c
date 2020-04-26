@@ -3,6 +3,7 @@
 #include "timer.h"
 #include "exception.h"
 #include "syscall.h"
+#include "debug.h"
 
 /**
  * common exception handler
@@ -169,9 +170,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
     unsigned long current_el;
     current_el = get_current_el();
 
-    uart_puts("Current EL: ");
-    uart_send_int(current_el);
-    uart_puts("\n");
+    DEBUG_LOG_EXCEPTION(("Current EL: %d\n", current_el));
 
     switch (current_el)
     {
@@ -204,7 +203,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         : "=r"(elr), "=r"(esr));
         */
 
-    uart_puts("*Interrput*: <Synchronous>\n");
+    DEBUG_LOG_EXCEPTION(("*Interrput*: <Synchronous>\n"));
     // decode exception type (some, not all. See ARM DDI0487B_b chapter D10.2.28)
     switch (esr >> 26)
     {
@@ -218,7 +217,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         uart_puts("Illegal execution");
         break;
     case 0b010101:
-        uart_puts("System call");
+        DEBUG_LOG_EXCEPTION(("System call"));
         break;
     case 0b100000:
         uart_puts("Instruction abort, lower EL");
@@ -254,31 +253,24 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
     uart_puts("\n");
 
     unsigned long iss = esr & 0x00FFFFFF;
-    uart_puts("Exception return address: ");
-    uart_send_hex(elr);
+    DEBUG_LOG_EXCEPTION(("Exception return address: 0x%x\n", elr));
     // ESR [31:26]
-    uart_puts("\nException class (EC): ");
-    uart_send_hex(esr >> 26);
+    DEBUG_LOG_EXCEPTION(("Exception class (EC): 0x%x\n", esr >> 26));
     // ESR [24:0]
-    uart_puts("\nInstruction specific syndrome (ISS): ");
-    uart_send_hex(iss);
-
-    uart_puts("\n");
+    DEBUG_LOG_EXCEPTION(("Instruction specific syndrome (ISS): 0x%x\n", iss));
 
     if (iss == 0x80)
     {
-        uart_puts("System Call[");
-        uart_send_int(x0);
-        uart_puts("]: ");
+        DEBUG_LOG_EXCEPTION(("System Call[%d]: ", x0));
         syscall_router(x0, x1, x2, x3);
 
-        uart_puts("\n===\n");
+        DEBUG_LOG_EXCEPTION(("\n===\n"));
     }
 }
 
 void irq_handler()
 {
-    // uart_puts("*Interrput*: <IRQ>\n");
+    // DEBUG_LOG_EXCEPTION(("*Interrput*: <IRQ>\n"));
 
     irq_router();
 }

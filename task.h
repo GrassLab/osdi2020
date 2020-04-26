@@ -14,9 +14,13 @@
 #define PF_KTHREAD 0x00000002
 #define PAGE_SIZE 2048
 
-#define TASK_NUM 4
-#define TASK_IDLE 0
-#define TASK_RUNNING 1
+#define TASK_NUM 8
+enum
+{
+    TASK_IDLE,
+    TASK_RUNNING,
+    TASK_ZOMBIE
+};
 #define THREAD_SIZE 4096
 
 typedef struct cpu_context_t
@@ -76,6 +80,8 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 
 int do_exec(unsigned long pc);
 
+int do_fork();
+
 void task_init();
 
 void context_switch(int task_id);
@@ -87,5 +93,7 @@ int check_reschedule();
 void timer_tick();
 
 void schedule_cnt_add(int n);
+
+void exit_process();
 
 #endif

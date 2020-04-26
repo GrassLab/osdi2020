@@ -96,6 +96,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
         childregs->regs[0] = 0;
         childregs->sp = stack + PAGE_SIZE;
         p->stack = stack;
+        p->state = TASK_RUNNING;
     }
     p->flags = clone_flags;
     p->priority = current->priority;
@@ -162,6 +163,10 @@ void schedule()
         {
             break;
         }
+        else
+        {
+            DEBUG_LOG_TASK(("\nTASK: %d, %d\n", task_id, p->state));
+        }
     }
 
     context_switch(task_id);
@@ -192,4 +197,32 @@ void timer_tick()
 void schedule_cnt_add(int n)
 {
     schedule_cnt += n;
+}
+
+void exit_process()
+{
+    task_t *current = task_pool[get_current()];
+    // preempt_disable();
+    for (int i = 0; i < TASK_NUM; i++)
+    {
+        if (task_pool[i] == current)
+        {
+            task_pool[i]->state = TASK_ZOMBIE;
+            break;
+        }
+    }
+    if (current->stack)
+    {
+        //free_page(current->stack);
+    }
+    //preempt_enable();
+    schedule();
+}
+
+int do_fork()
+{
+    unsigned long stack = (unsigned long)&kstack_pool[7][0];
+    memset((unsigned long *)stack, 0, THREAD_SIZE);
+
+    return copy_process(0, 0, 0, stack);
 }

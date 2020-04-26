@@ -1,9 +1,10 @@
 #include "bottom_half.h"
+#include "printf.h"
 #define BOTTOM_HALF_MAX_NUM 64
 
 static unsigned long bottom_half_source = 0;
 
-static bottom_half_t bottom_half_arr[BOTTOM_HALF_MAX_NUM];
+static bottom_half_t bottom_half_arr[BOTTOM_HALF_MAX_NUM] = {0};
 
 void bottom_half_set(unsigned long num)
 {

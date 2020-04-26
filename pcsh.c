@@ -182,6 +182,7 @@ void pcsh()
     char cmd[INPUT_BUFFER_SIZE];
     int x = 0;
 
+    printf("Shell start\n");
     // main loop
     while (x != -1)
     {
@@ -199,9 +200,5 @@ void pcsh()
 
         // default command
         x = sh_default_command(cmd);
-
-        // bottom half
-        // I don't have scheduler, so i implement bottom half here
-        bottom_half_router();
     }
 }
