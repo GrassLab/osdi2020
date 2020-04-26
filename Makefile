@@ -14,9 +14,10 @@ ASM_OBJS	= $(ASMS:%.S=%.S.o)
 ALL_OBJS	= $(SRC_OBJS) $(ASM_OBJS)
 LINK_SCRIPT = link.ld
 
-.PHONY: all clean run
+.PHONY: all clean run force
 
 all: kernel8.img
+force: clean kernel8.img
 
 clean:
 	@rm kernel8.elf $(ALL_OBJS) >/dev/null 2>/dev/null || true

@@ -1,6 +1,10 @@
 #ifndef TYPE_H
 #define TYPE_H
 
+#ifndef NULL
+    #define NULL ((void *)0)
+#endif
+
 typedef int int32_t;
 typedef long long int int64_t;
 

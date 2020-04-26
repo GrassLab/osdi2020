@@ -88,6 +88,10 @@ return_to_el1:
     # init sp for EL0
     sub x0, x0, #0x10000
     msr SP_EL0, x0
+
+    # lab4. start from el1
+    bl      el1_main
+    b       loop
     
     # load exception return address
     adr x1, return_to_el0
