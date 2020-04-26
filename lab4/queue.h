@@ -1,9 +1,10 @@
+#include <stdint.h>
 #ifndef __QUEUE_H__
 #define __QUEUE_H__
 
 /* Original author: JackGrence */
 
-#define QUEUE_MAX_SIZE 0x400
+#define QUEUE_MAX_SIZE 0x100
 
 typedef struct _char_queue
 {
@@ -12,7 +13,12 @@ typedef struct _char_queue
   int tail;
 } char_queue;
 
-char_queue tx_queue, rx_queue;
+typedef struct _uint64_t_queue
+{
+  uint64_t data[QUEUE_MAX_SIZE];
+  int head;
+  int tail;
+} uint64_t_queue;
 
 #define QUEUE_INIT(q) q.head = 0; q.tail = 0 /* Required if it is not stored in static (bss) */
 #define QUEUE_PUSH(q, val) q.data[q.tail] = val; q.tail = (q.tail + 1) % QUEUE_MAX_SIZE

@@ -4,7 +4,6 @@
 #include "irq.h"
 #include "uart.h"
 #include "timer.h"
-#include "queue.h"
 
 void irq_int_enable(void)
 {
@@ -53,14 +52,14 @@ void irq_el1_handler(void)
         return;
       }
 
-      if(!QUEUE_EMPTY(tx_queue))
+      if(!QUEUE_EMPTY(uart_tx_queue))
       {
         while(!CHECK_BIT(*UART_FR, 5)) /* while fifo is not full */
         {
           /* dump data */
-          if(!QUEUE_EMPTY(tx_queue))
+          if(!QUEUE_EMPTY(uart_tx_queue))
           {
-            *UART_DR = (uint32_t)QUEUE_POP(tx_queue);
+            *UART_DR = (uint32_t)QUEUE_POP(uart_tx_queue);
           }
           else
           {
@@ -77,9 +76,9 @@ void irq_el1_handler(void)
     {
       while(!CHECK_BIT(*UART_FR, 4)) /* rxfe not set -> fifo is not empty -> move data into queue */
       {
-        if(!QUEUE_FULL(rx_queue))
+        if(!QUEUE_FULL(uart_rx_queue))
         {
-          QUEUE_PUSH(rx_queue, (char)*UART_DR);
+          QUEUE_PUSH(uart_rx_queue, (char)*UART_DR);
         }
         else
         {

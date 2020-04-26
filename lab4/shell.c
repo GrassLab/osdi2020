@@ -99,8 +99,6 @@ void shell(void)
 {
   char string_buffer[0x1000];
 
-  uart_init();
-
 	/* Show boot message */
   uart_puts(pikachu0);
   uart_puts(pikachu1);

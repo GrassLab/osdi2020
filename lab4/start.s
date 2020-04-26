@@ -65,9 +65,15 @@ el2_to_el1:
   msr spsr_el2, x0
 
   // Use eret to el1
-  adr x0, el1_to_el0
+  adr x0, el1_schedule
   msr elr_el2, x0
   eret
+
+el1_schedule:
+// EL1 now
+  bl uart_init
+  bl scheduler_init
+
 el1_to_el0:
   eor x0, x0, x0
   msr spsr_el1, x0

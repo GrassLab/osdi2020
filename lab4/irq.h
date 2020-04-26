@@ -1,3 +1,4 @@
+#include "queue.h"
 #ifndef __IRQ_H__
 #define __IRQ_H__
 
@@ -8,6 +9,8 @@
 void irq_int_enable(void);
 void irq_int_disable(void);
 void irq_el1_handler(void);
+
+extern char_queue uart_tx_queue, uart_rx_queue;
 
 #endif
 

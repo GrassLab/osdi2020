@@ -3,6 +3,8 @@
 #include "gpio.h"
 #include "queue.h"
 
+char_queue uart_tx_queue, uart_rx_queue;
+
 void uart_init(void)
 {
   /* 1. Disable UART */
@@ -107,8 +109,8 @@ void uart_init(void)
   /* uart_int is interrupt 57, 57 = 1 * 32 + 25 */
   *IRQ_ENABLE_2 = 1 << 25;
 
-  QUEUE_INIT(rx_queue);
-  QUEUE_INIT(tx_queue);
+  QUEUE_INIT(uart_rx_queue);
+  QUEUE_INIT(uart_tx_queue);
 
   /* send a null byte to prevent qemu bug*/
   *UART_DR = 0;
@@ -122,9 +124,9 @@ void uart_init(void)
 char uart_getc(int echo)
 {
   char c;
-  if(!QUEUE_EMPTY(rx_queue)) /* read from queue first */
+  if(!QUEUE_EMPTY(uart_rx_queue)) /* read from queue first */
   {
-    c = QUEUE_POP(rx_queue);
+    c = QUEUE_POP(uart_rx_queue);
   }
   else if(!CHECK_BIT(*UART_FR, 4)) /* interrupt not triggered, and queue is empty. If rxfe [4] not set -> have data to read */
   {
@@ -134,12 +136,12 @@ char uart_getc(int echo)
   else
   {
     /* other interrupt might exit lower power mode, make sure the queue is load by ISR */
-    while(QUEUE_EMPTY(rx_queue))
+    while(QUEUE_EMPTY(uart_rx_queue))
     {
       asm volatile("wfi"); /* Enter low power mode and let ISR handle the data */
     }
     /* ISR store the data in rx_queue */
-    c = QUEUE_POP(rx_queue);
+    c = QUEUE_POP(uart_rx_queue);
   }
   /* Replace \r with \n */
   if(c == '\r')
@@ -159,22 +161,22 @@ char uart_putc(const char c)
   {
     /* Ready to send */
 
-    if(QUEUE_EMPTY(tx_queue))
+    if(QUEUE_EMPTY(uart_tx_queue))
     {
       *UART_DR = (uint32_t)c;
     }
     else
     {
-      char queue_c = QUEUE_POP(tx_queue);
-      QUEUE_PUSH(tx_queue, c);
+      char queue_c = QUEUE_POP(uart_tx_queue);
+      QUEUE_PUSH(uart_tx_queue, c);
       *UART_DR = (uint32_t)queue_c;
     }
   }
   else /* send in irq */
   {
-    while(QUEUE_FULL(tx_queue)); /* busy waiting until queue is cleared by isr */
+    while(QUEUE_FULL(uart_tx_queue)); /* busy waiting until queue is cleared by isr */
 
-    QUEUE_PUSH(tx_queue, c);
+    QUEUE_PUSH(uart_tx_queue, c);
   }
   return c;
 }
