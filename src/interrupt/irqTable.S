@@ -56,6 +56,7 @@ handle_irq:
     save_reg
     bl       irqHandler
     load_reg
+    bl       checkRSFlag
     eret
 
 // Simple vector table

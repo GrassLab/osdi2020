@@ -22,7 +22,7 @@ from_el2_to_el1:
     bl irqVectorInit
     mov x0, (1 << 31) // EL1 use aarch64
     msr hcr_el2, x0
-    mov x0, 0x5 // EL1h (SPSel = 1) with interrupt enable  (0x3c5 disable)
+    mov x0, 0x5 // EL1h (SPSel = 1) with interrupt enable (0x5 enable) (0x3c5 disable)
     msr spsr_el2, x0
     adr x0, shell // load exception return address
     msr elr_el2, x0

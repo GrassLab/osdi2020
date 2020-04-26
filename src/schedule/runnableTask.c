@@ -1,4 +1,5 @@
 #include "type.h"
+#include "device/uart.h"
 #include "schedule/schedule.h"
 
 void idleTask()
@@ -9,7 +10,19 @@ void idleTask()
 	}
 }
 
-void task1()
+void userTask()
+{
+    while (1)
+	{
+    }
+}
+
+void execTask()
+{
+    do_exec(&userTask, 1);
+}
+
+void kernelTask1()
 {
     while (1)
     {
@@ -28,7 +41,7 @@ void task1()
     }
 }
 
-void task2()
+void kernelTask2()
 {
     while (1)
     {

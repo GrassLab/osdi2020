@@ -2,7 +2,9 @@
 #define _RTASK_H
 
 void idleTask();
-void task1();
-void task2();
+void execTask();
+void userTask();
+void kernelTask1();
+void kernelTask2();
 
 #endif

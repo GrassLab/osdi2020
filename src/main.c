@@ -38,9 +38,11 @@ void main()
     // set up serial console
     uartInit();
     
-    int idle_tid = createPrivilegeTask(&idleTask, 0);
-    int t1_tid = createPrivilegeTask(&task1, 1);
-    int t2_tid = createPrivilegeTask(&task2, 1); 
+    // int idle_tid = createPrivilegeTask(&idleTask, 0);
+    // int t1_tid = createPrivilegeTask(&task1, 1);
+    // int t2_tid = createPrivilegeTask(&task2, 1); 
+
+    int tid = createPrivilegeTask(&execTask, 1); 
 
     // Create a null init task
     struct task init_task = INIT_TASK;

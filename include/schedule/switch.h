@@ -4,6 +4,7 @@
 #include "schedule/task.h"
 
 void switchTo();
+void switchToEL0();
 struct task* getCurrent();
 
 #endif
