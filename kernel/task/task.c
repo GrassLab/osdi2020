@@ -4,11 +4,16 @@
 #include "task.h"
 #include "task_queue.h"
 
-task_t * task_pool[NUM_THREADS];
-//char kstack_pool[64][4096];
+#include "kernel/peripherals/uart.h"
+
+const task_t INIT = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, 1, 0, 0, 0};
+task_t * CURRENT_TASK = &INIT;
+
+task_t * task_pool[NUM_THREADS] = { &INIT, };
+
 
 /* 64 bit to maintain which one can use */
-uint64_t task_pool_usage = 0;
+uint64_t task_pool_usage = 1;
 
 int privilege_task_create ( void(*func)() )
 {
@@ -47,4 +52,17 @@ int find_usable_in_pool ()
     }
 
     return -1;
+}
+
+void context_switch ( task_t * next )
+{
+    // if the next one is the same as the current, do nothing
+    if ( CURRENT_TASK == next )
+        return ;
+
+    task_t * prev = CURRENT_TASK;
+
+    CURRENT_TASK = next;
+    
+    switch_to ( prev, next );
 }

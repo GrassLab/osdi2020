@@ -11,9 +11,7 @@ int el1_main ()
     uart_printf("Hello World!!\n");
 
     privilege_task_create ( task_1 );
-    privilege_task_create ( task_2 );
-
-    uart_printf("Hello World!!\n");
+    privilege_task_create ( task_2 );    
 
     // shell_start();
 
