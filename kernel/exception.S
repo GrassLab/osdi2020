@@ -51,7 +51,7 @@
 
 .macro vec_entry handler
   b \handler
-  .align 7 // entry size is 0x80, .align will pad 0
+  .align 7 /* entry size is 0x80, .align will pad 0 */
 .endm
 
 curr_el_spx_sync:
@@ -66,12 +66,18 @@ curr_el_spx_irq:
   bl post_exception_hook
   exception_epilogue
 
+lower_el_aarch64_sync:
+  b curr_el_spx_sync
+
+lower_el_aarch64_irq:
+  b curr_el_spx_irq
+
 not_implemented:
   exception_prologue
   bl not_implemented_handler
   exception_epilogue
 
-.align 11 // vector table should be aligned to 0x800
+.align 11 /* vector table should be aligned to 0x800 */
 .global vector_table
 vector_table:
   vec_entry not_implemented
@@ -84,8 +90,8 @@ vector_table:
   vec_entry not_implemented
   vec_entry not_implemented
 
-  vec_entry curr_el_spx_sync
-  vec_entry curr_el_spx_irq
+  vec_entry lower_el_aarch64_sync
+  vec_entry lower_el_aarch64_irq
   vec_entry not_implemented
   vec_entry not_implemented
 

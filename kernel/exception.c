@@ -50,7 +50,7 @@ void curr_el_spx_sync_handler(void) {
         system_timer_enable();
         break;
       default:
-        printf("[ERROR] Unknown system call number %u" EOL, iss);
+        printf("[ERROR] Unknown SVC number %u" EOL, iss);
         break;
     }
   } else {
