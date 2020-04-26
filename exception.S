@@ -18,6 +18,8 @@
     stp x26, x27, [sp, #16 * 13]
     stp x28, x29, [sp, #16 * 14]
 
+
+    /* el == 0 表示轉成 el1 -> el0 ，否則就存trapframe，stack往上長 */
     .if \el == 0
     mrs x21, sp_el0
     .else
@@ -63,7 +65,7 @@
     .endm
 
 _exc_handler:
-  kernel_entry 1
+  //kernel_entry 1
   /*
     mov x0, #0
     mrs     x1, esr_el2
@@ -72,18 +74,30 @@ _exc_handler:
     mrs     x4, far_el2
     */
   bl exc_handler
-  kernel_exit 1
+  //kernel_exit 1
 
-_synchronous_handler:
+_el0_synchronous_handler:
+  kernel_entry 0
+  bl synchronous_handler
+  kernel_exit 0
+
+
+_el0_irq_handler:
+  kernel_entry 0
+  bl irq_handler
+  kernel_exit 0
+
+_el1_synchronous_handler:
   kernel_entry 1
   bl synchronous_handler
   kernel_exit 1
 
 
-_irq_handler:
+_el1_irq_handler:
   kernel_entry 1
   bl irq_handler
   kernel_exit 1
+
 
 .global ret_from_fork
 ret_from_fork:
@@ -94,7 +108,6 @@ ret_from_fork:
 ret_to_user:
     bl disable_irq
     kernel_exit 0
-    // kernel_exit 0
 
 // exception
     // important, code has to be properly aligned
@@ -116,10 +129,10 @@ _exception_vector:
 
     // synchronous
     .align  7
-    b       _synchronous_handler
+    b       _el1_synchronous_handler
     // IRQ
     .align  7
-    b       _irq_handler
+    b       _el1_irq_handler
     // FIQ
     .align  7
     b       _exc_handler
@@ -130,10 +143,10 @@ _exception_vector:
 
     // synchronous
     .align  7
-    b       _synchronous_handler
+    b       _el0_synchronous_handler
     // IRQ
     .align  7
-    b       _irq_handler
+    b       _el0_irq_handler
     // FIQ
     .align  7
     b       _exc_handler

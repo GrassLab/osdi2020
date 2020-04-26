@@ -13,6 +13,7 @@ pc means Po-Chun, NOT personal computer
 #include "timer.h"
 
 #include "bottom_half.h"
+#include "syscall.h"
 
 #define INPUT_BUFFER_SIZE 256
 
@@ -68,7 +69,7 @@ int cmd_reboot(int i)
 
 int cmd_timestamp(int i)
 {
-    float t = gettime();
+    double t = gettime();
     uart_send_float((float)t, 4);
     uart_send('\n');
 }

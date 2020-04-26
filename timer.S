@@ -41,7 +41,7 @@ _core_timer_disable:
 
 
 
-
+// count schedule flag
 .global _core_timer_handler
 _core_timer_handler:
   stp x29, x30, [sp, #-16]!
@@ -55,10 +55,8 @@ _core_timer_handler:
 
   // for schedule
   // add schedule counter
-  ldr x1, =schedule_cnt
-  ldr x0, schedule_cnt
-  add x0, x0, #1
-  str x0, [x1]
+  mov x0, #1
+  bl schedule_cnt_add
 
 /* 
   mov x0, EXPIRE_PERIOD

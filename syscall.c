@@ -2,18 +2,19 @@
 #include "bootloader.h"
 #include "timer.h"
 #include "bottom_half.h"
+#include "task.h"
 
 void syscall_core_timer(int enable)
 {
-    // uart_puts("core timer: ");
+    uart_puts("core timer: ");
     if (enable == 0)
     {
-        // uart_puts("core timer disable");
+        uart_puts("core timer disable");
         _core_timer_disable();
     }
     else
     {
-        // uart_puts("core timer enable");
+        uart_puts("core timer enable");
         _core_timer_enable();
     }
 }
@@ -65,6 +66,15 @@ void syscall_uart_recv(char *x1)
     } while (*UART0_FR & 0x10);
     /* read it and return */
     *x1 = (char)(*UART0_DR);
+}
+
+void syscall_fork(int *x1)
+{
+}
+
+void syscall_exec(unsigned long x1)
+{
+    do_exec(x1);
 }
 
 /* Can't work */
@@ -119,6 +129,12 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
     case 0x5:
         syscall_uart_recv((char *)x1);
         break;
+    case 0x30:
+        syscall_fork((int *)x1);
+        break;
+    case 0x31:
+        syscall_exec((unsigned long)x1);
+        break;
     // delay than print ...  (for test bottom half)
     case 0x100:
         syscall_delay();
@@ -152,6 +168,13 @@ char uart_recv()
 }
 */
 
+void core_timer(int enable)
+{
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x0\n"
+                 "svc #0x80\n" ::"r"(enable));
+}
+
 double gettime()
 {
     double t;
@@ -160,4 +183,15 @@ double gettime()
                  "svc #0x80\n" ::"r"(&t));
 
     return t;
+}
+
+int fork()
+{
+}
+
+int exec(unsigned int func)
+{
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x31\n"
+                 "svc #0x80\n" ::"r"(func));
 }

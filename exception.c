@@ -129,6 +129,9 @@ void exc_handler(unsigned long type)
     uart_puts("\n");
 
     // no return from exception for now
+    while (1)
+    {
+    }
 }
 
 unsigned long get_current_el()
@@ -231,6 +234,9 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         break;
     case 0b100101:
         uart_puts("Data abort, same EL");
+        while (1)
+        {
+        }
         break;
     case 0b100110:
         uart_puts("Stack alignment fault");
@@ -240,6 +246,9 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         break;
     default:
         uart_puts("Unknown");
+        while (1)
+        {
+        }
         break;
     }
     uart_puts("\n");

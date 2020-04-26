@@ -8,6 +8,9 @@
 void syscall_router(unsigned long, unsigned long, unsigned long, unsigned long);
 
 double gettime();
+void core_timer();
+int fork();
+int exec();
 
 //void uart_send(unsigned int c);
 //char uart_recv() __attribute__((section(".bootloader")));
