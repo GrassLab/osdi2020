@@ -221,7 +221,7 @@ void exit_process()
 
 int do_fork()
 {
-    unsigned long stack = (unsigned long)&kstack_pool[7][0];
+    unsigned long stack = (unsigned long)&kstack_pool[6][0];
     memset((unsigned long *)stack, 0, THREAD_SIZE);
 
     return copy_process(0, 0, 0, stack);
