@@ -1,3 +1,4 @@
+#include "ioutil.h"
 #include "mini_uart.h"
 #include "sched.h"
 #include "shell.h"
@@ -25,7 +26,8 @@ void privilege_task_create(void(*func)(void)) {
   task_pool[id].id = id;
   task_pool[id].timeslice = DEFAULT_TIMESLICE;
 
-  task_pool[id].context.lr = (uint64_t)func;
+  task_pool[id].context.x19 = (uint64_t)func;
+  task_pool[id].context.lr = (uint64_t)task_debut_hook;
   /* "+1" because stack grows toward lower address. */
   task_pool[id].context.fp = (uint64_t)kstack_pool[id + 1];
   task_pool[id].context.sp = (uint64_t)kstack_pool[id + 1];
@@ -42,4 +44,17 @@ void schedule(void) {
   /* Select the next task by simple round-robin policy. */
   struct task *victim = dequeue(&runqueue);
   context_switch(victim);
+}
+
+void do_exec(void(*func)(void)) {
+  el1_to_el0(func, ustack_pool[get_current_task()->id + 1]);
+}
+
+/* This function will be invoked after exception handler return. */
+void post_exception_hook(void) {
+  if (get_current_task()->timeslice == 0) {
+    printf("Context switch is triggered" EOL);
+    get_current_task()->timeslice = DEFAULT_TIMESLICE;
+    schedule();
+  }
 }

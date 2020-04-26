@@ -25,3 +25,19 @@ context_switch_helper:
 get_current_task:
   mrs x0, tpidr_el1
   ret
+
+/*
+ * This hook function will be invoked after a task gets scheduled
+ * for the first time, and before it excutes its start function (x19).
+ */
+.global task_debut_hook
+task_debut_hook:
+  bl enable_interrupt
+  blr x19
+
+.global el1_to_el0
+el1_to_el0:
+  msr elr_el1, x0
+  msr sp_el0, x1
+  msr spsr_el1, xzr
+  eret

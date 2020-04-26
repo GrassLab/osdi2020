@@ -14,7 +14,8 @@ int main(void) {
 
   idle_task_init();
   for (int i = 0; i < 10; ++i) {
-    privilege_task_create(foo);
+//    privilege_task_create(foo);
+    privilege_task_create(user_test);
   }
 
   idle();
@@ -24,18 +25,40 @@ void idle(void) {
   while (true) {
     printf("CPU0 is in idle state..." EOL);
 
-    while (get_current_task()->timeslice != 0) {}
-    get_current_task()->timeslice = DEFAULT_TIMESLICE;
-    schedule();
+    uint64_t sp;
+    asm("mov %0, sp" : "=r"(sp));
+    printf(">> sp = %#x\n", sp);
+
+    for (int i = 0; i < 10000000; ++i) {}
   }
 }
 
 void foo(void) {
-  while (true) {
-    printf("%u..." EOL, get_current_task()->id);
+  for (uint64_t i = 0; ; ++i) {
+    printf("%u: %u..." EOL, get_current_task()->id, i);
 
-    while (get_current_task()->timeslice != 0) {}
-    get_current_task()->timeslice = DEFAULT_TIMESLICE;
-    schedule();
+    uint64_t sp;
+    asm("mov %0, sp" : "=r"(sp));
+    printf(">> sp = %#x\n", sp);
+
+    for (int i = 0; i < 10000000; ++i) {}
+  }
+}
+
+void user_test(void) {
+  do_exec(test);
+}
+
+void test(void) {
+  uint64_t i = 0;
+  while (true) {
+    for (int i = 0; i < 10000000; ++i) {}
+    printf("user print %u\n", i++);
+
+    uint64_t sp, fp;
+    asm("mov %0, sp" : "=r"(sp));
+    asm("mov %0, x29" : "=r"(fp));
+    printf("sp = %#x\n", sp);
+    printf("fp = %#x\n", fp);
   }
 }

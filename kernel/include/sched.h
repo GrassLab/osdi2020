@@ -5,7 +5,7 @@
 
 #define MAX_TASK_NUM 64
 #define MAX_STACK_SIZE 4096
-#define DEFAULT_TIMESLICE 2
+#define DEFAULT_TIMESLICE 1
 
 struct task_context {
   /* Callee saved registers */
@@ -36,16 +36,22 @@ struct queue runqueue;
 struct task __attribute__((aligned(16))) task_pool[MAX_TASK_NUM];
 bool task_inuse[MAX_TASK_NUM];
 uint8_t kstack_pool[MAX_TASK_NUM][MAX_STACK_SIZE];
+uint8_t ustack_pool[MAX_TASK_NUM][MAX_STACK_SIZE];
 
 void idle_task_init(void);
 void privilege_task_create(void(*func)(void));
 void context_switch(struct task *next);
 void schedule();
+void do_exec(void(*func)(void));
 
 void context_switch_helper(struct task *prev, struct task *next);
 struct task *get_current_task(void);
+void task_debut_hook(void);
+void el1_to_el0(void(*func)(void), uint8_t *ustack);
 
 void idle(void);
 void foo(void);
+void user_test(void);
+void test(void);
 
 #endif // SCHED_H_

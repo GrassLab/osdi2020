@@ -58,13 +58,3 @@ el2_to_el1:
 
 3:
   bl main
-
-.global el1_to_el0
-el1_to_el0:
-  mov x0, 0x1000
-  msr sp_el0, x0
-  mov x0, 0
-  msr spsr_el1, x0
-  adr x0, shell
-  msr elr_el1, x0
-  eret
