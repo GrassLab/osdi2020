@@ -3,6 +3,8 @@
 #include "string.h"
 #include "uart.h"
 
+#include "debug.h"
+
 task_t *task_pool[TASK_NUM] = {0};
 
 static int task_pool_len = 0;
@@ -134,12 +136,8 @@ void task_init()
 
 void context_switch(int task_id)
 {
-    uart_send(':');
-    uart_send_int((int)get_current());
-    uart_send('>');
-    uart_send_int((int)task_id);
-    uart_send('\n');
-    uart_send('\r');
+    int current_el = get_current();
+    DEBUG_LOG_TASK((":%d>%d\n\r", current_el, task_id));
 
     int prev_id = get_current();
     task_t *prev = task_pool[get_current()];
@@ -172,7 +170,7 @@ void schedule()
 int check_reschedule()
 {
     // every 500ms, reschdule
-    if (schedule_cnt > 300)
+    if (schedule_cnt > 30)
     {
         schedule_cnt = 0;
         return 1;

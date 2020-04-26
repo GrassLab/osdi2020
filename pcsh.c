@@ -15,7 +15,9 @@ pc means Po-Chun, NOT personal computer
 #include "bottom_half.h"
 #include "syscall.h"
 
-#define INPUT_BUFFER_SIZE 256
+#include "printf.h"
+
+#define INPUT_BUFFER_SIZE 64
 
 extern char __bss_end[];
 
@@ -147,7 +149,7 @@ int cmd_delay_without_bottom_half(int i)
 
 int cmd_not_find(int i)
 {
-    uart_print("Command not find, Try 'help'\n");
+    printf("Command not find, Try 'help'\n");
     return 0;
 }
 
@@ -162,6 +164,8 @@ int sh_default_command(char *cmd)
         }
         ptr++;
     }
+
+    printf("\"%s\", ", cmd);
     cmd_not_find(0);
 
     return 0;

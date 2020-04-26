@@ -189,3 +189,8 @@ int uart_gets(char *buf, int buf_size)
 
     return i;
 }
+
+void putc ( void* p, char c)
+{
+	uart_send(c);
+}

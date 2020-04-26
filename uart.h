@@ -25,4 +25,6 @@ void uart_send_float(float, int);
 
 int uart_print(char *s);
 int uart_gets(char *buf, int buf_size);
+
+void putc( void* p, char c);
 #endif

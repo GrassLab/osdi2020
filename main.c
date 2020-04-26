@@ -11,6 +11,8 @@
 
 #include "task.h"
 
+#include "printf.h"
+
 #define INPUT_BUFFER_SIZE 64
 
 void system_start()
@@ -19,7 +21,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 4.0.2\n");
+    uart_print("Version : 4.2.1\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -56,7 +58,19 @@ void delay(char c)
             "bne   loop_delay_0\n");
     }
 }
+/* User task */
+void user_task_3()
+{
+    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
+    delay('3');
+}
 
+void user_syscall_test()
+{
+    exec((unsigned long)pcsh);
+}
+
+/* Kernel task */
 void task_1()
 {
     delay('1');
@@ -64,25 +78,12 @@ void task_1()
 
 void task_2()
 {
-    /*
-    uart_puts("task_2 Current EL: ");
-    uart_send_int(get_current_el());
-    uart_puts("\n");
-    */
-
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    delay('2');
-}
-
-void user_task_3()
-{
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    delay('3');
+    do_exec((unsigned long)user_syscall_test);
 }
 
 void task_3()
 {
-    do_exec((unsigned long)&user_task_3);
+    do_exec((unsigned long)user_task_3);
     //do_exec((unsigned long)&pcsh);
     if (check_reschedule())
         schedule();
@@ -92,6 +93,7 @@ int main()
 {
     // set uart
     uart_init();
+    init_printf(0, putc);
 
     system_start();
 
@@ -114,9 +116,8 @@ int main()
     //syscall_1(0, 1);
 
     task_init();
-    //privilege_task_create((unsigned long)task_1, (unsigned long)"12345");
+    copy_process(PF_KTHREAD, (unsigned long)task_1, (unsigned long)"aaa", 0);
     copy_process(PF_KTHREAD, (unsigned long)task_2, (unsigned long)"ccc", 0);
-    //privilege_task_create((unsigned long)task_3, (unsigned long)"aaa");
     copy_process(PF_KTHREAD, (unsigned long)task_3, 0, 0);
 
     //privilege_task_create((unsigned long)&pcsh, (unsigned long)"pcsh");
