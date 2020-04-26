@@ -2,7 +2,7 @@ CC       = aarch64-none-linux-gnu-gcc
 LD       = aarch64-none-linux-gnu-ld
 OBJCOPY  = aarch64-none-linux-gnu-objcopy
 EMULATOR = qemu-system-aarch64
-CFLAGS   = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -g
+CFLAGS   = -Wall -O0 -ffreestanding -nostdinc -nostdlib -nostartfiles -g
 INCLUDES = -Iinclude
 
 SRCDIR	 = src
@@ -19,13 +19,18 @@ DVDIR	 = src/device
 DV		 = $(wildcard $(DVDIR)/*.c)
 DVOBJS	 = $(patsubst $(DVDIR)/%.c,%.o,$(DV)) \
 		   $(patsubst $(DVDIR)/%.S,%.o,$(ASMDV))
+SCDDIR	 = src/schedule
+SCD		 = $(wildcard $(SCDDIR)/*.c)
+ASMSCD	 = $(wildcard $(SCDDIR)/*.S)
+SCDOBJS	 = $(patsubst $(SCDDIR)/%.c,%.o,$(SCD)) \
+		   $(patsubst $(SCDDIR)/%.S,%.o,$(ASMSCD))
 
-OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS)
+OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS) $(SCDOBJS)
 
 LSCRIPT  = linker.ld
 KERNEL   = kernel8
 
-VPATH    = $(SRCDIR) $(IRQDIR) $(DVDIR)
+VPATH    = $(SRCDIR) $(IRQDIR) $(DVDIR) $(SCDDIR)
 
 all: $(KERNEL).img
 

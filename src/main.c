@@ -25,11 +25,25 @@
 
 #include "shell.h"
 #include "device/uart.h"
+#include "schedule/schedule.h"
+#include "schedule/switch.h"
+#include "schedule/runnableTask.h"
+
+#define INIT_TASK \
+/*cpu_context*/ { { 0,0,0,0,0,0,0,0,0,0,0,0,0}, \
+/* state etc */	 0, 0} \
 
 void main()
 {
     // set up serial console
     uartInit();
+    
+    int idle_tid = createPrivilegeTask(&idleTask, 0);
+    int t1_tid = createPrivilegeTask(&task1, 1);
+    int t2_tid = createPrivilegeTask(&task2, 1); 
+    struct task init_task = INIT_TASK;
+    current = &init_task;
+    schedule();
 
-    runShell();
+    // runShell();
 }

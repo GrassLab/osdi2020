@@ -24,19 +24,19 @@ from_el2_to_el1:
     msr hcr_el2, x0
     mov x0, 0x3c5 // EL1h (SPSel = 1) with interrupt disabled
     msr spsr_el2, x0
-    adr x0, from_el1_to_el0 // load exception return address
+    adr x0, shell // load exception return address
     msr elr_el2, x0
     adr x0, __stack_start // init sp for el1 option 1
     msr sp_el1, x0
     eret // return to EL1
-from_el1_to_el0:   
-    mov x0, 0x1000
-    msr sp_el0, x0
-    mov x0, 0 // EL0 with interrupt enabled
-    msr spsr_el1, x0
-    adr x0, shell // return to shell run in EL0
-    msr elr_el1, x0
-    eret
+// from_el1_to_el0:   
+//    mov x0, 0x1000
+//    msr sp_el0, x0
+//    mov x0, 0 // EL0 with interrupt enabled
+//    msr spsr_el1, x0
+//    adr x0, shell // return to shell run in EL0
+//    msr elr_el1, x0
+//    eret
 shell:
     ;ldr x0, = __stack_start
     ;mov sp, x0
