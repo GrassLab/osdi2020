@@ -15,8 +15,10 @@ void process(char *array) {
 			uart_send(array[i]);
 			i++;
 		}
-		delay(1000000000);
-		schedule();
+		delay(100000000);
+		if(current->counter == 0) {
+			schedule();
+		}
 	}
 	return;
 }
@@ -43,46 +45,21 @@ int strcmp(char *str1, char *str2) {
 void kernel_main(void)
 {	
 	char buffer[100];
-	// enable timer
+	uart_recv();
 	uart_send_string("uart_init\r\n");
 	uart_send_string("# ");
+	sync_call_time();
+	enable_irq();
+
+	int res = copy_process((unsigned long)&process, (unsigned long)"12345\r\n");
+	if (res != 0) {
+		uart_send_string("fail to fork\r\n");
+	}
+	res = copy_process((unsigned long)&process, (unsigned long)"66666\r\n");
+	if (res != 0) {
+		uart_send_string("fail to fork\r\n");
+	}
 	while (1) {
-		readline(buffer, 100);
-		if (strcmp(buffer, "hello") == 0) {
-			uart_send_string("hhhhhh\r\n");
-			int res = copy_process((unsigned long)&process, (unsigned long)"12345\r\n");
-			if (res != 0) {
-				uart_send_string("fail to fork\r\n");
-			}
-			res = copy_process((unsigned long)&process, (unsigned long)"66666\r\n");
-			if (res != 0) {
-				uart_send_string("fail to fork\r\n");
-			}
-			while(1) {
-				uart_send_string("scheduling\r\n");
-				schedule();
-			}
-			buffer[0] = '\0';
-			uart_send_string("# ");
-		}
-		else if (strcmp(buffer, "exc") == 0) {
-			sync_call_exc();
-			buffer[0] = '\0';
-			uart_send_string("# ");
-		}
-		else if (strcmp(buffer, "irq") == 0) {
-			sync_call_time();
-			buffer[0] = '\0';
-			uart_send_string("# ");
-		}
-		else if (strcmp(buffer, "proc") == 0) {
-			sync_call_proc();
-			buffer[0] = '\0';
-			uart_send_string("# ");
-		}
-		else {
-			uart_send_string("wrong command!!!\r\n");
-			uart_send_string("# ");
-		}
+		schedule();
 	}
 }

@@ -13,7 +13,7 @@
 	b       \label
 .endm
 
-	.macro	kernel_entry, el
+	.macro	kernel_entry
 	sub	sp, sp, #S_FRAME_SIZE
 	stp	x0, x1, [sp, #16 * 0]
 	stp	x2, x3, [sp, #16 * 1]
@@ -31,30 +31,19 @@
 	stp	x26, x27, [sp, #16 * 13]
 	stp	x28, x29, [sp, #16 * 14]
 
-	.if	\el == 0
-	mrs	x21, sp_el0
-	.else
-	add	x21, sp, #S_FRAME_SIZE
-	.endif /* \el == 0 */
-
 	mrs	x22, elr_el1
 	mrs	x23, spsr_el1
 
-	stp	x30, x21, [sp, #16 * 15] 
-	stp	x22, x23, [sp, #16 * 16]
+	stp	x30, x22, [sp, #16 * 15] 
+	str	x23, [sp, #16 * 16]
 	.endm
 
-	.macro	kernel_exit, el
-	ldp	x22, x23, [sp, #16 * 16]
-	ldp	x30, x21, [sp, #16 * 15] 
-
-	.if	\el == 0
-	msr	sp_el0, x21
-	.endif /* \el == 0 */
+	.macro	kernel_exit
+	ldr	x23, [sp, #16 * 16]
+	ldp	x30, x22, [sp, #16 * 15] 
 
 	msr	elr_el1, x22			
 	msr	spsr_el1, x23
-
 
 	ldp	x0, x1, [sp, #16 * 0]
 	ldp	x2, x3, [sp, #16 * 1]
@@ -87,7 +76,7 @@ vectors:
 	ventry	fiq_invalid_el1t			// FIQ EL1t
 	ventry	error_invalid_el1t			// Error EL1t
 
-	ventry	irq_invalid_el1h			// Synchronous EL1h (this one)
+	ventry	sync_el1h  					// Synchronous EL1h (this one)
 	ventry	el1_irq						// IRQ EL1h
 	ventry	fiq_invalid_el1h			// FIQ EL1h
 	ventry	error_invalid_el1h			// Error EL1h
@@ -103,79 +92,80 @@ vectors:
 	ventry	error_invalid_el0_32		// Error 32-bit EL0
 
 sync_invalid_el1t:
-	handle_invalid_entry  1,SYNC_INVALID_EL1t
+	handle_invalid_entry  ,SYNC_INVALID_EL1t
 
 irq_invalid_el1t:
-	handle_invalid_entry  1,IRQ_INVALID_EL1t
+	handle_invalid_entry  ,IRQ_INVALID_EL1t
 
 fiq_invalid_el1t:
-	handle_invalid_entry  1,FIQ_INVALID_EL1t
+	handle_invalid_entry  ,FIQ_INVALID_EL1t
 
 error_invalid_el1t:
-	handle_invalid_entry  1,ERROR_INVALID_EL1t
+	handle_invalid_entry  ,ERROR_INVALID_EL1t
 
 
 sync_invalid_el1h:
-	handle_invalid_entry  1,SYNC_INVALID_EL1h
+	handle_invalid_entry  ,SYNC_INVALID_EL1h
 
 irq_invalid_el1h:
-    handle_invalid_entry  1,IRQ_INVALID_EL1h
+    handle_invalid_entry  ,IRQ_INVALID_EL1h
 
 fiq_invalid_el1h:
-	handle_invalid_entry  1,FIQ_INVALID_EL1h
+	handle_invalid_entry  ,FIQ_INVALID_EL1h
 
 error_invalid_el1h:
-	handle_invalid_entry  1,ERROR_INVALID_EL1h
+	handle_invalid_entry  ,ERROR_INVALID_EL1h
 
 
 
 sync_invalid_el0_64:
-	handle_invalid_entry  0,SYNC_INVALID_EL0_64
+	handle_invalid_entry  ,SYNC_INVALID_EL0_64
 
 irq_invalid_el0_64:
-	handle_invalid_entry  0,IRQ_INVALID_EL0_64
+	handle_invalid_entry  ,IRQ_INVALID_EL0_64
 
 fiq_invalid_el0_64:
-	handle_invalid_entry  0,FIQ_INVALID_EL0_64
+	handle_invalid_entry  ,FIQ_INVALID_EL0_64
 
 error_invalid_el0_64:
-	handle_invalid_entry  0,ERROR_INVALID_EL0_64
+	handle_invalid_entry  ,ERROR_INVALID_EL0_64
 
 sync_invalid_el0_32:
-	handle_invalid_entry  0,SYNC_INVALID_EL0_32
+	handle_invalid_entry  ,SYNC_INVALID_EL0_32
 
 irq_invalid_el0_32:
-	handle_invalid_entry  0,IRQ_INVALID_EL0_32
+	handle_invalid_entry  ,IRQ_INVALID_EL0_32
 
 fiq_invalid_el0_32:
-	handle_invalid_entry  0,FIQ_INVALID_EL0_32
+	handle_invalid_entry  ,FIQ_INVALID_EL0_32
 
 error_invalid_el0_32:
-	handle_invalid_entry  0,ERROR_INVALID_EL0_32
+	handle_invalid_entry  ,ERROR_INVALID_EL0_32
 
+	
 sync_el0_64:
-	kernel_entry 0
+	kernel_entry
 	mrs x0, esr_el1
 	mrs x1, elr_el1
 	bl	handle_el0_sync
-	kernel_exit 0
+	kernel_exit
 
 irq_el0_64:
-	kernel_entry 0
+	kernel_entry
 	bl	handle_irq
-	kernel_exit 0
+	kernel_exit
 
 sync_el1h:
-	kernel_entry 1
+	kernel_entry
 	mrs	x0, esr_el1  // Holds syndrome information for an exception taken to EL1.
 	mrs	x1, elr_el1  // When taking an exception to EL1, holds the address to return to.
-	bl	handle_sync
-	kernel_exit 1
+	bl	handle_el1_sync
+	kernel_exit
 
 el1_irq:
-	kernel_entry 1
+	kernel_entry
 	bl	handle_irq
-	kernel_exit 1
+	kernel_exit
 
 .globl err_hang
 err_hang: b err_hang

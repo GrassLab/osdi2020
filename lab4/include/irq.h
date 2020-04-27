@@ -3,4 +3,5 @@
 void handle_irq();
 void handle_sys_timer_irq();
 void handle_core_timer_irq(); 
+void handle_el1_irq();
 #endif

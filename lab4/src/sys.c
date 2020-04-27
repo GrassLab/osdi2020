@@ -64,3 +64,21 @@ void handle_el0_sync(unsigned long esr, unsigned long address)
     }
     return;
 }
+
+void handle_el1_sync(unsigned long esr, unsigned long address)
+{
+    unsigned int val;
+	asm volatile ("uxtw %0, w8" : "=r" (val));
+    if (val == SYS_TIME_IRQ) {
+        sys_timer_init();
+        enable_timer_controller();  // function in irq.c
+        unsigned int cntfrq;
+        unsigned int val;
+        cntfrq = read_cntfrq();
+        write_cntp_tval(cntfrq);    // clear cnthp interrupt and set next 1 sec timer.
+        val = read_cntp_tval();
+        core_timer_enable();
+        enable_irq();
+    }
+    return;
+}
