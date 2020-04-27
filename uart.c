@@ -61,28 +61,27 @@ void uart_init()
     *UART0_LCRH = 0b11 << 5; // 8n1
     *UART0_CR = 0x301;       // enable Tx, Rx, FIFO
 }
-
+/*
 void uart_send(unsigned int c)
 {
-    /* wait until we can send */
     do
     {
         asm volatile("nop");
     } while (*UART0_FR & 0x20);
-    /* write the character to the buffer */
     *UART0_DR = c;
 }
+*/
 
+/*
 char uart_recv()
 {
-    /* wait until something is in the buffer */
     do
     {
         asm volatile("nop");
     } while (*UART0_FR & 0x10);
-    /* read it and return */
     return (char)(*UART0_DR);
 }
+*/
 
 char uart_getc()
 {
@@ -190,7 +189,7 @@ int uart_gets(char *buf, int buf_size)
     return i;
 }
 
-void putc ( void* p, char c)
+void putc(void *p, char c)
 {
-	uart_send(c);
+    uart_send(c);
 }

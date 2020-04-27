@@ -2,8 +2,8 @@
 #define _DEBUG_H_
 
 // #define DEBUG_TASK
-#define DEBUG_SYSCALL
-#define DEBUG_EXCEPTION
+// #define DEBUG_SYSCALL
+// #define DEBUG_EXCEPTION
 
 #include "printf.h"
 

@@ -1,4 +1,5 @@
 #include "uart.h"
+#include "printf.h"
 #include "pcsh.h"
 #include "screen.h"
 #include "string.h"
@@ -8,10 +9,7 @@
 #include "bottom_half.h"
 
 #include "exception.h"
-
 #include "task.h"
-
-#include "printf.h"
 
 #define INPUT_BUFFER_SIZE 64
 
@@ -21,7 +19,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 4.3.1\n");
+    uart_print("Version : 4.3.2\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -33,7 +31,7 @@ void system_start()
 
 void bottom_half_0()
 {
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
+    // delay_c, depend on cpu frequency, so in rpi3 B+ and qemu is different
     for (int i = 0; i < 5; i++)
     {
         uart_puts(".");
@@ -46,7 +44,7 @@ void bottom_half_0()
     uart_send('\n');
 }
 
-void delay(char c)
+void delay_c(char c)
 {
     for (int i = 0; i < 10000; i++)
     {
@@ -54,21 +52,30 @@ void delay(char c)
         // very very very slow in real rpi3, but very very very fast in qemu
         asm volatile(
             "mov  x0, #0xfffff\n"
-            "loop_delay_0: subs  x0, x0, #1\n"
-            "bne   loop_delay_0\n");
+            "loop_delay_c_0: subs  x0, x0, #1\n"
+            "bne   loop_delay_c_0\n");
     }
 }
+
+void delay(unsigned long num)
+{
+    for (unsigned long i = 0; i < num; i++)
+    {
+        asm volatile("nop");
+    }
+}
+
 /* User task */
 void user_task_3()
 {
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    delay('3');
+    // delay_c, depend on cpu frequency, so in rpi3 B+ and qemu is different
+    delay_c('3');
 }
 
 void user_task_4()
 {
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    delay('4');
+    // delay_c, depend on cpu frequency, so in rpi3 B+ and qemu is different
+    delay_c('4');
 }
 
 void user_syscall_test()
@@ -84,13 +91,14 @@ void user_syscall_test()
     {
         printf("\nPID: %d\n", pid);
         exec((unsigned long)pcsh);
+        exit(0);
     }
 }
 
 /* Kernel task */
 void task_1()
 {
-    delay('1');
+    delay_c('1');
 }
 
 void task_2()
@@ -118,6 +126,55 @@ void task_4()
         schedule();
 }
 
+void foo()
+{
+    int tmp = 5;
+    printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+    exit(0);
+}
+
+void test()
+{
+    int cnt = 1;
+    if (fork() == 0)
+    {
+        fork();
+        delay(10000);
+        //fork();
+        while (cnt < 10)
+        {
+            printf("Task id: %d, cnt: %d\n\r", get_taskid(), cnt);
+            delay(5000000);
+            ++cnt;
+        }
+        exit(0);
+        printf("Should not be printed\n\r");
+    }
+    else
+    {
+        printf("Task %d before exec, cnt address 0x%x, cnt value %d\n\r", get_taskid(), &cnt, cnt);
+        exec(foo);
+    }
+}
+void user_test()
+{
+    do_exec((unsigned long)test);
+}
+
+void bottom_half_1()
+{
+    char x1;
+    do
+    {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x10);
+    x1 = (char)(*UART0_DR);
+    while (1)
+    {
+    }
+    bottom_half_clr(0x2);
+}
+
 int main()
 {
     // set uart
@@ -126,13 +183,18 @@ int main()
 
     system_start();
 
-    enable_irq();
+    // enable_irq();
 
     // enroll system call to bottom_half
-    bottom_half_t n = {
+    bottom_half_t n0 = {
         0,
         bottom_half_0};
-    bottom_half_enroll(n);
+    bottom_half_enroll(n0);
+
+    bottom_half_t n1 = {
+        1,
+        bottom_half_1};
+    bottom_half_enroll(n1);
 
     /* You can't know Current EL, if you in EL0 */
     /*
@@ -141,21 +203,21 @@ int main()
     uart_puts("\n");
     */
 
-    // core timer enable, every 1ms
-    //syscall_1(0, 1);
-
     task_init();
-    copy_process(PF_KTHREAD, (unsigned long)task_1, 0, 0);
-    copy_process(PF_KTHREAD, (unsigned long)task_2, 0, 0);
+    // copy_process(PF_KTHREAD, (unsigned long)task_1, 0, 0);
+    copy_process(PF_KTHREAD, (unsigned long)task_2, 0, 0); // fork, shell
     copy_process(PF_KTHREAD, (unsigned long)task_3, 0, 0);
-    copy_process(PF_KTHREAD, (unsigned long)task_4, 0, 0);
+    //copy_process(PF_KTHREAD, (unsigned long)task_4, 0, 0);
+    copy_process(PF_KTHREAD, (unsigned long)user_test, 0, 0);
 
-    //privilege_task_create((unsigned long)&pcsh, (unsigned long)"pcsh");
-
+    // core timer enable, every 1ms
     core_timer(1);
     //_core_timer_enable();
 
-    schedule();
+    while (1)
+    {
+        schedule();
+    }
 
     return 0;
 }

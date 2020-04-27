@@ -1,8 +1,9 @@
 #include "uart.h"
 #include "bootloader.h"
 #include "string.h"
+#include "syscall.h"
 
-#define INPUT_BUFFER_SIZE 256
+#define INPUT_BUFFER_SIZE 32
 
 void loadimg()
 {

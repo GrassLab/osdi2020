@@ -2,6 +2,8 @@
 #include "task.h"
 #include "string.h"
 #include "uart.h"
+#include "syscall.h"
+#include "mm.h"
 
 #include "debug.h"
 
@@ -9,9 +11,9 @@ task_t *task_pool[TASK_NUM] = {0};
 
 static int task_pool_len = 0;
 
-unsigned long kstack_pool[TASK_NUM][THREAD_SIZE] = {0};
+// unsigned long kstack_pool[TASK_NUM][THREAD_SIZE] = {0};
 
-unsigned long ustack_pool[TASK_NUM][THREAD_SIZE] = {0};
+// unsigned long ustack_pool[TASK_NUM][THREAD_SIZE] = {0};
 
 static int runqueue[TASK_NUM] = {0};
 
@@ -29,39 +31,6 @@ void init()
     }
 }
 
-int privilege_task_create(unsigned long func, unsigned long arg)
-{
-
-    task_t *current = task_pool[get_current()];
-
-    // preempt_disable();
-    task_t *p;
-
-    int task_id = task_pool_len;
-
-    p = (task_t *)&kstack_pool[task_id][0];
-    task_pool[task_id] = p;
-    if (!p)
-        return -1;
-    p->priority = current->priority;
-    p->state = TASK_RUNNING;
-    p->counter = p->priority;
-    p->preempt_count = 1; //disable preemtion until schedule_tail
-
-    p->cpu_context.x19 = func;
-    p->cpu_context.x20 = arg;
-    p->cpu_context.pc = (unsigned long)ret_from_fork;
-    p->cpu_context.sp = (unsigned long)p + THREAD_SIZE;
-
-    uart_send_int((unsigned long)p);
-    uart_send('\n');
-    //set_current(p);
-    // preempt_enable();
-
-    task_pool_len++;
-    return task_id;
-}
-
 user_context_t *task_user_context(task_t *task)
 {
     unsigned long p = (unsigned long)task + THREAD_SIZE - sizeof(user_context_t);
@@ -76,8 +45,11 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     task_t *p;
 
     int task_id = task_pool_len;
+    printf("c:%d, %d;", task_id, clone_flags);
 
-    p = (task_t *)&kstack_pool[task_id][0];
+    //p = (task_t *)&kstack_pool[task_id][0];
+    p = (task_t *)get_free_page();
+
     memset((unsigned long *)p, 0, THREAD_SIZE);
 
     user_context_t *childregs = task_user_context(p);
@@ -91,6 +63,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     }
     else
     {
+        // stack = p;
         user_context_t *cur_regs = task_user_context(current);
         *childregs = *cur_regs;
         childregs->regs[0] = 0;
@@ -120,8 +93,10 @@ int do_exec(unsigned long pc)
     memset(regs, 0, sizeof(*regs));
     regs->pc = pc;
     regs->pstate = PSR_MODE_EL0t;
-    unsigned long stack = (unsigned long)&ustack_pool[get_current()][0]; //allocate new user stack
-    memset((unsigned long *)stack, 0, THREAD_SIZE);
+    //unsigned long stack = (unsigned long)&ustack_pool[get_current()][0]; //allocate new user stack
+    //memset((unsigned long *)stack, 0, THREAD_SIZE);
+    unsigned long stack = get_free_page();
+    memset((unsigned long *)stack, 0, PAGE_SIZE);
 
     regs->sp = stack + PAGE_SIZE;
     // task_pool[get_current()]->stack = stack;
@@ -142,7 +117,6 @@ void context_switch(int task_id)
 
     int prev_id = get_current();
     task_t *prev = task_pool[get_current()];
-
     set_current(task_id);
 
     task_t *next = task_pool[task_id];
@@ -221,8 +195,10 @@ void exit_process()
 
 int do_fork()
 {
-    unsigned long stack = (unsigned long)&kstack_pool[6][0];
-    memset((unsigned long *)stack, 0, THREAD_SIZE);
+    printf("_%d_", get_current());
+    // unsigned long stack = (unsigned long)&kstack_pool[get_current()][0];
+    unsigned long stack = get_free_page();
+    memset((unsigned long *)stack, 0, PAGE_SIZE);
 
     return copy_process(0, 0, 0, stack);
 }

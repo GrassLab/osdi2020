@@ -11,7 +11,9 @@ double gettime();
 void core_timer();
 int fork();
 int exec();
+void exit(int);
+int get_taskid();
 
-//void uart_send(unsigned int c);
-//char uart_recv() __attribute__((section(".bootloader")));
+void uart_send(unsigned int c);
+char uart_recv() __attribute__((section(".bootloader")));
 #endif

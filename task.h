@@ -12,16 +12,14 @@
 #define PSR_MODE_EL3h 0x0000000d
 
 #define PF_KTHREAD 0x00000002
-#define PAGE_SIZE 2048
 
-#define TASK_NUM 8
+#define TASK_NUM 16
 enum
 {
     TASK_IDLE,
     TASK_RUNNING,
     TASK_ZOMBIE
 };
-#define THREAD_SIZE 4096
 
 typedef struct cpu_context_t
 {

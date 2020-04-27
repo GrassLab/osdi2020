@@ -170,7 +170,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
     unsigned long current_el;
     current_el = get_current_el();
 
-    DEBUG_LOG_EXCEPTION(("Current EL: %d\n", current_el));
+    DEBUG_LOG_EXCEPTION(("Current EL: %d\r\n", current_el));
 
     switch (current_el)
     {
@@ -195,15 +195,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         break;
     }
 
-    /* used in el2 */
-    /*
-    asm volatile(
-        "mrs %0, elr_el2;"
-        "mrs %1, esr_el2;"
-        : "=r"(elr), "=r"(esr));
-        */
-
-    DEBUG_LOG_EXCEPTION(("*Interrput*: <Synchronous>\n"));
+    DEBUG_LOG_EXCEPTION(("*Interrput*: <Synchronous>\r\n"));
     // decode exception type (some, not all. See ARM DDI0487B_b chapter D10.2.28)
     switch (esr >> 26)
     {
@@ -233,9 +225,6 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         break;
     case 0b100101:
         uart_puts("Data abort, same EL");
-        while (1)
-        {
-        }
         break;
     case 0b100110:
         uart_puts("Stack alignment fault");
@@ -250,7 +239,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         }
         break;
     }
-    uart_puts("\n");
+    DEBUG_LOG_EXCEPTION(("\n"));
 
     unsigned long iss = esr & 0x00FFFFFF;
     DEBUG_LOG_EXCEPTION(("Exception return address: 0x%x\n", elr));
@@ -265,6 +254,13 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         syscall_router(x0, x1, x2, x3);
 
         DEBUG_LOG_EXCEPTION(("\n===\n"));
+    }
+
+    if (esr >> 26 != 0b010101)
+    {
+        while (1)
+        {
+        }
     }
 }
 

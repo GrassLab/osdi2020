@@ -12,7 +12,6 @@ pc means Po-Chun, NOT personal computer
 #include "pcsh.h"
 #include "timer.h"
 
-#include "bottom_half.h"
 #include "syscall.h"
 
 #include "printf.h"
@@ -73,7 +72,7 @@ int cmd_timestamp(int i)
 {
     double t = gettime();
     uart_send_float((float)t, 4);
-    uart_send('\n');
+    //uart_send('\n');
 }
 
 int cmd_load_images(int i)
@@ -173,8 +172,7 @@ int sh_default_command(char *cmd)
 
 int symbol()
 {
-    uart_send('\r');
-    uart_send('>');
+    printf("\r>");
 }
 
 void pcsh()

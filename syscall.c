@@ -64,13 +64,15 @@ void syscall_uart_send(char x1)
 
 void syscall_uart_recv(char *x1)
 {
-    /* wait until something is in the buffer */
+    enable_irq();
     do
     {
         asm volatile("nop");
     } while (*UART0_FR & 0x10);
-    /* read it and return */
     *x1 = (char)(*UART0_DR);
+    disable_irq();
+    //printf("%c", *x1);
+    //bottom_half_set(0x1);
 }
 
 void syscall_fork(int *x1)
@@ -84,9 +86,14 @@ void syscall_exec(unsigned long x1)
     do_exec(x1);
 }
 
-void syscall_exit(int *x1)
+void syscall_exit(int x1)
 {
     exit_process();
+}
+
+void syscall_get_taskid(int *x1)
+{
+    *x1 = get_current();
 }
 
 /* Can't work */
@@ -100,22 +107,6 @@ void syscall_delay()
     DEBUG_LOG_SYSCALL(("syscall_delay"));
     DEBUG_LOG_SYSCALL(("\n"));
     bottom_half_set(0x0);
-}
-
-void syscall_delay_without_bottom_half()
-{
-    DEBUG_LOG_SYSCALL(("syscall_delay_without_bottom_half"));
-    for (int i = 0; i < 5; i++)
-    {
-        DEBUG_LOG_SYSCALL(("."));
-        // very very very slow in real rpi3, but very very very fast in qemu
-        asm volatile(
-            "mov  x0, #0xfffff\n"
-            "bottom_half_0_l: subs  x0, x0, #1\n"
-            "bne   bottom_half_0_l\n");
-    }
-    uart_send('n');
-    DEBUG_LOG_SYSCALL(("\n"));
 }
 
 void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
@@ -143,6 +134,9 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
     case 0x5:
         syscall_uart_recv((char *)x1);
         break;
+    case 0x20:
+        syscall_get_taskid((int *)x1);
+        break;
     case 0x30:
         syscall_fork((int *)x1);
         break;
@@ -150,19 +144,15 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         syscall_exec((unsigned long)x1);
         break;
     case 0x32:
-        syscall_exit((int *)x1);
+        syscall_exit((int)x1);
         break;
     // delay than print ...  (for test bottom half)
     case 0x100:
         syscall_delay();
         break;
-    // delay than print ...  (for test bottom half)
-    case 0x101:
-        syscall_delay_without_bottom_half();
-        break;
     // not this syscall
     default:
-        DEBUG_LOG_SYSCALL(("Can find this system call"));
+        printf("Can find this system call, Halt");
 
         while (1)
         {
@@ -170,21 +160,21 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
     }
 };
 
-/*
 void uart_send(unsigned int x1)
 {
-    syscall_1(0x4, x1);
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x04\n"
+                 "svc #0x80\n" ::"r"(x1));
 }
 
 char uart_recv()
 {
     char x1;
-    asm volatile("mov x1, %0\\n"
-                 "mov x0, #0x05\\n"
-                 "svc #0x80\\n" ::"r"(&x1));
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x05\n"
+                 "svc #0x80\n" ::"r"(&x1));
     return x1;
 }
-*/
 
 void core_timer(int enable)
 {
@@ -201,6 +191,15 @@ double gettime()
                  "svc #0x80\n" ::"r"(&t));
 
     return t;
+}
+
+int get_taskid()
+{
+    int taskid;
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x20\n"
+                 "svc #0x80\n" ::"r"(&taskid));
+    return taskid;
 }
 
 int fork()
@@ -228,6 +227,9 @@ int exec(unsigned int func)
                  "svc #0x80\n" ::"r"(func));
 }
 
-int exit()
+void exit(int value)
 {
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x32\n"
+                 "svc #0x80\n" ::"r"(value));
 }
