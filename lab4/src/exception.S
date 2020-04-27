@@ -1,3 +1,5 @@
+
+
 .section ".text"
     .macro	kernel_entry
 	sub	sp, sp, #256
@@ -53,8 +55,8 @@ exception_table:
     ventry not_implemented
     ventry not_implemented
 
-    ventry not_implemented
-    ventry not_implemented
+    ventry el1_exception
+    ventry irq_handler
     ventry not_implemented
     ventry not_implemented
 
@@ -80,3 +82,9 @@ irq_handler:
 	kernel_entry
 	bl irq_router
 	kernel_exit
+
+.globl ret_from_fork
+ret_from_fork:
+	//bl	schedule_tail
+	mov	x0, x20
+	blr	x19 		//should never return

@@ -1,6 +1,6 @@
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFALG = -fPIC -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude
+CFALG = -fPIC -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude -g
 ASMFALG = -fPIC -Iinclude
 SRC_DIR = src
 BUILD_DIR = build
@@ -45,3 +45,6 @@ runasm:
 
 rundis:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
+
+rungdb:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -S -gdb tcp::1234

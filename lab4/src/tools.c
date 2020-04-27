@@ -88,17 +88,22 @@ int cmd_box(char * command){
     if(my_strcmp(command, "loadimage")==1)return 5;
     if(my_strcmp(command, "exc")==1)return 6;
     if(my_strcmp(command, "irq")==1)return 7;
+    if(my_strcmp(command, "excl")==1)return 8;
+    if(my_strcmp(command, "foo")==1)return 9;
     return -1;
 }
 void process_cmd(char * command){
     switch (cmd_box(command)){
         case 1:
+            uart_puts("\n");
             uart_puts("help        :show every commands.\n");
             uart_puts("hello       :say hello to you.\n");
             uart_puts("reset       :reboot the mechine.\n");
             uart_puts("loadimage   :load kernel image.\n");
             uart_puts("exc         :create exception and print information.\n");
             uart_puts("irq         :create timer interrupt.\n");
+            uart_puts("excl        :Show exception level.\n");
+            uart_puts("foo         :Start create foo.\n");
             break;
         case 2:
             uart_puts("Hello World!");
@@ -120,6 +125,16 @@ void process_cmd(char * command){
             break;
         case 7:                       
             asm volatile ("svc #2");
+            break;
+        case 8:        
+            uart_puts("Exception level: ");               
+            int el = get_el();
+            uart_send_int(el);
+            uart_puts("\n");
+            break;
+        case 9:        
+            uart_puts("Start create foo\n");               
+            create_foo();
             break;
         default:
             uart_puts(command);
