@@ -45,7 +45,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     task_t *p;
 
     int task_id = task_pool_len;
-    printf("c:%d, %d;", task_id, clone_flags);
+    printf("c:%d, %d, %d;\n\r", get_current(), task_id, clone_flags);
 
     //p = (task_t *)&kstack_pool[task_id][0];
     p = (task_t *)get_free_page();
@@ -61,18 +61,37 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
         p->cpu_context.x19 = fn;
         p->cpu_context.x20 = arg;
     }
+    else if (clone_flags & PF_FORK)
+    {
+        // stack = p;
+
+        /*** try to fork all kernel thread ***/
+        //*p = *current;
+
+        user_context_t *cur_regs = task_user_context(current);
+        printf("%x %x\n\r", childregs, cur_regs);
+        *childregs = *cur_regs;
+        childregs->regs[0] = 0;
+        childregs->sp = stack + PAGE_SIZE;
+        printf("%x %x\n\r", childregs->sp, cur_regs->sp);
+        //p->cpu_context.sp = childregs->sp;
+        printf("pc: %x, %x\n\r", p->cpu_context.sp, current->cpu_context.sp);
+        //p->cpu_context.pc = p->cpu_context.pc + 32;
+        p->stack = stack;
+    }
     else
     {
         // stack = p;
         user_context_t *cur_regs = task_user_context(current);
+        printf("%x %x\n\r", childregs, cur_regs);
         *childregs = *cur_regs;
         childregs->regs[0] = 0;
         childregs->sp = stack + PAGE_SIZE;
+        printf("%x %x\n\r", childregs->sp, cur_regs->sp);
         p->stack = stack;
-        p->state = TASK_RUNNING;
     }
     p->flags = clone_flags;
-    p->priority = current->priority;
+    //p->priority = current->priority;
     p->state = TASK_RUNNING;
     p->counter = p->priority;
     p->preempt_count = 1; //disable preemtion until schedule_tail
@@ -105,9 +124,9 @@ int do_exec(unsigned long pc)
 
 void task_init()
 {
-    int task_id = copy_process(PF_KTHREAD, (unsigned long)init, (unsigned long)"init", 0);
+    set_current(0);
+    int task_id = copy_process(PF_KTHREAD, (unsigned long)init, 0, 0);
     task_pool[task_id]->state = TASK_IDLE;
-    set_current(task_id);
 }
 
 void context_switch(int task_id)
@@ -148,8 +167,8 @@ void schedule()
 
 int check_reschedule()
 {
-    // every 500ms, reschdule
-    if (schedule_cnt > 30)
+    // every 10ms, reschdule
+    if (schedule_cnt > 10)
     {
         schedule_cnt = 0;
         return 1;
@@ -187,7 +206,7 @@ void exit_process()
     }
     if (current->stack)
     {
-        //free_page(current->stack);
+        free_page(current->stack);
     }
     //preempt_enable();
     schedule();
@@ -200,5 +219,5 @@ int do_fork()
     unsigned long stack = get_free_page();
     memset((unsigned long *)stack, 0, PAGE_SIZE);
 
-    return copy_process(0, 0, 0, stack);
+    return copy_process(PF_FORK, 0, 0, stack);
 }

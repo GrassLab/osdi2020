@@ -53,6 +53,7 @@ void syscall_gettime(double *t)
 
 void syscall_uart_send(char x1)
 {
+    enable_irq();
     /* wait until we can send */
     do
     {
@@ -60,6 +61,7 @@ void syscall_uart_send(char x1)
     } while (*UART0_FR & 0x20);
     /* write the character to the buffer */
     *UART0_DR = x1;
+    disable_irq();
 }
 
 void syscall_uart_recv(char *x1)
@@ -102,13 +104,6 @@ void syscall_load_images()
     loadimg();
 }
 
-void syscall_delay()
-{
-    DEBUG_LOG_SYSCALL(("syscall_delay"));
-    DEBUG_LOG_SYSCALL(("\n"));
-    bottom_half_set(0x0);
-}
-
 void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
 {
     switch (x0)
@@ -145,10 +140,6 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         break;
     case 0x32:
         syscall_exit((int)x1);
-        break;
-    // delay than print ...  (for test bottom half)
-    case 0x100:
-        syscall_delay();
         break;
     // not this syscall
     default:
@@ -205,18 +196,19 @@ int get_taskid()
 int fork()
 {
     int return_value;
+    /*
     asm volatile("mov x10, x0\n"
                  "mov x11, x1\n"
                  "mov x12, x2\n");
+                 */
     asm volatile("mov x1, %0\n"
                  "mov x0, #0x30\n"
                  "svc #0x80\n" ::"r"(&return_value));
-    /*
     if (return_value == 0)
     {
-        thread_start();
+        //thread_start();
+        //asm volatile("mov x29, x10\n");
     }
-    */
     return return_value;
 }
 

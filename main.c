@@ -19,7 +19,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 4.3.2\n");
+    uart_print("Version : 4.4.1\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -27,21 +27,6 @@ void system_start()
     get_frame_buffer();
     showpicture();
     */
-}
-
-void bottom_half_0()
-{
-    // delay_c, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    for (int i = 0; i < 5; i++)
-    {
-        uart_puts(".");
-        // very very very slow in real rpi3, but very very very fast in qemu
-        asm volatile(
-            "mov  x0, #0xfffff\n"
-            "loop_bottom_half_0: subs  x0, x0, #1\n"
-            "bne   loop_bottom_half_0\n");
-    }
-    uart_send('\n');
 }
 
 void delay_c(char c)
@@ -121,9 +106,9 @@ void task_4()
     while (1)
     {
         bottom_half_router();
+        if (check_reschedule())
+            schedule();
     }
-    if (check_reschedule())
-        schedule();
 }
 
 void foo()
@@ -143,8 +128,8 @@ void test()
         //fork();
         while (cnt < 10)
         {
-            printf("Task id: %d, cnt: %d\n\r", get_taskid(), cnt);
-            delay(5000000);
+            printf("Task id: %d, cnt: %d address: %x\n\r", get_taskid(), cnt, &cnt);
+            delay(1000000);
             ++cnt;
         }
         exit(0);
@@ -161,20 +146,6 @@ void user_test()
     do_exec((unsigned long)test);
 }
 
-void bottom_half_1()
-{
-    char x1;
-    do
-    {
-        asm volatile("nop");
-    } while (*UART0_FR & 0x10);
-    x1 = (char)(*UART0_DR);
-    while (1)
-    {
-    }
-    bottom_half_clr(0x2);
-}
-
 int main()
 {
     // set uart
@@ -184,17 +155,6 @@ int main()
     system_start();
 
     // enable_irq();
-
-    // enroll system call to bottom_half
-    bottom_half_t n0 = {
-        0,
-        bottom_half_0};
-    bottom_half_enroll(n0);
-
-    bottom_half_t n1 = {
-        1,
-        bottom_half_1};
-    bottom_half_enroll(n1);
 
     /* You can't know Current EL, if you in EL0 */
     /*

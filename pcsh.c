@@ -30,8 +30,6 @@ static cmd_t default_cmd_arr[] = {
     {"exc", "svc #1", cmd_exc},
     {"brk", "brk #1", cmd_brk},
     {"irq", "start irq", cmd_irq},
-    {"delay", "delay and print ....", cmd_delay},
-    {"delay_x", "delay and print ....(in exception)", cmd_delay_without_bottom_half},
     {NULL, NULL, cmd_not_find}};
 
 int cmd_exit(int i)
@@ -59,7 +57,7 @@ int cmd_help(int i)
 
 int cmd_hello(int i)
 {
-    uart_print("Hello World!\n");
+    printf("Hello World!\n");
     return 0;
 }
 
@@ -71,7 +69,9 @@ int cmd_reboot(int i)
 int cmd_timestamp(int i)
 {
     double t = gettime();
+    printf("[");
     uart_send_float((float)t, 4);
+    printf("]\n\r");
     //uart_send('\n');
 }
 
@@ -129,20 +129,6 @@ int cmd_irq(int i)
 
         timer_enable = 1;
     }
-    return 0;
-}
-
-int cmd_delay(int i)
-{
-    asm volatile("mov x0, #0x100");
-    asm volatile("svc #0x80");
-    return 0;
-}
-
-int cmd_delay_without_bottom_half(int i)
-{
-    asm volatile("mov x0, #0x101");
-    asm volatile("svc #0x80");
     return 0;
 }
 

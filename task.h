@@ -12,6 +12,7 @@
 #define PSR_MODE_EL3h 0x0000000d
 
 #define PF_KTHREAD 0x00000002
+#define PF_FORK 0x00000004
 
 #define TASK_NUM 16
 enum

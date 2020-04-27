@@ -4,6 +4,7 @@
 #include "exception.h"
 #include "syscall.h"
 #include "debug.h"
+#include "system.h"
 
 /**
  * common exception handler
@@ -130,6 +131,7 @@ void exc_handler(unsigned long type)
     uart_puts("\n");
 
     // no return from exception for now
+    reset(0);
     while (1)
     {
     }
@@ -234,6 +236,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         break;
     default:
         uart_puts("Unknown");
+        reset(0);
         while (1)
         {
         }
@@ -258,6 +261,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
 
     if (esr >> 26 != 0b010101)
     {
+        reset(0);
         while (1)
         {
         }
