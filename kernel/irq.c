@@ -11,39 +11,7 @@ irq_router ()
   char r;
   arm = *IRQ_BASIC_PENDING;
   arm_local = *CORE0_INTR_SRC;
-  //printf ("%x | ", arm);
-  //printf ("%x\r\n", arm_local);
-  if (arm & 0x80000)
-    {
-      // uart interrupt
-      if (*UART0_RIS & 0x10)	// UARTRXINTR
-	{
-	  while (*UART0_FR & 0x40)
-	    {
-	      // receive
-	      r = (char) (*UART0_DR);
-	      if (!QUEUE_FULL (read_buf))
-		{
-		  QUEUE_SET (read_buf, r);
-		  QUEUE_PUSH (read_buf);
-		}
-	    }
-	  *UART0_ICR = 1 << 4;
-	}
-      else if (*UART0_RIS & 0x20)	// UARTTXINTR
-	{
-	  while (!QUEUE_EMPTY (write_buf))
-	    {
-	      r = QUEUE_GET (write_buf);
-	      QUEUE_POP (write_buf);
-	      while (*UART0_FR & 0x20)
-		asm volatile ("nop");
-	      *UART0_DR = r;
-	    }
-	  *UART0_ICR = 2 << 4;
-	}
-    }
-  else if (arm_local & 0x800)
+  if (arm_local & 0x800)
     {
       // local timer interrupt
       uart_puts ("local timer\n");
