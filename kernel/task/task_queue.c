@@ -3,6 +3,7 @@
 
 #include "mem.h"
 #include "task_queue.h"
+#include "task.h"
 
 task_t * QUEUE[THREAD_SIZE - 1];    /* there is one are used for idle task */
 int QUEUE_HEAD = 0;
@@ -26,7 +27,7 @@ task_queue_state_t task_enqueue ( task_t * task )
         if ( QUEUE_TAIL - QUEUE_HEAD + 1  == QUEUE_ACCOMMPDATION )
             IS_FULL = 1;
 
-        uart_printf("[TASK QUEUE] Task Enqueue: %x\n", task -> task_id );
+        uart_printf("[TASK QUEUE]\tTask Enqueue: %d\n", task -> task_id );
         
         return SUCCESS;
     }
@@ -46,7 +47,7 @@ task_t * task_dequeue ( )
     QUEUE_HEAD ++;
     IS_FULL = 0;
 
-    uart_printf("[TASK QUEUE] Task Dequeue: %x\n", temp -> task_id );
+    uart_printf("[TASK QUEUE]\tTask Dequeue: %d\n", temp -> task_id );
 
     return temp;
 }

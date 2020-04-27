@@ -5,20 +5,31 @@
 
 void test_task ()
 {
-    while ( 1 )
-    {
-        task_t * task = get_current_task ( );
-        
+    int i = 6;
+
+    task_t * task = get_current_task ( );
+
+    while ( i-- )
+    {   
         uart_printf("This is TASK %d\n", task -> task_id);
-        wait_msec(500000);
+        wait_msec(1000000);
+
+        schedule ( );
     }
-    
+
+    uart_printf("This is TASK %d\n", task -> task_id);
+
+    /* update self state before leaving */
+    task -> state = DEAD;
+
+    /* call schedule before leaving */ 
+    schedule ( );
 }
 
 void task_schedule_test ()
 {
     int i;
-    for ( i = 0; i < 10; i++ )
+    for ( i = 0; i < 5; i++ )
     {
         privilege_task_create ( test_task );
     }
