@@ -1,13 +1,15 @@
 #include "lib/type.h"
 #include "kernel/peripherals/uart.h"
 
+#include "mem.h"
 #include "task_queue.h"
 
-task_t * QUEUE[64];
+task_t * QUEUE[THREAD_SIZE - 1];    /* there is one are used for idle task */
 int QUEUE_HEAD = 0;
 int QUEUE_TAIL = 0;
-const int QUEUE_ACCOMMPDATION = 64;
+const int QUEUE_ACCOMMPDATION = THREAD_SIZE - 1;
 int IS_FULL = 0;
+extern task_t * IDLE;
 
 task_queue_state_t task_enqueue ( task_t * task )
 {
@@ -36,8 +38,9 @@ task_t * task_dequeue ( )
 {
     task_t * temp;
     
+    /* queue is empty */
     if ( QUEUE_HEAD == QUEUE_TAIL && !IS_FULL )
-        return NULL;
+        return IDLE;
 
     temp = QUEUE[QUEUE_HEAD];
     QUEUE_HEAD ++;

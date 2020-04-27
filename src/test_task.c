@@ -35,5 +35,5 @@ void task_schedule_test ()
     LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_ENABLE );
     LAUNCH_SYS_CALL ( SYS_CALL_CORE_TIMER_ENABLE );    
 
-    idle ( );    
+    launch_init ( );
 }

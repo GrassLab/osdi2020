@@ -47,6 +47,7 @@ void schedule ( );
 
 /* defined in task.S */
 extern void switch_to ( task_t *, task_t * );
+extern void launch_init ( );
 extern task_t* get_current_task ();
 extern void default_task_start();
 
