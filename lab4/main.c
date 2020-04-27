@@ -43,6 +43,9 @@ void compair(char *buf) {
     irq();
   } else if (strcpy(buf, "lv")) {
     ellevel();
+  } else if (strcpy(buf, "scs")) {
+    asm volatile("mov x0, #3");
+    asm volatile("svc #0");
   } else {
     printf("unknow command %s\n", buf);
   }

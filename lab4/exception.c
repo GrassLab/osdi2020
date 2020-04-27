@@ -1,5 +1,20 @@
+#include "task.h"
 #include "timer.h"
 #include "uart.h"
+
+void t1() {
+  for (int i = 0; i < 10; i++) {
+    uart_puts("1...\n");
+    schedule();
+  }
+}
+
+void t2() {
+  for (int i = 0; i < 10; i++) {
+    uart_puts("2...\n");
+    schedule();
+  }
+}
 
 unsigned int get_system_frequency() {
   unsigned int res = 0;
@@ -41,6 +56,11 @@ void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
   case 2:
     print_lv();
     break;
+  case 3:
+    privilege_task_create(t1);
+    privilege_task_create(t2);
+    schedule();
+    break;
   }
 }
 
@@ -61,6 +81,7 @@ void exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
       printf("Instruction specific syndrome (ISS) 0x%x\r\n", iss);
     }
   } else {
-    printf("OMG");
+    // printf("OMG\n");
+    // printf("Exception class (EC) 0x%x\r\n", ec);
   }
 }
