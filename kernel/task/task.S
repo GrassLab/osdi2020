@@ -15,6 +15,8 @@ switch_to:
     stp     fp,     lr,     [x0], #16
     str     x9,             [x0]
 
+    msr     TPIDR_EL1, x1
+
     ldp     x19,    x20,    [x1], #16       /* restore the context of the next task */
     ldp     x21,    x22,    [x1], #16
     ldp     x23,    x24,    [x1], #16
@@ -23,11 +25,14 @@ switch_to:
     ldp     fp,     lr,     [x1], #16
     ldr     x9,             [x1]
     mov     sp,     x9
-    msr     tpidr_el1, x1
+    
     ret
 
 launch_init: 
     ldr     x0,     IDLE                    /* IDLE would be declare in task.c */
+    
+    msr     TPIDR_EL1, x0
+    
     ldp     x19,    x20,    [x0], #16       /* restore the context of the next task */
     ldp     x21,    x22,    [x0], #16
     ldp     x23,    x24,    [x0], #16
@@ -36,11 +41,12 @@ launch_init:
     ldp     fp,     lr,     [x0], #16
     ldr     x9,             [x0]
     mov     sp,     x9
-    msr     tpidr_el1, x0
+
     ret
 
 get_current_task:
-    mrs     x0,     tpidr_el1
+    mrs     x0,     TPIDR_EL1
+    ret
 
 default_task_start:
     blr     x19  
