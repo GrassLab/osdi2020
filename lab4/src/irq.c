@@ -16,10 +16,11 @@ void irq_router ()
 {
     if (is_core_timer ())
     {
-        uart_puts ("core timer: ");
-        uart_send_int (++core_counter);
-        uart_send ('\n');
+        // uart_puts ("core timer: ");
+        // uart_send_int (++core_counter);
+        // uart_send ('\n');
         core_timer_handler ();
+        update_task_counter();
     }
     else if (is_local_timer ())
     {

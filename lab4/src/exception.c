@@ -24,7 +24,7 @@ void exception_handler (void)
         }else if(iss==0x2){
             uart_puts("enable time\n");
             core_timer_enable();
-            local_timer_init ();
+            // local_timer_init ();
         }else{
             uart_puts("unknown system call\n");
         }

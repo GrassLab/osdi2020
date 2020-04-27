@@ -40,5 +40,8 @@ void foo();
 void idle();
 void schedule();
 void create_foo();
+void init_init_task();
+void update_task_counter();
+
 extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 

@@ -2,26 +2,26 @@
 
 ## Requirement 1
 ### Design your own task struct
-- [ ] `required 1-1` Design your own task struct with at least one field called task id. Task ids should be unique.
+- [x] `required 1-1` Design your own task struct with at least one field called task id. Task ids should be unique.
 
 ### Create privilege tasks
-- [ ] `required 1-2` Implement `privilege_task_create`.
+- [x] `required 1-2` Implement `privilege_task_create`.
 
 ### Context Switch
-- [ ] `required 1-3` Implement `context_switch`.
+- [x] `required 1-3` Implement `context_switch`.
 
 ### Put task into runqueue
-- [ ] `required 1-4` In the end of `privilege_task_create`, put the task into the runqueue.
+- [x] `required 1-4` In the end of `privilege_task_create`, put the task into the runqueue.
 
 ### Schedule a task
-- [ ] `required 1-5` Replace `context_switch` with `schedule` in the privilege tasks, you should be able to create more than 2 tasks and switch between them.
+- [x] `required 1-5` Replace `context_switch` with `schedule` in the privilege tasks, you should be able to create more than 2 tasks and switch between them.
 
 
 ## Requirement 2
 
 ### Timer Interrupt
-- [ ] `required 2-1` Reimplement the core timer handler, it updates the current task’s reschedule flag.
-- [ ] `required 2-2` Create more than 2 privilege tasks. Each of them keeps checking the reschedule flag. If the flag is set, it prints some message, clears reschedule flag and issue `schedule` .
+- [x] `required 2-1` Reimplement the core timer handler, it updates the current task’s reschedule flag.
+- [x] `required 2-2` Create more than 2 privilege tasks. Each of them keeps checking the reschedule flag. If the flag is set, it prints some message, clears reschedule flag and issue `schedule` .
 
 
 ## Requirement 3

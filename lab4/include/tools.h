@@ -8,6 +8,7 @@ int my_strcmp(char * str1, char * str2);
 char *itoa(int num, char *str, int base);
 int atoi(const char *str);
 int cmd_box(char * command);
+void shell();
 void process_cmd(char * command);
 void print_hello();
 int get_cpu_time();
