@@ -6,6 +6,7 @@
 .global disable_EL0_interrupt
 .global brk_instr
 .global get_sync_exc_param_el1
+.global get_sync_exc_param_el2
 .global sleep
 
 enable_interrupt:
@@ -35,17 +36,19 @@ brk_instr:
 	ret
 
 get_sync_exc_param_el1:
-	sub     sp, sp, #8 * 3
-	str 	x2, [sp, #16]
-	str 	x3, [sp, #8]
-	mrs 	x2, esr_el1
-	mrs 	x3, elr_el1
-	str 	x2, [x0]
-	str 	x3, [x1]
-	ldr 	x2, [sp, #16]
-	ldr 	x3, [sp, #8]
-	add  	sp, sp, #8 * 3
+	mrs 	x9, esr_el1
+	mrs 	x10, elr_el1
+	str 	x9, [x0]
+	str 	x10, [x1]
 	ret
+
+get_sync_exc_param_el2:
+	mrs 	x9, esr_el2
+	mrs 	x10, elr_el2
+	str 	x9, [x0]
+	str 	x10, [x1]
+	ret
+
 
 sleep:
 	ldr 	x0, =0x1FFFFFF

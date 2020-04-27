@@ -19,19 +19,33 @@ switch_to:
 	mov 	sp,  x9
 	ret
 
-.global get_cur_taskId
-get_cur_taskId:
+.global get_cur_task
+get_cur_task:
 	mrs 	x0, tpidr_el1
 	ret
 
-.global set_cur_taskId
-set_cur_taskId:
+.global set_cur_task
+set_cur_task:
 	msr 	tpidr_el1, x0
 	ret
 
 .global go_to
 go_to:
-	ldp 	fp, lr, [x0, 16 * 5]
-	ldr 	x9, [x0, 16 * 6]
+	ldp 	fp, lr, [x0, 8 * 10]
+	ldr 	x9, [x0, 8 * 12]
 	mov 	sp,  x9
+	ret
+
+.global store_umode_lr_sp
+store_umode_lr_sp:
+	mrs 	x9, elr_el1
+	mrs 	x10, sp_el0
+	str 	x9, [x0]
+	str 	x10, [x1]
+	ret
+
+.global restore_umode_lr_sp
+restore_umode_lr_sp:
+	msr 	elr_el1, x0
+	msr 	sp_el0, x1
 	ret

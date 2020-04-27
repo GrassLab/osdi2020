@@ -1,4 +1,14 @@
 .macro kernel_entry
+	//load kernel stack
+	ldp x0, x1, [sp, 0]
+	mrs x0, tpidr_el1
+	add x0, x0, 8 * 13 	// move to pcb.kstack address
+	ldr x0, [x0]		// load pcb.kstack
+	mov x1, sp
+	mov sp, x0
+	stp x0, x1, [x1, 0]
+
+	//store user mode ctx
 	sub sp, sp, 32 * 8
 	stp x0, x1, [sp ,16 * 0]
 	stp x2, x3, [sp ,16 * 1]

@@ -4,6 +4,8 @@
 
 task_t task_pcb_pool[64];
 char kstack_pool[64][4096];
+char ustack_pool[64][4096];
+
 
 int new_taskId = 0;
 int ReSchedule = 0;
@@ -53,20 +55,37 @@ void privilege_task_create( void(*func)() ){
 
 	task_pcb_pool[cur_taskId].taskId = cur_taskId;
 
-	task_pcb_pool[cur_taskId].context.lr = (unsigned long long *)func;
-	task_pcb_pool[cur_taskId].context.sp = (unsigned long long *)&kstack_pool[cur_taskId][0];
+	task_pcb_pool[cur_taskId].context.lr = (unsigned long long)func;
+	task_pcb_pool[cur_taskId].context.kstack = (unsigned long long)&kstack_pool[cur_taskId][4095];
+
+	task_pcb_pool[cur_taskId].ustack = (unsigned long long)&ustack_pool[cur_taskId][4095];
 
 	for(int i=0; i<4096; i++) kstack_pool[cur_taskId][i] = '\0';
+	for(int i=0; i<4096; i++) ustack_pool[cur_taskId][i] = '\0';
 
 	enQueue(&runQueue, cur_taskId);
 	new_taskId++;
 }
 
+void do_exec( void(*func)() ){
+	task_t *curTask = get_cur_task();
+	curTask->umode_lr = (unsigned long long)func;
+
+	asm volatile(
+		"msr     elr_el1, %[retAddr];"
+		"msr     sp_el0, %[ustack];"
+		"eret;"
+		:
+		: [retAddr] "r" (func), [ustack] "r" ( curTask->ustack )
+		:
+	);
+}
+
 void context_switch(int next_taskId){
-	int cur_taskId = get_cur_taskId();
-	enQueue(&runQueue, cur_taskId);
-	set_cur_taskId(next_taskId);
-	switch_to(&task_pcb_pool[cur_taskId].context, &task_pcb_pool[next_taskId].context);
+	task_t *curTask = get_cur_task();
+	enQueue(&runQueue, curTask->taskId);
+	set_cur_task( &task_pcb_pool[next_taskId] );
+	switch_to(&curTask->context, &task_pcb_pool[next_taskId].context);
 }
 
 void schedule(){
@@ -82,10 +101,24 @@ void idle(){
 	while(1){
 		int next_taskId = deQueue(&runQueue);
 		if(next_taskId != -1){
-			set_cur_taskId(next_taskId);
+			set_cur_task( &task_pcb_pool[next_taskId] );
 			switch_to(&task_pcb_pool[0].context, &task_pcb_pool[next_taskId].context);
 		}else{
 			sleep();
 		}
 	}
+}
+
+void kernel_routine_entry(){
+	task_t *curTask = get_cur_task();
+	
+	store_umode_lr_sp(&curTask->umode_lr, &curTask->ustack);
+
+}
+
+void kernel_routine_exit(){
+	task_t *curTask = get_cur_task();
+
+	restore_umode_lr_sp(curTask->umode_lr, curTask->ustack);
+
 }

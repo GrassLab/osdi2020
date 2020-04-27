@@ -94,9 +94,9 @@ EL2_to_El1:
     eret
     */
 rest_initialization:
-
     // bl      disable_interrupt
-     bl      enable_interrupt
+    // bl      enable_interrupt
+    bl      enable_EL0_interrupt
 
     /*
         clear bss

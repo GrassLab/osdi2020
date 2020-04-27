@@ -62,7 +62,6 @@ void show_currentEL(){
 }
 
 void show_esr_elr(unsigned long esr, unsigned long elr){
-    uart_puts("sync_exc1_handler\n");
     uart_puts("***Exception type: Synchronous***\n");
 
     uart_puts("Exception return adress 0x");
@@ -82,38 +81,15 @@ void show_esr_elr(unsigned long esr, unsigned long elr){
 
 /* ========================= system call ========================= */
 
-void sysCall_print_esr_elr(){
+void sched_yield(){
     supervisor_call_1();
 }
 
-void sysCall_set_timer(){
-    supervisor_call_2();
-}
-
-void sysCall_task_init(){
-    supervisor_call_3();
-}
-
-
 void sysCall_handler_el0(int num){
-    unsigned long esr, elr;
-
     switch(num){
         case 1:
-            asm volatile(
-                "mrs %[esr], esr_el1;"
-                "mrs %[elr], elr_el1;"
-
-                : [esr] "=r" (esr), [elr] "=r" (elr)
-                ::
-            );
-            show_esr_elr(esr, elr);
-            break;
-        case 2:
-            core_timer_enable();
-            break;
-        case 3:
-            //test();
+            schedule();
+            // kernel_routine_exit();
             break;
 
         default:
@@ -122,23 +98,25 @@ void sysCall_handler_el0(int num){
             uart_puts(" not exist \n");
             break;
     }
+
+    kernel_routine_exit();
 }
 
 
 void sync_exc0_handler(){
     unsigned long esr, elr;
-    asm volatile(
-        "mrs %[esr], esr_el1;"
-        "mrs %[elr], elr_el1;"
-
-        : [esr] "=r" (esr), [elr] "=r" (elr)
-        ::
-    );
+    get_sync_exc_param_el1(&esr, &elr);
 
     if(esr>>26 == 0x15){
+        // uart_puts("kernel_routine_entry\n");
+        kernel_routine_entry();
+        // while(1);
+        // uart_puts("kernel_routine_entry end\n\n");
+
         int supervisorCallNum = esr & 0x1FFFFFF;
         sysCall_handler_el0( supervisorCallNum );
     }else{
+        uart_puts("sync_exc0_handler\n");
         show_esr_elr(esr, elr);
     }
 }
@@ -146,31 +124,18 @@ void sync_exc0_handler(){
 void sync_exc1_handler(){
     show_currentEL();
     unsigned long esr, elr;
-
-    asm volatile(
-        "mrs %[esr], esr_el1;"
-        "mrs %[elr], elr_el1;"
-
-        : [esr] "=r" (esr), [elr] "=r" (elr)
-        ::
-    );    
+    get_sync_exc_param_el1(&esr, &elr);  
     
+    uart_puts("sync_exc1_handler\n");
     show_esr_elr(esr, elr);
 }
 
 void sync_exc2_handler(){
     show_currentEL();
     unsigned long esr, elr;
-
-    asm volatile(
-        "mrs %[esr], esr_el2;"
-        "mrs %[elr], elr_el2;"
-
-        : [esr] "=r" (esr), [elr] "=r" (elr)
-        ::
-    );
+    get_sync_exc_param_el2(&esr, &elr);
     
-   show_esr_elr(esr, elr);
+    show_esr_elr(esr, elr);
 }
 
 
