@@ -7,7 +7,7 @@ void test_task ( )
 {
     int i = 6;
 
-    task_t * task = get_current_task ( );
+    thread_info_t * task = get_current_task ( );
 
     while ( i-- )
     {   

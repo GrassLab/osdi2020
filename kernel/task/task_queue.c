@@ -5,14 +5,14 @@
 #include "task_queue.h"
 #include "task.h"
 
-task_t * QUEUE[THREAD_SIZE - 1];    /* there is one are used for idle task */
+thread_info_t * QUEUE[NUM_THREADS - 1];    /* there is one are used for idle task */
 int QUEUE_HEAD = 0;
 int QUEUE_TAIL = 0;
-const int QUEUE_ACCOMMPDATION = THREAD_SIZE - 1;
+const int QUEUE_ACCOMMPDATION = NUM_THREADS - 1;
 int IS_FULL = 0;
-extern task_t * IDLE;
+extern thread_info_t * IDLE;
 
-task_queue_state_t task_enqueue ( task_t * task )
+task_queue_state_t task_enqueue ( thread_info_t * task )
 {
     /* queue is full */
     if ( IS_FULL )
@@ -35,9 +35,9 @@ task_queue_state_t task_enqueue ( task_t * task )
     return UNKNOWN;
 }
 
-task_t * task_dequeue ( )
+thread_info_t * task_dequeue ( )
 {
-    task_t * temp;
+    thread_info_t * temp;
     
     /* queue is empty */
     if ( QUEUE_HEAD == QUEUE_TAIL && !IS_FULL )

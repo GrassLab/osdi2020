@@ -7,8 +7,8 @@
 #include "task_queue.h"
 #include "task.h"
 
-task_t * IDLE = NULL;
-task_t * TASK_POOL[NUM_THREADS];
+thread_info_t * IDLE = NULL;
+thread_info_t * TASK_POOL[NUM_THREADS];
 
 uint64_t TASK_POOL_USAGE = 0;       /* 64 bit to maintain which one is in used */
 
@@ -28,16 +28,17 @@ int privilege_task_create ( void(*func)() )
     /* create IDLE task at first */
     if ( IDLE == NULL )
     {
-        IDLE = ( task_t * ) ( LOW_MEM );
+        pcb_t * idle_pcb = allocate_pcb ( 0 );
+
+        IDLE = idle_pcb -> thread_info;
         IDLE -> state = RUNNING;
         IDLE -> func = idle;
-        IDLE -> stack = ((char *)IDLE) + THREAD_SIZE;
         IDLE -> priority = 1;
         IDLE -> counter = 0;
 
         (IDLE -> cpu_context).x19 = (unsigned long)idle;
         (IDLE -> cpu_context).lr  = (unsigned long)default_task_start;
-        (IDLE -> cpu_context).sp  = (unsigned long)(((char *)IDLE) + THREAD_SIZE);
+        (IDLE -> cpu_context).sp  = (unsigned long)idle_pcb -> kernel_stack_ptr;
 
         /* reserve one for idle task*/
         TASK_POOL_USAGE = 1;
@@ -52,27 +53,27 @@ int privilege_task_create ( void(*func)() )
     TASK_POOL_USAGE |= ( 0b1 << task_id );
 
     /* allocate TCB in kernel space */
-    task_t * new_task = ( task_t * ) ( ( LOW_MEM ) +  ( THREAD_SIZE * task_id ) );
+    pcb_t * new_task = ( pcb_t * ) allocate_pcb ( task_id );
+    thread_info_t * thread_info = new_task -> thread_info;
  
     /* init a task */
-    new_task -> task_id = task_id;
-    new_task -> state = RUNNING;
-    new_task -> func = func;
-    new_task -> stack = ((char *)new_task) + THREAD_SIZE;
-    new_task -> priority = 1;   /* all task has the same priority */
-    new_task -> counter = 2;
+    thread_info -> task_id = task_id;
+    thread_info -> state = RUNNING;
+    thread_info -> func = func;
+    thread_info -> priority = 1;   /* all task has the same priority */
+    thread_info -> counter = 2;
 
-    (new_task -> cpu_context).x19 = (unsigned long)func;
-    (new_task -> cpu_context).lr = (unsigned long)default_task_start;
-    (new_task -> cpu_context).sp = (unsigned long)(((char *)new_task) + THREAD_SIZE);
+    (thread_info -> cpu_context).x19 = (unsigned long)func;
+    (thread_info -> cpu_context).lr =  (unsigned long)default_task_start;
+    (thread_info -> cpu_context).sp =  (unsigned long)(new_task -> kernel_stack_ptr);
 
     /* save it into the pool */
-    TASK_POOL[task_id] = new_task;
+    TASK_POOL[task_id] = thread_info;
 
     uart_printf( "[TASK]\t\tCreate Task with task_id: %d\n", task_id );
 
     /* put the task into the runqueue */
-    task_enqueue ( new_task );
+    task_enqueue ( thread_info );
 
     return task_id;
 }

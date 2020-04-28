@@ -13,7 +13,7 @@ typedef enum {
 
 } task_queue_state_t;
 
-task_queue_state_t task_enqueue ( task_t * task );
-task_t * task_dequeue ( );
+task_queue_state_t task_enqueue ( thread_info_t * task );
+thread_info_t * task_dequeue ( );
 
 #endif

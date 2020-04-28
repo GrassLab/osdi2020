@@ -5,9 +5,9 @@
 
 int RESCHED_FLAG = 0;
 
-void context_switch ( task_t * next )
+void context_switch ( thread_info_t * next )
 {
-    task_t * current_task = get_current_task ( );
+    thread_info_t * current_task = get_current_task ( );
     
     /* if the next one is the same as the current, do nothing */
     if ( current_task == next )
@@ -25,7 +25,7 @@ void context_switch ( task_t * next )
 
 void schedule ( )
 {
-    task_t * current_task = get_current_task ( );
+    thread_info_t * current_task = get_current_task ( );
 
     /* check if need to resched */
     if ( !RESCHED_FLAG && current_task -> state == RUNNING )
@@ -45,7 +45,7 @@ void schedule ( )
     }        
 
     /* current task spend all its time, switch to the next one */
-    task_t * next = task_dequeue ( );
+    thread_info_t * next = task_dequeue ( );
 
     /* switch to the next one */
     context_switch ( next );

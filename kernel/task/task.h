@@ -32,27 +32,26 @@ typedef struct {
     
     uint64_t task_id;
     task_state_t state;
-    void (*func)();
-    char * stack;
+    void (*func)();    
 
     uint64_t counter;
     uint64_t priority;  /* at this time, all task has the same priority */
 
-} task_t;
+} thread_info_t;
 
 /* defined in task.S */
-extern void switch_to ( task_t *, task_t * );
+extern void switch_to ( thread_info_t *, thread_info_t * );
 extern void launch_init ( );
-extern task_t* get_current_task ();
+extern thread_info_t* get_current_task ();
 extern void default_task_start();
 
 /* global variable for other file to use */
-extern task_t * IDLE;
+extern thread_info_t * IDLE;
 
 void idle ( );
 int privilege_task_create ( void(*func)() );
 int find_usable_in_pool ();
-void context_switch ( task_t * next );
+void context_switch ( thread_info_t * next );
 void schedule ( );
 
 #endif
