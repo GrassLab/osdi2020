@@ -1,20 +1,5 @@
-#include "task.h"
 #include "timer.h"
 #include "uart.h"
-
-void t1() {
-  for (int i = 0; i < 10; i++) {
-    uart_puts("1...\n");
-    schedule();
-  }
-}
-
-void t2() {
-  for (int i = 0; i < 10; i++) {
-    uart_puts("2...\n");
-    schedule();
-  }
-}
 
 unsigned int get_system_frequency() {
   unsigned int res = 0;
@@ -55,11 +40,6 @@ void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
     break;
   case 2:
     print_lv();
-    break;
-  case 3:
-    privilege_task_create(t1);
-    privilege_task_create(t2);
-    schedule();
     break;
   }
 }

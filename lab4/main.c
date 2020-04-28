@@ -3,6 +3,7 @@
 #include "lfb.h"
 #include "mbox.h"
 #include "string.h"
+#include "task.h"
 #include "uart.h"
 
 char *welcome = " \
@@ -14,6 +15,21 @@ char *welcome = " \
 █░░░▄▀█░░█░░░░░░░█▄▄█▄▄█░░░\n \
 █░▄▀░▄█░▄█░░░░░░▄▀░░░░▄█░░░\n \
 ";
+void t1() {
+  while (1) {
+    uart_puts("1...\n");
+    wait_cycles(1000000);
+    schedule();
+  }
+}
+
+void t2() {
+  while (1) {
+    uart_puts("2...\n");
+    wait_cycles(1000000);
+    schedule();
+  }
+}
 
 void compair(char *buf) {
   if (strcpy(buf, "hello")) {
@@ -44,8 +60,10 @@ void compair(char *buf) {
   } else if (strcpy(buf, "lv")) {
     ellevel();
   } else if (strcpy(buf, "scs")) {
-    asm volatile("mov x0, #3");
-    asm volatile("svc #0");
+    task_init();
+    privilege_task_create((unsigned long)&t1);
+    privilege_task_create((unsigned long)&t2);
+    schedule();
   } else {
     printf("unknow command %s\n", buf);
   }

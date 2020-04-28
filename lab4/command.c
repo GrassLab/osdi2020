@@ -11,8 +11,12 @@ unsigned long start_addr = 0x80000;
 extern char _end[];
 
 void ellevel() {
-  asm volatile("mov x0, #2");
-  asm volatile("svc #0");
+  unsigned int el = 0;
+  asm volatile("MRS %[result], CurrentEL" : [result] "=r"(el));
+  el >>= 2;
+  printf("Exception level: %d \r\n", el);
+  // asm volatile("mov x0, #2");
+  // asm volatile("svc #0");
 }
 void execpt() { asm volatile("svc #1"); }
 void reboot() {
