@@ -1,13 +1,10 @@
 #include "../include/gpio.h"
-
 #include "../include/uart.h"
 #include "../include/peripheral.h"
-
 #include "../include/task.h"
 
-
-extern unsigned int CORE_TIMER_COUNT;
-extern unsigned int LOCAL_TIMER_COUNT;
+unsigned int CORE_TIMER_COUNT = 0;
+unsigned int LOCAL_TIMER_COUNT = 0;
 
 void debug(){
     uart_puts("debugggggg!!\n");
@@ -94,6 +91,8 @@ void local_timer_handler()
 #define CORE0_INTERRUPT_SRC (unsigned int* )0x40000060
 void interrupt_handler()
 {
+    struct task* current = get_current();
+    current->state = IRQ_CONTEXT;
     unsigned int interrupt_src = *CORE0_INTERRUPT_SRC;
     char r;
 
@@ -148,14 +147,22 @@ void interrupt_handler()
     else {
         uart_puts("interrupt_handler error.\n");
     }
+    irq_reschedule();
+}
 
-
+void irq_reschedule() 
+{
     struct task* current = get_current();
     if (current->reschedule_flag == 1) {
         uart_puts("IRQ reschedule...\n");
+        uart_puts("previous task: ");
         uart_hex(current->task_id);
+        uart_puts("\n");
         current->reschedule_flag = 0;
         schedule();
+        uart_puts("after IRQ reschedule...\n");
+    // } else {
+    //     asm volatile("eret");
     }
 }
 

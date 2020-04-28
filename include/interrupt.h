@@ -19,3 +19,5 @@ void core_timer_handler(); // define in start.S
 
 // scheduler timer
 void timer_tick();
+
+void irq_reschedule();

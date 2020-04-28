@@ -1,6 +1,10 @@
 .section ".text"
 .global switch_to
 switch_to:
+    // update task state to context switch
+    mov x2, #5  // CONTEXT_SWITCH
+    str x2, [x0, 8 * 16]
+
     mov x9,  sp
     stp x19, x20, [x0, 16 * 0]
     stp x21, x22, [x0, 16 * 1]
@@ -18,6 +22,10 @@ switch_to:
     ldp x29, x9,  [x1, 16 * 5]
     ldr x30,      [x1, 16 * 6]
     mov sp,  x9
+
+    mov x2, #5  // CONTEXT_SWITCH
+    ldr x2, [x1, 8 * 16]
+
     msr tpidr_el1, x1   // set_current
     ret
 

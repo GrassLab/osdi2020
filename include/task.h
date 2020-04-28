@@ -1,3 +1,9 @@
+#define RUN_IN_USER_MODE    1
+#define IN_OUT_KERNEL       2
+#define RUN_IN_KERNEL_MODE  3
+#define IRQ_CONTEXT         4
+#define CONTEXT_SWITCH      5
+
 
 // the cpu_context's order must be the same as switch_to
 struct cpu_context {
@@ -16,11 +22,18 @@ struct cpu_context {
     unsigned long pc;
 };
 
+struct user_context {
+    unsigned long sp_el0;   // user stack
+    unsigned long spsr_el1; // user cpu state
+    unsigned long elr_el1;  // user pc 
+};
+
 struct task {
     struct cpu_context cpu_context;
+    struct user_context user_context;
     long state;
     long counter;
-    long priority;
+    long priority;  
     // long preempt_count;
     unsigned long task_id;
     int reschedule_flag;
@@ -30,6 +43,7 @@ struct task_manager {
     struct task task_pool[64];
     char kstack_pool[64][4096];
     char ustack_pool[64][4096];
+    unsigned long queue_bitmap;
     unsigned int task_num;
     // struct task*(*current)();
 };
@@ -43,10 +57,10 @@ void set_current(struct task* task_struct);
 void schedule();
 void kernel_test();
 void idle();
+void user_test();
 void do_exec(void(*func)());
 void _setup_user_content(void(*func)());
 void foo();
-
 
 #define N 3
 
