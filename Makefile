@@ -37,7 +37,7 @@ kernel8.elf: $(ALL_OBJS)
 run: kernel8.img
 	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio
 
-debug: CFLAGS += -ggdb -Og
+debug: CFLAGS += -ggdb3 -Og
 
 debug: clean kernel8.img
 	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio -s -S
