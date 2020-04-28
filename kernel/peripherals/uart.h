@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef UART_H
-#define UART_H
+#ifndef __UART_H
+#define __UART_H
 
 /* PL011 UART registers */
 /* https://cs140e.sergio.bz/docs/BCM2837-ARM-Peripherals.pdf p.177 */
@@ -58,27 +58,27 @@
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
-void uart_init();
+void uart_init ( );
 
 /**
  * Send a character
  */
-void uart_send(unsigned int c);
+void uart_send ( unsigned int c );
 
 /**
  * Receive a character
  */
-char uart_getc();
+char uart_getc ( );
 
 /**
  * Receive a integer
  */
-int uart_getint();
+int uart_getint ( );
 
 /**
  * Display a string
  */
-void uart_puts(char *s);
+void uart_puts ( char *s );
 
 /**
  * Display a string

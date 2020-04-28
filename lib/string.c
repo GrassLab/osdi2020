@@ -17,7 +17,7 @@ int strcmp ( char * s1, char * s2 )
     return  s1[i] - s2[i];
 }
 
-void strset (char * s1, int c, int size )
+void strset ( char * s1, int c, int size )
 {
     int i;
 
@@ -39,7 +39,7 @@ int strlen ( char * s )
 }
 
 // https://www.geeksforgeeks.org/convert-floating-point-number-string/
-void itoa (int x, char str[], int d) 
+void itoa ( int x, char str[], int d ) 
 { 
     int i = 0; 
     while (x) { 
@@ -57,7 +57,7 @@ void itoa (int x, char str[], int d)
 } 
 
 // https://www.geeksforgeeks.org/convert-floating-point-number-string/
-void ftoa(float n, char* res, int afterpoint) 
+void ftoa ( float n, char* res, int afterpoint ) 
 { 
     // Extract integer part 
     int ipart = (int)n; 

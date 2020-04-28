@@ -44,5 +44,3 @@ void wait_msec ( unsigned int n )
     
     } while( r < t );
 }
-
-

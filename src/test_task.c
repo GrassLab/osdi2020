@@ -3,7 +3,7 @@
 #include "kernel/peripherals/uart.h"
 #include "kernel/task/task.h"
 
-void test_task ()
+void test_task ( )
 {
     int i = 6;
 
@@ -26,7 +26,7 @@ void test_task ()
     schedule ( );
 }
 
-void task_schedule_test ()
+void task_schedule_test ( )
 {
     int i;
     for ( i = 0; i < 5; i++ )

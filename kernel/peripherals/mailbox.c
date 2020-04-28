@@ -39,7 +39,7 @@ int mailbox_call ( unsigned char channel, volatile uint32_t * mail_box )
 }
 
 /** https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface */
-uint32_t mbox_get_board_revision ()
+uint32_t mbox_get_board_revision ( )
 {
     volatile uint32_t  __attribute__((aligned(16))) mail_box[36];
 
@@ -64,7 +64,7 @@ uint32_t mbox_get_board_revision ()
     }
 }
 
-uint64_t mbox_get_VC_base_addr ()
+uint64_t mbox_get_VC_base_addr ( )
 {
     volatile uint32_t  __attribute__((aligned(16))) mail_box[36];
 
@@ -90,7 +90,7 @@ uint64_t mbox_get_VC_base_addr ()
     }
 }
 
-void mbox_set_clock_to_PL011 () 
+void mbox_set_clock_to_PL011 ( ) 
 {
     volatile uint32_t  __attribute__((aligned(16))) mail_box[36];
 

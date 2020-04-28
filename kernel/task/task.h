@@ -1,5 +1,5 @@
-#ifndef TASK_H
-#define TASK_H
+#ifndef __TASK_H
+#define __TASK_H
 
 #include "lib/type.h"
 
@@ -40,18 +40,19 @@ typedef struct {
 
 } task_t;
 
-void idle ( );
-int privilege_task_create ( void(*func)() );
-int find_usable_in_pool ();
-void context_switch ( task_t * next );
-void schedule ( );
-
 /* defined in task.S */
 extern void switch_to ( task_t *, task_t * );
 extern void launch_init ( );
 extern task_t* get_current_task ();
 extern void default_task_start();
 
+/* global variable for other file to use */
 extern task_t * IDLE;
+
+void idle ( );
+int privilege_task_create ( void(*func)() );
+int find_usable_in_pool ();
+void context_switch ( task_t * next );
+void schedule ( );
 
 #endif

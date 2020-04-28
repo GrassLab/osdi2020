@@ -1,5 +1,5 @@
-#ifndef TYPE_H
-#define TYPE_H
+#ifndef __TYPE_H
+#define __TYPE_H
 
 #ifndef NULL
     #define NULL ((void *)0)

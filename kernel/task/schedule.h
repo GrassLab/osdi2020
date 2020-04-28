@@ -1,5 +1,5 @@
-#ifndef SCHEDULE_H
-#define SCHEDULE_H
+#ifndef __SCHEDULE_H
+#define __SCHEDULE_H
 
 void schedule ( );
 

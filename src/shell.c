@@ -4,7 +4,7 @@
 #include "command.h"
 #include "shell.h"
 
-void shell_start () 
+void shell_start ( ) 
 {
     int buffer_counter = 0;
     char input_char;

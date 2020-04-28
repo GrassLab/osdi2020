@@ -1,5 +1,5 @@
-#ifndef TASK_QUEUE_H
-#define TASK_QUEUE_H
+#ifndef __TASK_QUEUE_H
+#define __TASK_QUEUE_H
 
 #include "task.h"
 

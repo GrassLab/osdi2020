@@ -6,7 +6,6 @@
 #include "kernel/peripherals/uart.h"
 #include "lib/string.h"
 
-
 void input_buffer_overflow_message ( char cmd[] )
 {
     uart_puts("Follow command: \"");
@@ -16,7 +15,7 @@ void input_buffer_overflow_message ( char cmd[] )
     uart_puts("The maximum length of input is 64.");
 }
 
-void command_help ()
+void command_help ( )
 {
     uart_puts("\n");
     uart_puts("Valid Command:\n");
@@ -36,24 +35,24 @@ void command_help ()
     uart_puts("\n");
 }
 
-void command_hello ()
+void command_hello ( )
 {
     uart_puts("Hello World!\n");
 }
 
-void command_timestamp ()
+void command_timestamp ( )
 {
     LAUNCH_SYS_CALL ( SYS_CALL_PRINT_TIMESTAMP_EL0 );
 }
 
-void command_not_found (char * s) 
+void command_not_found ( char * s ) 
 {
     uart_puts("Err: command ");
     uart_puts(s);
     uart_puts(" not found, try <help>\n");
 }
 
-void command_reboot ()
+void command_reboot ( )
 {
     uart_puts("Start Rebooting...\n");
 
@@ -63,7 +62,7 @@ void command_reboot ()
 	while(1);
 }
 
-void command_board_revision()
+void command_board_revision ( )
 {
     char str[20];  
     uint32_t board_revision = mbox_get_board_revision ();
@@ -81,7 +80,7 @@ void command_board_revision()
     }
 }
 
-void command_vc_base_addr()
+void command_vc_base_addr ( )
 {
     char str[20];  
     uint64_t vc_base_addr = mbox_get_VC_base_addr ();
@@ -106,22 +105,22 @@ void command_vc_base_addr()
     }
 }
 
-void command_svc_exception_trap ()
+void command_svc_exception_trap ( )
 {
     LAUNCH_SYS_CALL ( SYS_CALL_TEST_SVC );
 }
 
-void command_hvc_exception_trap ()
+void command_hvc_exception_trap ( )
 {
     LAUNCH_SYS_CALL ( SYS_CALL_TEST_HVC );
 }
 
-void command_brk_exception_trap ()
+void command_brk_exception_trap ( )
 {
     asm volatile ( "brk #1;" );
 }
 
-void command_timer_exception_enable ()
+void command_timer_exception_enable ( )
 {
     // enable irq in el1
     LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_ENABLE );
@@ -136,7 +135,7 @@ void command_timer_exception_enable ()
     uart_printf("[Local Timer Enable]\n");
 }
 
-void command_timer_exception_disable ()
+void command_timer_exception_disable ( )
 {   
     // core timer disable need to be done in el1
     LAUNCH_SYS_CALL ( SYS_CALL_CORE_TIMER_DISABLE );
@@ -146,13 +145,13 @@ void command_timer_exception_disable ()
     uart_printf("[Local Timer Disable]\n");
 }
 
-void command_irq_exception_enable ()
+void command_irq_exception_enable ( )
 {
     LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_ENABLE );
     uart_printf("[IRQ Enable]\n");
 }
 
-void command_irq_exception_disable ()
+void command_irq_exception_disable ( )
 {
     LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_DISABLE );
     uart_printf("[IRQ Disable]\n");

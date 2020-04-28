@@ -1,5 +1,5 @@
-#ifndef MAILBOX_H
-#define MAILBOX_H
+#ifndef __MAILBOX_H
+#define __MAILBOX_H
 
 #include "kernel/peripherals/gpio.h"
 #include "lib/type.h"
@@ -111,8 +111,8 @@
 #define FB_CURSOR_INFO_SET      0x00008010
 #define FB_CURSOR_STATE_SET     0x00008011
 
-uint32_t mbox_get_board_revision ();
-uint64_t mbox_get_VC_base_addr ();
-void mbox_set_clock_to_PL011 ();
+uint32_t mbox_get_board_revision ( );
+uint64_t mbox_get_VC_base_addr ( );
+void mbox_set_clock_to_PL011 ( );
 
 #endif

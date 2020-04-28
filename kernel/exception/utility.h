@@ -1,5 +1,5 @@
-#ifndef UTILITY_H
-#define UTILITY_H
+#ifndef __UTILITY_H
+#define __UTILITY_H
 
 void exception_not_implemented ();
 

@@ -23,8 +23,8 @@
  *
  */
 
-#ifndef GPIO_H
-#define GPIO_H
+#ifndef __GPIO_H
+#define __GPIO_H
 
 #define MMIO_BASE       0x3F000000
 

@@ -16,8 +16,8 @@ enum SPECIAL_CHARACTER
     UNKNOWN = -1,
 };
 
-void shell_start () ;
+void shell_start ( ) ;
 enum SPECIAL_CHARACTER parse ( char );
-void command_controller ( enum SPECIAL_CHARACTER, char c, char [], int *);
+void command_controller ( enum SPECIAL_CHARACTER, char c, char [], int * );
 
 #endif
