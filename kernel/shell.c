@@ -15,6 +15,7 @@ void
 shell_interactive ()
 {
   char buf[CMD_SIZE];
+  size_t a, b;
 
   while (1)
     {
@@ -39,10 +40,8 @@ shell_interactive ()
 	}
       else if (!strcmp ("timestamp", buf))
 	{
-	  ftoa (get_time (), buf);
-	  uart_puts ("[");
-	  uart_puts (buf);
-	  uart_puts ("]\n");
+	  get_time (&a, &b);
+	  printf ("[%f]\r\n", a, b);
 	}
       else if (!strcmp ("reboot", buf))
 	{
@@ -94,7 +93,7 @@ loadimg (unsigned long address)
   uart_puts ("\n");
   uart_puts ("Please give me the image.\n");
   uart_read ((char *) &img_size, 4);
-  ftoa (get_time (), buf);
+  ftoa (get_time (buf, buf), buf);
   uart_puts ("[");
   uart_puts (buf);
   uart_puts ("] image size: 0x");
@@ -178,22 +177,18 @@ hardware ()
 }
 
 double
-get_time ()
+get_time (size_t *cnt, size_t *freq)
 {
-  double t;
-  asm volatile ("mov x1, %0\n" "mov x0, #1\n" "svc #0\n"::"r" (&t));
-  return t;
+  asm volatile ("mov x2, %0\n" "mov x1, %1\n" "mov x0, #1\n"
+		"svc #0\n"::"r" (freq), "r" (cnt):"x1", "x2");
+  return (double) *cnt / (double) *freq;
 }
 
 void
-sys_get_time (double *result)
+sys_get_time (size_t *cnt, size_t *freq)
 {
-  unsigned long freq;
-  unsigned long cnt;
-
   asm volatile ("mrs %0, CNTFRQ_EL0\n"
-		"mrs %1, CNTPCT_EL0\n":"=r" (freq), "=r" (cnt));
-  *result = (double) cnt / (double) freq;
+		"mrs %1, CNTPCT_EL0\n":"=r" (*freq), "=r" (*cnt));
 }
 
 void

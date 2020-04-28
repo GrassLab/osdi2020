@@ -13,5 +13,6 @@ long strtol (const char *__restrict nptr, char **__restrict endptr, int base);
 int printf (const char *format, ...);
 void ftoa (double val, char *buf);
 void ltoa (unsigned long val, char *buf);
+void fdivtoa (unsigned long dividend, unsigned long divisor, char *buf);
 
 #endif /* _LINUX_STRING_H_ */

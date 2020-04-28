@@ -53,7 +53,7 @@ system_call (size_t x0, size_t x1, size_t x2, size_t x3)
       sys_core_timer_enable ();
       break;
     case 1:
-      sys_get_time ((double *) x1);
+      sys_get_time ((size_t *) x1, (size_t *) x2);
       break;
     }
 }
