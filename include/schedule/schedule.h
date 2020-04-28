@@ -6,7 +6,7 @@
 
 extern struct task* current;
 
-void do_exec(void(*func)(), int priority);
+void do_exec(void(*func)());
 int createPrivilegeTask(void(*func)(), int priority);
 void contextSwitch(struct task* next, bool returnEL0);
 void schedule();

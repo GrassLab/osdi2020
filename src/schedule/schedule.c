@@ -10,21 +10,12 @@ char ustack_pool[64][4096];
 int task_num = 0;
 struct task* current;
 
-void do_exec(void(*func)(), int priority)
+void do_exec(void(*func)())
 {
-	task_pool[task_num].user_context.pc = (unsigned long)func;
-	task_pool[task_num].user_context.sp = (unsigned long)&ustack_pool[task_num];
-	task_pool[task_num].task_id = task_num;
-	task_pool[task_num].priority = priority;
-	task_pool[task_num].task_state = running;
-	task_pool[task_num].re_schedule = false;
-	task_num++;
+	current->user_context.pc = (unsigned long)func;
+	current->user_context.sp = (unsigned long)&ustack_pool[task_num];
 
-	current->task_state = ready;
-	struct task* prev = current;
-	current = &task_pool[task_num-1];
-
-	switchToEL0(prev, current);
+	switchToEL0(&current->user_context);
 }
 
 int createPrivilegeTask(void(*func)(), int priority)
@@ -51,7 +42,7 @@ void contextSwitch(struct task* next)
 	struct task* prev = current;
 	current = next;
 
-	switchTo(prev, next);
+	switchTo(&prev->kernel_context, &next->kernel_context);
 }
 
 int _getNextProc()
@@ -83,8 +74,16 @@ void checkRSFlag()
 {
 	if (current->re_schedule == true)
 	{
+		asm volatile("mrs x19, sp_el0");
+		asm volatile("mrs x20, elr_el1");
+		asm volatile("mrs x21, spsr_el1");
+		
 		uartPuts("reschedule\n");
 		schedule();
+
+		asm volatile("msr sp_el0, x19");
+		asm volatile("msr elr_el1, x20");
+		asm volatile("msr spsr_el1, x21");
 	}
 
 	return;

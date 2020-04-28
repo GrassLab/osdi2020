@@ -6,16 +6,16 @@
 
 void userTask()
 {
-    while (1)
-	{
-    }
+    asm volatile("svc #2");
+
+    uartPuts("user task\n");
 }
 
 // Kernel task
 
 void execTask()
 {
-    do_exec(&userTask, 1);
+    do_exec(&userTask);
 }
 
 void idleTask()
