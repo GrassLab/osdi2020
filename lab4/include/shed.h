@@ -29,6 +29,8 @@ struct task_struct {
 #define NR_TASKS				64 
 #define THREAD_SIZE				4096
 #define THREAD_CPU_CONTEXT		0 		// offset of cpu_context in task_struct 
+#define TASK_RUNNING			0
+#define TASK_ZOMBIE				1
 
 
 

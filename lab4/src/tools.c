@@ -1,4 +1,5 @@
 #include "tools.h"
+#include "sys.h"
 
 int my_strcmp(char * str1, char * str2){
     int i=0;    
@@ -147,16 +148,13 @@ void process_cmd(char * command){
             load_image();
             break;        
         case 6:
-            asm volatile ("svc #1");
+            call_sys_chk_exl_info();
             break;
         case 7:                       
-            asm volatile ("svc #2");
+            call_sys_enable_time();
             break;
         case 8:        
-            uart_puts("Exception level: ");               
-            int el = get_el();
-            uart_send_int(el);
-            uart_puts("\n");
+            call_sys_chk_exl();
             break;
         case 9:        
             uart_puts("Start create foo\n");               

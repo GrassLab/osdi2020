@@ -46,7 +46,7 @@ clear_bss:
     //sub bss_size until bss_size = 0
     sub    w1, w1, #1
     cbnz   w1, clear_bss
-/* */
+/* 
 el2_to_el1:
     // Use el1h -> sp_el1 -> 0x5 M[3:0], bits [3:0] 0b0101 EL1h. h表示SP_ELx
     mov x0, 0x5
@@ -55,8 +55,8 @@ el2_to_el1:
     adr x0, main
     msr elr_el2, x0
     eret
-
-/* 
+*/
+/* */
 el2_to_el1:
     // Use el1h -> sp_el1 -> 0x5 M[3:0], bits [3:0] 0b0101 EL1h. h表示SP_ELx
     mov x0, 0x5
@@ -72,4 +72,3 @@ el1_to_el0:
     adr x0, main
     msr elr_el1, x0
     eret 
-*/

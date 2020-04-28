@@ -1,7 +1,7 @@
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFALG = -fPIC -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude -g
-ASMFALG = -fPIC -Iinclude
+CFALG = -fPIC -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude -g -O0 -ggdb3
+ASMFALG = -fPIC -Iinclude -g -O0 -ggdb3
 SRC_DIR = src
 BUILD_DIR = build
 
@@ -12,7 +12,7 @@ $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 	aarch64-linux-gnu-gcc $(CFALG) -c $< -o $@
 
 $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
-	aarch64-linux-gnu-gcc $(ASMOPS) -c $< -o $@
+	aarch64-linux-gnu-gcc $(ASMFALG) -c $< -o $@
 
 C_FILES = $(wildcard $(SRC_DIR)/*.c)
 ASM_FILES = $(wildcard $(SRC_DIR)/*.S)

@@ -26,6 +26,8 @@ void idle(){
 }
 void init_init_task(void (*func)()){
     current->taskid = 0;
+    current->state = TASK_RUNNING;
+    current->counter = 0;
     current->cpu_context.x19 = (unsigned long)func;
     current->cpu_context.pc = (unsigned long)ret_from_fork;
     current->cpu_context.sp = (unsigned long)current + THREAD_SIZE;
@@ -34,6 +36,7 @@ void privilege_task_create(void (*func)()){
     struct task_struct *new_task = (struct task_struct *) get_free_page();
     new_task->taskid = n_tasks;
     new_task->counter = 3;
+    new_task->state = TASK_RUNNING;
     new_task->cpu_context.x19 = (unsigned long)func;
     new_task->cpu_context.pc = (unsigned long)ret_from_fork;
     new_task->cpu_context.sp = (unsigned long)new_task + THREAD_SIZE;
@@ -51,15 +54,15 @@ void switch_to(struct task_struct *next)
 	struct task_struct * prev = current;
 	current = next; 
 	cpu_switch_to(prev, next);
-
+    
 }
 void schedule(){
     int next, c;
     // while(1){
     c = 0;
     next = 0;
-    for(int i=1;i<n_tasks;i++){
-        if(task[i]&&task[i]->counter>c){
+    for(int i=1;i<NR_TASKS;i++){
+        if(task[i]&&task[i]->counter>c&&task[i]->state==TASK_RUNNING){
             c = task[i]->counter;
             next=i;
         }
@@ -69,9 +72,7 @@ void schedule(){
     // }
     // int next;
     // next = ((current->taskid)+1)%n_tasks;
-    
     switch_to(task[next]);
-    
 }
 
 int N = 3;
