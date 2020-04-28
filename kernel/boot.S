@@ -47,18 +47,18 @@ ret2EL1:
   mrs x0, CPACR_EL1
   orr x0, x0, #(3 << 20)
   msr CPACR_EL1, x0
-  # setup EL0 stack
-  adr x0, _start
-  sub x0, x0, #0x10000
-  msr sp_el0, x0
-  # switch to EL0
-  # spsr_el1 clear daif and switch to EL0
-  mov x0, 0x0
-  msr spsr_el1, x0
-  adr x0, ret2EL0
-  msr elr_el1, x0
-  eret
-ret2EL0:
+#  # setup EL0 stack
+#  adr x0, _start
+#  sub x0, x0, #0x10000
+#  msr sp_el0, x0
+#  # switch to EL0
+#  # spsr_el1 clear daif and switch to EL0
+#  mov x0, 0x0
+#  msr spsr_el1, x0
+#  adr x0, ret2EL0
+#  msr elr_el1, x0
+#  eret
+#ret2EL0:
   mov x0, xzr
 
 jmp_main:

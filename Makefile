@@ -5,8 +5,8 @@ SDCARD ?= /dev/sdb
 HEADER := $(wildcard */*.h)
 SRC := $(wildcard */*.c)
 OBJECTS := $(patsubst %.c,%.o,$(SRC))
-ASM = kernel/boot.S kernel/exception.S peripheral/timer.S kernel/irq.S
-CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral
+ASM := kernel/boot.S $(wildcard */*.S)
+CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched
 
 .PHONY: all clean qemu debug indent
 
@@ -37,4 +37,4 @@ sd: kernel8.img
 	sudo umount rootfs
 
 indent:
-	indent $(SRC) $(HEADER)
+	indent $(SRC) $(HEADER) -Tsize_t
