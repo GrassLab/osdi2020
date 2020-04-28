@@ -14,4 +14,6 @@ void sleep( void );
 int get_taskId( void );
 void sched_yield( void );
 void uart_write(char *s);
+void uart_read(char *buf, int size);
+void exec( void(*func)() );
 #endif

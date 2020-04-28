@@ -80,6 +80,15 @@ void show_esr_elr(unsigned long esr, unsigned long elr){
 
 
 /* ========================= system call ========================= */
+void sys_uart_read(unsigned long long *argu){
+    char *buf = (char*)argu[9];
+    int num = (int)argu[10];
+
+    for(int i=0; i<num; i++){
+        buf[i] = uart_getc();
+    }
+}
+
 void sysCall_handler_el0(){
     unsigned long long  num = 16;
     task_t *curTask = get_cur_task();
@@ -97,6 +106,14 @@ void sysCall_handler_el0(){
 
         case 2:
             uart_puts((char*)argu[9]);
+            break;
+
+        case 3:
+            sys_uart_read(argu);
+            break;
+
+        case 4:
+            do_exec((void(*)())argu[9]);
             break;
 
         default:

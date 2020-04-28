@@ -74,3 +74,18 @@ uart_write:
 	mov 	x9, x0
 	svc 	0
 	ret
+
+.global uart_read
+uart_read:
+	mov 	x8, 3
+	mov 	x9, x0
+	mov 	x10, x1
+	svc 	0
+	ret
+
+.global exec
+exec:
+	mov 	x8, 4
+	mov 	x9, x0
+	svc 	0
+	ret
