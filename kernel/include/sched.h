@@ -30,6 +30,7 @@ struct task {
   struct task_context context;
   uint32_t id;
   uint32_t timeslice;
+  uint32_t preempt_count;
 };
 
 struct queue runqueue;
@@ -49,6 +50,9 @@ void context_switch_helper(struct task *prev, struct task *next);
 struct task *get_current_task(void);
 void task_debut_hook(void);
 void el1_to_el0(void(*func)(void), uint8_t *ustack);
+
+void preempt_enable(void);
+void preempt_disable(void);
 
 void idle(void);
 void foo(void);

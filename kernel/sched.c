@@ -58,3 +58,11 @@ void post_exception_hook(void) {
     schedule();
   }
 }
+
+void preempt_enable(void) {
+  get_current_task()->preempt_count -= 1;
+}
+
+void preempt_disable(void) {
+  get_current_task()->preempt_count += 1;
+}
