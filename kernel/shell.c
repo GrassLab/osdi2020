@@ -40,8 +40,7 @@ shell_interactive ()
 	}
       else if (!strcmp ("timestamp", buf))
 	{
-	  get_time (&a, &b);
-	  printf ("[%f]\r\n", a, b);
+	  printf ("[%f]\r\n", get_time ());
 	}
       else if (!strcmp ("reboot", buf))
 	{
@@ -93,7 +92,7 @@ loadimg (unsigned long address)
   uart_puts ("\n");
   uart_puts ("Please give me the image.\n");
   uart_read ((char *) &img_size, 4);
-  ftoa (get_time (buf, buf), buf);
+  ftoa (get_time (), buf);
   uart_puts ("[");
   uart_puts (buf);
   uart_puts ("] image size: 0x");
@@ -177,11 +176,12 @@ hardware ()
 }
 
 double
-get_time (size_t *cnt, size_t *freq)
+get_time ()
 {
+  size_t cnt, freq;
   asm volatile ("mov x2, %0\n" "mov x1, %1\n" "mov x0, #1\n"
-		"svc #0\n"::"r" (freq), "r" (cnt):"x1", "x2");
-  return (double) *cnt / (double) *freq;
+		"svc #0\n"::"r" (&freq), "r" (&cnt):"x1", "x2");
+  return (double) cnt / (double) freq;
 }
 
 void

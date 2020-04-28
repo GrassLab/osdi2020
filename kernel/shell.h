@@ -5,7 +5,7 @@
 #include <stddef.h>
 
 void shell_interactive ();
-double get_time (size_t *cnt, size_t *freq);
+double get_time ();
 void reset (int tick);
 void cancel_reset ();
 void hardware ();
