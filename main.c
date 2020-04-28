@@ -11,6 +11,8 @@
 #include "exception.h"
 #include "task.h"
 
+#include "signal.h"
+
 #define INPUT_BUFFER_SIZE 64
 
 void system_start()
@@ -19,7 +21,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 4.4.1\n");
+    uart_print("Version : 4.4.2\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -83,6 +85,7 @@ void user_syscall_test()
 /* Kernel task */
 void task_1()
 {
+    printf("\ntask_id: %d\n", get_taskid());
     delay_c('1');
 }
 
@@ -138,6 +141,7 @@ void test()
     else
     {
         printf("Task %d before exec, cnt address 0x%x, cnt value %d\n\r", get_taskid(), &cnt, cnt);
+        //kill(1, SIGKILL);
         exec(foo);
     }
 }
@@ -151,6 +155,7 @@ int main()
     // set uart
     uart_init();
     init_printf(0, putc);
+    signal_init();
 
     system_start();
 
@@ -164,7 +169,7 @@ int main()
     */
 
     task_init();
-    // copy_process(PF_KTHREAD, (unsigned long)task_1, 0, 0);
+    copy_process(PF_KTHREAD, (unsigned long)task_1, 0, 0);
     copy_process(PF_KTHREAD, (unsigned long)task_2, 0, 0); // fork, shell
     copy_process(PF_KTHREAD, (unsigned long)task_3, 0, 0);
     //copy_process(PF_KTHREAD, (unsigned long)task_4, 0, 0);

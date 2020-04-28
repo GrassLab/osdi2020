@@ -29,19 +29,21 @@
     mrs x22, elr_el1
     mrs x23, spsr_el1
 
-    stp x30, x21, [sp, #16 * 15] 
+    stp x30, x21, [sp, #16 * 15]
     stp x22, x23, [sp, #16 * 16]
     .endm
 
+
+
     .macro  kernel_exit, el
     ldp x22, x23, [sp, #16 * 16]
-    ldp x30, x21, [sp, #16 * 15] 
+    ldp x30, x21, [sp, #16 * 15]
 
     .if \el == 0
     msr sp_el0, x21
     .endif /* \el == 0 */
 
-    msr elr_el1, x22            
+    msr elr_el1, x22
     msr spsr_el1, x23
 
 
@@ -60,7 +62,7 @@
     ldp x24, x25, [sp, #16 * 12]
     ldp x26, x27, [sp, #16 * 13]
     ldp x28, x29, [sp, #16 * 14]
-    add sp, sp, #S_FRAME_SIZE       
+    add sp, sp, #S_FRAME_SIZE
     eret
     .endm
 

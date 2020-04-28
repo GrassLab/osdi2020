@@ -63,12 +63,13 @@ typedef struct task_t
     long preempt_count;
     unsigned long stack;
     unsigned long flags;
+    unsigned long signal_source;
 } task_t;
 
 extern int get_current();
 extern void set_current(int);
 extern unsigned long ret_from_fork();
-extern void switch_to(task_t *, task_t *);
+extern void switch_to(task_t *, task_t *, unsigned long);
 
 void schedule();
 
@@ -93,6 +94,10 @@ void timer_tick();
 
 void schedule_cnt_add(int n);
 
-void exit_process();
+void exit_process(int task_id);
+
+task_t *task(int task_id);
+
+unsigned long task_signal_source();
 
 #endif

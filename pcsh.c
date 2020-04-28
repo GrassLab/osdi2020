@@ -13,6 +13,7 @@ pc means Po-Chun, NOT personal computer
 #include "timer.h"
 
 #include "syscall.h"
+#include "signal.h"
 
 #include "printf.h"
 
@@ -30,6 +31,7 @@ static cmd_t default_cmd_arr[] = {
     {"exc", "svc #1", cmd_exc},
     {"brk", "brk #1", cmd_brk},
     {"irq", "start irq", cmd_irq},
+    {"kill", "kill process 1, can't choose process now!", cmd_kill},
     {NULL, NULL, cmd_not_find}};
 
 int cmd_exit(int i)
@@ -130,6 +132,11 @@ int cmd_irq(int i)
         timer_enable = 1;
     }
     return 0;
+}
+
+int cmd_kill(int i)
+{
+    kill(1, SIGKILL);
 }
 
 int cmd_not_find(int i)

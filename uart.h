@@ -14,8 +14,9 @@
 #define UART0_ICR ((volatile unsigned int *)(MMIO_BASE + 0x00201044))
 
 void uart_init();
-//void uart_send(unsigned int c);
-//char uart_recv() __attribute__((section(".bootloader")));
+void _uart_send(unsigned int c);
+char _uart_recv() __attribute__((section(".bootloader")));
+void _uart_puts(char *s);
 char uart_getc();
 void uart_puts(char *s);
 
@@ -27,4 +28,5 @@ int uart_print(char *s);
 int uart_gets(char *buf, int buf_size);
 
 void putc(void *p, char c);
+void _putc(void *p, char c);
 #endif

@@ -61,8 +61,8 @@ void uart_init()
     *UART0_LCRH = 0b11 << 5; // 8n1
     *UART0_CR = 0x301;       // enable Tx, Rx, FIFO
 }
-/*
-void uart_send(unsigned int c)
+
+void _uart_send(unsigned int c)
 {
     do
     {
@@ -70,10 +70,8 @@ void uart_send(unsigned int c)
     } while (*UART0_FR & 0x20);
     *UART0_DR = c;
 }
-*/
 
-/*
-char uart_recv()
+char _uart_recv()
 {
     do
     {
@@ -81,7 +79,17 @@ char uart_recv()
     } while (*UART0_FR & 0x10);
     return (char)(*UART0_DR);
 }
-*/
+
+void _uart_puts(char *s)
+{
+    while (*s)
+    {
+        /* convert newline to carrige return + newline */
+        if (*s == '\n')
+            _uart_send('\r');
+        _uart_send(*s++);
+    }
+}
 
 char uart_getc()
 {
@@ -192,4 +200,9 @@ int uart_gets(char *buf, int buf_size)
 void putc(void *p, char c)
 {
     uart_send(c);
+}
+
+void _putc(void *p, char c)
+{
+    _uart_send(c);
 }

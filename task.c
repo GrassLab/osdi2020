@@ -129,6 +129,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     p->state = TASK_RUNNING;
     p->counter = p->priority;
     p->preempt_count = 1; //disable preemtion until schedule_tail
+    p->signal_source = 0;
 
     p->cpu_context.pc = (unsigned long)ret_from_fork;
 
@@ -180,7 +181,7 @@ void context_switch(int task_id)
 
     task_t *next = task_pool[task_id];
 
-    switch_to(prev, next);
+    switch_to(prev, next, next->signal_source);
 }
 
 void schedule()
@@ -208,7 +209,7 @@ void schedule()
 int check_reschedule()
 {
     // every 10ms, reschdule
-    if (schedule_cnt > 10)
+    if (schedule_cnt > 5)
     {
         schedule_cnt = 0;
         return 1;
@@ -232,9 +233,9 @@ void schedule_cnt_add(int n)
     schedule_cnt += n;
 }
 
-void exit_process()
+void exit_process(int task_id)
 {
-    task_t *current = task_pool[get_current()];
+    task_t *current = task_pool[task_id];
     // preempt_disable();
     for (int i = 0; i < TASK_NUM; i++)
     {
@@ -261,4 +262,14 @@ int do_fork()
 
     return copy_process(0, 0, 0, stack);
     //return copy_process(PF_FORK, 0, 0, stack);
+}
+
+task_t *task(int task_id)
+{
+    return task_pool[task_id];
+}
+
+unsigned long task_signal_source()
+{
+    return task_pool[get_current()]->signal_source;
 }

@@ -5,6 +5,8 @@
 #include "task.h"
 #include "printf.h"
 #include "debug.h"
+#include "signal.h"
+#include "system.h"
 
 void syscall_core_timer(int enable)
 {
@@ -19,7 +21,7 @@ void syscall_core_timer(int enable)
         DEBUG_LOG_SYSCALL(("core timer enable"));
         _core_timer_enable();
     }
-    DEBUG_LOG_SYSCALL(("\n"));
+    DEBUG_LOG_SYSCALL(("\n\r"));
 }
 
 void syscall_local_timer(int enable)
@@ -35,7 +37,7 @@ void syscall_local_timer(int enable)
         DEBUG_LOG_SYSCALL(("local timer enable"));
         local_timer_enable();
     }
-    DEBUG_LOG_SYSCALL(("\n"));
+    DEBUG_LOG_SYSCALL(("\n\r"));
 }
 
 void syscall_gettime(double *t)
@@ -48,7 +50,7 @@ void syscall_gettime(double *t)
                  "mrs %1, CNTPCT_EL0\n"
                  : "=r"(freq), "=r"(ct));
     *t = (double)ct / (double)freq;
-    DEBUG_LOG_SYSCALL(("\n"));
+    DEBUG_LOG_SYSCALL(("\n\r"));
 }
 
 void syscall_uart_send(char x1)
@@ -66,13 +68,11 @@ void syscall_uart_send(char x1)
 
 void syscall_uart_recv(char *x1)
 {
-    enable_irq();
     do
     {
         asm volatile("nop");
     } while (*UART0_FR & 0x10);
     *x1 = (char)(*UART0_DR);
-    disable_irq();
     //bottom_half_set(0x1);
 }
 
@@ -89,7 +89,7 @@ void syscall_exec(unsigned long x1)
 
 void syscall_exit(int x1)
 {
-    exit_process();
+    exit_process(get_current());
 }
 
 void syscall_get_taskid(int *x1)
@@ -97,8 +97,11 @@ void syscall_get_taskid(int *x1)
     *x1 = get_current();
 }
 
-void syscall_signal(int process, int signal)
+void syscall_kill(int task_id, int signal)
 {
+    // signal_run(task_id, signal);
+    DEBUG_LOG_SYSCALL(("kill: taskid[%d], signal[%d]\n\r"));
+    signal_raise(task_id, signal);
 }
 
 /* Can't work */
@@ -121,18 +124,24 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         break;
     // get time
     case 0x2:
+        enable_irq();
         syscall_gettime((double *)x1);
         break;
+        /*
     case 0x3:
         syscall_load_images();
         break;
+        */
     case 0x4:
+        enable_irq();
         syscall_uart_send(x1);
         break;
     case 0x5:
+        enable_irq();
         syscall_uart_recv((char *)x1);
         break;
     case 0x20:
+        enable_irq();
         syscall_get_taskid((int *)x1);
         break;
     case 0x30:
@@ -145,11 +154,13 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         syscall_exit((int)x1);
         break;
     case 0x40:
-        syscall_signal((int)x1, (int)x2);
+        enable_irq();
+        syscall_kill((int)x1, (int)x2);
         break;
     // not this syscall
     default:
         printf("Can find this system call, Halt");
+        reset(0);
 
         while (1)
         {
@@ -230,4 +241,13 @@ void exit(int value)
     asm volatile("mov x1, %0\n"
                  "mov x0, #0x32\n"
                  "svc #0x80\n" ::"r"(value));
+}
+
+void kill(int task_id, int signal)
+{
+    asm volatile("mov x1, %0\n"
+                 "mov x2, %1\n"
+                 "mov x0, #0x40\n"
+                 "svc #0x80\n" ::"r"(task_id),
+                 "r"(signal));
 }

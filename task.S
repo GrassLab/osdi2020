@@ -22,6 +22,10 @@ switch_to:
     ldp x29, x9, [x8], #16
     ldr x30, [x8]
     mov sp, x9
+
+    cmp x2, #0
+    bne signal_router
+
     ret
 
 .global get_current
@@ -44,5 +48,4 @@ thread_start:
 	/* We are done, pass the return value through x0.  */
 	mov	x0, 0x32
 	svc	0x80
-  ret 
-
+  ret
