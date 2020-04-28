@@ -1,7 +1,6 @@
 #include "uart.h"
 #include "str.h"
 #include "mailbox.h"
-#include "lfb.h"
 #include "exc.h"
 #include "syscall.h"
 #include "task.h"
@@ -64,12 +63,6 @@ void get_board_revision()
 	uart_puts("\n");
 }
 
-void lfbuf()
-{
-	lfb_init();
-	lfb_showpicture();
-}
-
 void help()
 {
 	uart_puts("help : help\n");
@@ -78,7 +71,6 @@ void help()
 	uart_puts("reboot : reboot system\n");
 	uart_puts("vcb : VC Core base address.\n");
 	uart_puts("brv : board revision.\n");
-	uart_puts("lfb : frame buffer.\n");
 	uart_puts("address : show now address and SP.\n");
 	uart_puts("exc_svc : demo exception svc handler.(call svc #9)\n");
 	uart_puts("exc_brk : demo exception brk handler.(call brk #1)\n");
@@ -92,7 +84,7 @@ void main()
 	
 	uart_puts("Hello~~ try 'help' \n");
 	
-	char *command[12] = {"help", "hello", "timestamp", "reboot", "vcb", "brv", "lfb", "address", "exc_svc", "exc_brk","irq", 0};
+	char *command[11] = {"help", "hello", "timestamp", "reboot", "vcb", "brv", "address", "exc_svc", "exc_brk","irq", 0};
 	//uart_hex((unsigned int)command);
     char input[100]={0};
 	
@@ -123,10 +115,6 @@ void main()
 		else if(my_strcmp(input, command[5], my_strlen(input)) == 0) //board_revision
 		{
 			get_board_revision();
-		}
-		else if(my_strcmp(input, command[6], my_strlen(input)) == 0) //frame buffer
-		{
-			lfbuf();
 		}
 		else if(my_strcmp(input, command[7], my_strlen(input)) == 0) // show address and stack pointer info
 		{
@@ -185,7 +173,7 @@ here:
 
 	current_task->reschedule = 0;
 	uart_puts("flag done....1\r\n");
-	task_schedule(0);
+	task_schedule(0, sp, 0);
 
 	//context_switch(&task_pool[3]);
 	goto here;
@@ -211,7 +199,7 @@ here2:
 
 	current_task->reschedule = 0;
 	uart_puts("flag done ....2\r\n");
-	task_schedule(0);
+	task_schedule(0, sp, 0);
 	//context_switch(&task_pool[2]);
 	goto here2;
 }
@@ -220,13 +208,44 @@ void idle()
 {
 	while(1){
 		uart_puts("idle now\r\n");
-		task_schedule(0);
+		task_schedule(0, task_pool[1].ksp, 0);
 	}
 }
 
+void do_exec(void(*func)())
+{
+	task *current;
+	asm volatile("mrs %0,tpidr_el1":"=r"(current)::);
+	asm volatile("msr sp_el0, %0"::"r"(current->usp):);
+	asm volatile("msr spsr_el1, %0"::"r"(0):);
+	asm volatile("msr elr_el1, %0"::"r"(func):);
+	asm volatile("eret");
+}
+
+void utask()
+{
+here3:
+	show_svc_info();
+	//task_schedule(0);
+	while(!task_pool[4].reschedule){asm volatile("nop");}
+	uart_puts("call sch\r\n");
+	asm volatile("mov x0, #3");
+	asm volatile("svc #0");
+	goto here3;
+}
+
+void task3()
+{
+	toggle_privilege();
+	do_exec(utask);
+}
+
+
+
 void kernel_init()
 {
-	kstack_pool = (char*)0x280000;
+	//asm volatile("svc #0");
+	//ustack_pool = kstack_pool + (4096*64);
 	uart_init();
 	/*unsigned long long int tmp;
 	asm volatile("mov %0, sp":"=r"(tmp)::);
@@ -240,7 +259,7 @@ void kernel_init()
 	int idleid = privilege_task_create(idle);
 	privilege_task_create(task1);
 	privilege_task_create(task2);
-
+	privilege_task_create(task3);
 	//unsigned long long addrrr = &task_pool[t1];
 	
 	core_time_enable();

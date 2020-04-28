@@ -4,8 +4,14 @@
 
 //__attribute__((section(".userspace"))) char kstack_pool[64][4096];
 char *kstack_pool;
+
+
 task task_pool[64];
+
 task_queue runqueue;
+
+//char *ustack_pool;
+
 unsigned long long _global_coretimer;
 
 int privilege_task_create(void(*func)())
@@ -20,10 +26,12 @@ int privilege_task_create(void(*func)())
         }
     }
     task_pool[task_id].id = task_id;
-    task_pool[task_id].sp = kstack_pool+(task_id*8192);
+    task_pool[task_id].ksp = kstack_pool+(task_id*4096);
+    task_pool[task_id].usp = kstack_pool+(10*4096) + (task_id*4096);
     task_pool[task_id].usage = 1;
     task_pool[task_id].rip = func;
     task_pool[task_id].start_coretime = _global_coretimer;
+    task_pool[task_id].privilege = 1;
     runqueue_push(&task_pool[task_id]);
     //task_pool[task_id].alive = 1;
     return task_id;
@@ -39,6 +47,9 @@ void context_switch(task* next) //old
 
 void task_struct_init()
 {
+    extern void *_end;
+	kstack_pool = (char*)&_end;
+
     runqueue.head = 0;
     runqueue.tail = 0;
     runqueue.now = 0;
@@ -71,23 +82,33 @@ void runqueue_del(int id)
     }
 }
 
-void task_schedule(unsigned long long rip)
+void task_schedule(unsigned long long rip, unsigned long long sp, unsigned long long *oreg)
 {
+    unsigned long long x19_x28[10], fp, lr;
+    asm volatile("mov %0, x19":"=r"(x19_x28[0])::);
+    asm volatile("mov %0, x20":"=r"(x19_x28[1])::);
+    asm volatile("mov %0, x20":"=r"(x19_x28[2])::);
+    asm volatile("mov %0, x22":"=r"(x19_x28[3])::);
+    asm volatile("mov %0, x23":"=r"(x19_x28[4])::);
+    asm volatile("mov %0, x24":"=r"(x19_x28[5])::);
+    asm volatile("mov %0, x25":"=r"(x19_x28[6])::);
+    asm volatile("mov %0, x26":"=r"(x19_x28[7])::);
+    asm volatile("mov %0, x27":"=r"(x19_x28[8])::);
+    asm volatile("mov %0, x28":"=r"(x19_x28[9])::);
+    asm volatile("mov %0, fp":"=r"(fp)::);
+    asm volatile("mov %0, lr":"=r"(lr)::);
+    //uart_hex(oreg);
+    //uart_puts("\r\n");
     //note : in here you should get origin sp from sp_el0 or some other way, I store here for test
-    unsigned long long int sp;
-    asm volatile("mov %0, sp":"=r"(sp)::);
     //uart_hex(sp);
     //note : switch_to do not store the rip, you need to manual set now task rip to now task struct
     task *current, *next;
-
-    asm volatile("mrs %0, tpidr_el1":"=r"(current)::);
-    
+    current = get_current_task();
 
     if(rip == 0)
     {
         
         asm volatile("mov %0, x30":"=r"(rip)::);
-
         //uart_puts("rip 0: ");
         /*uart_hex(rip);
         uart_send('\n');*/
@@ -116,48 +137,118 @@ void task_schedule(unsigned long long rip)
         /*uart_hex(next);
         uart_send('\n');*/
     }
+
     if(current != next)
     {
         //uart_puts("current!=next\n");
-        /*uart_puts("note: ");
-        uart_hex(current->rip);
-        uart_puts("\r\n");
-        uart_hex(next->rip);
-        uart_puts("\r\n");*/
+        if(current->privilege == 1)
+        {
+            //uart_puts("current privilege 1\n");
+            current->rip = rip;
+            current->ksp = sp;
+            for(int i=0;i<10;i++)
+            {
+                current->x19_x28[i] = x19_x28[i];
+                current->fp_lr[0] = fp;
+                current->fp_lr[1] = lr;
+            }
+        }
+        else if(current->privilege == 0)
+        {
+            //uart_puts("current privilege 0\n");
+            unsigned long long int elr_el1, spsr_el1, sp_el0;
+            asm volatile("mrs %0,spsr_el1":"=r"(spsr_el1));
+            asm volatile("mrs %0,elr_el1":"=r"(elr_el1));
+            asm volatile("mrs %0,sp_el0":"=r"(sp_el0));
+            current->rip = elr_el1;
+            current->usp = sp_el0;
+            current->spsr_el1 = spsr_el1;
+            for(int i=0;i<31;i++)
+            {
+                //uart_hex(oreg[i]);
+                //uart_puts("\r\n");
+                if(i < 19 && i>=0)
+                {   current->x0_x18[i] = oreg[i];}
+                else if(i < 29 && i >= 19)
+                {   current->x19_x28[i-19] = oreg[i];}
+                else if(i >= 29 && i <= 30)
+                {   current->x29_x30[i-29] = oreg[i];}
+            }
+        }
+        else{uart_puts("schedule fail (in current)");}
 
         next->start_coretime = _global_coretimer;
-        current->rip = rip;
-        asm volatile("mov sp, %0"::"r"(sp-16):);
-
-        asm volatile(
-            "stp x19, x20, [%0, 16 * 0]\n"
-            "stp x21, x22, [%0, 16 * 1]\n"
-            "stp x23, x24, [%0, 16 * 2]\n"
-            "stp x25, x26, [%0, 16 * 3]\n"
-            "stp x27, x28, [%0, 16 * 4]\n"
-            "stp fp, lr, [%0, 16 * 5]\n"
-            "mov x9, sp\n"
-            "str x9, [%0, 16 * 6]\n"
-            ::"r"(current):
-        );
-
-        asm volatile(
-            "ldp x19, x20, [%0, 16 * 0]\n"
-            "ldp x21, x22, [%0, 16 * 1]\n"
-            "ldp x23, x24, [%0, 16 * 2]\n"
-            "ldp x25, x26, [%0, 16 * 3]\n"
-            "ldp x27, x28, [%0, 16 * 4]\n"
-            "ldp fp, lr, [%0, 16 * 5]\n"
-            "ldp x9, x30, [%0, 16 * 6]\n"
-            "mov sp,  x9\n"
-            "msr tpidr_el1, %0\n"
-            "ret"
-            ::"r"(next):
-        );
+        
+        if(next->privilege == 1){
+            //uart_puts("next privilege 1\n");
+            asm volatile("mov x10, %0"::"r"(next):);
+            asm volatile(
+                "ldp x19, x20, [x10, 16 * 0]\n"
+                "ldp x21, x22, [x10, 16 * 1]\n"
+                "ldp x23, x24, [x10, 16 * 2]\n"
+                "ldp x25, x26, [x10, 16 * 3]\n"
+                "ldp x27, x28, [x10, 16 * 4]\n"
+                "ldp fp, lr, [x10, 16 * 5]\n"
+                "ldp x9, x30, [x10, 16 * 6]\n"
+                "mov sp,  x9\n"
+                "msr tpidr_el1, x10\n"
+                "ret"
+            );
+        }
+        else if(next->privilege == 0)
+        {
+            //uart_puts("next privilege 0\n");
+            asm volatile("msr spsr_el1, %0"::"r"(next->spsr_el1):);
+            asm volatile("msr elr_el1, %0"::"r"(next->rip):);
+            asm volatile("msr sp_el0, %0"::"r"(next->usp):);
+            asm volatile(
+                "ldp x0, x1, [%0 ,16 * 0]\n"
+                "ldp x2, x3, [%0 ,16 * 1]\n"
+                "ldp x4, x5, [%0 ,16 * 2]\n"
+                "ldp x6, x7, [%0 ,16 * 3]\n"
+                "ldp x8, x9, [%0 ,16 * 4]\n"
+                "ldp x10, x11, [%0 ,16 * 5]\n"
+                "ldp x12, x13, [%0 ,16 * 6]\n"
+                "ldp x14, x15, [%0 ,16 * 7]\n"
+                "ldp x16, x17, [%0 ,16 * 8]\n"
+                "ldr x18, [%0 ,16 * 9]\n"
+                ::"r"(next->x0_x18):
+            );
+            asm volatile(
+                "ldp x19, x20, [%0, 16 * 0]\n"
+                "ldp x21, x22, [%0, 16 * 1]\n"
+                "ldp x23, x24, [%0, 16 * 2]\n"
+                "ldp x25, x26, [%0, 16 * 3]\n"
+                "ldp x27, x28, [%0, 16 * 4]\n"
+                ::"r"(next->x19_x28):
+            );
+            asm volatile(
+                "ldp x29, x30, [%0, 16 * 0]"
+                ::"r"(next->x29_x30):
+            );
+            asm volatile("eret");
+        }
+        else{uart_puts("schedule fail (in next)");}
+        
         //asm volatile("mov %0, x30":"=r"(tmp)::);
         //uart_hex(tmp);
         //asm volatile("ret");
         //switch_to(current, next);
     }
+
 }
 
+
+
+task *get_current_task()
+{
+    task *current;
+    asm volatile("mrs %0, tpidr_el1":"=r"(current)::);
+    return current;
+}
+
+void toggle_privilege()
+{
+    task *current = get_current_task();
+    current->privilege = !current->privilege;
+}

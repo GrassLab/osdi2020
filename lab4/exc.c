@@ -32,10 +32,14 @@ void _local_timer_handler();
 
 void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
 {
+    unsigned long long *sp;
+    asm volatile("mov %0, x7":"=r"(sp)::);
+
     //x0 = type, x1 = par1, x2 = par2 ...
-    unsigned int esr, elr, currentEL, currentSP;
+    unsigned int esr, elr, currentEL, currentSP, sp_el0;
     asm volatile("mrs %0,esr_el1":"=r"(esr));
     asm volatile("mrs %0,elr_el1":"=r"(elr));
+    asm volatile("mrs %0,sp_el0":"=r"(sp_el0));
     unsigned char exc_class = esr>>26;
     unsigned int ISS_bit = esr&0x1FFFFFF;
 
@@ -64,6 +68,12 @@ void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, 
             {
                 reset(1000);
             }
+            else if(x0 == 3)
+            {
+                uart_puts("syscall...\r\n");
+                asm volatile("msr daifclr, 0xf");
+                task_schedule(elr, sp_el0, sp);
+            }
             else
             {
                 uart_puts("unknown svc 0 call type\r\n");
@@ -90,6 +100,7 @@ void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, 
     {
         uart_puts("unknown sync exception\r\n");
     }
+    
 }
 
 void irq_hanlder()
