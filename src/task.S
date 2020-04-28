@@ -11,16 +11,16 @@ switch_to:
     stp x23, x24, [x0, 16 * 2]
     stp x25, x26, [x0, 16 * 3]
     stp x27, x28, [x0, 16 * 4]
-    stp x29, x9,  [x0, 16 * 5]
-    str x30,      [x0, 16 * 6]
+    stp x29, x9,  [x0, 16 * 5]  // fp, sp
+    str x30,      [x0, 16 * 6]  // pc
 
     ldp x19, x20, [x1, 16 * 0]
     ldp x21, x22, [x1, 16 * 1]
     ldp x23, x24, [x1, 16 * 2]
     ldp x25, x26, [x1, 16 * 3]
     ldp x27, x28, [x1, 16 * 4]
-    ldp x29, x9,  [x1, 16 * 5]
-    ldr x30,      [x1, 16 * 6]
+    ldp x29, x9,  [x1, 16 * 5]  // fp, sp
+    ldr x30,      [x1, 16 * 6]  // pc
     mov sp,  x9
 
     mov x2, #5  // CONTEXT_SWITCH
@@ -40,12 +40,24 @@ set_current:
     msr tpidr_el1, x0
     ret
 
-.globl ret_from_fork
+// first time process be schedule
+// next time process will not return to here
+// instead, back to the scheduler remain routine
+.global ret_from_fork
 ret_from_fork:
     // bl    schedule_tail
     mov    x0, x20
     blr    x19         //should never return
 
+.global ret_from_exec
+ret_from_exec:
+    mrs x1, tpidr_el1
+    // mov x5, #2  // IN_OUT_KERNEL
+    // str x5, [x1, 8 * 16]
+    ldr x2, [x1, 8 * 13]
+    ldr x3, [x1, 8 * 14]
+    ldr x4, [x1, 8 * 15]
+             
 
 #define USER_STACK 0x1000
 

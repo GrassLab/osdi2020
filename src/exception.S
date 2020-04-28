@@ -87,7 +87,7 @@
     ldp    x24, x25, [sp, #16 * 12]
     ldp    x26, x27, [sp, #16 * 13]
     ldp    x28, x29, [sp, #16 * 14]
-    // ldr    x30,      [sp, #16 * 15] // syscall ret_val 
+    // ldr    x30,      [sp, #16 * 15]  
 
     add    sp,  sp,  #16 * 17
 .endm
@@ -132,15 +132,19 @@ __el1_interrupt_routine:
 _exception_table:
     // Current exception level with SP_EL0.
     .align 7 // synchronous //  0x000
+    mov    x0,  0x000
     b exception_not_implement
 
     .align 7 // IRQ //  0x080
+    mov    x0,  0x080
     b exception_not_implement
     
     .align 7 // FIQ //  0x100
+    mov    x0,  0x100
     b exception_not_implement
 
     .align 7 // SError //  0x180
+    mov    x0,  0x180
     b exception_not_implement
 
     // Current exception level with SP_ELx, x > 0.
@@ -151,9 +155,11 @@ _exception_table:
     b __el1_interrupt_routine
 
     .align 7 // FIQ //  0x300
+    mov    x0,  0x300
     b exception_not_implement
 
     .align 7 // SError //  0x380
+    mov    x0,  0x380
     b exception_not_implement
 
     // Lower exception level, AArch64
@@ -164,22 +170,28 @@ _exception_table:
     b __el0_interrupt_routine
 
     .align 7 // FIQ //  0x500
+    mov    x0,  0x500
     b exception_not_implement
 
     .align 7 // SError //  0x580
+    mov    x0,  0x580
     b exception_not_implement
 
     // Lower exception level, AArch32
     .align 7 // synchronous //  0x600
+    mov    x0,  0x600
     b exception_not_implement
 
     .align 7 // IRQ //  0x680
+    mov    x0,  0x680
     b exception_not_implement
 
     .align 7 // FIQ //  0x700
+    mov    x0,  0x700
     b exception_not_implement
 
     .align 7 // SError //  0x780
+    mov    x0,  0x780
     b exception_not_implement
 
     .align 7 //  0x800

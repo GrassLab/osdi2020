@@ -36,6 +36,7 @@ struct task {
     long priority;  
     // long preempt_count;
     unsigned long task_id;
+    unsigned long parent_id;
     int reschedule_flag;
 };
 
@@ -45,12 +46,13 @@ struct task_manager {
     char ustack_pool[64][4096];
     unsigned long queue_bitmap;
     unsigned int task_num;
+    unsigned int next_task;
     // struct task*(*current)();
 };
 
 
 void task_manager_init();
-void privilege_task_create(void(*func)());
+int privilege_task_create(void(*func)(), int fork_flag);
 void context_switch(struct task* next);
 struct task* get_current();
 void set_current(struct task* task_struct);
@@ -59,8 +61,11 @@ void kernel_test();
 void idle();
 void user_test();
 void do_exec(void(*func)());
+int fork();
 void _setup_user_content(void(*func)());
 void foo();
+void test_foo();
+void test();
 
 #define N 3
 

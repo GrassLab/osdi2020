@@ -5,9 +5,11 @@
 #include "../include/task.h"
 #include "../include/exception.h"
 
-void exception_not_implement()
+void exception_not_implement(unsigned int offset)
 {
-    uart_puts("Exception not implement!\n"); 
+    uart_puts("Exception not implement! offset is "); 
+    uart_hex(offset);
+    uart_puts("\n");
     while (1);
 }
 
@@ -59,6 +61,9 @@ void decode_exception(unsigned long esr, unsigned long elr, unsigned long spsr)
 // syscall_x0 (x1, x2, x3)
 void exception_handler(unsigned int trapframe)
 {
+    struct task* current = get_current();
+    current->state = RUN_IN_KERNEL_MODE;
+    uart_puts("\r\n++++++++++  exception_handler begin  ++++++++++\n");
     unsigned long esr, elr, spsr; 
     unsigned long sys_ret_val;
     //  check exception level
@@ -79,12 +84,13 @@ void exception_handler(unsigned int trapframe)
             return;
     }    
 
+    // syscall - svc #0
     if ((esr>>26)==0b010101) {
         if ((esr&0x1ffffff)==0) {
-            unsigned int x8;
-            x8 = *(unsigned int*)(trapframe+8*8);
+            unsigned long sys_ret_val = 0;
             //asm volatile ("ldr %0, [%1, #8 * 8]" :"=r" (x8) :"r"(trapframe));
-            el0_svc_handler(x8);
+            sys_ret_val = el0_svc_handler(trapframe);
+            *(unsigned int*)trapframe = sys_ret_val;
         }
     } 
     else {
@@ -102,11 +108,16 @@ void exception_handler(unsigned int trapframe)
                 asm volatile ("msr elr_el3, %0" : : "r" (elr+4)); break;  
         }  
     }
+    uart_puts("++++++++++  exception_handler end  ++++++++++\n\r\n");
 }
 
 
-void el0_svc_handler(unsigned int x8)
+unsigned long el0_svc_handler(unsigned int trapframe)
 {
+    unsigned int x0; 
+    unsigned int x8;  // syscall number
+    x0 = *(unsigned int*)(trapframe+8*0);
+    x8 = *(unsigned int*)(trapframe+8*8);
     unsigned long sys_ret_val = 0;
     struct task* current = get_current();
     uart_puts("syscall ID: ");
@@ -127,9 +138,27 @@ void el0_svc_handler(unsigned int x8)
             uart_puts("sys_get_taskid success!\n");
             sys_ret_val = current->task_id;
             break;
+        case SYS_EXEC:
+            do_exec(x0);
+            break;
+        case SYS_FORK:
+            sys_ret_val = fork();
+            break;
+        case SYS_EXIT:
+            uart_puts("syscall not implement\n");
+            break;
+        case SYS_UART_READ:
+            uart_puts("syscall not implement\n");
+            break;
+        case SYS_UART_WRITE:
+            uart_puts("syscall not implement\n");
+            break;
+        default:
+            uart_puts("syscall not found\n");
+            break;
     }
     disable_irq();
-    asm volatile("str x0, [sp, #8 * 0]");
+    return sys_ret_val;
 }
 
 // int get_syscall_no()

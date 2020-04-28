@@ -91,6 +91,7 @@ void local_timer_handler()
 #define CORE0_INTERRUPT_SRC (unsigned int* )0x40000060
 void interrupt_handler()
 {
+    uart_puts("\r\n++++++++++  interrupt_handler begin  ++++++++++\n");
     struct task* current = get_current();
     current->state = IRQ_CONTEXT;
     unsigned int interrupt_src = *CORE0_INTERRUPT_SRC;
@@ -148,6 +149,7 @@ void interrupt_handler()
         uart_puts("interrupt_handler error.\n");
     }
     irq_reschedule();
+    uart_puts("++++++++++  interrupt_handler end  ++++++++++\n\r\n");
 }
 
 void irq_reschedule() 
