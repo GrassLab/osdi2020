@@ -40,10 +40,12 @@ void context_switch(struct task *next) {
 }
 
 void schedule(void) {
-  enqueue(&runqueue, get_current_task());
-  /* Select the next task by simple round-robin policy. */
-  struct task *victim = dequeue(&runqueue);
-  context_switch(victim);
+  if (get_current_task()->preempt_count == 0) {
+    enqueue(&runqueue, get_current_task());
+    /* Select the next task by simple round-robin policy. */
+    struct task *victim = dequeue(&runqueue);
+    context_switch(victim);
+  }
 }
 
 void do_exec(void(*func)(void)) {
@@ -52,8 +54,8 @@ void do_exec(void(*func)(void)) {
 
 /* This function will be invoked after exception handler return. */
 void post_exception_hook(void) {
-  if (get_current_task()->timeslice == 0) {
-    printf("Context switch is triggered" EOL);
+  if (get_current_task()->timeslice == 0 && get_current_task()->preempt_count == 0) {
+    printf("Task %u: Context switch is triggered" EOL, do_get_taskid());
     get_current_task()->timeslice = DEFAULT_TIMESLICE;
     schedule();
   }

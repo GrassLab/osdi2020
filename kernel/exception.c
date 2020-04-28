@@ -1,5 +1,6 @@
 #include "exception.h"
 #include "ioutil.h"
+#include "mini_uart.h"
 #include "types.h"
 #include "sched.h"
 
@@ -55,6 +56,7 @@ void curr_el_spx_sync_handler(void) {
     }
   } else {
     printf("[ERROR] Handler for EC %u isn't implemented yet" EOL, ec);
+    printf("ELR_EL1 = %#x\n", address);
   }
 }
 

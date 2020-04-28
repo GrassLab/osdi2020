@@ -72,6 +72,7 @@ lower_el_aarch64_sync:
   cmp x0, #0
   beq 0f
 
+  bl enable_interrupt
   ldr x8, [sp, 16 * 4]
   ldp x0, x1, [sp, 16 * 0]
   ldp x2, x3, [sp, 16 * 1]
@@ -83,8 +84,8 @@ lower_el_aarch64_sync:
   b 1f
 0:
   bl curr_el_spx_sync_handler
-  bl post_exception_hook
 1:
+  bl post_exception_hook
   exception_epilogue
 
 lower_el_aarch64_irq:

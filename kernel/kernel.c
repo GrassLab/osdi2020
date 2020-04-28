@@ -15,7 +15,7 @@ int main(void) {
 
   idle_task_init();
   for (int i = 0; i < 10; ++i) {
-//    privilege_task_create(foo);
+    //privilege_task_create(foo);
     privilege_task_create(user_test);
   }
 
@@ -24,25 +24,36 @@ int main(void) {
 
 void idle(void) {
   while (true) {
-    printf("CPU0 is in idle state..." EOL);
-
-    uint64_t sp;
-    asm("mov %0, sp" : "=r"(sp));
-    printf(">> sp = %#x\n", sp);
-
-    for (int i = 0; i < 100000; ++i) {}
+//    printf("CPU0 is in idle state..." EOL);
+//
+//    uint64_t sp;
+//    asm("mov %0, sp" : "=r"(sp));
+//    printf(">> sp = %#x\n", sp);
+//
+//    for (int i = 0; i < 100000; ++i) {}
+    schedule();
   }
 }
 
 void foo(void) {
   for (uint64_t i = 0; ; ++i) {
-    printf("%u: %u..." EOL, get_current_task()->id, i);
-
-    uint64_t sp;
-    asm("mov %0, sp" : "=r"(sp));
-    printf(">> sp = %#x\n", sp);
-
-    for (int i = 0; i < 100000; ++i) {}
+//    printf("%u: %u..." EOL, get_current_task()->id, i);
+//
+//    uint64_t sp;
+//    asm("mov %0, sp" : "=r"(sp));
+//    printf(">> sp = %#x\n", sp);
+//
+//    for (int i = 0; i < 100000; ++i) {}
+    printf("Task %u is reading..." EOL, get_current_task()->id);
+    preempt_disable();
+    for (;;) {
+      char c = mini_uart_getc(true);
+      if (c == 'q') {
+        break;
+      }
+    }
+    preempt_enable();
+    schedule();
   }
 }
 
@@ -51,15 +62,21 @@ void user_test(void) {
 }
 
 void test(void) {
-  uint64_t i = 0;
+//  uint64_t i = 0;
   while (true) {
-    for (int i = 0; i < 100000; ++i) {}
-    printf("user %u: %u\n", get_taskid(), i++);
-
-    uint64_t sp, fp;
-    asm("mov %0, sp" : "=r"(sp));
-    asm("mov %0, x29" : "=r"(fp));
-    printf("sp = %#x\n", sp);
-    printf("fp = %#x\n", fp);
+//    for (int i = 0; i < 100000; ++i) {}
+//    printf("user %u: %u\n", get_taskid(), i++);
+//
+//    uint64_t sp, fp;
+//    asm("mov %0, sp" : "=r"(sp));
+//    asm("mov %0, x29" : "=r"(fp));
+//    printf("sp = %#x\n", sp);
+//    printf("fp = %#x\n", fp);
+    char buf[32] = "";
+    printf("User %u is reading..." EOL, get_taskid());
+    uart_read(buf, 4);
+    printf("User %u read: \"", get_taskid());
+    uart_write(buf, strlen(buf));
+    printf("\"" EOL EOL);
   }
 }
