@@ -29,7 +29,8 @@ typedef enum
 
 struct task
 {
-    struct cpu_context cpu_context;
+	struct cpu_context kernel_context;
+    struct cpu_context user_context;
 	int task_id;
 	int priority;
 	state task_state;

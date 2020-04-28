@@ -155,6 +155,12 @@ void uartHex(unsigned int d)
 
 void uartInt(unsigned int i)
 {
+    if (i == 0)
+    {
+        uartSend('0');
+        return;
+    }
+        
     char buf[256];
     int buf_ptr = 0;
     while (i > 0)

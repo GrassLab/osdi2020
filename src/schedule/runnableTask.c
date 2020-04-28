@@ -2,13 +2,7 @@
 #include "device/uart.h"
 #include "schedule/schedule.h"
 
-void idleTask()
-{
-	while (1)
-	{
-		schedule();
-	}
-}
+// User task
 
 void userTask()
 {
@@ -17,45 +11,43 @@ void userTask()
     }
 }
 
+// Kernel task
+
 void execTask()
 {
     do_exec(&userTask, 1);
 }
 
-void kernelTask1()
+void idleTask()
 {
-    while (1)
-    {
-        if (current->re_schedule == true)
+	while (1)
+	{
+		schedule();
+
+        for (int i = 0; i < 1000000; ++i)
         {
-            uartPuts("task1... issue reschedule\n");
-
-            current->re_schedule = false;
-            schedule();
-
-            // for (int i = 0; i < 15000000; ++i)
-            // {
-            //     asm volatile("nop");
-            // }
+            asm volatile("nop");
         }
-    }
+	}
 }
 
-void kernelTask2()
+void kernelTask()
 {
     while (1)
     {
         if (current->re_schedule == true)
         {
-            uartPuts("task2... issue reschedule\n");
+            uartPuts("Task id: ");
+            uartInt(current->task_id);
+            uartPuts("  issue reschedule\n");
+
+            for (int i = 0; i < 1000000; ++i)
+            {
+                asm volatile("nop");
+            }
 
             current->re_schedule = false;
             schedule();
-
-            // for (int i = 0; i < 15000000; ++i)
-            // {
-            //     asm volatile("nop");
-            // }
         }
     }
 }
