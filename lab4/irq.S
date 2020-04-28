@@ -1,22 +1,17 @@
 .section ".text"
 
-.global enable_interrupt
-.global disable_interrupt
-.global enable_EL0_interrupt
-.global disable_EL0_interrupt
-.global brk_instr
-.global get_sync_exc_param_el1
-.global get_sync_exc_param_el2
-.global sleep
 
+.global enable_interrupt
 enable_interrupt:
 	msr 	DAIFClr, 0xf
 	ret
 
+.global disable_interrupt
 disable_interrupt:
 	msr 	DAIFSet, 0xf
 	ret
 
+.global enable_EL0_interrupt
 enable_EL0_interrupt:
 	mrs 	x0, spsr_el1
 	ldr 	x1, =0xFC3F
@@ -24,6 +19,7 @@ enable_EL0_interrupt:
 	msr 	spsr_el1, x0 	
 	ret
 
+.global disable_EL0_interrupt
 disable_EL0_interrupt:
 	mrs 	x0, spsr_el1
 	ldr 	x1, =0x03C0
@@ -31,10 +27,12 @@ disable_EL0_interrupt:
 	msr 	spsr_el1, x0
 	ret
 
+.global brk_instr
 brk_instr:
 	brk 	#1
 	ret
 
+.global get_sync_exc_param_el1
 get_sync_exc_param_el1:
 	mrs 	x9, esr_el1
 	mrs 	x10, elr_el1
@@ -42,6 +40,7 @@ get_sync_exc_param_el1:
 	str 	x10, [x1]
 	ret
 
+.global get_sync_exc_param_el2
 get_sync_exc_param_el2:
 	mrs 	x9, esr_el2
 	mrs 	x10, elr_el2
@@ -49,7 +48,7 @@ get_sync_exc_param_el2:
 	str 	x10, [x1]
 	ret
 
-
+.global sleep
 sleep:
 	ldr 	x0, =0x1FFFFFF
 loop:
@@ -57,17 +56,21 @@ loop:
 	cbnz 	x0, loop
 	ret
 
-
-.macro SVC_DECLARE svcNum
-.global supervisor_call_\svcNum
-supervisor_call_\svcNum :
-	svc 	\svcNum
+.global get_taskId
+get_taskId:
+	mov 	x8, 0
+	svc 	0
 	ret
-.endm
 
-SVC_DECLARE 1
-SVC_DECLARE 2
-SVC_DECLARE 3
-SVC_DECLARE 4
-SVC_DECLARE 5
-SVC_DECLARE 6
+.global sched_yield
+sched_yield:
+	mov 	x8, 1
+	svc 	0
+	ret
+
+.global uart_write
+uart_write:
+	mov 	x8, 2
+	mov 	x9, x0
+	svc 	0
+	ret

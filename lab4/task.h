@@ -3,7 +3,6 @@
 
 /* ===================== define ===================== */
 typedef struct context_def{
-	// unsigned long long can_corrupt_reg[19];
 	unsigned long long must_preserve_reg[10];
 	unsigned long long fp;
 	unsigned long long lr;

@@ -80,16 +80,23 @@ void show_esr_elr(unsigned long esr, unsigned long elr){
 
 
 /* ========================= system call ========================= */
+void sysCall_handler_el0(){
+    unsigned long long  num = 16;
+    task_t *curTask = get_cur_task();
+    unsigned long long *argu = (unsigned long long*)(curTask->context.kstack - 32 * 8);
+    num = argu[8];
 
-void sched_yield(){
-    supervisor_call_1();
-}
-
-void sysCall_handler_el0(int num){
     switch(num){
+        case 0:
+            argu[0] = curTask->taskId;
+            break;
+
         case 1:
             schedule();
-            // kernel_routine_exit();
+            break;
+
+        case 2:
+            uart_puts((char*)argu[9]);
             break;
 
         default:
@@ -113,8 +120,8 @@ void sync_exc0_handler(){
         // while(1);
         // uart_puts("kernel_routine_entry end\n\n");
 
-        int supervisorCallNum = esr & 0x1FFFFFF;
-        sysCall_handler_el0( supervisorCallNum );
+        int svcNum = esr & 0x1FFFFFF;
+        if(svcNum==0) sysCall_handler_el0();
     }else{
         uart_puts("sync_exc0_handler\n");
         show_esr_elr(esr, elr);
@@ -138,7 +145,7 @@ void sync_exc2_handler(){
     show_esr_elr(esr, elr);
 }
 
-
+/* ========================= IRQ ========================= */
 
 void irq_exc_handler(){
     unsigned int irq_status = *CORE0_IRQ_SOURCE;

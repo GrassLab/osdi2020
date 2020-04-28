@@ -1,9 +1,9 @@
 .macro kernel_entry
 	//load kernel stack
 	ldp x0, x1, [sp, 0]
-	mrs x0, tpidr_el1
-	add x0, x0, 8 * 13 	// move to pcb.kstack address
-	ldr x0, [x0]		// load pcb.kstack
+	mrs x0, tpidr_el1	// x0 = &task_pcb_pool[cur_task]
+	add x0, x0, 8 * 12 	// x0 = &(task_pcb_pool[cur_task].kstack)
+	ldr x0, [x0]		// x0 = task_pcb_pool[cur_task].kstack
 	mov x1, sp
 	mov sp, x0
 	stp x0, x1, [x1, 0]
