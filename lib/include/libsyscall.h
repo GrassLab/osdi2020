@@ -6,5 +6,6 @@
 uint32_t get_taskid(void);
 size_t uart_read(void *buf, size_t count);
 size_t uart_write(const void *buf, size_t count);
+int exec(void(*func)(void));
 
 #endif // LIBSYSCALL_H_

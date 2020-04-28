@@ -34,10 +34,3 @@ get_current_task:
 task_debut_hook:
   bl enable_interrupt
   blr x19
-
-.global el1_to_el0
-el1_to_el0:
-  msr elr_el1, x0
-  msr sp_el0, x1
-  msr spsr_el1, xzr
-  eret

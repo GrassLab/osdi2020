@@ -22,8 +22,13 @@ size_t do_uart_write(const void *buf, size_t count) {
   return count;
 }
 
+void do_exec(void(*func)(void)) {
+  el1_to_el0(func, ustack_pool[get_current_task()->id + 1]);
+}
+
 void *syscall_table[] = {
   do_get_taskid,
   do_uart_read,
-  do_uart_write
+  do_uart_write,
+  do_exec
 };

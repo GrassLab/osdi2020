@@ -4,6 +4,7 @@
 #include "mini_uart.h"
 #include "sched.h"
 #include "shell.h"
+#include "syscall.h"
 
 int main(void) {
   gpio_init();
@@ -14,7 +15,7 @@ int main(void) {
 //  shell();
 
   idle_task_init();
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < 1; ++i) {
     //privilege_task_create(foo);
     privilege_task_create(user_test);
   }
@@ -57,8 +58,21 @@ void foo(void) {
   }
 }
 
+void exec_success(void) {
+  while (true) {
+    for (int i = 0; i < 1000000; ++i) {}
+    printf("exec syscall works!" EOL);
+  }
+}
+
+void exec_test(void) {
+  exec(exec_success);
+  printf("THIS LINE SHOULD NOT BE PRINTED!" EOL);
+}
+
 void user_test(void) {
-  do_exec(test);
+//  do_exec(test);
+  do_exec(exec_test);
 }
 
 void test(void) {

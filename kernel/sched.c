@@ -48,10 +48,6 @@ void schedule(void) {
   }
 }
 
-void do_exec(void(*func)(void)) {
-  el1_to_el0(func, ustack_pool[get_current_task()->id + 1]);
-}
-
 /* This function will be invoked after exception handler return. */
 void post_exception_hook(void) {
   if (get_current_task()->timeslice == 0 && get_current_task()->preempt_count == 0) {

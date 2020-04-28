@@ -44,12 +44,10 @@ void idle_task_init(void);
 void privilege_task_create(void(*func)(void));
 void context_switch(struct task *next);
 void schedule();
-void do_exec(void(*func)(void));
 
 void context_switch_helper(struct task *prev, struct task *next);
 struct task *get_current_task(void);
 void task_debut_hook(void);
-void el1_to_el0(void(*func)(void), uint8_t *ustack);
 
 void preempt_enable(void);
 void preempt_disable(void);
