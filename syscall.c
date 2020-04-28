@@ -53,7 +53,7 @@ void syscall_gettime(double *t)
 
 void syscall_uart_send(char x1)
 {
-    enable_irq();
+    //enable_irq();
     /* wait until we can send */
     do
     {
@@ -61,7 +61,7 @@ void syscall_uart_send(char x1)
     } while (*UART0_FR & 0x20);
     /* write the character to the buffer */
     *UART0_DR = x1;
-    disable_irq();
+    //disable_irq();
 }
 
 void syscall_uart_recv(char *x1)
@@ -73,7 +73,6 @@ void syscall_uart_recv(char *x1)
     } while (*UART0_FR & 0x10);
     *x1 = (char)(*UART0_DR);
     disable_irq();
-    //printf("%c", *x1);
     //bottom_half_set(0x1);
 }
 
@@ -96,6 +95,10 @@ void syscall_exit(int x1)
 void syscall_get_taskid(int *x1)
 {
     *x1 = get_current();
+}
+
+void syscall_signal(int process, int signal)
+{
 }
 
 /* Can't work */
@@ -140,6 +143,9 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         break;
     case 0x32:
         syscall_exit((int)x1);
+        break;
+    case 0x40:
+        syscall_signal((int)x1, (int)x2);
         break;
     // not this syscall
     default:
@@ -206,7 +212,7 @@ int fork()
                  "svc #0x80\n" ::"r"(&return_value));
     if (return_value == 0)
     {
-        //thread_start();
+        // thread_start();
         //asm volatile("mov x29, x10\n");
     }
     return return_value;

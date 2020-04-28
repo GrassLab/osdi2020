@@ -37,6 +37,25 @@ user_context_t *task_user_context(task_t *task)
     return (user_context_t *)p;
 }
 
+void print_cpu_context(cpu_context_t *c)
+{
+    printf("============\n\r");
+    printf("x19: %x\n\r", c->x19);
+    printf("x20: %x\n\r", c->x20);
+    printf("x21: %x\n\r", c->x21);
+    printf("x22: %x\n\r", c->x22);
+    printf("x23: %x\n\r", c->x23);
+    printf("x24: %x\n\r", c->x24);
+    printf("x25: %x\n\r", c->x25);
+    printf("x26: %x\n\r", c->x26);
+    printf("x27: %x\n\r", c->x27);
+    printf("x28: %x\n\r", c->x28);
+    printf("fp: %x\n\r", c->fp);
+    printf("sp: %x\n\r", c->sp);
+    printf("pc: %x\n\r", c->pc);
+    printf("============\n\r");
+}
+
 int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack)
 {
     //preempt_disable();
@@ -50,45 +69,60 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     //p = (task_t *)&kstack_pool[task_id][0];
     p = (task_t *)get_free_page();
 
-    memset((unsigned long *)p, 0, THREAD_SIZE);
+    memset((unsigned short *)p, 0, PAGE_SIZE);
 
     user_context_t *childregs = task_user_context(p);
-    memset((unsigned long *)childregs, 0, sizeof(user_context_t));
-    memset((unsigned long *)&p->cpu_context, 0, sizeof(cpu_context_t));
+    memset((unsigned short *)childregs, 0, sizeof(user_context_t));
+    memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
 
     if (clone_flags & PF_KTHREAD)
     {
         p->cpu_context.x19 = fn;
         p->cpu_context.x20 = arg;
+
+        p->cpu_context.sp = (unsigned long)childregs;
     }
     else if (clone_flags & PF_FORK)
     {
+        memcpy((unsigned short *)p, (unsigned short *)current, PAGE_SIZE);
+        memcpy((unsigned short *)stack, (unsigned short *)current->stack, PAGE_SIZE);
         // stack = p;
+        memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
+        print_cpu_context(&current->cpu_context);
 
         /*** try to fork all kernel thread ***/
         //*p = *current;
 
         user_context_t *cur_regs = task_user_context(current);
         printf("%x %x\n\r", childregs, cur_regs);
+
         *childregs = *cur_regs;
         childregs->regs[0] = 0;
-        childregs->sp = stack + PAGE_SIZE;
+
         printf("%x %x\n\r", childregs->sp, cur_regs->sp);
         //p->cpu_context.sp = childregs->sp;
-        printf("pc: %x, %x\n\r", p->cpu_context.sp, current->cpu_context.sp);
         //p->cpu_context.pc = p->cpu_context.pc + 32;
         p->stack = stack;
+
+        //printf("==sp: %x, stack %x==\n\r", (unsigned long)current->cpu_context.sp, (unsigned long)current);
+        //printf("==sp: %x, stack %x==\n\r", (unsigned long)task_user_context(current)->sp, (unsigned long)current->stack);
+
+        unsigned long offset = (unsigned long)current->cpu_context.sp - (unsigned long)current;
+        p->cpu_context.sp = offset + (unsigned long)p;
+        //p->cpu_context.x19 += offset;
+        //childregs->sp = (unsigned long)task_user_context(current)->sp - (unsigned long)current->stack + (unsigned long)stack;
+        childregs->sp = stack + PAGE_SIZE;
     }
     else
     {
         // stack = p;
         user_context_t *cur_regs = task_user_context(current);
-        printf("%x %x\n\r", childregs, cur_regs);
         *childregs = *cur_regs;
         childregs->regs[0] = 0;
         childregs->sp = stack + PAGE_SIZE;
-        printf("%x %x\n\r", childregs->sp, cur_regs->sp);
         p->stack = stack;
+
+        p->cpu_context.sp = (unsigned long)childregs;
     }
     p->flags = clone_flags;
     //p->priority = current->priority;
@@ -97,7 +131,13 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     p->preempt_count = 1; //disable preemtion until schedule_tail
 
     p->cpu_context.pc = (unsigned long)ret_from_fork;
-    p->cpu_context.sp = (unsigned long)childregs;
+
+    if (clone_flags & PF_FORK)
+    {
+        //p->cpu_context.pc += 64;
+    }
+    //printf("sp: %x, %x\n\r", p->cpu_context.sp, current->cpu_context.sp);
+    //print_cpu_context(&p->cpu_context);
 
     task_pool_len++;
     task_pool[task_id] = p;
@@ -158,7 +198,7 @@ void schedule()
         }
         else
         {
-            DEBUG_LOG_TASK(("\nTASK: %d, %d\n", task_id, p->state));
+            //DEBUG_LOG_TASK(("\nTASK: %d, %d\n", task_id, p->state));
         }
     }
 
@@ -219,5 +259,6 @@ int do_fork()
     unsigned long stack = get_free_page();
     memset((unsigned long *)stack, 0, PAGE_SIZE);
 
-    return copy_process(PF_FORK, 0, 0, stack);
+    return copy_process(0, 0, 0, stack);
+    //return copy_process(PF_FORK, 0, 0, stack);
 }

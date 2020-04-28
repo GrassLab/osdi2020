@@ -89,7 +89,7 @@ void task_1()
 void task_2()
 {
     do_exec((unsigned long)user_syscall_test);
-    if (check_reschedule())
+    while (check_reschedule())
         schedule();
 }
 
@@ -97,7 +97,7 @@ void task_3()
 {
     do_exec((unsigned long)user_task_3);
     //do_exec((unsigned long)&pcsh);
-    if (check_reschedule())
+    while (check_reschedule())
         schedule();
 }
 
@@ -125,7 +125,7 @@ void test()
     {
         fork();
         delay(10000);
-        //fork();
+        fork();
         while (cnt < 10)
         {
             printf("Task id: %d, cnt: %d address: %x\n\r", get_taskid(), cnt, &cnt);
