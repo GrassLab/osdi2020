@@ -2,6 +2,7 @@
 #define SCHED_H_
 
 #include "queue.h"
+#include "types.h"
 
 #define MAX_TASK_NUM 64
 #define MAX_STACK_SIZE 4096

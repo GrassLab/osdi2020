@@ -1,5 +1,6 @@
 #include "exception.h"
 #include "ioutil.h"
+#include "libsyscall.h"
 #include "mini_uart.h"
 #include "sched.h"
 #include "shell.h"
@@ -29,7 +30,7 @@ void idle(void) {
     asm("mov %0, sp" : "=r"(sp));
     printf(">> sp = %#x\n", sp);
 
-    for (int i = 0; i < 10000000; ++i) {}
+    for (int i = 0; i < 100000; ++i) {}
   }
 }
 
@@ -41,7 +42,7 @@ void foo(void) {
     asm("mov %0, sp" : "=r"(sp));
     printf(">> sp = %#x\n", sp);
 
-    for (int i = 0; i < 10000000; ++i) {}
+    for (int i = 0; i < 100000; ++i) {}
   }
 }
 
@@ -52,8 +53,8 @@ void user_test(void) {
 void test(void) {
   uint64_t i = 0;
   while (true) {
-    for (int i = 0; i < 10000000; ++i) {}
-    printf("user print %u\n", i++);
+    for (int i = 0; i < 100000; ++i) {}
+    printf("user %u: %u\n", get_taskid(), i++);
 
     uint64_t sp, fp;
     asm("mov %0, sp" : "=r"(sp));

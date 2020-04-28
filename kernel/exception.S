@@ -67,7 +67,25 @@ curr_el_spx_irq:
   exception_epilogue
 
 lower_el_aarch64_sync:
-  b curr_el_spx_sync
+  exception_prologue
+  bl is_syscall
+  cmp x0, #0
+  beq 0f
+
+  ldr x8, [sp, 16 * 4]
+  ldp x0, x1, [sp, 16 * 0]
+  ldp x2, x3, [sp, 16 * 1]
+  ldp x4, x5, [sp, 16 * 2]
+  adr x9, syscall_table
+  ldr x9, [x9, x8, lsl #3]
+  blr x9
+  str x0, [sp, 16 * 0]
+  b 1f
+0:
+  bl curr_el_spx_sync_handler
+  bl post_exception_hook
+1:
+  exception_epilogue
 
 lower_el_aarch64_irq:
   b curr_el_spx_irq

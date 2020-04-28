@@ -130,3 +130,14 @@ void system_timer_handler(void) {
 void not_implemented_handler(void) {
   mini_uart_puts("This handler is not implemented yet" EOL);
 }
+
+int is_syscall(void) {
+  uint64_t syndrome;
+  asm("mrs %0, esr_el1" : "=r"(syndrome));
+
+  // EC, bits [31:26]
+  // ISS, bits [24:0]
+  uint64_t ec = (syndrome & 0xfc000000) >> 26;
+  uint64_t iss = syndrome & 0x01ffffff;
+  return ec == 0x15 && iss == 0;
+}
