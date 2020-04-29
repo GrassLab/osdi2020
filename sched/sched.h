@@ -37,7 +37,7 @@ void privilege_task_create (void (*func) ());
 #define current get_current()
 extern struct task_struct *get_current ();
 extern void switch_to (struct task_struct *cur, struct task_struct *next);
-struct list_head *run_queue;
+struct list_head *runqueue;
 void schedule ();
 
 
