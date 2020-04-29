@@ -73,25 +73,10 @@ return_to_el1:
     mov     x1,     0x3C0
     msr     SPSR_EL1, x1
 
-    # create IDLE
-    bl      create_idle_task
+    # go to set up init task, and run it
+    bl      run_init_task
 
-    # create main
-    ldr      x0,     =main      // where the acutally main is
-    bl      task_create         // create "main" task
-
-    # create test task 
-    ldr      x0,     =test_task 
-    bl      task_create         
-    
-    # create two test task
-    ldr      x0,     =test_task 
-    bl      task_create         
-    
-    # start from init, which will start to scheduling
-    bl      launch_init  
-
-    # it shall not return
+    # shall not return
     bl      loop
 
 loop:  

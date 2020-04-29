@@ -1,9 +1,29 @@
 .section ".text"
 
+.global run_init_task
 .global launch_init
+
+run_init_task:
+    # init uart first at el1 before anything start
+    bl      uart_init           // defined in uart.c
+
+    # create IDLE   
+    bl      create_idle_task    // defined in task.c
+
+    # create main
+    ldr      x0,     =main      // where the acutally main is
+    bl      task_create         // create "main" task
+
+    # start from init, which will start to scheduling
+    bl      launch_init  
+
+    # it shall never reach
+    ret
 
 # from el1 to el0
 launch_init: 
+
+    # set IDLE are going to run
     ldr     x0,     IDLE            // IDLE would be declare in task.c
     
     msr     TPIDR_EL0, x0
@@ -22,4 +42,5 @@ launch_init:
     bl      irq_el1_enable          // defined in irq.S
     bl      core_timer_enable       // defined in timer.c
 
+    # and go !!
     eret

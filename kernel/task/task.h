@@ -33,9 +33,6 @@ typedef struct {
 
 } thread_info_t;
 
-/* defined in task.S */
-extern void launch_init ( );
-
 /* global variable for other file to use */
 extern thread_info_t * IDLE;
 

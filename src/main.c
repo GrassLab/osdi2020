@@ -6,12 +6,6 @@
 
 int main ( )
 {
-    // set up serial console
-    uart_init();
-
-    // say hello
-    uart_printf("Hello World\n");
-
     while ( 1 )
     {
         uart_printf("Here is main.\n");
