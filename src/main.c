@@ -69,12 +69,24 @@ void main()
     /*
      ** el0 task
      */
-    task_manager_init();
+    // task_manager_init(idle);
+    // enable_irq();
+    // core_timer_enable();
+    // for(int i = 0; i < N; ++i) { // N should > 2
+    //     privilege_task_create(user_test, 0);
+    // }
+    // idle();
+
+    /*
+     ** final test
+     */
+    task_manager_init(final_idle);
     enable_irq();
     core_timer_enable();
-    for(int i = 0; i < N; ++i) { // N should > 2
-        privilege_task_create(user_test, 0);
-    }
-    idle();
+    privilege_task_create(final_user_test, 0);
+    final_idle();
+     
+    
+    
 }
 

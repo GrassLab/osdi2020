@@ -52,8 +52,8 @@
 .endm
 
 .macro LOAD_CONTEXT, el
-    ldp	x22, x23, [sp, #16 * 16]
 	ldp	x30, x21, [sp, #16 * 15] 
+    ldp	x22, x23, [sp, #16 * 16]
 
 	.if	\el == 0
     mrs x1, tpidr_el1
@@ -91,6 +91,21 @@
 
     add    sp,  sp,  #16 * 17
 .endm
+
+.global ret_to_user
+ret_to_user:
+    bl disable_irq
+    LOAD_CONTEXT 0
+    // bl debug
+    mov x0, 0
+    // mrs x1, tpidr_el1
+    // ldr x2, [x1, 8 * 13]
+    // ldr x3, [x1, 8 * 14]
+    // ldr x4, [x1, 8 * 15]
+	// msr	sp_el0, x2
+    // msr	elr_el1, x3
+	// msr	spsr_el1, x4
+    eret
 
 
 __el0_exception_routine:

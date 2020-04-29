@@ -1,8 +1,10 @@
+#define INIT                0
 #define RUN_IN_USER_MODE    1
 #define IN_OUT_KERNEL       2
 #define RUN_IN_KERNEL_MODE  3
 #define IRQ_CONTEXT         4
 #define CONTEXT_SWITCH      5
+#define ZOMBIE              6
 
 
 // the cpu_context's order must be the same as switch_to
@@ -20,13 +22,13 @@ struct cpu_context {
     unsigned long fp;
     unsigned long sp;
     unsigned long pc;
-};
+} __attribute__ ((aligned (8)));
 
 struct user_context {
     unsigned long sp_el0;   // user stack
     unsigned long spsr_el1; // user cpu state
     unsigned long elr_el1;  // user pc 
-};
+} __attribute__ ((aligned (8)));
 
 struct task {
     struct cpu_context cpu_context;
@@ -38,6 +40,7 @@ struct task {
     unsigned long task_id;
     unsigned long parent_id;
     int reschedule_flag;
+    unsigned long trapframe; // only for syscall, eg. fork
 };
 
 struct task_manager {
@@ -45,13 +48,20 @@ struct task_manager {
     char kstack_pool[64][4096];
     char ustack_pool[64][4096];
     unsigned long queue_bitmap;
+    unsigned long zombie_bitmap;
     unsigned int task_num;
-    unsigned int next_task;
     // struct task*(*current)();
 };
 
 
-void task_manager_init();
+struct pt_regs {
+	unsigned long regs[31];
+	unsigned long sp;
+	unsigned long pc;
+	unsigned long pstate;
+};
+
+void task_manager_init(void(*func)());
 int privilege_task_create(void(*func)(), int fork_flag);
 void context_switch(struct task* next);
 struct task* get_current();
@@ -60,12 +70,18 @@ void schedule();
 void kernel_test();
 void idle();
 void user_test();
+void foo();
+void _setup_user_content(void(*func)());
+
 void do_exec(void(*func)());
 int fork();
-void _setup_user_content(void(*func)());
-void foo();
-void test_foo();
-void test();
+int exit(int status);
+void zombie_reaper();
+
+void final_test_foo();
+void final_test(); 
+void final_user_test();
+void final_idle();
 
 #define N 3
 

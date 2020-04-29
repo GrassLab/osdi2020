@@ -46,8 +46,10 @@ set_current:
 .global ret_from_fork
 ret_from_fork:
     // bl    schedule_tail
+    cbz    x19, ret_to_user
     mov    x0, x20
     blr    x19         //should never return
+
 
 .global ret_from_exec
 ret_from_exec:

@@ -53,6 +53,7 @@ void decode_exception(unsigned long esr, unsigned long elr, unsigned long spsr)
     uart_hex(spsr>>16);
     uart_hex(spsr);
     uart_puts("\n");
+    while(1);
 }
 /**
  * common exception handler
@@ -62,6 +63,7 @@ void decode_exception(unsigned long esr, unsigned long elr, unsigned long spsr)
 void exception_handler(unsigned int trapframe)
 {
     struct task* current = get_current();
+    current->trapframe = trapframe;
     current->state = RUN_IN_KERNEL_MODE;
     uart_puts("\r\n++++++++++  exception_handler begin  ++++++++++\n");
     unsigned long esr, elr, spsr; 
@@ -87,6 +89,8 @@ void exception_handler(unsigned int trapframe)
     // syscall - svc #0
     if ((esr>>26)==0b010101) {
         if ((esr&0x1ffffff)==0) {
+            // decode_exception(esr, elr, spsr);
+
             unsigned long sys_ret_val = 0;
             //asm volatile ("ldr %0, [%1, #8 * 8]" :"=r" (x8) :"r"(trapframe));
             sys_ret_val = el0_svc_handler(trapframe);
@@ -94,6 +98,9 @@ void exception_handler(unsigned int trapframe)
         }
     } 
     else {
+        uart_hex(current->user_context.sp_el0);
+        uart_hex(current->user_context.spsr_el1);
+        uart_hex(current->user_context.elr_el1);
         decode_exception(esr, elr, spsr);
     }
 
@@ -145,7 +152,7 @@ unsigned long el0_svc_handler(unsigned int trapframe)
             sys_ret_val = fork();
             break;
         case SYS_EXIT:
-            uart_puts("syscall not implement\n");
+            sys_ret_val = exit(0);
             break;
         case SYS_UART_READ:
             uart_puts("syscall not implement\n");
@@ -157,9 +164,12 @@ unsigned long el0_svc_handler(unsigned int trapframe)
             uart_puts("syscall not found\n");
             break;
     }
+
     disable_irq();
     return sys_ret_val;
 }
+
+
 
 // int get_syscall_no()
 // {
