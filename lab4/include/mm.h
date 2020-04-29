@@ -23,12 +23,10 @@
 #define PAGING_PAGES            (PAGING_MEMORY/PAGE_SIZE)
 
 #ifndef __ASSEMBLER__
-unsigned long get_free_page();
 unsigned long get_kernel_id_page();
-
+unsigned long get_user_page(int pid);
 void free_page(unsigned long p);
 void memzero(unsigned long src, unsigned long n);
-
 #endif
 
 #endif  /*_MM_H */

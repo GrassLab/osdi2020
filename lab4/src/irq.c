@@ -4,6 +4,8 @@
 #include "../include/peripherals/irq.h"
 #include "peripherals/timer.h"
 #include "../include/sched.h"
+
+
 unsigned int core_jf   = 1;
 
 void handle_el1_irq(void)
@@ -33,8 +35,9 @@ void handle_core_timer_irq( void )
 	uart_send_int(core_jf);
 	core_jf += 1;
 	current->counter -= 1;
-	if (current->counter < 0) {
+	if (current->counter <= 0 ) {
 		current->counter = 0;
+		schedule();
 	}
 	return;
 }

@@ -5,23 +5,23 @@
 #include "fork.h"
 #include "../include/sched.h"
 
-void process(char *array) {
-	int i = 0;
-	while (1) {
-		i = 0;
-		while(1) {
-			if (array[i] == '\0')
-				break;
-			uart_send(array[i]);
-			i++;
-		}
+void user_process1(char *array) {
+	// this process run at el0
+	while(1) {
+		uart_send_string(array);
 		delay(100000000);
-		if(current->counter == 0) {
-			schedule();
-		}
 	}
-	return;
 }
+
+void user_process() {
+	//system call for clone process
+	sync_call_clone((unsigned long)user_process1, "Hello world!\r\n");
+	while(1) {
+		uart_send_string("ppppp\r\n");
+		delay(100000000);
+	}
+}
+
 
 int strcmp(char *str1, char *str2) {
     while (1) {
@@ -42,21 +42,22 @@ int strcmp(char *str1, char *str2) {
         str2++;
     }
 }
+
+void kernel_process()
+{
+	uart_send_string("Kernel process start at EL: ");
+	unsigned long err = do_exec((unsigned long)user_process);
+}
+
 void kernel_main(void)
 {	
-	char buffer[100];
 	uart_recv();
 	uart_send_string("uart_init\r\n");
 	uart_send_string("# ");
 	sync_call_time();
-	enable_irq();
-
-	int res = copy_process((unsigned long)&process, (unsigned long)"12345\r\n");
-	if (res != 0) {
-		uart_send_string("fail to fork\r\n");
-	}
-	res = copy_process((unsigned long)&process, (unsigned long)"66666\r\n");
-	if (res != 0) {
+	
+	int res = copy_process(PF_KTHREAD, (unsigned long)kernel_process, 0, 0); //kernel init task fork the process 
+	if (res == -1) {
 		uart_send_string("fail to fork\r\n");
 	}
 	while (1) {

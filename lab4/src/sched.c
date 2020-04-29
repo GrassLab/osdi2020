@@ -15,12 +15,6 @@ void switch_to(struct task_struct * next)
 	cpu_switch_to(prev, next);
 }
 
-void schedule(void)
-{
-	current->counter = 0;
-	_schedule();
-}
-
 void _schedule(void)
 {
 	preempt_disable();
@@ -49,6 +43,13 @@ void _schedule(void)
 	switch_to(task[next]);
 	preempt_enable();
 	return;
+}
+
+
+void schedule(void)
+{
+	current->counter = 0;
+	_schedule();
 }
 
 void schedule_tail(void) 
