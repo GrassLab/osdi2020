@@ -29,7 +29,7 @@
 void _core_timer_enable();
 void reset();
 void _local_timer_handler();
-void set_trap_ret(unsigned long long ret);
+void set_trap_ret(unsigned long long ret, int id);
 int sys_get_taskid();
 
 void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned long long x2, unsigned long long x3)
@@ -77,11 +77,11 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
             }
             else if(x0 == 4) //get task id
             {
-                set_trap_ret((unsigned long long)sys_get_taskid());
+                set_trap_ret((unsigned long long)sys_get_taskid(), get_current_task()->id);
             }
             else if(x0 == 5) //uart read
             {
-                set_trap_ret((unsigned long long)uart_getc());
+                set_trap_ret((unsigned long long)uart_getc(), get_current_task()->id);
             }
             else if(x0 == 6) // uart write
             {
@@ -93,8 +93,35 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
             }
             else if(x0 == 8)
             {
+                
+                extern char *kstack_pool;
+                task *currentsk = get_current_task();
                 int id = sys_do_fork();
                 
+                //uart_hex( currentsk->trapframe[0] );
+                task_pool[id].trapframe = (unsigned long long *)( (unsigned long long)(kstack_pool+(id*4096)) - ((unsigned long long)(kstack_pool+(currentsk->id*4096)) - (unsigned long long)currentsk->trapframe) );
+                
+                fork_ret(&task_pool[id], (kstack_pool+(currentsk->id*4096)));
+                
+                if(get_current_task()->id != id)
+                {
+                    set_trap_ret(id, currentsk->id);
+                }
+                else{
+                    set_trap_ret(0, id);
+                }
+                //uart_hex( task_pool[id].trapframe[0] );
+                
+               
+            }
+            else if(x0 == 9)
+            {
+                //x1 = exit value
+                runqueue_del(get_current_task()->id);
+            }
+            else if(x0 == 10)
+            {
+                uart_hex(x1);
             }
             else
             {
@@ -160,7 +187,7 @@ void irq_hanlder()
         _global_coretimer = core_count;
 
         if( ((core_count - current_task->start_coretime) > 2) || ((core_count - current_task->start_coretime) < 0 ) ){
-            uart_puts("\r\nset\r\n");
+            //uart_puts("\r\nset\r\n");
             //current_task->reschedule = 1;
             asm volatile("msr cntp_tval_el0, %0"::"r"(EXPIRE_PERIOD):);
             asm volatile("msr daifclr, 0xf");
@@ -271,10 +298,10 @@ void _local_timer_handler()
     uart_hex(local_count);
 }
 
-void set_trap_ret(unsigned long long ret)
+void set_trap_ret(unsigned long long ret, int id)
 {
-    task *current = get_current_task();
-    current->trapframe[0] = ret;
+    //task *current = get_current_task();
+    task_pool[id].trapframe[0] = ret;
 }
 
 int sys_get_taskid()
@@ -285,14 +312,23 @@ int sys_get_taskid()
 
 int sys_do_fork()
 {
-    task *current = get_current_task(), *new;
-    int new_id = privilege_task_create((void *)current->fp_lr[1]);
-    *new = task_pool[new_id];
-    for(int i=0;i<10;i++)
+    extern char *kstack_pool;
+    task *current = get_current_task();
+    int new_id = privilege_task_create((void *)current->fp_lr[1]); //will not use this ret address
+    
+    task_pool[new_id].elr_el1 = current->elr_el1;
+    task_pool[new_id].spsr_el1 = current->spsr_el1;
+    unsigned long long sgap = ((unsigned long long)(kstack_pool+(kernel_stack_size*4096))+(current->id*4096) - current->sp_el0);
+    task_pool[new_id].sp_el0 -= sgap;
+    
+    //uart_hex(sgap);
+    //uart_getc();
+    //while(1);
+    for(int i=0;i<sgap;i++)
     {
-        new->x19_x28[i] = current->x19_x28[i];
+        ((char*)task_pool[new_id].sp_el0)[i] = ((char*)current->sp_el0)[i];
     }
-    new->fp_lr[0] = current->fp_lr[0];
-    new->fp_lr[1] = current->fp_lr[1];
+    
+    return new_id;
 }
 //b *0x81e24

@@ -263,6 +263,27 @@ void utask5()
 	}
 }
 
+void utask6()
+{
+	int id = fork();
+	if(id == 0)
+	{
+		while(1)
+		{
+			uart_write("utask 88888888\r\n");
+			delay();
+		}
+	}
+	else{
+		while(1)
+		{
+			uart_write("utask 6\r\n");
+			delay();
+		}
+	}
+	
+}
+
 void utask2()
 {
 	/*unsigned long long sp;
@@ -304,6 +325,12 @@ void task4()
 	do_exec(utask2);
 }
 
+void task6()
+{
+	toggle_privilege();
+	do_exec(utask6);
+}
+
 
 
 void kernel_init()
@@ -323,8 +350,9 @@ void kernel_init()
 	int idleid = privilege_task_create(idle);
 	//privilege_task_create(task1);
 	//privilege_task_create(task2);
-	privilege_task_create(task3);
-	privilege_task_create(task4);
+	//privilege_task_create(task3);
+	//privilege_task_create(task4);
+	privilege_task_create(task6);
 	//unsigned long long addrrr = &task_pool[t1];
 	
 	
@@ -359,3 +387,5 @@ int fork()
 {
 	return syscall(8);
 }
+
+

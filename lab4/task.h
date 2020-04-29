@@ -31,7 +31,8 @@ typedef struct task_queue{
     struct task *taskq[64];
 } task_queue;
 
-
+//extern __attribute__((section(".userspace"))) char kstack_pool[64][4096];
+//extern __attribute__((section(".userspace"))) char user_pool[64][4096];
     
 //__attribute__ ((section (".userspace"))) char kstack_pool[64][4096];
 
@@ -47,3 +48,4 @@ void task_schedule();
 task *get_current_task();
 void toggle_privilege();
 void do_exec(void(*func)());
+void runqueue_del(int id);
