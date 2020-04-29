@@ -8,7 +8,6 @@
 # save general registers to stack
 .macro save_reg
 
-    sub     sp,     sp,     32 * 8
     stp     x0,     x1,     [sp ,16 * 0]
     stp     x2,     x3,     [sp ,16 * 1]
     stp     x4,     x5,     [sp ,16 * 2]
@@ -23,14 +22,27 @@
     stp     x22,    x23,    [sp ,16 * 11]
     stp     x24,    x25,    [sp ,16 * 12]
     stp     x26,    x27,    [sp ,16 * 13]
-    stp     x28,    x29,    [sp ,16 * 14]
-    str     x30,            [sp, 16 * 15]
+    stp     x28,    fp,     [sp ,16 * 14]
+    str     lr,             [sp, 16 * 15]
+    
+    mrs     x9,     SP_EL0  
+    str     x9,             [sp, 16 * 15 + 8]   /* save the location of the current user stack */
+
+    mrs     x9,     ELR_EL1  
+    str     x9,             [sp, 16 * 16 + 8]       /* the program counter after return to el0 */
 
 .endm
 
 # load general registers from stack
 .macro load_reg
 
+    ldr     x9,     [sp ,16 * 15 + 8]   /* get the location of the user stack */
+    msr     SP_EL0, x9                  /* save it to the sp_el0 */
+
+    ldr     x9,     [sp ,16 * 16 + 8]   /* get the program counter used in user mode */
+    msr     ELR_EL1, x9                 /* save it to the elr_el1 */
+    
+    /* load other general register */
     ldp     x0,     x1,     [sp ,16 * 0]
     ldp     x2,     x3,     [sp ,16 * 1]
     ldp     x4,     x5,     [sp ,16 * 2]
@@ -45,17 +57,42 @@
     ldp     x22,    x23,    [sp ,16 * 11]
     ldp     x24,    x25,    [sp ,16 * 12]
     ldp     x26,    x27,    [sp ,16 * 13]
-    ldp     x28,    x29,    [sp ,16 * 14]
-    ldr     x30,            [sp, 16 * 15]
-    add     sp,     sp,     32 * 8
+    ldp     x28,    fp,     [sp ,16 * 14]
+    ldr     lr,             [sp, 16 * 15]
+
+.endm
+
+.macro kernel_entry
+    
+    mrs x9, TPIDR_EL0   /* get the current task info */
+    ldr x9, [x9]
+    mov sp, x9          /* this sp is el1_sp, when jump to el1 */
+
+    save_reg            /* save the current register status */
+
+    mrs x9, TPIDR_EL0
+    ldr x9, [x9, 8 * 32]  /* get kernel stack of the current task */
+    mov sp, x9
+
+.endm
+
+.macro kernel_exit
+
+    mrs x0, TPIDR_EL0   /* retrieve what is going to do next */
+    ldr x0, [x0]
+    mov sp, x0
+
+    load_reg
+    
+    mov sp, #0x70000    /* location for the el1 for the next trapped */
     eret
 
 .endm
 
 _exception__handler_el1:
-    save_reg
+    kernel_entry
     bl      exec_controller_el1
-    load_reg
+    kernel_exit
 
 _irq__handler_el1:
     # how to make macro gloabl?

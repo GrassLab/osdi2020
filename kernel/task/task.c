@@ -1,3 +1,4 @@
+#include "kernel/exception/exception.h"
 #include "kernel/peripherals/time.h"
 #include "kernel/peripherals/uart.h"
 #include "lib/type.h"
@@ -18,32 +19,38 @@ void idle ( )
     {
         uart_printf("I am idle.\n");
         RESCHED_FLAG = 1;
-        schedule ( );
-        wait_msec(500000);
+        
+        LAUNCH_SYS_CALL ( SYS_CALL_SCHEDULE );
+        
+        // schedule ( );
+        // wait_msec(500000);
     }
 }
 
-int privilege_task_create ( void(*func)() )
+void create_idle_task ( )
 {
-    /* create IDLE task at first */
-    if ( IDLE == NULL )
-    {
-        pcb_t * idle_pcb = allocate_pcb ( 0 );
+    pcb_t * idle_pcb = allocate_pcb ( 0 );
 
-        IDLE = idle_pcb -> thread_info;
-        IDLE -> state = RUNNING;
-        IDLE -> func = idle;
-        IDLE -> priority = 1;
-        IDLE -> counter = 0;
+    IDLE = idle_pcb -> thread_info;
+    IDLE -> state = RUNNING;
+    IDLE -> func = idle;
+    IDLE -> priority = 1;
+    IDLE -> counter = 0;
 
-        (IDLE -> cpu_context).x19 = (unsigned long)idle;
-        (IDLE -> cpu_context).lr  = (unsigned long)default_task_start;
-        (IDLE -> cpu_context).sp  = (unsigned long)idle_pcb -> kernel_stack_ptr;
+    (IDLE -> cpu_context).x[19] = (unsigned long)idle;
+    (IDLE -> cpu_context).lr  = (unsigned long)default_task_start;
+    (IDLE -> cpu_context).user_sp  = (unsigned long)idle_pcb -> user_stack_ptr;
+    (IDLE -> cpu_context).kernel_sp  = (unsigned long)idle_pcb -> kernel_stack_ptr;
+    (IDLE -> cpu_context).user_mode_pc  = (unsigned long)default_task_start;
 
-        /* reserve one for idle task*/
-        TASK_POOL_USAGE = 1;
-    }
+    uart_printf ("%x\n", & ( (IDLE -> cpu_context).x[19]));
 
+    /* reserve one for idle task*/
+    TASK_POOL_USAGE = 1;
+}
+
+int task_create ( void(*func)() )
+{
     /* find the one that can be used */
     int task_id = find_usable_in_pool ();
 
@@ -63,9 +70,11 @@ int privilege_task_create ( void(*func)() )
     thread_info -> priority = 1;   /* all task has the same priority */
     thread_info -> counter = 2;
 
-    (thread_info -> cpu_context).x19 = (unsigned long)func;
+    (thread_info -> cpu_context).x[19] = (unsigned long)func;
     (thread_info -> cpu_context).lr =  (unsigned long)default_task_start;
-    (thread_info -> cpu_context).sp =  (unsigned long)(new_task -> kernel_stack_ptr);
+    (thread_info -> cpu_context).user_sp =  (unsigned long)(new_task -> user_stack_ptr);
+    (thread_info -> cpu_context).kernel_sp =  (unsigned long)(new_task -> kernel_stack_ptr);
+    (thread_info -> cpu_context).user_mode_pc =  (unsigned long)default_task_start;
 
     /* save it into the pool */
     TASK_POOL[task_id] = thread_info;
@@ -91,4 +100,15 @@ int find_usable_in_pool ()
     }
 
     return -1;
+}
+
+extern int main ();
+
+/* here is still in el1 */
+/* create task of main, and launch it */
+void launch_main ( )
+{
+    task_create ( ( void * )( main ) );
+    
+    launch_init ( );
 }

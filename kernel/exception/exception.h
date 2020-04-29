@@ -10,6 +10,7 @@
 #define SYS_CALL_CORE_TIMER_ENABLE      "svc #5;"
 #define SYS_CALL_CORE_TIMER_DISABLE     "svc #6;"
 #define SYS_CALL_PRINT_TIMESTAMP_EL0    "svc #7;"
+#define SYS_CALL_SCHEDULE               "svc #8;"
 
 #define HYPERVISORE_CALL_TEST_HVC       "hvc #2;"
 
@@ -24,6 +25,7 @@ enum system_call {
     CORE_TIMER_ENABLE,
     CORE_TIMER_DISABLE,
     PRINT_TIMESTAMP_EL0,
+    SCHEDULE,
 };
 
 enum exception_level {

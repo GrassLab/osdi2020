@@ -10,19 +10,12 @@ typedef enum {
 
 typedef struct {
 
-    unsigned long x19;
-    unsigned long x20;
-    unsigned long x21;
-    unsigned long x22;
-    unsigned long x23;
-    unsigned long x24;
-    unsigned long x25;
-    unsigned long x26;
-    unsigned long x27;
-    unsigned long x28;
-    unsigned long fp;   // x29
-    unsigned long lr;   // x30
-    unsigned long sp;
+    unsigned long x[29];    // x0~x28 
+    unsigned long fp;       // x29
+    unsigned long lr;       // x30
+    unsigned long user_sp;
+    unsigned long kernel_sp;
+    unsigned long user_mode_pc; /* to save the exec location, while trapped into kernel mode  */
 
 } context_t;
 
@@ -42,16 +35,15 @@ typedef struct {
 /* defined in task.S */
 extern void switch_to ( thread_info_t *, thread_info_t * );
 extern void launch_init ( );
-extern thread_info_t* get_current_task ();
 extern void default_task_start();
 
 /* global variable for other file to use */
 extern thread_info_t * IDLE;
 
 void idle ( );
-int privilege_task_create ( void(*func)() );
-int find_usable_in_pool ();
-void context_switch ( thread_info_t * next );
-void schedule ( );
+void create_idle_task ( );
+int task_create ( void(*func)() );
+int find_usable_in_pool ( );
+void launch_main ( );
 
 #endif

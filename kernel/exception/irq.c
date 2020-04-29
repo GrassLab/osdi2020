@@ -16,7 +16,7 @@ void irq_controller_el1 ( )
         core_timer_reload ();
 
         /* update current task counter */
-        thread_info_t * current_task = get_current_task ();
+        thread_info_t * current_task = get_current_task_el0 ();
         (current_task -> counter) --;
         
         /* check if need to do reschedule */

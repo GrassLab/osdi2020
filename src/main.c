@@ -3,17 +3,9 @@
 
 #include "shell.h"
 #include "test_task.h"
+#include "kernel/exception/exception.h"
 
-int el1_main ()
-{
-    uart_init ( );
-
-    task_schedule_test ();
-
-    return 0;
-}
-
-int main()
+int main ( )
 {
     // set up serial console
     uart_init();

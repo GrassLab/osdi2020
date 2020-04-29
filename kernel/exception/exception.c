@@ -1,5 +1,6 @@
 #include "kernel/peripherals/time.h"
 #include "kernel/peripherals/uart.h"
+#include "kernel/task/schedule.h"
 #include "lib/type.h"
 
 #include "exception.h"
@@ -42,6 +43,9 @@ void exec_controller_el1 ( )
             break;
         case PRINT_TIMESTAMP_EL0:
             print_current_timestamp ();
+            break;
+        case SCHEDULE:
+            schedule ();
             break;
         default:
             print_exec_info ( EL1, elr, esr );
