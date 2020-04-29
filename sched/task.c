@@ -16,3 +16,13 @@ privilege_task_create (void (*func) ())
   task_pool[i].ctx.sp = (size_t) &task_pool[i].kstack[0x1000];
   list_add_tail (&task_pool[i].list, runqueue);
 }
+
+void
+do_exec (void (*func) ())
+{
+  asm volatile ("mov x0, %0\n"
+		"msr sp_el0, x0\n"
+		"msr spsr_el1, xzr\n"
+		"msr elr_el1, %1\n"
+		"eret\n"::"r" (&current->stack[0x1000]), "r" (func):"x0");
+}

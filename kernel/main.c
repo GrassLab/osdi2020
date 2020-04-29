@@ -21,20 +21,20 @@
 void
 echo_and_delay ()
 {
-  size_t t, cnt, freq;
+  double t;
   while (1)
     {
-      printf ("echo %d\n", (int) current->task_id);
-      sys_get_time (&cnt, &freq);
-      t = cnt;
-      while (cnt - t < freq / 2)
-	sys_get_time (&cnt, &freq);
-      if (current->resched)
-	{
-	  current->resched = 0;
-	  schedule ();
-	}
+      uart_puts ("echo haha\r\n");
+      t = get_time ();
+      while (get_time () - t < 1);
     }
+}
+
+void
+echo_and_do_exec ()
+{
+  printf ("echo kernel %d\r\n", (int) current->task_id);
+  do_exec (&echo_and_delay);
 }
 
 int
@@ -53,11 +53,11 @@ main (int error, char *argv[])
       uart_puts (argv[0]);
       uart_puts ("-----------------------------\n");
     }
-  privilege_task_create (&echo_and_delay);
-  privilege_task_create (&echo_and_delay);
-  privilege_task_create (&echo_and_delay);
-  privilege_task_create (&echo_and_delay);
-  privilege_task_create (&echo_and_delay);
+  privilege_task_create (&echo_and_do_exec);
+  privilege_task_create (&echo_and_do_exec);
+  privilege_task_create (&echo_and_do_exec);
+  privilege_task_create (&echo_and_do_exec);
+  privilege_task_create (&echo_and_do_exec);
   sys_core_timer_enable ();
   switch_to (&fake, &task_pool[0]);
   shell_interactive ();
