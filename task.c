@@ -90,7 +90,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     {
         memcpy((unsigned short *)p, (unsigned short *)current, PAGE_SIZE);
         memcpy((unsigned short *)stack, (unsigned short *)current->stack, PAGE_SIZE);
-        //memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
+        memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
 
         // stack = p;
         print_cpu_context(&current->cpu_context);
@@ -120,7 +120,12 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
         printf("task off %d, u off %d\n\r", kstack_offset, ustack_offset);
 
         p->cpu_context.sp = (unsigned long)p + kstack_offset;
-        //p->cpu_context.x19 = 0;
+
+        /*
+        p->cpu_context.x19 = current->cpu_context.x19;
+        p->cpu_context.x20 = current->cpu_context.x20;
+        */
+
         childregs->sp = stack + ustack_offset;
     }
     else
