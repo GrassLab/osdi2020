@@ -23,7 +23,7 @@ void free_pid(int i){
 	pid_map[i]=0;
 }
 
-int privilege_task_create(void(* fn)){
+int privilege_task_create(void(* fn),int priority){
 	preempt_disable();
 	struct task_struct *p;
 
@@ -38,8 +38,8 @@ int privilege_task_create(void(* fn)){
 	p->cpu_context.x19 = (unsigned long)fn;
 	
 	p->state = TASK_RUNNING;
-	p->priority = 1;
-	p->counter = 1;
+	p->priority = priority;
+	p->counter = p->priority;
 	p->preempt_lock = 1;
 
 	p->cpu_context.pc = (unsigned long)ret_from_fork;
@@ -49,7 +49,7 @@ int privilege_task_create(void(* fn)){
 	task[pid] = p;	
 	p->pid = pid;
 
-	runQ_push(runQ,&runQ_tail,pid);
+	priorityQ_push(&runqueue,p->priority,p->pid);	
 	preempt_enable();
 	return pid;
 }
@@ -100,7 +100,7 @@ int user_task_create()
 
 	//dump_mem((void *)childregs->regs[29],copy_byte);
 	
-	runQ_push(runQ,&runQ_tail,pid);
+	priorityQ_push(&runqueue,p->priority,p->pid);	
 	preempt_enable();
 	return pid;
 }

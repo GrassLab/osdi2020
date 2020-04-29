@@ -7,6 +7,8 @@
 #include "include/fork.h"
 #include "include/printf.h"
 #include "include/irq.h"
+#include "include/peripherals/uart.h"
+#include "include/signal.h"
 
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
@@ -69,35 +71,46 @@ void exception_handler(unsigned long type,unsigned long esr, \
 
 // Since my system call just need no more than two argument now
 unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
+
 	switch(sys_call_num){
+		// Core timer
 		case 0:{
 			core_timer_enable();
 			return 0;
-		       }
+		}
+		// DAIF information
 		case 1:{
 			unsigned int daif;
           		asm volatile ("mrs %0, daif" : "=r" (daif));
-          		uart_send_string("DAIF is: ");
-          		uart_hex(daif);
- 		        uart_send_string("\r\n");
+          		printf("DAIF is %x\r\n",daif);
+			
 			return 0;
 		}
+		// kill
 		case 2:{
-			//??
+			struct task_struct *p = task[arg0];
+			if(p)
+				p -> pending_signal = SIGKILL;
+			return 0;
 		}
+		// fork
 		case 3:{
 			return user_task_create();
 		}
+		// exec
 		case 4:{
 		 	return do_exec((void *)arg0);      
 		}
+		// exit
 		case 5:{
 			exit_process();
 			return 0;
 		}
+		// get task pid
 		case 6:{
 			return current->pid;
 		}
+		//  uart write
 		case 7:{
 			int success = 0;
 			int ret = 0;
@@ -109,19 +122,53 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			}
 		 	return success;	
 		}
+		// uart read
 		case 8:{
 			char recv_char;
 			int i = 0;
-			enable_irq(); // Enable irq here for read
+			int flag = 0;
+			
+			// Since I don't want to enable interrupt
+			// Now I just change uart to round robin mode	
 			for(;i<arg1;i++){
-				recv_char = uart_recv();
-				uart_send(recv_char);
-
+				//recv
+				while(get32(UART0_FR)&0x10);
+				recv_char = (get32(UART0_DR)&0xFF);
+				//send
+				while(get32(UART0_FR)&0x20);
+				put32(UART0_DR,recv_char);
+ 				
+				if(recv_char =='\n' || recv_char == '\r'){
+					flag = 1;
+					break;
+				}
+		                 
 				((char*)arg0)[i] = recv_char;
 			}
-			disable_irq(); // Disable for safety...?
-		 		
+			
+			while(flag==0){
+				//recv
+				while(get32(UART0_FR)&0x10);
+				recv_char = (get32(UART0_DR)&0xFF);
+				//send
+				while(get32(UART0_FR)&0x20);
+				put32(UART0_DR,recv_char);
+
+				if(recv_char =='\n' || recv_char == '\r')
+					break;
+			}	
+			
+			// send "\r\n"
+			while(get32(UART0_FR)&0x20);
+			put32(UART0_DR,'\r');
+			while(get32(UART0_FR)&0x20);
+			put32(UART0_DR,'\n');
+
 			return i;	
+		}
+		// get priority
+		case 9:{
+			return current->priority;
 		}
 
 	}

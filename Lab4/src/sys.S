@@ -12,9 +12,9 @@ call_daif:
 	svc #0
 	ret
 
-.global unknown
-unknown:
-	mov x8,UNKNOWN
+.global kill
+kill:
+	mov x8,SYS_KILL
 	svc #0
 	ret
 
@@ -52,4 +52,11 @@ uart_write:
 uart_read:
 	mov x8,SYS_UART_READ
 	svc #0
-	ret	
+	ret
+
+	
+.global get_priority
+get_priority:
+	mov x8,SYS_GET_PRIORITY
+	svc #0
+	ret

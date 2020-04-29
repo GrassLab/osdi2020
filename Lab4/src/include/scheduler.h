@@ -14,11 +14,6 @@
 
 extern struct task_struct *task[NR_TASKS];
 
-//for runQ 
-int runQ_head;
-int runQ_tail;
-int runQ[NR_TASKS];
-
 struct cpu_context {
     unsigned long x19;
     unsigned long x20;
@@ -38,11 +33,13 @@ struct cpu_context {
 struct task_struct{
 	struct cpu_context cpu_context;
 	int pid;
+	int pending_signal;
 	long state;
 	long priority;
 	long counter;
 	long preempt_lock;
 	unsigned long stack;
+	
 };
 
 
@@ -60,7 +57,7 @@ extern void timer_tick();
 extern void exit_process();
 
 #define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-	0,0,1,0,0,0} 
+	0,0,0,1,0,0,0} 
 
 #endif
 #endif /*_SCHEDULER_H */

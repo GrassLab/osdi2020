@@ -29,11 +29,12 @@ void _schedule(void)
 		next = 0;
 		flag = 0;
 		
-		if(!isempty(runQ_head,runQ_tail)){
-			next = runQ_pop(runQ,&runQ_head);
+		if(runqueue.heap_size>0){ //not empty queue
+			next = priorityQ_pop(&runqueue);
+			//printf("next %d\r\n",next);
 			p = task[next];
 		  	if (p && p->state == TASK_RUNNING && p->counter>0){
-				runQ_push(runQ,&runQ_tail,next);
+				priorityQ_push(&runqueue,p->priority,next);
 				break;
 			}
 			// Else: a not running state task in queue...?
@@ -48,12 +49,13 @@ void _schedule(void)
 				if (p && p->state==TASK_RUNNING) {
 					flag = 1;
 					p->counter = p->priority;
-					runQ_push(runQ,&runQ_tail,i);
+					priorityQ_push(&runqueue,p->priority,i);
 				}
 			}
 
-			if(flag == 1)
+			if(flag == 1){
 				continue;
+			}
 			// No running state task, then just switch to any IDLE task
 			else{
 				next = 0; 
@@ -83,8 +85,8 @@ void context_switch(struct task_struct * next)
 
 
 void init_runQ(){
-	runQ_head = 0;
-	runQ_tail = 0;
+//	runQ_head = 0;
+//	runQ_tail = 0;
 }
 
 void schedule_tail(void) {
@@ -99,7 +101,7 @@ void timer_tick(){
 	}
 	// If counter <=0, it means reschedule flag set.
 	current->counter=0;
-	//printf("Reschedule pid %d\r\n",current->pid);
+	printf("\r\n### No timeslice fot pid %d, reschedule\r\n",current->pid);
 	
 	enable_irq(); //you have to enable irq in schedule state when in EL1
 			//When in EL0, it's not neccessary but need to protect kernel preemption
@@ -111,6 +113,7 @@ void exit_process(){
 	preempt_disable();
 	for (int i = 0; i < NR_TASKS; i++){
 		if (task[i] == current) {
+			printf("@@@ Done task %d, now exit\r\n",current->pid);
 			task[i]->state = TASK_ZOMBIE;
 			break;
 		}

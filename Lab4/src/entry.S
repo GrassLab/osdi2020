@@ -77,10 +77,10 @@ exception_table:
 
     // IRQ 0x280
     .align  7
-    b push_reg_el1_irq
+    b       push_reg_el1_irq
 after_push_el1_irq:
-    bl      irq_handler
-    b pop_reg_el1
+    bl      irq_handler 
+    b       pop_reg_el1
 
     // FIQ 0x300
     .align  7
@@ -119,6 +119,7 @@ after_push_el0:
     b push_reg_el0_irq //so stupid...right?
 after_push_el0_irq:
     bl      irq_handler
+    bl      signal_handler // Signal handler before you exit kernel
     b pop_reg_el0
     
     // FIQ 0x500
@@ -184,11 +185,14 @@ not_syscall:
     	mrs     x1, esr_el1
     	mrs     x2, elr_el1
     	bl      exception_handler
-    	b pop_reg_el0
+    	b end_of_exc
 
 ret_from_syscall: 
         bl disable_irq // disable interrupts before pulling preserved data off the stack
 	str	x0, [sp, #0] // save x0 on stack for return
+    
+end_of_exc:
+	bl      signal_handler // Signal handler before you exit kernel
         b pop_reg_el0
 
 

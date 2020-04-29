@@ -26,5 +26,4 @@ core_timer_handler:
   bl timer_tick //call schedule in timer
   ldr x30,[sp,#16*0]
   add sp,sp,#16
-
   ret

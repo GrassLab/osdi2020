@@ -11,6 +11,8 @@
 #include "include/mm.h"
 #include "include/scheduler.h"
 #include "include/printf.h"
+#include "include/signal.h"
+#include "include/queue.h"
 
 void get_board_revision_info(){
   mbox[0] = 7 * 4; // buffer size in bytes
@@ -81,26 +83,29 @@ void mytest(){
 	success_write = uart_write(buffer,sizeof(buffer));
 	printf("Write byte: %d\r\n",success_write);*/
 
-	/* uart_read test
-	char buffer[4];
+	/*uart_read test
+	char buffer[16];
 	int success_read;
 	printf(">>");
 	success_read = uart_read(buffer,sizeof(buffer));
 	printf("\r\nRead byte %d: ", success_read);
-	for(int i=0;i<sizeof(buffer);i++)
-		printf("%c",buffer[i]);
+	
+	if(success_read>0){
+		for(int i=0;i<sizeof(buffer);i++)
+			printf("%c",buffer[i]);
+	}
 	printf("\r\n");*/
 
-	int cnt = 2;
-	fork();
+	int cnt = 1;
+	int pid = fork();
 	
 	while(cnt < 10) {
-		printf("Task id: %d, cnt addr: 0x%x, value: %d\n", get_taskid(), &cnt, cnt);
-		delay(1000000);
+		printf("Task id: %d (priority %d), cnt addr: 0x%x, value: %d\n", get_taskid(),get_priority(), &cnt, cnt);
+		delay(100000000);
 		++cnt;
+		if(pid>0&&cnt>7)
+			kill(pid,SIGKILL);
 	}
-	printf("Task id: %d, cnt addr: 0x%x, value: %d\n", get_taskid(), &cnt, cnt);
-	printf("\r\n");
 	exit(0);
 }
 
@@ -128,15 +133,16 @@ void test() {
 }
 
 void kernel_process(){
-	int err = do_exec(test);
+	int err = do_exec(mytest);
     	if (err < 0){
         	printf("Error while moving process to user mode\r\n");
     	}
 }
 
 void zombie_reaper(){
-	printf("### Init zombie_reaper process...... \r\n");	
 	while(1){
+		schedule(); // It's Ok to let others doing first
+		delay(100000);
 		struct task_struct *p;
 		for (int i=0; i < NR_TASKS;i++){
 			p = task[i];
@@ -167,24 +173,26 @@ void kernel_main(void)
     get_board_revision_info();
     get_VC_core_base_addr();
  
-    init_runQ(); 
+    //init_runQ(); 
+    init_priority_queue(runqueue);
     init_idle_task(task[0]); // must init 'current' as idle task first 
    
 
     // Here init a task being zombie reaper
-    int res = privilege_task_create(zombie_reaper);
+    int res = privilege_task_create(zombie_reaper,2);
     if (res < 0) {
         	printf("error while starting process");
         	return;
     }
 
-    for(int num=0;num<1;num++){ 
-    	int res = privilege_task_create(kernel_process);
+    for(int num=0;num<2;num++){ 
+    	int res = privilege_task_create(kernel_process,num+1);
+
     	if (res < 0) {
         	printf("error while starting process");
         	return;
     	}
     }	
-    
+   	
     idle();
 }
