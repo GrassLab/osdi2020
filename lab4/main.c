@@ -5,7 +5,17 @@
 #include "syscall.h"
 #include "task.h"
 
-#define Idle_size 0x0ffffff;
+#define Idle_size 0x00fffff;
+
+char uart_read();
+void uart_write(char *c);
+void exec(void(*func)());
+
+void delay()
+{
+	unsigned long long size = Idle_size;
+	while(size--){asm volatile("nop");}
+}
 
 void myreadline(char *str, int max_size)
 {
@@ -173,7 +183,7 @@ here:
 
 	current_task->reschedule = 0;
 	uart_puts("flag done....1\r\n");
-	task_schedule(0, sp, 0);
+	task_schedule();
 
 	//context_switch(&task_pool[3]);
 	goto here;
@@ -199,7 +209,8 @@ here2:
 
 	current_task->reschedule = 0;
 	uart_puts("flag done ....2\r\n");
-	task_schedule(0, sp, 0);
+	//uart_getc();
+	task_schedule();
 	//context_switch(&task_pool[2]);
 	goto here2;
 }
@@ -208,36 +219,89 @@ void idle()
 {
 	while(1){
 		uart_puts("idle now\r\n");
-		task_schedule(0, task_pool[1].ksp, 0);
+		task_schedule();
 	}
 }
 
-void do_exec(void(*func)())
-{
-	task *current;
-	asm volatile("mrs %0,tpidr_el1":"=r"(current)::);
-	asm volatile("msr sp_el0, %0"::"r"(current->usp):);
-	asm volatile("msr spsr_el1, %0"::"r"(0):);
-	asm volatile("msr elr_el1, %0"::"r"(func):);
-	asm volatile("eret");
-}
+
 
 void utask()
 {
-here3:
-	show_svc_info();
+
+	//uart_getc();
+	//show_svc_info();
 	//task_schedule(0);
-	while(!task_pool[4].reschedule){asm volatile("nop");}
+	/*unsigned long long sp;
+here3:
+	uart_puts("utask1\r\n");
+	asm volatile("mov %0, sp":"=r"(sp));
+	uart_puts("utask sp: ");
+	uart_hex(sp);
+	uart_puts("\r\n");
+	//while(!task_pool[2].reschedule){asm volatile("nop");}
+	//task_pool[2].reschedule = 0;
 	uart_puts("call sch\r\n");
 	asm volatile("mov x0, #3");
 	asm volatile("svc #0");
-	goto here3;
+	goto here3;*/
+	while(1)
+	{
+		int id = (int)syscall(4); //get user id
+		uart_write("task 1: ");
+		uart_hex(id);
+		uart_write("\r\n");
+		delay();
+	}
 }
+
+void utask5()
+{
+	while(1)
+	{
+		uart_write("utask 5\r\n");
+		delay();
+	}
+}
+
+void utask2()
+{
+	/*unsigned long long sp;
+here4:
+	uart_puts("utask2\r\n");
+	//task_schedule(0);
+	asm volatile("mov %0, sp":"=r"(sp));
+	uart_puts("utask sp: ");
+	uart_hex(sp);
+	uart_puts("\r\n");
+	while(!task_pool[3].reschedule){asm volatile("nop");}
+	task_pool[3].reschedule = 0;
+	uart_puts("call sch\r\n");
+	asm volatile("mov x0, #3");
+	asm volatile("svc #0");
+	goto here4;*/
+	while(1)
+	{
+		uart_write("task 2\r\n");
+		char k[4] = "a\r\n\0";
+		k[0] = uart_read();
+		if(k[0]=='y')
+			exec(utask5);
+		uart_write(k);
+	}
+}
+
+
 
 void task3()
 {
 	toggle_privilege();
 	do_exec(utask);
+}
+
+void task4()
+{
+	toggle_privilege();
+	do_exec(utask2);
 }
 
 
@@ -255,22 +319,43 @@ void kernel_init()
 
 	_global_coretimer = 0;
 	task_struct_init();
-
+	
 	int idleid = privilege_task_create(idle);
-	privilege_task_create(task1);
-	privilege_task_create(task2);
+	//privilege_task_create(task1);
+	//privilege_task_create(task2);
 	privilege_task_create(task3);
+	privilege_task_create(task4);
 	//unsigned long long addrrr = &task_pool[t1];
 	
-	core_time_enable();
+	
 	//local_timer_init();
-
+	
 	asm volatile("msr tpidr_el1, %0"::"r"(&task_pool[idleid]):);
+	asm volatile("mov sp, %0"::"r"(task_pool[idleid].ksp):);
+	core_time_enable();
 	idle();
 
 	//task_schedule(0);
 	//task1(); //80d60
 }
-	
-	
 
+char uart_read() //for user
+{
+	char c = (char)syscall(5);
+	return c;
+}
+
+void uart_write(char *c) //for user
+{
+	syscall(6, c);
+}
+
+void exec(void(*func)())
+{
+	syscall(7, func);
+}
+
+int fork()
+{
+	return syscall(8);
+}

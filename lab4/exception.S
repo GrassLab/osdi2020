@@ -38,6 +38,25 @@
     add sp, sp, 32 * 8
 .ENDM
 
+.MACRO SAVE_RET
+    mrs x19, tpidr_el1
+    mrs x20, sp_el0
+    mrs x21, elr_el1
+    mrs x22, spsr_el1
+    mov x23, sp
+    stp x20, x21, [x19, 8 * 13]
+    stp x22, x23, [x19, 8 * 15]
+.ENDM
+
+.MACRO LOAD_RET
+    mrs x19, tpidr_el1
+    ldp x20, x21, [x19, 8*13]
+    ldr x22, [x19, 8 * 15]
+    msr sp_el0, x20
+    msr elr_el1, x21
+    msr spsr_el1, x22
+.ENDM
+
 .section ".text"
 .align 11 
 .global exception_table
@@ -81,8 +100,10 @@
 
 .global _ELx_IRQ_handler
 _ELx_IRQ_handler:
-    SAVE_REG  
+    SAVE_REG
+    SAVE_RET 
     bl irq_hanlder
+    LOAD_RET
     LOAD_REG
     eret
 
@@ -97,7 +118,14 @@ _other_exc_handler:
 .global _EL1_sync_handler
 _EL1_sync_handler: 
     SAVE_REG
+    SAVE_RET
     bl sync_el1_exc_handler
+    LOAD_RET
     LOAD_REG
     eret
+
+.global syscall
+syscall:
+  svc 0
+  ret
 

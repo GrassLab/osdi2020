@@ -14,7 +14,7 @@
 #define IRQ_ENABLE2 ((volatile unsigned int*)0x3f00b218)
 #define CORE0_TIMER_IRQ_CTRL ((volatile unsigned int*)0x40000040)
 #define CORE0_IRQ_SRC ((volatile unsigned int*)0x40000060)
-#define EXPIRE_PERIOD ((volatile unsigned int*)0x05fffff)
+#define EXPIRE_PERIOD ((volatile unsigned int*)0x0ffffff)
 #define IRQ_BASIC_PENDING ((volatile unsigned int*)(MMIO_BASE + 0xb200))
 #define PM_PASSWORD 0x5a000000
 #define PM_RSTC ((volatile unsigned int*)0x3F10001c)
@@ -29,23 +29,24 @@
 void _core_timer_enable();
 void reset();
 void _local_timer_handler();
+void set_trap_ret(unsigned long long ret);
+int sys_get_taskid();
 
-void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
+void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned long long x2, unsigned long long x3)
 {
-    unsigned long long *sp;
-    asm volatile("mov %0, x7":"=r"(sp)::);
-
+    //unsigned long long *sp;
+    //asm volatile("mov %0, x7":"=r"(sp)::);
     //x0 = type, x1 = par1, x2 = par2 ...
-    unsigned int esr, elr, currentEL, currentSP, sp_el0;
+    unsigned long long esr, currentEL, currentSP, sp_el0, elr_el1, spsr_el1;
     asm volatile("mrs %0,esr_el1":"=r"(esr));
-    asm volatile("mrs %0,elr_el1":"=r"(elr));
+    asm volatile("mrs %0,elr_el1":"=r"(elr_el1));
     asm volatile("mrs %0,sp_el0":"=r"(sp_el0));
+    asm volatile("mrs %0,spsr_el1":"=r"(spsr_el1));
     unsigned char exc_class = esr>>26;
     unsigned int ISS_bit = esr&0x1FFFFFF;
-
     if(exc_class == 0x3C) // brk instruction require+4
     {    
-        asm volatile("msr elr_el1, %0"::"r"(elr+4):);
+        asm volatile("msr elr_el1, %0"::"r"(elr_el1+4):);
     }
     else if(exc_class == 0x15) // if svc call
     {
@@ -68,11 +69,32 @@ void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, 
             {
                 reset(1000);
             }
-            else if(x0 == 3)
+            else if(x0 == 3) // schedule
             {
-                uart_puts("syscall...\r\n");
+                //uart_puts("syscall...\r\n");
                 asm volatile("msr daifclr, 0xf");
-                task_schedule(elr, sp_el0, sp);
+                task_schedule();
+            }
+            else if(x0 == 4) //get task id
+            {
+                set_trap_ret((unsigned long long)sys_get_taskid());
+            }
+            else if(x0 == 5) //uart read
+            {
+                set_trap_ret((unsigned long long)uart_getc());
+            }
+            else if(x0 == 6) // uart write
+            {
+                uart_puts((char*)x1);
+            }
+            else if(x0 == 7)
+            {
+                do_exec((void *)x1);
+            }
+            else if(x0 == 8)
+            {
+                int id = sys_do_fork();
+                
             }
             else
             {
@@ -85,11 +107,11 @@ void sync_el1_exc_handler(unsigned long x0, unsigned long x1, unsigned long x2, 
             asm volatile("mrs %0,daif":"=r"(currentEL));
             asm volatile("mov %0,sp":"=r"(currentSP));
 
-            *((unsigned int*)x1) = (unsigned int)exc_class;
-            *((unsigned int*)x1 + 1) = esr&0x1FFFFFF;
-            *((unsigned int*)x1 + 2) = elr;
-            *((unsigned int*)x1 + 3) = currentEL;
-            *((unsigned int*)x1 + 4) = currentSP;
+            *((unsigned long long*)x1) = (unsigned long long)exc_class;
+            *((unsigned long long*)x1 + 1) = esr&0x1FFFFFF;
+            *((unsigned long long*)x1 + 2) = elr_el1;
+            *((unsigned long long*)x1 + 3) = currentEL;
+            *((unsigned long long*)x1 + 4) = currentSP;
         }
         else
         {
@@ -112,6 +134,7 @@ void irq_hanlder()
     static unsigned long long core_count = 0, local_count = 0;;
     unsigned int c0_source = *CORE0_IRQ_SRC;
     unsigned long long tmp;
+
     //uart_hex(c0_source);
     //uart_puts("irq\r\n");
 
@@ -137,12 +160,12 @@ void irq_hanlder()
         _global_coretimer = core_count;
 
         if( ((core_count - current_task->start_coretime) > 2) || ((core_count - current_task->start_coretime) < 0 ) ){
-            //uart_puts("\r\nset");
-            current_task->reschedule = 1;
+            uart_puts("\r\nset\r\n");
+            //current_task->reschedule = 1;
+            asm volatile("msr cntp_tval_el0, %0"::"r"(EXPIRE_PERIOD):);
+            asm volatile("msr daifclr, 0xf");
+            task_schedule();
         }
-            
-
-        asm volatile("msr cntp_tval_el0, %0"::"r"(EXPIRE_PERIOD):);
         /*asm volatile("msr DAIFclr, 0xf");
         while(1){asm volatile("nop");}*/
     }
@@ -248,6 +271,28 @@ void _local_timer_handler()
     uart_hex(local_count);
 }
 
+void set_trap_ret(unsigned long long ret)
+{
+    task *current = get_current_task();
+    current->trapframe[0] = ret;
+}
 
+int sys_get_taskid()
+{
+    task *current = get_current_task();
+    return current->id;
+}
 
+int sys_do_fork()
+{
+    task *current = get_current_task(), *new;
+    int new_id = privilege_task_create((void *)current->fp_lr[1]);
+    *new = task_pool[new_id];
+    for(int i=0;i<10;i++)
+    {
+        new->x19_x28[i] = current->x19_x28[i];
+    }
+    new->fp_lr[0] = current->fp_lr[0];
+    new->fp_lr[1] = current->fp_lr[1];
+}
 //b *0x81e24
