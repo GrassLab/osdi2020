@@ -116,6 +116,10 @@ void sysCall_handler_el0(){
             do_exec((void(*)())argu[9]);
             break;
 
+        case 5:
+            do_fork();
+            break;
+
         default:
             uart_puts("system call ");
             uart_hex(num);
@@ -132,10 +136,7 @@ void sync_exc0_handler(){
     get_sync_exc_param_el1(&esr, &elr);
 
     if(esr>>26 == 0x15){
-        // uart_puts("kernel_routine_entry\n");
         kernel_routine_entry();
-        // while(1);
-        // uart_puts("kernel_routine_entry end\n\n");
 
         int svcNum = esr & 0x1FFFFFF;
         if(svcNum==0) sysCall_handler_el0();

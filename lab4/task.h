@@ -18,7 +18,7 @@ typedef struct task_def{
 	
 }task_t;
 
-#define MAX_QUEUE 5
+#define MAX_QUEUE 16
 typedef struct queue_def{
 	int circular_queue[MAX_QUEUE];
 	int front;
@@ -40,6 +40,7 @@ void idle( void );
 void do_exec( void(*func)() );
 void kernel_routine_entry( void );
 void kernel_routine_exit( void );
+void do_fork( void );
 
 
 /* ===================== task.S ===================== */
@@ -49,7 +50,7 @@ void switch_to(context_t *prev, context_t *next);
 task_t* get_cur_task( void );
 void set_cur_task(task_t *task);
 void go_to(context_t *idle_context);
-
+void restore_all_reg( void );
 
 
 

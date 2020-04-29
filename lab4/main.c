@@ -6,11 +6,18 @@
 #include "timer.h"
 
 void hello(){
-    while(1){
-        uart_write("hello\n");
-        sleep();
-        sched_yield();
-    }
+    // while(1){
+    //     uart_write("hello\n");
+    //     sleep();
+    //     sched_yield();
+    // }
+    int pid = fork();
+    sleep();
+    sleep();
+    if(pid>0) uart_write("parent\n");
+    else uart_write("child\n");
+    sched_yield();
+    while(1);
 }
 
 void task(){
@@ -54,8 +61,8 @@ void main()
     // privilege_task_create(task1);
     // privilege_task_create(task2);
     // privilege_task_create(task3);
-    privilege_task_create(user_task);
-    privilege_task_create(user_task);
+    // privilege_task_create(user_task);
+    // privilege_task_create(user_task);
     privilege_task_create(user_task_hello);
 
     go_to(&idle_pcb->context);

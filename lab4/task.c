@@ -113,12 +113,39 @@ void kernel_routine_entry(){
 	task_t *curTask = get_cur_task();
 	
 	store_umode_lr_sp(&curTask->umode_lr, &curTask->ustack);
-
 }
 
 void kernel_routine_exit(){
 	task_t *curTask = get_cur_task();
 
 	restore_umode_lr_sp(curTask->umode_lr, curTask->ustack);
+}
 
+void leave_fork(){
+	kernel_routine_exit();
+	restore_all_reg();
+}
+
+void do_fork(){
+	task_t *curTask = get_cur_task();
+
+	privilege_task_create( leave_fork );
+	int child = new_taskId-1;
+	int parent = curTask->taskId;
+
+	
+	unsigned long long *argu = (unsigned long long*)(curTask->context.kstack - 32 * 8);
+	argu[0] = 0;
+	for(int i=0; i<4096; i++) kstack_pool[child][i] = kstack_pool[parent][i];
+	for(int i=0; i<4096; i++) ustack_pool[child][i] = ustack_pool[parent][i];
+	argu[0] = child;
+
+	//user
+	int offset;
+	task_pcb_pool[child].umode_lr = curTask->umode_lr;
+	offset = curTask->ustack - (unsigned long long)&ustack_pool[parent][0];
+	task_pcb_pool[child].ustack = (unsigned long long)&ustack_pool[child][offset];
+
+
+	task_pcb_pool[child].context.kstack -= 32*8;
 }
