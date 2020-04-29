@@ -89,6 +89,18 @@ void task_1()
     delay_c('1');
 }
 
+void task_11()
+{
+    printf("\ntask_id: %d\n", get_taskid());
+    delay_c('_');
+}
+
+void task_111()
+{
+    printf("\ntask_id: %d\n", get_taskid());
+    delay_c('?');
+}
+
 void task_2()
 {
     do_exec((unsigned long)user_syscall_test);
@@ -123,8 +135,8 @@ void foo()
 
 void test()
 {
-    int cnt = 1;
-    //register int cnt = 1;
+    // int cnt = 1;
+    register int cnt = 1;
     if (fork() == 0)
     {
         fork();
@@ -132,8 +144,8 @@ void test()
         fork();
         while (cnt < 10)
         {
-            printf("Task id: %d, cnt: %d address: %x\n\r", get_taskid(), cnt, &cnt);
-            //printf("Task id: %d, cnt: %d \n\r", get_taskid(), cnt);
+            // printf("Task id: %d, cnt: %d address: %x\n\r", get_taskid(), cnt, &cnt);
+            printf("Task id: %d, cnt: %d \n\r", get_taskid(), cnt);
             delay(1000000);
             ++cnt;
         }
@@ -142,8 +154,8 @@ void test()
     }
     else
     {
-        printf("Task %d before exec, cnt address 0x%x, cnt value %d\n\r", get_taskid(), &cnt, cnt);
-        //printf("Task %d before exec, cnt value %d\n\r", get_taskid(), cnt);
+        // printf("Task %d before exec, cnt address 0x%x, cnt value %d\n\r", get_taskid(), &cnt, cnt);
+        printf("Task %d before exec, cnt value %d\n\r", get_taskid(), cnt);
         //kill(1, SIGKILL);
         exec(foo);
     }
@@ -172,6 +184,10 @@ int main()
     */
 
     task_init();
+    /*
+    privilege_task_create((unsigned long)task_11, 0);
+    privilege_task_create((unsigned long)task_111, 0);
+    */
     privilege_task_create((unsigned long)task_1, 0);
     privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
     privilege_task_create((unsigned long)task_3, 0);
@@ -181,10 +197,11 @@ int main()
     // core timer enable, every 1ms
     core_timer(1);
     //_core_timer_enable();
-
     while (1)
     {
+        /*
         schedule();
+    */
     }
 
     return 0;

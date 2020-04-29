@@ -44,7 +44,6 @@ thread_start:
 	mov	x29, 0
 
 
-
 	/* We are done, pass the return value through x0.  */
 	mov	x0, 0x32
 	svc	0x80

@@ -79,7 +79,7 @@ void syscall_uart_recv(char *x1)
 void syscall_fork(int *x1)
 {
     *x1 = do_fork();
-    printf("==%d==", *x1);
+    DEBUG_LOG_SYSCALL(("==%d==", *x1));
 }
 
 void syscall_exec(unsigned long x1)
