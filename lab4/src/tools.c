@@ -1,5 +1,6 @@
 #include "tools.h"
 #include "sys.h"
+#include "shed.h"
 
 int my_strcmp(char * str1, char * str2){
     int i=0;    
@@ -155,6 +156,8 @@ void process_cmd(char * command){
             break;
         case 8:        
             call_sys_chk_exl();
+            // uart_send_int(call_sys_get_taskid());
+            // uart_puts("\n");
             break;
         case 9:        
             uart_puts("Start create foo\n");               

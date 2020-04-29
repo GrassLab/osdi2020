@@ -2,7 +2,7 @@
 #include "sys.h"
 
 #define S_FRAME_SIZE			272 		// size of all saved registers 
-#define S_X0				0		// offset of x0 register in saved stack frame
+#define S_X0					0		// offset of x0 register in saved stack frame
 #define ESR_ELx_EC_SHIFT		26
 #define ESR_ELx_EC_SVC64		0x15
 
@@ -17,17 +17,17 @@
 #define FIQ_INVALID_EL1h		6 
 #define ERROR_INVALID_EL1h		7 
 
-#define SYNC_INVALID_EL0_64	    	8 
-#define IRQ_INVALID_EL0_64	    	9 
+#define SYNC_INVALID_EL0_64	    8 
+#define IRQ_INVALID_EL0_64	    9 
 #define FIQ_INVALID_EL0_64		10 
-#define ERROR_INVALID_EL0_64		11 
+#define ERROR_INVALID_EL0_64	11 
 
 #define SYNC_INVALID_EL0_32		12 
 #define IRQ_INVALID_EL0_32		13 
 #define FIQ_INVALID_EL0_32		14 
-#define ERROR_INVALID_EL0_32		15 
+#define ERROR_INVALID_EL0_32	15 
 
-#define SYNC_ERROR			16 
+#define SYNC_ERROR				16 
 #define SYSCALL_ERROR			17 
 
 .section ".text"
@@ -111,33 +111,66 @@ b	   \label
 .align 11
 .global exception_table
 exception_table:
-    ventry not_implemented
-    ventry not_implemented
-    ventry not_implemented
-    ventry not_implemented
+    ventry sync_invalid_el1t
+    ventry irq_invalid_el1t
+    ventry fiq_invalid_el1t
+    ventry error_invalid_el1t
 
-    ventry not_implemented
-    ventry not_implemented
-    ventry not_implemented
-    ventry not_implemented
+    ventry el1_exception
+    ventry el1_irq_handler
+    ventry fiq_invalid_el1h
+    ventry error_invalid_el1h
 
     ventry el0_exception
     ventry el0_irq_handler
-    ventry not_implemented
-    ventry not_implemented
+    ventry fiq_invalid_el0_64
+    ventry error_invalid_el0_64
 
-    ventry not_implemented
-    ventry not_implemented
-    ventry not_implemented
-    ventry not_implemented
+    ventry sync_invalid_el0_32
+    ventry irq_invalid_el0_32
+    ventry fiq_invalid_el0_32
+    ventry error_invalid_el0_32
+
+sync_invalid_el1t:
+	handle_invalid_entry 1,  SYNC_INVALID_EL1t
+
+irq_invalid_el1t:
+	handle_invalid_entry  1, IRQ_INVALID_EL1t
+
+fiq_invalid_el1t:
+	handle_invalid_entry  1, FIQ_INVALID_EL1t
+
+error_invalid_el1t:
+	handle_invalid_entry  1, ERROR_INVALID_EL1t
+
+sync_invalid_el1h:
+	handle_invalid_entry 1, SYNC_INVALID_EL1h
+
+fiq_invalid_el1h:
+	handle_invalid_entry  1, FIQ_INVALID_EL1h
+
+error_invalid_el1h:
+	handle_invalid_entry  1, ERROR_INVALID_EL1h
+
+fiq_invalid_el0_64:
+	handle_invalid_entry  0, FIQ_INVALID_EL0_64
+
+error_invalid_el0_64:
+	handle_invalid_entry  0, ERROR_INVALID_EL0_64
+
+sync_invalid_el0_32:
+	handle_invalid_entry  0, SYNC_INVALID_EL0_32
+
+irq_invalid_el0_32:
+	handle_invalid_entry  0, IRQ_INVALID_EL0_32
+
+fiq_invalid_el0_32:
+	handle_invalid_entry  0, FIQ_INVALID_EL0_32
+
+error_invalid_el0_32:
+	handle_invalid_entry  0, ERROR_INVALID_EL0_32
 
 el0_exception:
-    //kernel_entry
-	//mov     x0, #0
-    //mrs     x1, esr_el1
-    //mrs     x2, elr_el1
-    //bl exception_handler
-    //kernel_exit
 	kernel_entry 0
     mrs    x25, esr_el1                // read the syndrome register
     lsr    x24, x25, #ESR_ELx_EC_SHIFT // exception class
@@ -166,6 +199,35 @@ ret_from_syscall:
 	str	x0, [sp, #S_X0]				// returned x0
 	kernel_exit 0
 
+el1_exception:
+	kernel_entry 1
+    mrs    x25, esr_el1                // read the syndrome register
+    lsr    x24, x25, #ESR_ELx_EC_SHIFT // exception class
+    cmp    x24, #ESR_ELx_EC_SVC64      // SVC in 64-bit state
+    b.eq   el1_svc
+    handle_invalid_entry 0, SYNC_ERROR
+
+sc_nr	.req	x25					// number of system calls
+scno	.req	x26					// syscall number
+stbl	.req	x27					// syscall table pointer
+
+el1_svc:
+	adr	stbl, sys_call_table			// load syscall table pointer
+	uxtw	scno, w8				// syscall number in w8
+	mov	sc_nr, #__NR_syscalls
+	bl	enable_irq
+	cmp     scno, sc_nr                     	// check upper syscall limit
+	b.hs	ni_sys
+
+	ldr	x16, [stbl, scno, lsl #3]		// address in the syscall table
+	blr	x16					// call sys_* routine
+	b	ret1_from_syscall
+
+ret1_from_syscall:
+	bl	disable_irq				
+	str	x0, [sp, #S_X0]				// returned x0
+	kernel_exit 1
+
 el0_irq_handler:
 	kernel_entry 0
 	bl irq_router
@@ -178,9 +240,14 @@ el1_irq_handler:
 
 .globl ret_from_fork
 ret_from_fork:
-	//bl	schedule_tail
+	bl	enable_preempt
+	cbz	x19, ret_to_user
 	mov	x0, x20
 	blr	x19 		//should never return
+
+ret_to_user:
+	bl disable_irq				
+	kernel_exit 0 
 
 ni_sys:
 	handle_invalid_entry 0, SYSCALL_ERROR

@@ -36,6 +36,12 @@ call_sys_enable_time:
 	svc #0
 	ret
 
+.globl  call_sys_get_taskid
+call_sys_get_taskid:
+    mov w8, #SYS_GET_TASKID	
+	svc #0
+	ret
+
 .globl call_sys_clone
 call_sys_clone:
 	/* Save args for the child.  */

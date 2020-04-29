@@ -1,6 +1,5 @@
 #include "tools.h"
 #include "mm.h"
-
 void sys_write(char * buf){
 	uart_puts(buf);
 }
@@ -19,7 +18,7 @@ unsigned long sys_malloc(){
 }
 
 void sys_exit(){
-	//exit_process();
+    exit();
 }
 
 void sys_chk_exl_info(){
@@ -48,4 +47,9 @@ void sys_enable_time(){
 	core_timer_enable();
 }
 
-void * const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit, sys_chk_exl, sys_enable_time, sys_chk_exl_info};
+int sys_get_taskid(){
+	return get_taskid();
+}
+
+
+void * const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit, sys_chk_exl, sys_enable_time, sys_chk_exl_info, sys_get_taskid};
