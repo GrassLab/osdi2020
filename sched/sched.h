@@ -2,6 +2,8 @@
 #define SCHED
 
 #include <stddef.h>
+#include <list.h>
+
 #define POOL_SIZE 64
 
 struct context
@@ -27,6 +29,7 @@ struct task_struct
   size_t task_id;
   char stack[0x1000] __attribute__ ((aligned (8)));
   char kstack[0x1000] __attribute__ ((aligned (8)));
+  struct list_head list;
 } task_pool[POOL_SIZE];
 
 void privilege_task_create (void (*func) ());
@@ -34,6 +37,8 @@ void privilege_task_create (void (*func) ());
 #define current get_current()
 extern struct task_struct *get_current ();
 extern void switch_to (struct task_struct *cur, struct task_struct *next);
+struct list_head *run_queue;
+void schedule ();
 
 
 #endif /* ifndef SCHED */

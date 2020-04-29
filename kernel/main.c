@@ -1,6 +1,7 @@
 #include <uart.h>
 #include <lfb.h>
 #include <sched.h>
+#include <string.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -17,25 +18,18 @@
                  "                                                                  \n"
 
 void
-echo_and_delay1 ()
+echo_and_delay ()
 {
   size_t t, cnt, freq;
-  uart_puts ("echo 1\n");
-  sys_get_time (&cnt, &freq);
-  t = cnt;
-  while (cnt - t < freq / 2) sys_get_time (&cnt, &freq);
-  switch_to (current, &task_pool[1]);
-}
-
-void
-echo_and_delay2 ()
-{
-  size_t t, cnt, freq;
-  uart_puts ("echo 2\n");
-  sys_get_time (&cnt, &freq);
-  t = cnt;
-  while (cnt - t < freq / 2) sys_get_time (&cnt, &freq);
-  switch_to (current, &task_pool[0]);
+  while (1)
+    {
+      printf ("echo %d\n", (int) current->task_id);
+      sys_get_time (&cnt, &freq);
+      t = cnt;
+      while (cnt - t < freq / 2)
+	sys_get_time (&cnt, &freq);
+      schedule ();
+    }
 }
 
 int
@@ -54,8 +48,11 @@ main (int error, char *argv[])
       uart_puts (argv[0]);
       uart_puts ("-----------------------------\n");
     }
-  privilege_task_create (&echo_and_delay1);
-  privilege_task_create (&echo_and_delay2);
+  privilege_task_create (&echo_and_delay);
+  privilege_task_create (&echo_and_delay);
+  privilege_task_create (&echo_and_delay);
+  privilege_task_create (&echo_and_delay);
+  privilege_task_create (&echo_and_delay);
   switch_to (&fake, &task_pool[0]);
   shell_interactive ();
   return 0;
