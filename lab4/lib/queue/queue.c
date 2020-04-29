@@ -18,7 +18,7 @@ void *popQueue(Queue *self) {
         return NULL;
     }
 
-    void *retval = self->buffer[self->front];
     self->front = (self->front + 1) % self->capacity;
+    void *retval = self->buffer[self->front];
     return retval;
 }
