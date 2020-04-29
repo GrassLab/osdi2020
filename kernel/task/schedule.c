@@ -31,7 +31,10 @@ void schedule ( )
     thread_info_t * current_task = get_current_task_el0 ( );
 
     /* check if need to resched */
-    if ( !RESCHED_FLAG && current_task -> state == RUNNING )
+    /* RESCHED FLAG is rising */
+    /* CURRENT TASK still doing something */
+    /* this is not called by IDLE */
+    if ( !RESCHED_FLAG && current_task -> state == RUNNING && current_task != IDLE )
         return;    
     
     /* while scheduling, disable irq */
@@ -54,9 +57,25 @@ void schedule ( )
     context_switch ( next );
 }
 
-void do_exec ( void(*func)() )
+void sys_do_exec ( void(*func)() )
 {
-    int pid = task_create ( func );
-    thread_info_t * thread_info = get_thread_info ( pid );
-    context_switch ( thread_info );    
+    /* create thread for the target func */
+    task_create ( func );
+    
+    /* tell the scheduler to reschedule later */
+    RESCHED_FLAG = 1;
+    
+    schedule ( );
+}
+
+
+void sys_do_exit ( thread_info_t * thread )
+{
+    /* mark this thread as a dead one */
+    thread -> state = DEAD;
+    
+    /* tell the scheduler to reschedule later */
+    RESCHED_FLAG = 1;
+    
+    schedule ( );
 }

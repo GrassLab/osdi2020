@@ -63,7 +63,6 @@
 .endm
 
 .macro kernel_entry
-
     # let sp go the right place
     stp     x0,     x1,     [sp]    // save the x0, x1 first 
                                     // the sp here is el1_sp
@@ -71,7 +70,6 @@
     mrs     x0,     TPIDR_EL0       // get what is going on in the el0
     mov     x1,     sp              // save the location that are going to save the register
 
-    ldr     x0,     [x0]
     mov     sp,     x0              // move the sp to the correct kernel stack
 
     # retrieve user register
@@ -87,7 +85,6 @@
 
 .macro kernel_exit
     mrs     x0,     TPIDR_EL0       // retrieve what is going to do next 
-    ldr     x0,     [x0]
     mov     sp,     x0
 
     # load the user registers

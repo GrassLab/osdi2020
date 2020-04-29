@@ -4,11 +4,11 @@ OBJ_CPY 	= aarch64-linux-gnu-objcopy
 OBJ_DUMP	= aarch64-linux-gnu-objdump
 EMULATOR	= qemu-system-aarch64
 
-CFLAGS 		= -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
+CFLAGS 		= -Wall -O0 -ffreestanding -nostdinc -nostdlib -nostartfiles
 INCLUDE_FLG = -Iinclude -I.
 
 SRCS 		= $(wildcard kernel/*/*.c) $(wildcard lib/*.c) $(wildcard src/*.c)
-ASMS		= $(wildcard kernel/*/*.S) $(wildcard kernel/*.S)
+ASMS		= $(wildcard kernel/*/*.S) $(wildcard kernel/*.S) $(wildcard lib/*.S)
 SRC_OBJS 	= $(SRCS:%.c=%.o)
 ASM_OBJS	= $(ASMS:%.S=%.S.o)
 

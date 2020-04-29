@@ -1,9 +1,9 @@
 #include "kernel/peripherals/uart.h"
-#include "kernel/task/task.h"
+#include "lib/task.h"
 
 #include "shell.h"
 #include "test_task.h"
-#include "kernel/exception/exception.h"
+
 
 int main ( )
 {
@@ -14,7 +14,10 @@ int main ( )
     uart_printf("Hello World\n");
 
     // start shell
-    shell_start();
+    // shell_start();
+
+    // test do_exec, it shall just jump to that process
+    do_exec ( test_task );
     
     return 0;
 }

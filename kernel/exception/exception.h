@@ -11,6 +11,9 @@
 #define SYS_CALL_CORE_TIMER_DISABLE     "svc #6;"
 #define SYS_CALL_PRINT_TIMESTAMP_EL0    "svc #7;"
 #define SYS_CALL_SCHEDULE               "svc #8;"
+#define SYS_CALL_DO_EXEC                "scv #9;"
+#define SYS_CALL_WAIT_MSEC              "scv #10;"
+#define SYS_CALL_DO_EXIT                "scv #11;"
 
 #define HYPERVISORE_CALL_TEST_HVC       "hvc #2;"
 
@@ -26,6 +29,9 @@ enum system_call {
     CORE_TIMER_DISABLE,
     PRINT_TIMESTAMP_EL0,
     SCHEDULE,
+    SYS_DO_EXEC,
+    SYS_WAIT_MSEC,
+    SYS_DO_EXIT,
 };
 
 enum exception_level {

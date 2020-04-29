@@ -1,7 +1,6 @@
-#include "kernel/exception/exception.h"
-#include "kernel/peripherals/time.h"
 #include "kernel/peripherals/uart.h"
 #include "lib/type.h"
+#include "lib/task.h"
 
 #include "mem.h"
 #include "schedule.h"
@@ -12,20 +11,6 @@ thread_info_t * IDLE = NULL;
 thread_info_t * TASK_POOL[NUM_THREADS];
 
 uint64_t TASK_POOL_USAGE = 0;       /* 64 bit to maintain which one is in used */
-
-void idle ( )
-{
-    while ( 1 )
-    {
-        uart_printf("I am idle.\n");
-        RESCHED_FLAG = 1;
-        
-        LAUNCH_SYS_CALL ( SYS_CALL_SCHEDULE );
-        
-        // schedule ( );
-        // wait_msec(500000);
-    }
-}
 
 void create_idle_task ( )
 {

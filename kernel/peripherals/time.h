@@ -3,6 +3,6 @@
 
 void print_current_timestamp ( );
 void wait_cycles ( unsigned int n );
-void wait_msec ( unsigned int n );
+void sys_wait_msec ( unsigned int n );
 
 #endif

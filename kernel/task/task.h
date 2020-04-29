@@ -33,14 +33,11 @@ typedef struct {
 } thread_info_t;
 
 /* defined in task.S */
-extern void switch_to ( thread_info_t *, thread_info_t * );
 extern void launch_init ( );
-extern void default_task_start();
 
 /* global variable for other file to use */
 extern thread_info_t * IDLE;
 
-void idle ( );
 void create_idle_task ( );
 int task_create ( void(*func)() );
 int find_usable_in_pool ( );

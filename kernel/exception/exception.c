@@ -1,6 +1,7 @@
 #include "kernel/peripherals/time.h"
 #include "kernel/peripherals/uart.h"
 #include "kernel/task/schedule.h"
+#include "kernel/task/task.h"
 #include "lib/type.h"
 
 #include "exception.h"
@@ -11,6 +12,7 @@ void exec_controller_el1 ( )
 {
     uint64_t elr, esr;
     uint32_t iss;
+    thread_info_t * current_thread = get_current_task_el0 ( );
 
     asm volatile ( 
         "mrs     %0, ELR_EL1;"
@@ -46,6 +48,19 @@ void exec_controller_el1 ( )
             break;
         case SCHEDULE:
             schedule ();
+            break;
+        case SYS_DO_EXEC:
+            ;
+            void(*func)() = ( void(*)() ) ( current_thread -> cpu_context ).x[0];
+            sys_do_exec ( func );
+            break;
+        case SYS_WAIT_MSEC:
+            ;
+            unsigned int n = (unsigned int)( ( current_thread -> cpu_context ).x[0] );
+            sys_wait_msec ( n );
+            break;
+        case SYS_DO_EXIT:
+            sys_do_exit ( current_thread );
             break;
         default:
             print_exec_info ( EL1, elr, esr );
