@@ -146,7 +146,15 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     p->preempt_count = 1; //disable preemtion until schedule_tail
     p->signal_source = 0;
 
-    p->cpu_context.pc = (unsigned long)ret_from_fork;
+
+
+    if (clone_flags & PF_FORK){
+        // asm volatile("mov x0, %0;" :: "r"(current->cpu_context.x19));
+        p->cpu_context.pc = (unsigned long)ret_from_fork;
+    }
+    else{
+        p->cpu_context.pc = (unsigned long)ret_from_fork;
+    }
 
     if (clone_flags & PF_FORK)
     {
