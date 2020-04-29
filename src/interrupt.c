@@ -38,7 +38,7 @@ void core_timer_counter()
 }
 
 #define CORE0_TIMER_IRQ_CTRL (unsigned int* )0x40000040
-#define EXPIRE_PERIOD 0xffffff
+#define EXPIRE_PERIOD 0xfffff
 
 void core_timer_enable()
 {

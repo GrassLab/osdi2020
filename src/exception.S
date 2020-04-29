@@ -97,7 +97,7 @@ ret_to_user:
     bl disable_irq
     LOAD_CONTEXT 0
     // bl debug
-    mov x0, 0
+    mov x0, 0 // I am child
     // mrs x1, tpidr_el1
     // ldr x2, [x1, 8 * 13]
     // ldr x3, [x1, 8 * 14]

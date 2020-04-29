@@ -64,7 +64,7 @@ void exception_handler(unsigned int trapframe)
 {
     struct task* current = get_current();
     current->trapframe = trapframe;
-    current->state = RUN_IN_KERNEL_MODE;
+    current->state = EXC_CONTEXT;
     uart_puts("\r\n++++++++++  exception_handler begin  ++++++++++\n");
     unsigned long esr, elr, spsr; 
     unsigned long sys_ret_val;
@@ -155,10 +155,10 @@ unsigned long el0_svc_handler(unsigned int trapframe)
             sys_ret_val = exit(0);
             break;
         case SYS_UART_READ:
-            uart_puts("syscall not implement\n");
+            sys_ret_val = uart_getc();
             break;
         case SYS_UART_WRITE:
-            uart_puts("syscall not implement\n");
+            uart_puts(x0);
             break;
         default:
             uart_puts("syscall not found\n");

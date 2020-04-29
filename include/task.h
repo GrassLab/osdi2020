@@ -5,6 +5,7 @@
 #define IRQ_CONTEXT         4
 #define CONTEXT_SWITCH      5
 #define ZOMBIE              6
+#define EXC_CONTEXT         7
 
 
 // the cpu_context's order must be the same as switch_to
@@ -26,8 +27,8 @@ struct cpu_context {
 
 struct user_context {
     unsigned long sp_el0;   // user stack
-    unsigned long spsr_el1; // user cpu state
     unsigned long elr_el1;  // user pc 
+    unsigned long spsr_el1; // user cpu state
 } __attribute__ ((aligned (8)));
 
 struct task {
@@ -41,6 +42,7 @@ struct task {
     unsigned long parent_id;
     int reschedule_flag;
     unsigned long trapframe; // only for syscall, eg. fork
+    // struct trapframe_regs trapframe_regs;
 };
 
 struct task_manager {
@@ -54,11 +56,11 @@ struct task_manager {
 };
 
 
-struct pt_regs {
+struct trapframe_regs {
 	unsigned long regs[31];
-	unsigned long sp;
-	unsigned long pc;
-	unsigned long pstate;
+	unsigned long sp_el0; // sp
+	unsigned long elr_el1; // pc
+	unsigned long spsr_el1; // pstate
 };
 
 void task_manager_init(void(*func)());

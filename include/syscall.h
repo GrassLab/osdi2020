@@ -14,6 +14,6 @@ unsigned long call_sys_get_taskid();
 unsigned long call_sys_exec(void(*func)());
 int call_sys_fork();
 unsigned long call_sys_exit();
-unsigned long call_sys_uart_read();
-unsigned long call_sys_uart_write();
+char call_sys_uart_read();
+void call_sys_uart_write(char *s);
 #endif

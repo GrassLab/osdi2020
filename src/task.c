@@ -72,7 +72,7 @@ int privilege_task_create(void(*func)(), int fork_flag)
         uart_hex(&TaskManager.ustack_pool[task_id]);
         uart_puts("\n");
 
-        struct pt_regs* kstack_regs = TaskManager.kstack_pool[task_id];
+        struct trapframe_regs* kstack_regs = current->trapframe;
         // *TaskManager.kstack_pool[task_id] = (unsigned long) 0x0;
         // *(&TaskManager.kstack_pool[task_id][8*31]) = &TaskManager.ustack_pool[task_id];
         // kstack_regs->regs[0] = 0;
@@ -126,7 +126,7 @@ void schedule()
             break;
         next_task = (next_task+1) % TaskManager.task_num;
     } 
-    next->counter = 3;
+    next->counter = 0x20;
     uart_puts("switch to next task: ");
     uart_hex(next_task);
     uart_puts("\n");
@@ -188,6 +188,9 @@ void user_test()
  ** takes a function pointer to user code
  ** System call for do_exec , user context is replace by the provided one
  */
+
+
+
 void do_exec(void(*func)())
 {
     // be triggered at the first time execute
@@ -213,22 +216,21 @@ void do_exec(void(*func)())
         asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
         asm volatile("msr elr_el1, %0" :: "r" (func));
         asm volatile("eret");
+    } else if (current->state == EXC_CONTEXT){
+        struct trapframe_regs* kstack_regs = current->trapframe;
+        kstack_regs->sp_el0 = current->user_context.sp_el0;
+        kstack_regs->elr_el1 = func;
+        kstack_regs->spsr_el1 = 0;
+
     } else {
-        current->state = RUN_IN_USER_MODE;
-        unsigned long user_stack = current->user_context.sp_el0;
-        unsigned long user_cpu_state = current->user_context.spsr_el1;
-        unsigned long user_pc = current->user_context.elr_el1;
-        asm volatile("msr sp_el0, %0" :: "r" (user_stack));
-        asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
-        asm volatile("msr elr_el1, %0" :: "r" (user_pc));
-        asm volatile("eret");
+        uart_puts("do_exec() error");
+        while(1);
     }
 }
 
 
 int fork() 
 {
-    struct task* current = get_current();
     int pid;
     pid = privilege_task_create(0, 1);
     return pid;
@@ -265,9 +267,13 @@ void zombie_reaper()
 
 void hello()
 {
+    char read_char;
     while(1) {
-        uart_puts("hello world in foo\n");
-        wait_cycles(10000000);
+        // read_char = uart_getc();
+        // call_sys_uart_write(&read_char);
+        call_sys_uart_write("hello world in foo\n");
+
+        wait_cycles(1000000);
     }
 
 }
