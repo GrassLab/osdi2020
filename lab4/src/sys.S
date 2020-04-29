@@ -6,6 +6,12 @@ call_sys_write:
 	svc #0
 	ret
 
+.globl call_sys_read
+call_sys_read:
+	mov w8, #SYS_READ_NUMBER	
+	svc #0
+	ret
+
 .globl call_sys_malloc
 call_sys_malloc:
 	mov w8, #SYS_MALLOC_NUMBER	

@@ -36,17 +36,21 @@ void privilege_task_create(void (*func)()){
     new_task->cpu_context.sp = (unsigned long)new_task + THREAD_SIZE;
     new_task->parentid = current->taskid;
     n_task_id++;
-    
-    for(int i=0;i<NR_TASKS;i++){
-        if(task[i]->state==TASK_ZOMBIE || !task[i]){
-            n_tasks = i;
-            break;
-        }
-    }
+
     task[n_tasks] = (new_task);
-    // n_tasks++;
-    
     n_tasks%=NR_TASKS;
+
+    n_tasks++;    
+    // if(n_tasks>=NR_TASKS)
+    //     for(int i=1;i<NR_TASKS;i++){
+    //         if(task[i]->state==TASK_ZOMBIE){
+    //             task[i] = (new_task);                
+    //             break;
+    //         }
+    //     }
+    // else{
+    //     
+    // }
     uart_puts("Create new Task: ");
     uart_send_int(new_task->taskid);
     uart_send('\n');
@@ -97,17 +101,17 @@ void test() {
         delay(10000000);
         fork();
         while(cnt < 10) {
-            uart_puts("Task id: ");
+            call_sys_write("Task id: ");
             uart_send_int(call_sys_get_taskid());
-            uart_puts(", Parent task id: ");
+            call_sys_write(", Parent task id: ");
             uart_send_int(current->parentid);
-            uart_puts(", cnt: ");
+            call_sys_write(", cnt: ");
             uart_send_int(cnt);
-            uart_puts("\n");
+            call_sys_write("\n");
             delay(10000000);
             ++cnt;
         }
-        call_sys_exit(0);
+        call_sys_exit();
         uart_puts("Should not be printed\n");
     } else {
         uart_puts("Task id: ");
@@ -140,12 +144,13 @@ int get_taskid(){
 }
 void exit(){
     disable_preempt();
-    for (int i = 0; i < NR_TASKS; i++){
-        if (task[i] == current) {
-            task[i]->state = TASK_ZOMBIE;
-            break;
-        }
-    }
+    // for (int i = 0; i < NR_TASKS; i++){
+    //     if (task[i] == current) {
+    //         task[i]->state = TASK_ZOMBIE;
+    //         break;
+    //     }
+    // }
+    current->state = TASK_ZOMBIE;
     free_page((unsigned long)current);
     enable_preempt();
     schedule();

@@ -30,22 +30,22 @@
 - [ ] `required 3-1` Implement `do_exec`
 
 ### User tasks preemption
-- [ ] `required 3-2` Implement user tasks preemption.
+- [x] `required 3-2` Implement user tasks preemption.
 
 
 ## Requirement 4
 
 ### I/O system calls
-- [ ] `required 4-1` Implement `uart_read` and `uart_write`.
+- [x] `required 4-1` Implement `uart_read` and `uart_write`.
 
 ### Exec
-- [ ] `required 4-2` Implement `exec`.
+- [x] `required 4-2` Implement `exec`.
 
 ### Fork
-- [ ] `required 4-3` Implement `fork`.
+- [x] `required 4-3` Implement `fork`.
 
 ### Zombie reaper
-- [ ] `required 4-4` Implement exit and zombie reaper by one of the above methods.
+- [x] `required 4-4` Implement exit and zombie reaper by one of the above methods.
 
 
 

@@ -85,7 +85,7 @@ char command[100];
 void shell(){
     int command_index=0;
     while(1) {
-        char in = uart_getc();
+        char in = call_sys_read();
         if(in!='\n'){            
             if((unsigned int)in>=32 && (unsigned int)in<=126)
             command[command_index++] = in;
