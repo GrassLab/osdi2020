@@ -71,12 +71,12 @@ void user_syscall_test()
     //int pid = 0;
     if (pid == 0)
     {
-        printf("\nPID: %d\n", pid);
+        printf("\nPID: %d\n\r", pid);
         exec((unsigned long)user_task_4);
     }
     else
     {
-        printf("\nPID: %d\n", pid);
+        printf("\nPID: %d\n\r", pid);
         exec((unsigned long)pcsh);
         exit(0);
     }
@@ -124,6 +124,7 @@ void foo()
 void test()
 {
     int cnt = 1;
+    //register int cnt = 1;
     if (fork() == 0)
     {
         fork();
@@ -132,6 +133,7 @@ void test()
         while (cnt < 10)
         {
             printf("Task id: %d, cnt: %d address: %x\n\r", get_taskid(), cnt, &cnt);
+            //printf("Task id: %d, cnt: %d \n\r", get_taskid(), cnt);
             delay(1000000);
             ++cnt;
         }
@@ -141,6 +143,7 @@ void test()
     else
     {
         printf("Task %d before exec, cnt address 0x%x, cnt value %d\n\r", get_taskid(), &cnt, cnt);
+        //printf("Task %d before exec, cnt value %d\n\r", get_taskid(), cnt);
         //kill(1, SIGKILL);
         exec(foo);
     }
@@ -169,11 +172,11 @@ int main()
     */
 
     task_init();
-    copy_process(PF_KTHREAD, (unsigned long)task_1, 0, 0);
-    copy_process(PF_KTHREAD, (unsigned long)task_2, 0, 0); // fork, shell
-    copy_process(PF_KTHREAD, (unsigned long)task_3, 0, 0);
-    //copy_process(PF_KTHREAD, (unsigned long)task_4, 0, 0);
-    copy_process(PF_KTHREAD, (unsigned long)user_test, 0, 0);
+    privilege_task_create((unsigned long)task_1, 0);
+    privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
+    privilege_task_create((unsigned long)task_3, 0);
+    privilege_task_create((unsigned long)task_4, 0);
+    privilege_task_create((unsigned long)user_test, 0);
 
     // core timer enable, every 1ms
     core_timer(1);

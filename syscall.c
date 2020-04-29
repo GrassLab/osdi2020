@@ -212,7 +212,7 @@ int get_taskid()
 
 int fork()
 {
-    int return_value;
+    int return_value = 0;
     /*
     asm volatile("mov x10, x0\n"
                  "mov x11, x1\n"

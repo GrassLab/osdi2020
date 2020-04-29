@@ -68,12 +68,16 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 
     //p = (task_t *)&kstack_pool[task_id][0];
     p = (task_t *)get_free_page();
-
     memset((unsigned short *)p, 0, PAGE_SIZE);
 
     user_context_t *childregs = task_user_context(p);
     memset((unsigned short *)childregs, 0, sizeof(user_context_t));
     memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
+
+    if (stack != 0)
+        free_page(stack);
+    stack = get_free_page();
+    memset((unsigned short *)stack, 0, PAGE_SIZE);
 
     if (clone_flags & PF_KTHREAD)
     {
@@ -86,8 +90,9 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     {
         memcpy((unsigned short *)p, (unsigned short *)current, PAGE_SIZE);
         memcpy((unsigned short *)stack, (unsigned short *)current->stack, PAGE_SIZE);
+        //memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
+
         // stack = p;
-        memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
         print_cpu_context(&current->cpu_context);
 
         /*** try to fork all kernel thread ***/
@@ -104,14 +109,19 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
         //p->cpu_context.pc = p->cpu_context.pc + 32;
         p->stack = stack;
 
-        //printf("==sp: %x, stack %x==\n\r", (unsigned long)current->cpu_context.sp, (unsigned long)current);
-        //printf("==sp: %x, stack %x==\n\r", (unsigned long)task_user_context(current)->sp, (unsigned long)current->stack);
+        printf("==current kstack, sp: %x, stack %x==\n\r", (unsigned long)current->cpu_context.sp, (unsigned long)current);
+        printf("%x", (unsigned long)task_user_context(current));
+        printf("==current ustack, sp: %x, stack %x==\n\r", (unsigned long)task_user_context(current)->sp, (unsigned long)current->stack);
+        printf("==pc: %x, pc %x==\n\r", (unsigned long)task_user_context(current)->pc, childregs->pc);
 
-        unsigned long offset = (unsigned long)current->cpu_context.sp - (unsigned long)current;
-        p->cpu_context.sp = offset + (unsigned long)p;
-        //p->cpu_context.x19 += offset;
-        //childregs->sp = (unsigned long)task_user_context(current)->sp - (unsigned long)current->stack + (unsigned long)stack;
-        childregs->sp = stack + PAGE_SIZE;
+        unsigned long kstack_offset = (unsigned long)current->cpu_context.sp - (unsigned long)current;
+        int ustack_offset = (unsigned long)task_user_context(current)->sp - (unsigned long)current->stack;
+        printf("%d", PAGE_SIZE);
+        printf("task off %d, u off %d\n\r", kstack_offset, ustack_offset);
+
+        p->cpu_context.sp = (unsigned long)p + kstack_offset;
+        //p->cpu_context.x19 = 0;
+        childregs->sp = stack + ustack_offset;
     }
     else
     {
@@ -146,11 +156,16 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     return task_id;
 }
 
+int privilege_task_create(unsigned long func, unsigned long arg)
+{
+    return copy_process(PF_KTHREAD, func, arg, 0);
+}
+
 int do_exec(unsigned long pc)
 {
 
     user_context_t *regs = task_user_context(task_pool[get_current()]);
-    memset(regs, 0, sizeof(*regs));
+    memset(regs, 0, sizeof(user_context_t));
     regs->pc = pc;
     regs->pstate = PSR_MODE_EL0t;
     //unsigned long stack = (unsigned long)&ustack_pool[get_current()][0]; //allocate new user stack
@@ -159,7 +174,7 @@ int do_exec(unsigned long pc)
     memset((unsigned long *)stack, 0, PAGE_SIZE);
 
     regs->sp = stack + PAGE_SIZE;
-    // task_pool[get_current()]->stack = stack;
+    task_pool[get_current()]->stack = stack;
     return 0;
 }
 
@@ -260,8 +275,8 @@ int do_fork()
     unsigned long stack = get_free_page();
     memset((unsigned long *)stack, 0, PAGE_SIZE);
 
-    return copy_process(0, 0, 0, stack);
-    //return copy_process(PF_FORK, 0, 0, stack);
+    //return copy_process(0, 0, 0, stack);
+    return copy_process(PF_FORK, 0, 0, stack);
 }
 
 task_t *task(int task_id)

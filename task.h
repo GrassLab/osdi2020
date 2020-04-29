@@ -64,6 +64,7 @@ typedef struct task_t
     unsigned long stack;
     unsigned long flags;
     unsigned long signal_source;
+    //unsigned long user_context_num;
 } task_t;
 
 extern int get_current();

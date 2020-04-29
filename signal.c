@@ -33,7 +33,12 @@ void signal_run(int taskid, int signal)
     printf("ttttt");
 }
 
-void default_kill_handler()
+void default_sigint_handler()
+{
+    exit_process(get_current());
+}
+
+void default_sigkill_handler()
 {
     exit_process(get_current());
 }
@@ -47,7 +52,11 @@ void signal_init()
             if (j == SIGKILL)
             {
 
-                task_signal_handler[i][j] = default_kill_handler;
+                task_signal_handler[i][j] = default_sigkill_handler;
+            }
+            else if (j == SIGINT)
+            {
+                task_signal_handler[i][j] = default_sigint_handler;
             }
             else
             {
