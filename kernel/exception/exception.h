@@ -14,6 +14,7 @@
 #define SYS_CALL_DO_EXEC                "scv #9;"
 #define SYS_CALL_WAIT_MSEC              "scv #10;"
 #define SYS_CALL_DO_EXIT                "scv #11;"
+#define SYS_CALL_GET_PID                "scv #12;"
 
 #define HYPERVISORE_CALL_TEST_HVC       "hvc #2;"
 
@@ -32,6 +33,7 @@ enum system_call {
     SYS_DO_EXEC,
     SYS_WAIT_MSEC,
     SYS_DO_EXIT,
+    SYS_GET_PID,
 };
 
 enum exception_level {

@@ -5,6 +5,7 @@
 extern void default_task_start ( );
 extern void do_exec ( void(*func)() );
 extern void do_exit ( );
+extern int get_pid ( );
 
 void idle ( );
 

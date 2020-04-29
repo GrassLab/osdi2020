@@ -80,6 +80,14 @@ return_to_el1:
     ldr      x0,     =main      // where the acutally main is
     bl      task_create         // create "main" task
 
+    # create test task 
+    ldr      x0,     =test_task 
+    bl      task_create         
+    
+    # create two test task
+    ldr      x0,     =test_task 
+    bl      task_create         
+    
     # start from init, which will start to scheduling
     bl      launch_init  
 

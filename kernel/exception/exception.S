@@ -101,10 +101,9 @@ _exception__handler_el1:
     kernel_exit
 
 _irq__handler_el1:
-    # how to make macro gloabl?
-    save_reg
+    kernel_entry
     bl      irq_controller_el1
-    load_reg
+    kernel_exit
 
 _exception__handler_el2:
 

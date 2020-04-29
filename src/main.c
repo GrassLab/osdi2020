@@ -1,9 +1,8 @@
 #include "kernel/peripherals/uart.h"
 #include "lib/task.h"
+#include "lib/time.h"
 
 #include "shell.h"
-#include "test_task.h"
-
 
 int main ( )
 {
@@ -13,11 +12,11 @@ int main ( )
     // say hello
     uart_printf("Hello World\n");
 
-    // start shell
-    // shell_start();
-
-    // test do_exec, it shall just jump to that process
-    do_exec ( test_task );
+    while ( 1 )
+    {
+        uart_printf("Here is main.\n");
+        wait_msec ( 1000000 );
+    }
     
     return 0;
 }

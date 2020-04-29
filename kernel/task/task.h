@@ -6,6 +6,7 @@
 typedef enum {
     RUNNING = 1,
     DEAD = 2,
+    IDLE_STATE = 3,
 } task_state_t;
 
 typedef struct {

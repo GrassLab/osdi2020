@@ -62,6 +62,9 @@ void exec_controller_el1 ( )
         case SYS_DO_EXIT:
             sys_do_exit ( current_thread );
             break;
+        case SYS_GET_PID:
+            ( current_thread -> cpu_context ).x[0] = current_thread -> task_id;
+            break;
         default:
             print_exec_info ( EL1, elr, esr );
             break;

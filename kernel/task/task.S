@@ -18,4 +18,8 @@ launch_init:
 
     mov     sp,     #0x70000        // move the el1 sp to the default
 
+    # enable el1 irq
+    bl      irq_el1_enable          // defined in irq.S
+    bl      core_timer_enable       // defined in timer.c
+
     eret

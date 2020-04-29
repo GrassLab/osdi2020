@@ -1,6 +1,5 @@
 #include "kernel/peripherals/uart.h"
 #include "kernel/task/schedule.h"
-#include "kernel/task/task.h"
 
 #include "irq.h"
 #include "timer.h"
@@ -15,13 +14,8 @@ void irq_controller_el1 ( )
         uart_printf("Core Timer Interrupt\n");
         core_timer_reload ();
 
-        /* update current task counter */
-        thread_info_t * current_task = get_current_task_el0 ();
-        (current_task -> counter) --;
-        
-        /* check if need to do reschedule */
-        if ( current_task -> counter == 0 )
-            RESCHED_FLAG = 1;
+        /* call for potential rescheduling */
+        schedule ( );
 
         deal = 1;
     }

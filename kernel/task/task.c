@@ -53,11 +53,11 @@ int task_create ( void(*func)() )
     thread_info -> priority = 1;   /* all task has the same priority */
     thread_info -> counter = 2;
 
-    (thread_info -> cpu_context).x[19] = (unsigned long)func;
-    (thread_info -> cpu_context).lr =  (unsigned long)default_task_start;
+    (thread_info -> cpu_context).x[19] =    ( unsigned long)func;
+    (thread_info -> cpu_context).lr =       (unsigned long)default_task_start;
     (thread_info -> cpu_context).user_sp =  (unsigned long)(new_task -> user_stack_ptr);
-    (thread_info -> cpu_context).kernel_sp =  (unsigned long)(new_task -> kernel_stack_ptr);
-    (thread_info -> cpu_context).user_mode_pc =  (unsigned long)default_task_start;
+    (thread_info -> cpu_context).kernel_sp =    (unsigned long)(new_task -> kernel_stack_ptr);
+    (thread_info -> cpu_context).user_mode_pc = (unsigned long)default_task_start;
 
     /* save it into the pool */
     TASK_POOL[task_id] = thread_info;
