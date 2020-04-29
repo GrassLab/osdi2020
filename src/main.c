@@ -25,9 +25,10 @@
 
 #include "shell.h"
 #include "device/uart.h"
-#include "schedule/schedule.h"
-#include "schedule/switch.h"
-#include "schedule/runnableTask.h"
+#include "task/taskManager.h"
+#include "task/schedule.h"
+#include "task/switch.h"
+#include "task/runnableTask.h"
 
 #define INIT_TASK \
 /*cpu_context*/ { { 0,0,0,0,0,0,0,0,0,0,0,0,0}, \

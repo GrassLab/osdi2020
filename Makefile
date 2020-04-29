@@ -19,18 +19,18 @@ DVDIR	 = src/device
 DV		 = $(wildcard $(DVDIR)/*.c)
 DVOBJS	 = $(patsubst $(DVDIR)/%.c,%.o,$(DV)) \
 		   $(patsubst $(DVDIR)/%.S,%.o,$(ASMDV))
-SCDDIR	 = src/schedule
-SCD		 = $(wildcard $(SCDDIR)/*.c)
-ASMSCD	 = $(wildcard $(SCDDIR)/*.S)
-SCDOBJS	 = $(patsubst $(SCDDIR)/%.c,%.o,$(SCD)) \
-		   $(patsubst $(SCDDIR)/%.S,%.o,$(ASMSCD))
+TASKDIR	 = src/task
+TASK     = $(wildcard $(TASKDIR)/*.c)
+ASMTASK	 = $(wildcard $(TASKDIR)/*.S)
+TASKOBJS = $(patsubst $(TASKDIR)/%.c,%.o,$(TASK)) \
+		   $(patsubst $(TASKDIR)/%.S,%.o,$(ASMTASK))
 
-OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS) $(SCDOBJS)
+OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS) $(TASKOBJS)
 
 LSCRIPT  = linker.ld
 KERNEL   = kernel8
 
-VPATH    = $(SRCDIR) $(IRQDIR) $(DVDIR) $(SCDDIR)
+VPATH    = $(SRCDIR) $(IRQDIR) $(DVDIR) $(TASKDIR)
 
 all: $(KERNEL).img
 

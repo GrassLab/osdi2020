@@ -1,21 +1,38 @@
 #include "type.h"
 #include "device/uart.h"
-#include "schedule/schedule.h"
+#include "task/taskManager.h"
+#include "task/schedule.h"
+#include "task/sysCall.h"
 
 // User task
 
 void userTask()
 {
-    asm volatile("svc #2");
+    asm volatile("svc #2");  // Enable timer
 
     uartPuts("user task\n");
+}
+
+void forkTask()
+{
+    uartPuts("user task\n");
+    int r = fork();
+    uartInt(r);
+    if (fork() == 0)
+    {
+        uartPuts("parent\n");
+    }
+    else
+    {
+        uartPuts("child\n");
+    }  
 }
 
 // Kernel task
 
 void execTask()
 {
-    do_exec(&userTask);
+    doExec(&forkTask);
 }
 
 void idleTask()

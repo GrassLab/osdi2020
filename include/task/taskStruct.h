@@ -1,5 +1,5 @@
-#ifndef _TASK_H
-#define _TASK_H
+#ifndef _TASKSTRUCT_H
+#define _TASKSTRUCT_H
 
 #include "type.h"
 

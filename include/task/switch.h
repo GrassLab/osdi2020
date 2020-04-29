@@ -1,7 +1,7 @@
 #ifndef _SWITCH_H
 #define _SWITCH_H
 
-#include "schedule/task.h"
+#include "task/taskStruct.h"
 
 void switchTo();
 void switchToEL0();
