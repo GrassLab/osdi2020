@@ -33,6 +33,7 @@ void handle_core_timer_irq( void )
 	asm volatile ("msr cntp_tval_el0, %0" :: "r" (val)); // write tval
 	uart_send_string("Arm core timer interrupt, jiffies ");
 	uart_send_int(core_jf);
+	uart_send_string("\r\n");
 	core_jf += 1;
 	current->counter -= 1;
 	if (current->counter <= 0 ) {

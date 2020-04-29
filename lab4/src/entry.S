@@ -153,13 +153,10 @@ fiq_invalid_el0_32:
 error_invalid_el0_32:
 	handle_invalid_entry  0, ERROR_INVALID_EL0_32
 
-	
 sync_el0_64:
 	kernel_entry 0
-	mrs x0, esr_el1
-	mrs x1, elr_el1
 	bl	handle_el0_sync
-	str x0,[sp, #0] //return value
+	str x0,	[sp, #0] //return value
 	kernel_exit 0
 
 irq_el0_64:

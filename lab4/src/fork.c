@@ -3,7 +3,7 @@
 #include "entry.h"
 #include "../include/fork.h"
 
-int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack)
+int privilege_task_create(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack)
 {
 	preempt_disable();
 	struct task_struct *p;
@@ -25,7 +25,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 	else {
 		struct pt_regs *cur_regs   = task_pt_regs(current);
 		*childregs = *cur_regs;	// copy the parent kernel task
-		childregs->regs[0] = 0;
+		childregs->regs[0] = 0; // fork return with 0
 		childregs->sp = get_user_page(pid) + PAGE_SIZE;
 		p->stack = stack; // ?????
 	}
@@ -41,6 +41,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 	p->cpu_context.sp = (unsigned long)childregs;
 
 	task[pid] = p;	//put process stack to run queue
+	nr_tasks++;
 	preempt_enable();
 	return pid;
 }

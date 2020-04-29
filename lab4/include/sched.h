@@ -5,9 +5,11 @@
 #ifndef __ASSEMBLER__
 
 #define THREAD_SIZE				4096
-#define TASK_RUNNING				0
+#define TASK_RUNNING			0
+#define TASK_ZOMBIE				1
+
 #define NR_TASKS				64 
-#define PF_KTHREAD		            	0x00000002	
+#define PF_KTHREAD		        0x00000002	
 
 extern struct task_struct *current;
 extern struct task_struct *task[NR_TASKS];

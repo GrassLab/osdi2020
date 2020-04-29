@@ -97,6 +97,10 @@ int readline(char *buf, int maxlen) {
 }
 
 void uart_send_int(int number) {
+    if (number == 0) {
+        uart_send_string("0");
+        return;
+    }
     int i = 0, j; 
     char str[100];
     while (number) { 
@@ -104,15 +108,13 @@ void uart_send_int(int number) {
         number = number / 10; 
     } 
     reserve(str, i);
-    str[i] = '\r';
-    str[i + 1] = '\n';
-    str[i + 2] = '\0';
+    str[i] = '\0';
     uart_send_string(str);
     return ; 
 }
 
 void uart_send_hex(unsigned long number) {
-    char buffer[12];
+    char buffer[11];
     int i;
     buffer[0] = '0';
     buffer[1] = 'x'; 
@@ -132,9 +134,7 @@ void uart_send_hex(unsigned long number) {
             buffer[i] += 55;
         }
     }
-    buffer[10] = '\r';
-    buffer[11] = '\n';
-    buffer[12] = '\0';
+    buffer[10] = '\0';
     uart_send_string(buffer);
     return;
 }

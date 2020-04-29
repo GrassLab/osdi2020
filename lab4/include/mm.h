@@ -11,9 +11,8 @@
 #define PAGE_SIZE   			(1 << PAGE_SHIFT)	
 #define SECTION_SIZE			(1 << SECTION_SHIFT)	
 
-#define LOW_MEMORY              SECTION_SIZE  // warning 0x400000
+#define LOW_MEMORY              SECTION_SIZE  // warning 0x200000
 #define HIGH_MEMORY             PBASE
-
 
 #define LOW_KERNEL_STACK        LOW_MEMORY
 #define HIGH_KERNEL_STACK       LOW_MEMORY + 64 * PAGE_SIZE

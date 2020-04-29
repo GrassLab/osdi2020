@@ -35,13 +35,56 @@ void handle_sync(unsigned long esr, unsigned long address)
     return;
 }
 
-void handle_el0_sync(unsigned long esr, unsigned long address)
+void handle_el0_sync(unsigned long par1, unsigned long par2)
 {
     unsigned int val;
     asm volatile ("uxtw %0, w8" : "=r" (val));
     if (val == SYS_CLONE) {
-        uart_send("return from child\r\n");
-        return copy_process(0, 0, 0, 0);
+        //uart_send("return from child\r\n");
+        return privilege_task_create(0, 0, 0, 0);
+    }
+    if (val == SYS_EXIT_NUMBER) {
+        preempt_disable();
+        for (int i = 0 ; i < NR_TASKS ; i++) {
+            if (task[i] == current) {
+                task[i]->state = par1;
+                nr_tasks -= 1;
+                break;
+            }
+        }
+        preempt_enable();
+        //TODO free user page
+        schedule();
+    }
+    if (val == SYS_UART_READ) {
+        // par1 is buffer address
+        // par2 is read size
+        char c;
+        char *buf_ptr = par1;
+        unsigned long i;
+        for (i = 0 ; i < par2 ; i++) {
+            c = uart_recv();
+            *(buf_ptr + i) = c;
+        }
+        return i;
+    }
+    if (val == SYS_UART_WRITE) {
+        unsigned long i;
+        char *buf_ptr = par1; 
+        for (i = 0 ; i < par2 ;i++) {
+            uart_send(*(buf_ptr + i));
+        }
+        return i;
+    }
+    if (val == SYS_EXEC) {
+        return do_exec(par1);
+    }
+    if (val == SYS_FORK) {
+        return privilege_task_create(0, 0, 0, 0);
+    }
+    if (val == SYS_ID) {
+        unsigned long i = current->task_id;
+        return i;
     }
     return 0;
 }
