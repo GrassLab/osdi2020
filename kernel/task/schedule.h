@@ -11,5 +11,6 @@ extern void set_next_task_el0( thread_info_t * );
 extern int RESCHED_FLAG;
 
 void schedule ( );
+void do_exec ( void(*func)() );
 
 #endif

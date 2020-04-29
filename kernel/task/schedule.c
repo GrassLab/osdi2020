@@ -53,3 +53,10 @@ void schedule ( )
     /* switch to the next one */
     context_switch ( next );
 }
+
+void do_exec ( void(*func)() )
+{
+    int pid = task_create ( func );
+    thread_info_t * thread_info = get_thread_info ( pid );
+    context_switch ( thread_info );    
+}

@@ -30,24 +30,21 @@ switch_to:
 
 # from el1 to el0
 launch_init: 
-    ldr     x0,     IDLE                        /* IDLE would be declare in task.c */
+    ldr     x0,     IDLE            // IDLE would be declare in task.c
     
     msr     TPIDR_EL0, x0
 
-    # add x0, x0, #(8*30)
-
-    ldr     x19, [x0, 8 * 19]
+    ldr     x19,    [x0, 8 * 19]
     ldr     lr,     [x0, 8 * 30]
     
-    msr     ELR_EL1, lr                         /* when turn form el1 to el0, start from here */
+    msr     ELR_EL1, lr             // when turn form el1 to el0, start from here
 
-    ldr     x9,             [x0, 8 * 31]                /* user sp */
+    ldr     x9,     [x0, 8 * 31]    //  user sp 
     msr     SP_EL0, x9
 
-    mov sp, 0x70000 /* move the el1 sp to the default */
+    mov     sp,     #0x70000        // move the el1 sp to the default
 
     eret
-
 
 default_task_start:
     blr     x19  

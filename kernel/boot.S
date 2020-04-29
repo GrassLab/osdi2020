@@ -76,32 +76,15 @@ return_to_el1:
     # create IDLE
     bl      create_idle_task
 
+    # create main
+    ldr      x0,     =main      // where the acutally main is
+    bl      task_create         // create "main" task
 
-    # x0 would be the stack pointer of main, and should be the stack of el0
-    # init sp for EL0
-    # sub     x0,     x0,         #0x10000
-    # msr     SP_EL0, x0
-    
-    /* launch main in el1, should not return */
-    bl      launch_main
-    # bl      create_idle_task
-    
-    # load exception return address
-    # after done this all, go to schedule
-    adr     x1,     main
-    msr     ELR_EL1, x1
+    # start from init, which will start to scheduling
+    bl      launch_init  
 
-    # return to EL0
-    eret
-
-/* user mode start here */
-# return_to_el0: 
-#     
-#     
-# jmp_main:  
-#     /* starting scheduling, should not return */
-#     bl      main
-#     b       loop
+    # it shall not return
+    bl      loop
 
 loop:  
     wfe

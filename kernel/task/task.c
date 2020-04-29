@@ -37,13 +37,11 @@ void create_idle_task ( )
     IDLE -> priority = 1;
     IDLE -> counter = 0;
 
-    (IDLE -> cpu_context).x[19] = (unsigned long)idle;
-    (IDLE -> cpu_context).lr  = (unsigned long)default_task_start;
-    (IDLE -> cpu_context).user_sp  = (unsigned long)idle_pcb -> user_stack_ptr;
-    (IDLE -> cpu_context).kernel_sp  = (unsigned long)idle_pcb -> kernel_stack_ptr;
-    (IDLE -> cpu_context).user_mode_pc  = (unsigned long)default_task_start;
-
-    uart_printf ("%x\n", & ( (IDLE -> cpu_context).x[19]));
+    (IDLE -> cpu_context).x[19] =   (unsigned long)idle;
+    (IDLE -> cpu_context).lr =      (unsigned long)default_task_start;
+    (IDLE -> cpu_context).user_sp =         (unsigned long)idle_pcb -> user_stack_ptr;
+    (IDLE -> cpu_context).kernel_sp =       (unsigned long)idle_pcb -> kernel_stack_ptr;
+    (IDLE -> cpu_context).user_mode_pc =    (unsigned long)default_task_start;
 
     /* reserve one for idle task*/
     TASK_POOL_USAGE = 1;
@@ -102,13 +100,7 @@ int find_usable_in_pool ()
     return -1;
 }
 
-extern int main ();
-
-/* here is still in el1 */
-/* create task of main, and launch it */
-void launch_main ( )
+thread_info_t * get_thread_info ( int pid )
 {
-    task_create ( ( void * )( main ) );
-    
-    launch_init ( );
+    return TASK_POOL[pid];
 }

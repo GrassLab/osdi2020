@@ -1,6 +1,7 @@
 CC			= aarch64-linux-gnu-gcc
 LD 			= aarch64-linux-gnu-ld
 OBJ_CPY 	= aarch64-linux-gnu-objcopy
+OBJ_DUMP	= aarch64-linux-gnu-objdump
 EMULATOR	= qemu-system-aarch64
 
 CFLAGS 		= -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
@@ -20,7 +21,7 @@ all: kernel8.img
 force: clean kernel8.img
 
 clean:
-	@rm kernel8.elf $(ALL_OBJS) >/dev/null 2>/dev/null || true
+	@rm asm symbol kernel8.elf $(ALL_OBJS)  >/dev/null 2>/dev/null || true
 
 kernel8.img: kernel8.elf
 	$(OBJ_CPY) -O binary $^ $@
@@ -40,4 +41,6 @@ run: kernel8.img
 debug: CFLAGS += -ggdb3 -Og
 
 debug: clean kernel8.img
+	$(OBJ_DUMP) -d kernel8.elf > asm
+	$(OBJ_DUMP) -t kernel8.elf > symbol
 	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio -s -S

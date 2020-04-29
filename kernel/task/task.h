@@ -44,6 +44,6 @@ void idle ( );
 void create_idle_task ( );
 int task_create ( void(*func)() );
 int find_usable_in_pool ( );
-void launch_main ( );
+thread_info_t * get_thread_info ( int pid );
 
 #endif
