@@ -2,6 +2,7 @@
 #include <uart.h>
 #include <stddef.h>
 #include <string.h>
+#include <sched.h>
 #include "irq.h"
 
 void
@@ -26,6 +27,29 @@ irq_router ()
   else
     {
       uart_puts ("wtf? ghooooost IRQ\n");
+    }
+}
+
+void
+kernel_irq_router ()
+{
+  unsigned int arm, arm_local;
+  char r;
+  arm = *IRQ_BASIC_PENDING;
+  arm_local = *CORE0_INTR_SRC;
+  if (arm_local & 0x800)
+    {
+      // local timer interrupt
+    }
+  else if (arm_local & 0x2)
+    {
+      // core timer interrupt
+      current->resched = 1;
+      core_timer_handler ();
+    }
+  else
+    {
+      uart_puts ("wtf? ghooooost kernel IRQ\n");
     }
 }
 

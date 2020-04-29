@@ -23,3 +23,4 @@ switch_to:
 .global get_current
 get_current:
   mrs x0, tpidr_el1
+  ret

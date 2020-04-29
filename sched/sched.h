@@ -30,6 +30,7 @@ struct task_struct
   char stack[0x1000] __attribute__ ((aligned (8)));
   char kstack[0x1000] __attribute__ ((aligned (8)));
   struct list_head list;
+  char resched;
 } task_pool[POOL_SIZE];
 
 void privilege_task_create (void (*func) ());

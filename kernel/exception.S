@@ -56,6 +56,11 @@ irq_handler:
   bl irq_router
   kernel_exit
 
+kernel_irq_handler:
+  kernel_entry
+  bl kernel_irq_router
+  kernel_exit
+
 .align 11
 .global exception_table
 exception_table:
@@ -70,7 +75,7 @@ exception_table:
 
   b not_implemented
   .align 7
-  b not_implemented
+  b kernel_irq_handler
   .align 7
   b not_implemented
   .align 7

@@ -2,6 +2,7 @@
 #include <lfb.h>
 #include <sched.h>
 #include <string.h>
+#include <timer.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -28,7 +29,11 @@ echo_and_delay ()
       t = cnt;
       while (cnt - t < freq / 2)
 	sys_get_time (&cnt, &freq);
-      schedule ();
+      if (current->resched)
+	{
+	  current->resched = 0;
+	  schedule ();
+	}
     }
 }
 
@@ -53,6 +58,7 @@ main (int error, char *argv[])
   privilege_task_create (&echo_and_delay);
   privilege_task_create (&echo_and_delay);
   privilege_task_create (&echo_and_delay);
+  sys_core_timer_enable ();
   switch_to (&fake, &task_pool[0]);
   shell_interactive ();
   return 0;
