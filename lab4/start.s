@@ -33,16 +33,19 @@ master:
     orr x0, x0, x1
     msr HCR_EL2, x0
 
-    // setup lower sp_eln
+    // This should be set when performing mode switch, since each task has
+    // their own user stack
+    // add x0, sp, #0x2000
+    // msr SP_EL0, x0
+
+    // tmp kernel stack (should be reset before switching to user mode)
     add x0, sp, #0x2000
-    msr SP_EL0, x0
-    add x0, x0, #0x2000
     msr SP_EL1, x0
 
     b _from_el2_to_el1
 
 _from_el2_to_el1:
-    mov x0, 0x5 // EL1h (SPSel = 1) with interrupt disabled
+    mov x0, 0x3c5 // EL1h (SPSel = 1) with interrupt disabled
     msr SPSR_EL2, x0
     adr x0, kernel_main // load exception return address
     msr ELR_EL2, x0

@@ -134,9 +134,27 @@ leave:
 
 .global _irq_handler
 _irq_handler:
+    // entry of kernel routine
     _kernel_entry
 
+    bl switchUserToKernel
+
+    // set interrupt context (stack) to position 4MB
+    bl getCurrentTask
+    mov x9, sp
+    str x9, [x0, 16 * 6]
+    mov sp, 0x400000
+
     bl irq_handler
+
+    // reset back to kernel context (stack)
+    bl getCurrentTask
+    ldr x9, [x0, 16 * 6]
+    mov sp,  x9
+
+    // exit of kernel routine
+    bl checkRescheduleFlag
+    bl switchKernelToUser
 
     _kernel_exit
 

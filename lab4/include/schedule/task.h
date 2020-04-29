@@ -8,7 +8,7 @@
 
 #define MAX_TASK_NUM 64
 
-typedef struct __CpuContext {
+typedef struct __KernelContext {
     uint64_t x19;
     uint64_t x20;
     uint64_t x21;
@@ -21,24 +21,45 @@ typedef struct __CpuContext {
     uint64_t x28;
     uint64_t fp;
     uint64_t lr;
+
     uint64_t sp;
-} CpuContext;
+} KernelContext;
+
+typedef struct __UserContext {
+    uint64_t fp;
+    uint64_t lr;
+
+    uint64_t sp;
+    uint64_t elr_el1;
+    uint64_t spsr_el1;
+} UserContext;
+
+typedef struct __UserTaskStruct {
+    UserContext user_context;
+    uint32_t id;
+    bool regain_resource_flag;
+} UserTaskStruct;
 
 typedef struct __TaskStruct {
-    CpuContext cpu_context;
+    KernelContext kernel_context;
+    UserTaskStruct *user_task;
     uint32_t id;
     uint32_t counter;
     bool in_use;
     bool reschedule_flag;
 } TaskStruct;
 
-extern TaskStruct task_pool[MAX_TASK_NUM] __attribute__((aligned(16u)));
+extern TaskStruct ktask_pool[MAX_TASK_NUM] __attribute__((aligned(16u)));
 extern uint8_t kstack_pool[MAX_TASK_NUM][4096] __attribute__((aligned(16u)));
+
+extern UserTaskStruct utask_pool[MAX_TASK_NUM] __attribute__((aligned(16u)));
+extern uint8_t ustack_pool[MAX_TASK_NUM][4096] __attribute__((aligned(16u)));
 
 extern Queue running_queue;
 
 void initIdleTaskState(void);
 int createPrivilegeTask(void (*func)());
+void checkRescheduleFlag(void);
 
 // for testing scheduler
 void fooTask(void);
