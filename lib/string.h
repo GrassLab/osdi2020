@@ -3,11 +3,15 @@
 
 #include "type.h"
 
-int  strcmp     ( char * s1, char * s2 );
+int  strcmp     ( const char * s1, const char * s2 );
 void strset     ( char * s1, int c, int size );
-int  strlen     ( char * s );
-void itoa       ( int x, char str[], int d );
-void ftoa       ( float n, char* res, int afterpoint ); 
+int  strlen     ( const char * s );
+char * strcpy ( char * destination, const char * source );
+char * strncpy ( char * destination, const char * source, int num );
+const char * strchr ( const char * str, int character );
+char *  itoa ( int value, char * str, int base );
+int atoi ( const char * str );
+void ftoa ( double n, char * res, int afterpoint );
 void itohex_str ( uint64_t d, int size, char * s );
 void reverse    ( char *s );
 

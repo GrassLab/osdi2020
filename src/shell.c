@@ -1,4 +1,4 @@
-#include "kernel/peripherals/uart.h"
+#include "lib/io.h"
 #include "lib/string.h"
 
 #include "command.h"
@@ -6,24 +6,43 @@
 
 void shell_start ( ) 
 {
-    int buffer_counter = 0;
-    char input_char;
+    // int buffer_counter = 0;
+    // char input_char;
     char buffer[MAX_BUFFER_LEN];
-    enum SPECIAL_CHARACTER input_parse;
+    // enum SPECIAL_CHARACTER input_parse;
 
     strset (buffer, 0, MAX_BUFFER_LEN);   
 
     // new line head
-    uart_puts("# ");
+    printf("# ");
 
     // read input
     while(1)
     {
+        gets(buffer);
+
+        if      ( !strcmp(buffer, "help"            ) ) command_help();
+        else if ( !strcmp(buffer, "hello"           ) ) command_hello();
+        else if ( !strcmp(buffer, "timestamp"       ) ) command_timestamp();
+        // else if ( !strcmp(buffer, "reboot"          ) ) command_reboot();
+        else if ( !strcmp(buffer, "vc_base_addr"    ) ) command_vc_base_addr();
+        else if ( !strcmp(buffer, "board_revision"  ) ) command_board_revision();
+        else if ( !strcmp(buffer, "exc"             ) ) command_svc_exception_trap();
+        else if ( !strcmp(buffer, "hvc"             ) ) command_hvc_exception_trap();
+        else if ( !strcmp(buffer, "exc_brk"         ) ) command_brk_exception_trap();
+        else if ( !strcmp(buffer, "timer"           ) ) command_timer_exception_enable();
+        else if ( !strcmp(buffer, "timer-stp"       ) ) command_timer_exception_disable();
+        else if ( !strcmp(buffer, "irq"             ) ) command_irq_exception_enable();
+        else if ( !strcmp(buffer, "irq-stp"         ) ) command_irq_exception_disable();
+        else                                            command_not_found(buffer);
+        
+        /*
         input_char = uart_getc();
 
         input_parse = parse ( input_char );
 
         command_controller ( input_parse, input_char, buffer, &buffer_counter);
+        */
     }
 }
 
@@ -51,13 +70,11 @@ void command_controller ( enum SPECIAL_CHARACTER input_parse, char c, char buffe
         if (  (*counter) > 0 )
             (*counter) --;
         
-        uart_send(c);
-        uart_send(' ');
-        uart_send(c);
+        printf("%c %c", c, c);
     }
     else if ( input_parse == NEW_LINE )
     {
-        uart_send(c);
+        printf("%c\n", c);
 
         if ( (*counter) == MAX_BUFFER_LEN ) 
         {
@@ -70,7 +87,7 @@ void command_controller ( enum SPECIAL_CHARACTER input_parse, char c, char buffe
             if      ( !strcmp(buffer, "help"            ) ) command_help();
             else if ( !strcmp(buffer, "hello"           ) ) command_hello();
             else if ( !strcmp(buffer, "timestamp"       ) ) command_timestamp();
-            else if ( !strcmp(buffer, "reboot"          ) ) command_reboot();
+            // else if ( !strcmp(buffer, "reboot"          ) ) command_reboot();
             else if ( !strcmp(buffer, "vc_base_addr"    ) ) command_vc_base_addr();
             else if ( !strcmp(buffer, "board_revision"  ) ) command_board_revision();
             else if ( !strcmp(buffer, "exc"             ) ) command_svc_exception_trap();
@@ -87,11 +104,11 @@ void command_controller ( enum SPECIAL_CHARACTER input_parse, char c, char buffe
         strset (buffer, 0, MAX_BUFFER_LEN); 
 
         // new line head;
-        uart_puts("# ");
+        printf("# ");
     }
     else if ( input_parse == REGULAR_INPUT )
     {
-        uart_send(c);
+        printf("%c", c);
 
         if ( *counter < MAX_BUFFER_LEN)
         {

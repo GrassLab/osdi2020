@@ -15,6 +15,8 @@
 #define SYS_CALL_WAIT_MSEC              "scv #10;"
 #define SYS_CALL_DO_EXIT                "scv #11;"
 #define SYS_CALL_GET_PID                "scv #12;"
+#define SYS_CALL_UART_WRITE             "scv #13;"
+#define SYS_CALL_UART_READ              "scv #14;"
 
 #define HYPERVISORE_CALL_TEST_HVC       "hvc #2;"
 
@@ -34,6 +36,8 @@ enum system_call {
     SYS_WAIT_MSEC,
     SYS_DO_EXIT,
     SYS_GET_PID,
+    SYS_UART_WRITE,
+    SYS_UART_READ,
 };
 
 enum exception_level {

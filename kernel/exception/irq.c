@@ -11,7 +11,7 @@ void irq_controller_el1 ( )
 
     if ( irq_source & 0b10 )
     {
-        uart_printf("Core Timer Interrupt\n");
+        sys_printk("Core Timer Interrupt\n");
         core_timer_reload ();
 
         /* call for potential rescheduling */
@@ -22,7 +22,7 @@ void irq_controller_el1 ( )
     
     if (irq_source & 0b100000000000 )
     {
-        uart_printf("Local Timer Interrupt\n");
+        sys_printk("Local Timer Interrupt\n");
         local_timer_reload ();
 
         deal = 1;
@@ -30,8 +30,8 @@ void irq_controller_el1 ( )
 
     if ( !deal )
     {
-        uart_printf("Some Interrupt Happened. I don't like it\n");
-        uart_printf("%x\n", irq_source);
+        sys_printk("Some Interrupt Happened. I don't like it\n");
+        sys_printk("%x\n", irq_source);
     }
 }
 
@@ -42,7 +42,7 @@ void irq_controller_el2 ( )
 
     if ( irq_source & 0b10 )
     {
-        uart_printf("Core Timer Interrupt\n");
+        sys_printk("Core Timer Interrupt\n");
         core_timer_reload ();
 
         deal = 1;
@@ -50,7 +50,7 @@ void irq_controller_el2 ( )
     
     if (irq_source & 0b100000000000 )
     {
-        uart_printf("Local Timer Interrupt\n");
+        sys_printk("Local Timer Interrupt\n");
         local_timer_reload ();
 
         deal = 1;
@@ -58,8 +58,8 @@ void irq_controller_el2 ( )
 
     if ( !deal )
     {
-        uart_printf("Some Interrupt Happened. I don't like it\n");
-        uart_printf("%x\n", irq_source);
+        sys_printk("Some Interrupt Happened. I don't like it\n");
+        sys_printk("%x\n", irq_source);
     }
 }
 

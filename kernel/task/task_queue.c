@@ -1,5 +1,6 @@
-#include "lib/type.h"
 #include "kernel/peripherals/uart.h"
+
+#include "lib/type.h"
 
 #include "mem.h"
 #include "task_queue.h"
@@ -27,7 +28,7 @@ task_queue_state_t task_enqueue ( thread_info_t * task )
         if ( QUEUE_TAIL - QUEUE_HEAD + 1  == QUEUE_ACCOMMPDATION )
             IS_FULL = 1;
 
-        uart_printf("[TASK QUEUE]\tTask Enqueue: %d\n", task -> task_id );
+        sys_printk("[TASK QUEUE]\tTask Enqueue: %d\n", task -> task_id );
         
         return SUCCESS;
     }
@@ -47,7 +48,7 @@ thread_info_t * task_dequeue ( )
     QUEUE_HEAD ++;
     IS_FULL = 0;
 
-    uart_printf("[TASK QUEUE]\tTask Dequeue: %d\n", temp -> task_id );
+    sys_printk("[TASK QUEUE]\tTask Dequeue: %d\n", temp -> task_id );
 
     return temp;
 }

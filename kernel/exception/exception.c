@@ -65,6 +65,14 @@ void exec_controller_el1 ( )
         case SYS_GET_PID:
             ( current_thread -> cpu_context ).x[0] = current_thread -> task_id;
             break;
+        case SYS_UART_WRITE:
+            ;
+            char * s = (char *)( current_thread -> cpu_context ).x[0];
+            uart_puts ( s );
+            break;
+        case SYS_UART_READ:
+            ( current_thread -> cpu_context ).x[0] = uart_getc ( 0 );
+            break;
         default:
             print_exec_info ( EL1, elr, esr );
             break;
@@ -88,7 +96,7 @@ void exec_controller_el2 ( )
     switch ( iss ) 
     {
         case TEST_HVC:
-            uart_printf ( "Here, I am in EL2\n" );
+            sys_printk ( "Here, I am in EL2\n" );
             break;
         default:
             print_exec_info ( EL2, elr, esr );
@@ -104,10 +112,10 @@ void print_exec_info ( EL el, uint64_t elr, uint64_t esr )
     // int il = (((uint32_t)esr)>>25) & 0x1 ;
     iss = (((uint32_t)esr)) & 0x00FFFFFF;
 
-    uart_printf("Current Exception Level: %d\n", el);
-    uart_printf("Exception return address: %x\n", elr);
-    uart_printf("Exception clss (EC): %x\n", ec);
-    uart_printf("Instruction specific syndrome (ISS): %x\n", iss);
+    sys_printk("Current Exception Level: %d\n", el);
+    sys_printk("Exception return address: %x\n", elr);
+    sys_printk("Exception clss (EC): %x\n", ec);
+    sys_printk("Instruction specific syndrome (ISS): %x\n", iss);
 }
 
 int get_current_el ()

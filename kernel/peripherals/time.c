@@ -12,7 +12,7 @@ void print_current_timestamp ( )
         :
     );
 
-    uart_printf("[%f]\n", ((float)cnt_tpct) / cnt_freq);
+    sys_printk("[%f]\n", ((float)cnt_tpct) / cnt_freq);
 }
 
 void wait_cycles ( unsigned int n )

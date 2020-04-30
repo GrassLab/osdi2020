@@ -1,15 +1,23 @@
-#include "kernel/peripherals/uart.h"
-#include "lib/task.h"
 #include "lib/time.h"
-
-#include "shell.h"
+#include "lib/io.h"
 
 int main ( )
 {
+    char s[200];
+    int i;
     while ( 1 )
     {
-        uart_printf("Here is main.\n");
+        gets(s);
+        printf("%s Here is main.\n", s);
         wait_msec ( 1000000 );
+
+        i = 5;
+        while ( i -- )
+        {
+            printf("Here is main.\n");
+            wait_msec ( 50000 );
+        }
+        
     }
     
     return 0;

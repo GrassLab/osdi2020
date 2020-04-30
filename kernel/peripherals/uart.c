@@ -1,30 +1,8 @@
-/*
- * Copyright (C) 2018 bzt (bztsrc@github)
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- *
- */
 #include "lib/ctype.h"
+#include "lib/io.h"
 #include "lib/stdarg.h"
 #include "lib/string.h"
+#include "lib/type.h"
 
 #include "gpio.h"
 #include "mailbox.h"
@@ -100,36 +78,6 @@ void uart_send ( unsigned int c )
     }
 }
 
-/**
- * Send a integer
- */
-void uart_send_int ( int c, int field_length, int base )
-{
-    char buffer[20];
-
-    switch ( base )
-    {
-        case 10:
-            itoa( c, buffer, field_length );
-            break;
-        case 16:
-            itohex_str ( c, sizeof(int), buffer );
-            break;
-    }
-    
-    uart_puts( buffer );
-}
-
-/**
- * Send a float
- */
-void uart_send_float ( float f, int field_length )
-{
-    char buffer[20];
-    ftoa ( f, buffer, 6 );
-    uart_puts( buffer );
-}
-
 
 /**
  * Receive a character
@@ -148,32 +96,12 @@ char uart_getc ( )
     /* read it and return */
     r = ( char )( *UART_DR );
 
+    r = r == '\r' ? '\n' : r;
+
+    uart_send ( r );
+
     /* convert carrige return to newline */
-    return r == '\r' ? '\n' : r;
-}
-
-/**
- * Receive a integer
- */
-int uart_getint ( )
-{
-    int input, output;
-
-    output = 0;
-    
-    while ( 1 ) 
-    {
-        input = uart_getc();
-        uart_send(input);
-
-        if ( !isdigit ( input ) )
-            break;
-
-        output = output * 10 + (input - '0');
-        
-    }
-
-    return output;
+    return r;
 }
 
 /**
@@ -187,69 +115,126 @@ void uart_puts ( char *s )
     }
 }
 
-void uart_printf ( const char * format, ... )
+int sys_printk ( const char * format, ... )
 {
-    const char * temp = format;
-    int field_length;
-    int d;
-    char c;
-    char *s;
-    float f;
+    const char * current = format;
+    char temp_buffer[50];
+    int output_char_counts = 0;
+
     va_list arguments;
+    format_t output_format;
+
+    int d; char c; char *s; double f;
 
     va_start ( arguments, format );
 
-    do
-    {
-        if ( *temp == '%' )
-        {
-            temp ++;
+    do {
 
-            // field length
-            field_length = 0;
-            if (isdigit(*temp))
+        if ( *current == '%' )
+        {   
+            output_format = parse_format( &current );
+
+            /* retrive argument */
+            switch ( output_format.type )
             {
-                field_length = * temp;
+                case LONG_INT:
+                case INT:
+                    d = va_arg ( arguments, int );
+                    itoa ( d, temp_buffer, 10 );
+                    break;
+                case BINARY:
+                    d = va_arg ( arguments, int );
+                    itoa ( d, temp_buffer, 2 );
+                    break;
+                case OCTAL:
+                    d = va_arg ( arguments, int );
+                    itoa ( d, temp_buffer, 8 );
+                    break;
+                case HEXADECIMAL:
+                case POINTER:
+                    d = va_arg ( arguments, int );
+                    temp_buffer[0] = '0';
+                    temp_buffer[1] = 'x';
+                    itoa ( d, temp_buffer + 2, 16 );
+                    break;
+                case DOUBLE:
+                    f = va_arg ( arguments, double );
+                    ftoa ( f, temp_buffer, output_format.after_point_length );
+                    break;
+                case CHAR:
+                    c = va_arg ( arguments, int );
+                    temp_buffer[0] = c;
+                    temp_buffer[1] = '\0';
+                    break;
+                case STRING:
+                    s = va_arg ( arguments, char * );
+                    break;
+                default:
+                    break;
+            }
+            
+            /* output signed if needed */
+            if ( output_format.signed_flag && output_format.type == INT )
+            {
+                d = va_arg ( arguments, int );
 
-                while ( isdigit(*temp) ) 
+                output_char_counts ++;
+                uart_send ( d > 0 ? '+' : '-' );
+            }
+
+            /* padding zero or space */
+            if ( output_format.int_length != 0 && output_format.int_length > strlen ( temp_buffer ) && !output_format.is_justify_left )
+            {
+                while ( output_format.int_length - strlen ( temp_buffer ) > 0 )
                 {
-                    field_length *= 10;
-                    field_length += (*temp);
-                    temp ++;
+                    if ( output_format.is_zero_padding )
+                        uart_send ( '0' );
+                    else 
+                        uart_send ( ' ' );
+
+                    output_char_counts ++;
+                    output_format.int_length --;
                 }
             }
 
-            // format different argument
-            switch ( *temp )
+            if ( output_format.type == INT && output_format.signed_flag && d < 0 )
             {
-                case 'd':
-                    d = va_arg ( arguments, int );
-                    uart_send_int( d, field_length, 10 );
-                    break;
-                case 's':
-                    s = va_arg ( arguments, char * );
-                    uart_puts ( s );
-                    break;
-                case 'c':
-                    c = (char) va_arg ( arguments, int );
-                    uart_send ( c );
-                    break;
-                case 'x':
-                    d = va_arg ( arguments, int ); 
-                    uart_send_int( d, field_length, 16 );
-                    break;
-                case 'f':
-                    f = va_arg ( arguments, double );
-                    uart_send_float ( f, field_length );
-                    break;
+                output_char_counts += strlen ( temp_buffer + 1 );
+
+                uart_puts( temp_buffer + 1 );
+            }
+            else if ( output_format.type == STRING )
+            {
+                output_char_counts += strlen ( s );
+                uart_puts( s );
+            }
+            else
+            {
+                output_char_counts += strlen ( temp_buffer );
+                uart_puts( temp_buffer );                
+            }
+
+            /* padding space at the end*/
+            if ( output_format.int_length != 0 && output_format.int_length > strlen ( temp_buffer ) && output_format.is_justify_left )
+            {
+                while ( output_format.int_length - strlen ( temp_buffer ) > 0 )
+                {
+                    uart_send( ' ' );
+
+                    output_char_counts ++;
+                    output_format.int_length --;
+                }
             }
         }
         else
         {
-            uart_send( *temp );
+            output_char_counts ++;
+            uart_send( *current );
+
+            current ++;
         }
+            
+    } while ( *current != '\0' );
 
-        temp ++;
-
-    } while ( *temp != '\0');
+    return 0;
 }

@@ -55,6 +55,7 @@
 #define PM_RSTC         ((volatile unsigned int*)0x3F10001C)
 #define PM_WDOG         ((volatile unsigned int*)0x3F100024)
 #define PM_PASSWORD     (0x5a000000)
+
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
@@ -71,18 +72,11 @@ void uart_send ( unsigned int c );
 char uart_getc ( );
 
 /**
- * Receive a integer
- */
-int uart_getint ( );
-
-/**
  * Display a string
  */
 void uart_puts ( char *s );
 
-/**
- * Display a string
- */
-void uart_printf ( const char *  format, ... );
+/* Display a formatted string */
+int sys_printk ( const char *  format, ... );
 
 #endif

@@ -62,7 +62,7 @@ int task_create ( void(*func)() )
     /* save it into the pool */
     TASK_POOL[task_id] = thread_info;
 
-    uart_printf( "[TASK]\t\tCreate Task with task_id: %d\n", task_id );
+    sys_printk( "[TASK]\t\tCreate Task with task_id: %d\n", task_id );
 
     /* put the task into the runqueue */
     task_enqueue ( thread_info );

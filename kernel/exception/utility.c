@@ -2,5 +2,5 @@
 
 void exception_not_implemented (  unsigned long a  )
 {
-    uart_printf("Exception Not Implemented!!\n");
+    sys_printk("Exception Not Implemented!!\n");
 }

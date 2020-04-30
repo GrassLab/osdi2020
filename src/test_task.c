@@ -1,5 +1,5 @@
-#include "kernel/peripherals/uart.h"
 
+#include "lib/io.h"
 #include "lib/task.h"
 #include "lib/time.h"
 
@@ -10,7 +10,7 @@ void test_task ( )
 
     while ( i-- )
     {   
-        uart_printf("I am task %d\n", pid);
+        printf("I am task %d\n", pid);
         wait_msec(3000000);
     }
 }
