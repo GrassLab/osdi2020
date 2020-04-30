@@ -48,6 +48,7 @@ handle_exc:
     save_reg
     mrs     x0, ESR_EL1
     mrs     x1, ELR_EL1
+    mov     x9, sp
     bl       excHandler
     load_reg
     eret

@@ -8,7 +8,7 @@
 
 void userTask()
 {
-    asm volatile("svc #2"); // Enable timer
+    // asm volatile("svc #2"); // Enable timer
 
     uartPuts("user task\n");
 }
@@ -17,16 +17,16 @@ void forkTask()
 {
     asm volatile("svc #2"); // Enable timer
 
-    uartPuts("user task\n");
     // int r = fork();
     // uartInt(r);
     if (fork() == 0)
     {
-        uartPuts("parent\n");
+        uartPuts("child\n");
+        exec(&userTask);
     }
     else
     {
-        uartPuts("child\n");
+        uartPuts("parent\n");
     }
 }
 
