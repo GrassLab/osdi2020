@@ -4,6 +4,7 @@
 #include <mbox.h>
 #include <lfb.h>
 #include <timer.h>
+#include <sched.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -180,7 +181,7 @@ get_time ()
 {
   size_t cnt, freq;
   asm volatile ("mov x2, %0\n" "mov x1, %1\n" "mov x0, #1\n"
-		"svc #0\n"::"r" (&freq), "r" (&cnt):"x1", "x2");
+		"svc #0\n"::"r" (&freq), "r" (&cnt):"x0", "x1", "x2");
   return (double) cnt / (double) freq;
 }
 
