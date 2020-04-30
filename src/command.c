@@ -66,15 +66,12 @@ void command_reboot ( )
 
 void command_board_revision ( )
 {
-    char str[20];  
     uint32_t board_revision = mbox_get_board_revision ();
 
     printf("Board Revision: ");
     if ( board_revision )
     {
-        itohex_str(board_revision, sizeof(uint32_t), str);
-        printf(str);
-        printf("\n");
+        printf ("%x\n", board_revision);
     }
     else
     {
@@ -83,23 +80,14 @@ void command_board_revision ( )
 }
 
 void command_vc_base_addr ( )
-{
-    char str[20];  
+{   
     uint64_t vc_base_addr = mbox_get_VC_base_addr ();
 
     printf("VC Core Memory:\n");
     if ( vc_base_addr )
     {
-        printf("    - Base Address: ");
-        itohex_str((uint32_t)(vc_base_addr >> 32), sizeof(uint32_t), str);
-        printf(str);
-        printf(" (in bytes)\n");
-
-
-        printf("    - Size: ");
-        itohex_str((uint32_t)(vc_base_addr & 0xffffffff), sizeof(uint32_t), str);
-        printf(str);
-        printf(" (in bytes)\n");
+        printf("    - Base Address: %x (in bytes)\n", (uint32_t)(vc_base_addr >> 32));
+        printf("    - Size: %x (in bytes)\n", (uint32_t)(vc_base_addr & 0xffffffff));
     }
     else
     {

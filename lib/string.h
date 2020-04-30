@@ -12,7 +12,6 @@ const char * strchr ( const char * str, int character );
 char *  itoa ( int value, char * str, int base );
 int atoi ( const char * str );
 void ftoa ( double n, char * res, int afterpoint );
-void itohex_str ( uint64_t d, int size, char * s );
 void reverse    ( char *s );
 
 
