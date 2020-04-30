@@ -3,7 +3,11 @@
 #define NR_TASKS                   64
 #define THREAD_CPU_CONTEXT         0
 #define THREAD_SIZE                4096
+
 #define TASK_RUNNING			   0
+#define TASK_ZOMBIE                1
+
+#define PF_KTHREAD                 0x00000002
 
 #ifndef __ASSEMBLER__
 
@@ -31,6 +35,8 @@ struct task_struct {
   unsigned long priority;
   unsigned long preempt_count;
   unsigned long need_reched;
+  unsigned long stack;
+  unsigned long flags;
 };
 
 /* sched.c */
@@ -40,6 +46,9 @@ void schedule();
 void timer_tick();
 void preempt_enable();
 void preempt_disable();
+unsigned long unique_id();
+
+void exit_process();
 
 extern struct task_struct *current;
 extern struct task_struct *task[NR_TASKS];
@@ -52,6 +61,6 @@ void delay(unsigned long);
 
 #define INIT_TASK                                                       \
   /*cpu_context*/ { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},            \
-      /* state etc */   0, 0, 0, 1, 0, 0 }
+      /* state etc */   0, 0, 0, 1, 0, 0, 0, PF_KTHREAD }
 
 #endif

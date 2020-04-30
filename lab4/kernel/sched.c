@@ -88,20 +88,8 @@ void _schedule() {
 void schedule_tail() { preempt_enable(); }
 
 void schedule() {
-  struct task_struct *p = current;
-  if (p->pid) {
-    if (p->need_reched && p->preempt_count <= 0) {
-      p->need_reched = 0;
-      p->counter = 0;
-
-      /* enable_irq(); */
-      _schedule();
-      /* disable_irq(); */
-    }
-  } else {
-    _schedule();
-  }
-
+  current->counter = 0;
+  _schedule();
 }
 
 /* #define current get_current() */
@@ -109,7 +97,6 @@ void schedule() {
 /* extern struct task_struct *get_current(); */
 
 void context_switch(struct task_struct *next) {
-
   if (current == next)
     return;
 
@@ -117,24 +104,13 @@ void context_switch(struct task_struct *next) {
 
   current = next;
 
-  uart_println("[Sched] switch to %d", next->pid);
+  uart_println("\r\n[Sched] switch to %d", next->pid);
 
   /* switch to the next */
   cpu_switch_to(prev, next);
 }
 
 void timer_tick() {
-  struct task_struct *p = current;
-
-  /* if (p->pid) { */
-  /*   if (--p->counter <= 0) { */
-  /*     /\* p->counter = 0; *\/ */
-
-  /*     /\* just set the need_reched flag *\/ */
-  /*     p->need_reched = 1; */
-  /*   } */
-  /* } */
-
   --current->counter;
 
   /* epoch not used up or the current task can not be premmpt */
@@ -142,12 +118,29 @@ void timer_tick() {
     return;
   }
 
-  /* /\* used up its epoch *\/ */
-  /* /\* set the need_reched flag *\/ */
+  /* used up its epoch */
+  /* set the need_reched flag */
   current->need_reched = 1;
   current->counter = 0;
 
-  /* enable_irq(); */
-  /* _schedule(); */
-  /* disable_irq(); */
+  /* issue schedule */
+  current->need_reched = 0;
+  enable_irq();
+  _schedule();
+  disable_irq();
+}
+
+void exit_process(){
+    preempt_disable();
+    for (int i = 0; i < NR_TASKS; i++){
+        if (task[i] == current) {
+            task[i]->state = TASK_ZOMBIE;
+            break;
+        }
+    }
+    if (current->stack) {
+        free_page(current->stack);
+    }
+    preempt_enable();
+    schedule();
 }

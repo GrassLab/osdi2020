@@ -1,86 +1,102 @@
 #include "bh.h"
+#include "fork.h"
 #include "framebuffer.h"
 #include "irq.h"
 #include "libc.h"
 #include "miniuart.h"
 #include "sched.h"
 #include "shell.h"
+#include "sys.h"
 #include "timer.h"
 
-void wait_msec(unsigned int n) {
-  register unsigned long f, t, r;
-  // get the current counter frequency
-  asm volatile("mrs %0, cntfrq_el0" : "=r"(f));
-  // read the current counter
-  asm volatile("mrs %0, cntpct_el0" : "=r"(t));
-  // calculate expire value for counter
-  t += ((f / 1000) * n) / 1000;
-  do {
-    asm volatile("mrs %0, cntpct_el0" : "=r"(r));
-  } while (r < t);
+int get_el() {
+  int el;
+  asm volatile("mrs %0, CurrentEL\n"
+               "lsr %0, %0, #2"
+               : "=r"(el));
+  return el;
 }
 
-void first_func() {
-  while(1) {
-    delay(100000);
-    /* context_switch(task[0]); */
+void user_process1(char *array) {
+
+  char buf[2] = {0};
+  while (1) {
+    /* call_sys_write("User prcoess 1\r\n"); */
+    for (int i = 0; i < 5; i++) {
+      buf[0] = array[i];
+      call_sys_write(buf);
+      delay(100000);
+    }
   }
-  /* while (1){ */
-  /*   uart_println("(1) first function ..."); */
-  /*   wait_msec(600000); */
-  /*   context_switch(task[0]); */
-  /* } */
 }
 
-void second_func() {
-  while(1) {
-    delay(100000);
-    /* context_switch(task[0]); */
+void user_process() {
+  char buf[30] = {0};
+  /* tfp_sprintf(buf, "User process started\n\r"); */
+  call_sys_write("User prcoess started\r\n");
+  unsigned long stack = call_sys_malloc();
+  if (stack < 0) {
+    uart_println("Error while allocating stack for process 1");
+    return;
   }
-  /* while (1) { */
-  /*   uart_println("(2) second function ..."); */
-  /*   wait_msec(600000); */
-  /*   context_switch(task[0]); */
-  /* } */
+  int err = call_sys_clone((unsigned long)&user_process1,
+                           (unsigned long)"12345", stack);
+  if (err < 0) {
+    uart_println("Error while clonning process 1");
+    return;
+  }
+  stack = call_sys_malloc();
+  if (stack < 0) {
+    uart_println("Error while allocating stack for process 1\n\r");
+    return;
+  }
+  err = call_sys_clone((unsigned long)&user_process1, (unsigned long)"abcd",
+                       stack);
+  if (err < 0) {
+    uart_println("Error while clonning process 2\n\r");
+    return;
+  }
+  call_sys_exit();
 }
 
-void foo(){
-  while(1) {
+void kernel_process() {
+  uart_println("Kernel process started. EL %d", get_el());
+  int err = move_to_user_mode((unsigned long)&user_process);
+  if (err < 0) {
+    uart_println("Error while moving process to user mode");
+  }
+}
+
+void foo() {
+  while (1) {
     /* uart_println("Task id: %d\n", current->pid); */
     delay(1000000);
+  }
+}
+
+void idle() {
+  while (1) {
     schedule();
   }
 }
 
-void idle(){
-  while(1){
-    schedule();
-    delay(1000000);
-  }
-}
-
-void init() {
+void el1_main() {
   uart_init();
 
   /* local_timer_init(); */
   sys_core_timer_enable();
 
-  const int  N = 10;
-  for(int i = 0; i < N; ++i) { // N should > 2
-    privilege_task_create(foo, 0);
+  int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0, 0);
+  if (res < 0) {
+    uart_println("error while starting kernel process");
+    return;
   }
+  /* const int N = 10; */
+  /* for (int i = 0; i < N; ++i) { // N should > 2 */
 
-  // privilege_task_create(first_func, 0);
-  // privilege_task_create(second_func, 0);
+  /* } */
 
   idle();
-  /* while (1) { */
-  /*   schedule(); */
-  /* } */
-}
-
-void el1_main() {
-  init();
 }
 
 int main(int argc, char *argv[]) {
