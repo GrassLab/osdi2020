@@ -6,6 +6,8 @@
 #define PERIPHERAL_PHYSICAL_BASE 0x3F000000
 #define PERIPHERAL_TO_PHYSICAL(x) ((x & 0x00FFFFFF) | (PERIPHERAL_PHYSICAL_BASE & 0xFF000000))
 #define CHECK_BIT(var,pos) ((var) & ((unsigned)1<<(pos)))
+#define CLEAR_BIT(var, pos) ((var) &= ~((unsigned)1 << (pos)))
+#define SET_BIT(var, pos) ((var) |= ((unsigned)1 << (pos)))
 
 #define ANSI_RED       "\x1b[31m"
 #define ANSI_GREEN     "\x1b[32m"

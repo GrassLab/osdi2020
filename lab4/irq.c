@@ -4,6 +4,7 @@
 #include "irq.h"
 #include "uart.h"
 #include "timer.h"
+#include "schedule.h"
 
 void irq_int_enable(void)
 {
@@ -20,7 +21,6 @@ void irq_int_disable(void)
 void irq_el1_handler(void)
 {
   char string_buff[0x100];
-  static int core_timer_count = 0;
   static int local_timer_count = 0;
   if(CHECK_BIT(*LOCAL_TIMER_CONTROL_REG, 31))
   {
@@ -93,33 +93,9 @@ void irq_el1_handler(void)
   }
   else
   {
-    ++core_timer_count;
-    if(core_timer_count == DISABLE_TIMER_COUNT)
-    {
-      timer_expire_core_timer();
-      core_timer_count = 0;
-    }
-    else
-    {
-      timer_set_core_timer(CORE_TIMER_SECS);
-    }
-
-    string_buff[0] = '\0';
-    string_concat(string_buff, "ARM core time interrupt \"");
-    {
-      char id[4];
-      if(core_timer_count == 0)
-      {
-        string_longlong_to_char(id, DISABLE_TIMER_COUNT);
-      }
-      else
-      {
-        string_longlong_to_char(id, core_timer_count);
-      }
-      string_concat(string_buff, id);
-    }
-    string_concat(string_buff, "\" received\n");
-    uart_puts(string_buff);
+    /* ARM core timer interrupt */
+    schedule_update_quantum_count();
+    timer_set_core_timer_approx_ms(SCHEDULE_TIMEOUT_MS);
   }
   return;
 }

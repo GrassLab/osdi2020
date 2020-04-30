@@ -40,7 +40,7 @@ int syscall_timer_int(void)
   {
     timer_enable_and_set_local_timer();
   }
-  timer_set_core_timer(CORE_TIMER_SECS);
+  timer_set_core_timer_sec(CORE_TIMER_SECS);
 
   return 0;
 }

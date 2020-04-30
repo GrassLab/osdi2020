@@ -1,5 +1,8 @@
 #include "schedule.h"
+#include "meta_macro.h"
 #include "uart.h"
+#include "timer.h"
+#include "irq.h"
 #include "string_util.h"
 #include "queue.h"
 
@@ -18,6 +21,10 @@ void scheduler_init(void)
   schedule_privilege_task_create(schedule_demo_task);
   schedule_privilege_task_create(schedule_demo_task);
   schedule_privilege_task_create(schedule_demo_task);
+  /* End of demo purpose */
+  irq_int_enable();
+  timer_enable_core_timer();
+  timer_set_core_timer_approx_ms(SCHEDULE_TIMEOUT_MS);
   scheduler();
   return;
 }
@@ -42,11 +49,18 @@ void schedule_privilege_task_create(void(*start_func)())
   }
 
   /* assign id */
-  kernel_task_pool[new_id - 1].id = new_id;
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].id = new_id;
+
+  /* init quantum_count to 0 */
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].quantum_count = 0;
+
+  /* reset flag */
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].flag = 0;
+
   /* assign context */
-  kernel_task_pool[new_id - 1].cpu_context.lr = (uint64_t)start_func;
-  kernel_task_pool[new_id - 1].cpu_context.fp = (uint64_t)(kernel_stack_pool[new_id - 1] + TASK_KERNEL_STACK_SIZE);
-  kernel_task_pool[new_id - 1].cpu_context.sp = (uint64_t)(kernel_stack_pool[new_id - 1] + TASK_KERNEL_STACK_SIZE);
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.lr = (uint64_t)start_func;
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(kernel_stack_pool[TASK_ID_TO_IDX(new_id)] + TASK_KERNEL_STACK_SIZE);
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(kernel_stack_pool[TASK_ID_TO_IDX(new_id)] + TASK_KERNEL_STACK_SIZE);
 
   /* push into queue */
   QUEUE_PUSH(schedule_run_queue, new_id);
@@ -63,7 +77,7 @@ uint64_t schedule_get_current_privilege_task_id(void)
 
 void schedule_context_switch(uint64_t current_id, uint64_t next_id)
 {
-  schedule_switch_context(&(kernel_task_pool[current_id - 1].cpu_context), &(kernel_task_pool[next_id - 1].cpu_context), next_id);
+  schedule_switch_context(&(kernel_task_pool[TASK_ID_TO_IDX(current_id)].cpu_context), &(kernel_task_pool[TASK_ID_TO_IDX(next_id)].cpu_context), next_id);
   return;
 }
 
@@ -87,7 +101,8 @@ void scheduler(void)
   {
     static int schedule_demo_task_count = 0;
     uint64_t next_id = QUEUE_POP(schedule_run_queue);
-    if(schedule_demo_task_count < 8)
+#define TOTAL_SCHEDULE_DEMO_TASK_COUNT 4
+    if(schedule_demo_task_count < TOTAL_SCHEDULE_DEMO_TASK_COUNT)
     {
       QUEUE_PUSH(schedule_run_queue, next_id);
       ++schedule_demo_task_count;
@@ -104,10 +119,10 @@ void schedule_idle_task(void)
   while(1)
   {
     uart_puts("Hi I'm IDLE task\n");
-    if(QUEUE_EMPTY(schedule_run_queue))
+    while(QUEUE_EMPTY(schedule_run_queue))
     {
-      uart_puts("IDLE task is boring\n");
-      while(1);
+      asm volatile ("wfi");
+      /* keep waiting for new task even wake from timer interrupt */
     }
     scheduler();
   }
@@ -117,13 +132,45 @@ void schedule_demo_task(void)
 {
   while(1)
   {
-    char id_char[0x10];
+    char string_buff[0x10];
     uint64_t current_task_id = schedule_get_current_privilege_task_id();
     uart_puts("Hi I'm privilege task id ");
-    string_longlong_to_char(id_char, (int64_t)current_task_id);
-    uart_puts(id_char);
+    string_longlong_to_char(string_buff, (int64_t)current_task_id);
+    uart_puts(string_buff);
     uart_putc('\n');
+
+    uart_puts("Waiting to reschedule\n");
+    while(!schedule_check_self_reschedule())
+    {
+      asm volatile("wfi");
+    }
+
+    uart_puts("Time to reschedule\n");
+    CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
     scheduler();
   }
+}
+
+void schedule_update_quantum_count(void)
+{
+  uint64_t current_task_id = schedule_get_current_privilege_task_id();
+  uint64_t current_task_idx = TASK_ID_TO_IDX(current_task_id);
+
+  if(kernel_task_pool[current_task_idx].quantum_count + 1 >= TASK_DEFAULT_QUANTUM)
+  {
+    /* reset quantum count and time up */
+    kernel_task_pool[current_task_idx].quantum_count = 0;
+    SET_BIT(kernel_task_pool[current_task_idx].flag, 0);
+  }
+  else
+  {
+    ++kernel_task_pool[current_task_idx].quantum_count;
+  }
+}
+
+int schedule_check_self_reschedule(void)
+{
+  uint64_t current_task_id = schedule_get_current_privilege_task_id();
+  return CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
 }
 
