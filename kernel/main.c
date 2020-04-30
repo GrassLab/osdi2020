@@ -24,7 +24,7 @@ echo_and_delay ()
   double t;
   while (1)
     {
-      uart_puts ("echo haha\r\n");
+      printf ("echo haha %f\r\n", t);
       t = get_time ();
       while (get_time () - t < 1);
     }

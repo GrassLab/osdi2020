@@ -21,6 +21,9 @@ struct context
   size_t fp;
   size_t lr;
   size_t sp;
+  size_t sp_el0;
+  size_t elr_el1;
+  size_t spsr_el1;
 };
 
 struct task_struct

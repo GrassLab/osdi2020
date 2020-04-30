@@ -67,6 +67,8 @@ irq_handler:
   ldr x10, [sp]
   mov sp, x10
 
+  bl schedule
+
   kernel_exit
 
 .align 11
