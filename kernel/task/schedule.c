@@ -1,4 +1,5 @@
 #include "kernel/exception/exception.h"
+#include "kernel/peripherals/uart.h"
 
 #include "schedule.h"
 #include "task_queue.h"
@@ -41,8 +42,17 @@ void schedule ( )
     }        
 
     /* current task spend all its time, switch to the next one */
-    thread_info_t * next = task_dequeue ( );
+    thread_info_t * next;
+    while ( 1 )
+    {
+        next = task_dequeue ( );
 
+        if ( next -> state != RUNNING )
+            task_enqueue ( next );
+        else
+            break;
+    }
+    
     /* switch to the next one */
     context_switch ( next );
 }
@@ -52,18 +62,31 @@ void sys_do_exec ( void(*func)() )
     /* get cuurent task */
     thread_info_t * current_thread = get_current_task_el0 ( );
 
-    /* change the state to the IDLE */
-    current_thread -> state = IDLE_STATE;
-
     /* create thread for the target func */
-    task_create ( func );
+    int c_pid = task_create ( func );
+
+    /* change the state to the WAITING_CHILD */
+    current_thread -> state = WAITING_CHILD;
+    /* enqueu current task, it will be used lated */
+    task_enqueue ( current_thread );
+
+    current_thread -> child = get_thread_info ( c_pid );
+    current_thread -> child -> parent = current_thread;
     
     schedule ( );
 }
 
-
 void sys_do_exit ( thread_info_t * thread )
 {
+    /* wake parent up */
+    if ( thread -> parent && thread -> parent -> state == WAITING_CHILD )
+    {
+        thread -> parent -> state = RUNNING;        
+    }
+
+    if ( thread -> parent )
+        thread -> parent -> child = NULL;    
+    
     /* mark this thread as a dead one */
     thread -> state = DEAD;
     

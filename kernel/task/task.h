@@ -7,6 +7,7 @@ typedef enum {
     RUNNING = 1,
     DEAD = 2,
     IDLE_STATE = 3,
+    WAITING_CHILD = 4,
 } task_state_t;
 
 typedef struct {
@@ -20,10 +21,13 @@ typedef struct {
 
 } context_t;
 
-typedef struct {
+struct thread_info_t {
     
     context_t cpu_context;    
     
+    struct thread_info_t * parent;
+    struct thread_info_t * child;
+
     uint64_t task_id;
     task_state_t state;
     void (*func)();    
@@ -31,7 +35,9 @@ typedef struct {
     uint64_t counter;
     uint64_t priority;  /* at this time, all task has the same priority */
 
-} thread_info_t;
+} ;
+
+typedef struct thread_info_t thread_info_t;
 
 /* global variable for other file to use */
 extern thread_info_t * IDLE;

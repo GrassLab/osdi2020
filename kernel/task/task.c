@@ -22,11 +22,15 @@ void create_idle_task ( )
     IDLE -> priority = 1;
     IDLE -> counter = 0;
 
+    IDLE -> parent = NULL;
+    IDLE -> child = NULL;
+
     (IDLE -> cpu_context).x[19] =   (unsigned long)idle;
     (IDLE -> cpu_context).lr =      (unsigned long)default_task_start;
     (IDLE -> cpu_context).user_sp =         (unsigned long)idle_pcb -> user_stack_ptr;
     (IDLE -> cpu_context).kernel_sp =       (unsigned long)idle_pcb -> kernel_stack_ptr;
     (IDLE -> cpu_context).user_mode_pc =    (unsigned long)default_task_start;
+
 
     /* reserve one for idle task*/
     TASK_POOL_USAGE = 1;
@@ -52,6 +56,9 @@ int task_create ( void(*func)() )
     thread_info -> func = func;
     thread_info -> priority = 1;   /* all task has the same priority */
     thread_info -> counter = 2;
+
+    IDLE -> parent = NULL;
+    IDLE -> child = NULL;
 
     (thread_info -> cpu_context).x[19] =    ( unsigned long)func;
     (thread_info -> cpu_context).lr =       (unsigned long)default_task_start;
