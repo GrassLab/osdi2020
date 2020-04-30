@@ -53,12 +53,20 @@ exception_handler:
 
 irq_handler:
   kernel_entry
-  bl irq_router
-  kernel_exit
 
-kernel_irq_handler:
-  kernel_entry
-  bl kernel_irq_router
+  # setup IRQ stack
+  adr x9, _start
+  mov x10, sp
+  sub sp, x9, 8
+  str x10, [sp]
+
+  # interrupt handler
+  bl irq_router
+
+  # restore task stack
+  ldr x10, [sp]
+  mov sp, x10
+
   kernel_exit
 
 .align 11
@@ -75,7 +83,7 @@ exception_table:
 
   b not_implemented
   .align 7
-  b kernel_irq_handler
+  b irq_handler
   .align 7
   b not_implemented
   .align 7
