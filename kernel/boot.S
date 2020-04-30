@@ -4,6 +4,7 @@ error_msg_table:
 .quad EEL2
 
 .section ".text"
+.global _start
 _start:
   # get cpuid
   mrs x1, mpidr_el1
