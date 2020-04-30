@@ -81,6 +81,8 @@ ltoa (unsigned long val, char *buf)
 	*buf++ += '0';
       scan /= 10;
     }
+  if (!met_num)
+    *buf++ = '0';
   *buf = '\0';
 }
 
@@ -102,7 +104,14 @@ ftoa (double val, char *buf)
       if (scan < 1)
 	cnt++;
       if (scan == 1)
-	*buf++ = '.';
+	{
+	  if (!met_num)
+	    {
+	      *buf++ = '0';
+	      met_num = 1;
+	    }
+	  *buf++ = '.';
+	}
       scan /= 10;
     }
   *buf = 0;
