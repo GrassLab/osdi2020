@@ -29,7 +29,7 @@ void coreTimerHandler()
     // uartPuts("Core timer interrupt, jiffies ");
     // uartInt(core_timer_count);
     // uartPuts("\n");
-  
+
     current->re_schedule = true;
 
     asm volatile("mov x0, 0x1ffffff");
@@ -38,13 +38,15 @@ void coreTimerHandler()
     return;
 }
 
-void localTimerInit(){
+void localTimerInit()
+{
     unsigned int flag = 0x30000000; // enable timer and interrupt.
     unsigned int reload = 25000000;
     *LOCAL_TIMER_CONTROL = flag | reload;
 }
 
-void localTimerHandler(){
+void localTimerHandler()
+{
     local_timer_count++;
     uartPuts("Local timer interrupt, jiffies ");
     uartInt(local_timer_count);

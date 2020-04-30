@@ -3,26 +3,28 @@
 
 #include "type.h"
 
-struct cpu_context 
+struct cpu_context
 {
-	unsigned long x19;
+	unsigned long x19; //0
 	unsigned long x20;
-	unsigned long x21;
+	unsigned long x21; //1
 	unsigned long x22;
-	unsigned long x23;
+	unsigned long x23; //2
 	unsigned long x24;
-	unsigned long x25;
+	unsigned long x25; //3
 	unsigned long x26;
-	unsigned long x27;
+	unsigned long x27; //4
 	unsigned long x28;
-	unsigned long fp;
+	unsigned long fp; //5
 	unsigned long pc;
-	unsigned long sp;
+	unsigned long sp; //6
+	unsigned long elr_el1;
+	unsigned long sp_el0; //7
 };
 
 typedef enum
 {
-    ready,
+	ready,
 	running,
 	pending
 } state;
@@ -30,7 +32,6 @@ typedef enum
 struct task
 {
 	struct cpu_context kernel_context;
-    struct cpu_context user_context;
 	int task_id;
 	int priority;
 	state task_state;
