@@ -12,7 +12,7 @@ CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched
 
 all: kernel8.img
 
-$(wildcard */*.o): $(SRC) $(HEADER)
+$(wildcard */*.o): $(SRC) $(HEADER) $(ASM)
 
 kernel8.elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJECTS)
