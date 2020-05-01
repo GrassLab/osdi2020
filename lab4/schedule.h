@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "queue.h"
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
@@ -37,13 +38,13 @@ struct task_struct
   struct cpu_context_struct cpu_context;
 };
 
+extern struct task_struct kernel_task_pool[TASK_POOL_SIZE];
+extern uint16_t kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE]; /* Pi Stack needs to be 16 byte aligned */
+extern uint64_t_queue schedule_run_queue;
+
 void scheduler_init(void);
-void schedule_privilege_task_create(void(*start_func)());
-uint64_t scheudle_get_current_privilege_task_id(void);
 void schedule_context_switch(uint64_t current_id, uint64_t next_id);
 void scheduler(void);
-void schedule_idle_task(void);
-void schedule_demo_task(void);
 void schedule_update_quantum_count(void);
 int schedule_check_self_reschedule(void);
 
