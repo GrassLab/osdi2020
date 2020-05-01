@@ -7,6 +7,7 @@ SRC := $(wildcard */*.c)
 ASM := ./asm/kernel/boot.S ./asm/sched/sched.S ./asm/peripheral/timer.S ./asm/kernel/irq.S ./asm/kernel/exception.S
 OBJECTS := $(patsubst %.S,%.o,$(ASM)) $(patsubst %.c,%.o,$(SRC))
 CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched
+ASFLAGS =
 
 .PHONY: all clean qemu debug indent
 
@@ -27,6 +28,8 @@ qemu: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 
 debug: CFLAGS += -ggdb -Og
+
+debug: ASFLAGS += -ggdb -Og
 
 debug: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -s -S
