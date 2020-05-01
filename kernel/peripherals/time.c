@@ -1,21 +1,20 @@
 #include "kernel/peripherals/uart.h"
 
-// this function should be done in el1
-void print_current_timestamp ( )
+double sys_get_current_timestamp ( )
 {
     unsigned long int cnt_freq, cnt_tpct;    
 
     asm volatile(
-        "mrs %0, CNTFRQ_EL0 \n\t"
-        "mrs %1, CNTPCT_EL0 \n\t"
+        "mrs    %0,     CNTFRQ_EL0;"
+        "mrs    %1,     CNTPCT_EL0;"
         : "=r" (cnt_freq),  "=r" (cnt_tpct)
         :
     );
 
-    sys_printk("[%f]\n", ((float)cnt_tpct) / cnt_freq);
+    return ((double)cnt_tpct) / cnt_freq;
 }
 
-void wait_cycles ( unsigned int n )
+void sys_wait_cycles ( unsigned int n )
 {
     if ( n ) 
     {

@@ -1,4 +1,5 @@
-#ifndef MEM_H
+#ifndef __SYS_MEM_H
+#define __SUS_MEM_H
 
 #include "kernel/peripherals/gpio.h"
 #include "lib/type.h"

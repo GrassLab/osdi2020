@@ -3,6 +3,7 @@
 #include "type.h"
 #include "ctype.h"
 
+/* http://www.cplusplus.com/reference/cstring/strcmp/ */
 int strcmp ( const char * s1, const char * s2 )
 {
     int i;
@@ -26,6 +27,7 @@ void strset ( char * s1, int c, int size )
         s1[i] = c;
 }
 
+/* http://www.cplusplus.com/reference/cstring/strlen/ */
 int strlen ( const char * s )
 {
     int i = 0;
@@ -39,6 +41,7 @@ int strlen ( const char * s )
     return i;
 }
 
+/* http://www.cplusplus.com/reference/cstring/strcpy/ */
 char * strcpy ( char * destination, const char * source )
 {
     int i;
@@ -50,6 +53,7 @@ char * strcpy ( char * destination, const char * source )
     return destination;
 }
 
+/* http://www.cplusplus.com/reference/cstring/strncpy/ */
 char * strncpy ( char * destination, const char * source, int num )
 {
     int i;  
@@ -63,6 +67,7 @@ char * strncpy ( char * destination, const char * source, int num )
     return destination;
 }
 
+/* http://www.cplusplus.com/reference/cstring/strchr/ */
 const char * strchr ( const char * str, int character )
 {
     int i;
@@ -76,6 +81,7 @@ const char * strchr ( const char * str, int character )
     return NULL;
 }
 
+/* http://www.cplusplus.com/reference/cstdlib/itoa/ */
 char *  itoa ( int value, char * str, int base )
 {
     int str_count = 0;
@@ -114,6 +120,7 @@ char *  itoa ( int value, char * str, int base )
     return str;
 }
 
+/* http://www.cplusplus.com/reference/cstdlib/atoi/ */
 int atoi ( const char * str )
 {
     int i = 0;

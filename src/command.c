@@ -1,18 +1,11 @@
-#include "kernel/exception/exception.h"
-#include "kernel/exception/irq.h"
-#include "kernel/exception/timer.h"
-#include "kernel/peripherals/mailbox.h"
-#include "kernel/peripherals/time.h"
-
 #include "lib/io.h"
 #include "lib/string.h"
+#include "lib/sys.h"
+#include "lib/time.h"
 
 void input_buffer_overflow_message ( char cmd[] )
 {
-    printf("Follow command: \"");
-    printf(cmd);
-    printf("\"... is too long to process.\n");
-
+    printf("Follow Command: \"%s\"... is too long to process.\n");
     printf("The maximum length of input is 64.");
 }
 
@@ -43,14 +36,13 @@ void command_hello ( )
 
 void command_timestamp ( )
 {
-    LAUNCH_SYS_CALL ( SYS_CALL_PRINT_TIMESTAMP_EL0 );
+    double timestamp = get_time_stamp ( );
+    printf("[%f]\n", timestamp);
 }
 
 void command_not_found ( char * s ) 
 {
-    printf("Err: command ");
-    printf(s);
-    printf(" not found, try <help>\n");
+    printf("Err: command %s not found, try <help>\n");
 }
 /*
 void command_reboot ( )
@@ -66,8 +58,8 @@ void command_reboot ( )
 
 void command_board_revision ( )
 {
-    uint32_t board_revision = mbox_get_board_revision ();
-
+    uint32_t board_revision = get_board_revision ( );
+    
     printf("Board Revision: ");
     if ( board_revision )
     {
@@ -81,7 +73,7 @@ void command_board_revision ( )
 
 void command_vc_base_addr ( )
 {   
-    uint64_t vc_base_addr = mbox_get_VC_base_addr ();
+    uint64_t vc_base_addr = get_vc_base_addr ();
 
     printf("VC Core Memory:\n");
     if ( vc_base_addr )
@@ -97,27 +89,17 @@ void command_vc_base_addr ( )
 
 void command_svc_exception_trap ( )
 {
-    LAUNCH_SYS_CALL ( SYS_CALL_TEST_SVC );
-}
-
-void command_hvc_exception_trap ( )
-{
-    LAUNCH_SYS_CALL ( SYS_CALL_TEST_HVC );
-}
-
-void command_brk_exception_trap ( )
-{
-    asm volatile ( "brk #1;" );
+    svc_test ( );
 }
 
 void command_timer_exception_enable ( )
 {
     // enable irq in el1
-    LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_ENABLE );
+    irq_enable ( );
     printf("[IRQ Enable]\n");
     
     // enable core timer in el1
-    LAUNCH_SYS_CALL ( SYS_CALL_CORE_TIMER_ENABLE );
+    core_timer_enable ( );
     printf("[Core Timer Enable]\n");
 
     // enable local timer
@@ -128,21 +110,21 @@ void command_timer_exception_enable ( )
 void command_timer_exception_disable ( )
 {   
     // core timer disable need to be done in el1
-    LAUNCH_SYS_CALL ( SYS_CALL_CORE_TIMER_DISABLE );
+    core_timer_disable ( );    
     printf("[Core Timer Disable]\n");
 
-    local_timer_disable ();
+    local_timer_disable ( );
     printf("[Local Timer Disable]\n");
 }
 
 void command_irq_exception_enable ( )
 {
-    LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_ENABLE );
+    irq_enable ( );
     printf("[IRQ Enable]\n");
 }
 
 void command_irq_exception_disable ( )
 {
-    LAUNCH_SYS_CALL ( SYS_CALL_IRQ_EL1_DISABLE );
+    irq_disable ( );
     printf("[IRQ Disable]\n");
 }

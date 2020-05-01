@@ -81,6 +81,8 @@
     mrs     x0,     TPIDR_EL0
     ldr     x0,     [x0, 8 * 32]    // get kernel stack of the current task
     mov     sp,     x0
+
+    mov     x0,     x8              // the exception argument here      
 .endm
 
 .macro kernel_exit
@@ -104,26 +106,6 @@ _irq__handler_el1:
     kernel_entry
     bl      irq_controller_el1
     kernel_exit
-
-_exception__handler_el2:
-
-    # ESR_EL2:  Holds syndrome information for an exception taken to EL2.
-    # ELR_EL2:  When taking an exception to EL2, holds the address to return to.
-    # SPSR_EL2: Holds the saved process state when an exception is taken to EL2.
-    # FAR_EL2:  Holds the faulting Virtual Address for all synchronous Instruction or Data Abort, PC alignment fault and Watchpoint exceptions that are taken to EL2.
-
-    save_reg
-    # mrs     x0, ELR_EL2
-    # mrs     x1, ESR_EL2
-    # mrs     x2, SPSR_EL2
-    # mrs     x3, FAR_EL2
-    bl      exec_controller_el2
-    load_reg
-
-_irq__handler_el2:
-    save_reg
-    bl      irq_controller_el2
-    load_reg
 
 _not_implemented:
     save_reg
@@ -266,11 +248,11 @@ exception_table_el2:
     # Exception from a lower EL and at least one lower EL is AArch64
     # ==================================================
     # Synchronous    
-    b   _exception__handler_el2
+    b   _not_implemented
     .align 7
 
     # IRQ
-    b   _irq__handler_el2
+    b   _not_implemented
     .align 7
     
     # FIQ

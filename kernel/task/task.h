@@ -1,5 +1,5 @@
-#ifndef __TASK_H
-#define __TASK_H
+#ifndef __SYS_TASK_H
+#define __SYS_TASK_H
 
 #include "lib/type.h"
 

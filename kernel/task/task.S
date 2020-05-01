@@ -40,7 +40,7 @@ launch_init:
 
     # enable el1 irq
     bl      irq_el1_enable          // defined in irq.S
-    bl      core_timer_enable       // defined in timer.c
+    bl      sys_core_timer_enable   // defined in timer.c
 
     # and go !!
     eret

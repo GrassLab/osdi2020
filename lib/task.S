@@ -1,21 +1,12 @@
 .section ".text"
 
+#include "kernel/exception/sys_call_def.h"
+
 .global default_task_start
-.global do_exec
+.global exec
 .global do_exit
 .global get_pid
-
-.macro SYS_CALL_DO_EXEC
-    svc     #9
-.endm
-
-.macro SYS_CALL_DO_EXIT
-    svc     #11
-.endm
-
-.macro SYS_CALL_GET_PID
-    svc     #12
-.endm
+.global schedule
 
 default_task_start:
     blr     x19     // an user mode code 
@@ -23,15 +14,22 @@ default_task_start:
     # after user mode done, do this routine
     bl      do_exit 
 
-do_exec:
-    SYS_CALL_DO_EXEC
+exec:
+    mov     x8,     SYS_DO_EXEC
+    svc     #0
     ret
 
 do_exit:
-    SYS_CALL_DO_EXIT
+    mov     x8,     SYS_DO_EXIT
+    svc     #0
     ret
 
 get_pid: 
-    SYS_CALL_GET_PID
+    mov     x8,     SYS_GET_PID
+    svc     #0
     ret
 
+schedule:
+    mov     x8,     SYS_SCHEDULE
+    svc     #0
+    ret

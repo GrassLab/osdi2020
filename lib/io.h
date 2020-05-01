@@ -1,5 +1,5 @@
-#ifndef IO_H
-#define IO_H
+#ifndef __LIB_IO_H
+#define __LIB_IO_H
 
 #include "type.h"
 
@@ -15,7 +15,6 @@ typedef struct {
 
 int printf ( const char * format, ... );
 char * gets ( char * str );
-void buffer_enqueue ( const char * str );
 format_t parse_format ( const char ** input );
 
 

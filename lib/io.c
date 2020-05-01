@@ -8,6 +8,9 @@
 extern void uart_write ( char * s);
 extern char uart_read  ( );
 
+/* function that are not public ourside */
+void buffer_enqueue ( const char * str );
+
 int printf ( const char * format, ... )
 {
     const char * current = format;

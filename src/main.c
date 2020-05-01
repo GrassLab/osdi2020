@@ -3,13 +3,16 @@
 #include "lib/time.h"
 #include "lib/io.h"
 
+#include "shell.h"
 #include "test_task.h"
 
 int main ( )
 {
     printf("This is main before test_task!!\n");
 
-    do_exec ( test_task );
+    // shell_start ( );
+
+    exec ( test_task );
     
     while ( 1 )
     {

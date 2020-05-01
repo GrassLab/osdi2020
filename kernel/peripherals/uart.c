@@ -8,9 +8,7 @@
 #include "mailbox.h"
 #include "uart.h"
 
-/**
- * Set baud rate and characteristics (115200 8N1) and map to GPIO
- */
+/* Set baud rate and characteristics (115200 8N1) and map to GPIO */
 void uart_init ( )
 {
     register unsigned int reg;
@@ -51,9 +49,7 @@ void uart_init ( )
     //uart_flush();
 }
 
-/**
- * Send a character
- */
+/* Send a character */
 void uart_send ( unsigned int c )
 {
     /* Wait until we can send */
@@ -78,10 +74,7 @@ void uart_send ( unsigned int c )
     }
 }
 
-
-/**
- * Receive a character
- */
+/* Receive a character */
 char uart_getc ( )
 {
     char r;
@@ -104,9 +97,7 @@ char uart_getc ( )
     return r;
 }
 
-/**
- * Display a string
- */
+/* Display a string */
 void uart_puts ( char *s )
 {
     while( *s )

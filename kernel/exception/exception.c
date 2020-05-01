@@ -1,115 +1,88 @@
+#include "exception.h"
+
+#include "irq.h"
+#include "kernel/peripherals/mailbox.h"
 #include "kernel/peripherals/time.h"
 #include "kernel/peripherals/uart.h"
 #include "kernel/task/schedule.h"
 #include "kernel/task/task.h"
 #include "lib/type.h"
-
-#include "exception.h"
-#include "irq.h"
 #include "timer.h"
 
-void exec_controller_el1 ( )
-{
-    uint64_t elr, esr;
-    uint32_t iss;
-    thread_info_t * current_thread = get_current_task_el0 ( );
+void exec_controller_el1(int sys_call_type) {
 
-    asm volatile ( 
+    uint64_t elr, esr;
+    thread_info_t *current_thread = get_current_task_el0();
+    uint32_t *argus = (uint32_t *)(current_thread->cpu_context).x;
+
+    asm volatile(
         "mrs     %0, ELR_EL1;"
         "mrs     %1, ESR_EL1;"
-        : "=r" ( elr ), "=r" ( esr )
-        :
-    );
+        : "=r"(elr), "=r"(esr)
+        :);
 
-    iss = (((uint32_t)esr)) & 0x00FFFFFF;
-    
-    switch ( iss ) 
-    {
-        case TEST_SVC:
-            print_exec_info ( EL1, elr, esr );
+    switch (sys_call_type) {
+        case SYS_TEST_SVC:
+            print_exec_info(EL1, elr, esr);
             break;
-        case TEST_HVC:
-            LAUNCH_SYS_CALL ( HYPERVISORE_CALL_TEST_HVC );
+        case SYS_IRQ_EL1_ENABLE:
+            irq_el1_enable();
             break;
-        case IRQ_EL1_ENABLE:
-            irq_el1_enable ();
+        case SYS_IRQ_EL1_DISABLE:
+            irq_el1_disable();
             break;
-        case IRQ_EL1_DISABLE:
-            irq_el1_disable ();
+        case SYS_CORE_TIMER_ENABLE:
+            sys_core_timer_enable();
             break;
-        case CORE_TIMER_ENABLE:
-            core_timer_enable ();
+        case SYS_CORE_TIMER_DISABLE:
+            sys_core_timer_disable();
             break;
-        case CORE_TIMER_DISABLE:
-            core_timer_disable ();
+        case SYS_GET_TIMESTAMP:
+            argus[0] = (double)sys_get_current_timestamp();
             break;
-        case PRINT_TIMESTAMP_EL0:
-            print_current_timestamp ();
-            break;
-        case SCHEDULE:
-            schedule ();
+        case SYS_SCHEDULE:
+            sys_do_schedule();
             break;
         case SYS_DO_EXEC:
-            ;
-            void(*func)() = ( void(*)() ) ( current_thread -> cpu_context ).x[0];
-            sys_do_exec ( func );
+            sys_do_exec((void (*)())(intptr_t)(argus[0]));
             break;
         case SYS_WAIT_MSEC:
-            ;
-            unsigned int n = (unsigned int)( ( current_thread -> cpu_context ).x[0] );
-            sys_wait_msec ( n );
+            sys_wait_msec((unsigned int)(argus[0]));
             break;
         case SYS_DO_EXIT:
-            sys_do_exit ( current_thread );
+            sys_do_exit(current_thread);
             break;
         case SYS_GET_PID:
-            ( current_thread -> cpu_context ).x[0] = current_thread -> task_id;
+            argus[0] = current_thread->task_id; /* set the return value */
             break;
         case SYS_UART_WRITE:
-            ;
-            char * s = (char *)( current_thread -> cpu_context ).x[0];
-            uart_puts ( s );
+            uart_puts((char *)(intptr_t)(argus[0]));
             break;
         case SYS_UART_READ:
-            ( current_thread -> cpu_context ).x[0] = uart_getc ( 0 );
+            argus[0] = (char)(uart_getc()); /* set the return value */
+            break;
+        case SYS_GET_VC_BASE_ADDR:
+            argus[0] = (uint64_t)(mbox_get_VC_base_addr()); /* set the return value */
+            break;
+        case SYS_GET_BOARD_REVISION:
+            argus[0] = (uint32_t)(mbox_get_board_revision());
+            break;
+        case SYS_LOCAL_TIMER_ENABLE:
+            sys_local_timer_enable();
+            break;
+        case SYS_LOCAL_TIMER_DISABLE:
+            sys_local_timer_disable();
             break;
         default:
-            print_exec_info ( EL1, elr, esr );
+            print_exec_info(EL1, elr, esr);
             break;
     }
 }
 
-void exec_controller_el2 ( )
-{
-    uint64_t elr, esr;    
-    uint32_t iss;
-
-    asm volatile ( 
-        "mrs     %0, ELR_EL2;"
-        "mrs     %1, ESR_EL2;"
-        : "=r" ( elr ), "=r" ( esr )
-        :
-    );
-
-    iss = (((uint32_t)esr)) & 0x00FFFFFF;
-    
-    switch ( iss ) 
-    {
-        case TEST_HVC:
-            sys_printk ( "Here, I am in EL2\n" );
-            break;
-        default:
-            print_exec_info ( EL2, elr, esr );
-            break;
-    }
-}
-
-void print_exec_info ( EL el, uint64_t elr, uint64_t esr )
-{
+void print_exec_info(EL el, uint64_t elr, uint64_t esr) {
     uint32_t ec, iss;
 
-    ec = (((uint32_t)esr)>>26);
-    // int il = (((uint32_t)esr)>>25) & 0x1 ;
+    ec = (((uint32_t)esr) >> 26);
     iss = (((uint32_t)esr)) & 0x00FFFFFF;
 
     sys_printk("Current Exception Level: %d\n", el);
@@ -118,14 +91,12 @@ void print_exec_info ( EL el, uint64_t elr, uint64_t esr )
     sys_printk("Instruction specific syndrome (ISS): %x\n", iss);
 }
 
-int get_current_el ()
-{
+int get_current_el() {
     int el;
-    asm volatile (
+    asm volatile(
         "mrs    x0, CurrentEL;"
-        "mov    %0, x0;" 
-        : "=r" ( el )
-    );
+        "mov    %0, x0;"
+        : "=r"(el));
 
     el >>= 2;
     el &= 2;

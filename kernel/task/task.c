@@ -31,7 +31,6 @@ void create_idle_task ( )
     (IDLE -> cpu_context).kernel_sp =       (unsigned long)idle_pcb -> kernel_stack_ptr;
     (IDLE -> cpu_context).user_mode_pc =    (unsigned long)default_task_start;
 
-
     /* reserve one for idle task*/
     TASK_POOL_USAGE = 1;
 }

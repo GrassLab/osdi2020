@@ -1,20 +1,16 @@
 .section ".text"
 
+#include "kernel/exception/sys_call_def.h"
+
 .global uart_write
 .global uart_read
 
-.macro SYS_CALL_UART_WRITE
-    svc     #13
-.endm
-
-.macro SYS_CALL_UART_READ
-    svc     #14
-.endm
-
 uart_write:
-    SYS_CALL_UART_WRITE
+    mov     x8,     SYS_UART_WRITE
+    svc     #0
     ret
 
 uart_read:
-    SYS_CALL_UART_READ
+    mov     x8,     SYS_UART_READ
+    svc     #0
     ret

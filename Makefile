@@ -5,7 +5,7 @@ OBJ_DUMP	= aarch64-linux-gnu-objdump
 EMULATOR	= qemu-system-aarch64
 
 CFLAGS 		= -Wall -O0 -ffreestanding -nostdinc -nostdlib -nostartfiles
-INCLUDE_FLG = -Iinclude -I.
+INCLUDE_FLG = -Iinclude -I. -Ilib
 
 SRCS 		= $(wildcard kernel/*/*.c) $(wildcard lib/*.c) $(wildcard src/*.c)
 ASMS		= $(wildcard kernel/*/*.S) $(wildcard kernel/*.S) $(wildcard lib/*.S)
@@ -30,7 +30,7 @@ kernel8.elf: $(ALL_OBJS)
 	$(LD) -nostdlib -nostartfiles $^ -T $(LINK_SCRIPT) -o kernel8.elf
 
 %.S.o: %.S
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE_FLG) -c $< -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDE_FLG) -c $< -o $@
