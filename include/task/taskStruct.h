@@ -5,21 +5,21 @@
 
 struct cpu_context
 {
-	unsigned long x19; //0
-	unsigned long x20;
-	unsigned long x21; //1
-	unsigned long x22;
-	unsigned long x23; //2
-	unsigned long x24;
-	unsigned long x25; //3
-	unsigned long x26;
-	unsigned long x27; //4
-	unsigned long x28;
-	unsigned long fp; //5
-	unsigned long pc;
-	unsigned long sp; //6
-	unsigned long elr_el1;
-	unsigned long sp_el0; //7
+	uint64_t x19; //0
+	uint64_t x20;
+	uint64_t x21; //1
+	uint64_t x22;
+	uint64_t x23; //2
+	uint64_t x24;
+	uint64_t x25; //3
+	uint64_t x26;
+	uint64_t x27; //4
+	uint64_t x28;
+	uint64_t fp; //5
+	uint64_t pc;
+	uint64_t sp; //6
+	uint64_t elr_el1;
+	uint64_t sp_el0; //7
 };
 
 typedef enum
@@ -32,8 +32,8 @@ typedef enum
 struct task
 {
 	struct cpu_context kernel_context;
-	int task_id;
-	int priority;
+	uint32_t task_id;
+	uint32_t priority;
 	state task_state;
 	bool re_schedule;
 };

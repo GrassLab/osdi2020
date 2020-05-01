@@ -6,7 +6,7 @@
 #include "device/uart.h"
 #include "interrupt/timer.h"
 
-const static unsigned int MAX_BUFFER_SIZE = 512;
+const static uint32_t MAX_BUFFER_SIZE = 512;
 
 static inline void helpCmd()
 {
@@ -129,7 +129,7 @@ static inline void helloMessage()
 void runShell()
 {
     char buf[MAX_BUFFER_SIZE];
-    int buf_ptr = 0;
+    uint32_t buf_ptr = 0;
 
     helloMessage();
 

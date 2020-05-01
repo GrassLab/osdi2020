@@ -1,14 +1,16 @@
-unsigned int getFrequency()
+#include "type.h"
+
+uint32_t getFrequency()
 {
-    unsigned int freq = 0;
+    uint32_t freq = 0;
     asm volatile("mrs %0, cntfrq_el0"
                  : "=r"(freq));
     return freq;
 }
 
-unsigned int getCount()
+uint32_t getCount()
 {
-    unsigned int count = 0;
+    uint32_t count = 0;
     asm volatile("mrs %0, cntpct_el0"
                  : "=r"(count));
     return count;

@@ -6,11 +6,11 @@
 
 extern struct task *current;
 extern struct task task_pool[64];
-extern int task_num;
+extern uint32_t task_count;
 
 void _sysFork();
 void _sysexec();
 void doExec(void (*func)());
-int createPrivilegeTask(void (*func)(), int priority);
+uint32_t createPrivilegeTask(void (*func)(), uint32_t priority);
 
 #endif

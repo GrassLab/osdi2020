@@ -19,10 +19,10 @@ bool strcmp(const char *s1, const char *s2)
     }
 }
 
-int atoi(char *s)
+uint32_t atoi(char *s)
 {
-    int sum = 0;
-    for (int i = 0; s[i] != '\0'; i++)
+    uint32_t sum = 0;
+    for (uint32_t i = 0; s[i] != '\0'; i++)
     {
         sum = sum * 10 + s[i] - '0';
     }

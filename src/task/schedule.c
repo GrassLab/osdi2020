@@ -18,9 +18,9 @@ void contextSwitch(struct task *next)
 	switchTo(&prev->kernel_context, &next->kernel_context);
 }
 
-int _getNextProc()
+uint32_t _getNextProc()
 {
-	for (int i = 0; i < task_num; ++i)
+	for (uint32_t i = 0; i < task_count; ++i)
 	{
 		if (task_pool[i].task_state == ready)
 		{
@@ -33,7 +33,7 @@ int _getNextProc()
 
 void schedule()
 {
-	int next_task_id = _getNextProc();
+	uint32_t next_task_id = _getNextProc();
 
 	if (next_task_id == -1)
 		return;

@@ -3,59 +3,56 @@
 #include "task/taskStruct.h"
 #include "task/switch.h"
 
-const static unsigned int MAX_TASK_NUM = 64;
+const static uint32_t MAX_TASK_NUMBER = 64;
 struct task task_pool[64];
 char kstack_pool[64][4096];
 char ustack_pool[64][4096];
-int task_num = 0;
+uint32_t task_count = 0;
 struct task *current;
 
 void _sysFork()
 {
-	if (task_num >= (MAX_TASK_NUM - 1)) // Task number > max task number
+	if (task_count >= MAX_TASK_NUMBER) // Task number > max task number
 		return;
 
-	unsigned int sp_begin;
-	unsigned int sp_end;
+	struct task *new_task = &task_pool[task_count];
+	unsigned long new_kstask = (unsigned long)&kstack_pool[task_count];
+
+	uint32_t sp_begin;
+	uint32_t sp_end;
 	asm volatile("mov %0, x9"
 				 : "=r"(sp_begin));
-	sp_begin += 32 * 8;
 	asm volatile("mov %0, sp"
 				 : "=r"(sp_end));
-	unsigned int stack_size = sp_begin - sp_end;
+	uint32_t stack_size = sp_begin - sp_end;
 
-	*(unsigned int *)(sp_begin - 32 * 8) = task_num; // Set trapframe
+	// Set parent trapframe
+	*(uint32_t *)(sp_begin - 32 * 8) = task_count;
 
-	task_pool[task_num].kernel_context.sp = (unsigned long)&kstack_pool[task_num];
-	copyStack(task_pool[task_num].kernel_context.sp, sp_begin, stack_size);
-	*(unsigned int *)(task_pool[task_num].kernel_context.sp - 32 * 8) = 0; // Set trapframe
-	task_pool[task_num].kernel_context.sp -= stack_size;
+	new_task->kernel_context.sp = new_kstask;
+	// Copy the kernel stack
+	copyStack(new_task->kernel_context.sp, sp_begin, stack_size);
 
-	task_pool[task_num].task_id = task_num;
-	task_pool[task_num].priority = current->priority;
-	task_pool[task_num].task_state = ready;
-	task_pool[task_num].re_schedule = false;
-	task_num++;
+	// Set child trapframe
+	*(uint32_t *)(new_task->kernel_context.sp - 32 * 8) = 0;
+	// Because the stack is copied, the stack pointer should be moved down
+	new_task->kernel_context.sp -= stack_size;
 
-	copyContext(&task_pool[task_num - 1].kernel_context);
+	new_task->task_id = task_count++;
+	new_task->priority = current->priority;
+	new_task->task_state = ready;
+	new_task->re_schedule = false;
+
+	// Copy the context at last because I don't want to let child do the above works
+	copyContext(&new_task->kernel_context);
 
 	return;
-}
-
-void _sysexec()
-{
-	unsigned int sp_begin;
-	asm volatile("mov %0, x9"
-				 : "=r"(sp_begin));
-	sp_begin += 32 * 8;
-	unsigned int func = *(unsigned int *)(sp_begin - 32 * 8);
-
-	doExec(func);
 }
 
 void doExec(void (*func)())
 {
 	current->kernel_context.elr_el1 = (unsigned long)func;
+	// Allocate new user stack
 	current->kernel_context.sp_el0 = (unsigned long)&ustack_pool[current->task_id];
 
 	switchToEL0(&current->kernel_context);
@@ -63,15 +60,30 @@ void doExec(void (*func)())
 	return;
 }
 
-int createPrivilegeTask(void (*func)(), int priority)
+void _sysexec()
 {
-	task_pool[task_num].kernel_context.pc = (unsigned long)func;
-	task_pool[task_num].kernel_context.sp = (unsigned long)&kstack_pool[task_num];
-	task_pool[task_num].task_id = task_num;
-	task_pool[task_num].priority = priority;
-	task_pool[task_num].task_state = ready;
-	task_pool[task_num].re_schedule = false;
-	task_num++;
+	uint32_t sp_begin;
+	asm volatile("mov %0, x9"
+				 : "=r"(sp_begin));
+	uint32_t func = *(uint32_t *)(sp_begin - 32 * 8);
 
-	return task_num - 1;
+	doExec(func);
+}
+
+uint32_t createPrivilegeTask(void (*func)(), uint32_t priority)
+{
+	if (task_count >= MAX_TASK_NUMBER) // Task number > max task number
+		return -1;
+
+	struct task *new_task = &task_pool[task_count];
+	unsigned long new_kstask = (unsigned long)&kstack_pool[task_count];
+
+	new_task->kernel_context.pc = (unsigned long)func;
+	new_task->kernel_context.sp = new_kstask;
+	new_task->task_id = task_count++;
+	new_task->priority = priority;
+	new_task->task_state = ready;
+	new_task->re_schedule = false;
+
+	return task_count - 1;
 }

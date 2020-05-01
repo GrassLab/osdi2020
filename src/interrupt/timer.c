@@ -4,11 +4,11 @@
 
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
 #define EXPIRE_PERIOD 0xfffffff
-#define LOCAL_TIMER_CONTROL ((volatile unsigned int *)0x40000034)
-#define LOCAL_TIMER_IRQ_CLR ((volatile unsigned int *)0x40000038)
+#define LOCAL_TIMER_CONTROL ((volatile uint32_t *)0x40000034)
+#define LOCAL_TIMER_IRQ_CLR ((volatile uint32_t *)0x40000038)
 
-unsigned int core_timer_count = 0;
-unsigned int local_timer_count = 0;
+uint32_t core_timer_count = 0;
+uint32_t local_timer_count = 0;
 
 void enableCoreTimer()
 {
@@ -40,8 +40,8 @@ void coreTimerHandler()
 
 void localTimerInit()
 {
-    unsigned int flag = 0x30000000; // enable timer and interrupt.
-    unsigned int reload = 25000000;
+    uint32_t flag = 0x30000000; // enable timer and interrupt.
+    uint32_t reload = 25000000;
     *LOCAL_TIMER_CONTROL = flag | reload;
 }
 

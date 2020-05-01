@@ -1,15 +1,16 @@
+#include "type.h"
 #include "device/uart.h"
 #include "interrupt/timer.h"
 #include "interrupt/irqTable.h"
 #include "interrupt/irq.h"
 #include "task/taskManager.h"
 
-#define IRQ_BASIC ((volatile unsigned int *)(0x3F00B200))
-#define IRQ_PEND1 ((volatile unsigned int *)(0x3F00B204))
-#define IRQ_PEND2 ((volatile unsigned int *)(0x3F00B208))
-#define IRQ_ENABLE1 ((volatile unsigned int *)(0x3F00B210))
-#define GPU_INTERRUPTS_ROUTING ((volatile unsigned int *)(0x4000000C))
-#define CORE0_INTERRUPT_SOURCE ((volatile unsigned int *)(0x40000060))
+#define IRQ_BASIC ((volatile uint32_t *)(0x3F00B200))
+#define IRQ_PEND1 ((volatile uint32_t *)(0x3F00B204))
+#define IRQ_PEND2 ((volatile uint32_t *)(0x3F00B208))
+#define IRQ_ENABLE1 ((volatile uint32_t *)(0x3F00B210))
+#define GPU_INTERRUPTS_ROUTING ((volatile uint32_t *)(0x4000000C))
+#define CORE0_INTERRUPT_SOURCE ((volatile uint32_t *)(0x40000060))
 #define CORE_TIMER_IRQ 2
 #define LOCAL_TIMER_IRQ 2048
 
@@ -20,7 +21,7 @@
 
 void _systemCall()
 {
-    unsigned long sys_call_no;
+    uint64_t sys_call_no;
     asm volatile("mov %0, x8"
                  : "=r"(sys_call_no));
 
@@ -37,7 +38,7 @@ void _systemCall()
     }
 }
 
-void _printEXCInfo(unsigned long elr, unsigned long ec, unsigned long iss)
+void _printEXCInfo(uint64_t elr, uint64_t ec, uint64_t iss)
 {
     uartPuts("Exception return address ");
     uartHex(elr);
@@ -56,10 +57,10 @@ void _enableTimer()
     enableIrq();
 }
 
-void excHandler(unsigned long esr, unsigned long elr)
+void excHandler(uint64_t esr, uint64_t elr)
 {
-    unsigned long iss = LAST(esr, 16);
-    unsigned long ec = MID(esr, 26, 32);
+    uint64_t iss = LAST(esr, 16);
+    uint64_t ec = MID(esr, 26, 32);
 
     if (ec == SVC)
     {
@@ -85,7 +86,7 @@ void excHandler(unsigned long esr, unsigned long elr)
 
 void irqHandler()
 {
-    unsigned int cis = *CORE0_INTERRUPT_SOURCE;
+    uint32_t cis = *CORE0_INTERRUPT_SOURCE;
     if (cis == CORE_TIMER_IRQ)
         coreTimerHandler();
     else if (cis == LOCAL_TIMER_IRQ)

@@ -43,7 +43,7 @@ void idleTask()
     {
         schedule();
 
-        for (int i = 0; i < 1000000; ++i)
+        for (uint32_t i = 0; i < 1000000; ++i)
         {
             asm volatile("nop");
         }
@@ -60,7 +60,7 @@ void kernelTask()
             uartInt(current->task_id);
             uartPuts("  issue reschedule\n");
 
-            for (int i = 0; i < 1000000; ++i)
+            for (uint32_t i = 0; i < 1000000; ++i)
             {
                 asm volatile("nop");
             }
