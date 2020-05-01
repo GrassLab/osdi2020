@@ -3,11 +3,12 @@
 #include "entry.h"
 #include "irq.h"
 #include "config.h"
+#include "thread.h"
 
 unsigned int c = 0;
 unsigned int local_timer_count = 0;
 unsigned int core_timer_count = 0;
-
+extern task_t* current;
 
 const char *entry_error_messages[] = {
 	"SYNC_INVALID_EL1t",
@@ -116,6 +117,7 @@ void core_timer_handler()
 {
 	printf("Arm core timer interrupt, jiffies %d \r\n",core_timer_count);
 	core_timer_count += 1;
+	current->counter--;
 	clean_core_timer();
 	return;
 }

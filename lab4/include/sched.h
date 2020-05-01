@@ -3,7 +3,6 @@
 #include "thread.h"
 
 void _schedule(void);
-void schedule(void);
 void switch_to(task_t * next);
 
 #endif

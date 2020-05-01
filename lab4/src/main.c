@@ -7,8 +7,8 @@
 #include "config.h"
 #include "thread.h"
 
-extern task_manager_t TaskManager;
-extern task_t* current;
+task_manager_t TaskManager;
+task_t* current;
 
 void init_uart(){
     // uart_init();
@@ -37,16 +37,10 @@ void print(){
         // printf("%x\n",current->cpu_context.pc);
         // printf("%x\n",current->cpu_context.sp);
 
-        task_t* new_task = &TaskManager.task_pool[2];
-        // printf("print2 content\n");
-        // printf("%d\n",new_task->task_id);
-        // printf("%x\n",new_task->cpu_context.x19);
-        // printf("%x\n",new_task->cpu_context.x20);
-        // printf("%x\n",new_task->cpu_context.pc);
-        // printf("%x\n",new_task->cpu_context.sp);
-
-
-        context_switch(new_task);
+        task_t* self_task = &TaskManager.task_pool[1];
+        if(self_task->counter <= 0){
+            schedule();
+        }
     }
 }
 
@@ -56,16 +50,25 @@ void print2(){
         printf("222\n");
         delay(100000000);
 
-        task_t* new_task = &TaskManager.task_pool[1];
-        // printf("print2 content\n");
-        // printf("%d\n",new_task->task_id);
-        // printf("%x\n",new_task->cpu_context.x19);
-        // printf("%x\n",new_task->cpu_context.x20);
-        // printf("%x\n",new_task->cpu_context.pc);
-        // printf("%x\n",new_task->cpu_context.sp);
+        task_t* self_task = &TaskManager.task_pool[2];
 
+        if(self_task->counter <= 0){
+            schedule();
+        }
+    }
+}
 
-        context_switch(new_task);
+void print3(){
+    while (1){
+        printf("---\n");
+        printf("333\n");
+        delay(100000000);
+
+        task_t* self_task = &TaskManager.task_pool[3];
+
+        if(self_task->counter <= 0){
+            schedule();
+        }
     }
 }
 
@@ -76,22 +79,15 @@ void main()
     init_printf(0, putc);
     init_task_manager();
 
-    // irq_vector_init();
-    // timer_init();
-    // enable_interrupt_controller();
-
-    // asm volatile ("svc #1");
-	// enable_irq();
+    enable_interrupt_controller();
+    core_timer_enable();
+	enable_irq();
 
 
 
-    task_t* new_task1 = privilege_task_create((unsigned long)&print, 1);
-    printf("%d\n",new_task1->task_id);
-    printf("%x\n",new_task1->cpu_context.x19);
-    printf("%x\n",new_task1->cpu_context.x20);
-    printf("%x\n",new_task1->cpu_context.pc);
-    printf("%x\n",new_task1->cpu_context.sp);
-    task_t* new_task2 = privilege_task_create((unsigned long)&print2, 2);
+    task_t* new_task1 = privilege_task_create((unsigned long)&print);
+    task_t* new_task2 = privilege_task_create((unsigned long)&print2);
+    task_t* new_task3 = privilege_task_create((unsigned long)&print3);
 
     // shell();
     schedule();

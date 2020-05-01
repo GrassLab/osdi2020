@@ -3,6 +3,7 @@
 
 #define STACK_SIZE 4096
 #define MAX_TASK_SIZE 64
+#define schedule _schedule
 
 struct cpu_context {
     unsigned long x19;
@@ -48,11 +49,19 @@ struct task_manager {
     task_t task_pool[MAX_TASK_SIZE];
     char kstack_pool[MAX_TASK_SIZE][STACK_SIZE];
     char ustack_pool[MAX_TASK_SIZE][STACK_SIZE];
+    int task_num;
 };
 
 typedef struct task_manager task_manager_t;
 
+enum {
+    THREAD_RUNNABLE,
+    THREAD_NOT_RUNNABLE,
+};
+
 task_t* privilege_task_create();
+void create_idle_task();
+void idle_task();
 void init_task_manager();
 void context_switch(struct task* next);
 void cpu_switch_to(struct task*,struct task*);
