@@ -38,4 +38,17 @@ struct task
 	bool re_schedule;
 };
 
+struct task_node
+{
+	struct task *cur_task;
+	struct task_node *next;
+};
+
+struct task_queue
+{
+	struct task_node *head;
+	struct task_node *tail;
+	size_t q_size;
+};
+
 #endif

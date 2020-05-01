@@ -2,6 +2,7 @@
 #include "device/uart.h"
 #include "task/taskStruct.h"
 #include "task/switch.h"
+#include "task/taskQueue.h"
 
 const static uint32_t MAX_TASK_NUMBER = 64;
 struct task task_pool[64];
@@ -42,6 +43,8 @@ void _sysFork()
 	new_task->priority = current->priority;
 	new_task->task_state = ready;
 	new_task->re_schedule = false;
+
+	pushQueue(new_task);
 
 	// Copy the context at last because I don't want to let child do the above works
 	copyContext(&new_task->kernel_context);
@@ -84,6 +87,8 @@ uint32_t createPrivilegeTask(void (*func)(), uint32_t priority)
 	new_task->priority = priority;
 	new_task->task_state = ready;
 	new_task->re_schedule = false;
+
+	pushQueue(new_task);
 
 	return task_count - 1;
 }

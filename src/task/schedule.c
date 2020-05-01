@@ -3,14 +3,14 @@
 #include "task/taskStruct.h"
 #include "task/taskManager.h"
 #include "task/switch.h"
+#include "task/taskQueue.h"
 
 void contextSwitch(struct task *next)
 {
 	if (current == next)
 		return;
 
-	current->task_state = ready;
-	next->task_state = running;
+	pushQueue(current);
 
 	struct task *prev = current;
 	current = next;
@@ -18,27 +18,14 @@ void contextSwitch(struct task *next)
 	switchTo(&prev->kernel_context, &next->kernel_context);
 }
 
-uint32_t _getNextProc()
-{
-	for (uint32_t i = 0; i < task_count; ++i)
-	{
-		if (task_pool[i].task_state == ready)
-		{
-			return i;
-		}
-	}
-
-	return -1;
-}
-
 void schedule()
 {
-	uint32_t next_task_id = _getNextProc();
+	struct task *next_task = popQueue();
 
-	if (next_task_id == -1)
+	if (next_task == -1)
 		return;
 
-	contextSwitch(&task_pool[next_task_id]);
+	contextSwitch(next_task);
 
 	return;
 }
