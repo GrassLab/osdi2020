@@ -3,6 +3,7 @@
 #include "queue.h"
 #include "schedule.h"
 #include "uart.h"
+#include "irq.h"
 #include "string_util.h"
 
 struct task_struct kernel_task_pool[TASK_POOL_SIZE];
@@ -47,7 +48,7 @@ void task_privilege_task_create(void(*start_func)())
   return;
 }
 
-uint64_t task_get_current_privilege_task_id(void)
+uint64_t task_get_current_task_id(void)
 {
   uint64_t current_task_id;
   asm volatile("mrs %0, tpidr_el1\n":
@@ -65,6 +66,7 @@ void task_idle(void)
       asm volatile ("wfi");
       /* keep waiting for new task even wake from timer interrupt */
     }
+    uart_puts("IDLE calling scheduler\n");
     scheduler();
   }
 }
@@ -74,23 +76,61 @@ void task_privilege_demo(void)
   while(1)
   {
     char string_buff[0x10];
-    uint64_t current_task_id = task_get_current_privilege_task_id();
+    uint64_t current_task_id = task_get_current_task_id();
     uart_puts("Hi I'm privilege task id ");
+    irq_int_enable();
     string_longlong_to_char(string_buff, (int64_t)current_task_id);
     uart_puts(string_buff);
     uart_putc('\n');
+    uart_puts("Enabling timer interrupt\n");
 
     uart_puts("Waiting to reschedule\n");
     while(!schedule_check_self_reschedule())
     {
       asm volatile("wfi");
     }
-
-    uart_puts("Time to reschedule\n");
-    CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
-    scheduler();
   }
 }
 
+void task_do_exec(void(*start_func)())
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  /* setup register and eret */
+  asm volatile(
+    "mov x0, %0\n"
+    "msr sp_el0, x0\n"
+    : : "r"((uint64_t)(task_user_stack_pool[TASK_ID_TO_IDX(current_task_id)] + TASK_USER_STACK_SIZE)));
 
+  asm volatile(
+    "mov x0, %0\n"
+    "msr elr_el1, x0\n"
+    : : "r"(start_func));
+
+  asm volatile(
+    "eor x0, x0, x0\n"
+    "msr spsr_el1, x0\n"
+    "eret");
+}
+
+void task_user_demo(void)
+{
+  char string_buff[0x10];
+  uint64_t current_task_id = task_get_current_task_id();
+
+  uart_puts("task_user_demo in kernel mode id ");
+  string_longlong_to_char(string_buff, (int64_t)current_task_id);
+  uart_puts(string_buff);
+  uart_putc('\n');
+
+  task_do_exec(task_user_context_demo);
+}
+
+void task_user_context_demo(void)
+{
+  while(1)
+  {
+    uart_puts("task_user_demo in user mode\n");
+    for(int i = 0; i < 1000000; ++i);
+  }
+}
 

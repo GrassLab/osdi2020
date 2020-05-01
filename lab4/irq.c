@@ -93,9 +93,20 @@ void irq_el1_handler(void)
   }
   else
   {
+    uart_puts("Timer interrupt\n");
     /* ARM core timer interrupt */
     schedule_update_quantum_count();
     timer_set_core_timer_approx_ms(SCHEDULE_TIMEOUT_MS);
+
+    /* check reschedule bit */
+    if(schedule_check_self_reschedule())
+    {
+      uint64_t current_task_id = task_get_current_task_id();
+      uart_puts("Time to reschedule\n");
+      CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
+      scheduler();
+    }
+
   }
   return;
 }

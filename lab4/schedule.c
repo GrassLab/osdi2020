@@ -17,9 +17,9 @@ void scheduler_init(void)
                "msr tpidr_el1, x0\n");
   task_privilege_task_create(task_idle); /* Reserve the space for idle_task */
   /* Demo purpose */
+  task_privilege_task_create(task_user_demo);
   task_privilege_task_create(task_privilege_demo);
-  task_privilege_task_create(task_privilege_demo);
-  task_privilege_task_create(task_privilege_demo);
+  task_privilege_task_create(task_user_demo);
   /* End of demo purpose */
   irq_int_enable();
   timer_enable_core_timer();
@@ -36,7 +36,7 @@ void schedule_context_switch(uint64_t current_id, uint64_t next_id)
 
 void scheduler(void)
 {
-  uint64_t current_privilege_task_id = task_get_current_privilege_task_id();
+  uint64_t current_privilege_task_id = task_get_current_task_id();
   if(current_privilege_task_id == 0)
   {
     /* Come from schedule_init */
@@ -68,8 +68,13 @@ void scheduler(void)
 
 void schedule_update_quantum_count(void)
 {
-  uint64_t current_task_id = task_get_current_privilege_task_id();
+  uint64_t current_task_id = task_get_current_task_id();
   uint64_t current_task_idx = TASK_ID_TO_IDX(current_task_id);
+
+  if(CHECK_BIT(kernel_task_pool[current_task_idx].flag, 0))
+  {
+    return;
+  }
 
   if(kernel_task_pool[current_task_idx].quantum_count + 1 >= SCHEDULE_DEFAULT_QUANTUM)
   {
@@ -85,7 +90,7 @@ void schedule_update_quantum_count(void)
 
 int schedule_check_self_reschedule(void)
 {
-  uint64_t current_task_id = task_get_current_privilege_task_id();
+  uint64_t current_task_id = task_get_current_task_id();
   return CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
 }
 
