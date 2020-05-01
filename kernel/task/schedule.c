@@ -2,8 +2,10 @@
 
 #include "kernel/exception/exception.h"
 #include "kernel/peripherals/uart.h"
+
 #include "task.h"
 #include "task_queue.h"
+
 
 void context_switch ( thread_info_t * next )
 {

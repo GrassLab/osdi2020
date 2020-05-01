@@ -1,12 +1,14 @@
-#include "lib/time.h"
-#include "stdarg.h"
-#include "string.h"
-#include "ctype.h"
 #include "io.h"
 
+#include "lib/time.h"
+
+#include "ctype.h"
+#include "stdarg.h"
+#include "string.h"
+
 /* defined in io.S */
-extern void uart_write ( char * s);
-extern char uart_read  ( );
+extern void uart_write ( char * s );
+extern char uart_read ( );
 
 /* function that are not public ourside */
 void buffer_enqueue ( const char * str );
@@ -20,15 +22,18 @@ int printf ( const char * format, ... )
     va_list arguments;
     format_t output_format;
 
-    int d; char c; char *s; double f;
+    int d;
+    char c;
+    char * s;
+    double f;
 
     va_start ( arguments, format );
 
-    do {
-
+    do
+    {
         if ( *current == '%' )
-        {   
-            output_format = parse_format( &current );
+        {
+            output_format = parse_format ( &current );
 
             /* retrive argument */
             switch ( output_format.type )
@@ -48,7 +53,7 @@ int printf ( const char * format, ... )
                     break;
                 case HEXADECIMAL:
                 case POINTER:
-                    d = va_arg ( arguments, int );
+                    d              = va_arg ( arguments, int );
                     temp_buffer[0] = '0';
                     temp_buffer[1] = 'x';
                     itoa ( d, temp_buffer + 2, 16 );
@@ -58,7 +63,7 @@ int printf ( const char * format, ... )
                     ftoa ( f, temp_buffer, output_format.after_point_length );
                     break;
                 case CHAR:
-                    c = va_arg ( arguments, int );
+                    c              = va_arg ( arguments, int );
                     temp_buffer[0] = c;
                     temp_buffer[1] = '\0';
                     break;
@@ -68,13 +73,13 @@ int printf ( const char * format, ... )
                 default:
                     break;
             }
-            
+
             /* output signed if needed */
             if ( output_format.signed_flag && output_format.type == INT )
             {
                 d = va_arg ( arguments, int );
-                
-                output_char_counts ++;
+
+                output_char_counts++;
                 buffer_enqueue ( d > 0 ? "+" : "-" );
             }
 
@@ -84,13 +89,13 @@ int printf ( const char * format, ... )
                 while ( output_format.int_length - strlen ( temp_buffer ) > 0 )
                 {
                     if ( output_format.is_zero_padding )
-                        buffer_enqueue ("0");
-                    else 
-                        buffer_enqueue (" ");
+                        buffer_enqueue ( "0" );
+                    else
+                        buffer_enqueue ( " " );
 
-                    output_char_counts ++;
+                    output_char_counts++;
 
-                    output_format.int_length --;
+                    output_format.int_length--;
                 }
             }
 
@@ -102,7 +107,8 @@ int printf ( const char * format, ... )
             else if ( output_format.type == STRING )
             {
                 output_char_counts += strlen ( s );
-                buffer_enqueue ( s );;
+                buffer_enqueue ( s );
+                ;
             }
             else
             {
@@ -115,10 +121,10 @@ int printf ( const char * format, ... )
             {
                 while ( output_format.int_length - strlen ( temp_buffer ) > 0 )
                 {
-                    output_char_counts ++;
-                    buffer_enqueue (" ");
+                    output_char_counts++;
+                    buffer_enqueue ( " " );
 
-                    output_format.int_length --;
+                    output_format.int_length--;
                 }
             }
         }
@@ -127,12 +133,12 @@ int printf ( const char * format, ... )
             temp_buffer[0] = *current;
             temp_buffer[1] = '\0';
 
-            output_char_counts ++;
+            output_char_counts++;
             buffer_enqueue ( temp_buffer );
 
-            current ++;
+            current++;
         }
-            
+
     } while ( *current != '\0' );
 
     return output_char_counts;
@@ -145,15 +151,15 @@ char * gets ( char * str )
 
     while ( 1 )
     {
-        c = uart_read ( );
-        str [i++] = c;
+        c        = uart_read ( );
+        str[i++] = c;
 
         if ( c == '\n' )
         {
             str[i] = '\0';
             break;
         }
-    }  
+    }
 
     return str;
 }
@@ -162,33 +168,33 @@ void buffer_enqueue ( const char * str )
 {
     static char buffer[4096];
     static int buffer_count = 0;
-    
-    int current_str_output = 0;        
+
+    int current_str_output = 0;
 
     while ( current_str_output < strlen ( str ) )
     {
         if ( buffer_count + strlen ( str + current_str_output ) > 4000 )
         {
             strncpy ( buffer + buffer_count, str + current_str_output, 4000 - buffer_count );
-            current_str_output += (4000 - buffer_count);
+            current_str_output += ( 4000 - buffer_count );
 
             buffer[4000] = '\0';
-            
+
             uart_write ( buffer );
             buffer_count = 0;
         }
         else
         {
             strcpy ( buffer + buffer_count, str + current_str_output );
-            
-            buffer_count +=strlen ( str + current_str_output );
+
+            buffer_count += strlen ( str + current_str_output );
             current_str_output += strlen ( str + current_str_output );
         }
     }
 
     /* if there still something in the queue, and the buffer contain \n */
     /* flush the buffer */
-    if ( buffer_count > 0 && strchr(buffer, '\n') != NULL )
+    if ( buffer_count > 0 && strchr ( buffer, '\n' ) != NULL )
     {
         uart_write ( buffer );
         buffer_count = 0;
@@ -198,53 +204,53 @@ void buffer_enqueue ( const char * str )
 format_t parse_format ( const char ** input )
 {
     format_t format = {
-        .is_zero_padding = 0,
-        .signed_flag = 0,
-        .int_length = 0,
+        .is_zero_padding    = 0,
+        .signed_flag        = 0,
+        .int_length         = 0,
         .after_point_length = 6,
-        .is_justify_left = 0,
+        .is_justify_left    = 0,
     };
 
     // move on, skip '%'
-    (*input)++;
+    ( *input )++;
 
     while ( 1 )
     {
-        if ( (**input) == '+' )
+        if ( ( **input ) == '+' )
         {
             format.signed_flag = 1;
-            (*input)++;
+            ( *input )++;
         }
-        else if ( (**input) == '-' )
+        else if ( ( **input ) == '-' )
         {
             format.is_justify_left = 1;
-            (*input)++;
+            ( *input )++;
         }
         else if ( isdigit ( **input ) )
-        {   
+        {
             // lenght control start with 0
-            if ( (**input) == '0')
+            if ( ( **input ) == '0' )
             {
-                (*input)++;
+                ( *input )++;
                 format.is_zero_padding = 1;
             }
-                
+
             format.int_length = atoi ( *input );
-            
-            while ( isdigit(**input) )
-                (*input)++;
+
+            while ( isdigit ( **input ) )
+                ( *input )++;
         }
-        else if ( (**input) == '.' )
+        else if ( ( **input ) == '.' )
         {
-            (*input)++;
+            ( *input )++;
             format.after_point_length = atoi ( *input );
-            
-            while ( isdigit(**input) )
-                (*input)++;
+
+            while ( isdigit ( **input ) )
+                ( *input )++;
         }
-        else if ( isalpha( **input ) )
+        else if ( isalpha ( **input ) )
         {
-            switch( **input )
+            switch ( **input )
             {
                 case 'd':
                 case 'i':
@@ -274,7 +280,7 @@ format_t parse_format ( const char ** input )
                 default:
                     break;
             }
-            (*input)++;
+            ( *input )++;
         }
         else
         {

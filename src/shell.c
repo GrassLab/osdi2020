@@ -1,40 +1,53 @@
+#include "shell.h"
+
 #include "lib/io.h"
 #include "lib/string.h"
 
 #include "command.h"
-#include "shell.h"
 
-void shell_start ( ) 
+
+void shell_start ( )
 {
     // int buffer_counter = 0;
     // char input_char;
     char buffer[MAX_BUFFER_LEN];
     // enum SPECIAL_CHARACTER input_parse;
 
-    strset (buffer, 0, MAX_BUFFER_LEN);   
+    strset ( buffer, 0, MAX_BUFFER_LEN );
 
     // new line head
-    printf("# ");
+    printf ( "# " );
 
     // read input
-    while(1)
+    while ( 1 )
     {
-        gets(buffer);
-        buffer[strlen(buffer)-1] = '\0';
+        gets ( buffer );
+        buffer[strlen ( buffer ) - 1] = '\0';
 
-        if      ( !strcmp(buffer, "help"            ) ) command_help();
-        else if ( !strcmp(buffer, "hello"           ) ) command_hello();
-        else if ( !strcmp(buffer, "timestamp"       ) ) command_timestamp();
+        if ( !strcmp ( buffer, "help" ) )
+            command_help ( );
+        else if ( !strcmp ( buffer, "hello" ) )
+            command_hello ( );
+        else if ( !strcmp ( buffer, "timestamp" ) )
+            command_timestamp ( );
         // else if ( !strcmp(buffer, "reboot"          ) ) command_reboot();
-        else if ( !strcmp(buffer, "vc_base_addr"    ) ) command_vc_base_addr();
-        else if ( !strcmp(buffer, "board_revision"  ) ) command_board_revision();
-        else if ( !strcmp(buffer, "exc"             ) ) command_svc_exception_trap();
-        else if ( !strcmp(buffer, "timer"           ) ) command_timer_exception_enable();
-        else if ( !strcmp(buffer, "timer-stp"       ) ) command_timer_exception_disable();
-        else if ( !strcmp(buffer, "irq"             ) ) command_irq_exception_enable();
-        else if ( !strcmp(buffer, "irq-stp"         ) ) command_irq_exception_disable();
-        else                                            command_not_found(buffer);
-        
+        else if ( !strcmp ( buffer, "vc_base_addr" ) )
+            command_vc_base_addr ( );
+        else if ( !strcmp ( buffer, "board_revision" ) )
+            command_board_revision ( );
+        else if ( !strcmp ( buffer, "exc" ) )
+            command_svc_exception_trap ( );
+        else if ( !strcmp ( buffer, "timer" ) )
+            command_timer_exception_enable ( );
+        else if ( !strcmp ( buffer, "timer-stp" ) )
+            command_timer_exception_disable ( );
+        else if ( !strcmp ( buffer, "irq" ) )
+            command_irq_exception_enable ( );
+        else if ( !strcmp ( buffer, "irq-stp" ) )
+            command_irq_exception_disable ( );
+        else
+            command_not_found ( buffer );
+
         /*
         input_char = uart_getc();
 
@@ -47,7 +60,7 @@ void shell_start ( )
 
 enum SPECIAL_CHARACTER parse ( char c )
 {
-    if ( !(c < 128 && c >= 0) )
+    if ( !( c < 128 && c >= 0 ) )
         return UNKNOWN;
 
     if ( c == BACK_SPACE )
@@ -55,62 +68,73 @@ enum SPECIAL_CHARACTER parse ( char c )
     else if ( c == LINE_FEED || c == CARRIAGE_RETURN )
         return NEW_LINE;
     else
-        return REGULAR_INPUT;    
+        return REGULAR_INPUT;
 }
 
 void command_controller ( enum SPECIAL_CHARACTER input_parse, char c, char buffer[], int * counter )
 {
     if ( input_parse == UNKNOWN )
         return;
-    
+
     // Special key
     if ( input_parse == BACK_SPACE )
     {
-        if (  (*counter) > 0 )
-            (*counter) --;
-        
-        printf("%c %c", c, c);
+        if ( ( *counter ) > 0 )
+            ( *counter )--;
+
+        printf ( "%c %c", c, c );
     }
     else if ( input_parse == NEW_LINE )
     {
-        printf("%c\n", c);
+        printf ( "%c\n", c );
 
-        if ( (*counter) == MAX_BUFFER_LEN ) 
+        if ( ( *counter ) == MAX_BUFFER_LEN )
         {
-            input_buffer_overflow_message(buffer);
+            input_buffer_overflow_message ( buffer );
         }
-        else 
+        else
         {
-            buffer[(*counter)] = '\0';
+            buffer[( *counter )] = '\0';
 
-            if      ( !strcmp(buffer, "help"            ) ) command_help();
-            else if ( !strcmp(buffer, "hello"           ) ) command_hello();
-            else if ( !strcmp(buffer, "timestamp"       ) ) command_timestamp();
+            if ( !strcmp ( buffer, "help" ) )
+                command_help ( );
+            else if ( !strcmp ( buffer, "hello" ) )
+                command_hello ( );
+            else if ( !strcmp ( buffer, "timestamp" ) )
+                command_timestamp ( );
             // else if ( !strcmp(buffer, "reboot"          ) ) command_reboot();
-            else if ( !strcmp(buffer, "vc_base_addr"    ) ) command_vc_base_addr();
-            else if ( !strcmp(buffer, "board_revision"  ) ) command_board_revision();
-            else if ( !strcmp(buffer, "exc"             ) ) command_svc_exception_trap();
-            else if ( !strcmp(buffer, "timer"           ) ) command_timer_exception_enable();
-            else if ( !strcmp(buffer, "timer-stp"       ) ) command_timer_exception_disable();
-            else if ( !strcmp(buffer, "irq"             ) ) command_irq_exception_enable();
-            else if ( !strcmp(buffer, "irq-stp"         ) ) command_irq_exception_disable();
-            else                                            command_not_found(buffer);
+            else if ( !strcmp ( buffer, "vc_base_addr" ) )
+                command_vc_base_addr ( );
+            else if ( !strcmp ( buffer, "board_revision" ) )
+                command_board_revision ( );
+            else if ( !strcmp ( buffer, "exc" ) )
+                command_svc_exception_trap ( );
+            else if ( !strcmp ( buffer, "timer" ) )
+                command_timer_exception_enable ( );
+            else if ( !strcmp ( buffer, "timer-stp" ) )
+                command_timer_exception_disable ( );
+            else if ( !strcmp ( buffer, "irq" ) )
+                command_irq_exception_enable ( );
+            else if ( !strcmp ( buffer, "irq-stp" ) )
+                command_irq_exception_disable ( );
+            else
+                command_not_found ( buffer );
         }
-            
-        (*counter) = 0;
-        strset (buffer, 0, MAX_BUFFER_LEN); 
+
+        ( *counter ) = 0;
+        strset ( buffer, 0, MAX_BUFFER_LEN );
 
         // new line head;
-        printf("# ");
+        printf ( "# " );
     }
     else if ( input_parse == REGULAR_INPUT )
     {
-        printf("%c", c);
+        printf ( "%c", c );
 
-        if ( *counter < MAX_BUFFER_LEN)
+        if ( *counter < MAX_BUFFER_LEN )
         {
             buffer[*counter] = c;
-            (*counter) ++;
+            ( *counter )++;
         }
     }
 }

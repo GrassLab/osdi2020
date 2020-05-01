@@ -1,5 +1,7 @@
 #include "timer.h"
+
 #include "kernel/peripherals/uart.h"
+
 // need to run in EL1
 void sys_core_timer_enable ( )
 {
@@ -8,14 +10,13 @@ void sys_core_timer_enable ( )
     // bit[0]: ENABLE
     // bit[1]: IMASK
     // bit[2]: ISTATUS
-    asm volatile (
+    asm volatile(
         "mov x0, #1;"
-        "msr CNTP_CTL_EL0, x0;"
-    );
+        "msr CNTP_CTL_EL0, x0;" );
 
     // set expired time
-    sys_core_timer_reload();
-    
+    sys_core_timer_reload ( );
+
     // Core Timer Interrupt
     // bit[0]: nCNTPSIRQ:    secure physical timer
     // bit[1]: nCNTPNSIRQ:   Non-secure physical timer
@@ -32,10 +33,9 @@ void sys_core_timer_enable ( )
 // need to run in EL1
 void sys_core_timer_disable ( )
 {
-    asm volatile (
+    asm volatile(
         "mov x0, xzr;"
-        "msr CNTP_CTL_EL0, x0;"
-    );
+        "msr CNTP_CTL_EL0, x0;" );
 
     *CORE0_TIMER_IRQ_CTRL = 0b00;
 }
@@ -45,12 +45,11 @@ void sys_core_timer_reload ( )
 {
     // CNTP_TVAL_EL0: Holds the timer value for the EL1 physical timer.
     // TimerValue, bits [31:0]
-    asm volatile (
+    asm volatile(
         "mov x0, %0;"
         "msr CNTP_TVAL_EL0, x0;"
         :
-        : "r" (0x3FFFFFF)
-    );
+        : "r"( 0x3FFFFFF ) );
 }
 
 void sys_local_timer_enable ( )
@@ -68,7 +67,7 @@ void sys_local_timer_disable ( )
     *LOCAL_TIMER_CTRL = 0b0;
 }
 
-void sys_local_timer_reload( )
+void sys_local_timer_reload ( )
 {
     // bit[31]: INTR Flag clear
     // bit[30]: Local timer-reloaded

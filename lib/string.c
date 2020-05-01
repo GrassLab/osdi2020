@@ -1,14 +1,15 @@
-#include "math.h"
 #include "string.h"
-#include "type.h"
+
 #include "ctype.h"
+#include "math.h"
+#include "type.h"
 
 /* http://www.cplusplus.com/reference/cstring/strcmp/ */
 int strcmp ( const char * s1, const char * s2 )
 {
     int i;
 
-    for ( i = 0; i < strlen(s1); i ++ )
+    for ( i = 0; i < strlen ( s1 ); i++ )
     {
         if ( s1[i] != s2[i] )
         {
@@ -16,14 +17,14 @@ int strcmp ( const char * s1, const char * s2 )
         }
     }
 
-    return  s1[i] - s2[i];
+    return s1[i] - s2[i];
 }
 
 void strset ( char * s1, int c, int size )
 {
     int i;
 
-    for ( i = 0; i < size; i ++)
+    for ( i = 0; i < size; i++ )
         s1[i] = c;
 }
 
@@ -33,7 +34,7 @@ int strlen ( const char * s )
     int i = 0;
     while ( 1 )
     {
-        if ( *(s+i) == '\0' )
+        if ( *( s + i ) == '\0' )
             break;
         i++;
     }
@@ -56,9 +57,9 @@ char * strcpy ( char * destination, const char * source )
 /* http://www.cplusplus.com/reference/cstring/strncpy/ */
 char * strncpy ( char * destination, const char * source, int num )
 {
-    int i;  
-    int len = num > strlen ( source ) ?  strlen ( source ) : num;
-    
+    int i;
+    int len = num > strlen ( source ) ? strlen ( source ) : num;
+
     for ( i = 0; i < len; i++ )
     {
         destination[i] = source[i];
@@ -72,7 +73,7 @@ const char * strchr ( const char * str, int character )
 {
     int i;
 
-    for ( i = 0; i < strlen(str); i++ )
+    for ( i = 0; i < strlen ( str ); i++ )
     {
         if ( str[i] == character )
             return str + i;
@@ -82,19 +83,19 @@ const char * strchr ( const char * str, int character )
 }
 
 /* http://www.cplusplus.com/reference/cstdlib/itoa/ */
-char *  itoa ( int value, char * str, int base )
+char * itoa ( int value, char * str, int base )
 {
     int str_count = 0;
     int new_value;
-    const int origin_value = value;   
-    unsigned int v = value;
+    const int origin_value = value;
+    unsigned int v         = value;
 
     if ( origin_value < 0 && base == 10 )
     {
         str[str_count++] = '-';
-        v = abs( value );
+        v                = abs ( value );
     }
-        
+
     while ( v != 0 )
     {
         new_value = v % base;
@@ -105,14 +106,14 @@ char *  itoa ( int value, char * str, int base )
             str[str_count] = ( new_value - 10 ) + 'A';
         else
             return str;
-        
-        str_count ++;
+
+        str_count++;
         v /= base;
     }
 
     if ( str_count == 0 )
         str[str_count++] = '0';
-    
+
     str[str_count] = '\0';
 
     reverse ( ( origin_value < 0 && base == 10 ) ? str + 1 : str );
@@ -126,41 +127,41 @@ int atoi ( const char * str )
     int i = 0;
 
     while ( isspace ( *str ) )
-        str ++;
+        str++;
 
-    while ( isdigit(*str) )
+    while ( isdigit ( *str ) )
     {
         i *= 10;
-        i += ( (*str) - '0' );
+        i += ( ( *str ) - '0' );
 
-        str ++;
+        str++;
     }
-    
-    return i;    
+
+    return i;
 }
 
 // https://www.geeksforgeeks.org/convert-floating-point-number-string/
-void ftoa ( double n, char * res, int afterpoint ) 
-{ 
-    // Extract integer part 
-    int ipart = (int)n; 
-  
-    // Extract floating part 
-    double fpart = n - (double)ipart; 
-  
-    // convert integer part to string 
-    itoa(ipart, res, 10); 
-    int i = strlen(res);
+void ftoa ( double n, char * res, int afterpoint )
+{
+    // Extract integer part
+    int ipart = (int) n;
+
+    // Extract floating part
+    double fpart = n - (double) ipart;
+
+    // convert integer part to string
+    itoa ( ipart, res, 10 );
+    int i = strlen ( res );
 
     int p = 0;
-  
-    // check for display option after point 
-    if (afterpoint != 0) { 
-        
-        res[i++] = '.'; 
-        
+
+    // check for display option after point
+    if ( afterpoint != 0 )
+    {
+        res[i++] = '.';
+
         /* get the number that are wanted after point */
-        fpart = fpart * pow(10, afterpoint); 
+        fpart = fpart * pow ( 10, afterpoint );
 
         /* padding necessary 0 here */
         while ( fpart < (double) pow ( 10, ( afterpoint - 1 - p ) ) )
@@ -169,8 +170,8 @@ void ftoa ( double n, char * res, int afterpoint )
             p++;
         }
 
-        itoa(fpart, res + i, 10); 
-    } 
+        itoa ( fpart, res + i, 10 );
+    }
 }
 
 void reverse ( char * s )
@@ -178,10 +179,10 @@ void reverse ( char * s )
     int i;
     char temp;
 
-    for ( i = 0; i < strlen(s) / 2; i++ ) 
+    for ( i = 0; i < strlen ( s ) / 2; i++ )
     {
-        temp = s[strlen(s) - i - 1];
-        s[strlen(s) - i - 1] = s[i];
-        s[i] = temp;
+        temp                    = s[strlen ( s ) - i - 1];
+        s[strlen ( s ) - i - 1] = s[i];
+        s[i]                    = temp;
     }
 }

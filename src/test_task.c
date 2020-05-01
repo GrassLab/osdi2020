@@ -5,12 +5,12 @@
 
 void test_task ( )
 {
-    int i = 5;
+    int i   = 5;
     int pid = get_pid ( );
 
     while ( i-- )
-    {   
-        printf("I am task %d\n", pid);
-        wait_msec(3000000);
+    {
+        printf ( "I am task %d\n", pid );
+        wait_msec ( 3000000 );
     }
 }

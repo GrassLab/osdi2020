@@ -18,7 +18,7 @@ int isspace ( int c )
 /* http://www.cplusplus.com/reference/cctype/isalpha/ */
 int isalpha ( int c )
 {
-    if ( ( c <= 'Z' && c >= 'A' )  || ( c <= 'z' && c >= 'a') )
+    if ( ( c <= 'Z' && c >= 'A' ) || ( c <= 'z' && c >= 'a' ) )
         return 1;
     return 0;
 }
@@ -50,8 +50,7 @@ int toupper ( int c )
 /* http://www.cplusplus.com/reference/cctype/isxdigit/ */
 int isxdigit ( int c )
 {
-    if ( (c <= '9' && c >= '0') || (c <= 'F' && c >= 'A') )
+    if ( ( c <= '9' && c >= '0' ) || ( c <= 'F' && c >= 'A' ) )
         return 1;
     return 0;
 }
-

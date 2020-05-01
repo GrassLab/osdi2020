@@ -3,7 +3,8 @@
 
 #include "type.h"
 
-typedef struct {
+typedef struct
+{
     int is_zero_padding;
     int signed_flag;
     int int_length;
@@ -16,6 +17,5 @@ typedef struct {
 int printf ( const char * format, ... );
 char * gets ( char * str );
 format_t parse_format ( const char ** input );
-
 
 #endif

@@ -3,39 +3,39 @@
 
 #include "lib/type.h"
 
-typedef enum {
-    RUNNING = 1,
-    DEAD = 2,
-    IDLE_STATE = 3,
+typedef enum
+{
+    RUNNING       = 1,
+    DEAD          = 2,
+    IDLE_STATE    = 3,
     WAITING_CHILD = 4,
 } task_state_t;
 
-typedef struct {
-
-    unsigned long x[29];    // x0~x28 
-    unsigned long fp;       // x29
-    unsigned long lr;       // x30
+typedef struct
+{
+    unsigned long x[29];  // x0~x28
+    unsigned long fp;     // x29
+    unsigned long lr;     // x30
     unsigned long user_sp;
     unsigned long kernel_sp;
     unsigned long user_mode_pc; /* to save the exec location, while trapped into kernel mode  */
 
 } context_t;
 
-struct thread_info_t {
-    
-    context_t cpu_context;    
-    
+struct thread_info_t
+{
+    context_t cpu_context;
+
     struct thread_info_t * parent;
     struct thread_info_t * child;
 
     uint64_t task_id;
     task_state_t state;
-    void (*func)();    
+    void ( *func ) ( );
 
     uint64_t counter;
-    uint64_t priority;  /* at this time, all task has the same priority */
-
-} ;
+    uint64_t priority; /* at this time, all task has the same priority */
+};
 
 typedef struct thread_info_t thread_info_t;
 
@@ -43,7 +43,7 @@ typedef struct thread_info_t thread_info_t;
 extern thread_info_t * IDLE;
 
 void create_idle_task ( );
-int task_create ( void(*func)() );
+int task_create ( void ( *func ) ( ) );
 int find_usable_in_pool ( );
 thread_info_t * get_thread_info ( int pid );
 
