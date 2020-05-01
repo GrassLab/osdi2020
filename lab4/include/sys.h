@@ -8,4 +8,5 @@
 #define SYS_EXEC        0x6
 #define SYS_FORK        0x7
 #define SYS_ID          0x8
+#define SYS_KILL        0x9
 #endif  /*_SYS_H */

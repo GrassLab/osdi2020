@@ -40,6 +40,7 @@ struct task_struct {
     long preempt_count;
 	unsigned long stack;
 	unsigned long flags;
+	unsigned long kill_flag;
 };
 
 extern void preempt_disable(void);
@@ -50,7 +51,7 @@ extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 
 #define INIT_TASK \
 /*cpu_context*/	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-/* state etc */	0,0,0,1, 0, 0, PF_KTHREAD \
+/* state etc */	0,0,0,1, 0, 0, PF_KTHREAD, 0 \
 }
 
 #endif

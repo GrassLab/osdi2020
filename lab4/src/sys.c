@@ -5,8 +5,10 @@
 #include "sys.h"
 #include "fork.h"
 #include "irq.h"
+#include "mm.h"
 #include "peripherals/irq.h"
 #include "peripherals/mini_uart.h"
+
 unsigned int read_cntfrq(void)
 {
     unsigned int val;
@@ -94,6 +96,13 @@ void handle_el0_sync(unsigned long par1, unsigned long par2)
     if (val == SYS_ID) {
         unsigned long i = current->task_id;
         return i;
+    }
+    if (val == SYS_KILL) {
+        unsigned long pid = par1;
+        struct task_struct *killed_child; 
+        uart_send_int(pid);
+        killed_child = (struct task_struct *)(LOW_KERNEL_STACK + (pid - 1) *PAGE_SIZE);
+        killed_child->kill_flag = 1;
     }
     return 0;
 }

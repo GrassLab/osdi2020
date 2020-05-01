@@ -1,6 +1,7 @@
 #include "mm.h"
 #include "../include/sched.h"
 #include "entry.h"
+#include "printf.h"
 #include "../include/fork.h"
 
 int privilege_task_create(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack)
@@ -25,23 +26,33 @@ int privilege_task_create(unsigned long clone_flags, unsigned long fn, unsigned 
 	else {
 		struct pt_regs *cur_regs   = task_pt_regs(current);
 		*childregs = *cur_regs;	// copy the parent kernel task
-		childregs->regs[0] = 0; // fork return with 0
-		childregs->sp = get_user_page(pid) + PAGE_SIZE;
+		if (current->task_id > pid) {
+			childregs->regs[29] = cur_regs->regs[29] + get_user_page(current->task_id) - get_user_page(pid);
+			childregs->sp       = cur_regs->sp + get_user_page(current->task_id) - get_user_page(pid); 
+		}
+		else {
+			childregs->regs[29] = cur_regs->regs[29] + get_user_page(pid) - get_user_page(current->task_id);
+			childregs->sp       = cur_regs->sp + get_user_page(pid) - get_user_page(current->task_id);
+		}
+		childregs->regs[0] 	= 0; // fork return with 0
+		printf("%d\r\n", (childregs->sp - childregs->regs[29]));
+		memcpy((unsigned long)childregs->sp, (unsigned long)cur_regs->sp, (childregs->sp - childregs->regs[29]));
 		p->stack = stack; // ?????
 	}
 
-	p->flags    = clone_flags;
-	p->task_id  = pid;
-	p->priority = current->priority;
-	p->state 	= TASK_RUNNING;
-	p->counter 	= p->priority;
-	p->preempt_count = 1; //disable preemtion until schedule_tail
-	
+	p->flags    = 		clone_flags;
+	p->task_id  = 		pid;
+	p->priority = 		current->priority;
+	p->state 	= 		TASK_RUNNING;
+	p->counter 	= 		p->priority;
+	p->preempt_count = 	1; //disable preemtion until schedule_tail
+	p->kill_flag = 		0;
 	p->cpu_context.pc = (unsigned long)ret_from_fork;
 	p->cpu_context.sp = (unsigned long)childregs;
 
 	task[pid] = p;	//put process stack to run queue
 	nr_tasks++;
+	
 	preempt_enable();
 	return pid;
 }

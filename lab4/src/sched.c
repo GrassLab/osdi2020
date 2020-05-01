@@ -55,6 +55,12 @@ void schedule(void)
 void schedule_tail(void) 
 {
 	preempt_enable();
+	// check for signal
+	if (current->kill_flag == 1) {
+		current->state = TASK_ZOMBIE;
+		nr_tasks -= 1;
+		schedule();
+	}
 }
 
 void preempt_disable(void)

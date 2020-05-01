@@ -68,3 +68,9 @@ get_taskid:
     mov w8, #SYS_ID
     svc #0
     ret /* return value $x0 is pid */
+
+.globl kill
+kill:
+    mov w8, #SYS_KILL
+    svc #0
+    ret /* never return here */

@@ -80,7 +80,7 @@ void _putc (char c)
 // This function is required by printf function
 void putc ( void* p, char c)
 {
-    _putc (c);
+    uart_send(c);
 }
 
 int readline(char *buf, int maxlen) {
