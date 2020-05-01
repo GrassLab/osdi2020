@@ -7,7 +7,7 @@
 
 struct node{
 	int key;
-	int element;
+	int element; 
 };
 
 // using a heap as priority queue

@@ -9,6 +9,7 @@
 #include "include/irq.h"
 #include "include/peripherals/uart.h"
 #include "include/signal.h"
+#include "include/queue.h"
 
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
@@ -71,6 +72,7 @@ void exception_handler(unsigned long type,unsigned long esr, \
 
 // Since my system call just need no more than two argument now
 unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
+	enable_irq();
 
 	switch(sys_call_num){
 		// Core timer
@@ -89,8 +91,11 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 		// kill
 		case 2:{
 			struct task_struct *p = task[arg0];
-			if(p)
-				p -> pending_signal = SIGKILL;
+			if(p && p->signal.pending!=SIGKILL)
+				p -> signal.pending = SIGKILL;
+
+			else
+				printf("@@@ Signal failed\r\n");
 			return 0;
 		}
 		// fork
@@ -112,6 +117,9 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 		}
 		//  uart write
 		case 7:{
+			// Using blocking write for safety
+			preempt_disable();
+
 			int success = 0;
 			int ret = 0;
 			
@@ -120,50 +128,46 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 				if(ret==0)
 					++success;
 			}
+
+			preempt_enable();
 		 	return success;	
 		}
 		// uart read
-		case 8:{
-			char recv_char;
-			int i = 0;
-			int flag = 0;
-			
-			// Since I don't want to enable interrupt
-			// Now I just change uart to round robin mode	
-			for(;i<arg1;i++){
-				//recv
-				while(get32(UART0_FR)&0x10);
-				recv_char = (get32(UART0_DR)&0xFF);
-				//send
-				while(get32(UART0_FR)&0x20);
-				put32(UART0_DR,recv_char);
- 				
+		case 8:{	 
+		      char recv_char;
+		      int i = 0;
+		      int flag = 0;
+		      
+		      preempt_disable();
+
+		      for(;i<arg1;i++){
+				//recv and send
+				recv_char = uart_recv();		
+				uart_send(recv_char);
+
 				if(recv_char =='\n' || recv_char == '\r'){
 					flag = 1;
 					break;
 				}
-		                 
-				((char*)arg0)[i] = recv_char;
+				else{ 
+					((char*)arg0)[i] = recv_char;
+				}
 			}
 			
 			while(flag==0){
-				//recv
-				while(get32(UART0_FR)&0x10);
-				recv_char = (get32(UART0_DR)&0xFF);
-				//send
-				while(get32(UART0_FR)&0x20);
-				put32(UART0_DR,recv_char);
+				//recv and send
+				recv_char = uart_recv();
+				uart_send(recv_char);
 
 				if(recv_char =='\n' || recv_char == '\r')
 					break;
 			}	
 			
 			// send "\r\n"
-			while(get32(UART0_FR)&0x20);
-			put32(UART0_DR,'\r');
-			while(get32(UART0_FR)&0x20);
-			put32(UART0_DR,'\n');
+			uart_send('\r');
+			uart_send('\n');
 
+			preempt_disable();
 			return i;	
 		}
 		// get priority

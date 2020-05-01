@@ -12,7 +12,7 @@
 #define SYS_UART_READ  8
 #define SYS_GET_PRIORITY 9
 
-#ifndef __ASSEMBLER__
+#ifndef __ASSEMBLER__ 
 int call_core_timer();
 void call_daif();
 

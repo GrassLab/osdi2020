@@ -1,9 +1,12 @@
 #include "include/mbox.h"
 #include "include/peripherals/uart.h"
 #include "include/uart.h"
+#include "include/printf.h"
 #include "include/peripherals/gpio.h"
 #include "include/utils.h"
 #include "include/queue.h"
+#include "include/scheduler.h"
+#include "include/irq.h"
 
 #define IRQ_ENABLE1 0x3f00b214
 
@@ -139,15 +142,17 @@ void uart_hex(unsigned int d) {
 void uart_IRQhandler(){
 	unsigned int status = get32(UART0_MIS);	
 	char c;
-	if(status&0x10){ // for receive
-		
+	
+	if(status&0x10){ // for receive	
+
 		while(get32(UART0_FR)&0x40){//receive FIFO full
 			c = get32(UART0_DR)&0xFF;
-			
+
 			if(!isfull(read_buf_head,read_buf_tail)){
 				push(read_buf,&read_buf_tail,c);
 			}
 		}
+
 		put32(UART0_ICR,status); //clear interrupt
 
 	}

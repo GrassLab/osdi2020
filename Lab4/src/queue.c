@@ -64,21 +64,22 @@ void priorityQ_push(struct priority_queue *q,int key, int element){
 }
 
 int priorityQ_pop(struct priority_queue *q){
-	if(q->heap_size<=0)
-		return -1; //empty heap
+	if(q->heap_size<=0){
+		return -1; 
+	}
 	else{
 		q->heap_size--;
 
 		if(q->heap_size == 0)
 			return q->node[0].element;
 		else{
-			int root = q->node[0].element;
+			struct node root = q->node[0];
 			q->node[0].key = q->node[q->heap_size].key;
 			q->node[0].element = q->node[q->heap_size].element;
 
 			heapify(q,0);
 			
-			return root;
+			return root.element;
 		}
 		
 	}
@@ -89,9 +90,9 @@ void heapify(struct priority_queue *q,int i){
     int r = right(i); 
     int largest = i;
 
-    if (l < q->heap_size && q->node[l].key > q->node[i].key) 
+    if (l < q->heap_size && q->node[l].key >= q->node[i].key) 
         largest = l; 
-    if (r < q->heap_size && q->node[r].key > q->node[largest].key) 
+    if (r < q->heap_size && q->node[r].key >= q->node[largest].key) 
         largest = r; 
     
     if (largest != i) 

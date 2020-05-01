@@ -75,33 +75,37 @@ void idle(){
   while(1);
 }
 
-
-void mytest(){
+void uart_test(){
 	/* uart_write test
 	char buffer[64]="Word in buffer\r\n";
 	int success_write;
 	success_write = uart_write(buffer,sizeof(buffer));
 	printf("Write byte: %d\r\n",success_write);*/
 
-	/*uart_read test
+	/* uart_read test */
 	char buffer[16];
 	int success_read;
-	printf(">>");
+	printf("### Task %d, call UART_READ\r\n",get_taskid());
 	success_read = uart_read(buffer,sizeof(buffer));
 	printf("\r\nRead byte %d: ", success_read);
-	
+
 	if(success_read>0){
-		for(int i=0;i<sizeof(buffer);i++)
+		for(int i=0;i<success_read;i++)
 			printf("%c",buffer[i]);
 	}
-	printf("\r\n");*/
 
+	printf("\r\n");
+
+	exit(0);
+}
+
+void mytest(){
 	int cnt = 1;
 	int pid = fork();
 	
 	while(cnt < 10) {
-		printf("Task id: %d (priority %d), cnt addr: 0x%x, value: %d\n", get_taskid(),get_priority(), &cnt, cnt);
-		delay(100000000);
+		printf("Task id: %d (priority %d), cnt addr: 0x%x, value: %d\r\n", get_taskid(),get_priority(), &cnt, cnt);
+		delay(1000000);
 		++cnt;
 		if(pid>0&&cnt>7)
 			kill(pid,SIGKILL);
@@ -121,15 +125,20 @@ void test() {
       			delay(100000);
       			++cnt;
     		}
-		printf("\r\n");
    	 	exit(0);
     		printf("Should not be printed\n");
-  	} else {
-		
+  	} else {	
     		printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
     		exec(foo);
   	}
 	exit(0);	
+}
+
+void kernel_process_b(){
+	int err = do_exec(uart_test);
+    	if (err < 0){
+        	printf("Error while moving process to user mode\r\n");
+    	}
 }
 
 void kernel_process(){
@@ -142,7 +151,7 @@ void kernel_process(){
 void zombie_reaper(){
 	while(1){
 		schedule(); // It's Ok to let others doing first
-		delay(100000);
+		delay(10000);
 		struct task_struct *p;
 		for (int i=0; i < NR_TASKS;i++){
 			p = task[i];
@@ -179,12 +188,13 @@ void kernel_main(void)
    
 
     // Here init a task being zombie reaper
-    int res = privilege_task_create(zombie_reaper,2);
+    int res = privilege_task_create(zombie_reaper,1);
     if (res < 0) {
         	printf("error while starting process");
         	return;
     }
-
+    
+    	
     for(int num=0;num<2;num++){ 
     	int res = privilege_task_create(kernel_process,num+1);
 
@@ -194,5 +204,15 @@ void kernel_main(void)
     	}
     }	
    	
+    /* Task with uart 
+    for(int num=0;num<2;num++){ 
+    	int res = privilege_task_create(kernel_process_b,num+1);
+
+    	if (res < 0) {
+        	printf("error while starting process");
+        	return;
+    	}
+     }*/
+    
     idle();
 }
