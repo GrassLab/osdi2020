@@ -60,6 +60,10 @@ void _schedule() {
 
   struct task_struct *p;
 
+  /* TODO */
+  /* check alarm, wake up any interruptible tasks that have got a signal */
+  /* ==== */
+
   while (1) {
     /* find out the first task that counter != 0 */
     for (int i = 0; i < NR_TASKS; ++i) {
@@ -129,6 +133,8 @@ void timer_tick() {
   _schedule();
   disable_irq();
 }
+
+
 
 void exit_process(){
     preempt_disable();

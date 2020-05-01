@@ -31,7 +31,7 @@ void user_process1(char *array) {
 }
 
 void user_process() {
-  char buf[30] = {0};
+  /* char buf[30] = {0}; */
   /* tfp_sprintf(buf, "User process started\n\r"); */
   call_sys_write("User prcoess started\r\n");
   unsigned long stack = call_sys_malloc();
@@ -50,6 +50,9 @@ void user_process() {
     uart_println("Error while allocating stack for process 1\n\r");
     return;
   }
+
+  uart_println("[User] Allocate a stack for user process @ %x", stack);
+
   err = call_sys_clone((unsigned long)&user_process1, (unsigned long)"abcd",
                        stack);
   if (err < 0) {
@@ -82,6 +85,12 @@ void idle() {
 
 void el1_main() {
   uart_init();
+
+  {
+#include "mm.h"
+    uart_println("Low memory: %x", LOW_MEMORY);
+    uart_println("High memory: %x", HIGH_MEMORY);
+  }
 
   /* local_timer_init(); */
   sys_core_timer_enable();

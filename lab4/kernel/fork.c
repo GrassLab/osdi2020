@@ -8,7 +8,6 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
                  unsigned long stack) {
   preempt_disable();
 
-
   /* allocate a task struct */
   struct task_struct *p = (struct task_struct *)get_free_page();
   if (!p)
@@ -25,6 +24,17 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     struct pt_regs *cur_regs = task_pt_regs(current);
     *childregs = *cur_regs;
     childregs->regs[0] = 0;
+    /**
+     *  +---------------+ stack = base
+     *  |  task_struct  |
+     *  + ------------- +
+     *  |               |
+     *  |               |
+     *  |               |
+     *  | ^^^^^^^^^^^^  |
+     *  |     stack     |
+     *  +---------------+ sp    = stack + PageSize(4KB)
+     */
     childregs->sp = stack + PAGE_SIZE;
     p->stack = stack;
   }
@@ -44,6 +54,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
   uart_println("[Task]   pid:      %d", p->pid);
   uart_println("[Task]   priority: %d", p->priority);
   uart_println("[Task]   counter:  %d", p->counter);
+  uart_println("[Task]   stack:    %x", p->stack);
 
   preempt_enable();
   return p->pid;
@@ -55,15 +66,23 @@ int move_to_user_mode(unsigned long pc) {
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
   unsigned long stack = get_free_page(); // allocate new user stack
+
   if (!stack) {
     return -1;
   }
   regs->sp = stack + PAGE_SIZE;
   current->stack = stack;
+
   return 0;
 }
 
 struct pt_regs *task_pt_regs(struct task_struct *tsk) {
   unsigned long p = (unsigned long)tsk + THREAD_SIZE - sizeof(struct pt_regs);
   return (struct pt_regs *)p;
+}
+
+void do_exec(void (*func)) {
+  asm volatile ("msr spsr_el1, %0" :: "r"(0));
+  asm volatile ("msr elr_el1, %0"  :: "r"(func));
+  asm volatile ("eret");
 }
