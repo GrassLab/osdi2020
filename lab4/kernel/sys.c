@@ -3,6 +3,7 @@
 #include "mm.h"
 #include "sched.h"
 
+
 void sys_write(char *buf) {
   uart_print("%s", buf);
 }
@@ -10,7 +11,7 @@ void sys_write(char *buf) {
 int sys_clone(unsigned long stack) { return copy_process(0, 0, 0, stack); }
 
 unsigned long sys_malloc() {
-  unsigned long addr = get_free_page();
+  unsigned long addr = get_user_free_page();
   if (!addr) {
     return -1;
   }

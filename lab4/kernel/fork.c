@@ -65,13 +65,29 @@ int move_to_user_mode(unsigned long pc) {
   memzero((unsigned long)regs, sizeof(*regs));
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
-  unsigned long stack = get_free_page(); // allocate new user stack
+  unsigned long stack = get_user_free_page(); // allocate new user stack
 
   if (!stack) {
     return -1;
   }
   regs->sp = stack + PAGE_SIZE;
   current->stack = stack;
+
+  char *PSR_STR_ARRAY[16] = {
+    [PSR_MODE_EL0t] = "PSR_MODE_EL0t",
+    [PSR_MODE_EL1t] = "PSR_MODE_EL1t",
+    [PSR_MODE_EL1h] = "PSR_MODE_EL1h",
+    [PSR_MODE_EL2t] = "PSR_MODE_EL2t",
+    [PSR_MODE_EL2h] = "PSR_MODE_EL2h",
+    [PSR_MODE_EL3t] = "PSR_MODE_EL3t",
+    [PSR_MODE_EL3h] = "PSR_MODE_EL3h",
+};
+
+  uart_println("[Move] Allocate a stack for process %x @ %x", pc, stack);
+  uart_println("[Move] pt_regs:");
+  uart_println("[Move]   sp    = %x", regs->sp);
+  uart_println("[Move]   pc    = %x", regs->pc);
+  uart_println("[Move]   pstat = %s", PSR_STR_ARRAY[regs->pstate]);
 
   return 0;
 }
@@ -82,7 +98,8 @@ struct pt_regs *task_pt_regs(struct task_struct *tsk) {
 }
 
 void do_exec(void (*func)) {
-  asm volatile ("msr spsr_el1, %0" :: "r"(0));
-  asm volatile ("msr elr_el1, %0"  :: "r"(func));
-  asm volatile ("eret");
+  struct task_struct *current = get_current();
+  uart_println("do exec in pid: %d w/ process @ %x", current->pid, func);
+
+  move_to_user_mode((unsigned long)func);
 }

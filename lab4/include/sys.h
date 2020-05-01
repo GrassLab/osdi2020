@@ -7,10 +7,9 @@
 #define SYS_CLONE_NUMBER    2
 #define SYS_EXIT_NUMBER     3
 
-
-
 #ifndef __ASSEMBLER__
 
+int sys_getel();
 void sys_write(char * buf);
 int sys_fork();
 

@@ -108,7 +108,7 @@ void context_switch(struct task_struct *next) {
 
   current = next;
 
-  uart_println("\r\n[Sched] switch to %d", next->pid);
+  uart_println("[Sched] switch to %d", next->pid);
 
   /* switch to the next */
   cpu_switch_to(prev, next);
