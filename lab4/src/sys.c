@@ -5,8 +5,8 @@
 #include "sys.h"
 #include "fork.h"
 #include "irq.h"
-#include "../include/peripherals/irq.h"
-
+#include "peripherals/irq.h"
+#include "peripherals/mini_uart.h"
 unsigned int read_cntfrq(void)
 {
     unsigned int val;
@@ -60,12 +60,21 @@ void handle_el0_sync(unsigned long par1, unsigned long par2)
         // par1 is buffer address
         // par2 is read size
         char c;
+        int  i = 0;
         char *buf_ptr = par1;
-        unsigned long i;
-        for (i = 0 ; i < par2 ; i++) {
-            c = uart_recv();
-            *(buf_ptr + i) = c;
-        }
+        while(1) {
+		    if(get32(AUX_MU_LSR_REG)&0x01) {
+                c = get32(AUX_MU_IO_REG)&0xFF;
+                *(buf_ptr + i) = c;
+                i++;
+                if (i == par2) {
+                    break;
+                }
+            } 
+            else if(i > 0) {
+                break;
+            }
+	    }
         return i;
     }
     if (val == SYS_UART_WRITE) {

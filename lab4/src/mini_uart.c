@@ -1,8 +1,6 @@
 #include "utils.h"
 #include "peripherals/mini_uart.h"
 #include "peripherals/gpio.h"
-
-
 void reserve(char *str,int index)
 {
     int i = 0, j = index - 1, temp;
@@ -73,10 +71,16 @@ void uart_init ( void )
 	put32(AUX_MU_CNTL_REG,3);               //Finally, enable transmitter and receiver
 }
 
+void _putc (char c)
+{
+    char temp = c;
+    sync_call_uart_write(&temp,1);
+}
+
 // This function is required by printf function
 void putc ( void* p, char c)
 {
-	uart_send(c);
+    _putc (c);
 }
 
 int readline(char *buf, int maxlen) {
