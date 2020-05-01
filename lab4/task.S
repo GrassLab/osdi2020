@@ -17,6 +17,7 @@ switch_to:
   ldp x29, x9, [x1], #16
   ldr x30, [x1]
   mov sp, x9
+  msr DAIFClr, 0xf
   ret
 
 .global get_current

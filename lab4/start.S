@@ -28,20 +28,27 @@ setup_EL1:
     mov x0, 0x3c5 // EL1h (SPSel = 1) with interrupt disabled
     msr spsr_el2, x0
 
-    adr x0, jump_main
+    adr x0, from_el1_to_el0
     msr elr_el2, x0
 
     # setup EL1 stack
     adr x0, _start
     msr sp_el1, x0
+    eret
 
+from_el1_to_el0:
     // let va_list can use
     mrs x0, CPACR_EL1
     orr x0, x0, #(3 << 20)
     msr CPACR_EL1, x0
 
+    mov x0, USER_STACK
+    msr sp_el0, x0
+    mov x0, 0 // EL0 with interrupt enabled
+    msr spsr_el1, x0
+    adr x0, jump_main // return to shell run in EL0
+    msr elr_el1, x0
     eret
-
 jump_main:
 
     bl      main

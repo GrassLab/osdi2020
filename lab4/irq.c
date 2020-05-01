@@ -1,6 +1,6 @@
+#include "schedule.h"
 #include "timer.h"
 #include "uart.h"
-
 #define LOCAL_TIMER_CONTROL_REG (unsigned int *)0x40000034
 #define LOCAL_TIMER_IRQ_CLR (unsigned int *)0x40000038
 unsigned int core_jf = 0;
@@ -23,16 +23,16 @@ void irq() {
 }
 
 void core_timer_handler() {
-  unsigned int val;
   printf("arm core timer , %d \n", core_jf);
-  asm volatile("mrs %0, cntfrq_el0" : "=r"(val));   // read val
-  asm volatile("msr cntp_tval_el0, %0" ::"r"(val)); // write tval
   core_jf += 1;
-  if (core_jf == 10) {
-    core_timer_disable();
-    core_jf = 1;
-  }
-  return;
+  asm volatile("mov x0, 0xfffffff"); // write tval
+  asm volatile("msr cntp_tval_el0, x0");
+  timer_tick();
+  // if (core_jf == 10) {
+  //   core_timer_disable();
+  //   core_jf = 1;
+  // }
+  // return;
 }
 
 void irq_router_do() { core_timer_handler(); }

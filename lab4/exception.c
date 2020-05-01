@@ -1,3 +1,4 @@
+#include "schedule.h"
 #include "timer.h"
 #include "uart.h"
 
@@ -41,6 +42,12 @@ void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
   case 2:
     print_lv();
     break;
+  case 3:
+    scs();
+    break;
+  case 4:
+    ics();
+    break;
   }
 }
 
@@ -61,7 +68,7 @@ void exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
       printf("Instruction specific syndrome (ISS) 0x%x\r\n", iss);
     }
   } else {
-    // printf("OMG\n");
-    // printf("Exception class (EC) 0x%x\r\n", ec);
+    printf("OMG\n");
+    printf("Exception class (EC) 0x%x\r\n", ec);
   }
 }
