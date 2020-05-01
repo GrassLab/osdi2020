@@ -6,6 +6,8 @@
 #include "shell.h"
 #include "syscall.h"
 
+void reaper(void);
+
 int main(void) {
   gpio_init();
   mini_uart_init();
@@ -15,6 +17,7 @@ int main(void) {
 //  shell();
 
   idle_task_init();
+  privilege_task_create(reaper);
   for (int i = 0; i < 1; ++i) {
     //privilege_task_create(foo);
     privilege_task_create(user_test);
@@ -36,6 +39,16 @@ void idle(void) {
   }
 }
 
+void reaper(void) {
+  while (true) {
+    for (int i = 0; i < MAX_TASK_NUM; ++i) {
+      if (task_pool[i].state == TASK_ZOMBIE) {
+        task_inuse[i] = false;
+      }
+    }
+  }
+}
+
 void foo(void) {
   for (uint64_t i = 0; ; ++i) {
     printf("%u: %u..." EOL, get_current_task()->id, i);
@@ -44,7 +57,7 @@ void foo(void) {
     asm("mov %0, sp" : "=r"(sp));
     printf(">> sp = %#x\n", sp);
 
-    for (int i = 0; i < 10000000; ++i) {}
+    for (int i = 0; i < 100000; ++i) {}
 //    printf("Task %u is reading..." EOL, get_current_task()->id);
 //    preempt_disable();
 //    for (;;) {
@@ -123,17 +136,19 @@ void test(void) {
     a = 4;
 
     asm("mov %0, sp" : "=r"(sp));
-    for (;;) {
-      for (int i = 0; i < 10000000; ++i) {}
+    for (int c = 0; c < 10; ++c) {
+      for (int i = 0; i < 100000; ++i) {}
       printf("Task %u: stack = %#x, a = %u\n", get_taskid(), sp, a);
     }
+    exit(2);
   } else {
     printf("Task %u: This is the PARENT\n", get_taskid());
 
     asm("mov %0, sp" : "=r"(sp));
-    for (;;) {
-      for (int i = 0; i < 10000000; ++i) {}
+    for (int c = 0; c < 10; ++c) {
+      for (int i = 0; i < 100000; ++i) {}
       printf("Task %u: stack = %#x, a = %u\n", get_taskid(), sp, a);
     }
+    exit(1);
   }
 }

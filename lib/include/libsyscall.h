@@ -8,5 +8,6 @@ size_t uart_read(void *buf, size_t count);
 size_t uart_write(const void *buf, size_t count);
 int exec(void(*func)(void));
 int fork(void);
+void exit(int status);
 
 #endif // LIBSYSCALL_H_

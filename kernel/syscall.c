@@ -58,10 +58,16 @@ int do_fork_helper(uint64_t trapframe, uint64_t lr) {
   return cid;
 }
 
+void do_exit(int status) {
+  get_current_task()->state = TASK_ZOMBIE;
+  get_current_task()->exit_status = status;
+}
+
 void *syscall_table[] = {
   do_get_taskid,
   do_uart_read,
   do_uart_write,
   do_exec,
-  do_fork
+  do_fork,
+  do_exit
 };

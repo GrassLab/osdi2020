@@ -11,6 +11,8 @@ void idle_task_init() {
   task_inuse[0] = true;
   task_pool[0].id = 0;
   task_pool[0].timeslice = DEFAULT_TIMESLICE;
+  task_pool[0].preempt_count = 0;
+  task_pool[0].state = TASK_RUNNING;
   asm volatile("msr tpidr_el1, %0" : : "r"(&task_pool[0]));
 }
 
@@ -26,6 +28,7 @@ uint32_t privilege_task_init(void) {
   task_pool[id].id = id;
   task_pool[id].timeslice = DEFAULT_TIMESLICE;
   task_pool[id].preempt_count = 0;
+  task_pool[id].state = TASK_RUNNING;
   return id;
 }
 
@@ -53,13 +56,17 @@ void schedule(void) {
     enqueue(&runqueue, get_current_task());
     /* Select the next task by simple round-robin policy. */
     struct task *victim = dequeue(&runqueue);
+    while (victim->state != TASK_RUNNING) {
+      enqueue(&runqueue, victim);
+      victim = dequeue(&runqueue);
+    }
     context_switch(victim);
   }
 }
 
 /* This function will be invoked after exception handler return. */
 void post_exception_hook(void) {
-  if (get_current_task()->timeslice == 0 && get_current_task()->preempt_count == 0) {
+  if ((get_current_task()->timeslice == 0 || get_current_task()->state == TASK_ZOMBIE) && get_current_task()->preempt_count == 0) {
     printf("Task %u: Context switch is triggered" EOL, do_get_taskid());
     get_current_task()->timeslice = DEFAULT_TIMESLICE;
     schedule();

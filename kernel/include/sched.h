@@ -26,11 +26,18 @@ struct task_context {
   uint64_t sp;
 };
 
+enum task_state {
+  TASK_RUNNING,
+  TASK_ZOMBIE
+};
+
 struct task {
   struct task_context context;
   uint32_t id;
   uint32_t timeslice;
   uint32_t preempt_count;
+  enum task_state state;
+  int32_t exit_status;
 };
 
 struct queue runqueue;
