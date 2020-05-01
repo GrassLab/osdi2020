@@ -2,6 +2,7 @@
 #include <string.h>
 #include <timer.h>
 #include "shell.h"
+#include "irq.h"
 
 void system_call (size_t x0, size_t x1, size_t x2, size_t x3);
 
@@ -31,10 +32,12 @@ exception_router (size_t x0, size_t x1, size_t x2, size_t x3)
   iss = esr_el1 & 0xffffff;
   if (ec == 0x15)
     {
+      enable_irq ();
       if (iss == 0)
 	system_call (x0, x1, x2, x3);
       else
 	show_exception_status (elr_el1, esr_el1);
+      disable_irq ();
     }
   else
     {

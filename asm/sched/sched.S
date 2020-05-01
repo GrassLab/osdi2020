@@ -7,11 +7,7 @@ switch_to:
   stp x27, x28, [x0, 16 * 4]
   stp fp, lr, [x0, 16 * 5]
   mov x9, sp
-  mrs x10, SP_EL0
-  stp x9, x10, [x0, 16 * 6]
-  mrs x9, ELR_EL1
-  mrs x10, SPSR_EL1
-  stp x9, x10, [x0, 16 * 7]
+  str x9, [x0, 16 * 6]
 
   ldp x19, x20, [x1, 16 * 0]
   ldp x21, x22, [x1, 16 * 1]
@@ -19,12 +15,8 @@ switch_to:
   ldp x25, x26, [x1, 16 * 3]
   ldp x27, x28, [x1, 16 * 4]
   ldp fp, lr, [x1, 16 * 5]
-  ldp x9, x10, [x1, 16 * 6]
+  ldr x9, [x1, 16 * 6]
   mov sp,  x9
-  msr SP_EL0, x10
-  ldp x9, x10, [x1, 16 * 7]
-  msr ELR_EL1, x9
-  msr SPSR_EL1, x10
   msr tpidr_el1, x1
   ret
 
