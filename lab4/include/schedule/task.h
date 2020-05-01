@@ -58,9 +58,13 @@ extern uint8_t ustack_pool[MAX_TASK_NUM][4096] __attribute__((aligned(16u)));
 extern Queue running_queue;
 
 void initIdleTaskState(void);
-int createPrivilegeTask(void (*func)());
+int64_t createPrivilegeTask(void (*func)());
 void doExec(void (*func)());
 void checkRescheduleFlag(void);
+
+void copyContexts(int64_t id);
+void copyStacks(int64_t id);
+void updateTrapFrame(int64_t id);
 
 // for testing scheduler
 void fooTask(void);

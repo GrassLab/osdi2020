@@ -156,6 +156,11 @@ leave:
 
     eret
 
+.global _child_return_from_fork
+_child_return_from_fork:
+    _kernel_exit
+    eret
+
 .global _irq_handler
 _irq_handler:
     // entry of kernel routine

@@ -6,3 +6,8 @@ void exec(void (*func)()) {
     asm volatile("mov x0, %0" : : "r"(SYS_EXEC));
     asm volatile("svc 0");
 }
+
+int fork(void) {
+    asm volatile("mov x0, %0" : : "r"(SYS_FORK));
+    asm volatile("svc 0");
+}

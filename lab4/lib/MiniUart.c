@@ -1,3 +1,4 @@
+#include "MiniUart.h"
 #include "peripheral/MiniUart.h"
 #include "peripheral/gpio.h"
 #include "sys/syscall.h"
@@ -60,10 +61,10 @@ static char getHexChar(char c) {
     return (c > 9) ? c - 0xa + 'a' : c + '0';
 }
 
-void sendHexUART(unsigned int hex) {
+void sendHexUART(uint64_t hex) {
     sendStringUART("0x");
-    for (size_t i = 1; i <= sizeof(unsigned int); ++i) {
-        char c = (hex >> ((sizeof(unsigned int) - i) * 8)) & 0xFF;
+    for (size_t i = 1; i <= sizeof(uint64_t); ++i) {
+        char c = (hex >> ((sizeof(uint64_t) - i) * 8)) & 0xFF;
 
         // send upper 4-bit
         sendUART(getHexChar(c >> 4));
@@ -91,10 +92,10 @@ void writeStringUART(const char *str) {
     }
 }
 
-void writeHexUART(unsigned int hex) {
+void writeHexUART(uint64_t hex) {
     writeStringUART("0x");
-    for (size_t i = 1; i <= sizeof(unsigned int); ++i) {
-        char c = (hex >> ((sizeof(unsigned int) - i) * 8)) & 0xFF;
+    for (size_t i = 1; i <= sizeof(uint64_t); ++i) {
+        char c = (hex >> ((sizeof(uint64_t) - i) * 8)) & 0xFF;
 
         // send upper 4-bit
         writeUART(getHexChar(c >> 4));

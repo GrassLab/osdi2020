@@ -2,5 +2,6 @@
 #define __SYS_UNISTD_H
 
 void exec(void (*func)());
+int fork(void);
 
 #endif

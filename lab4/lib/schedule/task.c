@@ -3,6 +3,7 @@
 #include "schedule/context.h"
 #include "schedule/schedule.h"
 #include "sys/unistd.h"
+#include "utils.h"
 
 // since circular queue will waste a space for circulation
 TaskStruct *queue_buffer[MAX_TASK_NUM + 1];
@@ -28,7 +29,7 @@ void initIdleTaskState() {
                  : /* clobbered register */);
 }
 
-int createPrivilegeTask(void (*func)()) {
+int64_t createPrivilegeTask(void (*func)()) {
     for (uint32_t i = 1; i < MAX_TASK_NUM; ++i) {
         if (ktask_pool[i].in_use == false) {
             ktask_pool[i].in_use = true;
@@ -47,12 +48,12 @@ int createPrivilegeTask(void (*func)()) {
             ktask_pool[i].user_task->regain_resource_flag = false;
 
             pushQueue(&running_queue, ktask_pool + i);
-            return 0;
+            return i;
         }
     }
 
     sendStringUART("[ERROR] No more tasks can be created!\n");
-    return 1;
+    return -1;
 }
 
 void checkRescheduleFlag(void) {
@@ -80,7 +81,62 @@ void doExec(void (*func)()) {
                           &cur_task->user_task->user_context);
 }
 
+void copyContexts(int64_t id) {
+    TaskStruct *cur_task = getCurrentTask();
+
+    uint8_t *src_ctx = (uint8_t *)&cur_task->kernel_context;
+    uint8_t *dst_ctx = (uint8_t *)&ktask_pool[id].kernel_context;
+
+    // only x19-x28
+    memcpy(dst_ctx, src_ctx, sizeof(uint64_t) * 10);
+
+    UserContext *src = &cur_task->user_task->user_context;
+    UserContext *dst = &utask_pool[id].user_context;
+
+    // fp, lr should be populated by _kernel_exit
+    // sp should be populated by copyStacks()
+    dst->elr_el1 = src->elr_el1;
+    dst->spsr_el1 = src->spsr_el1;
+}
+
+void copyStacks(int64_t id) {
+    TaskStruct *cur_task = getCurrentTask();
+
+    // kernel
+    uint8_t *src_sp = kstack_pool[cur_task->id];
+    uint8_t *dst_sp = kstack_pool[id];
+
+    memcpy(dst_sp, src_sp, 4096);
+
+    // bottom - current
+    uint64_t src_size =
+        (uint64_t)kstack_pool[cur_task->id + 1] - cur_task->kernel_context.sp;
+    ktask_pool[id].kernel_context.sp = (uint64_t)kstack_pool[id + 1] - src_size;
+
+    // user
+    src_sp = ustack_pool[cur_task->id];
+    dst_sp = ustack_pool[id];
+
+    memcpy(dst_sp, src_sp, 4096);
+
+    src_size = (uint64_t)ustack_pool[cur_task->id + 1] -
+               cur_task->user_task->user_context.sp;
+    utask_pool[id].user_context.sp = (uint64_t)ustack_pool[id + 1] - src_size;
+}
+
+void updateTrapFrame(int64_t id) {
+    TaskStruct *child_task = ktask_pool + id;
+
+    uint64_t *trapframe = (uint64_t *)child_task->kernel_context.sp;
+
+    // retval
+    trapframe[0] = 0;
+    // fp
+    trapframe[28] = (uint64_t)ustack_pool[id + 1];
+}
+
 static void barTask(void);
+static void forkTask(void);
 
 // kernel task
 void fooTask(void) {
@@ -93,10 +149,57 @@ void fooTask(void) {
     sendStringUART(" in kernel mode...\n");
     sendStringUART("Doing kernel routine for awhile...\n");
 
-    doExec(barTask);
+    doExec(forkTask);
 }
 
 // ------ For User Mode ----------------
+static void forkedTask(void) {
+    int tmp = 5;
+    UserTaskStruct *cur_task = getUserCurrentTask();
+
+    writeStringUART("Task ");
+    writeHexUART(cur_task->id);
+    writeStringUART(" after exec, tmp address ");
+    writeHexUART((uint64_t)&tmp);
+    writeStringUART(", tmp value ");
+    writeHexUART(tmp);
+    writeUART('\n');
+
+    while (cur_task->regain_resource_flag == false)
+        ;
+
+    // reset
+    cur_task->regain_resource_flag = false;
+}
+
+static void forkTask(void) {
+    int cnt = 1;
+    if (fork() == 0) {
+        UserTaskStruct *cur_task = getUserCurrentTask();
+
+        while (cnt < 10) {
+            writeStringUART("Task id ");
+            writeHexUART(cur_task->id);
+            writeStringUART(", cnt: ");
+            writeHexUART(cnt);
+            writeUART('\n');
+            delay(100000);
+            ++cnt;
+        }
+    } else {
+        UserTaskStruct *cur_task = getUserCurrentTask();
+
+        writeStringUART("Task ");
+        writeHexUART(cur_task->id);
+        writeStringUART(" before exec, cnt address ");
+        writeHexUART((uint64_t)&cnt);
+        writeStringUART(", cnt value ");
+        writeHexUART(cnt);
+        writeUART('\n');
+        exec(forkedTask);
+    }
+}
+
 static void bazTask(void) {
     UserTaskStruct *cur_task = getUserCurrentTask();
 
@@ -131,4 +234,3 @@ static void barTask(void) {
 
     exec(bazTask);
 }
-
