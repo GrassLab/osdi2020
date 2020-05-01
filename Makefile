@@ -4,8 +4,8 @@ LDFLAGS = -T kernel/linker.ld -nostdlib
 SDCARD ?= /dev/sdb
 HEADER := $(wildcard */*.h)
 SRC := $(wildcard */*.c)
-OBJECTS := $(patsubst %.c,%.o,$(SRC))
-ASM = ./kernel/boot.S ./sched/sched.S ./peripheral/timer.S ./kernel/irq.S ./kernel/exception.S
+ASM := ./asm/kernel/boot.S ./asm/sched/sched.S ./asm/peripheral/timer.S ./asm/kernel/irq.S ./asm/kernel/exception.S
+OBJECTS := $(patsubst %.S,%.o,$(ASM)) $(patsubst %.c,%.o,$(SRC))
 CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched
 
 .PHONY: all clean qemu debug indent
@@ -14,8 +14,8 @@ all: kernel8.img
 
 $(wildcard */*.o): $(SRC) $(HEADER)
 
-kernel8.elf: $(ASM) $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $(ASM) $(OBJECTS)
+kernel8.elf: $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJECTS)
 
 kernel8.img: kernel8.elf
 	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
