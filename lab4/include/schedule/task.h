@@ -59,6 +59,7 @@ extern Queue running_queue;
 
 void initIdleTaskState(void);
 int createPrivilegeTask(void (*func)());
+void doExec(void (*func)());
 void checkRescheduleFlag(void);
 
 // for testing scheduler

@@ -18,6 +18,12 @@ static void handleSendUart(uint64_t *trapframe) {
     sendUART(trapframe[1]);
 }
 
+static void handleExec(uint64_t *trapframe) {
+    // first parameter of svc is syscall number, access second parameter for
+    // real argument
+    doExec((void (*)())trapframe[1]);
+}
+
 void handleSVC(void) {
     TaskStruct *cur_task = getCurrentTask();
 
@@ -28,6 +34,9 @@ void handleSVC(void) {
         break;
     case 1:
         handleSendUart((uint64_t *)cur_task->kernel_context.sp);
+        break;
+    case 2:
+        handleExec((uint64_t *)cur_task->kernel_context.sp);
         break;
     default:
         sendStringUART("[ERROR] Unknown syscall number, shouldn't reach here");

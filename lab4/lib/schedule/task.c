@@ -2,6 +2,7 @@
 #include "MiniUart.h"
 #include "schedule/context.h"
 #include "schedule/schedule.h"
+#include "sys/unistd.h"
 
 // since circular queue will waste a space for circulation
 TaskStruct *queue_buffer[MAX_TASK_NUM + 1];
@@ -65,7 +66,7 @@ void checkRescheduleFlag(void) {
     }
 }
 
-static void doExec(void (*func)()) {
+void doExec(void (*func)()) {
     TaskStruct *cur_task = getCurrentTask();
     UserTaskStruct *user_task = cur_task->user_task;
 
@@ -79,22 +80,7 @@ static void doExec(void (*func)()) {
                           &cur_task->user_task->user_context);
 }
 
-// user task
-static void barTask(void) {
-    UserTaskStruct *cur_task = getUserCurrentTask();
-
-    writeStringUART("\nHi, I'm ");
-    writeHexUART(cur_task->id);
-    writeStringUART(" in user mode...\n");
-
-    writeStringUART("Doing user routine for awhile...\n");
-
-    while (cur_task->regain_resource_flag == false)
-        ;
-
-    // reset
-    cur_task->regain_resource_flag = false;
-}
+static void barTask(void);
 
 // kernel task
 void fooTask(void) {
@@ -109,3 +95,40 @@ void fooTask(void) {
 
     doExec(barTask);
 }
+
+// ------ For User Mode ----------------
+static void bazTask(void) {
+    UserTaskStruct *cur_task = getUserCurrentTask();
+
+    writeStringUART("\nHi, I'm ");
+    writeHexUART(cur_task->id);
+    writeStringUART(" in user mode...\n");
+
+    writeStringUART("Doing bazTask() for awhile...\n");
+
+    while (cur_task->regain_resource_flag == false)
+        ;
+
+    // reset
+    cur_task->regain_resource_flag = false;
+}
+
+// main user task
+static void barTask(void) {
+    UserTaskStruct *cur_task = getUserCurrentTask();
+
+    writeStringUART("\nHi, I'm ");
+    writeHexUART(cur_task->id);
+    writeStringUART(" in user mode...\n");
+
+    writeStringUART("Doing barTask() for awhile...\n");
+
+    while (cur_task->regain_resource_flag == false)
+        ;
+
+    // reset
+    cur_task->regain_resource_flag = false;
+
+    exec(bazTask);
+}
+
