@@ -8,4 +8,10 @@ void sendStringUART(const char *str);
 void sendHexUART(unsigned int hex);
 void delay(unsigned int clock);
 
+// ---- For User Mode --------------------
+char readUART(void);
+void writeUART(char c);
+void writeStringUART(const char *str);
+void writeHexUART(unsigned int hex);
+
 #endif

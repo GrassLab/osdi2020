@@ -67,9 +67,13 @@ stp x24, x25, [sp, #16 * 12]
 stp x26, x27, [sp, #16 * 13]
 stp x28, x29, [sp, #16 * 14]
 str x30, [sp, #16 * 15]
+
+bl switchUserToKernel
 .endm
 
 .macro _kernel_exit
+bl switchKernelToUser
+
 ldp x0, x1, [sp, #16 * 0]
 ldp x2, x3, [sp, #16 * 1]
 ldp x4, x5, [sp, #16 * 2]
@@ -89,43 +93,63 @@ ldr x30, [sp, #16 * 15]
 add sp, sp, #256
 .endm
 
+.macro _interrupt_entry
+// set interrupt context (stack) to position 4MB
+bl getCurrentTask
+mov x9, sp
+str x9, [x0, 16 * 6]
+mov sp, 0x400000
+.endm
+
+.macro _interrupt_exit
+// reset back to kernel context (stack)
+bl getCurrentTask
+ldr x9, [x0, 16 * 6]
+mov sp,  x9
+.endm
+
 .global _exception_handler
 _exception_handler:
     _kernel_entry
 
-    ldr x0, =_exception_ret_addr
-    bl sendStringUART
-    mrs x0, ELR_EL1
-    bl sendHexUART
-    mov x0, #10
-    bl sendUART
+    _interrupt_entry
 
-    ldr x0, =_exception_class
-    bl sendStringUART
-    mrs x0, ESR_EL1
-    // logical shift right
-    // EC: [31:26]
-    lsr x0, x0, #26
-    bl sendHexUART
-    mov x0, #10
-    bl sendUART
+    bl handleSVC
+    // ldr x0, =_exception_ret_addr
+    // bl sendStringUART
+    // mrs x0, ELR_EL1
+    // bl sendHexUART
+    // mov x0, #10
+    // bl sendUART
 
-    ldr x0, =_exception_iss
-    bl sendStringUART
-    mrs x0, ESR_EL1
-    // ISS: [24:0], 0x1ffffff (2**25 - 1)
-    and x0, x0, #0x1ffffff
-    bl sendHexUART
-    mov x0, #10
-    bl sendUART
+    // ldr x0, =_exception_class
+    // bl sendStringUART
+    // mrs x0, ESR_EL1
+    // // logical shift right
+    // // EC: [31:26]
+    // lsr x0, x0, #26
+    // bl sendHexUART
+    // mov x0, #10
+    // bl sendUART
 
-    mrs x0, ESR_EL1
-    and x0, x0, #0x1ffffff
-    cmp x0, #1  // 1 for exc, 2 for irq
-    b.eq leave
+    // ldr x0, =_exception_iss
+    // bl sendStringUART
+    // mrs x0, ESR_EL1
+    // // ISS: [24:0], 0x1ffffff (2**25 - 1)
+    // and x0, x0, #0x1ffffff
+    // bl sendHexUART
+    // mov x0, #10
+    // bl sendUART
 
-    bl enable_irq
-    bl _enable_core_timer
+    // mrs x0, ESR_EL1
+    // and x0, x0, #0x1ffffff
+    // cmp x0, #1  // 1 for exc, 2 for irq
+    // b.eq leave
+
+    // bl enable_irq
+    // bl _enable_core_timer
+
+    _interrupt_exit
 
 leave:
     _kernel_exit
@@ -137,24 +161,14 @@ _irq_handler:
     // entry of kernel routine
     _kernel_entry
 
-    bl switchUserToKernel
-
-    // set interrupt context (stack) to position 4MB
-    bl getCurrentTask
-    mov x9, sp
-    str x9, [x0, 16 * 6]
-    mov sp, 0x400000
+    _interrupt_entry
 
     bl irq_handler
 
-    // reset back to kernel context (stack)
-    bl getCurrentTask
-    ldr x9, [x0, 16 * 6]
-    mov sp,  x9
+    _interrupt_exit
 
     // exit of kernel routine
     bl checkRescheduleFlag
-    bl switchKernelToUser
 
     _kernel_exit
 

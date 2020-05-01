@@ -83,11 +83,11 @@ static void doExec(void (*func)()) {
 static void barTask(void) {
     UserTaskStruct *cur_task = getUserCurrentTask();
 
-    sendStringUART("\nHi, I'm ");
-    sendHexUART(cur_task->id);
-    sendStringUART(" in user mode...\n");
+    writeStringUART("\nHi, I'm ");
+    writeHexUART(cur_task->id);
+    writeStringUART(" in user mode...\n");
 
-    sendStringUART("Doing user routine for awhile...\n");
+    writeStringUART("Doing user routine for awhile...\n");
 
     while (cur_task->regain_resource_flag == false)
         ;

@@ -1,5 +1,6 @@
 #include "peripheral/MiniUart.h"
 #include "peripheral/gpio.h"
+#include "sys/syscall.h"
 
 #include <stddef.h>
 
@@ -46,7 +47,6 @@ char recvUART(void) {
     // wait until bit 1st set to 1
     while(!(*AUX_MU_LSR_REG & 0x01)) {}
 
-
     return *AUX_MU_IO_REG & 0xFF;
 }
 
@@ -70,5 +70,36 @@ void sendHexUART(unsigned int hex) {
 
         // send lower 4-bit
         sendUART(getHexChar(c & 0xf));
+    }
+}
+
+// ---- For User Mode ----------------------
+char readUART(void) {
+    asm volatile("mov x0, %0" : : "r"(SYS_RECV_UART));
+    asm volatile("svc 0");
+}
+
+void writeUART(char c) {
+    asm volatile("mov x1, %0" : : "r"(c));
+    asm volatile("mov x0, %0" : : "r"(SYS_SEND_UART));
+    asm volatile("svc 0");
+}
+
+void writeStringUART(const char *str) {
+    while (*str) {
+        writeUART(*str++);
+    }
+}
+
+void writeHexUART(unsigned int hex) {
+    writeStringUART("0x");
+    for (size_t i = 1; i <= sizeof(unsigned int); ++i) {
+        char c = (hex >> ((sizeof(unsigned int) - i) * 8)) & 0xFF;
+
+        // send upper 4-bit
+        writeUART(getHexChar(c >> 4));
+
+        // send lower 4-bit
+        writeUART(getHexChar(c & 0xf));
     }
 }
