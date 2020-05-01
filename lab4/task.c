@@ -5,6 +5,10 @@
 #include "uart.h"
 #include "string_util.h"
 
+struct task_struct kernel_task_pool[TASK_POOL_SIZE];
+uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
+uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];
+
 void task_privilege_task_create(void(*start_func)())
 {
   unsigned new_id = 0;
@@ -35,11 +39,11 @@ void task_privilege_task_create(void(*start_func)())
 
   /* assign context */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.lr = (uint64_t)start_func;
-  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(kernel_stack_pool[TASK_ID_TO_IDX(new_id)] + TASK_KERNEL_STACK_SIZE);
-  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(kernel_stack_pool[TASK_ID_TO_IDX(new_id)] + TASK_KERNEL_STACK_SIZE);
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(task_kernel_stack_pool[TASK_ID_TO_IDX(new_id)] + TASK_KERNEL_STACK_SIZE);
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool[TASK_ID_TO_IDX(new_id)] + TASK_KERNEL_STACK_SIZE);
 
   /* push into queue */
-  QUEUE_PUSH(schedule_run_queue, new_id);
+  schedule_enqueue(new_id);
   return;
 }
 
@@ -56,7 +60,7 @@ void task_idle(void)
   while(1)
   {
     uart_puts("Hi I'm IDLE task\n");
-    while(QUEUE_EMPTY(schedule_run_queue))
+    while(schedule_check_queue_empty())
     {
       asm volatile ("wfi");
       /* keep waiting for new task even wake from timer interrupt */
@@ -65,7 +69,7 @@ void task_idle(void)
   }
 }
 
-void task_demo(void)
+void task_privilege_demo(void)
 {
   while(1)
   {

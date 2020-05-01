@@ -7,9 +7,7 @@
 #include "task.h"
 #include "queue.h"
 
-struct task_struct kernel_task_pool[TASK_POOL_SIZE];
-uint16_t kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE]; /* Pi Stack needs to be 16 byte aligned */
-uint64_t_queue schedule_run_queue;
+static uint64_t_queue schedule_run_queue;
 
 void scheduler_init(void)
 {
@@ -19,9 +17,9 @@ void scheduler_init(void)
                "msr tpidr_el1, x0\n");
   task_privilege_task_create(task_idle); /* Reserve the space for idle_task */
   /* Demo purpose */
-  task_privilege_task_create(task_demo);
-  task_privilege_task_create(task_demo);
-  task_privilege_task_create(task_demo);
+  task_privilege_task_create(task_privilege_demo);
+  task_privilege_task_create(task_privilege_demo);
+  task_privilege_task_create(task_privilege_demo);
   /* End of demo purpose */
   irq_int_enable();
   timer_enable_core_timer();
@@ -73,7 +71,7 @@ void schedule_update_quantum_count(void)
   uint64_t current_task_id = task_get_current_privilege_task_id();
   uint64_t current_task_idx = TASK_ID_TO_IDX(current_task_id);
 
-  if(kernel_task_pool[current_task_idx].quantum_count + 1 >= TASK_DEFAULT_QUANTUM)
+  if(kernel_task_pool[current_task_idx].quantum_count + 1 >= SCHEDULE_DEFAULT_QUANTUM)
   {
     /* reset quantum count and time up */
     kernel_task_pool[current_task_idx].quantum_count = 0;
@@ -89,5 +87,16 @@ int schedule_check_self_reschedule(void)
 {
   uint64_t current_task_id = task_get_current_privilege_task_id();
   return CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
+}
+
+void schedule_enqueue(uint64_t id)
+{
+  QUEUE_PUSH(schedule_run_queue, (unsigned)id);
+  return;
+}
+
+int schedule_check_queue_empty(void)
+{
+  return QUEUE_EMPTY(schedule_run_queue);
 }
 
