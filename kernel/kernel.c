@@ -126,29 +126,31 @@ void test(void) {
 //    exec(foo);
 //  }
 
-  uint64_t sp;
-  asm("mov %0, sp" : "=r"(sp));
-  printf("Task %u: SP_EL0: %#x\n", get_taskid(), sp);
-  int a = 3;
-  int id = fork();
-  if (id == 0) {
-    printf("Task %u: This is the child\n", get_taskid());
-    a = 4;
+//  uint64_t sp;
+//  asm("mov %0, sp" : "=r"(sp));
+//  printf("Task %u: SP_EL0: %#x\n", get_taskid(), sp);
+//  int a = 3;
+//  int id = fork();
+//  if (id == 0) {
+//    printf("Task %u: This is the child\n", get_taskid());
+//    a = 4;
+//
+//    asm("mov %0, sp" : "=r"(sp));
+//    for (int c = 0; c < 10; ++c) {
+//      for (int i = 0; i < 100000; ++i) {}
+//      printf("Task %u: stack = %#x, a = %u\n", get_taskid(), sp, a);
+//    }
+//    exit(2);
+//  } else {
+//    printf("Task %u: This is the PARENT\n", get_taskid());
+//
+//    asm("mov %0, sp" : "=r"(sp));
+//    for (int c = 0; c < 10; ++c) {
+//      for (int i = 0; i < 100000; ++i) {}
+//      printf("Task %u: stack = %#x, a = %u\n", get_taskid(), sp, a);
+//    }
+//    exit(1);
+//  }
+//}
 
-    asm("mov %0, sp" : "=r"(sp));
-    for (int c = 0; c < 10; ++c) {
-      for (int i = 0; i < 100000; ++i) {}
-      printf("Task %u: stack = %#x, a = %u\n", get_taskid(), sp, a);
-    }
-    exit(2);
-  } else {
-    printf("Task %u: This is the PARENT\n", get_taskid());
 
-    asm("mov %0, sp" : "=r"(sp));
-    for (int c = 0; c < 10; ++c) {
-      for (int i = 0; i < 100000; ++i) {}
-      printf("Task %u: stack = %#x, a = %u\n", get_taskid(), sp, a);
-    }
-    exit(1);
-  }
-}

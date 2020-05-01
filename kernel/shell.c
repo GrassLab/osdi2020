@@ -1,6 +1,9 @@
+#include "ioutil.h"
 #include "mailbox.h"
 #include "mini_uart.h"
 #include "shell.h"
+#include "string.h"
+#include "utils.h"
 
 void help(void) {
   mini_uart_puts("hello: print Hello World!" EOL);

@@ -2,6 +2,7 @@
 #include "mini_uart.h"
 #include "sched.h"
 #include "shell.h"
+#include "string.h"
 
 /*
  * Create the permanently exist idle task.
@@ -24,6 +25,7 @@ uint32_t privilege_task_init(void) {
     return 0;
   }
 
+  memset(&task_pool[id], 0, sizeof(struct task));
   task_inuse[id] = true;
   task_pool[id].id = id;
   task_pool[id].timeslice = DEFAULT_TIMESLICE;
@@ -70,6 +72,11 @@ void post_exception_hook(void) {
     printf("Task %u: Context switch is triggered" EOL, do_get_taskid());
     get_current_task()->timeslice = DEFAULT_TIMESLICE;
     schedule();
+  }
+
+  bool *sig_pending = get_current_task()->sig_pending;
+  if (sig_pending[SIGKILL]) {
+    do_exit(0);
   }
 }
 

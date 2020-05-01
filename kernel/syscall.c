@@ -63,11 +63,16 @@ void do_exit(int status) {
   get_current_task()->exit_status = status;
 }
 
+int do_kill(uint32_t id, int sig) {
+  get_current_task()->sig_pending[sig] = true;
+}
+
 void *syscall_table[] = {
   do_get_taskid,
   do_uart_read,
   do_uart_write,
   do_exec,
   do_fork,
-  do_exit
+  do_exit,
+  do_kill
 };

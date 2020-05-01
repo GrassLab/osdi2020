@@ -31,6 +31,9 @@ enum task_state {
   TASK_ZOMBIE
 };
 
+#define MAX_SIGNAL_NUM 32
+#define SIGKILL 9
+
 struct task {
   struct task_context context;
   uint32_t id;
@@ -38,6 +41,7 @@ struct task {
   uint32_t preempt_count;
   enum task_state state;
   int32_t exit_status;
+  bool sig_pending[MAX_SIGNAL_NUM];
 };
 
 struct queue runqueue;
