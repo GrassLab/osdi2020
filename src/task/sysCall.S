@@ -11,3 +11,9 @@ exec:
     mov x8, EXEC
     svc #0
     ret
+
+.globl exit
+exit:
+    mov x8, EXIT
+    svc #0
+    ret

@@ -2,6 +2,7 @@
 #include "device/uart.h"
 #include "task/taskStruct.h"
 #include "task/switch.h"
+#include "task/schedule.h"
 #include "task/taskQueue.h"
 
 const static uint32_t MAX_TASK_NUMBER = 64;
@@ -9,15 +10,36 @@ struct task task_pool[64];
 char kstack_pool[64][4096];
 char ustack_pool[64][4096];
 uint32_t task_count = 0;
+bool pool_occupied[64] = {false};
 struct task *current;
+
+int32_t _get_free_pool_num()
+{
+	if (task_count >= MAX_TASK_NUMBER)
+		return -1;
+	else
+	{
+		for (int32_t i = 0; i < MAX_TASK_NUMBER; ++i)
+		{
+			if (pool_occupied[i] == false)
+			{
+				task_count++;
+				pool_occupied[i] = true;
+				return i;
+			}
+		}
+	}
+}
 
 void _sysFork()
 {
-	if (task_count >= MAX_TASK_NUMBER) // Task number > max task number
+	int32_t free_pool_num = _get_free_pool_num();
+
+	if (free_pool_num == -1)
 		return;
 
-	struct task *new_task = &task_pool[task_count];
-	unsigned long new_kstask = (unsigned long)&kstack_pool[task_count];
+	struct task *new_task = &task_pool[free_pool_num];
+	unsigned long new_kstask = (unsigned long)&kstack_pool[free_pool_num];
 
 	uint32_t sp_begin;
 	uint32_t sp_end;
@@ -28,7 +50,7 @@ void _sysFork()
 	uint32_t stack_size = sp_begin - sp_end;
 
 	// Set parent trapframe
-	*(uint32_t *)(sp_begin - 32 * 8) = task_count;
+	*(uint32_t *)(sp_begin - 32 * 8) = free_pool_num;
 
 	new_task->kernel_context.sp = new_kstask;
 	// Copy the kernel stack
@@ -39,7 +61,7 @@ void _sysFork()
 	// Because the stack is copied, the stack pointer should be moved down
 	new_task->kernel_context.sp -= stack_size;
 
-	new_task->task_id = task_count++;
+	new_task->task_id = free_pool_num;
 	new_task->priority = current->priority;
 	new_task->task_state = ready;
 	new_task->re_schedule = false;
@@ -73,22 +95,53 @@ void _sysexec()
 	doExec(func);
 }
 
+void _sysexit()
+{
+	int32_t sp_begin;
+	asm volatile("mov %0, x9"
+				 : "=r"(sp_begin));
+	int32_t exit_code = *(int32_t *)(sp_begin - 32 * 8);
+
+	uartPuts("Exit with code ");
+	uartInt(exit_code);
+	uartPuts("\n");
+
+	current->task_state = zombie;
+	task_count--;
+}
+
+void zombieReaper()
+{
+	while (1)
+	{
+		for (uint32_t i = 0; i < MAX_TASK_NUMBER; ++i)
+		{
+			if (task_pool[i].task_state == zombie)
+				pool_occupied[i] = false;
+		}
+
+		schedule();
+	}
+}
+
 uint32_t createPrivilegeTask(void (*func)(), uint32_t priority)
 {
-	if (task_count >= MAX_TASK_NUMBER) // Task number > max task number
-		return -1;
+	int32_t free_pool_num = _get_free_pool_num();
 
-	struct task *new_task = &task_pool[task_count];
-	unsigned long new_kstask = (unsigned long)&kstack_pool[task_count];
+	if (free_pool_num == -1)
+		return;
+
+	struct task *new_task = &task_pool[free_pool_num];
+	unsigned long new_kstask = (unsigned long)&kstack_pool[free_pool_num];
 
 	new_task->kernel_context.pc = (unsigned long)func;
 	new_task->kernel_context.sp = new_kstask;
-	new_task->task_id = task_count++;
+	new_task->task_id = free_pool_num;
 	new_task->priority = priority;
 	new_task->task_state = ready;
 	new_task->re_schedule = false;
 
 	pushQueue(new_task);
 
-	return task_count - 1;
+	return free_pool_num;
 }

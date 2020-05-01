@@ -26,7 +26,8 @@ typedef enum
 {
 	ready,
 	running,
-	pending
+	pending,
+	zombie
 } state;
 
 struct task

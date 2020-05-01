@@ -11,6 +11,7 @@ void userTask()
     // asm volatile("svc #2"); // Enable timer
 
     uartPuts("user task\n");
+    exit(0);
 }
 
 void forkTask()

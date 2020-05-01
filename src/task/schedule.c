@@ -10,7 +10,8 @@ void contextSwitch(struct task *next)
 	if (current == next)
 		return;
 
-	pushQueue(current);
+	if (current->task_state == ready)
+		pushQueue(current);
 
 	struct task *prev = current;
 	current = next;
@@ -25,6 +26,11 @@ void schedule()
 	if (next_task == -1)
 		return;
 
+	uartPuts("Reschedule from ");
+	uartInt(current->task_id);
+	uartPuts(" to ");
+	uartInt(next_task->task_id);
+	uartPuts("\n");
 	contextSwitch(next_task);
 
 	return;
@@ -34,7 +40,6 @@ void checkRSFlag()
 {
 	if (current->re_schedule == true)
 	{
-		uartPuts("reschedule\n");
 		schedule();
 	}
 

@@ -4,6 +4,7 @@
 #include "interrupt/irqTable.h"
 #include "interrupt/irq.h"
 #include "task/taskManager.h"
+#include "task/sysCallTable.h"
 
 #define IRQ_BASIC ((volatile uint32_t *)(0x3F00B200))
 #define IRQ_PEND1 ((volatile uint32_t *)(0x3F00B204))
@@ -27,11 +28,14 @@ void _systemCall()
 
     switch (sys_call_no)
     {
-    case 0:
+    case FORK:
         _sysFork();
         break;
-    case 1:
+    case EXEC:
         _sysexec();
+        break;
+    case EXIT:
+        _sysexit();
         break;
     default:
         break;

@@ -1,7 +1,10 @@
 #ifndef _SYSCALL_H
 #define _SYSCALL_H
 
-int fork();
-int exec(void(*func)());
+#include "type.h"
+
+int32_t fork();
+int32_t exec(void (*func)());
+void exit(int32_t status);
 
 #endif

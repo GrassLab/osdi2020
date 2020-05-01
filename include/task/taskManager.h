@@ -11,7 +11,9 @@ extern uint32_t task_count;
 
 void _sysFork();
 void _sysexec();
+void _sysexit();
 void doExec(void (*func)());
 uint32_t createPrivilegeTask(void (*func)(), uint32_t priority);
+void zombieReaper();
 
 #endif
