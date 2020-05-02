@@ -1,8 +1,8 @@
 #include "thread.h"
 #include "config.h"
 
-extern task_manager_t TaskManager;
-extern task_t* current;
+task_manager_t TaskManager;
+task_t* current;
 extern schedule();
 
 void idle_task(){
@@ -43,6 +43,7 @@ task_t* privilege_task_create(unsigned long fn){
     new_task->user_context.spsr_el1 = 0;
     new_task->user_context.elr_el1 = 0;
     new_task->trapframe = 0;
+    new_task->mode = KERNEL_MODE;
     
     new_task->cpu_context.pc = (unsigned long)ret_from_fork;
     new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id];
@@ -50,6 +51,20 @@ task_t* privilege_task_create(unsigned long fn){
     TaskManager.task_num++;
 
     return new_task;
+}
+
+void do_exec(void(*func)()){
+    if(current->rescheduled){
+        current->rescheduled = 0;
+        schedule();
+    }
+    unsigned long user_stack = current->user_context.sp_el0;
+    unsigned long user_cpu_state = 0x0;
+    asm volatile("msr sp_el0, %0" :: "r" (user_stack));
+    asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
+    asm volatile("msr elr_el1, %0" :: "r" (func));
+    asm volatile("eret");
+    current->mode = USER_MODE;
 }
 
 extern struct task* get_current();

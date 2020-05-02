@@ -9,6 +9,7 @@ unsigned int c = 0;
 unsigned int local_timer_count = 0;
 unsigned int core_timer_count = 0;
 extern task_t* current;
+extern check_reschedule();
 
 const char *entry_error_messages[] = {
 	"SYNC_INVALID_EL1t",
@@ -86,6 +87,8 @@ void handle_el0_sync(unsigned long esr, unsigned long address)
 	else if(num == 4){
 		timestamp_handler();
 	}
+	check_reschedule();
+
 }
 
 void timestamp_handler(){
@@ -118,6 +121,9 @@ void core_timer_handler()
 	printf("Arm core timer interrupt, jiffies %d \r\n",core_timer_count);
 	core_timer_count += 1;
 	current->counter--;
+	if(current->counter <= 0){
+		current->rescheduled = 1;
+	}
 	clean_core_timer();
 	return;
 }
@@ -134,6 +140,6 @@ void handle_irq(void)
 	else{
 		printf("%%%%%%%%%%%%%%%%%%%%%%\n");
 	}
-
+	check_reschedule();
 }
 

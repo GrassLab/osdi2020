@@ -37,8 +37,7 @@ void print(){
         // printf("%x\n",current->cpu_context.pc);
         // printf("%x\n",current->cpu_context.sp);
 
-        task_t* self_task = &TaskManager.task_pool[1];
-        if(self_task->counter <= 0){
+        if(current->counter <= 0){
             schedule();
         }
     }
@@ -50,9 +49,7 @@ void print2(){
         printf("222\n");
         delay(100000000);
 
-        task_t* self_task = &TaskManager.task_pool[2];
-
-        if(self_task->counter <= 0){
+        if(current->counter <= 0){
             schedule();
         }
     }
@@ -64,13 +61,39 @@ void print3(){
         printf("333\n");
         delay(100000000);
 
-        task_t* self_task = &TaskManager.task_pool[3];
-
-        if(self_task->counter <= 0){
+        if(current->counter <= 0){
             schedule();
         }
     }
 }
+
+void func(){
+    while(1){
+        printf("---\n");
+        printf("user loop\n");
+        delay(100000000);
+    }
+}
+
+void func2(){
+    while(1){
+        printf("---\n");
+        printf("user loop2\n");
+        delay(100000000);
+    }
+}
+ 
+void user_task2(){
+    do_exec(func2);
+}
+
+void user_task(){
+    do_exec(func);
+}
+
+
+
+
 
 void main()
 {
@@ -79,18 +102,20 @@ void main()
     init_printf(0, putc);
     init_task_manager();
 
+
+    // task_t* new_task1 = privilege_task_create((unsigned long)&print);
+    // task_t* new_task2 = privilege_task_create((unsigned long)&print2);
+    // task_t* new_task3 = privilege_task_create((unsigned long)&print3);
+    task_t* new_task4 = privilege_task_create((unsigned long)&user_task);
+    task_t* new_task5 = privilege_task_create((unsigned long)&user_task2);
+
+    // shell();
     enable_interrupt_controller();
     core_timer_enable();
 	enable_irq();
 
-
-
-    task_t* new_task1 = privilege_task_create((unsigned long)&print);
-    task_t* new_task2 = privilege_task_create((unsigned long)&print2);
-    task_t* new_task3 = privilege_task_create((unsigned long)&print3);
-
-    // shell();
     schedule();
+
 
 
 

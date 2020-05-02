@@ -40,7 +40,9 @@ struct task {
     long state;
     long counter;
     long priority;
-    int preempt_count;  
+    int preempt_count; 
+    int mode;
+    int rescheduled; 
 };
 
 typedef struct task task_t;
@@ -57,6 +59,11 @@ typedef struct task_manager task_manager_t;
 enum {
     THREAD_RUNNABLE,
     THREAD_NOT_RUNNABLE,
+};
+
+enum {
+    KERNEL_MODE,
+    USER_MODE
 };
 
 task_t* privilege_task_create();
