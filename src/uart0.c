@@ -2,11 +2,11 @@
 
 #include "mbox.h"
 #include "my_string.h"
-#include "queue.h"
 #include "peripherals/gpio.h"
 #include "peripherals/irq.h"
 #include "peripherals/mbox.h"
 #include "peripherals/uart0.h"
+#include "queue.h"
 
 struct queue read_buf, write_buf;
 
@@ -65,31 +65,31 @@ void uart_init() {
     /* Enable UART */
     *UART0_CR = 0x301;
 
-    queue_init(&read_buf, UART0_BUF_MAX_SIZE);
-    queue_init(&write_buf, UART0_BUF_MAX_SIZE);
+    QUEUE_INIT(read_buf, UART0_BUF_MAX_SIZE);
+    QUEUE_INIT(write_buf, UART0_BUF_MAX_SIZE);
 }
 
 char uart_read() {
-    while (queue_empty(&read_buf)) {
-        asm volatile ("nop");
+    while (QUEUE_EMPTY(read_buf)) {
+        asm volatile("nop");
     }
-    char r = queue_pop(&read_buf);
+    char r = QUEUE_POP(read_buf);
     return r == '\r' ? '\n' : r;
 }
 
 void uart_write(char c) {
-    if (*UART0_FR & 0x80) { // TX FIFO Empty
+    if (*UART0_FR & 0x80) {  // TX FIFO Empty
         // trigger interrupt by sending one character
-        if (queue_empty(&write_buf)) {
+        if (QUEUE_EMPTY(write_buf)) {
             *UART0_DR = c;
         }
         else {
-            queue_push(&write_buf, c);
-            *UART0_DR = queue_pop(&write_buf);
+            QUEUE_PUSH(write_buf, c);
+            *UART0_DR = QUEUE_POP(write_buf);
         }
     }
     else {
-        queue_push(&write_buf, c); // push to write queue, drop if buffer full
+        QUEUE_PUSH(write_buf, c);  // push to write queue, drop if buffer full
     }
 }
 

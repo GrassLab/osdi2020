@@ -12,8 +12,23 @@ struct queue {  // circular queue
 
 #endif
 
-void queue_init(struct queue* q, int size);
-int queue_empty(struct queue* q);
-int queue_full(struct queue* q);
-void queue_push(struct queue* q, char val);
-char queue_pop(struct queue* q);
+#define QUEUE_INIT(q, qsize) \
+    q.front = 0;             \
+    q.rear = 0;              \
+    q.size = qsize
+
+#define QUEUE_EMPTY(q) (q.front == q.rear)
+
+#define QUEUE_FULL(q) (q.front == (q.rear + 1) % q.size)
+
+#define QUEUE_PUSH(q, val)              \
+    if (!QUEUE_FULL(q)) {               \
+        q.buf[q.rear] = val;            \
+        q.rear = (q.rear + 1) % q.size; \
+    }
+
+#define QUEUE_POP_ELMT(q) \
+    q.buf[q.front];       \
+    q.front = (q.front + 1) % q.size
+
+#define QUEUE_POP(q) QUEUE_EMPTY(q) ? '\0' : QUEUE_POP_ELMT(q)
