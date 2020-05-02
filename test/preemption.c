@@ -2,7 +2,7 @@
 #include <string.h>
 #include <timer.h>
 
-void
+static void
 delay (int sec)
 {
   size_t t, cnt, freq;
@@ -12,7 +12,7 @@ delay (int sec)
     sys_get_time (&cnt, &freq);
 }
 
-void
+static void
 foo ()
 {
   while (1)
@@ -24,7 +24,7 @@ foo ()
     }
 }
 
-void
+static void
 idle ()
 {
   while (1)
