@@ -80,6 +80,9 @@ void exec_controller_el1 ( int sys_call_type )
             /* set the return value as child pid */
             argus[0] = sys_duplicate_task ( current_thread )->task_id;
             break;
+        case SYS_CLEAR_ZOMBIE:
+            clear_zombie ( );
+            break;
         default:
             print_exec_info ( EL1, elr, esr );
             break;

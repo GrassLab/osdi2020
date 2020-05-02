@@ -19,5 +19,6 @@
 #define SYS_LOCAL_TIMER_ENABLE  17
 #define SYS_LOCAL_TIMER_DISABLE 18
 #define SYS_FORK                19
+#define SYS_CLEAR_ZOMBIE        20
 
 #endif

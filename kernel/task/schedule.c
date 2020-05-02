@@ -3,6 +3,9 @@
 #include "kernel/exception/exception.h"
 #include "kernel/peripherals/uart.h"
 
+#include "lib/task.h"
+
+#include "mem.h"
 #include "task.h"
 #include "task_queue.h"
 
@@ -27,7 +30,7 @@ void sys_do_schedule ( )
     /* current task still have time to do something */
     /* CURRENT TASK still doing something */
     /* this is not called by IDLE */
-    if ( current_task->counter > 0 && current_task->state == RUNNING && current_task != IDLE )
+    if ( current_task->counter > 0 && current_task->state == RUNNING )
     {
         ( current_task->counter )--;
         return;
@@ -46,7 +49,7 @@ void sys_do_schedule ( )
     {
         next = task_dequeue ( );
 
-        if ( next->state != RUNNING )
+        if ( next->state == IDLE_STATE )
         {
             task_enqueue ( next );
         }
@@ -60,6 +63,7 @@ void sys_do_schedule ( )
             break;
         }
     }
+
     /* switch to the next one */
     context_switch ( next );
 }
@@ -69,33 +73,32 @@ void sys_do_exec ( void ( *func ) ( ) )
     /* get cuurent task */
     thread_info_t * current_thread = get_current_task_el0 ( );
 
-    /* create thread for the target func */
-    int c_pid = task_create ( func );
+    current_thread->state = RUNNING;
+    current_thread->func  = func;
 
-    /* change the state to the DEAD */
-    current_thread->state = DEAD;
-    /* enqueu current task, it will be used lated */
-    // task_enqueue ( current_thread );
+    /* enqueue this task */
+    current_thread->counter = 2;
 
-    current_thread->child         = get_thread_info ( c_pid );
-    current_thread->child->parent = current_thread;
+    /* we will do scheuld, right after setup, and it will check it the "current" task still have time or not */
+    /* so, it won;t need to be enqueued */
+    /* task_enqueue ( current_thread ); */
+
+    ( current_thread->cpu_context ).x[19]        = (uint64_t *) func;
+    ( current_thread->cpu_context ).lr           = (uint64_t *) default_task_start;
+    ( current_thread->cpu_context ).user_sp      = (uint64_t *) ( current_thread->user_sp ); /* reset stack start point */
+    ( current_thread->cpu_context ).kernel_sp    = (uint64_t *) ( current_thread->kernel_sp );
+    ( current_thread->cpu_context ).user_mode_pc = (uint64_t *) default_task_start;
 
     sys_do_schedule ( );
 }
 
 void sys_do_exit ( thread_info_t * thread )
 {
-    /* wake parent up */
-    if ( thread->parent && thread->parent->state == WAITING_CHILD )
-    {
-        thread->parent->state = RUNNING;
-    }
-
-    if ( thread->parent )
-        thread->parent->child = NULL;
-
     /* mark this thread as a dead one */
-    thread->state = DEAD;
+    thread->state = ZOMBIE;
+
+    release_user_space ( ( (pcb_t *) thread )->user_space_index );
+    sys_printk ( "release user space of task %d\n", thread->task_id );
 
     sys_do_schedule ( );
 }

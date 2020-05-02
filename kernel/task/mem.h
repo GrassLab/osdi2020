@@ -28,9 +28,14 @@ typedef struct
     thread_info_t * thread_info;
     uint64_t * kernel_stack_ptr;
     uint64_t * user_stack_ptr;
+    int kernel_space_index;
+    int user_space_index;
 
 } pcb_t;
 
-pcb_t * allocate_pcb ( uint64_t tid );
+pcb_t * allocate_pcb ( );
+void release_pcb ( pcb_t * );
+void release_kernel_space ( int index );
+void release_user_space ( int index );
 
 #endif

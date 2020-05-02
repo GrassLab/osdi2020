@@ -9,6 +9,7 @@ typedef enum
     DEAD          = 2,
     IDLE_STATE    = 3,
     WAITING_CHILD = 4,
+    ZOMBIE        = 5,
 } task_state_t;
 
 typedef struct
@@ -44,11 +45,12 @@ typedef struct thread_info_t thread_info_t;
 
 /* global variable for other file to use */
 extern thread_info_t * IDLE;
+extern thread_info_t * ZOMBIE_REPEAR;
 
 void create_idle_task ( );
 int task_create ( void ( *func ) ( ) );
-int find_usable_in_pool ( );
 thread_info_t * get_thread_info ( int pid );
 thread_info_t * sys_duplicate_task ( thread_info_t * current );
+void clear_zombie ( );
 
 #endif

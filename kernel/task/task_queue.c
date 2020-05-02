@@ -41,15 +41,23 @@ thread_info_t * task_dequeue ( )
 {
     thread_info_t * temp;
 
-    /* queue is empty */
-    if ( QUEUE_HEAD == QUEUE_TAIL && !IS_FULL )
-        return IDLE;
+    do
+    {
+        /* queue is empty */
+        if ( QUEUE_HEAD == QUEUE_TAIL && !IS_FULL )
+            return IDLE;
 
-    temp = QUEUE[QUEUE_HEAD];
-    QUEUE_HEAD++;
-    IS_FULL = 0;
+        temp = QUEUE[QUEUE_HEAD];
+        QUEUE_HEAD++;
+        IS_FULL = 0;
 
-    // sys_printk ( "[TASK QUEUE]\tTask Dequeue: %d\n", temp->task_id );
+        /* only dequeue the one that can be running */
+        if ( temp->state != RUNNING )
+            task_enqueue ( temp );
+        else
+            return temp;
+
+    } while ( 1 );
 
     return temp;
 }

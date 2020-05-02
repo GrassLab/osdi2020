@@ -19,3 +19,15 @@ void idle ( )
         wait_msec ( 500000 );
     }
 }
+
+void zombie_reaper ( )
+{
+    while ( 1 )
+    {
+        printf ( "Zombie Reaper is working...\n" );
+
+        sys_zombie_clearer ( );
+
+        wait_msec ( 1000000 );
+    }
+}

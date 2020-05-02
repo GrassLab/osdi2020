@@ -4,23 +4,24 @@
 
 .global default_task_start
 .global exec
-.global do_exit
+.global exit
 .global get_pid
 .global schedule
+.global sys_zombie_clearer
 .global fork
 
 default_task_start:
     blr     x19     // an user mode code 
 
     # after user mode done, do this routine
-    bl      do_exit 
+    bl      exit 
 
 exec:
     mov     x8,     SYS_DO_EXEC
     svc     #0
     ret
 
-do_exit:
+exit:
     mov     x8,     SYS_DO_EXIT
     svc     #0
     ret
@@ -32,6 +33,11 @@ get_pid:
 
 schedule:
     mov     x8,     SYS_SCHEDULE
+    svc     #0
+    ret
+
+sys_zombie_clearer:
+    mov     x8,     SYS_CLEAR_ZOMBIE
     svc     #0
     ret
 

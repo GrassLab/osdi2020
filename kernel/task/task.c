@@ -1,5 +1,6 @@
 #include "lib/task.h"
 
+#include "kernel/peripherals/time.h"
 #include "kernel/peripherals/uart.h"
 
 #include "lib/type.h"
@@ -12,11 +13,12 @@
 thread_info_t * IDLE = NULL;
 thread_info_t * TASK_POOL[NUM_THREADS];
 
-uint64_t TASK_POOL_USAGE = 0; /* 64 bit to maintain which one is in used */
+/* only can be used in this file */
+thread_info_t * create_thread_info ( void ( *func ) ( ) );
 
 void create_idle_task ( )
 {
-    pcb_t * idle_pcb = allocate_pcb ( 0 );
+    pcb_t * idle_pcb = allocate_pcb ( );
 
     IDLE           = idle_pcb->thread_info;
     IDLE->state    = RUNNING;
@@ -35,25 +37,15 @@ void create_idle_task ( )
     ( IDLE->cpu_context ).user_sp      = (uint64_t *) idle_pcb->user_stack_ptr;
     ( IDLE->cpu_context ).kernel_sp    = (uint64_t *) idle_pcb->kernel_stack_ptr;
     ( IDLE->cpu_context ).user_mode_pc = (uint64_t *) default_task_start;
-
-    /* reserve one for idle task*/
-    TASK_POOL_USAGE = 1;
 }
 
 thread_info_t * create_thread_info ( void ( *func ) ( ) )
 {
-    /* find the one that can be used */
-    int task_id = find_usable_in_pool ( );
-
-    if ( task_id == -1 )
-        return NULL;
-
     /* allocate TCB in kernel space */
-    pcb_t * new_task            = (pcb_t *) allocate_pcb ( task_id );
+    pcb_t * new_task            = (pcb_t *) allocate_pcb ( );
     thread_info_t * thread_info = new_task->thread_info;
 
     /* init a task */
-    thread_info->task_id  = task_id;
     thread_info->state    = RUNNING;
     thread_info->func     = func;
     thread_info->priority = 1; /* all task has the same priority */
@@ -71,7 +63,7 @@ thread_info_t * create_thread_info ( void ( *func ) ( ) )
     ( thread_info->cpu_context ).kernel_sp    = (uint64_t *) ( new_task->kernel_stack_ptr );
     ( thread_info->cpu_context ).user_mode_pc = (uint64_t *) default_task_start;
 
-    sys_printk ( "[TASK]\t\tCreate Task with task_id: %d\n", task_id );
+    sys_printk ( "[TASK]\t\tCreate Task with task_id: %d\n", thread_info->task_id );
 
     return thread_info;
 }
@@ -90,23 +82,6 @@ int task_create ( void ( *func ) ( ) )
     task_enqueue ( new_task );
 
     return new_task->task_id;
-}
-
-int find_usable_in_pool ( )
-{
-    int i;
-
-    for ( i = 0; i < 64; i++ )
-    {
-        if ( ( TASK_POOL_USAGE & ( 0b1 << i ) ) == 0 )
-        {
-            /* set it as be used */
-            TASK_POOL_USAGE |= ( 0b1 << i );
-            return i;
-        }
-    }
-
-    return -1;
 }
 
 thread_info_t * get_thread_info ( int pid )
@@ -152,4 +127,19 @@ thread_info_t * sys_duplicate_task ( thread_info_t * current_task )
     task_enqueue ( new_task );
 
     return new_task;
+}
+
+void clear_zombie ( )
+{
+    int i;
+    for ( i = 0; i < NUM_THREADS; i++ )
+    {
+        if ( TASK_POOL[i]->state == ZOMBIE )
+        {
+            sys_printk ( "Release Zombie: %d\n", TASK_POOL[i]->task_id );
+            TASK_POOL[i]->state = DEAD;
+            release_pcb ( (pcb_t *) TASK_POOL[i] );
+        }
+    }
+    sys_wait_msec ( 500000 );
 }

@@ -10,6 +10,10 @@ run_init_task:
     # create IDLE   
     bl      create_idle_task    // defined in task.c
 
+    # create ZOMBIE REAPER
+    ldr     x0,     =zombie_reaper
+    bl      task_create
+
     # create main
     ldr      x0,     =main      // where the acutally main is
     bl      task_create         // create "main" task
