@@ -14,7 +14,7 @@
 #define IRQ_ENABLE2 ((volatile unsigned int*)0x3f00b218)
 #define CORE0_TIMER_IRQ_CTRL ((volatile unsigned int*)0x40000040)
 #define CORE0_IRQ_SRC ((volatile unsigned int*)0x40000060)
-#define EXPIRE_PERIOD ((volatile unsigned int*)0x0ffffff)
+#define EXPIRE_PERIOD ((volatile unsigned int*)0x006ffff)
 #define IRQ_BASIC_PENDING ((volatile unsigned int*)(MMIO_BASE + 0xb200))
 #define PM_PASSWORD 0x5a000000
 #define PM_RSTC ((volatile unsigned int*)0x3F10001c)
@@ -31,6 +31,7 @@ void reset();
 void _local_timer_handler();
 void set_trap_ret(unsigned long long ret, int id);
 int sys_get_taskid();
+void sys_printf(const char *fmt, __builtin_va_list args);
 
 void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned long long x2, unsigned long long x3)
 {
@@ -93,21 +94,25 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
             }
             else if(x0 == 8)
             {
-                
-                extern char *kstack_pool;
                 task *currentsk = get_current_task();
                 int id = sys_do_fork();
+                unsigned long long parent_x29 = currentsk->trapframe[29];
+                unsigned long long parent_ubase = currentsk->ubase;
+
+                task_pool[id].trapframe = task_pool[id].kbase - (currentsk->kbase - (unsigned long long)currentsk->trapframe);
                 
-                //uart_hex( currentsk->trapframe[0] );
-                task_pool[id].trapframe = (unsigned long long *)( (unsigned long long)(kstack_pool+(id*4096)) - ((unsigned long long)(kstack_pool+(currentsk->id*4096)) - (unsigned long long)currentsk->trapframe) );
                 
-                fork_ret(&task_pool[id], (kstack_pool+(currentsk->id*4096)));
-                
-                if(get_current_task()->id != id)
+                fork_ret(&task_pool[id], currentsk->kbase, task_pool[id].kbase);
+                currentsk = get_current_task();
+                //my_printf("fork now id: %d\r\n", currentsk->id);
+                if(currentsk->id != id)
                 {
+                    //uart_hex(currentsk->trapframe[29]);
                     set_trap_ret(id, currentsk->id);
                 }
                 else{
+                    currentsk->trapframe[29] = currentsk->ubase - (parent_ubase - parent_x29);  //rebase user stack x29
+                    //uart_hex(currentsk->trapframe[29]);
                     set_trap_ret(0, id);
                 }
                 //uart_hex( task_pool[id].trapframe[0] );
@@ -118,10 +123,21 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
             {
                 //x1 = exit value
                 runqueue_del(get_current_task()->id);
+                asm volatile("msr daifclr, 0xf");
+                task_schedule();
             }
             else if(x0 == 10)
             {
                 uart_hex(x1);
+            }
+            else if(x0 == 11)
+            {
+                uart_send((char)x1);
+            }
+            else if(x0 == 12)
+            {
+                //sys_printf((char*)x1, (__builtin_va_list)x2);
+                uart_puts("printf note implement");
             }
             else
             {
@@ -312,23 +328,80 @@ int sys_get_taskid()
 
 int sys_do_fork()
 {
-    extern char *kstack_pool;
+    //extern char kstack_pool[64][4096];
     task *current = get_current_task();
     int new_id = privilege_task_create((void *)current->fp_lr[1]); //will not use this ret address
     
     task_pool[new_id].elr_el1 = current->elr_el1;
     task_pool[new_id].spsr_el1 = current->spsr_el1;
-    unsigned long long sgap = ((unsigned long long)(kstack_pool+(kernel_stack_size*4096))+(current->id*4096) - current->sp_el0);
+    unsigned long long sgap = (current->ubase - current->sp_el0);
     task_pool[new_id].sp_el0 -= sgap;
     
-    //uart_hex(sgap);
-    //uart_getc();
-    //while(1);
+    //my_printf("current base stack: %x, usp: %x\r\n", user_pool[current->id], current->sp_el0);
+    
+
     for(int i=0;i<sgap;i++)
     {
-        ((char*)task_pool[new_id].sp_el0)[i] = ((char*)current->sp_el0)[i];
+        ((char*)(task_pool[new_id].sp_el0))[i] = ((char*)(current->sp_el0))[i];
     }
+
+    //my_printf("child base stack: %x, usp: %x\r\n", user_pool[new_id], task_pool[new_id].sp_el0);
+
+    //while(1);
     
     return new_id;
 }
 //b *0x81e24
+
+void sys_num(unsigned int num, int base) 
+{ 
+	static char Representation[]= "0123456789ABCDEF";
+	static char buffer[50]; 
+	char *ptr; 
+	ptr = &buffer[49]; 
+	*ptr = '\0'; 
+	
+	do 
+	{ 
+		*--ptr = Representation[num%base]; 
+		num /= base; 
+	}while(num != 0); 
+
+    uart_puts(ptr);
+}
+
+void sys_printf(const char *fmt, __builtin_va_list args)
+{
+    char *traverse; 
+	unsigned int i; 
+	char *s; 
+	for(traverse = fmt; *traverse != '\0'; traverse++) 
+	{ 
+        if(*traverse == '%')
+        {
+            traverse++;
+            switch(*traverse)
+            {
+                case '%':
+                    uart_send('%');
+                    break;
+                case 's':
+                    //char *p = va_arg(args, char *);
+                    uart_puts(__builtin_va_arg(args, char *));
+                    break;
+                case 'd':
+                    //int arg = va_arg(args, int);
+                    sys_num(__builtin_va_arg(args, int), 10);
+                    break;
+                case 'x':
+                    //int arg = va_arg(args, int);
+                    sys_num(__builtin_va_arg(args, int), 16);
+                    break;
+            }
+        }
+        else
+        {
+            uart_send(*traverse);
+        }
+    }
+}

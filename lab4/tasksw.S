@@ -31,9 +31,11 @@ fork_ret:
   stp x23, x24, [x0, 16 * 2]
   stp x25, x26, [x0, 16 * 3]
   stp x27, x28, [x0, 16 * 4]
-  stp fp, lr, [x0, 16 * 5]
+  sub x9, x1, x29  //x9 = offset of x29 and kernel stack base
+  sub x9, x2, x9  // set new kernel stack x29
+  stp x9, lr, [x0, 16 * 5]
 
-  mov x9, sp
+  mov x9, sp //copy kernel stack
   sub x9, x1, x9
   ldr x10, [x0, 16 * 6]
   sub x10, x10, x9
@@ -49,11 +51,3 @@ fork_ret:
   cbnz x9, 3b
 2:
   ret
-
-
-  
-  
-
-
-  mov x9, sp
-  str x9, [x0, 16 * 6]

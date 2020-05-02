@@ -40,16 +40,4 @@ rest_initialization:
 2:    
     bl kernel_init
     b 1b
-
-4:  
-
-    ldr x0, =0x280000 //(user stack)
-    msr sp_el0, x0
-    mov x0, 0
-    msr spsr_el1, x0
-    adr x0, main
-    msr elr_el1, x0
-    eret
-    bl main
-    b 1b
     

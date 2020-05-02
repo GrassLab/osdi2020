@@ -2,9 +2,9 @@
 #include "uart.h"
 
 
-//__attribute__((section(".userspace"))) char kstack_pool[64][4096];
-//__attribute__((section(".userspace"))) char user_pool[64][4096];
-char *kstack_pool;
+__attribute__((section(".userspace"))) char kstack_pool[64][4096];
+__attribute__((section(".userspace"))) char user_pool[64][4096];
+//char *kstack_pool;
 
 
 task task_pool[64];
@@ -27,8 +27,10 @@ int privilege_task_create(void(*func)())
         }
     }
     task_pool[task_id].id = task_id;
-    task_pool[task_id].ksp = kstack_pool+(task_id*4096);
-    task_pool[task_id].sp_el0 = kstack_pool+(kernel_stack_size*4096) + (task_id*4096);
+    task_pool[task_id].ksp = kstack_pool[task_id];//kstack_pool+(task_id*4096);
+    task_pool[task_id].sp_el0 = user_pool[task_id];//kstack_pool+(kernel_stack_size*4096) + (task_id*4096);
+    task_pool[task_id].kbase = kstack_pool[task_id];
+    task_pool[task_id].ubase = user_pool[task_id];
     task_pool[task_id].usage = 1;
     task_pool[task_id].fp_lr[1] = func;
     task_pool[task_id].start_coretime = _global_coretimer;
@@ -55,8 +57,8 @@ void context_switch(task* next) //old
 
 void task_struct_init()
 {
-    extern void *_end;
-	kstack_pool = (char*)&_end;
+    //extern void *_end;
+	//kstack_pool = (char*)&_end;
 
     runqueue.head = 0;
     runqueue.tail = 0;
@@ -120,7 +122,7 @@ void task_schedule()
         
         if(current->privilege == 0)
         {
-            uart_puts("current privilege 0\n");
+            //uart_puts("current privilege 0\n");
             unsigned long long int elr_el1, spsr_el1, sp_el0;
             asm volatile("mrs %0,spsr_el1":"=r"(spsr_el1));
             asm volatile("mrs %0,elr_el1":"=r"(elr_el1));

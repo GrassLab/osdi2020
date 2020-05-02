@@ -13,6 +13,8 @@ typedef struct task{
     unsigned long long elr_el1;
     unsigned long long spsr_el1;
     unsigned long long *trapframe;
+    unsigned long long kbase;
+    unsigned long long ubase;
     int id;
     int priority;
     char alive;
