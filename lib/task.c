@@ -28,6 +28,6 @@ void zombie_reaper ( )
 
         sys_zombie_clearer ( );
 
-        wait_msec ( 1000000 );
+        schedule ( );
     }
 }

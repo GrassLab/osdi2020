@@ -14,6 +14,10 @@ run_init_task:
     ldr     x0,     =zombie_reaper
     bl      task_create
 
+    # set counter of zombie reaper as only 1
+    mov     x1,     #1
+    bl      set_thread_const_couner
+
     # create main
     ldr      x0,     =main      // where the acutally main is
     bl      task_create         // create "main" task

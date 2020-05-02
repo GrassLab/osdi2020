@@ -39,7 +39,7 @@ void sys_do_schedule ( )
     /* enqueue current task to the run queue, if it needed */
     if ( current_task->state == RUNNING && current_task != IDLE )
     {
-        current_task->counter = 2;
+        current_task->counter = current_task->const_counter;
         task_enqueue ( current_task );
     }
 
@@ -55,7 +55,7 @@ void sys_do_schedule ( )
         }
         else if ( next->state == RUNNING && next->counter < 0 )
         {
-            next->counter = 2;
+            next->counter = next->const_counter;
             task_enqueue ( next );
         }
         else

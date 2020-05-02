@@ -11,7 +11,7 @@
 #include "task_queue.h"
 
 thread_info_t * IDLE = NULL;
-thread_info_t * TASK_POOL[NUM_THREADS];
+thread_info_t * THREAD_POOL[NUM_THREADS];
 
 /* only can be used in this file */
 thread_info_t * create_thread_info ( void ( *func ) ( ) );
@@ -20,11 +20,12 @@ void create_idle_task ( )
 {
     pcb_t * idle_pcb = allocate_pcb ( );
 
-    IDLE           = idle_pcb->thread_info;
-    IDLE->state    = RUNNING;
-    IDLE->func     = idle;
-    IDLE->priority = 1;
-    IDLE->counter  = 0;
+    IDLE                = idle_pcb->thread_info;
+    IDLE->state         = RUNNING;
+    IDLE->func          = idle;
+    IDLE->priority      = 1;
+    IDLE->const_counter = 0;
+    IDLE->counter       = 0;
 
     IDLE->parent = NULL;
     IDLE->child  = NULL;
@@ -46,10 +47,11 @@ thread_info_t * create_thread_info ( void ( *func ) ( ) )
     thread_info_t * thread_info = new_task->thread_info;
 
     /* init a task */
-    thread_info->state    = RUNNING;
-    thread_info->func     = func;
-    thread_info->priority = 1; /* all task has the same priority */
-    thread_info->counter  = 2;
+    thread_info->state         = RUNNING;
+    thread_info->func          = func;
+    thread_info->priority      = 1; /* all task has the same priority */
+    thread_info->const_counter = 2;
+    thread_info->counter       = 2;
 
     thread_info->parent = NULL;
     thread_info->child  = NULL;
@@ -76,7 +78,7 @@ int task_create ( void ( *func ) ( ) )
         return -1;
 
     /* save it into the pool */
-    TASK_POOL[new_task->task_id] = new_task;
+    THREAD_POOL[new_task->task_id] = new_task;
 
     /* put the task into the runqueue */
     task_enqueue ( new_task );
@@ -84,9 +86,15 @@ int task_create ( void ( *func ) ( ) )
     return new_task->task_id;
 }
 
+void set_thread_const_couner ( int pid, int v )
+{
+    THREAD_POOL[pid]->const_counter = v;
+    THREAD_POOL[pid]->counter       = THREAD_POOL[pid]->counter > v ? v : THREAD_POOL[pid]->counter;
+}
+
 thread_info_t * get_thread_info ( int pid )
 {
-    return TASK_POOL[pid];
+    return THREAD_POOL[pid];
 }
 
 thread_info_t * sys_duplicate_task ( thread_info_t * current_task )
@@ -116,12 +124,11 @@ thread_info_t * sys_duplicate_task ( thread_info_t * current_task )
     ( new_task->cpu_context ).user_mode_pc = ( current_task->cpu_context ).user_mode_pc; /* program counter remain the same */
     /* copy memory */
     int size = ( uint64_t ) ( (char *) current_task->user_sp - (char *) ( ( current_task->cpu_context ).user_sp ) );
-
     for ( i = 0; i < size; i++ )
         ( (char *) ( ( new_task->cpu_context ).user_sp ) )[i] = ( (char *) ( ( current_task->cpu_context ).user_sp ) )[i];
 
     /* save it into the pool */
-    TASK_POOL[new_task->task_id] = new_task;
+    THREAD_POOL[new_task->task_id] = new_task;
 
     /* put the task into the runqueue */
     task_enqueue ( new_task );
@@ -134,11 +141,11 @@ void clear_zombie ( )
     int i;
     for ( i = 0; i < NUM_THREADS; i++ )
     {
-        if ( TASK_POOL[i]->state == ZOMBIE )
+        if ( THREAD_POOL[i]->state == ZOMBIE )
         {
-            sys_printk ( "Release Zombie: %d\n", TASK_POOL[i]->task_id );
-            TASK_POOL[i]->state = DEAD;
-            release_pcb ( (pcb_t *) TASK_POOL[i] );
+            sys_printk ( "Release Zombie: %d\n", THREAD_POOL[i]->task_id );
+            THREAD_POOL[i]->state = DEAD;
+            release_pcb ( (pcb_t *) THREAD_POOL[i] );
         }
     }
     sys_wait_msec ( 500000 );

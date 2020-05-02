@@ -37,6 +37,7 @@ struct thread_info_t
     task_state_t state;
     void ( *func ) ( );
 
+    int64_t const_counter;
     int64_t counter;
     int64_t priority; /* at this time, all task has the same priority */
 };
@@ -49,6 +50,7 @@ extern thread_info_t * ZOMBIE_REPEAR;
 
 void create_idle_task ( );
 int task_create ( void ( *func ) ( ) );
+void set_thread_const_couner ( int pid, int v );
 thread_info_t * get_thread_info ( int pid );
 thread_info_t * sys_duplicate_task ( thread_info_t * current );
 void clear_zombie ( );
