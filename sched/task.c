@@ -20,11 +20,22 @@ privilege_task_create (void (*func) ())
 int
 do_exec (void (*func) ())
 {
+  current->ctx.sp = (size_t) &current->kstack[0x1000];
   asm volatile ("mov x0, %0\n"
-		"msr sp_el0, x0\n"
-		"msr spsr_el1, xzr\n"
-		"msr elr_el1, %1\n"
-		"eret\n"::"r" (&current->stack[0x1000]), "r" (func):"x0");
+		"msr sp_el0, x0\n" "msr spsr_el1, xzr\n" "msr elr_el1, %1\n"
+		// prevent kernel address leakage
+		"mov x0, xzr\n" "mov x1, xzr\n" "mov x2, xzr\n"
+		"mov x3, xzr\n" "mov x4, xzr\n" "mov x5, xzr\n"
+		"mov x6, xzr\n" "mov x7, xzr\n" "mov x8, xzr\n"
+		"mov x9, xzr\n" "mov x10, xzr\n" "mov x11, xzr\n"
+		"mov x12, xzr\n" "mov x13, xzr\n" "mov x14, xzr\n"
+		"mov x15, xzr\n" "mov x16, xzr\n" "mov x17, xzr\n"
+		"mov x18, xzr\n" "mov x19, xzr\n" "mov x20, xzr\n"
+		"mov x21, xzr\n" "mov x22, xzr\n" "mov x23, xzr\n"
+		"mov x24, xzr\n" "mov x25, xzr\n" "mov x26, xzr\n"
+		"mov x27, xzr\n" "mov x28, xzr\n" "mov x29, xzr\n"
+		"mov x30, xzr\n" "eret\n"::"r" (&current->stack[0x1000]),
+		"r" (func):"x0");
   return 0;
 }
 
