@@ -27,4 +27,7 @@ void gpu_interrupt_handler(void);
 void system_timer_handler(void);
 void not_implemented_handler(void);
 
+void enable_interrupt(void);
+void disable_interrupt(void);
+
 #endif // EXCEPTION_H_

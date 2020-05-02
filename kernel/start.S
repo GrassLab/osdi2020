@@ -52,7 +52,8 @@ el2_to_el1:
 
   adr x0, 3f
   msr elr_el2, x0
-  ldr x0, =_start
+  ldr x0, =kstack_pool
+  add x0, x0, #4096
   msr sp_el1, x0
   eret
 
