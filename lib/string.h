@@ -1,9 +1,10 @@
 #ifndef _LINUX_STRING_H_
 #define _LINUX_STRING_H_
 
+#include <stddef.h>
 #define STRBUF_SIZE 0x30
+#define abort() {while (1);}
 
-typedef unsigned long size_t;
 int strcmp (const char *cs, const char *ct);
 int strncmp (const char *s1, const char *s2, size_t n);
 void *memcpy (void *dest, const void *src, size_t len);
@@ -14,5 +15,6 @@ int printf (const char *format, ...);
 void ftoa (double val, char *buf);
 void ltoa (unsigned long val, char *buf);
 void fdivtoa (unsigned long dividend, unsigned long divisor, char *buf);
+size_t strlen (const char *str);
 
 #endif /* _LINUX_STRING_H_ */
