@@ -53,3 +53,10 @@ int sys_uart_puts(char * string)
   return 0;
 }
 
+int sys_uart_gets(char * string, char delimiter, unsigned length)
+{
+  irq_int_enable();
+  uart_gets(string, delimiter, length);
+  return 0;
+}
+

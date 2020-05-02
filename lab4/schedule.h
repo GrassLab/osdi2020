@@ -20,6 +20,7 @@ void schedule_update_quantum_count(void);
 int schedule_check_self_reschedule(void);
 void schedule_enqueue(uint64_t id);
 int schedule_check_queue_empty(void);
+void schedule_yield(void);
 
 extern void schedule_switch_context(struct cpu_context_struct * current_id_context_struct, struct cpu_context_struct * next_id_context_struct, uint64_t next_id);
 

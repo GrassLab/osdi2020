@@ -138,7 +138,7 @@ char uart_getc(int echo)
     /* other interrupt might exit lower power mode, make sure the queue is load by ISR */
     while(QUEUE_EMPTY(uart_rx_queue))
     {
-      asm volatile("wfi"); /* Enter low power mode and let ISR handle the data */
+      asm volatile("wfi");
     }
     /* ISR store the data in rx_queue */
     c = QUEUE_POP(uart_rx_queue);

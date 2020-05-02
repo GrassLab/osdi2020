@@ -61,13 +61,11 @@ void task_idle(void)
 {
   while(1)
   {
-    uart_puts("Hi I'm IDLE task\n");
     while(schedule_check_queue_empty())
     {
       asm volatile ("wfi");
       /* keep waiting for new task even wake from timer interrupt */
     }
-    uart_puts("IDLE calling scheduler\n");
     scheduler();
   }
 }
@@ -78,18 +76,22 @@ void task_privilege_demo(void)
   {
     char string_buff[0x10];
     uint64_t current_task_id = task_get_current_task_id();
+    uint64_t current_quantum_count;
     uart_puts("Hi I'm privilege task id ");
-    irq_int_enable();
     string_longlong_to_char(string_buff, (int64_t)current_task_id);
     uart_puts(string_buff);
     uart_putc('\n');
+    irq_int_enable();
     uart_puts("Enabling timer interrupt\n");
 
     uart_puts("Waiting to reschedule\n");
-    while(!schedule_check_self_reschedule())
+    /* if quantum_count get from task_pool is less than previous one, the reschedule occurred */
+    do
     {
+      current_quantum_count = kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].quantum_count;
       asm volatile("wfi");
     }
+    while(current_quantum_count <= kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].quantum_count);
   }
 }
 
@@ -118,7 +120,8 @@ void task_user_demo(void)
   char string_buff[0x10];
   uint64_t current_task_id = task_get_current_task_id();
 
-  uart_puts("task_user_demo in kernel mode id ");
+  irq_int_enable();
+  uart_puts("task_user_demo in kernel mode with irq enable id ");
   string_longlong_to_char(string_buff, (int64_t)current_task_id);
   uart_puts(string_buff);
   uart_putc('\n');
@@ -128,11 +131,13 @@ void task_user_demo(void)
 
 void task_user_context_demo(void)
 {
-  char string[] = "task_user_demo in user mode\n";
+  char string[] = "task_user_demo in user mode. Type and echo\n";
+  syscall_uart_puts(string);
+  char input_string[0x20];
   while(1)
   {
-    syscall_uart_puts(string);
-    for(int i = 0; i < 1000000; ++i);
+    syscall_uart_gets(input_string, '\n', 0x20 - 2);
+    syscall_uart_puts(input_string);
   }
 }
 

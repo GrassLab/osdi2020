@@ -2,14 +2,19 @@
 .type schedule_switch_context,%function
 
 schedule_switch_context:
+  mov x9, sp
+  mrs x10, spsr_el1
+  mrs x11, elr_el1
+  mrs x12, sp_el0
+
   stp x19, x20, [x0, 16 * 0]
   stp x21, x22, [x0, 16 * 1]
   stp x23, x24, [x0, 16 * 2]
   stp x25, x26, [x0, 16 * 3]
   stp x27, x28, [x0, 16 * 4]
   stp fp, lr,   [x0, 16 * 5]
-  mov x9, sp
-  str x9,       [x0, 16 * 6]
+  stp x9, x10,  [x0, 16 * 6]
+  stp x11, x12, [x0, 16 * 7]
 
   ldp x19, x20, [x1, 16 * 0]
   ldp x21, x22, [x1, 16 * 1]
@@ -17,8 +22,13 @@ schedule_switch_context:
   ldp x25, x26, [x1, 16 * 3]
   ldp x27, x28, [x1, 16 * 4]
   ldp fp, lr,   [x1, 16 * 5]
-  ldr x9,       [x1, 16 * 6]
+  ldp x9, x10,  [x1, 16 * 6]
+  ldp x11, x12, [x1, 16 * 7]
+
   mov sp, x9
+  msr spsr_el1, x10
+  msr elr_el1, x11
+  msr sp_el0, x12
   msr tpidr_el1, x2
   ret
 

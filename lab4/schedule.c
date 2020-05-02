@@ -17,7 +17,7 @@ void scheduler_init(void)
                "msr tpidr_el1, x0\n");
   task_privilege_task_create(task_idle); /* Reserve the space for idle_task */
   /* Demo purpose */
-  task_privilege_task_create(task_user_demo);
+  //task_privilege_task_create(task_user_demo);
   task_privilege_task_create(task_privilege_demo);
   task_privilege_task_create(task_user_demo);
   /* End of demo purpose */
@@ -54,11 +54,18 @@ void scheduler(void)
   {
     static int schedule_demo_task_count = 0;
     uint64_t next_id = QUEUE_POP(schedule_run_queue);
-#define TOTAL_SCHEDULE_DEMO_TASK_COUNT 4
-    if(schedule_demo_task_count < TOTAL_SCHEDULE_DEMO_TASK_COUNT)
+#define TOTAL_SCHEDULE_PRIVILEGE_DEMO_TASK_COUNT 3
+    if(next_id == 2)
+    {
+      if(schedule_demo_task_count < TOTAL_SCHEDULE_PRIVILEGE_DEMO_TASK_COUNT)
+      {
+        QUEUE_PUSH(schedule_run_queue, next_id);
+        ++schedule_demo_task_count;
+      }
+    }
+    else
     {
       QUEUE_PUSH(schedule_run_queue, next_id);
-      ++schedule_demo_task_count;
     }
     schedule_context_switch(current_privilege_task_id, next_id);
   }
@@ -103,5 +110,13 @@ void schedule_enqueue(uint64_t id)
 int schedule_check_queue_empty(void)
 {
   return QUEUE_EMPTY(schedule_run_queue);
+}
+
+void schedule_yield(void)
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
+  scheduler();
+  return;
 }
 

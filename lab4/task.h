@@ -21,6 +21,9 @@ struct cpu_context_struct
   uint64_t fp; /* x29 */
   uint64_t lr; /* x30 */
   uint64_t sp;
+  uint64_t spsr_el1;
+  uint64_t elr_el1;
+  uint64_t sp_el0;
 };
 
 struct task_struct

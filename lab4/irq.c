@@ -22,7 +22,19 @@ void irq_el1_handler(void)
 {
   char string_buff[0x100];
   static int local_timer_count = 0;
-  if(CHECK_BIT(*LOCAL_TIMER_CONTROL_REG, 31))
+  if(CHECK_BIT(*CORE0_IRQ_SRC, 1))
+  {
+    /* ARM core timer interrupt */
+    schedule_update_quantum_count();
+    timer_set_core_timer_approx_ms(SCHEDULE_TIMEOUT_MS);
+
+    /* check reschedule bit */
+    if(schedule_check_self_reschedule())
+    {
+      schedule_yield();
+    }
+  }
+  else if(CHECK_BIT(*LOCAL_TIMER_CONTROL_REG, 31))
   {
     ++local_timer_count;
     uart_puts("ARM local time interrupt \"");
@@ -82,6 +94,7 @@ void irq_el1_handler(void)
         }
         else
         {
+          uart_puts("RX QUEUE EXPLODE\n");
           while(1);
           /* There's nothing we can do for now, the program will hang. Try enlarge the queue */
         }
@@ -93,20 +106,8 @@ void irq_el1_handler(void)
   }
   else
   {
-    uart_puts("Timer interrupt\n");
-    /* ARM core timer interrupt */
-    schedule_update_quantum_count();
-    timer_set_core_timer_approx_ms(SCHEDULE_TIMEOUT_MS);
-
-    /* check reschedule bit */
-    if(schedule_check_self_reschedule())
-    {
-      uint64_t current_task_id = task_get_current_task_id();
-      uart_puts("Time to reschedule\n");
-      CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
-      scheduler();
-    }
-
+    uart_puts("Unidentified interrupt source\nEntering busy loop");
+    while(1);
   }
   return;
 }

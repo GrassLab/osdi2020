@@ -103,6 +103,9 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
   case SYS_UART_PUTS:
     sys_uart_puts((char *)trapframe -> x1);
     break;
+  case SYS_UART_GETS:
+    sys_uart_gets((char *)trapframe -> x1, (char)trapframe -> x2, (unsigned)trapframe -> x3);
+    break;
   default:
     uart_puts("Unhandled svc immediate value\n");
     break;
