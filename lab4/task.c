@@ -5,6 +5,7 @@
 #include "uart.h"
 #include "irq.h"
 #include "string_util.h"
+#include "syscall.h"
 
 struct task_struct kernel_task_pool[TASK_POOL_SIZE];
 uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
@@ -127,9 +128,10 @@ void task_user_demo(void)
 
 void task_user_context_demo(void)
 {
+  char string[] = "task_user_demo in user mode\n";
   while(1)
   {
-    uart_puts("task_user_demo in user mode\n");
+    syscall_uart_puts(string);
     for(int i = 0; i < 1000000; ++i);
   }
 }

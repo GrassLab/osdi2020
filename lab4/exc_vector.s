@@ -40,6 +40,9 @@ EL_dispatcher:
   stp x1, x2,   [sp, #16 * 15]
   str x3,       [sp, #16 * 16]
 
+  // pointer to trapframe
+  mov x1, sp
+
   bl exc_dispatcher
 
   ldr x3,       [sp, #16 * 16]

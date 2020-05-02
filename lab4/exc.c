@@ -1,9 +1,9 @@
 #include "exc.h"
 #include "irq.h"
-#include "syscall.h"
+#include "sys.h"
 #include "timer.h"
 
-void exc_dispatcher(uint64_t identifier)
+void exc_dispatcher(uint64_t identifier, struct trapframe_struct * trapframe)
 {
   /* identifier is 0xYZ */
   /* Y is exception level */
@@ -25,7 +25,7 @@ void exc_dispatcher(uint64_t identifier)
       exc_EL1_same_level_EL_SP_EL1_irq();
       return;
     case 8:
-      exc_EL1_lower_aa64_EL_SP_EL1_sync();
+      exc_EL1_lower_aa64_EL_SP_EL1_sync(trapframe);
       return;
     case 9:
       exc_EL1_lower_aa64_EL_SP_EL1_irq();
@@ -73,7 +73,7 @@ void exc_EL1_same_level_EL_SP_EL1_irq(void)
   return;
 }
 
-void exc_EL1_lower_aa64_EL_SP_EL1_sync(void)
+void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
 {
   uint64_t ELR_EL1, ESR_EL1;
   uint8_t exception_class;
@@ -95,10 +95,13 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(void)
   switch(exception_imm)
   {
   case 1:
-    syscall_exc(ELR_EL1, exception_class, exception_iss);
+    sys_exc(ELR_EL1, exception_class, exception_iss);
     break;
   case 2:
-    syscall_timer_int();
+    sys_timer_int();
+    break;
+  case SYS_UART_PUTS:
+    sys_uart_puts((char *)trapframe -> x1);
     break;
   default:
     uart_puts("Unhandled svc immediate value\n");
