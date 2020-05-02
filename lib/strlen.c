@@ -9,8 +9,7 @@ strlen (const char *str)
   /* Handle the first few characters by reading one character at a time.
      Do this until CHAR_PTR is aligned on a longword boundary.  */
   for (char_ptr = str; ((unsigned long int) char_ptr
-                        & (sizeof (longword) - 1)) != 0;
-       ++char_ptr)
+			& (sizeof (longword) - 1)) != 0; ++char_ptr)
     if (*char_ptr == '\0')
       return char_ptr - str;
   /* All these elucidatory comments refer to 4-byte longwords,
@@ -41,29 +40,29 @@ strlen (const char *str)
     {
       longword = *longword_ptr++;
       if (((longword - lomagic) & ~longword & himagic) != 0)
-        {
-          /* Which of the bytes was the zero?  If none of them were, it was
-             a misfire; continue the search.  */
-          const char *cp = (const char *) (longword_ptr - 1);
-          if (cp[0] == 0)
-            return cp - str;
-          if (cp[1] == 0)
-            return cp - str + 1;
-          if (cp[2] == 0)
-            return cp - str + 2;
-          if (cp[3] == 0)
-            return cp - str + 3;
-          if (sizeof (longword) > 4)
-            {
-              if (cp[4] == 0)
-                return cp - str + 4;
-              if (cp[5] == 0)
-                return cp - str + 5;
-              if (cp[6] == 0)
-                return cp - str + 6;
-              if (cp[7] == 0)
-                return cp - str + 7;
-            }
-        }
+	{
+	  /* Which of the bytes was the zero?  If none of them were, it was
+	     a misfire; continue the search.  */
+	  const char *cp = (const char *) (longword_ptr - 1);
+	  if (cp[0] == 0)
+	    return cp - str;
+	  if (cp[1] == 0)
+	    return cp - str + 1;
+	  if (cp[2] == 0)
+	    return cp - str + 2;
+	  if (cp[3] == 0)
+	    return cp - str + 3;
+	  if (sizeof (longword) > 4)
+	    {
+	      if (cp[4] == 0)
+		return cp - str + 4;
+	      if (cp[5] == 0)
+		return cp - str + 5;
+	      if (cp[6] == 0)
+		return cp - str + 6;
+	      if (cp[7] == 0)
+		return cp - str + 7;
+	    }
+	}
     }
 }
