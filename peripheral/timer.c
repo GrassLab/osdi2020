@@ -19,3 +19,19 @@ core_timer_enable ()
 {
   asm volatile ("mov x8, #0\n" "svc #0\n");
 }
+
+double
+get_time ()
+{
+  size_t cnt, freq;
+  asm volatile ("mov x1, %0\n" "mov x0, %1\n" "mov x8, #1\n"
+		"svc #0\n"::"r" (&freq), "r" (&cnt):"x0", "x1", "x8");
+  return (double) cnt / (double) freq;
+}
+
+void
+sys_get_time (size_t *cnt, size_t *freq)
+{
+  asm volatile ("mrs %0, CNTFRQ_EL0\n"
+		"mrs %1, CNTPCT_EL0\n":"=r" (*freq), "=r" (*cnt));
+}
