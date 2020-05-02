@@ -8,10 +8,20 @@
 
 unsigned int core_jf   = 1;
 
+void handle_uart_irq() 
+{
+	schedule_uart();
+	return;
+}
+
 void handle_el1_irq(void)
 {
 	unsigned int fir_level_irq = get32(CORE0_INTERRUPT_SOURCE);
-	if (fir_level_irq == 2) {
+	unsigned int sec_level_irq = get32(IRQ_PENDING_1);
+	if(sec_level_irq & AUX_IRQ) {
+		handle_uart_irq();
+	}
+	else if (fir_level_irq == 2) {
 		handle_core_timer_irq();
 	}
 	return;
@@ -19,8 +29,12 @@ void handle_el1_irq(void)
 
 void handle_irq(void)
 {
+	unsigned int sec_level_irq = get32(IRQ_PENDING_1);
 	unsigned int fir_level_irq = get32(CORE0_INTERRUPT_SOURCE);
-	if (fir_level_irq == 2) {
+	if(sec_level_irq & AUX_IRQ) {
+		handle_uart_irq();
+	}
+	else if (fir_level_irq == 2) {
 		handle_core_timer_irq();
 	}
 	return;
@@ -42,4 +56,3 @@ void handle_core_timer_irq( void )
 	}
 	return;
 }
-

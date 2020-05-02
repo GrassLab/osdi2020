@@ -7,6 +7,8 @@
 #define THREAD_SIZE				4096
 #define TASK_RUNNING			0
 #define TASK_ZOMBIE				1
+#define TASK_WAITING            2
+
 
 #define NR_TASKS				64 
 #define PF_KTHREAD		        0x00000002	
@@ -45,10 +47,10 @@ struct task_struct {
 
 extern void preempt_disable(void);
 extern void preempt_enable(void);
-extern void schedule(void);
+extern void schedule();
 extern void switch_to(struct task_struct * next);
 extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
-
+extern void schedule_uart();
 #define INIT_TASK \
 /*cpu_context*/	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 /* state etc */	0,0,0,1, 0, 0, PF_KTHREAD, 0 \

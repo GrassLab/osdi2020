@@ -6,48 +6,43 @@
 #include "mm.h"
 #include "sched.h"
 #include "../include/printf.h"
-int strcmp(char *str1, char *str2) {
-    while (1) {
-    if (*str1 != *str2) {
-        return *str1 - *str2;
-    }
+#define ONE_SEC 100000000
+//#define REQ_1_2
+#define REQ_3_4
+//#define ELE_1
+//#define ELE_3
 
-    if (*str1 == '\0' && *str2 != '\0') {
-        return 1;
-    }
-		else if (*str1 != '\0' && *str2 == '\0') {
-			return 1;
-		}
-		else if (*str1 == '\0' && *str2 == '\0') {
-			return 0;
-		}
-        str1++;
-        str2++;
-    }
+#ifdef REQ_1_2
+void foo(){
+  while(1) {
+    printf("Task id: %d\r\n", current->task_id);
+    delay(ONE_SEC);
+    schedule();
+  }
 }
-
+void idle(){
+  while(1){
+    schedule();
+    delay(ONE_SEC);
+  }
+}
+#endif
+#ifdef REQ_3_4
 void foo(){
   int tmp = 5;
   printf("Task %d after exec, tmp address 0x%x, tmp value %d\r\n", get_taskid(), &tmp, tmp);
   exit(TASK_ZOMBIE);
 }
 
-void test_read() {
-    char buff[100];
-    sync_call_uart_read(buff, 100);
-    printf("%s",buff);
-    exit(TASK_ZOMBIE);
-}
-
 void test() {
   int cnt = 1;
   if (fork()== 0) {
     fork();
-    delay(10000000);
+    delay(ONE_SEC);
     fork();
     while(cnt < 10) {
 		  printf("Task id: %d, cnt: %d\r\n", get_taskid(), cnt);
-    	delay(100000000);
+    	delay(ONE_SEC);
     	++cnt;
     }
     exit(TASK_ZOMBIE);
@@ -60,15 +55,23 @@ void test() {
   exit(TASK_ZOMBIE);
 }
 
+void usertest()
+{
+	do_exec((unsigned long)test);
+}
+#endif
+
+#ifdef ELE_1
 void test_kill() {
   unsigned long pid = fork();
   if (pid == 0) {
     while (1) {
       printf("Hello from child\r\n");
-      delay(100000000);
+      delay(ONE_SEC);
     }
   }
   else {
+    delay(1000000000);
     kill(pid);
     printf("Killed child\r\n");
   }
@@ -77,30 +80,60 @@ void test_kill() {
 
 void usertest()
 {
-  //do_exec((unsigned long)test_read);
-	do_exec((unsigned long)test);
-  //do_exec((unsigned long)test_kill);
+	do_exec((unsigned long)test_kill);
 }
 
+#endif
+#ifdef ELE_3
+void test_read() {
+    sync_call_uart();
+    char buff[100];
+    while (sync_call_uart_read(buff, 100)) {
+      printf("%s",buff);
+    }
+    exit(TASK_ZOMBIE);
+}
+void usertest()
+{
+	do_exec((unsigned long)test_read);
+}
+#endif
+
+#ifndef REQ_1_2
 void idle(){
+  enable_irq();
   while(1){
     if(nr_tasks == 1) {
       break;
     }
     schedule();
-    delay(10000000);
+    delay(ONE_SEC);
+    enable_irq();
   }
   uart_send_string("Test finished\r\n");
+  disable_irq();
   while(1);
 }
+#endif
 
 void kernel_main(void)
 {	
   init_printf(0, putc);
   uart_recv();
   uart_send_string("uart_init\r\n");
-  sync_call_time();
+  sync_call_time(); //enable timer
+
+  #ifdef  REQ_1_2
+  for(int i = 0; i < 3; ++i) { // N should > 2
+    privilege_task_create(PF_KTHREAD, foo, 0, 0);
+  }
   enable_irq();
-  int res = privilege_task_create(PF_KTHREAD, usertest, 0, 0); //kernel init task fork the process 
+  #endif
+
+  #ifndef REQ_1_2
+  int res = privilege_task_create(PF_KTHREAD, usertest, 0, 0); //kernel init task fork the process
+  enable_irq();
+  #endif
+
   idle();
 }

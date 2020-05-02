@@ -46,7 +46,6 @@ void handle_el0_sync(unsigned long par1, unsigned long par2)
         return privilege_task_create(0, 0, 0, 0);
     }
     if (val == SYS_EXIT_NUMBER) {
-        preempt_disable();
         for (int i = 0 ; i < NR_TASKS ; i++) {
             if (task[i] == current) {
                 task[i]->state = par1;
@@ -54,7 +53,6 @@ void handle_el0_sync(unsigned long par1, unsigned long par2)
                 break;
             }
         }
-        preempt_enable();
         //TODO free user page
         schedule();
     }
@@ -75,6 +73,10 @@ void handle_el0_sync(unsigned long par1, unsigned long par2)
             } 
             else if(i > 0) {
                 break;
+            }
+            else{
+                current->state = TASK_WAITING;
+                schedule();
             }
 	    }
         return i;
@@ -100,9 +102,11 @@ void handle_el0_sync(unsigned long par1, unsigned long par2)
     if (val == SYS_KILL) {
         unsigned long pid = par1;
         struct task_struct *killed_child; 
-        uart_send_int(pid);
         killed_child = (struct task_struct *)(LOW_KERNEL_STACK + (pid - 1) *PAGE_SIZE);
         killed_child->kill_flag = 1;
+    }
+    if (val == SYS_UART_EN) {
+        put32(ENABLE_IRQS_1, AUX_IRQ);
     }
     return 0;
 }

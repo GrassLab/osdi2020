@@ -35,7 +35,6 @@ int privilege_task_create(unsigned long clone_flags, unsigned long fn, unsigned 
 			childregs->sp       = cur_regs->sp + get_user_page(pid) - get_user_page(current->task_id);
 		}
 		childregs->regs[0] 	= 0; // fork return with 0
-		printf("%d\r\n", (childregs->sp - childregs->regs[29]));
 		memcpy((unsigned long)childregs->sp, (unsigned long)cur_regs->sp, (childregs->sp - childregs->regs[29]));
 		p->stack = stack; // ?????
 	}
@@ -53,7 +52,6 @@ int privilege_task_create(unsigned long clone_flags, unsigned long fn, unsigned 
 	task[pid] = p;	//put process stack to run queue
 	nr_tasks++;
 	
-	preempt_enable();
 	return pid;
 }
 

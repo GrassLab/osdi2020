@@ -9,4 +9,5 @@
 #define SYS_FORK        0x7
 #define SYS_ID          0x8
 #define SYS_KILL        0x9
+#define SYS_UART_EN     0x10
 #endif  /*_SYS_H */

@@ -74,3 +74,9 @@ kill:
     mov w8, #SYS_KILL
     svc #0
     ret /* never return here */
+
+.globl sync_call_uart
+sync_call_uart:
+    mov w8, #SYS_UART_EN
+    svc #0
+    ret

@@ -173,7 +173,7 @@ sync_el1h:
 
 el1_irq:
 	kernel_entry 1
-	bl	handle_irq
+	bl	handle_el1_irq
 	kernel_exit 1
 
 .globl err_hang
