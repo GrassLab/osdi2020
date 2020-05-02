@@ -31,7 +31,7 @@ void reset();
 void _local_timer_handler();
 void set_trap_ret(unsigned long long ret, int id);
 int sys_get_taskid();
-void sys_printf(const char *fmt, __builtin_va_list args);
+
 
 void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned long long x2, unsigned long long x3)
 {
@@ -133,11 +133,6 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
             else if(x0 == 11)
             {
                 uart_send((char)x1);
-            }
-            else if(x0 == 12)
-            {
-                //sys_printf((char*)x1, (__builtin_va_list)x2);
-                uart_puts("printf note implement");
             }
             else
             {
@@ -353,55 +348,3 @@ int sys_do_fork()
 }
 //b *0x81e24
 
-void sys_num(unsigned int num, int base) 
-{ 
-	static char Representation[]= "0123456789ABCDEF";
-	static char buffer[50]; 
-	char *ptr; 
-	ptr = &buffer[49]; 
-	*ptr = '\0'; 
-	
-	do 
-	{ 
-		*--ptr = Representation[num%base]; 
-		num /= base; 
-	}while(num != 0); 
-
-    uart_puts(ptr);
-}
-
-void sys_printf(const char *fmt, __builtin_va_list args)
-{
-    char *traverse; 
-	unsigned int i; 
-	char *s; 
-	for(traverse = fmt; *traverse != '\0'; traverse++) 
-	{ 
-        if(*traverse == '%')
-        {
-            traverse++;
-            switch(*traverse)
-            {
-                case '%':
-                    uart_send('%');
-                    break;
-                case 's':
-                    //char *p = va_arg(args, char *);
-                    uart_puts(__builtin_va_arg(args, char *));
-                    break;
-                case 'd':
-                    //int arg = va_arg(args, int);
-                    sys_num(__builtin_va_arg(args, int), 10);
-                    break;
-                case 'x':
-                    //int arg = va_arg(args, int);
-                    sys_num(__builtin_va_arg(args, int), 16);
-                    break;
-            }
-        }
-        else
-        {
-            uart_send(*traverse);
-        }
-    }
-}

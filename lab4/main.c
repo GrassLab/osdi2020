@@ -30,9 +30,17 @@ void delay()
 void idle()
 {
 	while(1){
+		if((runqueue.tail - runqueue.head) == 1)
+		{
+			break;
+		}
 		//uart_puts("idle now\r\n");
 		task_schedule();
+		delay(1000000);
 	}
+	my_printf("Test finished\n");
+  	while(1);
+
 }
 
 void foo()
