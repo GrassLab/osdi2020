@@ -7,6 +7,7 @@
 .global do_exit
 .global get_pid
 .global schedule
+.global fork
 
 default_task_start:
     blr     x19     // an user mode code 
@@ -31,5 +32,10 @@ get_pid:
 
 schedule:
     mov     x8,     SYS_SCHEDULE
+    svc     #0
+    ret
+
+fork:
+    mov     x8,     SYS_FORK
     svc     #0
     ret

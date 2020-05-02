@@ -76,6 +76,10 @@ void exec_controller_el1 ( int sys_call_type )
         case SYS_LOCAL_TIMER_DISABLE:
             sys_local_timer_disable ( );
             break;
+        case SYS_FORK:
+            /* set the return value as child pid */
+            argus[0] = sys_duplicate_task ( current_thread )->task_id;
+            break;
         default:
             print_exec_info ( EL1, elr, esr );
             break;

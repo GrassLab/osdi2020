@@ -27,25 +27,26 @@ void create_idle_task ( )
     IDLE->parent = NULL;
     IDLE->child  = NULL;
 
-    ( IDLE->cpu_context ).x[19]        = (unsigned long) idle;
-    ( IDLE->cpu_context ).lr           = (unsigned long) default_task_start;
-    ( IDLE->cpu_context ).user_sp      = (unsigned long) idle_pcb->user_stack_ptr;
-    ( IDLE->cpu_context ).kernel_sp    = (unsigned long) idle_pcb->kernel_stack_ptr;
-    ( IDLE->cpu_context ).user_mode_pc = (unsigned long) default_task_start;
+    IDLE->kernel_sp = idle_pcb->kernel_stack_ptr;
+    IDLE->user_sp   = idle_pcb->user_stack_ptr;
+
+    ( IDLE->cpu_context ).x[19]        = (uint64_t *) idle;
+    ( IDLE->cpu_context ).lr           = (uint64_t *) default_task_start;
+    ( IDLE->cpu_context ).user_sp      = (uint64_t *) idle_pcb->user_stack_ptr;
+    ( IDLE->cpu_context ).kernel_sp    = (uint64_t *) idle_pcb->kernel_stack_ptr;
+    ( IDLE->cpu_context ).user_mode_pc = (uint64_t *) default_task_start;
 
     /* reserve one for idle task*/
     TASK_POOL_USAGE = 1;
 }
 
-int task_create ( void ( *func ) ( ) )
+thread_info_t * create_thread_info ( void ( *func ) ( ) )
 {
     /* find the one that can be used */
     int task_id = find_usable_in_pool ( );
 
     if ( task_id == -1 )
-        return -1;
-
-    TASK_POOL_USAGE |= ( 0b1 << task_id );
+        return NULL;
 
     /* allocate TCB in kernel space */
     pcb_t * new_task            = (pcb_t *) allocate_pcb ( task_id );
@@ -58,24 +59,37 @@ int task_create ( void ( *func ) ( ) )
     thread_info->priority = 1; /* all task has the same priority */
     thread_info->counter  = 2;
 
-    IDLE->parent = NULL;
-    IDLE->child  = NULL;
+    thread_info->parent = NULL;
+    thread_info->child  = NULL;
 
-    ( thread_info->cpu_context ).x[19]        = (unsigned long) func;
-    ( thread_info->cpu_context ).lr           = (unsigned long) default_task_start;
-    ( thread_info->cpu_context ).user_sp      = (unsigned long) ( new_task->user_stack_ptr );
-    ( thread_info->cpu_context ).kernel_sp    = (unsigned long) ( new_task->kernel_stack_ptr );
-    ( thread_info->cpu_context ).user_mode_pc = (unsigned long) default_task_start;
+    thread_info->kernel_sp = new_task->kernel_stack_ptr;
+    thread_info->user_sp   = new_task->user_stack_ptr;
 
-    /* save it into the pool */
-    TASK_POOL[task_id] = thread_info;
+    ( thread_info->cpu_context ).x[19]        = (uint64_t *) func;
+    ( thread_info->cpu_context ).lr           = (uint64_t *) default_task_start;
+    ( thread_info->cpu_context ).user_sp      = (uint64_t *) ( new_task->user_stack_ptr );
+    ( thread_info->cpu_context ).kernel_sp    = (uint64_t *) ( new_task->kernel_stack_ptr );
+    ( thread_info->cpu_context ).user_mode_pc = (uint64_t *) default_task_start;
 
     sys_printk ( "[TASK]\t\tCreate Task with task_id: %d\n", task_id );
 
-    /* put the task into the runqueue */
-    task_enqueue ( thread_info );
+    return thread_info;
+}
 
-    return task_id;
+int task_create ( void ( *func ) ( ) )
+{
+    thread_info_t * new_task = create_thread_info ( func );
+
+    if ( new_task == NULL )
+        return -1;
+
+    /* save it into the pool */
+    TASK_POOL[new_task->task_id] = new_task;
+
+    /* put the task into the runqueue */
+    task_enqueue ( new_task );
+
+    return new_task->task_id;
 }
 
 int find_usable_in_pool ( )
@@ -86,6 +100,8 @@ int find_usable_in_pool ( )
     {
         if ( ( TASK_POOL_USAGE & ( 0b1 << i ) ) == 0 )
         {
+            /* set it as be used */
+            TASK_POOL_USAGE |= ( 0b1 << i );
             return i;
         }
     }
@@ -96,4 +112,44 @@ int find_usable_in_pool ( )
 thread_info_t * get_thread_info ( int pid )
 {
     return TASK_POOL[pid];
+}
+
+thread_info_t * sys_duplicate_task ( thread_info_t * current_task )
+{
+    thread_info_t * new_task = create_thread_info ( current_task->func );
+
+    if ( new_task == NULL )
+        return NULL;
+
+    new_task->priority = current_task->priority;
+    new_task->counter  = current_task->counter;
+
+    new_task->parent    = current_task;
+    current_task->child = new_task;
+
+    /* copy cpu_context */
+    int i;
+    /* set the return value as 0 for the child task */
+    ( new_task->cpu_context ).x[0] = 0;
+    /* copy register, start from 1 */
+    for ( i = 1; i < 29; i++ )
+        ( new_task->cpu_context ).x[i] = ( new_task->cpu_context ).x[i];
+    ( new_task->cpu_context ).fp           = ( new_task->user_sp ) - ( current_task->user_sp - ( ( current_task->cpu_context ).user_sp ) ); /* count the offset */
+    ( new_task->cpu_context ).lr           = ( current_task->cpu_context ).lr;                                                              /* return address remain the same */
+    ( new_task->cpu_context ).user_sp      = ( new_task->user_sp ) - ( current_task->user_sp - ( ( current_task->cpu_context ).user_sp ) ); /* count the offset */
+    ( new_task->cpu_context ).kernel_sp    = new_task->kernel_sp;
+    ( new_task->cpu_context ).user_mode_pc = ( current_task->cpu_context ).user_mode_pc; /* program counter remain the same */
+    /* copy memory */
+    int size = ( uint64_t ) ( (char *) current_task->user_sp - (char *) ( ( current_task->cpu_context ).user_sp ) );
+
+    for ( i = 0; i < size; i++ )
+        ( (char *) ( ( new_task->cpu_context ).user_sp ) )[i] = ( (char *) ( ( current_task->cpu_context ).user_sp ) )[i];
+
+    /* save it into the pool */
+    TASK_POOL[new_task->task_id] = new_task;
+
+    /* put the task into the runqueue */
+    task_enqueue ( new_task );
+
+    return new_task;
 }

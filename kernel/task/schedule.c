@@ -6,7 +6,6 @@
 #include "task.h"
 #include "task_queue.h"
 
-
 void context_switch ( thread_info_t * next )
 {
     thread_info_t * current_task = get_current_task_el0 ( );
@@ -48,11 +47,19 @@ void sys_do_schedule ( )
         next = task_dequeue ( );
 
         if ( next->state != RUNNING )
+        {
             task_enqueue ( next );
+        }
+        else if ( next->state == RUNNING && next->counter < 0 )
+        {
+            next->counter = 2;
+            task_enqueue ( next );
+        }
         else
+        {
             break;
+        }
     }
-
     /* switch to the next one */
     context_switch ( next );
 }
@@ -65,10 +72,10 @@ void sys_do_exec ( void ( *func ) ( ) )
     /* create thread for the target func */
     int c_pid = task_create ( func );
 
-    /* change the state to the WAITING_CHILD */
-    current_thread->state = WAITING_CHILD;
+    /* change the state to the DEAD */
+    current_thread->state = DEAD;
     /* enqueu current task, it will be used lated */
-    task_enqueue ( current_thread );
+    // task_enqueue ( current_thread );
 
     current_thread->child         = get_thread_info ( c_pid );
     current_thread->child->parent = current_thread;

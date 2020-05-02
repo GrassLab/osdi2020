@@ -7,7 +7,6 @@
 #include "mem.h"
 #include "task.h"
 
-
 thread_info_t * QUEUE[NUM_THREADS - 1]; /* there is one are used for idle task */
 int QUEUE_HEAD                = 0;
 int QUEUE_TAIL                = 0;
@@ -30,7 +29,7 @@ task_queue_state_t task_enqueue ( thread_info_t * task )
         if ( QUEUE_TAIL - QUEUE_HEAD + 1 == QUEUE_ACCOMMPDATION )
             IS_FULL = 1;
 
-        sys_printk ( "[TASK QUEUE]\tTask Enqueue: %d\n", task->task_id );
+        // sys_printk ( "[TASK QUEUE]\tTask Enqueue: %d\n", task->task_id );
 
         return SUCCESS;
     }
@@ -50,7 +49,7 @@ thread_info_t * task_dequeue ( )
     QUEUE_HEAD++;
     IS_FULL = 0;
 
-    sys_printk ( "[TASK QUEUE]\tTask Dequeue: %d\n", temp->task_id );
+    // sys_printk ( "[TASK QUEUE]\tTask Dequeue: %d\n", temp->task_id );
 
     return temp;
 }

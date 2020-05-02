@@ -13,18 +13,21 @@ typedef enum
 
 typedef struct
 {
-    unsigned long x[29];  // x0~x28
-    unsigned long fp;     // x29
-    unsigned long lr;     // x30
-    unsigned long user_sp;
-    unsigned long kernel_sp;
-    unsigned long user_mode_pc; /* to save the exec location, while trapped into kernel mode  */
+    uint64_t * x[29];  // x0~x28
+    uint64_t * fp;     // x29
+    uint64_t * lr;     // x30
+    uint64_t * user_sp;
+    uint64_t * kernel_sp;
+    uint64_t * user_mode_pc; /* to save the exec location, while trapped into kernel mode  */
 
 } context_t;
 
 struct thread_info_t
 {
     context_t cpu_context;
+
+    uint64_t * user_sp; /* this one will record where the stack start to gorw, and the one in cpu_context will be moved due to the function call */
+    uint64_t * kernel_sp;
 
     struct thread_info_t * parent;
     struct thread_info_t * child;
@@ -33,8 +36,8 @@ struct thread_info_t
     task_state_t state;
     void ( *func ) ( );
 
-    uint64_t counter;
-    uint64_t priority; /* at this time, all task has the same priority */
+    int64_t counter;
+    int64_t priority; /* at this time, all task has the same priority */
 };
 
 typedef struct thread_info_t thread_info_t;
@@ -46,5 +49,6 @@ void create_idle_task ( );
 int task_create ( void ( *func ) ( ) );
 int find_usable_in_pool ( );
 thread_info_t * get_thread_info ( int pid );
+thread_info_t * sys_duplicate_task ( thread_info_t * current );
 
 #endif

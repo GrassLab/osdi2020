@@ -5,7 +5,6 @@
 #include "io.h"
 #include "time.h"
 
-
 /* defined in task.S */
 extern void schedule ( );
 

@@ -18,5 +18,6 @@
 #define SYS_GET_BOARD_REVISION  16
 #define SYS_LOCAL_TIMER_ENABLE  17
 #define SYS_LOCAL_TIMER_DISABLE 18
+#define SYS_FORK                19
 
 #endif
