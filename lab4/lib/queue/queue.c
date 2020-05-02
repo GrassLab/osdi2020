@@ -12,8 +12,12 @@ void pushQueue(Queue *self, void *task) {
     self->back = next_back;
 }
 
+bool isQueueEmpty(Queue *self) {
+    return (self->front == self->back) ? : false;
+}
+
 void *popQueue(Queue *self) {
-    if (self->front == self->back) {
+    if (isQueueEmpty(self)) {
         sendStringUART("[ERROR] Queue is empty.\n");
         return NULL;
     }

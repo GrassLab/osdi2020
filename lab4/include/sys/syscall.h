@@ -5,6 +5,7 @@
 #define SYS_SEND_UART 1u
 #define SYS_EXEC 2u
 #define SYS_FORK 3u
+#define SYS_EXIT 4u
 
 #include <stdint.h>
 

@@ -15,7 +15,7 @@ void schedule(void) {
     TaskStruct *cur_task = getCurrentTask();
 
     // we don't have to put idle task into running_queue
-    if (cur_task != ktask_pool + 0u) {
+    if (cur_task != ktask_pool + 0u && cur_task->status != kZombie) {
         pushQueue(&running_queue, cur_task);
     }
 

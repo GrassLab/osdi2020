@@ -1,6 +1,7 @@
 #ifndef __QUEUE_QUEUE_H
 #define __QUEUE_QUEUE_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef struct __Queue {
@@ -11,6 +12,7 @@ typedef struct __Queue {
 } Queue;
 
 void pushQueue(Queue *self, void *task);
+bool isQueueEmpty(Queue *self);
 void *popQueue(Queue *self);
 
 #endif

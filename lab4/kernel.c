@@ -5,13 +5,6 @@
 #include "schedule/task.h"
 #include "schedule/schedule.h"
 
-void idle(void) {
-    while (1) {
-        sendStringUART("Enter idle state ...\n");
-        schedule();
-    }
-}
-
 void kernel_main(void) {
     initUART();
     sendStringUART("Hello World!\n");

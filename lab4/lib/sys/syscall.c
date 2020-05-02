@@ -26,7 +26,10 @@ static void handleExec(uint64_t *trapframe) {
 
 static void handleFork(uint64_t *trapframe) {
     doFork(trapframe);
+}
 
+static void handleExit(uint64_t *trapframe) {
+    doExit(trapframe[1]);
 }
 
 void handleSVC(uint64_t *trapframe) {
@@ -45,6 +48,9 @@ void handleSVC(uint64_t *trapframe) {
         break;
     case 3:
         handleFork(trapframe);
+        break;
+    case 4:
+        handleExit(trapframe);
         break;
     default:
         sendStringUART("[ERROR] Unknown syscall number, shouldn't reach here\n");

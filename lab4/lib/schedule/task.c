@@ -19,11 +19,27 @@ uint8_t kstack_pool[MAX_TASK_NUM][4096] __attribute__((aligned(16u)));
 UserTaskStruct utask_pool[MAX_TASK_NUM] __attribute__((aligned(16u)));
 uint8_t ustack_pool[MAX_TASK_NUM][4096] __attribute__((aligned(16u)));
 
+void idle(void) {
+    while (1) {
+        sendStringUART("Enter idle state ...\n");
+        // TODO: zombie reaper
+        //   There is no need for now since each task has their own fixed resources.
+
+        if (isQueueEmpty(&running_queue)) {
+            break;
+        }
+        schedule();
+    }
+    sendStringUART("\n\nTest finished\n\n");
+    while (1)
+        ;
+}
+
 void initIdleTaskState() {
     ktask_pool[0].id = 0u;
     ktask_pool[0].counter = 0u;
     ktask_pool[0].reschedule_flag = true;
-    ktask_pool[0].in_use = true;
+    ktask_pool[0].status = kInUse;
     asm volatile("msr tpidr_el1, %0"
                  : /* output operands */
                  : "r"(&ktask_pool[0]) /* input operands */
@@ -32,8 +48,8 @@ void initIdleTaskState() {
 
 int64_t createPrivilegeTask(void (*func)()) {
     for (uint32_t i = 1; i < MAX_TASK_NUM; ++i) {
-        if (ktask_pool[i].in_use == false) {
-            ktask_pool[i].in_use = true;
+        if (ktask_pool[i].status != kInUse) {
+            ktask_pool[i].status = kInUse;
             ktask_pool[i].id = i;
             ktask_pool[i].counter = 10u;
             ktask_pool[i].reschedule_flag = false;
@@ -152,6 +168,15 @@ void doFork(uint64_t *trapframe) {
     updateTrapFrame(new_task_id);
 }
 
+void doExit(int status) {
+    TaskStruct *cur_task = getCurrentTask();
+
+    // TODO: handle status code, where to use???
+
+    cur_task->status = kZombie;
+    cur_task->reschedule_flag = true;
+}
+
 static void barTask(void);
 static void forkTask(void);
 
@@ -182,11 +207,7 @@ static void forkedTask(void) {
     writeHexUART(tmp);
     writeUART('\n');
 
-    while (cur_task->regain_resource_flag == false)
-        ;
-
-    // reset
-    cur_task->regain_resource_flag = false;
+    exit(0);
 }
 
 static void forkTask(void) {
@@ -207,6 +228,9 @@ static void forkTask(void) {
             delay(100000);
             ++cnt;
         }
+        exit(0);
+
+        writeStringUART("Shouldn't reach here\n");
     } else {
         UserTaskStruct *cur_task = getUserCurrentTask();
 

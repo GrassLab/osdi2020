@@ -3,5 +3,6 @@
 
 void exec(void (*func)());
 int fork(void);
+void exit(int status);
 
 #endif

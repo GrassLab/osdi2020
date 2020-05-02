@@ -37,16 +37,22 @@ typedef struct __UserContext {
 typedef struct __UserTaskStruct {
     UserContext user_context;
     uint32_t id;
-    bool regain_resource_flag;
+    uint32_t regain_resource_flag;
 } UserTaskStruct;
+
+enum Status {
+    kUnUse,
+    kInUse,
+    kZombie
+};
 
 typedef struct __TaskStruct {
     KernelContext kernel_context;
     UserTaskStruct *user_task;
     uint32_t id;
     uint32_t counter;
-    bool in_use;
-    bool reschedule_flag;
+    enum Status status;
+    uint32_t reschedule_flag;
 } TaskStruct;
 
 extern TaskStruct ktask_pool[MAX_TASK_NUM] __attribute__((aligned(16u)));
@@ -57,12 +63,14 @@ extern uint8_t ustack_pool[MAX_TASK_NUM][4096] __attribute__((aligned(16u)));
 
 extern Queue running_queue;
 
+void idle(void);
 void initIdleTaskState(void);
 int64_t createPrivilegeTask(void (*func)());
 void doExec(void (*func)());
 void checkRescheduleFlag(void);
 
 void doFork(uint64_t *trapframe);
+void doExit(int status);
 
 // for testing scheduler
 void fooTask(void);
