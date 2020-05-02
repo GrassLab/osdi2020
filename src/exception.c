@@ -4,7 +4,10 @@
 #include "timer.h"
 #include "queue.h"
 #include "uart0.h"
-#include "shared_variables.h"
+#include "exception.h"
+
+uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
+uint64_t cntfrq_el0, cntpct_el0;
 
 void irq_enable() {
     asm volatile("msr daifclr, #2");

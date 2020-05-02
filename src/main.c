@@ -1,15 +1,12 @@
 #include "shell.h"
 #include "uart0.h"
 #include "frame_buffer.h"
-#include "shared_variables.h"
 #include "mbox.h"
 #include "util.h"
 
 #define CMD_LEN 128
 
 void boot_init() {
-    shared_variables_init();
-
     // Initialize UART
     uart_init();
     uart_flush();

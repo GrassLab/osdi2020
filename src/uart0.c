@@ -3,12 +3,12 @@
 #include "mbox.h"
 #include "my_string.h"
 #include "queue.h"
-#include "shared_variables.h"
 #include "peripherals/gpio.h"
 #include "peripherals/irq.h"
 #include "peripherals/mbox.h"
 #include "peripherals/uart0.h"
 
+struct queue read_buf, write_buf;
 
 void uart_init() {
     *UART0_CR = 0;  // turn off UART0
@@ -64,6 +64,9 @@ void uart_init() {
 
     /* Enable UART */
     *UART0_CR = 0x301;
+
+    queue_init(&read_buf, UART0_BUF_MAX_SIZE);
+    queue_init(&write_buf, UART0_BUF_MAX_SIZE);
 }
 
 char uart_read() {
