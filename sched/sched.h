@@ -43,7 +43,8 @@ extern struct task_struct *get_current ();
 extern void switch_to (struct task_struct *cur, struct task_struct *next);
 struct list_head *runqueue;
 void schedule ();
-void do_exec (void (*func) ());
+int do_exec (void (*func) ());
+int sys_exec (void (*func) ());
 
 
 #endif /* ifndef SCHED */

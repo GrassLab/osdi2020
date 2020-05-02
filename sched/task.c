@@ -17,7 +17,7 @@ privilege_task_create (void (*func) ())
   list_add_tail (&task_pool[i].list, runqueue);
 }
 
-void
+int
 do_exec (void (*func) ())
 {
   asm volatile ("mov x0, %0\n"
@@ -25,4 +25,11 @@ do_exec (void (*func) ())
 		"msr spsr_el1, xzr\n"
 		"msr elr_el1, %1\n"
 		"eret\n"::"r" (&current->stack[0x1000]), "r" (func):"x0");
+  return 0;
+}
+
+int
+sys_exec (void (*func) ())
+{
+  return do_exec (func);
 }

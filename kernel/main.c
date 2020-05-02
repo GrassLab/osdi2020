@@ -20,11 +20,23 @@
                  "                                                                  \n"
 
 void
+after_do_exec ()
+{
+  char buf[] = "after exec\n";
+  while (1)
+    {
+      uart_write (buf, 11);
+      uart_read (buf, 5);
+    }
+}
+
+void
 echo_and_delay ()
 {
   double t;
   char buf[10];
   int c;
+  exec (after_do_exec);
   c = uart_read (buf, 10);
   printf ("%d: %s\r\n", c, buf);
   while (1)

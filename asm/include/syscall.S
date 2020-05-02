@@ -10,3 +10,8 @@ uart_write:
   mov x8, #3
   svc #0
   ret
+.global exec
+exec:
+  mov x8, #4
+  svc #0
+  ret

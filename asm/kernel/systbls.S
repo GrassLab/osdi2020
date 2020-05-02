@@ -6,4 +6,5 @@ syscall_tables:
   .quad sys_get_time
   .quad sys_uart_read
   .quad sys_uart_write
+  .quad sys_exec
 end_syscall_tables:
