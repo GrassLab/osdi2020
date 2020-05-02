@@ -9,13 +9,24 @@ typedef struct context_def{
 	unsigned long long kstack;
 }context_t;
 
+typedef enum{
+	run,
+	ready,
+	wait,
+	zombie
+}processStatus;
+
 typedef struct task_def{
 	context_t context;
 
 	unsigned long long ustack;
 	unsigned long long umode_lr;
+
 	int taskId;
-	
+	int ustack_id;
+	int exitStatus;
+	processStatus pstatus;
+
 }task_t;
 
 #define MAX_QUEUE 16
@@ -33,7 +44,7 @@ extern queue_t runQueue;
 extern task_t *idle_pcb;
 
 
-void privilege_task_create( void(*func)() );
+int privilege_task_create( void(*func)() );
 void schedule( void );
 void init_Queue(queue_t *q);
 void idle( void );
@@ -41,7 +52,8 @@ void do_exec( void(*func)() );
 void kernel_routine_entry( void );
 void kernel_routine_exit( void );
 void do_fork( void );
-
+void do_exit(int status);
+void zombieReaper( void );
 
 /* ===================== task.S ===================== */
 void store_umode_lr_sp(unsigned long long *elr_el1, unsigned long long *ustack);

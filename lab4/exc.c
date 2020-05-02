@@ -120,6 +120,10 @@ void sysCall_handler_el0(){
             do_fork();
             break;
 
+        case 6:
+            do_exit( (int)argu[9] );
+            break;
+
         default:
             uart_puts("system call ");
             uart_hex(num);
@@ -172,7 +176,7 @@ void irq_exc_handler(){
         // uart_puts("ARM_CORE_TIMER_IRQ\n");
         core_timer_handler();
         ReSchedule = 1;
-
+        schedule();
         return;
     }
         

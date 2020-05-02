@@ -5,50 +5,94 @@
 #include "task.h"
 #include "timer.h"
 
-void hello(){
-    // while(1){
-    //     uart_write("hello\n");
-    //     sleep();
-    //     sched_yield();
-    // }
-    int pid = fork();
-    sleep();
-    sleep();
-    if(pid>0) uart_write("parent\n");
-    else uart_write("child\n");
-    sched_yield();
-    while(1);
+void foo(){
+    char out[128] = {0};
+    char buf[32] = {0};
+    int tmp = 5;
+
+    strAppend(out, "Task ");
+
+    ullToStr( (unsigned long long)get_taskId(), buf);
+    strAppend(out, buf);
+    strAppend(out, " after exec, tmp address 0x");
+
+    ullToStr_hex((unsigned long long)&tmp, buf);
+    strAppend(out, buf);
+    strAppend(out, ", tmp value ");
+
+    ullToStr((unsigned long long)tmp, buf);
+    strAppend(out, buf);
+    strAppend(out, "\n");
+
+    uart_write(out);
+
+    exit(0);
 }
 
-void task(){
-    while(1){
-        int taskId = get_taskId();
-        uart_hex(taskId);
-        uart_write(" ...\n");
+void test() {
+    int cnt = 1;
 
-        // char in[10] = {0};
-        // uart_read(in, 5);
-        // uart_write("read ret: \n");
-        // uart_write(in);
-        // uart_write("\n");
-
+    if (fork() == 0) {
+        fork();
         sleep();
-        sched_yield();
-        // schedule();
+        fork();
+
+        while(cnt < 10) {
+            char out[128] = {0};
+            char buf[32] = {0};
+            strAppend(out, "Task id: ");
+
+            int taskid = get_taskId();
+            ullToStr((unsigned long long)taskid, buf);
+            strAppend(out, buf);
+            strAppend(out, ", cnt: ");
+
+            ullToStr((unsigned long long)cnt, buf);
+            strAppend(out, buf);
+            strAppend(out, ", cnt address: 0x");
+
+            ullToStr_hex((unsigned long long)&cnt, buf);
+            strAppend(out, buf);
+            strAppend(out, "\n");
+
+
+            uart_write(out);
+
+            sleep();
+            ++cnt;
+        }
+
+        exit(0);
+        uart_write("Should not be printed\n");
+    } else {
+        char out[128] = {0};
+        char buf[32] = {0};
+
+        strAppend(out, "Task ");
+
+        ullToStr((unsigned long long)get_taskId(), buf);
+        strAppend(out, buf);
+        strAppend(out, " before exec, cnt address 0x");
+
+        ullToStr_hex((unsigned long long)&cnt, buf);
+        strAppend(out, buf);
+        strAppend(out, ", cnt value ");
+
+        ullToStr((unsigned long long)cnt, buf);
+        strAppend(out, buf);
+        strAppend(out, "\n");
+
+        uart_write(out);
+
+        exec(foo);
     }
 }
 
-void user_task(){
-    do_exec(task);
+void user_test(){
+  do_exec(test);
 }
 
-void to_hello(){
-    exec(hello);
-}
 
-void user_task_hello(){
-    do_exec(to_hello);
-}
 
 void main()
 {
@@ -58,12 +102,9 @@ void main()
     init_Queue(&runQueue);
 
     privilege_task_create(idle);
-    // privilege_task_create(task1);
-    // privilege_task_create(task2);
-    // privilege_task_create(task3);
-    // privilege_task_create(user_task);
-    // privilege_task_create(user_task);
-    privilege_task_create(user_task_hello);
+    privilege_task_create(zombieReaper);
+
+    privilege_task_create(user_test);
 
     go_to(&idle_pcb->context);
 }

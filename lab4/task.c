@@ -48,23 +48,76 @@ int deQueue(queue_t *q){
 
 }
 
+/* ======================= resource status =======================*/
+unsigned long long task_allocate_status = 0;
+unsigned long long user_stack_allocate_status = 0;
+
+void SET(unsigned long long *status, int taskId){
+	unsigned long long bit = 1;
+	bit = bit << taskId;
+
+	*status = *status | bit;
+}
+
+void CLR(unsigned long long *status, int taskId){
+	unsigned long long bit = 1;
+	bit = bit << taskId;
+
+	*status = *status & (~bit);
+}
+
+int isSET(unsigned long long status, int taskId){
+	unsigned long long bit = 1;
+	bit = bit << taskId;
+
+	if(status & bit) return 1;
+	return 0;
+}
+
+int ALLOCATABLE(unsigned long long status){
+	for(int id=0; id<64; id++){
+		if( isSET(status, id)==0 ) return id;
+	}
+
+	return -1;
+}
+
+int BITFULL(unsigned long long status){
+	if(status == 0xFFFFFFFFFFFFFFFF) return 1;
+	return 0;
+}
+
+
+
 /* ======================= task =======================*/
 
-void privilege_task_create( void(*func)() ){
-	int cur_taskId = new_taskId;
+int privilege_task_create( void(*func)() ){
+	if( BITFULL(task_allocate_status) || BITFULL(user_stack_allocate_status) ) return -1;
+
+	int cur_taskId = ALLOCATABLE(task_allocate_status);
+	SET(&task_allocate_status, cur_taskId);
+
+	int ustack_id = ALLOCATABLE(user_stack_allocate_status);
+	SET(&user_stack_allocate_status, ustack_id);
+
 
 	task_pcb_pool[cur_taskId].taskId = cur_taskId;
-
 	task_pcb_pool[cur_taskId].context.lr = (unsigned long long)func;
 	task_pcb_pool[cur_taskId].context.kstack = (unsigned long long)&kstack_pool[cur_taskId][4095];
 
-	task_pcb_pool[cur_taskId].ustack = (unsigned long long)&ustack_pool[cur_taskId][4095];
+	task_pcb_pool[cur_taskId].ustack_id = ustack_id;
+	task_pcb_pool[cur_taskId].ustack = (unsigned long long)&ustack_pool[ustack_id][4095];
 
 	for(int i=0; i<4096; i++) kstack_pool[cur_taskId][i] = '\0';
-	for(int i=0; i<4096; i++) ustack_pool[cur_taskId][i] = '\0';
+	for(int i=0; i<4096; i++) ustack_pool[ustack_id][i] = '\0';
+
+
+	task_pcb_pool[cur_taskId].exitStatus = -1;
+	task_pcb_pool[cur_taskId].pstatus = ready;
 
 	enQueue(&runQueue, cur_taskId);
-	new_taskId++;
+
+	return cur_taskId;
 }
 
 void do_exec( void(*func)() ){
@@ -83,7 +136,7 @@ void do_exec( void(*func)() ){
 
 void context_switch(int next_taskId){
 	task_t *curTask = get_cur_task();
-	enQueue(&runQueue, curTask->taskId);
+	if(curTask->pstatus == ready) enQueue(&runQueue, curTask->taskId);
 	set_cur_task( &task_pcb_pool[next_taskId] );
 	switch_to(&curTask->context, &task_pcb_pool[next_taskId].context);
 }
@@ -104,6 +157,7 @@ void idle(){
 			set_cur_task( &task_pcb_pool[next_taskId] );
 			switch_to(&task_pcb_pool[0].context, &task_pcb_pool[next_taskId].context);
 		}else{
+			uart_puts("i'm idle");
 			sleep();
 		}
 	}
@@ -123,29 +177,95 @@ void kernel_routine_exit(){
 
 void leave_fork(){
 	kernel_routine_exit();
+
+	/*
+		using sp to restore register
+		make sure go to this function using b instr. but not bl instr. 
+		because bl instr. will change the sp, it will make function restore error value to register and cause corruption.
+
+		Question:
+		How to force compiler using b instr. but not bl instr. in C language.
+	*/
 	restore_all_reg();
 }
 
 void do_fork(){
 	task_t *curTask = get_cur_task();
 
-	privilege_task_create( leave_fork );
-	int child = new_taskId-1;
+	int child = privilege_task_create( leave_fork );
 	int parent = curTask->taskId;
 
-	
+	int child_ustack_id = task_pcb_pool[child].ustack_id;
+	int parent_ustack_id = curTask->ustack_id;
+
+	int offset;
+	unsigned long long fp;
 	unsigned long long *argu = (unsigned long long*)(curTask->context.kstack - 32 * 8);
+	
+	fp = argu[29];
+	offset = fp - (unsigned long long)&ustack_pool[parent_ustack_id][0];
+	argu[29] = (unsigned long long)&ustack_pool[child_ustack_id][offset];
+
 	argu[0] = 0;
+
 	for(int i=0; i<4096; i++) kstack_pool[child][i] = kstack_pool[parent][i];
-	for(int i=0; i<4096; i++) ustack_pool[child][i] = ustack_pool[parent][i];
+	for(int i=0; i<4096; i++) ustack_pool[child_ustack_id][i] = ustack_pool[parent_ustack_id][i];
 	argu[0] = child;
+	argu[29] = fp;
 
 	//user
-	int offset;
 	task_pcb_pool[child].umode_lr = curTask->umode_lr;
-	offset = curTask->ustack - (unsigned long long)&ustack_pool[parent][0];
-	task_pcb_pool[child].ustack = (unsigned long long)&ustack_pool[child][offset];
+	offset = curTask->ustack - (unsigned long long)&ustack_pool[parent_ustack_id][0];
+	task_pcb_pool[child].ustack = (unsigned long long)&ustack_pool[child_ustack_id][offset];
 
+	//kernel
+	offset = curTask->context.kstack - 32 * 8 - (unsigned long long)&kstack_pool[parent][0];
+	task_pcb_pool[child].context.kstack  = (unsigned long long)&kstack_pool[child][offset];
 
-	task_pcb_pool[child].context.kstack -= 32*8;
+	// uart_puts("fork: parent id: ");
+	// uart_hex(parent);
+	// uart_puts("   ->  user stack addr ");
+	// uart_hex(&ustack_pool[parent_ustack_id][0]);
+	// uart_puts(" ~ ");
+	// uart_hex(&ustack_pool[parent_ustack_id][4095]);
+	// uart_puts("   ->  sp  ");
+	// uart_hex((unsigned long long)curTask->ustack);
+	// uart_puts("\n");
+
+	// uart_puts("fork: child id: ");
+	// uart_hex(child);
+	// uart_puts("   ->  user stack ");
+	// uart_hex(&ustack_pool[child_ustack_id][0]);
+	// uart_puts(" ~  ");
+	// uart_hex(&ustack_pool[child_ustack_id][4095]);
+	// uart_puts("   ->  sp  ");
+	// uart_hex((unsigned long long)task_pcb_pool[child].ustack);
+	// uart_puts("\n\n");
+}
+
+void do_exit(int status){
+	task_t *curTask = get_cur_task();
+
+	curTask->pstatus = zombie;
+	curTask->exitStatus = status;
+
+	//release user stack
+	int ustack_id = curTask->ustack_id;
+	CLR(&user_stack_allocate_status, ustack_id);
+
+	ReSchedule = 1;
+	schedule();
+}
+
+void zombieReaper(){
+	while(1){
+		for(int id=0; id<64; id++){
+			if(isSET(task_allocate_status, id)) {
+				if( task_pcb_pool[id].pstatus == zombie ) CLR(&task_allocate_status, id);	
+			}
+		}
+
+		ReSchedule = 1;
+		schedule();
+	}
 }

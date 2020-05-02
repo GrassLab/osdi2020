@@ -22,6 +22,18 @@ int strlen(char *s){
 	return size;
 }
 
+void strAppend(char *s1, char *s2){
+	int len1 = strlen(s1);
+	int len2 = strlen(s2);
+
+	for(int i=0; i<len2; i++){
+		s1[len1 + i] = s2[i];
+	}
+
+	s1[len1 + len2] = '\0';
+
+}
+
 int strcmp(char *s1, char *s2){
 	int len1 = strlen(s1);
 	int len2 = strlen(s2);
@@ -71,6 +83,20 @@ void ullToStr(unsigned long long num, char *buf){
 	strReverse(buf, size-1);
 
 	return;
+}
+
+void ullToStr_hex(unsigned long long num, char *buf){
+	unsigned int n;
+    int size=0;
+    for(int c=60; c>=0; c-=4,size++) {
+        // get highest tetrad
+        n=(num>>c)&0xF;
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n+=n>9?0x37:0x30;
+        buf[size] = (char)n;
+    }
+    buf[16] = '\0';
+    
 }
 
 void cntTimeStamp(unsigned long long cntfrq, unsigned long long cntpct, char *timeStr){

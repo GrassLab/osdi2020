@@ -17,4 +17,5 @@ void uart_write(char *s);
 void uart_read(char *buf, int size);
 void exec( void(*func)() );
 int fork( void );
+void exit(int status);
 #endif

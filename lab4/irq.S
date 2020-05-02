@@ -95,3 +95,10 @@ fork:
 	mov 	x8, 5
 	svc 	0
 	ret
+
+.global exit
+exit:
+	mov 	x8, 6
+	mov 	x9, x0
+	svc 	0
+	ret

@@ -27,7 +27,7 @@ C_SRCS = $(wildcard *.c)
 C_OBJS = $(C_SRCS:.c=.o)
 S_SRCS = $(wildcard *.S)
 S_OBJS = $(S_SRCS:.S=.s.o)
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -nodefaultlibs
+CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -nodefaultlibs 
 
 debug: CFLAGS += -ggdb3 -Og
 
