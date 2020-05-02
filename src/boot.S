@@ -36,6 +36,9 @@ el1_entry:
     ldr     x0, =__bss_start
     bl      memzero
 
+    ldr     x0, =exception_table  // set up el1 exception table
+    msr     vbar_el1, x0
+
 main_entry:
     mov     sp, #(2 * SECTION_SIZE)
     bl      kernel_main           // jump to C code, should not return

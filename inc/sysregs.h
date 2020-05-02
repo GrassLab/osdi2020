@@ -43,8 +43,9 @@
 #define SPSR_MASK_F         (1 << 6)
 #define SPSR_EL0t           (0b0000 << 0) // Exception level and selected Stack Pointer. from which level we trap in to el2
 #define SPSR_EL1t           (0b0100 << 0)
-#define SPSR_EL1h           (0b0101 << 0)	
-#define SPSR_EL2t           (0b1000 << 0)	
-#define SPSR_EL2h           (0b1001 << 0)	
-#define SPSR_EL2_VALUE      (SPSR_MASK_A | SPSR_MASK_I | SPSR_MASK_F | SPSR_EL1h)
+#define SPSR_EL1h           (0b0101 << 0)
+#define SPSR_EL2t           (0b1000 << 0)
+#define SPSR_EL2h           (0b1001 << 0)
+// #define SPSR_EL2_VALUE      (SPSR_MASK_A | SPSR_MASK_I | SPSR_MASK_F | SPSR_EL1h)
+#define SPSR_EL2_VALUE      (SPSR_MASK_A | SPSR_MASK_F | SPSR_EL1h)
 #define SPSR_EL1_VALUE      (SPSR_EL0t)

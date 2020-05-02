@@ -1,7 +1,9 @@
 #include "sched.h"
 
+#include "exce.h"
 #include "mm.h"
 #include "printf.h"
+#include "timer.h"
 #include "uart.h"
 
 struct task_struct *current;              //currently executing task
@@ -40,6 +42,7 @@ void idle_task()
         uart_puts("error while starting process 2\n");
     if (privilege_task_create((void *)&proc_3))
         uart_puts("error while starting process 3\n");
+    core_timer_enable();
 
     while (1)
         schedule();
@@ -125,7 +128,6 @@ int privilege_task_create(void(*func)())
     if (!(pTask = (struct task_struct *) get_free_kstack()))
         return 1;
     pTask->state = TASK_RUNNING;
-    pTask->counter = 0;
     pTask->cpu_context.x19 = (long)func;
     pTask->cpu_context.pc = (unsigned long)func;
     pTask->cpu_context.sp = (unsigned long)pTask + THREAD_SIZE;
@@ -133,4 +135,11 @@ int privilege_task_create(void(*func)())
     pTask->task_id = task_id;
     task[task_id] = pTask;
     return 0;
+}
+
+void timer_tick()
+{
+    enable_irq();
+    schedule();
+    disable_irq();
 }

@@ -29,7 +29,7 @@ struct task_struct {
     struct cpu_context cpu_context;
     long task_id;
     long state;	
-    long counter;
+    // long counter;
     // long priority;
     // long preempt_count;
 };
@@ -38,6 +38,7 @@ struct task_struct {
 int privilege_task_create(void(*func)());
 void sched_init(void);
 void schedule(void);
+void timer_tick(void);
 void context_switch(struct task_struct* next);
 void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 

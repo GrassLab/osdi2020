@@ -1,6 +1,7 @@
 #include "exce.h"
 
 #include "printf.h"
+#include "sched.h"
 #include "string.h"
 #include "timer.h"
 #include "uart.h"
@@ -68,9 +69,11 @@ void irq_router(){
     // readirq source
     unsigned int src = *CORE0_IRQ_SRC;
     if (src & (1<<1)){
+        printf("[irq router] core timer interrupt trigerred!\n");
         core_timer_handler();
-        printf("\nCore timer interrupt, jiffies %d", core_cnt++);
-        core_cnt ++;
+        timer_tick();
+        // printf("\nCore timer interrupt, jiffies %d", core_cnt++);
+        // core_cnt ++;
     } else if (src & (1<<11)){
         local_timer_handler();
         printf("\nLocal timer interrupt, jiffies %d", local_cnt++);
