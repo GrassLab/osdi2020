@@ -2,8 +2,8 @@
 #define __TASK_H__
 
 #define TASK_POOL_SIZE 64
-#define TASK_KERNEL_STACK_SIZE 0x100
-#define TASK_USER_STACK_SIZE 0x200
+#define TASK_KERNEL_STACK_SIZE 0x400
+#define TASK_USER_STACK_SIZE 0x600
 
 struct cpu_context_struct
 {
