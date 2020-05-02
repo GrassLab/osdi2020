@@ -29,6 +29,7 @@ echo_and_delay ()
   printf ("%d: %s\r\n", c, buf);
   while (1)
     {
+      uart_write (buf, 10);
       printf ("echo haha %f\r\n", t);
       t = get_time ();
       while (get_time () - t < 1);

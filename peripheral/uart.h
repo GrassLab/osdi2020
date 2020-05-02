@@ -53,4 +53,6 @@ void uart_hex (unsigned int d);
 size_t sys_uart_read (char *buf, size_t count);
 size_t do_uart_read (char *buf, size_t count)
   __attribute__ ((section (".bootloader")));
+size_t do_uart_write (char *buf, size_t size);
+size_t sys_uart_write (char *buf, size_t size);
 #endif /* ifndef UART */

@@ -131,3 +131,18 @@ sys_uart_read (char *buf, size_t count)
 {
   return do_uart_read (buf, count);
 }
+
+size_t
+do_uart_write (char *buf, size_t size)
+{
+  int i;
+  for (i = 0; i < size; ++i)
+    uart_send (*buf++);
+  return i;
+}
+
+size_t
+sys_uart_write (char *buf, size_t size)
+{
+  return do_uart_write (buf, size);
+}
