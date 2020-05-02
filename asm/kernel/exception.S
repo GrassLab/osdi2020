@@ -64,7 +64,10 @@ exception_handler:
   and x10, x10, 0xffffff
   cmp x10, 0
   b.ne not_syscall
+  bl enable_irq
   bl system_call
+  bl disable_irq
+  str x0, [sp, #16 * 0]
 exc_end:
   kernel_exit
 not_syscall:

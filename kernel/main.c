@@ -3,6 +3,7 @@
 #include <sched.h>
 #include <string.h>
 #include <timer.h>
+#include <syscall.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -22,6 +23,10 @@ void
 echo_and_delay ()
 {
   double t;
+  char buf[10];
+  int c;
+  c = uart_read (buf, 10);
+  printf ("%d: %s\r\n", c, buf);
   while (1)
     {
       printf ("echo haha %f\r\n", t);

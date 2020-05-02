@@ -117,9 +117,17 @@ _putchar (char character)
   uart_send (character);
 }
 
-void
-uart_read (char *buf, unsigned long count)
+size_t
+do_uart_read (char *buf, size_t count)
 {
-  while (count--)
+  int i;
+  for (i = 0; i < count; ++i)
     *buf++ = uart_getc ();
+  return i;
+}
+
+size_t
+sys_uart_read (char *buf, size_t count)
+{
+  return do_uart_read (buf, count);
 }
