@@ -2,8 +2,12 @@
 #include "time.h"
 #include "utility.h"
 
-void exception_handler()
+void exception_handler(unsigned long sp)
 {
+    // uart_puts("exception_handler: sp: ");
+    // uart_print_hex(sp);
+    // uart_puts("\n");
+
     unsigned int el_level;
     unsigned int esr, elr, spsr, far;
     unsigned int ec, iss, retaddr;

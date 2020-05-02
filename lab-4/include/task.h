@@ -1,7 +1,10 @@
 #ifndef TASK_H
 #define TASK_H
 
-typedef struct context {
+#define IN_KERNEL_MODE 0
+#define IN_USER_MODE 1
+
+typedef struct cpuContext {
     unsigned long x19;
     unsigned long x20;
     unsigned long x21;
@@ -15,23 +18,37 @@ typedef struct context {
     unsigned long fp;
     unsigned long sp;
     unsigned long pc;
-} Context;
+} CpuContext;
+
+typedef struct userContext {
+    unsigned long sp_el0;   // user stack
+    unsigned long elr_el1;  // user pc 
+    unsigned long spsr_el1; // user cpu state
+} UserContext;
 
 typedef struct task {
-    Context context;
+    CpuContext cpuContext;
+    UserContext userContext;
     int id;
+    int rescheduleFlag;
+    int timeCount;
+    int state; // IN_KERNEL_MODE || IN_USER_MODE
+    // unsigned long regs[31];
 } Task;
 
 typedef struct taskManager {
     int taskCount;
+    int runningTaskId;
     Task taskPool[64];
+    char ustackPool[64][4096];
     char kstackPool[64][4096];
 } TaskManager;
 
 
-void taskManagerInit();
+void task_manager_init();
 void privilege_task_create(void(*func)());
 void context_switch(Task* next);
 void schedule();
+void user_task_test();
 void foo();
 #endif

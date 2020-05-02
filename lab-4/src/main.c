@@ -9,15 +9,15 @@
 int main()
 {
     uart_init();
-    printPowerOnMessage();
-    
-    taskManagerInit();
+    // printPowerOnMessage();
+    enable_irq();
+    core_timer_init();
+    task_manager_init();
 
-    for(int i = 0; i < 10; ++i) {
-        privilege_task_create(foo);
+    for(int i = 0; i < 3; ++i) {
+        privilege_task_create(user_task_test);
     }
 
     idle();
-    
     interative();
 }

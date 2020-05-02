@@ -1,7 +1,9 @@
 #include "time.h"
+#include "task.h"
 #include "utility.h"
 #include "uart.h"
 
+extern TaskManager taskManager;
 int local_timer_counter = 0;
 int core_timer_counter = 0;
 
@@ -53,7 +55,7 @@ void __core_timer_init()
 {
     asm volatile("mov x0, 1");
     asm volatile("msr cntp_ctl_el0, x0");
-    asm volatile("mov x0, 0xfffffff");
+    asm volatile("mov x0, 0xffffff");
     asm volatile("msr cntp_tval_el0, x0");
     asm volatile("mov x0, 2");
     asm volatile("ldr x1, =0x40000040");
@@ -62,11 +64,15 @@ void __core_timer_init()
 
 void core_timer_handler()
 {
-    uart_puts("[timer] Core timer interrupt, ");
-    uart_print_int(core_timer_counter++);
-    uart_puts(" times\n");
-    asm volatile("mov x0, 0xfffffff");
+    // uart_puts("[timer] Core timer interrupt, ");
+    // uart_print_int(core_timer_counter++);
+    // uart_puts(" times\n");
+    asm volatile("mov x0, 0xffffff");
     asm volatile("msr cntp_tval_el0, x0");
+    if (taskManager.taskPool[taskManager.runningTaskId].timeCount++ > 0) {
+        taskManager.taskPool[taskManager.runningTaskId].rescheduleFlag = 1;
+        taskManager.taskPool[taskManager.runningTaskId].timeCount = 0;
+    }
 }
 
 void wait(int clock)

@@ -10,7 +10,7 @@ OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
 run: $(TARGET)
-	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -serial stdio -display none -s -d int
+	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -serial stdio -display none -s
 debug: $(TARGET)
 	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -s -serial stdio -display none -d int -S
 loader: 
@@ -20,7 +20,7 @@ src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(TARGET): $(ASMS) $(OBJS)
-	$(CC) -I include -nostdlib -nostartfiles $(ASMS) $(OBJS) -T linker.ld -o kernel8.elf
+	$(CC) -I include -g -nostdlib -nostartfiles $(ASMS) $(OBJS) -T linker.ld -o kernel8.elf
 	$(OBJCOPY) -O binary kernel8.elf $@
 
 clean:

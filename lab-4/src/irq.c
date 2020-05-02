@@ -1,7 +1,8 @@
 #include "irq.h"
 #include "utility.h"
-#include "timer.h"
+#include "time.h"
 #include "uart.h"
+#include "task.h"
 
 void enable_irq()
 {
@@ -41,5 +42,19 @@ void irq_handler()
 		core_timer_handler();
 	} else {
         local_timer_handler();
+    }
+    irq_reschedule();
+}
+
+void irq_reschedule()
+{
+    Task* task = get_current();
+    if (task->rescheduleFlag == 1) {
+        uart_puts("[IRQ reschedule]: TaskId: ");
+        uart_print_int(task->id);
+        uart_puts("\n");
+        task->rescheduleFlag = 0;
+        schedule();
+        uart_puts("[IRQ reschedule]: Finish.\n");
     }
 }
