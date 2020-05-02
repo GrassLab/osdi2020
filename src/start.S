@@ -61,6 +61,11 @@ el1_start:
     ldr     x1, =SPSR_EL1_VALUE
     msr     spsr_el1, x1
 
+    bl      boot_init
+
+1:
+    b       1b
+
     adr     x1, el0_start
     msr     elr_el1, x1
 
