@@ -3,7 +3,7 @@ EEL2: .string "not in EL2\n"
 error_msg_table:
 .quad EEL2
 
-.section ".text"
+.section ".text.boot"
 .global _start
 _start:
   # get cpuid
