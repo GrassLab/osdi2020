@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "timer.h"
+#include "queue.h"
 
 #define CORE0_IRQ_SOURCE              ((volatile unsigned int*)0x40000060)
 #define IRQ_BASIC_PENDING             ((volatile unsigned int*)(MMIO_BASE+0x0000b200))
@@ -43,17 +44,17 @@ void irq_handler()
             uart_puts("  ");
             while (*UART0_FR & 0x40){
                 r = (char) (*UART0_DR);
-                while (queue_full(&read_buf))
+                while (QUEUE_FULL(read_buf, UARTBUF_SIZE))
                     asm volatile ("nop");
-                enqueue(&read_buf, r);
+                ENQUEUE(read_buf, UARTBUF_SIZE, r);
             }
             *UART0_ICR = *UART0_ICR | (1 << 4);
             *UART0_IMSC = *UART0_IMSC & 0x2f;
         }
         else if (*UART0_MIS & (1 << 5)){
             // uart_puts("uart0 send interrupt\n");
-            while (!queue_empty(&write_buf)){
-                r = dequeue(&write_buf);
+            while (!(QUEUE_EMPTY(write_buf))){
+                DEQUEUE(write_buf, UARTBUF_SIZE, r);
                 while (*UART0_FR & 0x20)
                     asm volatile ("nop");
                 *UART0_DR = r;

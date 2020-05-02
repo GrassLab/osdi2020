@@ -46,7 +46,4 @@ struct uart_buf{
     int tail;
 } read_buf, write_buf;
 
-int queue_empty(struct uart_buf*);
-int queue_full (struct uart_buf*);
-void enqueue(struct uart_buf*, char);
-char dequeue(struct uart_buf*);
+void putc (void* p, char c);

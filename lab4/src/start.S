@@ -1,6 +1,6 @@
 .section ".text.boot"
 
-#define STACK_SIZE 0x10000
+#define STACK_SIZE 0x1000
 
 .global _start
 
@@ -40,7 +40,7 @@ _start:
     msr     elr_el2, x2
     eret
 
-5:  // switch to el0
+/*5:  // switch to el0
     adr x0, _start
     sub x0, x0, #STACK_SIZE
     msr sp_el0, x0
@@ -48,7 +48,7 @@ _start:
     msr spsr_el1, x0
     adr x0, 5f
     msr elr_el1, x0
-    eret
+    eret                 */
 
 5:    // clear bss
     ldr     x1, =__bss_start

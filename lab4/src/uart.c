@@ -1,7 +1,7 @@
 #include "gpio.h"
 #include "mbox.h"
 #include "uart.h"
-#include "mystd.h"
+#include "queue.h"
 
 void mini_uart_send(unsigned int c);
 void PL011_uart_send(unsigned int c);
@@ -108,31 +108,14 @@ char mini_uart_getc() {
     return r=='\r'?'\n':r;
 }
 
-
-int queue_empty(struct uart_buf *queue){
-    return queue->head == queue->tail;
-}
-int queue_full (struct uart_buf *queue){
-    return queue->head == (queue->tail + 1) % UARTBUF_SIZE;
-}
-void enqueue(struct uart_buf *queue, char c){
-    queue->buf[queue->tail] = c;
-    queue->tail = (queue->tail + 1) % UARTBUF_SIZE;
-}
-char dequeue(struct uart_buf *queue){
-    char head = queue->buf[queue->head];
-    queue->head = (queue->head + 1) % UARTBUF_SIZE;
-    return head;
-}
-
 /**
  * Send a character
  */
 void PL011_uart_send(unsigned int c) {
     if(uart0_irq_enable){
-        while (queue_full(&write_buf))
+        while (QUEUE_FULL(write_buf, UARTBUF_SIZE))
             asm volatile ("nop");
-        enqueue(&write_buf, c);
+        ENQUEUE(write_buf, UARTBUF_SIZE, c);
         *UART0_IMSC = *UART0_IMSC | (1 << 5);
     }else{
         /* wait until we can send */
@@ -149,9 +132,9 @@ char PL011_uart_getc() {
     char r;
     if(uart0_irq_enable){
        *UART0_IMSC = *UART0_IMSC | (1 << 4);
-        while (queue_empty(&read_buf))
+        while (QUEUE_EMPTY(read_buf))
             asm volatile("nop");
-        r = dequeue(&read_buf);
+        DEQUEUE(read_buf, UARTBUF_SIZE, r);
     }else{
         /* wait until something is in the buffer */
         do{asm volatile("nop");}while(*UART0_FR&0x10);
@@ -230,4 +213,10 @@ void enable_uart0_irq(){
     read_buf.tail = 0;
     write_buf.head = 0;
     write_buf.tail = 0;
+}
+
+// This function is required by printf function
+void putc(void* p, char c)
+{
+	uart_send(c);
 }

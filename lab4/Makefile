@@ -1,6 +1,6 @@
 ARMGNU ?= aarch64-linux-gnu
 
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude 
+CFLAGS = -Wall -O2 -ffreestanding -nostdlib -nostartfiles -Iinclude 
 ASM_FLAGS = -Iinclude 
 
 BUILD_DIR = build
@@ -33,7 +33,7 @@ clean :
 debug: CFLAGS += -g
 
 debug: kernel8.img
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img  -serial stdio -display none -s
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img  -serial stdio -display none -s -S
 
 level: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img  -serial stdio -display none -d int
