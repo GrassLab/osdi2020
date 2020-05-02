@@ -44,3 +44,15 @@ sys_exec (void (*func) ())
 {
   return do_exec (func);
 }
+
+size_t
+do_get_task_id ()
+{
+  return current->task_id;
+}
+
+size_t
+sys_get_task_id ()
+{
+  return do_get_task_id ();
+}

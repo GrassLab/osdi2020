@@ -15,3 +15,8 @@ exec:
   mov x8, #4
   svc #0
   ret
+.global get_task_id
+get_task_id:
+  mov x8, #5
+  svc #0
+  ret

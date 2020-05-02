@@ -45,6 +45,8 @@ struct list_head *runqueue;
 void schedule ();
 int do_exec (void (*func) ());
 int sys_exec (void (*func) ());
+size_t do_get_task_id ();
+size_t sys_get_task_id ();
 
 
 #endif /* ifndef SCHED */
