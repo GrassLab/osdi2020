@@ -50,13 +50,14 @@ exception_router (size_t x0, size_t x1, size_t x2, size_t x3)
 void
 system_call (size_t x0, size_t x1, size_t x2, size_t x3)
 {
-  switch (x0)
-    {
-    case 0:
-      sys_core_timer_enable ();
-      break;
-    case 1:
-      sys_get_time ((size_t *) x1, (size_t *) x2);
-      break;
-    }
+  extern void (*syscall_tables[]) (size_t x1, size_t x2, size_t x3);
+  extern void (*end_syscall_tables[]) (size_t x1, size_t x2, size_t x3);
+  void (**func) (size_t x1, size_t x2, size_t x3);
+
+  func = &syscall_tables[x0];
+  if (func >= syscall_tables && func < end_syscall_tables)
+    (*func) (x1, x2, x3);
+  else
+    uart_puts ("invalid system_call");
+  return;
 }
