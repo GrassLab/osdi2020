@@ -71,6 +71,10 @@ main (int error, char *argv[])
       uart_puts (argv[0]);
       uart_puts ("-----------------------------\n");
     }
+
+  extern void test_preemption ();
+  test_preemption ();
+
   privilege_task_create (&echo_and_do_exec);
   privilege_task_create (&echo_and_do_exec);
   privilege_task_create (&echo_and_do_exec);
