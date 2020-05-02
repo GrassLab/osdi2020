@@ -3,6 +3,7 @@
 #include <timer.h>
 #include "shell.h"
 #include "irq.h"
+#include "panic.h"
 
 void system_call (size_t x0, size_t x1, size_t x2, size_t x3);
 
@@ -34,7 +35,7 @@ exception_router (size_t x0, size_t x1, size_t x2, size_t x3)
     {
       enable_irq ();
       if (iss == 0)
-	system_call (x0, x1, x2, x3);
+	syscall_number_error ();
       else
 	show_exception_status (elr_el1, esr_el1);
       disable_irq ();
@@ -45,19 +46,4 @@ exception_router (size_t x0, size_t x1, size_t x2, size_t x3)
       show_exception_status (elr_el1, esr_el1);
       while (1);
     }
-}
-
-void
-system_call (size_t x0, size_t x1, size_t x2, size_t x3)
-{
-  extern void (*syscall_tables[]) (size_t x1, size_t x2, size_t x3);
-  extern void (*end_syscall_tables[]) (size_t x1, size_t x2, size_t x3);
-  void (**func) (size_t x1, size_t x2, size_t x3);
-
-  func = &syscall_tables[x0];
-  if (func >= syscall_tables && func < end_syscall_tables)
-    (*func) (x1, x2, x3);
-  else
-    uart_puts ("invalid system_call");
-  return;
 }

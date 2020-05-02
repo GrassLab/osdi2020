@@ -17,5 +17,5 @@ local_timer_handler ()
 void
 core_timer_enable ()
 {
-  asm volatile ("mov x0, #0\n" "svc #0\n");
+  asm volatile ("mov x8, #0\n" "svc #0\n");
 }

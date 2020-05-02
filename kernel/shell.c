@@ -180,8 +180,8 @@ double
 get_time ()
 {
   size_t cnt, freq;
-  asm volatile ("mov x2, %0\n" "mov x1, %1\n" "mov x0, #1\n"
-		"svc #0\n"::"r" (&freq), "r" (&cnt):"x0", "x1", "x2");
+  asm volatile ("mov x1, %0\n" "mov x0, %1\n" "mov x8, #1\n"
+		"svc #0\n"::"r" (&freq), "r" (&cnt):"x0", "x1", "x8");
   return (double) cnt / (double) freq;
 }
 

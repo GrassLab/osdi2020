@@ -56,8 +56,20 @@ setup_exception_vector_table:
 
 exception_handler:
   kernel_entry
-  bl exception_router
+  mrs x9, ESR_EL1
+  mov x10, x9
+  lsr x9, x9, #26
+  cmp x9, #0x15
+  b.ne not_syscall
+  and x10, x10, 0xffffff
+  cmp x10, 0
+  b.ne not_syscall
+  bl system_call
+exc_end:
   kernel_exit
+not_syscall:
+  bl exception_router
+  b exc_end
 
 irq_handler:
   kernel_entry
