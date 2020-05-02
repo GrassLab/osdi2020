@@ -72,6 +72,9 @@ bl switchUserToKernel
 .endm
 
 .macro _kernel_exit
+// exit of kernel routine
+bl checkRescheduleFlag
+
 bl switchKernelToUser
 
 ldp x0, x1, [sp, #16 * 0]
@@ -112,8 +115,7 @@ mov sp,  x9
 _exception_handler:
     _kernel_entry
 
-    _interrupt_entry
-
+    mov x0, sp
     bl handleSVC
     // ldr x0, =_exception_ret_addr
     // bl sendStringUART
@@ -149,8 +151,6 @@ _exception_handler:
     // bl enable_irq
     // bl _enable_core_timer
 
-    _interrupt_exit
-
 leave:
     _kernel_exit
 
@@ -171,9 +171,6 @@ _irq_handler:
     bl irq_handler
 
     _interrupt_exit
-
-    // exit of kernel routine
-    bl checkRescheduleFlag
 
     _kernel_exit
 

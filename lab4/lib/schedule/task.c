@@ -1,5 +1,6 @@
 #include "schedule/task.h"
 #include "MiniUart.h"
+#include "exception/exception.h"
 #include "schedule/context.h"
 #include "schedule/schedule.h"
 #include "sys/unistd.h"
@@ -81,22 +82,16 @@ void doExec(void (*func)()) {
                           &cur_task->user_task->user_context);
 }
 
-void copyContexts(int64_t id) {
+static void copyUserContext(int64_t id) {
     TaskStruct *cur_task = getCurrentTask();
 
-    uint8_t *src_ctx = (uint8_t *)&cur_task->kernel_context;
-    uint8_t *dst_ctx = (uint8_t *)&ktask_pool[id].kernel_context;
-
-    // only x19-x28
-    memcpy(dst_ctx, src_ctx, sizeof(uint64_t) * 10);
-
-    UserContext *src = &cur_task->user_task->user_context;
-    UserContext *dst = &utask_pool[id].user_context;
+    UserContext *src_ctx = &cur_task->user_task->user_context;
+    UserContext *dst_ctx = &utask_pool[id].user_context;
 
     // fp, lr should be populated by _kernel_exit
     // sp should be populated by copyStacks()
-    dst->elr_el1 = src->elr_el1;
-    dst->spsr_el1 = src->spsr_el1;
+    dst_ctx->elr_el1 = src_ctx->elr_el1;
+    dst_ctx->spsr_el1 = src_ctx->spsr_el1;
 }
 
 void copyStacks(int64_t id) {
@@ -124,15 +119,37 @@ void copyStacks(int64_t id) {
     utask_pool[id].user_context.sp = (uint64_t)ustack_pool[id + 1] - src_size;
 }
 
-void updateTrapFrame(int64_t id) {
+static void updateTrapFrame(int64_t id) {
     TaskStruct *child_task = ktask_pool + id;
 
     uint64_t *trapframe = (uint64_t *)child_task->kernel_context.sp;
 
     // retval
     trapframe[0] = 0;
+
     // fp
-    trapframe[28] = (uint64_t)ustack_pool[id + 1];
+    trapframe[29] = (uint64_t)ustack_pool[id + 1] -
+                    // gap b/t parent's current fp and it's stack orignal base
+                    ((uint64_t)ustack_pool[getCurrentTask()->id + 1] - trapframe[29]);
+}
+
+void doFork(uint64_t *trapframe) {
+    TaskStruct *cur_task = getCurrentTask();
+
+    int64_t new_task_id = createPrivilegeTask(_child_return_from_fork);
+    if (new_task_id == -1) {
+        // TODO:
+        sendStringUART("[ERROR] fail to create privilege task\n");
+        return;
+    }
+
+    copyUserContext(new_task_id);
+
+    cur_task->kernel_context.sp = (uint64_t)trapframe;
+    copyStacks(new_task_id);
+
+    // child's fp, retval should be different from parent's ones
+    updateTrapFrame(new_task_id);
 }
 
 static void barTask(void);
@@ -175,6 +192,10 @@ static void forkedTask(void) {
 static void forkTask(void) {
     int cnt = 1;
     if (fork() == 0) {
+        fork();
+        delay(100000);
+        fork();
+
         UserTaskStruct *cur_task = getUserCurrentTask();
 
         while (cnt < 10) {

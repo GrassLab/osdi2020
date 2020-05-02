@@ -46,8 +46,6 @@ getUserCurrentTask:
 
 .global initUserTaskandSwitch
 initUserTaskandSwitch:
-    _save_callee_saved_registers
-
     // set up user mode context, set up lr for forever loop back to barTask
     ldp fp, lr, [x1, 16 * 0] 
     ldr x10, [x1, 16 * 1]
@@ -70,16 +68,10 @@ switchToEl1:
     mrs x9, SPSR_EL1
     str x9, [x0, 16 * 2]
 
-    mov x9, lr
-    _restore_callee_saved_registers
-    mov lr, x9
-
     ret
 
 .global switchToEl0
 switchToEl0:
-    _save_callee_saved_registers
-
     // restore SP, ELR, SPSR from user context
     ldp x9, x10, [x1, 16 * 1]
     msr SP_EL0, x9

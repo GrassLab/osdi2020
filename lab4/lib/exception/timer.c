@@ -23,7 +23,7 @@ void _core_timer_handler(void) {
     asm volatile("mov x0, 0x1f00000");
     asm volatile("msr cntp_tval_el0, x0");
 
-    TaskStruct *cur_task = getCurrentTask(); 
+    TaskStruct *cur_task = getCurrentTask();
 
     --cur_task->counter;
     if (cur_task->counter > 0) {

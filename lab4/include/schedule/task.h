@@ -62,9 +62,7 @@ int64_t createPrivilegeTask(void (*func)());
 void doExec(void (*func)());
 void checkRescheduleFlag(void);
 
-void copyContexts(int64_t id);
-void copyStacks(int64_t id);
-void updateTrapFrame(int64_t id);
+void doFork(uint64_t *trapframe);
 
 // for testing scheduler
 void fooTask(void);

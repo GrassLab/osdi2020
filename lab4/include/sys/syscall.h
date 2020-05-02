@@ -6,6 +6,8 @@
 #define SYS_EXEC 2u
 #define SYS_FORK 3u
 
-void handleSVC(void);
+#include <stdint.h>
+
+void handleSVC(uint64_t *trapframe);
 
 #endif
