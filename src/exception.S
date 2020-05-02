@@ -95,16 +95,44 @@
 .global ret_to_user
 ret_to_user:
     bl disable_irq
-    LOAD_CONTEXT 0
-    // bl debug
-    mov x0, 0 // I am child
-    // mrs x1, tpidr_el1
-    // ldr x2, [x1, 8 * 13]
-    // ldr x3, [x1, 8 * 14]
-    // ldr x4, [x1, 8 * 15]
-	// msr	sp_el0, x2
-    // msr	elr_el1, x3
-	// msr	spsr_el1, x4
+    mrs x1, tpidr_el1
+    ldr x0, [x1, 8 * 11]
+    mov sp, x0
+    mov x5, #2  // IN_OUT_KERNEL
+    ldr x2, [x1, 8 * 13]
+    ldr x3, [x1, 8 * 14]
+    ldr x4, [x1, 8 * 15]
+    str x5, [x1, 8 * 16]
+	msr	sp_el0, x2
+    msr	elr_el1, x3
+	msr	spsr_el1, x4
+
+    // ldr    x0,      [sp, #8 * 29] // fp
+    ldr    x0,       [x1, 8 * 10]
+    ldr    x29,      [x1, 8 * 10]
+    bl debug
+
+
+	ldp    x0,  x1,  [sp, #16 * 0] 
+    ldp    x2,  x3,  [sp, #16 * 1]
+    ldp    x4,  x5,  [sp, #16 * 2]
+    ldp    x6,  x7,  [sp, #16 * 3]
+    ldp    x8,  x9,  [sp, #16 * 4]
+    ldp    x10, x11, [sp, #16 * 5]
+    ldp    x12, x13, [sp, #16 * 6]
+    ldp    x14, x15, [sp, #16 * 7]
+    ldp    x16, x17, [sp, #16 * 8]
+    ldp    x18, x19, [sp, #16 * 9]
+    ldp    x20, x21, [sp, #16 * 10]
+    ldp    x22, x23, [sp, #16 * 11]
+    ldp    x24, x25, [sp, #16 * 12]
+    ldp    x26, x27, [sp, #16 * 13]
+    // ldp    x28, x29, [sp, #16 * 14]
+    ldr    x28,      [sp, #16 * 14]
+    ldr    x30,      [sp, #16 * 15] 
+
+    add    sp,  sp,  #16 * 17
+    mov    x0, 0 // I am child
     eret
 
 

@@ -27,7 +27,7 @@ extern void ret_to_user();
 void task_manager_init(void(*func)())
 {
     TaskManager.queue_bitmap = 0;
-    TaskManager.zombie_bitmap = 0;
+    TaskManager.zombie_num = 0;
     TaskManager.task_num = 0;
 
     // idle task
@@ -36,7 +36,15 @@ void task_manager_init(void(*func)())
     set_current(&(init_task));
     
 }
-
+void stack_copy(const void *src, void *dst, int len)
+{
+    const char *s = src;
+    char *d = dst;
+    while (len--) {
+        *d-- = *s--;
+        //if (*s == 0) break;
+    }
+}
 
 int privilege_task_create(void(*func)(), int fork_flag)
 {
@@ -56,20 +64,22 @@ int privilege_task_create(void(*func)(), int fork_flag)
         new_task->trapframe = 0;
         
         // uart_hex((unsigned long) func);
-        new_task->cpu_context.pc = (unsigned long)ret_from_fork;
+        new_task->cpu_context.pc = (unsigned long) ret_from_fork;
         new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id];
     } else {
         struct task* current = get_current();
         new_task->parent_id = current->task_id;
-        uart_memcpy(&current->cpu_context, &new_task->cpu_context, 8*13);
-        uart_memcpy(&current->user_context, &new_task->user_context, 8*3);
-        uart_memcpy(&TaskManager.ustack_pool[current->task_id], &TaskManager.ustack_pool[task_id], 4096);
-        uart_memcpy(&TaskManager.kstack_pool[current->task_id], &TaskManager.kstack_pool[task_id], 16*17);
+        uart_memcpy(&current->cpu_context, &new_task->cpu_context, 8*10); // x19 - x28
+        // uart_memcpy(&current->user_context, &new_task->user_context, 8*3);
+        stack_copy(&TaskManager.ustack_pool[current->task_id], &TaskManager.ustack_pool[task_id], 2048);
+        stack_copy(&TaskManager.kstack_pool[current->task_id], &TaskManager.kstack_pool[task_id], 2048);
         
         uart_puts("kstack_pool: ");
-        uart_hex(&TaskManager.kstack_pool[task_id]);
+        uart_hex(TaskManager.kstack_pool[0][0x100]);
         uart_puts(" ,ustack_pool: ");
-        uart_hex(&TaskManager.ustack_pool[task_id]);
+        uart_hex(TaskManager.kstack_pool[1][0x100]);
+        uart_puts(" ,ustack_pool: ");
+        uart_hex(TaskManager.kstack_pool[2][0x100]);
         uart_puts("\n");
 
         struct trapframe_regs* kstack_regs = current->trapframe;
@@ -78,19 +88,35 @@ int privilege_task_create(void(*func)(), int fork_flag)
         // kstack_regs->regs[0] = 0;
         // kstack_regs->sp = &TaskManager.ustack_pool[task_id];
 
+        unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->sp_el0;
+        uart_puts("ustack_offset: ");
+        uart_hex(ustack_offset);
+        uart_puts("\n");
 
-        new_task->user_context.sp_el0 = &TaskManager.ustack_pool[task_id];
-        new_task->user_context.spsr_el1 = current->user_context.spsr_el1;
-        new_task->user_context.elr_el1 = current->user_context.elr_el1;
-        unsigned long trapframe_offset = (unsigned long) &TaskManager.kstack_pool[current->task_id] - current->trapframe;
+
+        new_task->user_context.sp_el0 = (unsigned long) &TaskManager.ustack_pool[task_id] - ustack_offset;
+        new_task->user_context.spsr_el1 = kstack_regs->spsr_el1;
+        new_task->user_context.elr_el1 = kstack_regs->elr_el1;
+
+        unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[current->task_id]) - current->trapframe;
         uart_puts("trapframe_offset: ");
         uart_hex(trapframe_offset);
         uart_puts("\n");
 
+
+        unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->regs[29];
+        uart_puts("fp_offset: ");
+        uart_hex(fp_offset);
+        uart_puts("\n");
+        uart_puts("fp: ");
+        uart_hex(current->cpu_context.fp);
+        uart_puts("\n");
         // unsigned long pc;
         // asm volatile ("mrs %0, elr_el1" : "=r"(pc));
-        new_task->cpu_context.x19 = (unsigned long) 0;
-        new_task->cpu_context.pc = (unsigned long) ret_to_user;
+        // new_task->cpu_context.x19 = (unsigned long) 0;
+        new_task->cpu_context.fp = (unsigned long) &TaskManager.ustack_pool[task_id] - fp_offset;
+        // new_task->cpu_context.fp = (unsigned long) current->cpu_context.fp;
+        new_task->cpu_context.pc = (unsigned long) ret_to_user;//current->cpu_context.pc;
         new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id] - trapframe_offset;
     }
 
@@ -126,7 +152,10 @@ void schedule()
             break;
         next_task = (next_task+1) % TaskManager.task_num;
     } 
-    next->counter = 0x20;
+    if (next->state == ZOMBIE) {
+        uart_puts("OH NO ZOMBIE\n");
+    }
+    next->counter = CNT;
     uart_puts("switch to next task: ");
     uart_hex(next_task);
     uart_puts("\n");
@@ -243,11 +272,12 @@ int exit(int status)
     // release most of its resource but keepping the kernel stack and task struct
     // current->cpu_context = {0,0,0,0,0,0,0,0,0,0,0,0,0};
     // current->user_context = {0,0,0};
-    uart_memset(current, 0, 8*16);
+    // uart_memset(current, 0, 8*16);
     // set its state to be zombie state and won’t be scheduled again.
     current->state = ZOMBIE;
     current->reschedule_flag = 1;
-    TaskManager.zombie_bitmap &= (1<<current->task_id);
+    // TaskManager.zombie_bitmap &= (1<<current->task_id);
+    TaskManager.zombie_num++;
     schedule();
     return 0;
 }
@@ -269,8 +299,7 @@ void hello()
 {
     char read_char;
     while(1) {
-        // read_char = uart_getc();
-        // call_sys_uart_write(&read_char);
+        read_char = call_sys_uart_read(); // it will wait but still can be interrupt
         call_sys_uart_write("hello world in foo\n");
 
         wait_cycles(1000000);
@@ -317,19 +346,29 @@ void final_test_foo()
 
 void final_test() 
 {
-    int cnt = 1;
+    int cnt = 2;
     if (call_sys_fork() == 0) { // child
         uart_puts("I am child\n");
         call_sys_fork();
         wait_cycles(100000);
         call_sys_fork();
-        while(cnt < 3) {
+        unsigned long task_id = call_sys_get_taskid();
+        uart_puts("#### Task id: ");
+        uart_hex(task_id);
+        uart_puts(", cnt: ");
+        uart_hex(cnt);
+        uart_puts(", &cnt: ");
+        uart_hex(&cnt);
+        uart_puts(" ####\n");
+        while(cnt < 4) {
             // printf("Task id: %d, cnt: %d\n", call_sys_get_taskid(), cnt);
             unsigned long task_id = call_sys_get_taskid();
             uart_puts("Task id: ");
             uart_hex(task_id);
             uart_puts(", cnt: ");
             uart_hex(cnt);
+            uart_puts(", &cnt: ");
+            uart_hex(&cnt);
             uart_puts("\n");
 
             wait_cycles(100000);
@@ -362,10 +401,10 @@ void final_user_test()
 void final_idle()
 {
     while(1){
-        if(TaskManager.task_num == 1) {
+        uart_puts("idle...\n");
+        if(TaskManager.task_num == TaskManager.zombie_num-1) {
             break;
         }
-        uart_puts("idle...\n");
         schedule();
         wait_cycles(1000000);
     }

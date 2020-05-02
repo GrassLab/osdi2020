@@ -11,7 +11,7 @@
 // struct runqueue {
 //     int head;
 //     int tail;
-//     unsigned long buf[TASK_CAPACITY];
+//     unsigned long runqueue_buff[64];
 // };
 
 // struct runqueue RunQueue;

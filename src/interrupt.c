@@ -6,8 +6,21 @@
 unsigned int CORE_TIMER_COUNT = 0;
 unsigned int LOCAL_TIMER_COUNT = 0;
 
-void debug(){
+void debug(unsigned long fp){
     uart_puts("debugggggg!!\n");
+    unsigned long elr, sp_el0, sp;
+    asm volatile ("mrs %0, elr_el1" : "=r"(elr));
+    asm volatile ("mrs %0, sp_el0" : "=r"(sp_el0));
+    asm volatile ("mov %0, sp" : "=r"(sp));
+    uart_puts("\n\t  ELR_EL1: 0x");
+    uart_hex(elr);
+    uart_puts("\n\t  SP_EL0: 0x");
+    uart_hex(sp_el0);
+    uart_puts("\n\t  SP: 0x");
+    uart_hex(sp);
+    uart_puts("\n\t  FP: 0x");
+    uart_hex(fp);
+    uart_puts("\n");
 }
 
 void disable_irq() 

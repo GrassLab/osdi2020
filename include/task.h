@@ -47,10 +47,11 @@ struct task {
 
 struct task_manager {
     struct task task_pool[64];
+    char kstack_pool_prevent[4096];
     char kstack_pool[64][4096];
     char ustack_pool[64][4096];
     unsigned long queue_bitmap;
-    unsigned long zombie_bitmap;
+    unsigned long zombie_num;
     unsigned int task_num;
     // struct task*(*current)();
 };
@@ -61,7 +62,7 @@ struct trapframe_regs {
 	unsigned long sp_el0; // sp
 	unsigned long elr_el1; // pc
 	unsigned long spsr_el1; // pstate
-};
+} __attribute__ ((aligned (8)));
 
 void task_manager_init(void(*func)());
 int privilege_task_create(void(*func)(), int fork_flag);
@@ -86,4 +87,4 @@ void final_user_test();
 void final_idle();
 
 #define N 3
-
+#define CNT 0x2000
