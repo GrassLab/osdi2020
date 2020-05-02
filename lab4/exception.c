@@ -48,6 +48,12 @@ void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
   case 4:
     ics();
     break;
+  case 5:
+    do_exec();
+    break;
+  case 6:
+    do_ucs();
+    break;
   }
 }
 

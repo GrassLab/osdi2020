@@ -1,45 +1,23 @@
+#include "schedule.h"
 #include "task.h"
 #include "timer.h"
 #include "uart.h"
-#define TASK_IDLE 0
-#define TASK_RUNNING 1
-#define THREAD_SIZE 4096
 
-typedef struct cpu_context_t {
-  unsigned long x19;
-  unsigned long x20;
-  unsigned long x21;
-  unsigned long x22;
-  unsigned long x23;
-  unsigned long x24;
-  unsigned long x25;
-  unsigned long x26;
-  unsigned long x27;
-  unsigned long x28;
-  unsigned long fp;
-  unsigned long sp;
-  unsigned long pc;
-} cpu_context_t;
-
-typedef struct task_t {
-  cpu_context_t cpu_context;
-  long state;
-  long counter;
-  long priority;
-  long preempt_count;
-} task_t;
-
+unsigned long execfun;
 static task_t init_task = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                            0, /* state etc */
                            0,
                            1,
+                           0,
+                           0,
                            0};
 
 task_t *task_pool[64] = {
     &(init_task),
 };
 
-void schedule();
+user_task_context user_pool[64];
+
 void init() {
   while (1) {
     schedule();
@@ -48,8 +26,9 @@ void init() {
 
 static int task_count = 0;
 static unsigned short kstack_pool[64][THREAD_SIZE] = {0};
+static unsigned short ustack_pool[64][THREAD_SIZE] = {0};
 
-int privilege_task_create(unsigned long func) {
+int privilege_task_create(unsigned long func, int usr) {
   int task_id = task_count;
   task_t *p = (task_t *)&kstack_pool[task_id][0];
   task_pool[task_id] = p;
@@ -61,7 +40,14 @@ int privilege_task_create(unsigned long func) {
   p->counter = 2;
   p->preempt_count = 0; // disable preemtion until schedule_tail
 
-  p->cpu_context.x19 = func;
+  if (usr) {
+    p->is_usr = 1;
+    user_pool[task_id].spsr = func;
+    p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
+  } else {
+    p->cpu_context.x19 = func;
+  }
+
   p->cpu_context.pc = (unsigned long)ret_from_fork;
   p->cpu_context.sp = (unsigned long)p + THREAD_SIZE;
 
@@ -70,7 +56,7 @@ int privilege_task_create(unsigned long func) {
 }
 
 void task_init() {
-  int task_id = privilege_task_create((unsigned long)init);
+  int task_id = privilege_task_create((unsigned long)init, 0);
   task_pool[task_id]->state = TASK_IDLE;
   set_current(task_id);
 }
@@ -78,6 +64,10 @@ void task_init() {
 void context_switch(int task_id) {
   int prev_id = get_current();
   set_current(task_id);
+  task_t *now = task_pool[task_id];
+  if (now->is_usr) {
+    now->cpu_context.pc = (unsigned long)&jmp_to_usr;
+  }
   switch_to(task_pool[prev_id], task_pool[task_id]);
 }
 
@@ -106,13 +96,31 @@ void timer_tick() {
   }
   printf("switch\n");
   current->counter = 2;
-  schedule();
+  current->switchflag = 1;
+  if (current->is_usr) {
+    jmp_to_usr();
+  }
+}
+
+void jmp_to_usr() {
+  int now = get_current();
+  task_t *current = task_pool[now];
+  if (current->switchflag == 1) {
+    printf("user context switch\n");
+    current->switchflag = 0;
+    schedule();
+  }
+  printf("runfun = %x\n", user_pool[now].spsr);
+  asm volatile("msr sp_el0, %0" ::"r"(ustack_pool[now]) :);
+  asm volatile("msr spsr_el1, %0" ::"r"(0) :);
+  asm volatile("msr elr_el1, %0" ::"r"(user_pool[now].spsr) :);
+  asm volatile("eret");
 }
 
 void t1() {
   while (1) {
     uart_puts("1...\n");
-    wait_cycles(1000000);
+    wait_cycles(10000);
     schedule();
   }
 }
@@ -120,36 +128,86 @@ void t1() {
 void t2() {
   while (1) {
     uart_puts("2...\n");
-    wait_cycles(1000000);
+    wait_cycles(10000);
     schedule();
   }
 }
 void i1() {
   while (1) {
     uart_puts("1...\n");
-    wait_cycles(1000000000);
+    wait_cycles(1000000);
+    task_t *current = task_pool[get_current()];
+    if (current->switchflag == 1) {
+      current->switchflag = 0;
+      schedule();
+    }
   }
 }
 
 void i2() {
   while (1) {
     uart_puts("2...\n");
-    wait_cycles(1000000000);
+    wait_cycles(1000000);
+    task_t *current = task_pool[get_current()];
+    if (current->switchflag == 1) {
+      current->switchflag = 0;
+      schedule();
+    }
   }
 }
 
 void scs() {
   task_init();
-  privilege_task_create((unsigned long)&t1);
-  privilege_task_create((unsigned long)&t2);
+  privilege_task_create((unsigned long)&t1, 0);
+  privilege_task_create((unsigned long)&t2, 0);
   schedule();
 }
 
 void ics() {
   task_init();
-  privilege_task_create((unsigned long)&i1);
-  privilege_task_create((unsigned long)&i2);
+  privilege_task_create((unsigned long)&i1, 0);
+  privilege_task_create((unsigned long)&i2, 0);
   asm volatile("msr DAIFClr, 0xf;");
   core_timer_enable();
   schedule();
+}
+
+void u1() {
+  while (1) {
+    uart_puts("u1...\n");
+    wait_cycles(10000000);
+  }
+}
+
+void u2() {
+  while (1) {
+    uart_puts("u2...\n");
+    wait_cycles(10000000);
+  }
+}
+
+void do_exec() {
+  task_init();
+  privilege_task_create(execfun, 1);
+  schedule();
+};
+
+void exec(unsigned long fun) {
+  execfun = fun;
+  asm volatile("mov x0, #5");
+  asm volatile("svc #0");
+}
+
+void do_ucs() {
+  task_init();
+  privilege_task_create((unsigned long)&u1, 1);
+  privilege_task_create((unsigned long)&u2, 1);
+  asm volatile("msr DAIFClr, 0xf;");
+  core_timer_enable();
+  schedule();
+}
+
+void ucs() {
+  asm volatile("mov x0, #6");
+  asm volatile("svc #0");
 }

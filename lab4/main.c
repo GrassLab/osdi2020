@@ -2,9 +2,17 @@
 #include "irq.h"
 #include "lfb.h"
 #include "mbox.h"
+#include "schedule.h"
 #include "string.h"
 #include "timer.h"
 #include "uart.h"
+
+void testfun() {
+  while (1) {
+    uart_puts("exec...\n");
+    wait_cycles(100000);
+  }
+}
 
 char *welcome = " \
 ░░░░░░░░░░░░░░░░▄░█▄░█▄▄▄░░\n \
@@ -50,6 +58,10 @@ void compair(char *buf) {
   } else if (strcpy(buf, "ics")) {
     asm volatile("mov x0, #4\n"
                  "svc #0\n");
+  } else if (strcpy(buf, "doexec")) {
+    exec((unsigned long)&testfun);
+  } else if (strcpy(buf, "ucs")) {
+    ucs();
   } else {
     printf("unknow command %s\n", buf);
   }
