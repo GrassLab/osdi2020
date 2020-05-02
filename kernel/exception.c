@@ -96,11 +96,11 @@ static uint64_t core_timer_jiffie = 0;
 static uint64_t system_timer_jiffie = 0;
 
 void core_timer_handler(void) {
-  printf("Core timer interrupt, jiffies %u" EOL, ++core_timer_jiffie);
+//  printf("Core timer interrupt, jiffies %u" EOL, ++core_timer_jiffie);
 
   uint64_t sp;
   asm("mov %0, sp" : "=r"(sp));
-  printf("Task %u: SP_EL1 is %#x\n", do_get_taskid(), sp);
+//  printf("Task %u: SP_EL1 is %#x\n", do_get_taskid(), sp);
 
   get_current_task()->timeslice -= 1;
 

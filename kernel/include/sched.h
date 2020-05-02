@@ -64,9 +64,4 @@ void task_debut_hook(void);
 void preempt_enable(void);
 void preempt_disable(void);
 
-void idle(void);
-void foo(void);
-void user_test(void);
-void test(void);
-
 #endif // SCHED_H_

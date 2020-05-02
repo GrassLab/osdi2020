@@ -3,6 +3,7 @@
 #include "sched.h"
 #include "shell.h"
 #include "string.h"
+#include "syscall.h"
 
 /*
  * Create the permanently exist idle task.
@@ -40,7 +41,6 @@ void privilege_task_create(void(*func)(void)) {
   task_pool[id].context.x19 = (uint64_t)func;
   task_pool[id].context.lr = (uint64_t)task_debut_hook;
   /* "+1" because stack grows toward lower address. */
-  //task_pool[id].context.fp = (uint64_t)kstack_pool[id + 1];
   task_pool[id].context.sp = (uint64_t)kstack_pool[id + 1];
   enqueue(&runqueue, &task_pool[id]);
 }
@@ -48,9 +48,6 @@ void privilege_task_create(void(*func)(void)) {
 void context_switch(struct task *next) {
   struct task *prev = get_current_task();
   context_switch_helper(prev, next);
-  uint64_t sp;
-  asm("mov %0, sp" : "=r"(sp));
-  printf("Task %u: SP_EL1: %#x, After context switch\n", do_get_taskid(), sp);
 }
 
 void schedule(void) {
