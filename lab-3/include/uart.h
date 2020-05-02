@@ -12,12 +12,15 @@
 #define UART0_CR        MMIO_BASE+0x00201030// ((volatile unsigned int*)(MMIO_BASE+0x00201030))
 #define UART0_IMSC      MMIO_BASE+0x00201038// ((volatile unsigned int*)(MMIO_BASE+0x00201038))
 #define UART0_ICR       MMIO_BASE+0x00201044// ((volatile unsigned int*)(MMIO_BASE+0x00201044))
+#define UART0_MIS       MMIO_BASE+0x00201040// ((volatile unsigned int*)(MMIO_BASE+0x00201044))
 #define IRQ_ENABLE_REGISTER_2       MMIO_BASE+0xb214
 
 void uart_init();
 void uart_send(unsigned int c);
 char uart_recv_char();
 char uart_getc();
+int uart_buffer_empty();
+void uart_save(char c);
 void uart_get_string(char *str);
 void uart_puts(char *s);
 void uart_print(char *s);

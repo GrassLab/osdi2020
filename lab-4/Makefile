@@ -20,7 +20,7 @@ src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(TARGET): $(ASMS) $(OBJS)
-	$(CC) $(CFLAGS) $(ASMS) $(OBJS) -T linker.ld -o kernel8.elf
+	$(CC) -I include -nostdlib -nostartfiles $(ASMS) $(OBJS) -T linker.ld -o kernel8.elf
 	$(OBJCOPY) -O binary kernel8.elf $@
 
 clean:

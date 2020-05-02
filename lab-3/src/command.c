@@ -41,6 +41,9 @@ void interative()
     int commandIndex = 0;
     int isbooting = 1;
     while (1) {
+        // if (uart_buffer_empty()) {
+        //     continue;
+        // }
         char c = uart_getc();
         if (isbooting) {
             isbooting = 0;
@@ -75,12 +78,7 @@ void command_reboot()
 
 void command_timestamp()
 {
-    char str[1024] = {0};
-    doubleToStr(getTimestamp(), str);
-    uart_puts("[");
-    uart_puts(str);
-    uart_puts("]");
-    uart_puts("\n");
+    getTimestamp();
 }
 
 void command_hardware_info()

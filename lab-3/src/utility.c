@@ -61,14 +61,24 @@ void reboot(int tick)
     *PM_RSTC = PM_PASSWORD | 0x20;
 }
 
-double getTimestamp()
+void getTimestamp()
+{
+    asm volatile("svc #0x105");
+    return 0;
+}
+
+void __getTimestamp()
 {
     long long int cntfrq;
     long long int cntptc;
     asm volatile ("mrs %0, cntfrq_el0" : "=r" (cntfrq));
     asm volatile ("mrs %0, cntpct_el0" : "=r" (cntptc));
-    return ((double)cntptc / cntfrq);
+    double a = ((double)cntptc / cntfrq);
+    char str[1024] = {0};
+    doubleToStr(a, str);
 }
+
+
 
 void memset(void* mem, int value, int size) {
     unsigned char *ptr = (unsigned char*) mem;

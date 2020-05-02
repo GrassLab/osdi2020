@@ -1,31 +1,28 @@
 #include "task.h"
+#include "time.h"
 #include "uart.h"
 
-int taskCount = 0;
+TaskManager taskManager;
 Task tasks[64];
+
 extern Task* get_current();
+extern void set_current();
 extern void switch_to(struct task* prev, struct task* next);
-char kstack_pool[64][4096];
+extern void switch_exit();
 
-void example_task_one()
-{
-    int count = 10000;
-    while(count-- > 0);
-    uart_puts("1....\n");
-    context_switch(&tasks[1]);
-}
-
-void example_task_two()
-{
-    int count = 10000;
-    while(count-- > 0);
-    uart_puts("2....\n");
-    context_switch(&tasks[0]);
+void taskManagerInit() {
+    taskManager.taskCount = 0;
 }
 
 void privilege_task_create(void(*func)())
 {
-
+    unsigned int taskId = taskManager.taskCount;
+    Task* task = &taskManager.taskPool[taskId]; 
+    task->context.x19 = (unsigned long) func;
+    task->context.pc = (unsigned long) switch_exit;
+    task->context.sp = (unsigned long) &taskManager.kstackPool[taskId];
+    task->id = taskId;
+    taskManager.taskCount++;
 }
 
 void context_switch(Task* next)
@@ -36,5 +33,26 @@ void context_switch(Task* next)
 
 void schedule() 
 {
+    for(int i = 0; i < taskManager.taskCount; ++i) {
+        struct task* next = &taskManager.taskPool[i];
+        context_switch(next);
+    }
+}
 
+void foo(){
+    while(1) {
+        Task *task = get_current();
+        uart_puts("Task id: ");
+        uart_print_int(task->id);
+        uart_puts("\n");
+        wait(1000000);
+        schedule();
+    }
+}
+
+void idle(){
+    while(1) {
+        schedule();
+        wait(1000000);
+    }
 }

@@ -12,7 +12,7 @@ _start:
 1:  wfe
     b       1b
 
-2:  b el2_setting
+2:  // b el2_setting
     // cpu id == 0
     // El2 to El1
     // set stack before our code
@@ -30,7 +30,8 @@ _start:
     ldr     x2, =exception_table_el2
     msr     vbar_el2, x2
     // jump to el1_start when call eret
-    adr	    x0, el1_to_el0		
+    // adr	    x0, el1_to_el0		
+    adr	    x0, main_start		
 	msr	    elr_el2, x0
     eret
 

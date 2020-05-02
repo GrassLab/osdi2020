@@ -1,4 +1,4 @@
-#include "timer.h"
+#include "time.h"
 #include "utility.h"
 #include "uart.h"
 
@@ -67,4 +67,9 @@ void core_timer_handler()
     uart_puts(" times\n");
     asm volatile("mov x0, 0xfffffff");
     asm volatile("msr cntp_tval_el0, x0");
+}
+
+void wait(int clock)
+{
+    while(clock--) asm volatile("nop");
 }

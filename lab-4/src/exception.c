@@ -1,5 +1,5 @@
 #include "irq.h"
-#include "timer.h"
+#include "time.h"
 #include "utility.h"
 
 void exception_handler()

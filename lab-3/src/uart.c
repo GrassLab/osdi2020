@@ -3,6 +3,10 @@
 #include "mailbox.h"
 #include "utility.h"
 
+char uart_buffer[2048];
+int uart_buffer_front = 0;
+int uart_buffer_end = 0;
+
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
@@ -43,6 +47,7 @@ void uart_init()
     setRegister(UART0_CR, 0x301);
     // setRegister(UART0_IMSC, 3 << 4);
     // setRegister(IRQ_ENABLE_REGISTER_2, 1 << 25);
+    memset(uart_buffer, 0 , sizeof(uart_buffer));
 }
 
 /**
@@ -76,6 +81,20 @@ char uart_getc() {
     r = (char)(getRegister(UART0_DR));
     /* convert carrige return to newline */
     return r == '\r' ? '\n' : r;
+    if (!uart_buffer_empty()) {
+        char c = uart_buffer[uart_buffer_end];
+        uart_buffer_end = (uart_buffer_end+1) % 2048;
+        return c;
+    }
+}
+
+int uart_buffer_empty() {
+    return uart_buffer_front == uart_buffer_end;
+}
+
+void uart_save(char c) {
+    uart_buffer[uart_buffer_front] = (c == '\r') ? '\n' : c;
+    uart_buffer_front = (uart_buffer_front+1) % 2048;
 }
 
 void uart_get_string(char *str) {
