@@ -15,9 +15,11 @@ int main()
     task_manager_init();
 
     for(int i = 0; i < 3; ++i) {
-        privilege_task_create(user_task_test);
+        privilege_task_create(user_test);
     }
-
+    // for(int i = 0; i < 3; ++i) {
+    //     exec(foo);
+    // }
     idle();
     interative();
 }

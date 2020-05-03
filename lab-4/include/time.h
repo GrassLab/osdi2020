@@ -12,12 +12,6 @@
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
 #define CORE0_EXPIRE_PERIOD 0xfffffff
 
-#define SYSCALL_ENABLE_IRQ          0x100
-#define SYSCALL_DISABLE_IRQ         0x101
-#define SYSCALL_LOCAL_TIMER_INIT    0x102
-#define SYSCALL_SYS_TIMER_INIT      0x103
-#define SYSCALL_CORE_TIMER_INIT     0x104
-
 void local_timer_init();
 void __local_timer_init();
 void local_timer_handler();

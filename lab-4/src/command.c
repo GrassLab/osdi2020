@@ -2,6 +2,7 @@
 #include "string.h"
 #include "uart.h"
 #include "utility.h"
+#include "syscall.h"
 #include "mailbox.h"
 #include "bootloader.h"
 #include "framebuffer.h"
@@ -78,13 +79,7 @@ void command_reboot()
 
 void command_timestamp()
 {
-    // char str[1024] = {0};
-    getTimestamp();
-    // doubleToStr(getTimestamp(), str);
-    // uart_puts("[");
-    // uart_puts(str);
-    // uart_puts("]");
-    // uart_puts("\n");
+    get_timestamp();
 }
 
 void command_hardware_info()

@@ -3,6 +3,31 @@
 #include "syscall.h"
 #include "utility.h"
 
+static void el0_svc_handler(unsigned long sp)
+{
+    unsigned long *spp = (unsigned long *)sp;
+    unsigned long x8 = *(spp+8);
+    unsigned long x0 = *(spp);
+    unsigned long syscallReturnValue = 0;
+
+    if (x8 == SYSCALL_GET_TASK_ID) {
+        syscallReturnValue = __get_taskid();
+    } else if (x8 == SYSCALL_GET_TIMESTAMP) {
+        __get_timestamp();
+    } else if (x8 == SYSCALL_ENABLE_IRQ) {
+        __enable_irq();
+    } else if (x8 == SYSCALL_CORE_TIMER_INIT) {
+        __core_timer_init();
+    } else if (x8 == SYSCALL_LOCAL_TIMER_INIT) {
+        __local_timer_init();
+    } else if (x8 == SYSCALL_EXEC) {
+        do_exec(x0);
+    } else if (x8 == SYSCALL_EXIT) {
+        __exit(x0);
+    }
+    *(spp) = syscallReturnValue;
+}
+
 void exception_handler(unsigned long sp)
 {
     unsigned int el_level;
@@ -24,25 +49,10 @@ void exception_handler(unsigned long sp)
     iss = esr & (0xffffff);
     retaddr = elr;
 
-    if (iss == SYSCALL_ENABLE_IRQ) {
-        __enable_irq();
-    } else if (iss == SYSCALL_CORE_TIMER_INIT) {
-        __core_timer_init();
-    } else if (iss == SYSCALL_LOCAL_TIMER_INIT) {
-        __local_timer_init();
-    } else if (iss == GET_TIMESTAMP) {
-        __getTimestamp();
+    // SVC
+    if ((esr>>26) == 0b010101) {
+        el0_svc_handler(sp);
     }
-
-    unsigned long *spp = (unsigned long *)sp;
-    unsigned long x8 = *(spp+8);
-    unsigned long syscallReturnValue = 0;
-
-    if (x8 == SYSCALL_GET_TASK_ID) {
-        syscallReturnValue = __get_taskid();
-    }
-
-    *(spp) = syscallReturnValue;
 
     // uart_puts("[exp] Exception Level: 0x");
     // uart_print_hex(el_level);

@@ -61,35 +61,20 @@ void reboot(int tick)
     *PM_RSTC = PM_PASSWORD | 0x20;
 }
 
-void getTimestamp()
-{
-    asm volatile("svc #0x105");
-    return 0;
-}
-
-void __getTimestamp()
-{
-    long long int cntfrq;
-    long long int cntptc;
-    asm volatile ("mrs %0, cntfrq_el0" : "=r" (cntfrq));
-    asm volatile ("mrs %0, cntpct_el0" : "=r" (cntptc));
-    cntptc *= 100000;
-    int intPart = (cntptc / cntfrq) / 100000;
-    int floatPart = (cntptc / cntfrq) % 100000;
-    uart_puts("[");
-    uart_print_int(intPart);
-    uart_puts(".");
-    uart_print_int(floatPart);
-    uart_puts("]");
-    uart_puts("\n");
-}
-
-
-
 void memset(void* mem, int value, int size) {
     unsigned char *ptr = (unsigned char*) mem;
     while (size-- > 0)
         *ptr++ = value;
+}
+
+void memcpy(void *src, void *dst, int size) {
+    char *s = src;
+    char *d = dst;
+    while(size--) {
+        (*d) = (*s);
+        d++;
+        s++;
+    }
 }
 
 int pow(int num, int p)

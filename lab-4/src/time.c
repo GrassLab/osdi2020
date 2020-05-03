@@ -2,6 +2,7 @@
 #include "task.h"
 #include "utility.h"
 #include "uart.h"
+#include "syscall.h"
 
 extern TaskManager taskManager;
 int local_timer_counter = 0;
@@ -9,7 +10,8 @@ int core_timer_counter = 0;
 
 void local_timer_init()
 {
-    asm volatile("svc #0x102");
+    asm volatile("mov x8, %0" : :"r"(SYSCALL_LOCAL_TIMER_INIT));
+    asm volatile("svc #0");
 }
 
 void __local_timer_init()
@@ -29,7 +31,8 @@ void local_timer_handler()
 
 void sys_timer_init()
 {
-    asm volatile("svc #0x103");
+    asm volatile("mov x8, %0" : :"r"(SYSCALL_SYS_TIMER_INIT));
+    asm volatile("svc #0");
 }
 
 void __sys_timer_init()
@@ -48,7 +51,8 @@ void sys_timer_handler()
 
 void core_timer_init()
 {
-    asm volatile("svc #0x104");
+    asm volatile("mov x8, %0" : :"r"(SYSCALL_CORE_TIMER_INIT));
+    asm volatile("svc #0");
 }
 
 void __core_timer_init()

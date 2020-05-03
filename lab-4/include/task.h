@@ -3,6 +3,7 @@
 
 #define IN_KERNEL_MODE 0
 #define IN_USER_MODE 1
+#define ZOMBIE 2
 
 typedef struct cpuContext {
     unsigned long x19;
@@ -32,8 +33,8 @@ typedef struct task {
     int id;
     int rescheduleFlag;
     int timeCount;
-    int state; // IN_KERNEL_MODE || IN_USER_MODE
-    // unsigned long regs[31];
+    int state; // IN_KERNEL_MODE || IN_USER_MODE || ZOMBIE
+    int parentId;
 } Task;
 
 typedef struct taskManager {
@@ -49,6 +50,13 @@ void task_manager_init();
 void privilege_task_create(void(*func)());
 void context_switch(Task* next);
 void schedule();
-void user_task_test();
+void do_exec(void(*func)());
+void exit(int status);
+int fork();
+
+// Lab4 test case
+void user_test();
+void test();
+void idle();
 void foo();
 #endif

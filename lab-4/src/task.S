@@ -35,3 +35,7 @@ set_current:
 switch_exit:
     mov    x0, x20
     blr    x19
+
+.globl fork_child_exit
+fork_child_exit:
+    

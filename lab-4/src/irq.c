@@ -3,15 +3,18 @@
 #include "time.h"
 #include "uart.h"
 #include "task.h"
+#include "syscall.h"
 
 void enable_irq()
 {
-    asm volatile("svc #0x100");
+    asm volatile("mov x8, %0" : :"r"(SYSCALL_ENABLE_IRQ));
+    asm volatile("svc #0");
 }
 
 void disable_irq()
 {
-    asm volatile("svc #0x101");
+    asm volatile("mov x8, %0" : :"r"(SYSCALL_DISABLE_IRQ));
+    asm volatile("svc #0");
 }
 
 void __enable_irq()

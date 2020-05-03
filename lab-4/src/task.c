@@ -17,15 +17,19 @@ void task_manager_init() {
 
 void privilege_task_create(void(*func)())
 {
-    unsigned int taskId = taskManager.taskCount;
-    Task* task = &taskManager.taskPool[taskId]; 
-    task->cpuContext.x19 = (unsigned long) func;
-    task->cpuContext.pc = (unsigned long) switch_exit;
+    if (func == 0) { // fork
+        return;
+    }
+
+    int taskId = taskManager.taskCount;
+    Task* task = &taskManager.taskPool[taskId];
+    task->cpuContext.pc = (unsigned long) func;
     task->cpuContext.sp = (unsigned long) &taskManager.kstackPool[taskId];
     task->userContext.sp_el0 = &taskManager.ustackPool[taskId];
     task->userContext.spsr_el1 = 0;
     task->userContext.elr_el1 = 0;
     task->id = taskId;
+    task->parentId = 0;
     task->rescheduleFlag = 0;
     task->state = IN_KERNEL_MODE;
     taskManager.runningTaskId = 0;
@@ -41,17 +45,45 @@ void context_switch(Task* next)
 
 void schedule() 
 {
-    for(int i = 0; i < taskManager.taskCount; ++i) {
-        Task *next = &taskManager.taskPool[i];
-        taskManager.runningTaskId = next->id;
-        context_switch(next);
+    Task *current = get_current();
+    int nextTaskId = (current->id + 1) % taskManager.taskCount;
+    while(nextTaskId != current->id) {
+        if (taskManager.taskPool[nextTaskId].state != ZOMBIE) {
+            taskManager.runningTaskId = nextTaskId;
+            context_switch(&taskManager.taskPool[nextTaskId]);
+            return;
+        }
+        nextTaskId = (nextTaskId + 1) % taskManager.taskCount;
     }
+}
+
+void __exit(int status)
+{
+    Task *task = get_current();
+    task->state = ZOMBIE;
+    schedule();
+}
+
+int fork()
+{
+    int childTaskId = taskManager.taskCount;
+    Task *parent = get_current();
+    Task *child = &taskManager.taskPool[childTaskId];
+    // uart_puts("parent: ");
+    // uart_print_int(parent->id);
+    // uart_puts("\n");
+    child->parentId = 0;
+    memcpy(taskManager.kstackPool[parent->id], taskManager.kstackPool[childTaskId], 4096);
+    memcpy(taskManager.ustackPool[parent->id], taskManager.kstackPool[childTaskId], 4096);
+    // child->userContext.sp_el0 = ((unsigned long) &taskManager.ustackPool[parent->id]) - ;
 }
 
 void foo()
 {
     while(1) {
-        get_taskid();
+        uart_puts("TaskId: ");
+        uart_print_int(get_taskid());
+        uart_puts("\n");
         wait(100000000);
     }
 }
@@ -64,7 +96,12 @@ void idle()
     }
 }
 
-void user_task_test() {
+void test() {
+    exec(foo);
+    exit(0);
+}
+
+void user_test() {
     do_exec(foo);
 }
 
