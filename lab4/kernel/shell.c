@@ -24,6 +24,7 @@ void help() {
             "  help       Display this information.\r\n"
             "  hello      Display \"Hello World!\".\r\n"
             "  timestamp  Display current timestamp.\r\n"
+            "  exec       Show the exec for example.\r\n"
             "  reboot     Reboot.\r\n"
             );
 }
@@ -158,6 +159,17 @@ void get_arm_memory() {
   }
 }
 
+
+void program1() {
+  call_sys_write("this program is replace the shell and exit\r\n");
+  call_sys_exit();
+}
+
+void exec_example() {
+  call_sys_exec(program1);
+}
+
+
 void shell() {
   get_board_revision();
   get_arm_memory();
@@ -172,6 +184,7 @@ void shell() {
     SWITCH_CONTINUE(buf, "hello",     hello);
     SWITCH_CONTINUE(buf, "timestamp", call_sys_timestamp);
     SWITCH_CONTINUE(buf, "show",      lfb_showpicture);
+    SWITCH_CONTINUE(buf, "exec",      exec_example);
     SWITCH_CONTINUE(buf, "reboot",    reset);
 
     uart_println("[ERR] command `%s` not found", buf);

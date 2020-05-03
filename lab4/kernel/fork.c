@@ -57,6 +57,18 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     p->cpu_context.x20 = arg;
     p->cpu_context.sp = (unsigned long)childregs;
 
+    /**
+     *  +---------------+ stack = base
+     *  |  task_struct  |
+     *  + ------------- +
+     *  |               |
+     *  |               |
+     *  |               |
+     *  | ^^^^^^^^^^^^  |
+     *  |     stack     |
+     *  +---------------+ sp    = stack + PageSize(4KB)
+     */
+
   } else if (clone_flags & PF_FORK) {
 
     /* copty stack to the new stack */
@@ -95,17 +107,24 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     struct pt_regs *cur_regs = task_pt_regs(current);
     *childregs = *cur_regs;
     childregs->regs[0] = 0;
+
     /**
-     *  +---------------+ stack = base
-     *  |  task_struct  |
-     *  + ------------- +
-     *  |               |
-     *  |               |
-     *  |               |
-     *  | ^^^^^^^^^^^^  |
-     *  |     stack     |
-     *  +---------------+ sp    = stack + PageSize(4KB)
+     *                +---stack-----------------------------------------+
+     *                |                                                 |
+     *                |            copied from fn                       |
+     *  +-------------|-+        +---------------+                      |
+     *  |  task_struct  |        |  task_struct  |---cup_context.sp ----|---------------+
+     *  + ------------- +        + ------------- +                      |               |
+     *  |               |        |               |                      |               |
+     *  |               |        |               |   +-- reg.0 = 0      v               |
+     *  |               |        |               |   |__ sp -------+    +-------+ stack |
+     *  + ------------- + assign + ------------- +   |             |    |  4KB  |       |
+     *  |   cur_regs    |  =>    |   childregs   | --+             +--> +-------+       |
+     *  +---------------+        +---------------+ <------+                             |
+     *                                                    |                             |
+     *                                                    +-----------------------------+
      */
+
     childregs->sp = stack + PAGE_SIZE;
     p->stack = stack;
     p->cpu_context.sp = (unsigned long)childregs;
@@ -125,6 +144,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
   uart_println("[Task] Copy a process @ %x", p);
   uart_println("[Task] The task with");
   uart_println("[Task]   pid:      %d", p->pid);
+  uart_println("[Task]   flags:    %d", p->flags);
   uart_println("[Task]   priority: %d", p->priority);
   uart_println("[Task]   counter:  %d", p->counter);
   uart_println("[Task]   stack:    %x", p->stack);
@@ -164,15 +184,30 @@ struct pt_regs *task_pt_regs(struct task_struct *tsk) {
   return (struct pt_regs *)p;
 }
 
-void do_exec(void (*func)) {
-  struct task_struct *current = get_current();
+int do_exec(void (*func)) {
+  /* struct task_struct *current = get_current(); */
+
 #ifdef DEBUG
   uart_println("do exec in pid: %d w/ process @ %x", current->pid, func);
 #endif
+
+  /* the process is not only the priviledge task */
+  if (current->flags != PF_KTHREAD) {
+#ifdef DEBUG
+    uart_println("[EXEC] replace the current user stack to newr one");
+#endif
+    struct pt_regs *regs = task_pt_regs(current);
+    memzero((unsigned long)regs, sizeof(*regs));
+    regs->pc = (unsigned long)func;
+    regs->sp = current->stack + PAGE_SIZE;
+
+    return 0;
+  }
   int err = move_to_user_mode((unsigned long)func);
   if (err < 0) {
     uart_println("Error while moving process to user mode");
   }
+  return err;
 }
 
 

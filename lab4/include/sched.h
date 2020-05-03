@@ -57,7 +57,7 @@ extern unsigned long nr_tasks;
 
 /* sched.S */
 void cpu_switch_to(struct task_struct *, struct task_struct *);
-struct task_struct *get_current();
+/* struct task_struct *get_current(); */
 void delay(unsigned long);
 
 #define INIT_TASK                                                       \

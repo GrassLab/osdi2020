@@ -43,21 +43,21 @@ void init_process() {
   /* tty */
   int pid = call_sys_fork();
   if (pid == 0) {
-    unsigned long stack = call_sys_malloc();
-    if (stack < 0) {
-      uart_println("Error while allocating stack for shell");
-    } else {
-      int err = call_sys_clone((unsigned long)&shell, 0, stack);
-      if (err < 0) {
-        uart_println("Error while clonning shell");
-      }
-    }
+    call_sys_exec(shell);
     call_sys_exit();
   }
 
 
-
-
+  /* /\* exec the shell process *\/ */
+  /* unsigned long stack = call_sys_malloc(); */
+  /* if (stack < 0) { */
+  /*   uart_println("Error while allocating stack for shell"); */
+  /* } else { */
+  /*   int err = call_sys_clone((unsigned long)&shell, 0, stack); */
+  /*   if (err < 0) { */
+  /*     uart_println("Error while clonning shell"); */
+  /*   } */
+  /* } */
 
   /* fork the first process (tty)
   /* TODO */
@@ -136,7 +136,9 @@ void init_process() {
   /*   return; */
   /* } */
 
-  while (1) { delay(1000000); }
+  while (1) {
+    delay(1000000);
+  }
   call_sys_exit();
 }
 

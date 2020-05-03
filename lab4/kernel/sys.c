@@ -3,6 +3,8 @@
 #include "mm.h"
 #include "sched.h"
 
+int sys_exec(void(*func)) { return do_exec(func); }
+
 /* timestamp: display the "system" timer */
 void sys_timestamp() {
   unsigned long long freq, cnt;
@@ -34,9 +36,11 @@ unsigned long sys_malloc() {
 }
 
 void sys_exit() {
+#ifdef DEBUG
   uart_println("task %d exit the process", sys_getid());
+#endif
   exit_process();
 }
 
-void *const sys_call_table[] = {sys_write, sys_malloc, sys_clone,    sys_exit,
-                                sys_fork,  sys_getid,  sys_timestamp};
+void *const sys_call_table[] = {sys_write, sys_malloc, sys_clone,     sys_exit,
+                                sys_fork,  sys_getid,  sys_timestamp, sys_exec};
