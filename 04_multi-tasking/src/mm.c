@@ -1,6 +1,6 @@
 #include "mm.h"
 
-unsigned char page_map[NUM_PAGES] = {1,};
+unsigned char page_map[NUM_PAGES] = {0,};
 
 /* simple allocate a continuous memory */
 unsigned long allocate_a_page() {

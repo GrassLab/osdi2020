@@ -7,7 +7,8 @@ void foo() {
     while(1) {
         uart_puts("Task ID: ");
         uart_send_ulong(current -> task_id);
-        // uart_send_ulong(* LOW_MEMORY + PAGE * task
+        uart_puts("; task_struct ptr: ");
+        uart_send_hex(current);
         uart_puts("; sp: ");
         uart_send_hex(current -> cpu_context.sp);
         uart_send('\n');
