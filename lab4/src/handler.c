@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "timer.h"
 #include "queue.h"
+#include "sched.h"
 
 #define CORE0_IRQ_SOURCE              ((volatile unsigned int*)0x40000060)
 #define IRQ_BASIC_PENDING             ((volatile unsigned int*)(MMIO_BASE+0x0000b200))
@@ -28,10 +29,14 @@ void exception_handler(unsigned long esr, unsigned long elr)
 
 void irq_handler()
 {
+    static core_cnt = 0;
     // uart_puts("irq\n");
     if (*CORE0_IRQ_SOURCE & (1 << 1)){
-        uart_puts("core timer interrupt\n");
+        ++core_cnt; 
+        uart_puts("core timer interrupt ");
+        uart_dec(core_cnt); uart_puts("\n");
         set_core_timer_period();
+        --current->counter;
     }
     else if (*CORE0_IRQ_SOURCE & (1 << 11)){
         uart_puts("local timer interrupt\n");

@@ -1,7 +1,7 @@
 #define MAX_TASK_NUM 64
 #define STACK_SIZE 4096
 #define current get_current()
-// #define INIT_TASK {{0,0,0,0,0,0,0,0,0,0,0,0,0}, 0}
+// #define INIT_TASK {{0,0,0,0,0,0,0,0,0,0,0,0,0}, 0, 0}
 
 struct cpu_context {
 	unsigned long x19;
@@ -22,8 +22,8 @@ struct cpu_context {
 struct task {
 	struct cpu_context cpu_context;
 	int taskid;
+	int counter;
 	// long state;	
-	// long counter;
 	// long priority;
 	// long preempt_count;
 };
@@ -37,6 +37,7 @@ char kstack_pool[MAX_TASK_NUM][STACK_SIZE];
 void init_task();
 void privilege_task_create(void(*func)());
 void context_switch(struct task* next);
+void idle_schedule();
 void schedule();
 
 struct run_queue{

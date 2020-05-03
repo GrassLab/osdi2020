@@ -3,8 +3,11 @@
 #include "shell.h"
 #include "printf.h"
 #include "sched.h"
+#include "timer.h"
 
 #define N 10
+
+extern void disable_irq();
 
 void foo(){
   while(1) {
@@ -21,7 +24,7 @@ void foo(){
 void idle(){
   // uart_puts("enter idel\n");
   while(1){
-    schedule();
+    idle_schedule();
     delay(1000000);
   }
 }
@@ -35,9 +38,11 @@ void main()
     init_task();
     for(int i = 0; i < N; ++i)  // N should > 2
          privilege_task_create(foo);
-
+    
     // context_switch(&task_pool[1]);
 
+    // disable_irq();
+    core_timer_enable();
     idle();
 
     // privilege_task_create(foo);
