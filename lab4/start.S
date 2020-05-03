@@ -96,6 +96,8 @@ EL2_to_El1:
 rest_initialization:
     // bl      disable_interrupt
     // bl      enable_interrupt
+    mov     x0, 0x3c0               // DAIF & El0
+    msr     spsr_el1, x0
     bl      enable_EL0_interrupt
 
     /*

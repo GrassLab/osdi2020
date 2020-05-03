@@ -24,7 +24,7 @@ void core_timer_handler(){
 		"mov 	x0, %[period];" //EXPIRE_PERIOD
 		"msr 	cntp_tval_el0, x0;"
 		:
-		: [period] "r" (0x1ffffff)
+		: [period] "r" (0x05fffff)
 		:
 	);
 }

@@ -103,19 +103,20 @@ int privilege_task_create( void(*func)() ){
 
 	task_pcb_pool[cur_taskId].taskId = cur_taskId;
 	task_pcb_pool[cur_taskId].context.lr = (unsigned long long)func;
-	task_pcb_pool[cur_taskId].context.kstack = (unsigned long long)&kstack_pool[cur_taskId][4095];
+	task_pcb_pool[cur_taskId].context.kstack = (unsigned long long)&kstack_pool[cur_taskId][4096];
+
 
 	task_pcb_pool[cur_taskId].ustack_id = ustack_id;
-	task_pcb_pool[cur_taskId].ustack = (unsigned long long)&ustack_pool[ustack_id][4095];
+	task_pcb_pool[cur_taskId].ustack = (unsigned long long)&ustack_pool[ustack_id][4096];
+
 
 	for(int i=0; i<4096; i++) kstack_pool[cur_taskId][i] = '\0';
 	for(int i=0; i<4096; i++) ustack_pool[ustack_id][i] = '\0';
 
-
 	task_pcb_pool[cur_taskId].exitStatus = -1;
 	task_pcb_pool[cur_taskId].pstatus = ready;
 
-	enQueue(&runQueue, cur_taskId);
+	enQueue(&runQueue, cur_taskId);	
 
 	return cur_taskId;
 }
@@ -123,6 +124,11 @@ int privilege_task_create( void(*func)() ){
 void do_exec( void(*func)() ){
 	task_t *curTask = get_cur_task();
 	curTask->umode_lr = (unsigned long long)func;
+	
+
+	curTask->context.lr = (unsigned long long)func;
+	curTask->context.kstack = (unsigned long long)&kstack_pool[curTask->taskId][4096];
+	curTask->ustack = (unsigned long long)&ustack_pool[curTask->ustack_id][4096];
 
 	asm volatile(
 		"msr     elr_el1, %[retAddr];"
@@ -131,7 +137,8 @@ void do_exec( void(*func)() ){
 		:
 		: [retAddr] "r" (func), [ustack] "r" ( curTask->ustack )
 		:
-	);
+	);	
+	
 }
 
 void context_switch(int next_taskId){

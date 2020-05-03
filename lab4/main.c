@@ -89,7 +89,7 @@ void test() {
 }
 
 void user_test(){
-  do_exec(test);
+    do_exec(test);
 }
 
 
@@ -97,7 +97,7 @@ void user_test(){
 void main()
 {
     uart_init();
-
+    
     core_timer_enable();
     init_Queue(&runQueue);
 
