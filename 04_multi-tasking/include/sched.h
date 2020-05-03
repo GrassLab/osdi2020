@@ -1,16 +1,17 @@
 #ifndef _SCHED_H
 #define _SCHED_H
 
-#define MAX_NUM_TASKS 64
+#define CPU_CONTEXT_OFFSET 0
+#ifndef __ASSEMBLER__
 
-/* static allocation NUM_TASKS */
-/* Error will happend if used_task_id > MAX_NUM_TASKS */ 
+#define MAX_CONCURRENT_TASKS 64
 
 typedef long tid_t;
 enum state_t {TASK_RUNNING};
 
-/* 0 is for init_task */
-static tid_t used_task_id = 0;
+extern struct task_struct *current;
+extern struct task_struct *tasks[MAX_CONCURRENT_TASKS];
+extern unsigned int num_tasks;
 
 struct cpu_context {
     unsigned long x19;
@@ -24,8 +25,8 @@ struct cpu_context {
     unsigned long x27;
     unsigned long x28;
     unsigned long fp;  // x29 
-    unsigned long pc;  // x30
     unsigned long sp; 
+    unsigned long pc;  // x30
 };
 
 struct task_struct {
@@ -34,16 +35,20 @@ struct task_struct {
     enum state_t state;
     long counter;
     long priority;
-    long preempt_count;
+    int preempt_count;
     // unsigned long stack;
     // unsigned long flags;
     // unsigned long kill_flag;
 };
-static struct task_struct task_pool[MAX_NUM_TASKS];
+// static struct task_struct task_pool[MAX_NUM_TASKS];
 
 #define INIT_TASK \
 { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \
-   0, TASK_RUNNING, 0, 1, 0}
+   0, TASK_RUNNING, 5, 5, 0}
 
 tid_t acquire_unused_task_id();
+void preempt_enable();
+void preempt_disable();
+
+#endif
 #endif

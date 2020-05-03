@@ -24,11 +24,11 @@ const char *entry_error_messages[] = {
 };
 
 void show_invalid_entry_message(int type, unsigned long esr, unsigned long address) {
-    uart_send_string("Error: ");
-    uart_send_string(entry_error_messages[type]);
-    uart_send_string("\n");
-    uart_send_string("EC: ");
+    uart_puts("Error: ");
+    uart_puts(entry_error_messages[type]);
+    uart_puts("\n");
+    uart_puts("EC: ");
     uart_send_hex(esr >> 26);
-    uart_send_string("ISS: ");
+    uart_puts("; ISS: ");
     uart_send_hex(esr & 0x1ffffff);
 }

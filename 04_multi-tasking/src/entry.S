@@ -1,4 +1,5 @@
 #include "entry.h"
+#include "timer.h"
 
 _loop:
     b _loop
@@ -80,28 +81,28 @@ _loop:
     eret
 .endm
 
-.global init_el1_vector
-init_el1_vector:
-    adr x0, vectors // Get the address of vector table
+.global el1_vector_init
+el1_vector_init:
+    adr x0, el1_vector // Get the address of vector table
     msr vbar_el1, x0
     ret 
 
 /* Exception vectors */
 .align  11
-.global vectors
-vectors:
+.global el1_vector
+el1_vector:
     ventry  sync_invalid_el1t           // Synchronous EL1t
     ventry  irq_invalid_el1t            // IRQ EL1t
     ventry  fiq_invalid_el1t            // FIQ EL1t
     ventry  error_invalid_el1t          // Error EL1t
 
-    ventry  sync_el1h                   // Synchronous EL1h (this one)
+    ventry  sync_invalid_el1h           // Synchronous EL1h (this one)
     ventry  el1_irq                     // IRQ EL1h
     ventry  fiq_invalid_el1h            // FIQ EL1h
     ventry  error_invalid_el1h          // Error EL1h
 
-    ventry  sync_el0_64                 // Synchronous 64-bit EL0
-    ventry  irq_el0_64                  // IRQ 64-bit EL0
+    ventry  sync_invalid_el0_64         // Synchronous 64-bit EL0
+    ventry  irq_invalid_el0_64          // IRQ 64-bit EL0
     ventry  fiq_invalid_el0_64          // FIQ 64-bit EL0
     ventry  error_invalid_el0_64        // Error 64-bit EL0
 
@@ -188,3 +189,9 @@ el1_irq:
     kernel_entry 1
     bl handle_irq
     kernel_exit 1
+
+.global ret_from_fork
+ret_from_fork:
+    bl  schedule_tail
+    mov x0, x20 
+    blr x19            //should never return

@@ -9,9 +9,6 @@
 #define PAGE_SIZE (1 << PAGE_SHIFT)
 #define SECTION_SIZE (1 << SECTION_SHIFT)
 
-#define PAGE_SIZE (1 << PAGE_SHIFT)
-#define SECTION_SIZE (1 << SECTION_SHIFT)
-
 #define LOW_MEMORY SECTION_SIZE // warning 0x200000
 #define HIGH_MEMORY PBASE
 #define NUM_PAGES 64

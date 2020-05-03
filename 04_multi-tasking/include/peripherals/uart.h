@@ -16,15 +16,12 @@
 #define AUX_MU_STAT_REG (PBASE + 0x00215064)
 #define AUX_MU_BAUD_REG (PBASE + 0x00215068)
 
-void putc(void *p, char c);
-void uart_init(void);
-char uart_recv(void);
-void uart_send(char c);
-void uart_send_string(const char *str);
-void putc(void *p, char c);
-int readline(char *buf, int maxlen);
-void uart_send_int(int number);
-void uart_send_hex(unsigned long number);
-void handle_uart_irq();
+void uart_init();
+char uart_recv();
+void uart_send(char);
+void uart_puts(const char *);
+void uart_send_hex(unsigned int);
+void uart_send_ulong(unsigned long);
+// void handle_uart_irq();
 
 #endif

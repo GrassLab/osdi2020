@@ -36,9 +36,10 @@ el1_entry:
     bl memzero
     mov sp, #LOW_MEMORY
     
-    bl uart_init
-    bl init_el1_vector
+    // bl uart_init
+    // bl init_el1_vector
     bl kernel_main
+    // bl create_kernel_main
     b _loop
 
 _loop:

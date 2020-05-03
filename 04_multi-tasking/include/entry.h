@@ -26,7 +26,7 @@
 #ifndef __ASSEMBLER__
 
 void show_invalid_entry_message(int, unsigned long, unsigned long);
-void ret_from_fork(void);
+void ret_from_fork();
 
 #endif
 

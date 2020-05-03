@@ -3,6 +3,6 @@
 
 #include "sched.h"
 
-tid_t privilege_task_create(unsigned long);
+int privilege_task_create(unsigned long, unsigned long);
 
 #endif

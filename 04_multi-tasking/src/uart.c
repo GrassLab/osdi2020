@@ -2,18 +2,7 @@
 #include "peripherals/gpio.h"
 #include "utils.h"
 
-void reserve(char *str, int index) {
-    int i = 0, j = index - 1, temp;
-    while (i < j) {
-        temp = str[i];
-        str[i] = str[j];
-        str[j] = temp;
-        i++;
-        j--;
-    }
-}
-
-void uart_send(char c) {
+void uart_send(const char c) {
     while (1) {
         if (get32(AUX_MU_LSR_REG) & 0x20)
             break;
@@ -21,7 +10,7 @@ void uart_send(char c) {
     put32(AUX_MU_IO_REG, c);
 }
 
-char uart_recv(void) {
+char uart_recv() {
     while (1) {
         if (get32(AUX_MU_LSR_REG) & 0x01)
             break;
@@ -29,7 +18,7 @@ char uart_recv(void) {
     return (get32(AUX_MU_IO_REG) & 0xFF);
 }
 
-void uart_send_string(const char *str) {
+void uart_puts(const char *str) {
     char c = str[0];
     int i = 0;
     while (c != '\0') {
@@ -68,72 +57,34 @@ void uart_init(void) {
     put32(AUX_MU_CNTL_REG, 3); // Finally, enable transmitter and receiver
 }
 
-/*
-void _putc(char c) {
-    char temp = c;
-    sync_call_uart_write(&temp, 1);
-}
-*/
-
-// This function is required by printf function
-void putc(void *p, char c) { uart_send(c); }
-
-int readline(char *buf, int maxlen) {
-    int num = 0;
-    while (num < maxlen - 1) {
-        char c = uart_recv();
-        uart_send(c);
-
-        if (c == '\n' || c == '\0' || c == '\r') {
-            if (c == '\r')
-                uart_send('\n');
-            break;
-        }
-        buf[num] = c;
-        num++;
+void uart_send_hex(unsigned int d) {
+    unsigned int n;
+    int c;
+    uart_puts("0x");
+    for(c=28;c>=0;c-=4) {
+        // get highest tetrad
+        n=(d>>c)&0xF;
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n+=n>9?0x37:0x30;
+        uart_send(n);
     }
-    buf[num] = '\0';
-    return num;
 }
 
-void uart_send_int(int number) {
+void uart_send_ulong(unsigned long number) {
     if (number == 0) {
-        uart_send_string("0");
+        uart_send('0');
         return;
     }
-    int i = 0;
-    char str[100];
-    while (number) {
-        str[i++] = (number % 10) + '0';
-        number = number / 10;
-    }
-    reserve(str, i);
-    str[i] = '\0';
-    uart_send_string(str);
-    return;
-}
-
-void uart_send_hex(unsigned long number) {
-    char buffer[11];
-    int i;
-    buffer[0] = '0';
-    buffer[1] = 'x';
-    buffer[2] = (char)((number >> 28) & 0xF);
-    buffer[3] = (char)((number >> 24) & 0xF);
-    buffer[4] = (char)((number >> 20) & 0xF);
-    buffer[5] = (char)((number >> 16) & 0xF);
-    buffer[6] = (char)((number >> 12) & 0xF);
-    buffer[7] = (char)((number >> 8) & 0xF);
-    buffer[8] = (char)((number >> 4) & 0xF);
-    buffer[9] = (char)(number & 0xF);
-    for (i = 2; i < 10; i++) {
-        if (buffer[i] < 10) {
-            buffer[i] += 48;
-        } else {
-            buffer[i] += 55;
-        }
-    }
-    buffer[10] = '\0';
-    uart_send_string(buffer);
-    return;
+    const int bufsize = 64;
+    char tbuf[bufsize];
+    for (int i = 0; i < bufsize; ++ i) {
+        tbuf[i] = 0;
+    }   
+    int cur = bufsize - 2;
+    while (number > 0 && cur > 0) {
+        tbuf[cur] = (number % 10) + '0';
+        number = number / 10; 
+        cur --; 
+    }    
+    uart_puts(tbuf + cur + 1); 
 }
