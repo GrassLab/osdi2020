@@ -27,3 +27,11 @@ int syscall_exec(void(*start_func)())
   return 0;
 }
 
+int syscall_fork(void)
+{
+  int retval;
+  asm volatile("svc #6");
+  asm volatile("mov %0, x0" : "=r"(retval));
+  return retval;
+}
+

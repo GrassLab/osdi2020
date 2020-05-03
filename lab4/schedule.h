@@ -7,8 +7,6 @@
 #define SCHEDULE_DEFAULT_QUANTUM 3
 #define SCHEDULE_TIMEOUT_MS 10
 
-#define TASK_ID_TO_IDX(x) ((x - 1))
-
 extern struct task_struct kernel_task_pool[TASK_POOL_SIZE];
 extern uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
 extern uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];

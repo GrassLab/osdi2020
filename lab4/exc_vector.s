@@ -16,6 +16,7 @@
 
 .text
 EL_dispatcher:
+  // WARNING: FORK is highly depend on the implementation of this section
   sub	sp, sp, #272
 
   stp	x1, x2,   [sp, #16 * 0]
@@ -45,6 +46,8 @@ EL_dispatcher:
 
   bl exc_dispatcher
 
+.global __sys_fork_child_entry
+__sys_fork_child_entry:
   ldr x3,       [sp, #16 * 16]
   ldp x1, x2,   [sp, #16 * 15]
   msr sp_el0, x3

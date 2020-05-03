@@ -5,6 +5,8 @@
 #define TASK_KERNEL_STACK_SIZE 0x1000
 #define TASK_USER_STACK_SIZE 0x1000
 
+#define TASK_ID_TO_IDX(x) ((x - 1))
+
 struct cpu_context_struct
 {
   /* callee-saved registers */
@@ -37,7 +39,7 @@ struct task_struct
 };
 
 
-void task_privilege_task_create(void(*start_func)());
+uint64_t task_privilege_task_create(void(*start_func)());
 uint64_t task_get_current_task_id(void);
 void task_idle(void);
 void task_privilege_demo(void);

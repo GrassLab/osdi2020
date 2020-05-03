@@ -11,7 +11,7 @@ struct task_struct kernel_task_pool[TASK_POOL_SIZE];
 uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
 uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];
 
-void task_privilege_task_create(void(*start_func)())
+uint64_t task_privilege_task_create(void(*start_func)())
 {
   unsigned new_id = 0;
 
@@ -27,7 +27,7 @@ void task_privilege_task_create(void(*start_func)())
   if(new_id == 0)
   {
     /* failed to create new task */
-    return;
+    return 0;
   }
 
   /* assign id */
@@ -48,7 +48,7 @@ void task_privilege_task_create(void(*start_func)())
 
   /* push into queue */
   schedule_enqueue(new_id);
-  return;
+  return new_id;
 }
 
 uint64_t task_get_current_task_id(void)
@@ -134,22 +134,41 @@ void task_user_demo(void)
 
 void task_user_context1_demo(void)
 {
-  char string[] = "task_user_demo in user mode. Type and echo\n";
-  char input_string[0x20];
-  syscall_uart_puts(string);
-  syscall_uart_gets(input_string, '\n', 0x20 - 2);
+  syscall_uart_puts("task_user_demo in user mode.\n");
   syscall_uart_puts("Let's exec in user mode\n");
   syscall_exec(task_user_context2_demo);
 }
 
 void task_user_context2_demo(void)
 {
-  char string[] = "I'm Mr.Meeseeks. Look at me. Type and echo\n";
   char input_string[0x20];
+  int new_task_id;
 
-  syscall_uart_puts(string);
-  syscall_uart_gets(input_string, '\n', 0x20 - 2);
-  syscall_uart_puts("Can do. Let's exec in user mode\n");
-  syscall_exec(task_user_context1_demo);
+  syscall_uart_puts("I'm Mr.Meeseeks. Look at me. Let's call another meeseeks.\n");
+  new_task_id = syscall_fork();
+  if(new_task_id == 0)
+  {
+    while(1)
+    {
+      syscall_uart_puts("I'm the new meeseeks\n");
+      syscall_uart_gets(input_string, '\n', 0x20 - 2);
+    }
+  }
+  else
+  {
+    syscall_uart_puts("New meeseeks has id of ");
+    string_longlong_to_char(input_string, new_task_id);
+    syscall_uart_puts(input_string);
+    syscall_uart_puts("\n");
+
+    while(1)
+    {
+      syscall_uart_puts("I'm the original meeseeks\n");
+      syscall_uart_gets(input_string, '\n', 0x20 - 2);
+    }
+  }
+
 }
+
+
 

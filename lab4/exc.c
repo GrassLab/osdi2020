@@ -109,6 +109,9 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
   case SYS_EXEC:
     sys_exec((void(*)())trapframe -> x1);
     break;
+  case SYS_FORK:
+    sys_fork(trapframe);
+    break;
   default:
     uart_puts("Unhandled svc immediate value\n");
     break;
