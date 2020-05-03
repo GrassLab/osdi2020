@@ -29,6 +29,8 @@ void irq_handler()
 
 	if (first_level_irq == 2) {
 		core_timer_handler();
+        delay(1000);
+        timer_tick();
 	} else {
         local_timer_handler();
     }

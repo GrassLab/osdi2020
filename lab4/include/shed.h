@@ -34,7 +34,7 @@ struct cpu_context {
 struct task_struct {
     struct cpu_context cpu_context;
     long state;
-    long counter;
+    unsigned int counter;
     long priority;
     long preempt_count;
     int task_id;
@@ -45,10 +45,11 @@ extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 void enable_preempt();
 void disable_preempt();
 void privilege_task_create(void (*func)());
+void timer_tick();
 
 #define INIT_TASK \
 {   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \
-    0, 0, 1, 0, 0 \
+    0, 5, 0, 1, 0, 0 \
 }
 
 #endif

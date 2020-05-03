@@ -2,6 +2,7 @@
 #include "uart.h"
 #include "mm.h"
 #include "entry.h"
+#include "irq.h"
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
@@ -36,7 +37,7 @@ void privilege_task_create(void (*func)()) {
     }
 
     new_task->task_id = n_task_id;
-    new_task->counter = 3;
+    new_task->counter = 5;
     new_task->state = TASK_RUNNING;
     new_task->preempt_count = 1;
     new_task->cpu_context.x19 = (unsigned long) func;
@@ -70,34 +71,33 @@ void _schedule() {
     int next, c;
     struct task_struct *p;
 
-    while(1) {
-        c = -1;
-        next = 0;
+    c = 0;
+    next = 0;
 
-        for(int i=1; i<NR_TASKS; i++) {
-            p = task[i];
-            if(p && p->state == TASK_RUNNING && p->counter > c) {
-                c = p->counter;
-                next = i;
-            }
-        }
-        if(c) {
-            break;
-        }
-        for(int i=0; i<NR_TASKS; i++) {
-            p = task[i];
-            if(p) {
-                p->counter = 3;
-            }
+    for(int i=1; i<NR_TASKS; i++) {
+        p = task[i];
+        if(p && p->state == TASK_RUNNING && p->counter > c) {
+            c = p->counter;
+            next = i;
         }
     }
+    // if(c) {
+    //     break;
+    // }
+    // for(int i=0; i<NR_TASKS; i++) {
+    //     p = task[i];
+    //     if(p) {
+    //         p->counter = 3;
+    //     }
+    // }
     switch_to(task[next]);
     enable_preempt();
 }
 
 void schedule() {
-    current->counter = 0;
-    _schedule();
+    // current->counter = 0;
+    // _schedule();
+    // timer_tick();
 }
 
 void schedule_tail() {
@@ -106,4 +106,18 @@ void schedule_tail() {
 
 struct task_struct *get_current_task() {
     return current;
+}
+
+void timer_tick() {
+    // uart_print_int(current->counter);
+    // uart_puts("\r\n");
+	current->counter--;
+	if (current->counter > 0 || current->preempt_count  == 0) {
+		return;
+	}
+	current->counter=0;
+	enable_irq();
+    uart_puts("Rescheduling...\r\n");
+	_schedule();
+	disable_irq();
 }

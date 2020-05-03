@@ -22,5 +22,7 @@
 
 void enable_interrupt_controller();
 void handle_irq();
+void enable_irq();
+void disable_irq();
 
 #endif

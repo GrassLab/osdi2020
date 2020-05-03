@@ -108,7 +108,7 @@ el1_exception_table:
 
     b el_not_implement
     .align 7
-    b el_not_implement
+    b el1_irq_handler
     .align 7
     b el_not_implement
     .align 7

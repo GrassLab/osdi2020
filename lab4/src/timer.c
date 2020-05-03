@@ -1,6 +1,7 @@
 #include "asm.h"
 #include "uart.h"
 #include "timer.h"
+#include "shed.h"
 
 const unsigned int interval = 200000;
 unsigned int curVal = 0;
@@ -31,7 +32,7 @@ void core_timer_init()
     // asm_delay();
     asm volatile("mov x0, 1");
     asm volatile("msr cntp_ctl_el0, x0");
-    asm volatile("mov x0, 0xffffffff");
+    asm volatile("mrs x0, cntfrq_el0");
     asm volatile("msr cntp_tval_el0, x0");
     asm volatile("mov x0, 2");
     asm volatile("ldr x1, =0x40000040");
@@ -46,7 +47,8 @@ void core_timer_handler()
     uart_puts("Core timer interrupt, ");
     uart_print_int(core_timer_counter++);
     uart_puts(" times\n");
-    asm volatile("mov x0, 0xfffffff");
+    // timer_tick();
+    asm volatile("mrs x0, cntfrq_el0");
     asm volatile("msr cntp_tval_el0, x0");
 }
 
@@ -59,8 +61,8 @@ void local_timer_init()
 
 void local_timer_handler()
 {
-    uart_puts("Local timer interrupt, repeat ");
-    uart_print_int(local_timer_counter++);
-    uart_puts(" times\n");
+    // uart_puts("Local timer interrupt, repeat ");
+    // uart_print_int(local_timer_counter++);
+    // uart_puts(" times\n");
     put32(LOCAL_TIMER_IRQ_CLR, 0xc0000000);
 }

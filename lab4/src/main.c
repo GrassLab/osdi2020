@@ -26,7 +26,7 @@ void foo(){
 		uart_puts("Task id: ");
 		uart_print_int(current -> task_id);
 		uart_puts("\r\n");
-		delay(1000);
+		delay(1000000000);
 		schedule();
 	}
 }
@@ -34,14 +34,18 @@ void foo(){
 void idle(){
 	while(1){
 		schedule();
-		delay(1000);
+		delay(1000000);
 	}
 }
 
 void main() {
 	uart_init();
+	uart_puts("hihi\r\n");
+	asm volatile ("mov x0, #0\n" "svc #0\n");
+	
 
 	for(int i = 0; i < 3; ++i) { // N should > 2
+		// uart_puts("hihi\r\n");
 		privilege_task_create(foo);
 	}
 
