@@ -4,6 +4,7 @@
 #include "timer.h"
 #include "framebuffer.h"
 #include "bh.h"
+#include "sys.h"
 
 
 int getcmd(char *buf, int nbuf);
@@ -23,41 +24,12 @@ void help() {
             "  help       Display this information.\r\n"
             "  hello      Display \"Hello World!\".\r\n"
             "  timestamp  Display current timestamp.\r\n"
-            "  getel      Display the current exception level.\r\n"
-            "  exc        Issue svc #1.\r\n"
-            "  irq        Core/Local timer interrupt.\r\n"
-            "  coretime   Core timer interrupt.\r\n"
-            "  localtime  Local timer interrupt.\r\n"
             "  reboot     Reboot.\r\n"
-            "  bhmode     enable bottom half mode.\r\n"
             );
 }
 
 /* hello: display hello world */
 void hello() { uart_puts("Hello World!\r\n"); }
-
-/* timestamp: display the "system" timer */
-void get_system_timer() {
-  asm volatile("stp x8, x9, [sp, #-16]!");
-  asm volatile("mov x8, #1");   /* 1 for print system time */
-  asm volatile("svc     #0");
-  asm volatile("ldp x8, x9, [sp], #16");
-  /* syscall to gettimer */
-
-  /* register unsigned long long f, t; */
-
-  /* /\* get the current counter frequency *\/ */
-  /* asm volatile("mrs %0, cntfrq_el0" : "=r"(f)); */
-  /* /\* read the current counter *\/ */
-  /* asm volatile("mrs %0, cntpct_el0" : "=r"(t)); */
-
-  /* /\* time = timer counter / timer frequency *\/ */
-  /* unsigned long long i_part = t / f; */
-  /* unsigned long long f_part = t * 100000000 / f % 100000000; */
-
-  /* uart_println("[%d.%d]", i_part, f_part); */
-  /* return t / f; */
-}
 
 /* reboot: reset the power of the board */
 void reset() {
@@ -198,15 +170,9 @@ void shell() {
       continue;
     SWITCH_CONTINUE(buf, "help",      help);
     SWITCH_CONTINUE(buf, "hello",     hello);
-    SWITCH_CONTINUE(buf, "timestamp", get_system_timer);
+    SWITCH_CONTINUE(buf, "timestamp", call_sys_timestamp);
     SWITCH_CONTINUE(buf, "show",      lfb_showpicture);
     SWITCH_CONTINUE(buf, "reboot",    reset);
-    SWITCH_CONTINUE(buf, "getel",     get_current_el);
-    SWITCH_CONTINUE(buf, "exc",       svc1);
-    SWITCH_CONTINUE(buf, "irq",       timer_interrupt);
-    SWITCH_CONTINUE(buf, "coretime",  core_timer_interrupt);
-    SWITCH_CONTINUE(buf, "localtime", local_timer_interrupt);
-    SWITCH_CONTINUE(buf, "bhmode",    bottom_half_mode);
 
     uart_println("[ERR] command `%s` not found", buf);
   }

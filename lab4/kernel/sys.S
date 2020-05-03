@@ -1,5 +1,11 @@
 #include "sys.h"
 
+.globl call_sys_timestamp
+call_sys_timestamp:
+    mov w8, #SYS_TIMESTAMP_NUMBER
+    svc #0
+    ret
+
 .globl call_sys_getid
 call_sys_getid:
     mov w8, #SYS_GETID_NUMBER

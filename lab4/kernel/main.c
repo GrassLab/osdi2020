@@ -57,6 +57,8 @@ void init_process() {
 
 
 
+
+
   /* fork the first process (tty)
   /* TODO */
   /* int cnt = 1; */
