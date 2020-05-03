@@ -43,7 +43,8 @@ void task_idle(void);
 void task_privilege_demo(void);
 void task_do_exec(void(*start_func)());
 void task_user_demo(void);
-void task_user_context_demo(void);
+void task_user_context1_demo(void);
+void task_user_context2_demo(void);
 
 #endif
 

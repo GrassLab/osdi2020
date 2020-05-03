@@ -3,6 +3,7 @@
 #include "string_util.h"
 #include "timer.h"
 #include "irq.h"
+#include "task.h"
 
 int sys_exc(uint64_t ELR_EL1, uint8_t exception_class, uint32_t exception_iss)
 {
@@ -59,4 +60,11 @@ int sys_uart_gets(char * string, char delimiter, unsigned length)
   uart_gets(string, delimiter, length);
   return 0;
 }
+
+int sys_exec(void(*start_func)())
+{
+  task_do_exec(start_func);
+  return 0;
+}
+
 

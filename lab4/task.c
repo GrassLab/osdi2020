@@ -126,18 +126,27 @@ void task_user_demo(void)
   uart_puts(string_buff);
   uart_putc('\n');
 
-  task_do_exec(task_user_context_demo);
+  task_do_exec(task_user_context1_demo);
 }
 
-void task_user_context_demo(void)
+void task_user_context1_demo(void)
 {
   char string[] = "task_user_demo in user mode. Type and echo\n";
-  syscall_uart_puts(string);
   char input_string[0x20];
-  while(1)
-  {
-    syscall_uart_gets(input_string, '\n', 0x20 - 2);
-    syscall_uart_puts(input_string);
-  }
+  syscall_uart_puts(string);
+  syscall_uart_gets(input_string, '\n', 0x20 - 2);
+  syscall_uart_puts("Let's exec in user mode\n");
+  syscall_exec(task_user_context2_demo);
+}
+
+void task_user_context2_demo(void)
+{
+  char string[] = "I'm Mr.Meeseeks. Look at me. Type and echo\n";
+  char input_string[0x20];
+
+  syscall_uart_puts(string);
+  syscall_uart_gets(input_string, '\n', 0x20 - 2);
+  syscall_uart_puts("Can do. Let's exec in user mode\n");
+  syscall_exec(task_user_context1_demo);
 }
 

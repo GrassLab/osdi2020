@@ -18,3 +18,12 @@ int syscall_uart_gets(char * string, char delimiter, unsigned length)
   return 0;
 }
 
+int syscall_exec(void(*start_func)())
+{
+  asm volatile(
+    "mov x1, %0\n"
+    "svc #5\n"
+    : : "r"(start_func));
+  return 0;
+}
+
