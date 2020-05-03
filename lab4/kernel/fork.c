@@ -81,7 +81,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 
     /* adust the offset of kernel and user stack */
     unsigned long kstack_off = current->cpu_context.sp - (unsigned long)current;
-    unsigned long ustack_off = task_pt_regs(current)->sp - (unsigned long)current->stack;
+    unsigned long ustack_off = cur_regs->sp - (unsigned long)current->stack;
 
     /* kernel stack adjust */
     p->cpu_context.sp = (unsigned long)p + kstack_off;
@@ -220,5 +220,9 @@ int do_fork() {
 #ifdef DEBUG
   uart_println("[Fork] Allocate a new stack @ %x", stack);
 #endif
+#ifdef DEBUG
+  return copy_process(0, 0, 0, stack);
+#else
   return copy_process(PF_FORK, 0, 0, stack);
+#endif
 }
