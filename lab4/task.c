@@ -62,6 +62,7 @@ uint64_t task_get_current_task_id(void)
 
 void task_idle(void)
 {
+  uart_puts("Hi I'm "ANSI_GREEN"IDLE"ANSI_RESET". There won't be any messages originate from this task from now on.\n");
   while(1)
   {
     while(schedule_check_queue_empty())
@@ -82,7 +83,7 @@ void task_privilege_demo(void)
     char string_buff[0x10];
     uint64_t current_task_id = task_get_current_task_id();
     uint64_t current_quantum_count;
-    uart_puts("Hi I'm privilege task id ");
+    uart_puts("Hi I'm "ANSI_YELLOW"privilege task"ANSI_RESET" id ");
     string_longlong_to_char(string_buff, (int64_t)current_task_id);
     uart_puts(string_buff);
     uart_putc('\n');
@@ -100,7 +101,7 @@ void task_privilege_demo(void)
     ++current_reschedule_count;
     if(current_reschedule_count >= max_reschedule_time)
     {
-      uart_puts("Privilege task will exit\n");
+      uart_puts(ANSI_YELLOW"Privilege task"ANSI_RESET" exit\n");
       sys_exit(0);
     }
   }
@@ -133,7 +134,7 @@ void task_user_demo(void)
   uint64_t current_task_id = task_get_current_task_id();
 
   irq_int_enable();
-  uart_puts("task_user_demo in kernel mode with irq enable id ");
+  uart_puts(ANSI_YELLOW"task_user_demo"ANSI_RESET" in kernel mode with irq enable id ");
   string_longlong_to_char(string_buff, (int64_t)current_task_id);
   uart_puts(string_buff);
   uart_putc('\n');
@@ -143,7 +144,7 @@ void task_user_demo(void)
 
 void task_user_context1_demo(void)
 {
-  syscall_uart_puts("task_user_demo in user mode.\n");
+  syscall_uart_puts(ANSI_YELLOW"task_user_demo"ANSI_RESET" in user mode.\n");
   syscall_uart_puts("Let's exec in user mode\n");
   syscall_exec(task_user_context2_demo);
 }
@@ -153,25 +154,25 @@ void task_user_context2_demo(void)
   char input_string[0x20];
   int new_task_id;
 
-  syscall_uart_puts("I'm Mr.Meeseeks. Look at me. Let's call another meeseeks.\n");
+  syscall_uart_puts("I'm "ANSI_BLUE"Mr.Meeseeks"ANSI_RESET". Look at me. Let's call another meeseeks.\n");
   new_task_id = syscall_fork();
   if(new_task_id == 0)
   {
-    syscall_uart_puts("I'm the new meeseeks\n");
+    syscall_uart_puts("I'm the new "ANSI_BLUE"meeseeks"ANSI_RESET"\n");
     syscall_uart_gets(input_string, '\n', 0x20 - 2);
-    uart_puts("Owee new meeseeks' mission accomplished. [Poof]\n");
+    uart_puts("Owee new "ANSI_BLUE"meeseeks"ANSI_RESET" mission accomplished. [Poof]\n");
     syscall_exit(0);
   }
   else
   {
-    syscall_uart_puts("New meeseeks has id of ");
+    syscall_uart_puts("New "ANSI_BLUE"meeseeks"ANSI_RESET" has id of ");
     string_longlong_to_char(input_string, new_task_id);
     syscall_uart_puts(input_string);
     syscall_uart_puts("\n");
 
     while(1)
     {
-      syscall_uart_puts("I'm the original meeseeks\n");
+      syscall_uart_puts("I'm the original "ANSI_BLUE"meeseeks"ANSI_RESET", I won't quit user mode.\n");
       syscall_uart_gets(input_string, '\n', 0x20 - 2);
     }
   }

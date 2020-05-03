@@ -12,6 +12,7 @@
 #define ANSI_RED       "\x1b[31m"
 #define ANSI_GREEN     "\x1b[32m"
 #define ANSI_YELLOW    "\x1b[33m"
+#define ANSI_BLUE      "\x1b[34m"
 #define ANSI_BG_RED    "\x1b[41;1m"
 #define ANSI_BG_GREEN  "\x1b[42;1m"
 #define ANSI_BG_YELLOW "\x1b[43;1m"
