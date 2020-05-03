@@ -8,6 +8,7 @@
 #define TASK_ZOMBIE                1
 
 #define PF_KTHREAD                 0x00000002
+#define PF_FORK                    0x00000004
 
 #ifndef __ASSEMBLER__
 

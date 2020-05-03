@@ -50,7 +50,11 @@ void core_timer_enable_w4sec() {
 
 void sched_core_timer_handler() {
   unsigned long r;
+#ifdef DEBUG
   asm volatile ("mov %0, #0x600000" : "=r"(r));
+#else
+  asm volatile ("mov %0, #0x200000" : "=r"(r));
+#endif
   asm volatile ("msr cntp_tval_el0, %0" : "=r"(r));
   timer_tick();
 }

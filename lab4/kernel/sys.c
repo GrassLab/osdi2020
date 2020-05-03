@@ -3,6 +3,13 @@
 #include "mm.h"
 #include "sched.h"
 
+int sys_getid() {
+  return current->pid;
+}
+
+int sys_fork() {
+  return do_fork();
+}
 
 void sys_write(char *buf) {
   uart_print("%s", buf);
@@ -18,6 +25,6 @@ unsigned long sys_malloc() {
   return addr;
 }
 
-void sys_exit() { exit_process(); }
+void sys_exit() { uart_println("task %d exit the process", sys_getid()); exit_process(); }
 
-void *const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit};
+void *const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit, sys_fork, sys_getid};

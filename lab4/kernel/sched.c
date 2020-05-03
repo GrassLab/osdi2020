@@ -107,8 +107,9 @@ void context_switch(struct task_struct *next) {
   struct task_struct *prev = current;
 
   current = next;
-
+#ifdef DEBUG
   uart_println("[Sched] switch to %d", next->pid);
+#endif
 
   /* switch to the next */
   cpu_switch_to(prev, next);
@@ -133,7 +134,6 @@ void timer_tick() {
   _schedule();
   disable_irq();
 }
-
 
 
 void exit_process(){

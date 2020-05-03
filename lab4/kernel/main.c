@@ -38,52 +38,109 @@ void program() {
   call_sys_exit();
 }
 
-void user_process() {
-  /* char buf[30] = {0}; */
-  /* tfp_sprintf(buf, "User process started\n\r"); */
-  /* uart_println("Kernel process started. EL %d", get_el()); */
-  call_sys_write("User prcoess started\r\n");
+void init_process() {
 
-  /* process 1 */
-  unsigned long stack = call_sys_malloc();
-  if (stack < 0) {
-    uart_println("Error while allocating stack for process 1");
-    return;
-  }
-  uart_println("[User] Allocate a stack for user process @ %x", stack);
-  int err = call_sys_clone((unsigned long)&user_process1,
-                           (unsigned long)"12345", stack);
-  if (err < 0) {
-    uart_println("Error while clonning process 1");
-    return;
+  /* tty */
+  int pid = call_sys_fork();
+  if (pid == 0) {
+    unsigned long stack = call_sys_malloc();
+    if (stack < 0) {
+      uart_println("Error while allocating stack for shell");
+    } else {
+      int err = call_sys_clone((unsigned long)&shell, 0, stack);
+      if (err < 0) {
+        uart_println("Error while clonning shell");
+      }
+    }
+    call_sys_exit();
   }
 
-  /* process 2 */
-  stack = call_sys_malloc();
-  if (stack < 0) {
-    uart_println("Error while allocating stack for process 2");
-    return;
-  }
 
-  uart_println("[User] Allocate a stack for user process @ %x", stack);
 
-  err = call_sys_clone((unsigned long)&user_process1, (unsigned long)"abcd",
-                       stack);
-  if (err < 0) {
-    uart_println("Error while clonning process 2");
-    return;
-  }
+  /* fork the first process (tty)
+  /* TODO */
+  /* int cnt = 1; */
 
+  /* if (call_sys_fork() == 0) { */
+  /*   call_sys_fork(); */
+  /*   delay(10000000); */
+  /*   call_sys_fork(); */
+  /*   while(cnt < 10) { */
+  /*     /\* uart_println("Task id: %d, cnt: %d\n", 123, cnt); *\/ */
+  /*     delay(10000000); */
+  /*     ++cnt; */
+  /*   } */
+  /*   call_sys_exit(); */
+  /*   uart_println("shoud not be printed"); */
+  /* } else { */
+  /*   uart_println("Task %d before exec, cnt address 0x%x, cnt value %d\n",
+   * 123, &cnt, cnt); */
+  /* } */
+
+  /* if (call_sys_fork() == 0) { */
+  /*   uart_println("*[child] w/ task id: %d", call_sys_getid()); */
+  /* } else { */
+  /*   uart_println("*[parent] w/ task id: %d", call_sys_getid()); */
+  /* } */
+
+  /* if (call_sys_fork() == 0) { */
+  /*   uart_println("[child] w/ task id: %d", call_sys_getid()); */
+  /*   if (call_sys_fork() == 0) { */
+  /*     uart_println("[child child] w/ task id: %d", call_sys_getid()); */
+  /*   } else { */
+  /*     uart_println("[child parent] w/ task id: %d", call_sys_getid()); */
+  /*   } */
+  /*   /\* get_el(); *\/ */
+  /* } else { */
+  /*   uart_println("[parent] w/ task id: %d", call_sys_getid()); */
+  /*   /\* get_el(); *\/ */
+  /* } */
+
+  /* uart_println("id: %d", call_sys_getid()); */
+
+  /* /\* char buf[30] = {0}; *\/ */
+  /* /\* tfp_sprintf(buf, "User process started\n\r"); *\/ */
+  /* /\* uart_println("Kernel process started. EL %d", get_el()); *\/ */
+  /* call_sys_write("User prcoess started\r\n"); */
+
+  /* /\* process 1 *\/ */
+  /* unsigned long stack = call_sys_malloc(); */
+  /* if (stack < 0) { */
+  /*   uart_println("Error while allocating stack for process 1"); */
+  /*   return; */
+  /* } */
+  /* uart_println("[User] Allocate a stack for user process @ %x", stack); */
+  /* int err = call_sys_clone((unsigned long)&user_process1, */
+  /*                          (unsigned long)"12345", stack); */
+  /* if (err < 0) { */
+  /*   uart_println("Error while clonning process 1"); */
+  /*   return; */
+  /* } */
+
+  /* /\* process 2 *\/ */
+  /* stack = call_sys_malloc(); */
+  /* if (stack < 0) { */
+  /*   uart_println("Error while allocating stack for process 2"); */
+  /*   return; */
+  /* } */
+
+  /* uart_println("[User] Allocate a stack for user process @ %x", stack); */
+
+  /* err = call_sys_clone((unsigned long)&user_process1, (unsigned long)"abcd",
+   */
+  /*                      stack); */
+  /* if (err < 0) { */
+  /*   uart_println("Error while clonning process 2"); */
+  /*   return; */
+  /* } */
+
+  while (1) { delay(1000000); }
   call_sys_exit();
 }
 
 void kernel_process() {
-  do_exec(program);
-  /* uart_println("Kernel process started. EL %d", get_el()); */
-  /* int err = move_to_user_mode((unsigned long)&user_process); */
-  /* if (err < 0) { */
-  /*   uart_println("Error while moving process to user mode"); */
-  /* } */
+  uart_println("Kernel process started. EL %d", get_el());
+  do_exec(init_process);
 }
 
 void foo() {
@@ -116,6 +173,7 @@ void el1_main() {
     uart_println("error while starting kernel process");
     return;
   }
+
   /* const int N = 10; */
   /* for (int i = 0; i < N; ++i) { // N should > 2 */
 

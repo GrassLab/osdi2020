@@ -51,12 +51,18 @@ stdio: $(TARGET)
 stdio_int: $(TARGET)
 	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -serial null -serial stdio -d int
 
-debug: $(TARGET)
-	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -S -s
+# debug: $(TARGET)
+#	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -S -s
+
+debug:
+	make clean
+	make "TESTFLAGS+=-DDEBUG -DSHOW"
 
 test:
 	make clean
 	make "TESTFLAGS+=-DTEST -DSHOW"
+
+
 
 clean:
 	$(RM) $(TARGET) $(ELF_TARGET) $(OBJS)

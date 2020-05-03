@@ -1,5 +1,17 @@
 #include "sys.h"
 
+.globl call_sys_getid
+call_sys_getid:
+    mov w8, #SYS_GETID_NUMBER
+    svc #0
+    ret
+
+.globl call_sys_fork
+call_sys_fork:
+    mov w8, #SYS_FORK_NUMBER
+    svc #0
+    ret
+
 .globl call_sys_write
 call_sys_write:
     mov w8, #SYS_WRITE_NUMBER

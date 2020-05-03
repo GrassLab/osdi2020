@@ -19,6 +19,7 @@ int move_to_user_mode(unsigned long pc);
 struct pt_regs *task_pt_regs(struct task_struct *tsk);
 
 void do_exec(void (*func));
+int do_fork();
 
 struct pt_regs {
     unsigned long regs[31];
