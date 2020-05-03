@@ -52,21 +52,13 @@ void scheduler(void)
   }
   else
   {
-    static int schedule_demo_task_count = 0;
     uint64_t next_id = QUEUE_POP(schedule_run_queue);
-#define TOTAL_SCHEDULE_PRIVILEGE_DEMO_TASK_COUNT 3
-    if(next_id == 2)
+    while(CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(next_id)].flag, 1))
     {
-      if(schedule_demo_task_count < TOTAL_SCHEDULE_PRIVILEGE_DEMO_TASK_COUNT)
-      {
-        QUEUE_PUSH(schedule_run_queue, next_id);
-        ++schedule_demo_task_count;
-      }
+      /* zomebie will not be queued */
+      next_id = QUEUE_POP(schedule_run_queue);
     }
-    else
-    {
-      QUEUE_PUSH(schedule_run_queue, next_id);
-    }
+    QUEUE_PUSH(schedule_run_queue, next_id);
     schedule_context_switch(current_privilege_task_id, next_id);
   }
 

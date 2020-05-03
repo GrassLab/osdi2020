@@ -6,6 +6,7 @@ int syscall_uart_puts(char * string);
 int syscall_uart_gets(char * string, char delimiter, unsigned length);
 int syscall_exec(void(*start_func)());
 int syscall_fork(void);
+int syscall_exit(int status);
 
 #endif
 

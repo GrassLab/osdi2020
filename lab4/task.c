@@ -6,6 +6,7 @@
 #include "irq.h"
 #include "string_util.h"
 #include "syscall.h"
+#include "sys.h"
 
 struct task_struct kernel_task_pool[TASK_POOL_SIZE];
 uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
@@ -74,6 +75,8 @@ void task_idle(void)
 
 void task_privilege_demo(void)
 {
+  int current_reschedule_count = 0;
+  int max_reschedule_time = 3;
   while(1)
   {
     char string_buff[0x10];
@@ -94,6 +97,12 @@ void task_privilege_demo(void)
       asm volatile("wfi");
     }
     while(current_quantum_count <= kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].quantum_count);
+    ++current_reschedule_count;
+    if(current_reschedule_count >= max_reschedule_time)
+    {
+      uart_puts("Privilege task will exit\n");
+      sys_exit(0);
+    }
   }
 }
 
@@ -148,11 +157,10 @@ void task_user_context2_demo(void)
   new_task_id = syscall_fork();
   if(new_task_id == 0)
   {
-    while(1)
-    {
-      syscall_uart_puts("I'm the new meeseeks\n");
-      syscall_uart_gets(input_string, '\n', 0x20 - 2);
-    }
+    syscall_uart_puts("I'm the new meeseeks\n");
+    syscall_uart_gets(input_string, '\n', 0x20 - 2);
+    uart_puts("Owee new meeseeks' mission accomplished. [Poof]\n");
+    syscall_exit(0);
   }
   else
   {
@@ -169,6 +177,4 @@ void task_user_context2_demo(void)
   }
 
 }
-
-
 

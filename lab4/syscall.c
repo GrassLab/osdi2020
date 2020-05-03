@@ -35,3 +35,10 @@ int syscall_fork(void)
   return retval;
 }
 
+int syscall_exit(int status)
+{
+  asm volatile("svc #7");
+  asm volatile("mov x1, %0" : : "r"(status));
+  return 0;
+}
+

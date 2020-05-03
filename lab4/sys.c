@@ -1,9 +1,11 @@
+#include "meta_macro.h"
 #include "sys.h"
 #include "uart.h"
 #include "string_util.h"
 #include "timer.h"
 #include "irq.h"
 #include "task.h"
+#include "schedule.h"
 
 int sys_exc(uint64_t ELR_EL1, uint8_t exception_class, uint32_t exception_iss)
 {
@@ -114,6 +116,15 @@ int sys_fork(struct trapframe_struct * trapframe)
   /* return value of parent should be new task id */
   *(uint64_t *)(((uint64_t)trapframe) + 288) = new_task_id;
 
+  return 0;
+}
+
+int sys_exit(int status)
+{
+  UNUSED(status);
+  uint64_t current_task_id = task_get_current_task_id();
+  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 1);
+  schedule_yield();
   return 0;
 }
 

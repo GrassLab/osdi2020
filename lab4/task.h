@@ -30,10 +30,11 @@ struct cpu_context_struct
 
 struct task_struct
 {
-  uint64_t id;
+  uint64_t id; /* if id != idx + 1 then the slot is unused */
   uint64_t quantum_count;
   /* bit */
   /* bit 0 -> reschedule */
+  /* bit 1 -> zombie */
   uint64_t flag;
   struct cpu_context_struct cpu_context;
 };
