@@ -135,6 +135,7 @@ error_invalid_el1h:
 el0_sync:
     // dealing with sync call with svc
     kernel_entry 0
+    msr DAIFClr, 0xf                   // what? TODO
     mrs	 x25, esr_el1                  // read the syndrome register
     lsr	 x24, x25, #ESR_ELx_EC_SHIFT   // exception class
     cmp	 x24, #ESR_ELx_EC_SVC64        // SVC in 64-bit state

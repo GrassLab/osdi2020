@@ -73,6 +73,14 @@ void _schedule() {
         next = i;
       }
     }
+
+    /* uart_print("task: ["); */
+    /* for (int i = 0; i < NR_TASKS; ++i) { */
+    /*   struct task_struct *r = task[i]; */
+    /*   uart_print("%d", r->state); */
+    /* } */
+    /* uart_println(" ]"); */
+
     if (c) {
       break;
     }
@@ -94,6 +102,23 @@ void schedule_tail() { preempt_enable(); }
 void schedule() {
   current->counter = 0;
   _schedule();
+}
+
+void zombie_reaper() {
+  struct task_struct *p;
+  while (1) {
+    for (int i = 0; i < NR_TASKS; ++i) {
+      p = task[i];
+      if (p && p->state == TASK_ZOMBIE && p != current) {
+#ifdef DEBUG
+        uart_println("[Zombie] reap the zombie task %d", p->pid);
+#endif
+        free_page((unsigned long)p);
+        task[p->pid] = 0;
+      }
+    }
+    schedule();
+  }
 }
 
 /* #define current get_current() */
@@ -135,18 +160,17 @@ void timer_tick() {
   disable_irq();
 }
 
-
-void exit_process(){
-    preempt_disable();
-    for (int i = 0; i < NR_TASKS; i++){
-        if (task[i] == current) {
-            task[i]->state = TASK_ZOMBIE;
-            break;
-        }
+void exit_process() {
+  preempt_disable();
+  for (int i = 0; i < NR_TASKS; i++) {
+    if (task[i] == current) {
+      task[i]->state = TASK_ZOMBIE;
+      break;
     }
-    if (current->stack) {
-        free_page(current->stack);
-    }
-    preempt_enable();
-    schedule();
+  }
+  if (current->stack) {
+    free_page(current->stack);
+  }
+  preempt_enable();
+  schedule();
 }

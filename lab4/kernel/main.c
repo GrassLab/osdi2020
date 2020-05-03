@@ -140,6 +140,12 @@ void el1_main() {
     return;
   }
 
+  res = copy_process(PF_KTHREAD, (unsigned long)&zombie_reaper, 0, 0);
+  if (res < 0) {
+    uart_println("error while starting zombie reaper");
+    return;
+  }
+
   /* const int N = 10; */
   /* for (int i = 0; i < N; ++i) { // N should > 2 */
 

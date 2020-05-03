@@ -37,7 +37,7 @@
 #pragma once
 
 #define BUF_SIZE 1024
-char uart_buffer[BUF_SIZE];
+
 
 
 void uart_init();

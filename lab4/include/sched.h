@@ -1,6 +1,6 @@
 #pragma once
 
-#define NR_TASKS                   64
+#define NR_TASKS                   128
 #define THREAD_CPU_CONTEXT         0
 #define THREAD_SIZE                4096
 
@@ -44,6 +44,7 @@ struct task_struct {
 struct task_struct *privilege_task_create(void (*func)(), unsigned long num);
 void context_switch(struct task_struct *next);
 void schedule();
+void zombie_reaper();
 void timer_tick();
 void preempt_enable();
 void preempt_disable();

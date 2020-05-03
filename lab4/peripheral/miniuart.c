@@ -50,6 +50,7 @@
 
 #define IIR_REG_REC_NON_EMPTY (2 << 1)
 
+char uart_buffer[BUF_SIZE] = {0,};
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
