@@ -1,6 +1,7 @@
 #include "task.h"
 #include "time.h"
 #include "uart.h"
+#include "syscall.h"
 
 TaskManager taskManager;
 Task tasks[64];
@@ -30,7 +31,6 @@ void privilege_task_create(void(*func)())
     taskManager.runningTaskId = 0;
     taskManager.taskPool[taskId].timeCount = 0;
     taskManager.taskCount++;
-    //TODO: add task to RunQueue
 }
 
 void context_switch(Task* next)
@@ -51,7 +51,8 @@ void schedule()
 void foo()
 {
     while(1) {
-        wait(10000000);
+        get_taskid();
+        wait(100000000);
     }
 }
 

@@ -16,7 +16,7 @@ stp	x24, x25, [sp, #16 * 12]
 stp	x26, x27, [sp, #16 * 13]
 stp	x28, x29, [sp, #16 * 14]
 str	x30, [sp, #16 * 15] 
-// mov x0,  sp
+mov x0,  sp
 .endm
 
 .macro	kernel_exit

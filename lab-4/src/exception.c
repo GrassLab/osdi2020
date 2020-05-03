@@ -1,13 +1,10 @@
 #include "irq.h"
 #include "time.h"
+#include "syscall.h"
 #include "utility.h"
 
 void exception_handler(unsigned long sp)
 {
-    // uart_puts("exception_handler: sp: ");
-    // uart_print_hex(sp);
-    // uart_puts("\n");
-
     unsigned int el_level;
     unsigned int esr, elr, spsr, far;
     unsigned int ec, iss, retaddr;
@@ -37,13 +34,23 @@ void exception_handler(unsigned long sp)
         __getTimestamp();
     }
 
-    uart_puts("[info] Exception Level: 0x");
-    uart_print_hex(el_level);
-    uart_puts("\n[info] Exception Class: 0x");
-    uart_print_hex(ec);
-    uart_puts("\n[info] Instruction Specific syndrome: 0x");
-    uart_print_hex(iss);
-    uart_puts("\n[info] Exception return address: 0x");
-    uart_print_hex(retaddr);
-    uart_puts("\n\n");
+    unsigned long *spp = (unsigned long *)sp;
+    unsigned long x8 = *(spp+8);
+    unsigned long syscallReturnValue = 0;
+
+    if (x8 == SYSCALL_GET_TASK_ID) {
+        syscallReturnValue = __get_taskid();
+    }
+
+    *(spp) = syscallReturnValue;
+
+    // uart_puts("[exp] Exception Level: 0x");
+    // uart_print_hex(el_level);
+    // uart_puts("\n[exp] Exception Class: 0x");
+    // uart_print_hex(ec);
+    // uart_puts("\n[exp] Instruction Specific syndrome: 0x");
+    // uart_print_hex(iss);
+    // uart_puts("\n[exp] Exception return address: 0x");
+    // uart_print_hex(retaddr);
+    // uart_puts("\n\n");
 }

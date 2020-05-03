@@ -10,7 +10,7 @@ OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
 run: $(TARGET)
-	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -serial stdio -display none -s
+	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -serial stdio -display none -s -d int
 debug: $(TARGET)
 	qemu-system-aarch64 -M raspi3 -kernel $(TARGET) -s -serial stdio -display none -d int -S
 loader: 
