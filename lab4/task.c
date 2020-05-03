@@ -41,8 +41,10 @@ void task_privilege_task_create(void(*start_func)())
 
   /* assign context */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.lr = (uint64_t)start_func;
-  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(task_kernel_stack_pool[TASK_ID_TO_IDX(new_id)] + TASK_KERNEL_STACK_SIZE);
-  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool[TASK_ID_TO_IDX(new_id)] + TASK_KERNEL_STACK_SIZE);
+
+  /* stack grow from high to low */
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(task_kernel_stack_pool[new_id]);
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool[new_id]);
 
   /* push into queue */
   schedule_enqueue(new_id);
@@ -97,12 +99,13 @@ void task_privilege_demo(void)
 
 void task_do_exec(void(*start_func)())
 {
+  /* CAUTION: kernel stack may explode if you keep doing exec */
   uint64_t current_task_id = task_get_current_task_id();
   /* setup register and eret */
   asm volatile(
     "mov x0, %0\n"
     "msr sp_el0, x0\n"
-    : : "r"((uint64_t)(task_user_stack_pool[TASK_ID_TO_IDX(current_task_id)] + TASK_USER_STACK_SIZE)));
+    : : "r"((uint64_t)(task_user_stack_pool[current_task_id]))); /* stack grows from high to low */
 
   asm volatile(
     "mov x0, %0\n"
