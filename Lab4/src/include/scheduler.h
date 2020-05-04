@@ -60,6 +60,7 @@ extern void preempt_enable(void);
 extern void schedule_tail(void);
 extern void timer_tick();
 extern void exit_process();
+extern int  num_runnable_tasks();
 
 #define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 	{0,0}, \

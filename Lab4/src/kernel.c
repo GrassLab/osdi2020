@@ -60,19 +60,30 @@ void get_VC_core_base_addr(){
   }
 }
 
+void foo_kernel(){
+  	while(1) {
+    		printf("Task id: %d\n", current -> pid);
+    		delay(100000000);
+    		schedule();
+  	}
+}
+
+
 void foo(){
-  int tmp = 5;
-  printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
-  exit(0);
+  	int tmp = 5;
+  	printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+  	exit(0);
 }
 
 void idle(){
-  while(1){
-    	schedule();
-    	delay(100000);
-  }
-  printf("Test finished\n");
-  while(1);
+  	while(1){
+ 		//if(num_runnable_tasks() == 1) 
+      		//	break;
+    		schedule();
+    		delay(100000);
+  	}
+  	printf("Test finished\n");
+  	while(1);
 }
 
 void uart_test(){
@@ -105,7 +116,7 @@ void mytest(){
 	
 	while(cnt < 10) {
 		printf("Task id: %d (priority %d), cnt addr: 0x%x, value: %d\r\n", get_taskid(),get_priority(), &cnt, cnt);
-		delay(1000000);
+		delay(100000000);
 		++cnt;
 		if(pid>0&&cnt>7)
 			kill(pid,SIGKILL);
@@ -113,25 +124,27 @@ void mytest(){
 	exit(0);
 }
 
-void test() {	
-  	int cnt = 1; 
-	if (fork() == 0) {
+void test() {
+  	int cnt = 1;
+  	if (fork() == 0) {
     		fork();
-    		delay(100000);	
+    		delay(100000);
     		fork();
-
-		while(cnt < 10) {
-      			printf("Task id: %d, cnt addr: 0x%x, value: %d\n", get_taskid(), &cnt, cnt);
-      			delay(100000);
+    		while(cnt < 10) {
+      			printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+      			delay(10000000);
       			++cnt;
-    		}
-   	 	exit(0);
+   		 }
+    		exit(0);
     		printf("Should not be printed\n");
-  	} else {	
+  	} else {
     		printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
     		exec(foo);
-  	}
-	exit(0);	
+ 	 }
+}
+
+void user_test(){
+  	do_exec(test);
 }
 
 void kernel_process_b(){
@@ -194,7 +207,15 @@ void kernel_main(void)
         	return;
     }
     
-    	
+    /* Test case 1: 
+    for(int i = 0; i < 2; ++i) { // N should > 2
+    	privilege_task_create(foo_kernel,1);
+    }*/     
+
+    /* Test case 2: 
+    privilege_task_create(user_test,1);*/
+    
+    /* My test 
     for(int num=0;num<2;num++){ 
     	int res = privilege_task_create(kernel_process,num+1);
 
@@ -202,9 +223,10 @@ void kernel_main(void)
         	printf("error while starting process");
         	return;
     	}
-    }	
+    }	*/
    	
-    /* Task with uart 
+    
+    /* Test with uart */
     for(int num=0;num<2;num++){ 
     	int res = privilege_task_create(kernel_process_b,num+1);
 
@@ -212,7 +234,7 @@ void kernel_main(void)
         	printf("error while starting process");
         	return;
     	}
-     }*/
+     }
     
     idle();
 }

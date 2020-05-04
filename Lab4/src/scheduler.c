@@ -45,8 +45,8 @@ void _schedule(void)
 			
 		// If runQ empty, give exist task timeslice and keep waiting
 		else {
-			//give timeslice except pid 0
-			for (int i = 1; i < NR_TASKS; i++) {
+			//give timeslice 
+			for (int i = 0; i < NR_TASKS; i++) {
 				p = task[i];
 				if (p && p->state==TASK_RUNNING) {
 					flag = 1;
@@ -125,4 +125,15 @@ void exit_process(){
 	preempt_enable();
 	
 	schedule();
+}
+
+int num_runnable_tasks() {
+	for(int i=0; i<NR_TASKS;i++){
+		if(task[i] && task[i]->state==TASK_RUNNING && \
+				task[i]->pid>1){
+			printf("task %d running\r\n",i);
+			return 0;
+		}
+	}
+	return 1;
 }
