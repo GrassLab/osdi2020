@@ -133,3 +133,9 @@ int sys_exit(int status)
   return 0;
 }
 
+int sys_signal(int task_id, int signalno)
+{
+  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].signal, signalno);
+  return 0;
+}
+

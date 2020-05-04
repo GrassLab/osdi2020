@@ -5,6 +5,9 @@
 #include "uart.h"
 #include "timer.h"
 #include "schedule.h"
+#include "signal.h"
+#include "task.h"
+#include "sys.h"
 
 void irq_int_enable(void)
 {
@@ -24,9 +27,16 @@ void irq_el1_handler(void)
   static int local_timer_count = 0;
   if(CHECK_BIT(*CORE0_IRQ_SRC, 1))
   {
-    /* ARM core timer interrupt */
-    schedule_update_quantum_count();
+    /* ARM core timer interrupt, update*/
     timer_set_core_timer_approx_ms(SCHEDULE_TIMEOUT_MS);
+
+    schedule_update_quantum_count();
+
+    /* check SIGKILL */
+    if(CHECK_BIT(task_get_current_task_signal(), SIGKILL))
+    {
+      sys_exit(1);
+    }
 
     /* check reschedule bit */
     if(schedule_check_self_reschedule())

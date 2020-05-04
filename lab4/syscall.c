@@ -37,8 +37,16 @@ int syscall_fork(void)
 
 int syscall_exit(int status)
 {
-  asm volatile("svc #7");
   asm volatile("mov x1, %0" : : "r"(status));
+  asm volatile("svc #7");
+  return 0;
+}
+
+int syscall_signal(int task_id, int signalno)
+{
+  asm volatile("mov x1, %0" : : "r"(task_id));
+  asm volatile("mov x2, %0" : : "r"(signalno));
+  asm volatile("svc #8");
   return 0;
 }
 

@@ -8,6 +8,7 @@
 #include "syscall.h"
 #include "sys.h"
 #include "shell.h"
+#include "signal.h"
 
 struct task_struct kernel_task_pool[TASK_POOL_SIZE];
 uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
@@ -40,6 +41,9 @@ uint64_t task_privilege_task_create(void(*start_func)())
 
   /* reset flag */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].flag = 0;
+
+  /* reset signal */
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].signal = 0;
 
   /* assign context */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.lr = (uint64_t)start_func;
@@ -147,32 +151,57 @@ void task_user_context1_demo(void)
 void task_user_context2_demo(void)
 {
   char input_string[0x20];
-  int new_task_id;
+  int second_meeseek_id;
 
   syscall_uart_puts(ANSI_BLUE"[I'm Mr.Meeseeks. Look at me] "ANSI_RESET "Let's call another meeseeks.\n");
-  new_task_id = syscall_fork();
-  if(new_task_id == 0)
+  second_meeseek_id = syscall_fork();
+  if(second_meeseek_id == 0)
   {
+    int third_meeseek_id;
     uint64_t current_sp;
     char current_sp_hex[0x10];
-    char ann[] = ANSI_MAGENTA"[I'm the newly created meeseeks] "ANSI_RESET;
+    char ann[0x80] = ANSI_MAGENTA"[I'm the second meeseeks] "ANSI_RESET;
 
     asm volatile("mov %0, sp" : "=r"(current_sp));
     string_ulonglong_to_hex_char(current_sp_hex, current_sp);
     syscall_uart_puts(ann);
     syscall_uart_puts("sp: ");
     syscall_uart_puts(current_sp_hex);
-    syscall_uart_puts(" I will exit when I recieve input\n");
+    syscall_uart_puts(" I fork a new meeseeks and exit when I recieve input\n");
     syscall_uart_gets(input_string, '\n', 0x20 - 2);
-    syscall_uart_puts(ann);
-    uart_puts("Owee new mission accomplished. [Poof]\n");
-    syscall_exit(0);
+
+    third_meeseek_id = syscall_fork();
+    if(third_meeseek_id == 0)
+    {
+      asm volatile("mov %0, sp" : "=r"(current_sp));
+      string_ulonglong_to_hex_char(current_sp_hex, current_sp);
+      ann[0] = '\0';
+      string_concat(ann, ANSI_CYAN"[I'm the third meeseeks] "ANSI_RESET);
+      while(1)
+      {
+        syscall_uart_puts(ann);
+        syscall_uart_puts("sp: ");
+        syscall_uart_puts(current_sp_hex);
+        syscall_uart_puts(" I can be killed by SIGKILL\n");
+        syscall_uart_gets(input_string, '\n', 0x20 - 2);
+        syscall_uart_puts(input_string);
+      }
+    }
+    else
+    {
+      syscall_uart_puts(ann);
+      syscall_uart_puts("New meeseeks has id of ");
+      string_longlong_to_char(input_string, third_meeseek_id);
+      syscall_uart_puts(input_string);
+      uart_puts(". Owee new mission accomplished. [Poof]\n");
+      syscall_exit(0);
+    }
   }
   else
   {
     uint64_t current_sp;
     char current_sp_hex[0x10];
-    char ann[] = ANSI_BLUE"[I'm the original meeseeks] "ANSI_RESET;
+    char ann[] = ANSI_BLUE"[I'm the first meeseeks] "ANSI_RESET;
 
     asm volatile("mov %0, sp" : "=r"(current_sp));
     string_ulonglong_to_hex_char(current_sp_hex, current_sp);
@@ -181,7 +210,7 @@ void task_user_context2_demo(void)
     syscall_uart_puts("sp: ");
     syscall_uart_puts(current_sp_hex);
     syscall_uart_puts(" New meeseeks has id of ");
-    string_longlong_to_char(input_string, new_task_id);
+    string_longlong_to_char(input_string, second_meeseek_id);
     syscall_uart_puts(input_string);
     syscall_uart_puts("\n");
 
@@ -192,13 +221,26 @@ void task_user_context2_demo(void)
       syscall_uart_puts(ann);
       syscall_uart_puts("sp: ");
       syscall_uart_puts(current_sp_hex);
-      syscall_uart_puts(" I won't quit until you enter 'shell'.\n");
+      syscall_uart_puts(" I won't quit until you enter 's', press 'k' to kill the third meeseeks.\n");
       syscall_uart_gets(input_string, '\n', 0x20 - 2);
-      if(string_cmp(input_string, "shell", 5))
+      if(input_string[0] == 's')
       {
         shell();
       }
+      if(input_string[0] == 'k')
+      {
+        /* In the demo scenario, the thrid meeseeks has task id 2 */
+        syscall_uart_puts(ann);
+        syscall_uart_puts("SIGKILL sent.\n");
+        syscall_signal(2, SIGKILL);
+      }
     }
   }
+}
+
+uint64_t task_get_current_task_signal(void)
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  return kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].signal;
 }
 

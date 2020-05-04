@@ -36,6 +36,7 @@ struct task_struct
   /* bit 0 -> reschedule */
   /* bit 1 -> zombie */
   uint64_t flag;
+  uint64_t signal;
   struct cpu_context_struct cpu_context;
 };
 
@@ -47,6 +48,7 @@ void task_do_exec(void(*start_func)());
 void task_user_demo(void);
 void task_user_context1_demo(void);
 void task_user_context2_demo(void);
+uint64_t task_get_current_task_signal(void);
 
 #endif
 
