@@ -30,3 +30,4 @@ void local_timer_init ();
 void local_timer_handler ();
 void local_timer_display_handler();
 void clear_local_timer_interrupt();
+void sched_core_timer_handler();
