@@ -113,8 +113,12 @@ int sys_fork(struct trapframe_struct * trapframe)
   /* NOTE: EFFECTED BY trap dispatcher */
   /* x0 of trapframe is located at sp + (272 + 32) - 16 bytes */
   *(uint64_t *)((uint64_t)(kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp) + 288) = 0;
+
   /* return value of parent should be new task id */
   *(uint64_t *)(((uint64_t)trapframe) + 288) = new_task_id;
+
+  /* sp_el0 (sp + 256) and fp (ignored) needs update */
+  *(uint64_t *)(((uint64_t)trapframe) + 256) = kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp_el0;
 
   return 0;
 }
