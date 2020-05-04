@@ -159,6 +159,8 @@ void doFork(uint64_t *trapframe) {
         return;
     }
 
+    trapframe[0] = new_task_id;
+
     copyUserContext(new_task_id);
 
     cur_task->kernel_context.sp = (uint64_t)trapframe;
