@@ -17,7 +17,7 @@ void scheduler_init(void)
                "msr tpidr_el1, x0\n");
   task_privilege_task_create(task_idle); /* Reserve the space for idle_task */
   /* Demo purpose */
-  //task_privilege_task_create(task_user_demo);
+  task_privilege_task_create(schedule_zombie_reaper);
   task_privilege_task_create(task_privilege_demo);
   task_privilege_task_create(task_user_demo);
   /* End of demo purpose */
@@ -110,5 +110,47 @@ void schedule_yield(void)
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
   scheduler();
   return;
+}
+
+void schedule_zombie_reaper(void)
+{
+  char ann[] = ANSI_RED"[Zombie reaper] "ANSI_RESET;
+
+  uart_puts(ann);
+  uart_puts("Allow me to introduce myself.\n");
+  while(1)
+  {
+    for(unsigned task_idx = 0; task_idx < TASK_POOL_SIZE; ++task_idx)
+    {
+      if(CHECK_BIT(kernel_task_pool[task_idx].flag, 1))
+      {
+        char id_in_string[0x10];
+
+        /* free task struct */
+        kernel_task_pool[task_idx].flag = 0;
+        kernel_task_pool[task_idx].id = 0;
+
+        /* remove all the zombie in schedule_run_queue */
+        /* There will always be idle and zombie reaper in queue */
+        int queue_length = schedule_run_queue.tail - schedule_run_queue.head;
+
+        for(int queue_idx = 0; queue_idx < queue_length; ++queue_idx)
+        {
+          uint64_t task_id = QUEUE_POP(schedule_run_queue);
+          /* queue back if the task is not zombie */
+          if(task_id != task_idx + 1)
+          {
+            QUEUE_PUSH(schedule_run_queue, task_id);
+          }
+        }
+        string_longlong_to_char(id_in_string, task_idx + 1);
+        uart_puts(ann);
+        uart_puts("Task id: ");
+        uart_puts(id_in_string);
+        uart_puts(" reaped!\n");
+      }
+    }
+    schedule_yield();
+  }
 }
 
