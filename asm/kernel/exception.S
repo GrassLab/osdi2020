@@ -1,3 +1,20 @@
+/*
+exception_entry:
+	push x0~x30, SP_EL0, ELR_EL1, SPSR_EL1
+exception_handler:
+	syscall or show exception
+exception_exit:
+	pop x0~x30, SP_EL0, ELR_EL1, SPSR_EL1
+irq_entry:
+	push x0~x30, SP_EL0, ELR_EL1, SPSR_EL1
+	swith to IRQ stack
+irq_hander:
+	if (core timer) set reschedule bit
+irq_exit:
+	swith back to kernel task stack
+	schedule
+	pop x0~x30, SP_EL0, ELR_EL1, SPSR_EL1
+*/
 .section ".text"
   .macro kernel_entry
   sub	sp, sp, #16 * 17
@@ -21,6 +38,9 @@
   mrs 	x9, ELR_EL1
   mrs 	x10, SPSR_EL1
   stp 	x9, x10, [sp, #16 * 16]
+  mrs 	x9, tpidr_el1
+  mov 	x10, sp
+  str 	x10, [x9, #16 * 6 + 8]
   .endm
 
   .macro kernel_exit
@@ -67,6 +87,7 @@ exception_handler:
   bl enable_irq
   bl system_call
   bl disable_irq
+  // set return value
   str x0, [sp, #16 * 0]
 exc_end:
   kernel_exit
