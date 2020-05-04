@@ -5,7 +5,7 @@
 #define EXEC 1
 #define EXIT 2
 #define GET_TASK_ID 3
-#define UART_PUTS 4
-#define UART_INT 5
+#define UART_WRITE 4
+#define UART_READ 5
 
 #endif

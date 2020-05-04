@@ -7,6 +7,7 @@
 extern struct task *current;
 extern struct task_queue tq;
 extern struct task task_pool[64];
+extern char kstack_pool[64][4096];
 extern uint32_t task_count;
 
 void _sysGetTaskId();

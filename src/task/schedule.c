@@ -29,9 +29,9 @@ void schedule()
 		return;
 
 	// uartPuts("Reschedule from ");
-	// uartInt(current->kernel_context.sp_el0);
+	// uartInt(current->task_id);
 	// uartPuts(" to ");
-	// uartInt(next_task->kernel_context.sp_el0);
+	// uartInt(next_task->task_id);
 	// uartPuts("\n");
 	contextSwitch(next_task);
 

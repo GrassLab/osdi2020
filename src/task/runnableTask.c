@@ -28,7 +28,7 @@ void foo()
     uartPuts("Task ");
     uartInt(getTaskId());
     uartPuts(" after exec, tmp address ");
-    uartInt(&tmp);
+    uartHex((uint32_t)&tmp);
     uartPuts(", tmp value ");
     uartInt(tmp);
     uartPuts("\n");
@@ -45,24 +45,19 @@ void forkTask()
     {
         fork();
 
-        delay(50000000);
+        delay(5000000);
 
         fork();
 
         while (cnt < 10)
         {
-            uint32_t sp = 0;
-            asm volatile("mov %0, sp"
-                         : "=r"(sp));
             uartPuts("Task id: ");
             uartInt(getTaskId());
             uartPuts(", cnt: ");
             uartInt(cnt);
-            uartPuts(" , cnt address ");
-            uartInt(sp);
             uartPuts("\n");
 
-            delay(50000000);
+            delay(5000000);
 
             ++cnt;
         }
@@ -75,7 +70,7 @@ void forkTask()
         uartPuts("Task ");
         uartInt(getTaskId());
         uartPuts(" before exec, cnt address ");
-        uartInt(&cnt);
+        uartHex((uint32_t)&cnt);
         uartPuts(", cnt value ");
         uartInt(cnt);
         uartPuts("\n");

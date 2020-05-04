@@ -24,14 +24,14 @@ getTaskId:
     svc #0
     ret
 
-.globl uuartPuts
-uartPuts:
-    mov x8, UART_PUTS
+.globl uartWrite
+uartWrite:
+    mov x8, UART_WRITE
     svc #0
     ret 
 
-.globl uuartInt
-uartInt:
-    mov x8, UART_INT
+.globl uartRead
+uartRead:
+    mov x8, UART_READ
     svc #0
     ret 

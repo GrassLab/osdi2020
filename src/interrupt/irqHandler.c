@@ -40,11 +40,11 @@ void _systemCall()
     case GET_TASK_ID:
         _sysGetTaskId();
         break;
-        // case UART_PUTS:
-        //     _sysUartPuts();
-        //     break;
-        // case UART_INT:
-        //     _sysUartInt();
+    case UART_WRITE:
+        _sysUartWrite();
+        break;
+    case UART_READ:
+        _sysUartRead();
         break;
     default:
         break;

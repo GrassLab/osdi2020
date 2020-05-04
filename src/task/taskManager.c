@@ -61,16 +61,20 @@ void _sysFork()
 	asm volatile("mrs %0, sp_el0"
 				 : "=r"(usp_end));
 	uint32_t ustack_used = usp_begin - usp_end;
+	uint32_t ufp = *(uint32_t *)(ksp_begin - 3 * 8);
+	uint32_t ufp_offset = usp_end - ufp;
 
-	// Set parent trapframe
+	// Set parent return value
 	*(uint32_t *)(ksp_begin - 32 * 8) = free_pool_num;
 
 	// Copy the kernel stack
 	copyStack(new_kstack, &kstack_pool[current->task_id + 1], kstack_used);
 	copyStack(new_ustack, &ustack_pool[current->task_id + 1], 4096);
 
-	// Set child trapframe
+	// Set child return value
 	*(uint32_t *)(new_kstack - 32 * 8) = 0;
+	// Set child fp
+	*(uint32_t *)(new_kstack - 3 * 8) = new_ustack - ustack_used + ufp_offset;
 	// Because the stack is copied, the stack pointer should be moved down
 	new_task->kernel_context.sp = new_kstack - kstack_used;
 	new_task->kernel_context.sp_el0 = new_ustack - ustack_used;

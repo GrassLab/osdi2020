@@ -27,6 +27,8 @@
 #include "device/gpio.h"
 #include "device/mbox.h"
 #include "task/sysCallTable.h"
+#include "task/sysCall.h"
+#include "task/taskManager.h"
 
 /* PL011 UART registers */
 #define UART0_DR ((volatile uint32_t *)(MMIO_BASE + 0x00201000))
@@ -107,6 +109,22 @@ char uartGetc()
     return r == '\r' ? '\n' : r;
 }
 
+void _sysUartWrite()
+{
+    uint32_t sp_begin = &kstack_pool[current->task_id + 1];
+    uint32_t c = *(uint32_t *)(sp_begin - 32 * 8);
+
+    uartSend(c);
+}
+
+void _sysUartRead()
+{
+    uint32_t sp_begin = &kstack_pool[current->task_id + 1];
+
+    char c = uartGetc();
+    *(uint32_t *)(sp_begin - 32 * 8) = c;
+}
+
 /**
  * Receive a character without converting carrige return
  */
@@ -133,7 +151,9 @@ void uartPuts(char *s)
     {
         /* convert newline to carrige return + newline */
         if (*s == '\n')
+            // uartWrite('\r');
             uartSend('\r');
+        // uartWrite(*s++);
         uartSend(*s++);
     }
 }
@@ -143,8 +163,10 @@ void uartPuts(char *s)
  */
 void uartHex(uint32_t d)
 {
+    uartPuts("0x");
+
     uint32_t n;
-    uint32_t c;
+    int32_t c;
     for (c = 28; c >= 0; c -= 4)
     {
         // get highest tetrad
@@ -152,13 +174,17 @@ void uartHex(uint32_t d)
         // 0-9 => '0'-'9', 10-15 => 'A'-'F'
         n += n > 9 ? 0x37 : 0x30;
         uartSend(n);
+        // uartWrite(n);
     }
+
+    return;
 }
 
 void uartInt(uint32_t i)
 {
     if (i == 0)
     {
+        // uartWrite('0');
         uartSend('0');
         return;
     }
@@ -189,23 +215,3 @@ void uartFloat(double f)
     uartPuts(".");
     uartInt(frac);
 }
-
-// void _sysUartPuts()
-// {
-//     uint32_t sp_begin;
-//     asm volatile("mov %0, x9"
-//                  : "=r"(sp_begin));
-//     uint32_t string_p = *(uint32_t *)(sp_begin - 32 * 8);
-
-//     _uartPuts(string_p);
-// }
-
-// void _sysUartInt()
-// {
-//     uint32_t sp_begin;
-//     asm volatile("mov %0, x9"
-//                  : "=r"(sp_begin));
-//     uint32_t val = *(uint32_t *)(sp_begin - 32 * 8);
-
-//     _uartInt(val);
-// }

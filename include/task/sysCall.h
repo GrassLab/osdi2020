@@ -7,7 +7,7 @@ int32_t fork();
 int32_t exec(void (*func)());
 void exit(int32_t status);
 uint32_t getTaskId();
-void uuartPuts(const char *s);
-void uuartInt(uint32_t i);
+void uartWrite(uint32_t c);
+char uartRead();
 
 #endif
