@@ -59,6 +59,6 @@ int sys_fork ();
 void sys_exit (int status);
 void do_exit (int status);
 void zombie_reaper ();
-struct trapframe * get_syscall_trapframe ();
+struct trapframe *get_syscall_trapframe (struct task_struct *task);
 
 #endif /* ifndef SCHED */
