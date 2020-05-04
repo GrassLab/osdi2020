@@ -158,6 +158,8 @@ void schedule()
     next->counter = CNT;
     uart_puts("switch to next task: ");
     uart_hex(next_task);
+    uart_puts(", state: ");
+    uart_hex(next->state);
     uart_puts("\n");
     context_switch(next);
 
@@ -402,7 +404,7 @@ void final_idle()
 {
     while(1){
         uart_puts("idle...\n");
-        if(TaskManager.task_num == TaskManager.zombie_num-1) {
+        if(TaskManager.task_num == TaskManager.zombie_num+1) {
             break;
         }
         schedule();

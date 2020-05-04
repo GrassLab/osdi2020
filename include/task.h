@@ -8,6 +8,7 @@
 #define EXC_CONTEXT         7
 
 
+
 // the cpu_context's order must be the same as switch_to
 struct cpu_context {
     unsigned long x19;
@@ -34,9 +35,9 @@ struct user_context {
 struct task {
     struct cpu_context cpu_context;
     struct user_context user_context;
-    long state;
     long counter;
     long priority;  
+    long state;
     // long preempt_count;
     unsigned long task_id;
     unsigned long parent_id;

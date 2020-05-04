@@ -32,7 +32,7 @@
 	mrs	x2, sp_el0
     mrs	x3, elr_el1
 	mrs	x4, spsr_el1
-    mov x5, #2  // IN_OUT_KERNEL
+    // mov x5, #2  // IN_OUT_KERNEL
     str x2, [x1, 8 * 13]
     str x3, [x1, 8 * 14]
     str x4, [x1, 8 * 15]
@@ -57,7 +57,7 @@
 
 	.if	\el == 0
     mrs x1, tpidr_el1
-    mov x5, #2  // IN_OUT_KERNEL
+    // mov x5, #2  // IN_OUT_KERNEL
     str x5, [x1, 8 * 16]
     ldr x2, [x1, 8 * 13]
     ldr x3, [x1, 8 * 14]
