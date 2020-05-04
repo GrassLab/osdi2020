@@ -40,6 +40,7 @@ struct task_struct *privilege_task_create (void (*func) ());
 extern struct task_struct *get_current ();
 extern void switch_to (struct task_struct *cur, struct task_struct *next);
 struct list_head *runqueue;
+struct list_head *zombiequeue;
 void schedule ();
 int do_exec (void (*func) ());
 int sys_exec (void (*func) ());
@@ -47,6 +48,8 @@ size_t do_get_task_id ();
 size_t sys_get_task_id ();
 int do_fork ();
 int sys_fork ();
-
+void sys_exit (int status);
+void do_exit (int status);
+void zombie_reaper ();
 
 #endif /* ifndef SCHED */

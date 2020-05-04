@@ -7,4 +7,5 @@ extern int exec (void (*func) ());
 extern double get_time ();
 extern size_t get_task_id ();
 extern int fork ();
+extern void exit (int status);
 #endif /* ifndef SYSCALL */

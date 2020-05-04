@@ -25,3 +25,8 @@ fork:
   mov x8, #6
   svc #0
   ret
+.global exit
+exit:
+  mov x8, #7
+  svc #0
+  ret

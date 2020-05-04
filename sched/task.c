@@ -104,3 +104,19 @@ sys_fork ()
 {
   return do_fork ();
 }
+
+void
+do_exit (int status)
+{
+  struct task_struct *cur = current;
+  disable_irq ();
+  list_del (&cur->list);
+  enable_irq ();
+  schedule ();
+}
+
+void
+sys_exit (int status)
+{
+  do_exit (status);
+}
