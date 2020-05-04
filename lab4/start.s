@@ -74,17 +74,6 @@ el1_schedule:
   bl uart_init
   bl scheduler_init
 
-el1_to_el0:
-  eor x0, x0, x0
-  msr spsr_el1, x0
-  adr x0, main
-  msr elr_el1, x0
-  eret // return to main
-
-  // Jump to main
-  // main should not return or the stack will be smashed
-  //bl main
-
-  // If main return, enter low power mode
+  // In case return, enter low power mode
   b other_core
 

@@ -7,6 +7,7 @@
 #include "string_util.h"
 #include "syscall.h"
 #include "sys.h"
+#include "shell.h"
 
 struct task_struct kernel_task_pool[TASK_POOL_SIZE];
 uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
@@ -62,21 +63,25 @@ uint64_t task_get_current_task_id(void)
 
 void task_privilege_demo(void)
 {
+  char ann[] = ANSI_YELLOW"[Privilege task] "ANSI_RESET;
   int current_reschedule_count = 0;
   int max_reschedule_time = 3;
+
   while(1)
   {
     char string_buff[0x10];
     uint64_t current_task_id = task_get_current_task_id();
     uint64_t current_quantum_count;
-    uart_puts("Hi I'm "ANSI_YELLOW"privilege task"ANSI_RESET" id ");
+
+    uart_puts(ann);
+    uart_puts("Hi I'm id ");
     string_longlong_to_char(string_buff, (int64_t)current_task_id);
     uart_puts(string_buff);
     uart_putc('\n');
     irq_int_enable();
-    uart_puts("Enabling timer interrupt\n");
+    uart_puts(ann);
+    uart_puts("Enabling timer interrupt and waiting to reschedule\n");
 
-    uart_puts("Waiting to reschedule\n");
     /* if quantum_count get from task_pool is less than previous one, the reschedule occurred */
     do
     {
@@ -87,7 +92,8 @@ void task_privilege_demo(void)
     ++current_reschedule_count;
     if(current_reschedule_count >= max_reschedule_time)
     {
-      uart_puts(ANSI_YELLOW"Privilege task"ANSI_RESET" exit\n");
+      uart_puts(ann);
+      uart_puts("exiting\n");
       sys_exit(0);
     }
   }
@@ -116,13 +122,15 @@ void task_do_exec(void(*start_func)())
 
 void task_user_demo(void)
 {
+  char ann[] = ANSI_YELLOW"[Privilege task that will exec to user mode] "ANSI_RESET;
   char string_buff[0x10];
   uint64_t current_task_id = task_get_current_task_id();
 
-  irq_int_enable();
-  uart_puts(ANSI_YELLOW"task_user_demo"ANSI_RESET" in kernel mode with irq enable id ");
   string_longlong_to_char(string_buff, (int64_t)current_task_id);
+  uart_puts(ann);
+  uart_puts("In kernel mode with irq enable ID: ");
   uart_puts(string_buff);
+  irq_int_enable();
   uart_putc('\n');
 
   task_do_exec(task_user_context1_demo);
@@ -130,7 +138,8 @@ void task_user_demo(void)
 
 void task_user_context1_demo(void)
 {
-  syscall_uart_puts(ANSI_YELLOW"task_user_demo"ANSI_RESET" in user mode.\n");
+  char ann[] = ANSI_YELLOW"[Privilege task that exec\"ed\" to user mode] "ANSI_RESET;
+  uart_puts(ann);
   syscall_uart_puts("Let's exec in user mode\n");
   syscall_exec(task_user_context2_demo);
 }
@@ -140,28 +149,56 @@ void task_user_context2_demo(void)
   char input_string[0x20];
   int new_task_id;
 
-  syscall_uart_puts("I'm "ANSI_BLUE"Mr.Meeseeks"ANSI_RESET". Look at me. Let's call another meeseeks.\n");
+  syscall_uart_puts(ANSI_BLUE"[I'm Mr.Meeseeks. Look at me] "ANSI_RESET "Let's call another meeseeks.\n");
   new_task_id = syscall_fork();
   if(new_task_id == 0)
   {
-    syscall_uart_puts("I'm the new "ANSI_BLUE"meeseeks"ANSI_RESET"\n");
+    uint64_t current_sp;
+    char current_sp_hex[0x10];
+    char ann[] = ANSI_MAGENTA"[I'm the newly created meeseeks] "ANSI_RESET;
+
+    asm volatile("mov %0, sp" : "=r"(current_sp));
+    string_ulonglong_to_hex_char(current_sp_hex, current_sp);
+    syscall_uart_puts(ann);
+    syscall_uart_puts("sp: ");
+    syscall_uart_puts(current_sp_hex);
+    syscall_uart_puts(" I will exit when I recieve input\n");
     syscall_uart_gets(input_string, '\n', 0x20 - 2);
-    uart_puts("Owee new "ANSI_BLUE"meeseeks"ANSI_RESET" mission accomplished. [Poof]\n");
+    syscall_uart_puts(ann);
+    uart_puts("Owee new mission accomplished. [Poof]\n");
     syscall_exit(0);
   }
   else
   {
-    syscall_uart_puts("New "ANSI_BLUE"meeseeks"ANSI_RESET" has id of ");
+    uint64_t current_sp;
+    char current_sp_hex[0x10];
+    char ann[] = ANSI_BLUE"[I'm the original meeseeks] "ANSI_RESET;
+
+    asm volatile("mov %0, sp" : "=r"(current_sp));
+    string_ulonglong_to_hex_char(current_sp_hex, current_sp);
+
+    syscall_uart_puts(ann);
+    syscall_uart_puts("sp: ");
+    syscall_uart_puts(current_sp_hex);
+    syscall_uart_puts(" New meeseeks has id of ");
     string_longlong_to_char(input_string, new_task_id);
     syscall_uart_puts(input_string);
     syscall_uart_puts("\n");
 
     while(1)
     {
-      syscall_uart_puts("I'm the original "ANSI_BLUE"meeseeks"ANSI_RESET", I won't quit user mode.\n");
+      asm volatile("mov %0, sp" : "=r"(current_sp));
+      string_ulonglong_to_hex_char(current_sp_hex, current_sp);
+      syscall_uart_puts(ann);
+      syscall_uart_puts("sp: ");
+      syscall_uart_puts(current_sp_hex);
+      syscall_uart_puts(" I won't quit until you enter 'shell'.\n");
       syscall_uart_gets(input_string, '\n', 0x20 - 2);
+      if(string_cmp(input_string, "shell", 5))
+      {
+        shell();
+      }
     }
   }
-
 }
 
