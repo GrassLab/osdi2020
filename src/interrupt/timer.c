@@ -32,7 +32,7 @@ void coreTimerHandler()
 
     current->re_schedule = true;
 
-    asm volatile("mov x0, 0x1ffffff");
+    asm volatile("mov x0, 0x1fffff");
     asm volatile("msr cntp_tval_el0, x0");
 
     return;

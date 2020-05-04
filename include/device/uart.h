@@ -33,8 +33,10 @@ void uartSend(uint32_t c);
 char uartGetc();
 char uartGetcWithCR();
 void uartPuts(const char *s);
+void _sysUartPuts();
 void uartHex(uint32_t d);
 void uartInt(uint32_t i);
+void _sysUartInt();
 void uartFloat(double f);
 
 #endif

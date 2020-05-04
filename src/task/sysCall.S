@@ -17,3 +17,21 @@ exit:
     mov x8, EXIT
     svc #0
     ret
+
+.globl getTaskId
+getTaskId:
+    mov x8, GET_TASK_ID
+    svc #0
+    ret
+
+.globl uuartPuts
+uartPuts:
+    mov x8, UART_PUTS
+    svc #0
+    ret 
+
+.globl uuartInt
+uartInt:
+    mov x8, UART_INT
+    svc #0
+    ret 

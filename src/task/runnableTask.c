@@ -4,6 +4,14 @@
 #include "task/schedule.h"
 #include "task/sysCall.h"
 
+void delay(uint32_t count)
+{
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        asm volatile("nop");
+    }
+}
+
 // User task
 
 void userTask()
@@ -14,20 +22,64 @@ void userTask()
     exit(0);
 }
 
+void foo()
+{
+    uint32_t tmp = 5;
+    uartPuts("Task ");
+    uartInt(getTaskId());
+    uartPuts(" after exec, tmp address ");
+    uartInt(&tmp);
+    uartPuts(", tmp value ");
+    uartInt(tmp);
+    uartPuts("\n");
+    exit(0);
+}
+
 void forkTask()
 {
     asm volatile("svc #2"); // Enable timer
 
-    // int r = fork();
-    // uartInt(r);
+    uint32_t cnt = 1;
+
     if (fork() == 0)
     {
-        uartPuts("child\n");
-        exec(&userTask);
+        fork();
+
+        delay(50000000);
+
+        fork();
+
+        while (cnt < 10)
+        {
+            uint32_t sp = 0;
+            asm volatile("mov %0, sp"
+                         : "=r"(sp));
+            uartPuts("Task id: ");
+            uartInt(getTaskId());
+            uartPuts(", cnt: ");
+            uartInt(cnt);
+            uartPuts(" , cnt address ");
+            uartInt(sp);
+            uartPuts("\n");
+
+            delay(50000000);
+
+            ++cnt;
+        }
+
+        exit(0);
+        uartPuts("Should not be printed\n");
     }
     else
     {
-        uartPuts("parent\n");
+        uartPuts("Task ");
+        uartInt(getTaskId());
+        uartPuts(" before exec, cnt address ");
+        uartInt(&cnt);
+        uartPuts(", cnt value ");
+        uartInt(cnt);
+        uartPuts("\n");
+        exec(&foo);
     }
 }
 

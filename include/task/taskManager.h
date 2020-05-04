@@ -9,6 +9,7 @@ extern struct task_queue tq;
 extern struct task task_pool[64];
 extern uint32_t task_count;
 
+void _sysGetTaskId();
 void _sysFork();
 void _sysexec();
 void _sysexit();

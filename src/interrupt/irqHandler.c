@@ -37,6 +37,15 @@ void _systemCall()
     case EXIT:
         _sysexit();
         break;
+    case GET_TASK_ID:
+        _sysGetTaskId();
+        break;
+        // case UART_PUTS:
+        //     _sysUartPuts();
+        //     break;
+        // case UART_INT:
+        //     _sysUartInt();
+        break;
     default:
         break;
     }
@@ -55,7 +64,7 @@ void _printEXCInfo(uint64_t elr, uint64_t ec, uint64_t iss)
 
 void _enableTimer()
 {
-    uartPuts("Enable timer \n");
+    // uartPuts("Enable timer \n");
     enableCoreTimer();
     // localTimerInit();
     enableIrq();

@@ -24,10 +24,10 @@ struct cpu_context
 
 typedef enum
 {
+	zombie,
 	ready,
 	running,
-	pending,
-	zombie
+	pending
 } state;
 
 struct task

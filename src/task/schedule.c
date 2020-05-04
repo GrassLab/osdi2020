@@ -17,6 +17,8 @@ void contextSwitch(struct task *next)
 	current = next;
 
 	switchTo(&prev->kernel_context, &next->kernel_context);
+
+	return;
 }
 
 void schedule()
@@ -26,11 +28,11 @@ void schedule()
 	if (next_task == -1)
 		return;
 
-	uartPuts("Reschedule from ");
-	uartInt(current->task_id);
-	uartPuts(" to ");
-	uartInt(next_task->task_id);
-	uartPuts("\n");
+	// uartPuts("Reschedule from ");
+	// uartInt(current->kernel_context.sp_el0);
+	// uartPuts(" to ");
+	// uartInt(next_task->kernel_context.sp_el0);
+	// uartPuts("\n");
 	contextSwitch(next_task);
 
 	return;

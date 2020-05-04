@@ -26,6 +26,7 @@
 #include "type.h"
 #include "device/gpio.h"
 #include "device/mbox.h"
+#include "task/sysCallTable.h"
 
 /* PL011 UART registers */
 #define UART0_DR ((volatile uint32_t *)(MMIO_BASE + 0x00201000))
@@ -188,3 +189,23 @@ void uartFloat(double f)
     uartPuts(".");
     uartInt(frac);
 }
+
+// void _sysUartPuts()
+// {
+//     uint32_t sp_begin;
+//     asm volatile("mov %0, x9"
+//                  : "=r"(sp_begin));
+//     uint32_t string_p = *(uint32_t *)(sp_begin - 32 * 8);
+
+//     _uartPuts(string_p);
+// }
+
+// void _sysUartInt()
+// {
+//     uint32_t sp_begin;
+//     asm volatile("mov %0, x9"
+//                  : "=r"(sp_begin));
+//     uint32_t val = *(uint32_t *)(sp_begin - 32 * 8);
+
+//     _uartInt(val);
+// }

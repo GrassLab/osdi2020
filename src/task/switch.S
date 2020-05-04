@@ -53,6 +53,5 @@ copyContext:
     stp x27, x28, [x0, 16 * 4]
     stp x29, x30, [x0, 16 * 5]
     mrs x8, elr_el1
-    mrs x9, sp_el0
-    stp x8, x9, [x0, 16 * 6 + 8]
+    str x8, [x0, 16 * 6 + 8]
     ret
