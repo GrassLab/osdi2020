@@ -1,6 +1,7 @@
 #include "../include/peripheral.h"
 #include "../include/gpio.h"
 #include "../include/mailbox.h"
+#include "../include/sprintf.h"
 
 
 
@@ -254,3 +255,4 @@ void uart_memset (void *dst, char s, int len)
         *d++ = s;
     }
 }
+

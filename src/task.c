@@ -403,8 +403,8 @@ void final_user_test()
 void final_idle()
 {
     while(1){
-        uart_hex(TaskManager.task_num);
-        uart_hex(TaskManager.zombie_num);
+        // uart_hex(TaskManager.task_num);
+        // uart_hex(TaskManager.zombie_num);
         uart_puts("idle...\n");
         if(TaskManager.task_num == TaskManager.zombie_num+1) {
             break;
