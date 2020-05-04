@@ -8,6 +8,7 @@
 #include "queue.h"
 
 static uint64_t_queue schedule_run_queue;
+int schedule_zombie_exist = 0;
 
 void scheduler_init(void)
 {
@@ -15,9 +16,8 @@ void scheduler_init(void)
 
   asm volatile("mov x0, xzr\n"
                "msr tpidr_el1, x0\n");
-  task_privilege_task_create(task_idle); /* Reserve the space for idle_task */
-  /* Demo purpose */
   task_privilege_task_create(schedule_zombie_reaper);
+  /* Demo purpose */
   task_privilege_task_create(task_privilege_demo);
   task_privilege_task_create(task_user_demo);
   /* End of demo purpose */
@@ -43,12 +43,12 @@ void scheduler(void)
     /* Call schedule_idle_task */
     asm volatile("mov x0, %0\n"
                  "msr tpidr_el1, x0\n" : : "I"(1));
-    /* No need to switch from idle_task to idle_task */
+    /* No need to switch from zombie_reaper to zombie_reaper */
 #pragma GCC diagnostic ignored "-Wunused-value"
     QUEUE_POP(schedule_run_queue);
-    /* But idle_task still need to persist in run queue */
+    /* But zombie_reaper still need to persist in run queue */
     QUEUE_PUSH(schedule_run_queue, 1);
-    task_idle();
+    schedule_zombie_reaper();
   }
   else
   {
@@ -114,14 +114,24 @@ void schedule_yield(void)
 
 void schedule_zombie_reaper(void)
 {
-  char ann[] = ANSI_RED"[Zombie reaper] "ANSI_RESET;
-
+  char ann[] = ANSI_RED"[Zombie reaper/"ANSI_GREEN"idle] "ANSI_RESET;
   uart_puts(ann);
   uart_puts("Allow me to introduce myself.\n");
   while(1)
   {
+    if(schedule_zombie_exist == 0)
+    {
+      /* nothing to do, try to exhaust quantum */
+      while(schedule_check_queue_empty())
+      {
+        asm volatile("wfi");
+      }
+      schedule_yield();
+      continue;
+    }
     for(unsigned task_idx = 0; task_idx < TASK_POOL_SIZE; ++task_idx)
     {
+      schedule_zombie_exist = 0;
       if(CHECK_BIT(kernel_task_pool[task_idx].flag, 1))
       {
         char id_in_string[0x10];

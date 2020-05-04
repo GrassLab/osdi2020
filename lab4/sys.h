@@ -23,6 +23,7 @@ extern uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
 extern uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];
 
 extern void __sys_fork_child_entry(void);
+extern int schedule_zombie_exist;
 
 #endif
 

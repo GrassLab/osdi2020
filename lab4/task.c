@@ -60,20 +60,6 @@ uint64_t task_get_current_task_id(void)
   return current_task_id;
 }
 
-void task_idle(void)
-{
-  uart_puts("Hi I'm "ANSI_GREEN"IDLE"ANSI_RESET". There won't be any messages originate from this task from now on.\n");
-  while(1)
-  {
-    while(schedule_check_queue_empty())
-    {
-      asm volatile ("wfi");
-      /* keep waiting for new task even wake from timer interrupt */
-    }
-    scheduler();
-  }
-}
-
 void task_privilege_demo(void)
 {
   int current_reschedule_count = 0;
