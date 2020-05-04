@@ -161,13 +161,13 @@ sync_el0_64:
 
 irq_el0_64:
 	kernel_entry 0
+	mrs x0, esr_el1
+	mrs x1, elr_el1
 	bl	handle_irq
 	kernel_exit 0
 
 sync_el1h:
 	kernel_entry 1
-	mrs	x0, esr_el1  // Holds syndrome information for an exception taken to EL1.
-	mrs	x1, elr_el1  // When taking an exception to EL1, holds the address to return to.
 	bl	handle_el1_sync
 	kernel_exit 1
 

@@ -28,14 +28,14 @@ int privilege_task_create(unsigned long clone_flags, unsigned long fn, unsigned 
 		*childregs = *cur_regs;	// copy the parent kernel task
 		if (current->task_id > pid) {
 			childregs->regs[29] = cur_regs->regs[29] + get_user_page(current->task_id) - get_user_page(pid);
-			childregs->sp       = cur_regs->sp + get_user_page(current->task_id) - get_user_page(pid); 
+			childregs->sp       = cur_regs->sp + get_user_page(pid) - get_user_page(current->task_id);
 		}
 		else {
 			childregs->regs[29] = cur_regs->regs[29] + get_user_page(pid) - get_user_page(current->task_id);
 			childregs->sp       = cur_regs->sp + get_user_page(pid) - get_user_page(current->task_id);
 		}
 		childregs->regs[0] 	= 0; // fork return with 0
-		memcpy((unsigned long)childregs->sp, (unsigned long)cur_regs->sp, (childregs->sp - childregs->regs[29]));
+		memcpy((unsigned long)childregs->sp, (unsigned long)cur_regs->sp, ((LOW_USER_STACK + (pid - 1) * PAGE_SIZE) - (unsigned long)cur_regs->sp));
 		p->stack = stack; // ?????
 	}
 

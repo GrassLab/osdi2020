@@ -27,7 +27,7 @@ void handle_el1_irq(void)
 	return;
 }
 
-void handle_irq(void)
+void handle_irq(unsigned long esr, unsigned long address)
 {
 	unsigned int sec_level_irq = get32(IRQ_PENDING_1);
 	unsigned int fir_level_irq = get32(CORE0_INTERRUPT_SOURCE);

@@ -25,3 +25,14 @@ void sys_timer_init ( void )
 	put32(TIMER_C1, curVal);
 	return;
 }
+
+void enable_core_timer(void)
+{
+    unsigned int cntfrq;
+    unsigned int val;
+    cntfrq = read_cntfrq();
+    write_cntp_tval(cntfrq);    // clear cnthp interrupt and set next 1 sec timer.
+    val = read_cntp_tval();
+    core_timer_enable();
+    enable_irq();
+}

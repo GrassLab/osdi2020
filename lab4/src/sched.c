@@ -94,6 +94,7 @@ void schedule(void)
 void schedule_tail(void) 
 {
 	//enable
+	preempt_enable();
 }
 
 void preempt_disable(void)

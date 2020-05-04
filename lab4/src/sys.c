@@ -74,10 +74,6 @@ void handle_el0_sync(unsigned long par1, unsigned long par2)
             else if(i > 0) {
                 break;
             }
-            else{
-                current->state = TASK_WAITING;
-                schedule();
-            }
 	    }
         return i;
     }

@@ -6,11 +6,12 @@
 #include "mm.h"
 #include "sched.h"
 #include "../include/printf.h"
-#define ONE_SEC 100000000
+#define ONE_SEC 1000000
+#define MAN_SEC 10000000
 //#define REQ_1_2
 #define REQ_3_4
+//#define READ
 //#define ELE_1
-//#define ELE_3
 
 #ifdef REQ_1_2
 void foo(){
@@ -41,7 +42,7 @@ void test() {
     delay(ONE_SEC);
     fork();
     while(cnt < 10) {
-		  printf("Task id: %d, cnt: %d\r\n", get_taskid(), cnt);
+		  printf("Task id: %d, cnt address 0x%x, cnt value %d\r\n", get_taskid(), &cnt, cnt);
     	delay(ONE_SEC);
     	++cnt;
     }
@@ -61,9 +62,29 @@ void usertest()
 }
 #endif
 
+#ifdef READ
+void test() {
+  int cnt;
+  char buff[50];
+  printf("delay...\r\n");
+  delay(MAN_SEC);
+  cnt = sync_call_uart_read(buff, 50);
+  printf("read size %d, content: %s\r\n", cnt, buff);
+  exit(TASK_ZOMBIE);
+}
+
+void usertest()
+{
+	do_exec((unsigned long)test);
+}
+
+#endif
+
+
 #ifdef ELE_1
 void test_kill() {
-  unsigned long pid = fork();
+  unsigned long pid;
+  pid = fork();
   if (pid == 0) {
     while (1) {
       printf("Hello from child\r\n");
@@ -71,7 +92,7 @@ void test_kill() {
     }
   }
   else {
-    delay(1000000000);
+    delay(MAN_SEC);
     kill(pid);
     printf("Killed child\r\n");
   }
@@ -84,24 +105,9 @@ void usertest()
 }
 
 #endif
-#ifdef ELE_3
-void test_read() {
-    sync_call_uart();
-    char buff[100];
-    while (sync_call_uart_read(buff, 100)) {
-      printf("%s",buff);
-    }
-    exit(TASK_ZOMBIE);
-}
-void usertest()
-{
-	do_exec((unsigned long)test_read);
-}
-#endif
 
 #ifndef REQ_1_2
 void idle(){
-  enable_irq();
   while(1){
     if(nr_tasks == 1) {
       break;
@@ -119,9 +125,12 @@ void idle(){
 void kernel_main(void)
 {	
   init_printf(0, putc);
-  uart_recv();
+  while (1) {
+		if (uart_recv()) {
+            break;
+		}
+	}
   uart_send_string("uart_init\r\n");
-  sync_call_time(); //enable timer
 
   #ifdef  REQ_1_2
   for(int i = 0; i < 3; ++i) { // N should > 2
@@ -131,6 +140,7 @@ void kernel_main(void)
   #endif
 
   #ifndef REQ_1_2
+  enable_core_timer(); //enable timer
   int res = privilege_task_create(PF_KTHREAD, usertest, 0, 0); //kernel init task fork the process
   enable_irq();
   #endif

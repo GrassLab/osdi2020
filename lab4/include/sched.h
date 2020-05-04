@@ -45,15 +45,15 @@ struct task_struct {
 	unsigned long kill_flag;
 };
 
-extern void preempt_disable(void);
-extern void preempt_enable(void);
-extern void schedule();
-extern void switch_to(struct task_struct * next);
-extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
-extern void schedule_uart();
+void preempt_disable(void);
+void preempt_enable(void);
+void schedule();
+void switch_to(struct task_struct * next);
+void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
+void schedule_uart();
 #define INIT_TASK \
 /*cpu_context*/	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-/* state etc */	0,0,0,1, 0, 0, PF_KTHREAD, 0 \
+/* state etc */	0,0,0,1, 0, 0, PF_KTHREAD, 0 , 0 \
 }
 
 #endif
