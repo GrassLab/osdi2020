@@ -39,13 +39,15 @@ struct task_struct {
   unsigned long stack;
   unsigned long flags;
   unsigned long print_buffer;
+  unsigned long signals;
+  unsigned long sighand;
 };
 
 /* sched.c */
 struct task_struct *privilege_task_create(void (*func)(), unsigned long num);
 void context_switch(struct task_struct *next);
 void schedule();
-void zombie_reaper();
+void pm_daemon();
 void timer_tick();
 void preempt_enable();
 void preempt_disable();
@@ -65,6 +67,6 @@ void delay(unsigned long);
 
 #define INIT_TASK                                                       \
   /*cpu_context*/ { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},            \
-      /* state etc */   0, 0, 0, 1, 0, 0, 0, PF_KTHREAD, 0 }
+      /* state etc */   0, 0, 0, 1, 0, 0, 0, PF_KTHREAD, 0, 0 }
 
 #endif

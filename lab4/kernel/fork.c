@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "sched.h"
 #include "libc.h"
+#include "signal.h"
 
 char *PSR_STR_ARRAY[16] = {
     [PSR_MODE_EL0t] = "PSR_MODE_EL0t",
@@ -83,11 +84,13 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     unsigned long kstack_off = current->cpu_context.sp - (unsigned long)current;
     unsigned long ustack_off = cur_regs->sp - (unsigned long)current->stack;
 
-    /* kernel stack adjust */
-    p->cpu_context.sp = (unsigned long)p + kstack_off;
-    /* user stack adjust */
+    /* /\* kernel stack adjust *\/ */
+    /* p->cpu_context.sp = (unsigned long)p + kstack_off; */
+    // p->cpu_context.sp = (unsigned long)childregs + kstack_off
+    p->cpu_context.sp = (unsigned long)p  + kstack_off;
+    /* /\* user stack adjust *\/ */
     childregs->sp     = stack + ustack_off;
-
+    /* childregs->sp = stack + PAGE_SIZE; */
 
     /* assign the stack to newer one */
     p->stack = stack;
@@ -136,6 +139,14 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
   p->state    = TASK_RUNNING;
   p->counter  = p->priority;
   p->preempt_count = 1; // disable preemtion until schedule_tail
+
+  p->signals = 0;
+
+  p->sighand = get_free_page();
+  memzero(p->sighand, PAGE_SIZE);
+
+  /* TODO it's not a good way to record signalhandler */
+  ((sig_t*)p->sighand)[SIGKILL] = (sig_t)exit_process;
 
   p->print_buffer = get_free_page();
   memzero(p->print_buffer, PAGE_SIZE);

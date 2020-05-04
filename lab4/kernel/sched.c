@@ -5,6 +5,7 @@
 #include "mm.h"
 #include "sched.h"
 #include "miniuart.h"
+#include "signal.h"
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
@@ -57,6 +58,8 @@ void preempt_enable() {
   need_resched();
 }
 
+
+
 /* internal scheduler */
 void _schedule() {
   preempt_disable();
@@ -68,7 +71,16 @@ void _schedule() {
 
   /* TODO */
   /* check alarm, wake up any interruptible tasks that have got a signal */
+  for (int i = 0; i < NR_TASKS; ++i) {
+    p = task[i];
+    if (p && p->state == TASK_RUNNING && p->signals != 0) {
+      /* wake the task */
+      next = i;
+      goto SWITCH;
+    }
+  }
   /* ==== */
+
 
   while (1) {
     /* find out the first task that counter != 0 */
@@ -99,6 +111,7 @@ void _schedule() {
     }
   }
 
+ SWITCH:
   context_switch(task[next]);
   preempt_enable();
 }
@@ -110,7 +123,7 @@ void schedule() {
   _schedule();
 }
 
-void zombie_reaper() {
+void pm_daemon() {
   struct task_struct *p;
   while (1) {
     preempt_disable();
@@ -123,6 +136,7 @@ void zombie_reaper() {
         *(char*)(p->print_buffer) = 0;
       }
 
+      /* zombie reaper */
       if (p && p->state == TASK_ZOMBIE && p != current) {
         uart_println("[Zombie] reap the zombie task %d", p->pid);
         n = 1;
@@ -165,6 +179,11 @@ void timer_tick() {
     return;
   }
 
+  if (current->signals & SIGKILL) {
+    exit_process();
+    return ;
+  }
+
   /* used up its epoch or preemptiable */
   /* set the need_reched flag */
 
@@ -187,12 +206,14 @@ void timer_tick() {
   /* disable_irq(); */
 }
 void need_resched() {
-  enable_irq();
+
+
   if (current->need_reched) {
+    enable_irq();
     current->need_reched = 0;
     _schedule();
+    disable_irq();
   }
-  disable_irq();
 }
 
 

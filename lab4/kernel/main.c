@@ -9,7 +9,6 @@
 #include "sys.h"
 #include "timer.h"
 
-
 int get_el() {
   int el;
   asm volatile("mrs %0, CurrentEL\n"
@@ -41,13 +40,35 @@ void program() {
 
 void bar() {
   int tmp = 5;
-  // sys_write("Task after exec tmp address, tmp value\r\n");
   sys_println("Task %d after exec, tmp address 0x%x, tmp value %d\n",
-    call_sys_getid(), &tmp, tmp);
+              call_sys_getid(), &tmp, tmp);
   call_sys_exit();
 }
 
+void test_case() {
+  int cnt = 1;
+  if (call_sys_fork() == 0) {
 
+    call_sys_fork();
+    delay(10000000);
+    call_sys_fork();
+
+    while (cnt < 10) {
+
+      sys_println("Task id: %d, cnt: %d", call_sys_getid(), cnt);
+      delay(10000000);
+      ++cnt;
+    }
+    call_sys_exit();
+    sys_println("shoud not be printed");
+  } else {
+
+    sys_println("Task %d before exec, cnt address 0x%x, cnt value %d",
+                call_sys_getid(), &cnt, cnt);
+    call_sys_exec(bar);
+  }
+  call_sys_exit();
+}
 
 void init_process() {
 
@@ -55,40 +76,12 @@ void init_process() {
   int pid = call_sys_fork();
   if (pid == 0) {
     call_sys_exec(shell);
-    call_sys_exit();
   }
 
-  /* delay(10000000); */
-
-/* #ifdef DEBUG */
   /* test case */
   if (call_sys_fork() == 0) {
-    int cnt = 1;
-    if (call_sys_fork() == 0) {
-
-      call_sys_fork();
-      delay(10000000);
-      call_sys_fork();
-
-      while (cnt < 10) {
-        //sys_write("Task cnt\r\n");
-
-        sys_println("Task id: %d, cnt: %d", call_sys_getid(), cnt);
-        delay(10000000);
-        ++cnt;
-      }
-      call_sys_exit();
-      sys_println("shoud not be printed");
-    } else {
-      //sys_write("Task before exec tmp address, tmp value\r\n");
-      sys_println("Task %d before exec, cnt address 0x%x, cnt value %d",
-        call_sys_getid(), &cnt, cnt);
-      call_sys_exec(bar);
-    }
-    call_sys_exit();
+    call_sys_exec(test_case);
   }
-
-/* #endif */
 
 
   /* /\* exec the shell process *\/ */
@@ -120,9 +113,21 @@ void foo() {
   }
 }
 
+/* int ipc_index = 0; */
+
+/* struct mail { */
+/*   int type; */
+/*   char *message; */
+/* }; */
+
+/* struct mail ipc_box[BUF_SIZE] = {}; */
+
 void idle() {
   while (1) {
-    if (nr_tasks == 1) break;   /* TODO */
+    /* maintain the ipc */
+
+    if (nr_tasks == 1)
+      break; /* TODO */
     schedule();
   }
 }
@@ -136,10 +141,8 @@ void el1_main() {
     uart_println("High memory: %x", HIGH_MEMORY);
   }
 
-  /* local_timer_init(); */
-  sys_core_timer_enable();
 
-  int res = copy_process(PF_KTHREAD, (unsigned long)&zombie_reaper, 0, 0);
+  int res = copy_process(PF_KTHREAD, (unsigned long)&pm_daemon, 0, 0);
   if (res < 0) {
     uart_println("error while starting zombie reaper");
     return;
@@ -151,11 +154,13 @@ void el1_main() {
     return;
   }
 
+  /* local_timer_init(); */
+  sys_core_timer_enable();
+
   /* const int N = 10; */
   /* for (int i = 0; i < N; ++i) { // N should > 2 */
 
   /* } */
-
   idle();
 }
 

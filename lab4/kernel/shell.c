@@ -5,6 +5,9 @@
 #include "framebuffer.h"
 #include "bh.h"
 #include "sys.h"
+#include "sched.h"
+#include "signal.h"
+
 
 
 int getcmd(char *buf, int nbuf);
@@ -160,14 +163,29 @@ void get_arm_memory() {
   }
 }
 
+int program1_pid = -1;
 
 void program1() {
-  call_sys_write("this program is replace the shell and exit\r\n");
+  while (1) {
+    call_sys_write("program1 type: \"kill\" to end this program.\r\n");
+    delay(10000000);
+  }
   call_sys_exit();
 }
 
 void exec_example() {
-  call_sys_exec(program1);
+  int pid = call_sys_fork();
+  if (pid == 0) {
+    call_sys_exec(program1);
+  } else {
+    program1_pid = pid;
+  }
+}
+
+void signal_example() {
+  if (program1_pid > 0) {
+    send_signal(program1_pid, SIGKILL);
+  }
 }
 
 
@@ -186,11 +204,14 @@ void shell() {
     SWITCH_CONTINUE(buf, "timestamp", call_sys_timestamp);
     SWITCH_CONTINUE(buf, "show",      lfb_showpicture);
     SWITCH_CONTINUE(buf, "exec",      exec_example);
+    SWITCH_CONTINUE(buf, "kill",      signal_example);
     SWITCH_CONTINUE(buf, "exit",      call_sys_exit);
     SWITCH_CONTINUE(buf, "reboot",    reset);
 
     uart_println("[ERR] command `%s` not found", buf);
   }
+
+  call_sys_exit();
 }
 
 int getcmd(char *buf, int nbuf) {
