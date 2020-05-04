@@ -20,3 +20,8 @@ get_task_id:
   mov x8, #5
   svc #0
   ret
+.global fork
+fork:
+  mov x8, #6
+  svc #0
+  ret

@@ -73,7 +73,10 @@ main (int error, char *argv[])
     }
 
   extern void test_preemption ();
-  test_preemption ();
+  // test_preemption ();
+
+  extern void test_fork_exec ();
+  test_fork_exec ();
 
   privilege_task_create (&echo_and_do_exec);
   privilege_task_create (&echo_and_do_exec);

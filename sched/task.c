@@ -1,8 +1,9 @@
 #include <list.h>
 #include <string.h>
+#include <irq.h>
 #include "sched.h"
 
-void
+struct task_struct *
 privilege_task_create (void (*func) ())
 {
   int i;
@@ -10,11 +11,14 @@ privilege_task_create (void (*func) ())
   for (i = 0; i < POOL_SIZE; ++i)
     if (task_pool[i].task_id == 0)
       break;
+  if (i == POOL_SIZE)
+    return NULL;
   bzero (&task_pool[i].ctx, sizeof (task_pool[i].ctx));
   task_pool[i].task_id = i + 1;
   task_pool[i].ctx.lr = (size_t) func;
   task_pool[i].ctx.sp = (size_t) &task_pool[i].kstack[0x1000];
   list_add_tail (&task_pool[i].list, runqueue);
+  return &task_pool[i];
 }
 
 int
@@ -55,4 +59,48 @@ size_t
 sys_get_task_id ()
 {
   return do_get_task_id ();
+}
+
+int
+do_fork ()
+{
+  struct task_struct *new;
+  int pid;
+  size_t *sp_el0;
+  size_t *x29;
+
+  disable_irq ();
+  new = privilege_task_create (&&child);
+  if (!new)
+    return -1;
+  switch_to (current, current);
+  memcpy (new->kstack, current->kstack, 0x1000);
+  memcpy (new->stack, current->stack, 0x1000);
+  new->ctx = current->ctx;
+  new->ctx.fp =
+    (size_t) new->kstack + current->ctx.fp - (size_t) current->kstack;
+  new->ctx.sp =
+    (size_t) new->kstack + current->ctx.sp - (size_t) current->kstack;
+  new->ctx.lr = (size_t) &&child;
+  new->ctx.trapframe =
+    (size_t) new->kstack + current->ctx.trapframe - (size_t) current->kstack;
+  x29 = (size_t *) (new->ctx.trapframe + 16 * 14 + 8);
+  *x29 = (size_t) new->stack + *x29 - (size_t) current->stack;
+  sp_el0 = (size_t *) (new->ctx.trapframe + 16 * 15 + 8);
+  *sp_el0 = (size_t) new->stack + *sp_el0 - (size_t) current->stack;
+  enable_irq ();
+  pid = new->task_id;
+  if (pid != 0)
+    return pid;
+  else
+    {
+    child:
+      return 0;
+    }
+}
+
+int
+sys_fork ()
+{
+  return do_fork ();
 }

@@ -8,4 +8,5 @@ syscall_tables:
   .quad sys_uart_write
   .quad sys_exec
   .quad sys_get_task_id		  /* 5 */
+  .quad sys_fork
 end_syscall_tables:

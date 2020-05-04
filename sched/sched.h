@@ -21,9 +21,7 @@ struct context
   size_t fp;
   size_t lr;
   size_t sp;
-  size_t sp_el0;
-  size_t elr_el1;
-  size_t spsr_el1;
+  size_t trapframe;
 };
 
 struct task_struct
@@ -36,7 +34,7 @@ struct task_struct
   char resched;
 } task_pool[POOL_SIZE];
 
-void privilege_task_create (void (*func) ());
+struct task_struct *privilege_task_create (void (*func) ());
 
 #define current get_current()
 extern struct task_struct *get_current ();
@@ -47,6 +45,8 @@ int do_exec (void (*func) ());
 int sys_exec (void (*func) ());
 size_t do_get_task_id ();
 size_t sys_get_task_id ();
+int do_fork ();
+int sys_fork ();
 
 
 #endif /* ifndef SCHED */
