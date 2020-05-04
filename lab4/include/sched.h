@@ -50,6 +50,7 @@ void timer_tick();
 void preempt_enable();
 void preempt_disable();
 unsigned long unique_id();
+void need_resched();
 
 void exit_process();
 

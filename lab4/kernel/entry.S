@@ -55,11 +55,13 @@
     .endm
 
     .macro	kernel_exit, el
+
     ldp	x22, x23, [sp, #16 * 16]
     ldp	x30, x21, [sp, #16 * 15]
 
     .if \el == 0
     msr	sp_el0, x21
+
     .endif
 
     msr	elr_el1, x22
@@ -82,6 +84,9 @@
     ldp	x28, x29, [sp, #16 * 14]
     //ldr	x30, [sp, #16 * 15]
     add	sp, sp, #S_FRAME_SIZE
+
+
+
     eret
     .endm
 
@@ -91,12 +96,12 @@
 .align	11
 .globl vectors
 vectors:
-    ventry	sync_invalid_el1t           // Synchronous EL1t
-    ventry	irq_invalid_el1t            // IRQ EL1t
+    ventry	el1_sync                    // Synchronous EL1t
+    ventry	el1_irq                     // IRQ EL1t
     ventry	fiq_invalid_el1t            // FIQ EL1t
     ventry	error_invalid_el1t          // Error EL1t
 
-    ventry	sync_invalid_el1h           // Synchronous EL1h
+    ventry	el1_sync                    // Synchronous EL1h
     ventry	el1_irq                     // IRQ EL1h
     ventry	fiq_invalid_el1h            // FIQ EL1h
     ventry	error_invalid_el1h          // Error EL1h
@@ -106,8 +111,8 @@ vectors:
     ventry	fiq_invalid_el0_64          // FIQ 64-bit EL0
     ventry	error_invalid_el0_64        // Error 64-bit EL0
 
-    ventry	sync_invalid_el0_32         // Synchronous 32-bit EL0
-    ventry	irq_invalid_el0_32          // IRQ 32-bit EL0
+    ventry	el0_sync                    // Synchronous 32-bit EL0
+    ventry	el0_irq                     // IRQ 32-bit EL0
     ventry	fiq_invalid_el0_32          // FIQ 32-bit EL0
     ventry	error_invalid_el0_32        // Error 32-bit EL0
 
@@ -133,13 +138,23 @@ sync_invalid_el1h:
 el1_irq:
     kernel_entry 1
     bl irq_handler
+    bl need_resched
     kernel_exit  1
 fiq_invalid_el1h:
     handle_invalid_entry  1, FIQ_INVALID_EL1h
 error_invalid_el1h:
     handle_invalid_entry  1, ERROR_INVALID_EL1h
 
-
+el1_sync:
+    // dealing with sync call with svc
+    kernel_entry 1
+    msr DAIFClr, 0xf                   // what? TODO
+    mrs	 x25, esr_el1                  // read the syndrome register
+    lsr	 x24, x25, #ESR_ELx_EC_SHIFT   // exception class
+    cmp	 x24, #ESR_ELx_EC_SVC64        // SVC in 64-bit state
+    b.eq el1_svc
+    // TODO otherwise exception_etnry (excpetion.c)
+    handle_invalid_entry 1, SYNC_ERROR
 el0_sync:
     // dealing with sync call with svc
     kernel_entry 0
@@ -153,6 +168,7 @@ el0_sync:
 el0_irq:
     kernel_entry 0
     bl irq_handler
+    bl need_resched
     kernel_exit  0
 fiq_invalid_el0_64:
     handle_invalid_entry  0, FIQ_INVALID_EL0_64
@@ -239,6 +255,7 @@ ni_sys1:
 ret_from_syscall1:
     bl	disable_irq
     str	x0, [sp, #S_X0]             // returned x0
+    bl  need_resched
     kernel_exit 1
 
 
@@ -259,6 +276,7 @@ ni_sys:
 ret_from_syscall:
     bl	disable_irq
     str	x0, [sp, #S_X0]             // returned x0
+    bl  need_resched
     kernel_exit 0
 
 .globl ret_from_fork

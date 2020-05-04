@@ -66,7 +66,7 @@ void __attribute__((noreturn)) abort() {
 
 void uart_print(char *format, ...) {
   char print_buf[1024] = {
-      0,
+                          0,
   };
   int buf_i = 0;
   unsigned int i;

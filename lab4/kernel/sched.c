@@ -9,6 +9,7 @@
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
 struct task_struct *task[NR_TASKS] = {&(init_task)};
+struct task_struct *runqueue;
 unsigned long nr_tasks = 0;
 unsigned long task_id = 1;
 
@@ -51,7 +52,10 @@ struct task_struct *privilege_task_create(void (*func)(), unsigned long num) {
 
 void preempt_disable() { current->preempt_count++; }
 
-void preempt_enable() { current->preempt_count--; }
+void preempt_enable() {
+  current->preempt_count--;
+  need_resched();
+}
 
 /* internal scheduler */
 void _schedule() {
@@ -161,17 +165,37 @@ void timer_tick() {
     return;
   }
 
-  /* used up its epoch */
+  /* used up its epoch or preemptiable */
   /* set the need_reched flag */
+
+  /* if (current->need_reched) { */
+  /*   enable_irq(); */
+  /*   _schedule(); */
+  /*   disable_irq(); */
+  /* } else { */
   current->need_reched = 1;
   current->counter = 0;
+  /* } */
+
+
 
   /* issue schedule */
-  current->need_reched = 0;
+
+  /* current->need_reched = 0; */
+  /* enable_irq(); */
+  /* _schedule(); */
+  /* disable_irq(); */
+}
+void need_resched() {
   enable_irq();
-  _schedule();
+  if (current->need_reched) {
+    current->need_reched = 0;
+    _schedule();
+  }
   disable_irq();
 }
+
+
 
 void exit_process() {
   preempt_disable();
