@@ -38,9 +38,6 @@ irq_exit:
   mrs 	x9, ELR_EL1
   mrs 	x10, SPSR_EL1
   stp 	x9, x10, [sp, #16 * 16]
-  mrs 	x9, tpidr_el1
-  mov 	x10, sp
-  str 	x10, [x9, #16 * 6 + 8]
   .endm
 
   .macro kernel_exit

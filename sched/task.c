@@ -16,7 +16,7 @@ privilege_task_create (void (*func) ())
   bzero (&task_pool[i].ctx, sizeof (task_pool[i].ctx));
   task_pool[i].task_id = i + 1;
   task_pool[i].ctx.lr = (size_t) func;
-  task_pool[i].ctx.sp = (size_t) &task_pool[i].kstack[0x1000];
+  task_pool[i].ctx.sp = (size_t) &task_pool[i].kstack[STACK_SIZE];
   list_add_tail (&task_pool[i].list, runqueue);
   return &task_pool[i];
 }
@@ -24,7 +24,7 @@ privilege_task_create (void (*func) ())
 int
 do_exec (void (*func) ())
 {
-  current->ctx.sp = (size_t) &current->kstack[0x1000];
+  current->ctx.sp = (size_t) &current->kstack[STACK_SIZE];
   asm volatile ("mov x0, %0\n"
 		"msr sp_el0, x0\n" "msr spsr_el1, xzr\n" "msr elr_el1, %1\n"
 		// prevent kernel address leakage
@@ -38,7 +38,7 @@ do_exec (void (*func) ())
 		"mov x21, xzr\n" "mov x22, xzr\n" "mov x23, xzr\n"
 		"mov x24, xzr\n" "mov x25, xzr\n" "mov x26, xzr\n"
 		"mov x27, xzr\n" "mov x28, xzr\n" "mov x29, xzr\n"
-		"mov x30, xzr\n" "eret\n"::"r" (&current->stack[0x1000]),
+		"mov x30, xzr\n" "eret\n"::"r" (&current->stack[STACK_SIZE]),
 		"r" (func):"x0");
   return 0;
 }
@@ -61,6 +61,15 @@ sys_get_task_id ()
   return do_get_task_id ();
 }
 
+/* syscall only, not in IRQ */
+struct trapframe *
+get_syscall_trapframe ()
+{
+  struct trapframe *tf;
+  tf = (struct trapframe *)(&current->kstack[STACK_SIZE] - sizeof (*tf));
+  return tf;
+}
+
 int
 do_fork ()
 {
@@ -74,8 +83,8 @@ do_fork ()
   if (!new)
     return -1;
   switch_to (current, current);
-  memcpy (new->kstack, current->kstack, 0x1000);
-  memcpy (new->stack, current->stack, 0x1000);
+  memcpy (new->kstack, current->kstack, STACK_SIZE);
+  memcpy (new->stack, current->stack, STACK_SIZE);
   new->ctx = current->ctx;
   new->ctx.fp =
     (size_t) new->kstack + current->ctx.fp - (size_t) current->kstack;
