@@ -38,6 +38,7 @@ struct task_struct {
   unsigned long need_reched;
   unsigned long stack;
   unsigned long flags;
+  unsigned long print_buffer;
 };
 
 /* sched.c */
@@ -63,6 +64,6 @@ void delay(unsigned long);
 
 #define INIT_TASK                                                       \
   /*cpu_context*/ { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},            \
-      /* state etc */   0, 0, 0, 1, 0, 0, 0, PF_KTHREAD }
+      /* state etc */   0, 0, 0, 1, 0, 0, 0, PF_KTHREAD, 0 }
 
 #endif

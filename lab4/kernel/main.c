@@ -41,8 +41,9 @@ void program() {
 
 void bar() {
   int tmp = 5;
-  uart_println("Task %d after exec, tmp address 0x%x, tmp value %d\n",
-               call_sys_getid(), &tmp, tmp);
+  // sys_write("Task after exec tmp address, tmp value\r\n");
+  sys_println("Task %d after exec, tmp address 0x%x, tmp value %d\n",
+    call_sys_getid(), &tmp, tmp);
   call_sys_exit();
 }
 
@@ -59,7 +60,7 @@ void init_process() {
 
   /* delay(10000000); */
 
-#ifdef DEBUG
+/* #ifdef DEBUG */
   /* test case */
   if (call_sys_fork() == 0) {
     int cnt = 1;
@@ -70,21 +71,24 @@ void init_process() {
       call_sys_fork();
 
       while (cnt < 10) {
-        uart_println("Task id: %d, cnt: %d", call_sys_getid(), cnt);
+        //sys_write("Task cnt\r\n");
+
+        sys_println("Task id: %d, cnt: %d", call_sys_getid(), cnt);
         delay(10000000);
         ++cnt;
       }
       call_sys_exit();
-      uart_println("shoud not be printed");
+      sys_println("shoud not be printed");
     } else {
-      uart_println("Task %d before exec, cnt address 0x%x, cnt value %d",
-                   call_sys_getid(), &cnt, cnt);
+      //sys_write("Task before exec tmp address, tmp value\r\n");
+      sys_println("Task %d before exec, cnt address 0x%x, cnt value %d",
+        call_sys_getid(), &cnt, cnt);
       call_sys_exec(bar);
     }
     call_sys_exit();
   }
 
-#endif
+/* #endif */
 
 
   /* /\* exec the shell process *\/ */
@@ -118,6 +122,7 @@ void foo() {
 
 void idle() {
   while (1) {
+    if (nr_tasks == 1) break;   /* TODO */
     schedule();
   }
 }
@@ -134,15 +139,15 @@ void el1_main() {
   /* local_timer_init(); */
   sys_core_timer_enable();
 
-  int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0, 0);
+  int res = copy_process(PF_KTHREAD, (unsigned long)&zombie_reaper, 0, 0);
   if (res < 0) {
-    uart_println("error while starting kernel process");
+    uart_println("error while starting zombie reaper");
     return;
   }
 
-  res = copy_process(PF_KTHREAD, (unsigned long)&zombie_reaper, 0, 0);
+  res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0, 0);
   if (res < 0) {
-    uart_println("error while starting zombie reaper");
+    uart_println("error while starting kernel process");
     return;
   }
 

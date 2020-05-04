@@ -121,7 +121,15 @@ error_invalid_el1t:
     handle_invalid_entry  1, ERROR_INVALID_EL1t
 
 sync_invalid_el1h:
-    handle_invalid_entry 1, SYNC_INVALID_EL1h
+    // dealing with sync call with svc
+    kernel_entry 1
+    msr DAIFClr, 0xf                   // what? TODO
+    mrs	 x25, esr_el1                  // read the syndrome register
+    lsr	 x24, x25, #ESR_ELx_EC_SHIFT   // exception class
+    cmp	 x24, #ESR_ELx_EC_SVC64        // SVC in 64-bit state
+    b.eq el1_svc
+    // TODO otherwise exception_etnry (excpetion.c)
+    handle_invalid_entry 0, SYNC_ERROR
 el1_irq:
     kernel_entry 1
     bl irq_handler
@@ -213,6 +221,25 @@ stbl    .req    x27                 // syscall table pointer
 //    handle_invalid_entry  FIQ_INVALID_EL0_32
 //error_invalid_el0_32:
 //    handle_invalid_entry  ERROR_INVALID_EL0_32
+
+el1_svc:
+    // syscall convension
+    adr	  stbl, sys_call_table  // load syscall table pointer
+    uxtw  scno, w8              // syscall number in w8
+    mov   sc_nr, #__NR_syscalls
+    bl    enable_irq
+    cmp   scno, sc_nr           // check upper syscall limit
+    b.hs  ni_sys1
+
+    ldr	x16, [stbl, scno, lsl #3]       // address in the syscall table
+    blr	x16                             // call sys_* routine
+    b   ret_from_syscall1
+ni_sys1:
+    handle_invalid_entry 0, SYSCALL_ERROR
+ret_from_syscall1:
+    bl	disable_irq
+    str	x0, [sp, #S_X0]             // returned x0
+    kernel_exit 1
 
 
 el0_svc:

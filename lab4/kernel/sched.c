@@ -4,13 +4,15 @@
 #include "libc.h"
 #include "mm.h"
 #include "sched.h"
+#include "miniuart.h"
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
 struct task_struct *task[NR_TASKS] = {&(init_task)};
-unsigned long nr_tasks = 1;
+unsigned long nr_tasks = 0;
+unsigned long task_id = 1;
 
-unsigned long unique_id() { return nr_tasks++; }
+unsigned long unique_id() {  nr_tasks++; return task_id++; }
 
 struct task_struct *privilege_task_create(void (*func)(), unsigned long num) {
   preempt_disable();
@@ -107,16 +109,27 @@ void schedule() {
 void zombie_reaper() {
   struct task_struct *p;
   while (1) {
+    preempt_disable();
+    int n = 0;
     for (int i = 0; i < NR_TASKS; ++i) {
       p = task[i];
+      /* printer maintainer */
+      if (p && *(char *)(p->print_buffer) != 0 && p != current) {
+        uart_puts((char*)p->print_buffer);
+        *(char*)(p->print_buffer) = 0;
+      }
+
       if (p && p->state == TASK_ZOMBIE && p != current) {
-#ifdef DEBUG
         uart_println("[Zombie] reap the zombie task %d", p->pid);
-#endif
+        n = 1;
+        /* free the kernel stack */
         free_page((unsigned long)p);
+
         task[p->pid] = 0;
+        nr_tasks--;
       }
     }
+    preempt_enable();
     schedule();
   }
 }
@@ -162,15 +175,21 @@ void timer_tick() {
 
 void exit_process() {
   preempt_disable();
-  for (int i = 0; i < NR_TASKS; i++) {
-    if (task[i] == current) {
-      task[i]->state = TASK_ZOMBIE;
-      break;
-    }
-  }
+  /* for (int i = 0; i < NR_TASKS; i++) { */
+  /*   if (task[i] == current) { */
+  /*     task[i]->state = TASK_ZOMBIE; */
+  /*     break; */
+  /*   } */
+  /* } */
+  /* if (current->stack) { */
+  /*   free_page(current->stack); */
+  /* } */
+  current->state = TASK_ZOMBIE;
   if (current->stack) {
+    /* free the user stack */
     free_page(current->stack);
   }
+
   preempt_enable();
   schedule();
 }

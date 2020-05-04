@@ -1,5 +1,11 @@
 #include "sys.h"
 
+.globl call_sys_read
+call_sys_read:
+    mov w8, #SYS_READ_NUMBER
+    svc #0
+    ret
+
 .globl call_sys_exec
 call_sys_exec:
     mov w8, #SYS_EXEC_NUMBER

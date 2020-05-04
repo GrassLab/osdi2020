@@ -88,6 +88,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     /* user stack adjust */
     childregs->sp     = stack + ustack_off;
 
+
     /* assign the stack to newer one */
     p->stack = stack;
 
@@ -136,7 +137,11 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
   p->counter  = p->priority;
   p->preempt_count = 1; // disable preemtion until schedule_tail
 
+  p->print_buffer = get_free_page();
+  memzero(p->print_buffer, PAGE_SIZE);
+
   p->cpu_context.pc = (unsigned long)ret_from_fork;
+
 
   task[p->pid] = p;
 
@@ -223,6 +228,6 @@ int do_fork() {
 #ifdef DEBUG
   return copy_process(0, 0, 0, stack);
 #else
-  return copy_process(PF_FORK, 0, 0, stack);
+  return copy_process(0, 0, 0, stack);
 #endif
 }

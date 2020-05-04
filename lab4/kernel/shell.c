@@ -25,6 +25,7 @@ void help() {
             "  hello      Display \"Hello World!\".\r\n"
             "  timestamp  Display current timestamp.\r\n"
             "  exec       Show the exec for example.\r\n"
+            "  exit       call system exit.\r\n"
             "  reboot     Reboot.\r\n"
             );
 }
@@ -185,6 +186,7 @@ void shell() {
     SWITCH_CONTINUE(buf, "timestamp", call_sys_timestamp);
     SWITCH_CONTINUE(buf, "show",      lfb_showpicture);
     SWITCH_CONTINUE(buf, "exec",      exec_example);
+    SWITCH_CONTINUE(buf, "exit",      call_sys_exit);
     SWITCH_CONTINUE(buf, "reboot",    reset);
 
     uart_println("[ERR] command `%s` not found", buf);
@@ -199,7 +201,7 @@ int getcmd(char *buf, int nbuf) {
 
   /* read from uart to buf until newline */
   char c;
-  while ((c = getc()) != '\r') {
+  while ((c = call_sys_read()) != '\r') {
     if (c == 127 || c == 8) { /* backspace or delete */
       /* display */
       if (p_buf != buf) {
