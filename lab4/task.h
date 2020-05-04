@@ -43,6 +43,7 @@ struct task_struct
 
 uint64_t task_privilege_task_create(void(*start_func)());
 uint64_t task_get_current_task_id(void);
+uint64_t task_user_get_current_task_id(void);
 void task_privilege_demo(void);
 void task_do_exec(void(*start_func)());
 void task_user_demo(void);

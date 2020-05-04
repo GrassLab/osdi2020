@@ -9,6 +9,7 @@
 #define CLEAR_BIT(var, pos) ((var) &= ~((unsigned)1 << (pos)))
 #define SET_BIT(var, pos) ((var) |= ((unsigned)1 << (pos)))
 
+#define ANSI_BLACK     "\x1b[30m"
 #define ANSI_RED       "\x1b[31m"
 #define ANSI_GREEN     "\x1b[32m"
 #define ANSI_YELLOW    "\x1b[33m"

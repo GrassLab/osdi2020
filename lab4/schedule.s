@@ -30,5 +30,6 @@ schedule_switch_context:
   msr elr_el1, x11
   msr sp_el0, x12
   msr tpidr_el1, x2
+  msr tpidr_el0, x2
   ret
 
