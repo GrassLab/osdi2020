@@ -44,9 +44,9 @@ void set_HCR_EL2_IMO()
 
 void core_timer_counter()
 {
-    uart_puts("Core Timer interrupt received ");
-    uart_hex(CORE_TIMER_COUNT++);
-    uart_puts("\n");
+    // uart_puts("Core Timer interrupt received ");
+    // uart_hex(CORE_TIMER_COUNT++);
+    // uart_puts("\n");
     timer_tick();  // set reschedule_flag
 }
 
@@ -104,7 +104,7 @@ void local_timer_handler()
 #define CORE0_INTERRUPT_SRC (unsigned int* )0x40000060
 void interrupt_handler()
 {
-    uart_puts("\r\n++++++++++  interrupt_handler begin  ++++++++++\n");
+    // uart_puts("\r\n++++++++++  interrupt_handler begin  ++++++++++\n");
     struct task* current = get_current();
     current->state = IRQ_CONTEXT;
     unsigned int interrupt_src = *CORE0_INTERRUPT_SRC;
@@ -162,20 +162,20 @@ void interrupt_handler()
         uart_puts("interrupt_handler error.\n");
     }
     irq_reschedule();
-    uart_puts("++++++++++  interrupt_handler end  ++++++++++\n\r\n");
+    // uart_puts("++++++++++  interrupt_handler end  ++++++++++\n\r\n");
 }
 
 void irq_reschedule() 
 {
     struct task* current = get_current();
     if (current->reschedule_flag == 1) {
-        uart_puts("IRQ reschedule...\n");
-        uart_puts("previous task: ");
-        uart_hex(current->task_id);
-        uart_puts("\n");
+        // uart_puts("IRQ reschedule...\n");
+        // uart_puts("previous task: ");
+        // uart_hex(current->task_id);
+        // uart_puts("\n");
         current->reschedule_flag = 0;
         schedule();
-        uart_puts("after IRQ reschedule...\n");
+        // uart_puts("after IRQ reschedule...\n");
     // } else {
     //     asm volatile("eret");
     }
@@ -190,7 +190,10 @@ void uart_irq_enable()
 void timer_tick()
 {
     struct task* current = get_current();
-    --current->counter;
+    current->counter--;
+    // uart_puts("count: ");
+    // uart_hex(current->counter);
+    // uart_puts("\n");
 	if (current->counter == 0) {
 	    current->reschedule_flag = 1;
     }

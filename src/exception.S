@@ -94,7 +94,7 @@
 
 .global ret_to_user
 ret_to_user:
-    bl disable_irq
+    // bl disable_irq
     mrs x1, tpidr_el1
     ldr x0, [x1, 8 * 11]
     mov sp, x0
@@ -110,7 +110,7 @@ ret_to_user:
     // ldr    x0,      [sp, #8 * 29] // fp
     ldr    x0,       [x1, 8 * 10]
     ldr    x29,      [x1, 8 * 10]
-    bl debug
+    // bl debug
 
 
 	ldp    x0,  x1,  [sp, #16 * 0] 

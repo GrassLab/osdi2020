@@ -38,7 +38,7 @@ void task_manager_init(void(*func)())
 }
 void stack_copy(const void *src, void *dst, int len)
 {
-    const char *s = src;
+    char *s = src;
     char *d = dst;
     while (len--) {
         *d-- = *s--;
@@ -74,13 +74,13 @@ int privilege_task_create(void(*func)(), int fork_flag)
         stack_copy(&TaskManager.ustack_pool[current->task_id], &TaskManager.ustack_pool[task_id], 2048);
         stack_copy(&TaskManager.kstack_pool[current->task_id], &TaskManager.kstack_pool[task_id], 2048);
         
-        uart_puts("kstack_pool: ");
-        uart_hex(TaskManager.kstack_pool[0][0x100]);
-        uart_puts(" ,ustack_pool: ");
-        uart_hex(TaskManager.kstack_pool[1][0x100]);
-        uart_puts(" ,ustack_pool: ");
-        uart_hex(TaskManager.kstack_pool[2][0x100]);
-        uart_puts("\n");
+        // uart_puts("kstack_pool: ");
+        // uart_hex(TaskManager.kstack_pool[0][0x100]);
+        // uart_puts(" ,ustack_pool: ");
+        // uart_hex(TaskManager.kstack_pool[1][0x100]);
+        // uart_puts(" ,ustack_pool: ");
+        // uart_hex(TaskManager.kstack_pool[2][0x100]);
+        // uart_puts("\n");
 
         struct trapframe_regs* kstack_regs = current->trapframe;
         // *TaskManager.kstack_pool[task_id] = (unsigned long) 0x0;
@@ -89,9 +89,9 @@ int privilege_task_create(void(*func)(), int fork_flag)
         // kstack_regs->sp = &TaskManager.ustack_pool[task_id];
 
         unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->sp_el0;
-        uart_puts("ustack_offset: ");
-        uart_hex(ustack_offset);
-        uart_puts("\n");
+        // uart_puts("ustack_offset: ");
+        // uart_hex(ustack_offset);
+        // uart_puts("\n");
 
 
         new_task->user_context.sp_el0 = (unsigned long) &TaskManager.ustack_pool[task_id] - ustack_offset;
@@ -99,18 +99,18 @@ int privilege_task_create(void(*func)(), int fork_flag)
         new_task->user_context.elr_el1 = kstack_regs->elr_el1;
 
         unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[current->task_id]) - current->trapframe;
-        uart_puts("trapframe_offset: ");
-        uart_hex(trapframe_offset);
-        uart_puts("\n");
+        // uart_puts("trapframe_offset: ");
+        // uart_hex(trapframe_offset);
+        // uart_puts("\n");
 
 
         unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->regs[29];
-        uart_puts("fp_offset: ");
-        uart_hex(fp_offset);
-        uart_puts("\n");
-        uart_puts("fp: ");
-        uart_hex(current->cpu_context.fp);
-        uart_puts("\n");
+        // uart_puts("fp_offset: ");
+        // uart_hex(fp_offset);
+        // uart_puts("\n");
+        // uart_puts("fp: ");
+        // uart_hex(current->cpu_context.fp);
+        // uart_puts("\n");
         // unsigned long pc;
         // asm volatile ("mrs %0, elr_el1" : "=r"(pc));
         // new_task->cpu_context.x19 = (unsigned long) 0;
@@ -142,7 +142,7 @@ void context_switch(struct task* next)
 
 void schedule()
 {
-    uart_puts("\r\n++++++++++  scheduler begin  ++++++++++\n");
+    // uart_puts("\r\n++++++++++  scheduler begin  ++++++++++\n");
     struct task* current = get_current();
     int next_task = (current->task_id+1) % TaskManager.task_num;
     struct task* next;
@@ -156,11 +156,11 @@ void schedule()
         uart_puts("OH NO ZOMBIE\n");
     }
     next->counter = CNT;
-    uart_puts("switch to next task: ");
-    uart_hex(next_task);
-    uart_puts(", state: ");
-    uart_hex(next->state);
-    uart_puts("\n");
+    // uart_puts("switch to next task: ");
+    // uart_hex(next_task);
+    // uart_puts(", state: ");
+    // uart_hex(next->state);
+    // uart_puts("\n");
     context_switch(next);
 
     // while (!QUEUE_EMPTY(RunQueue)) {
@@ -172,7 +172,7 @@ void schedule()
 
     //     context_switch(next);
     // }
-    uart_puts("++++++++++  scheduler end  ++++++++++\n\r\n");
+    // uart_puts("++++++++++  scheduler end  ++++++++++\n\r\n");
 }
 
 
@@ -226,9 +226,9 @@ void do_exec(void(*func)())
 {
     // be triggered at the first time execute
     struct task* current = get_current();
-    uart_puts("do_exec$ Task_id: ");
-    uart_hex(current->task_id);
-    uart_puts("\n");
+    // uart_puts("do_exec$ Task_id: ");
+    // uart_hex(current->task_id);
+    // uart_puts("\n");
 
     // _setup_user_content(func);
 
@@ -348,11 +348,11 @@ void final_test_foo()
 
 void final_test() 
 {
-    int cnt = 2;
+    int cnt = 1;
     if (call_sys_fork() == 0) { // child
         uart_puts("I am child\n");
         call_sys_fork();
-        wait_cycles(100000);
+        wait_cycles(1000000);
         call_sys_fork();
         unsigned long task_id = call_sys_get_taskid();
         uart_puts("#### Task id: ");
@@ -362,7 +362,7 @@ void final_test()
         uart_puts(", &cnt: ");
         uart_hex(&cnt);
         uart_puts(" ####\n");
-        while(cnt < 4) {
+        while(cnt < 8) {
             // printf("Task id: %d, cnt: %d\n", call_sys_get_taskid(), cnt);
             unsigned long task_id = call_sys_get_taskid();
             uart_puts("Task id: ");
@@ -373,7 +373,7 @@ void final_test()
             uart_hex(&cnt);
             uart_puts("\n");
 
-            wait_cycles(100000);
+            wait_cycles(1000000);
             ++cnt;
         }
         call_sys_exit(0);
@@ -390,7 +390,7 @@ void final_test()
         uart_puts(", cnt value ");
         uart_hex(cnt);
         uart_puts("\n");
-
+        cnt = 5;
         call_sys_exec(final_test_foo);
     }
 }
@@ -403,6 +403,8 @@ void final_user_test()
 void final_idle()
 {
     while(1){
+        uart_hex(TaskManager.task_num);
+        uart_hex(TaskManager.zombie_num);
         uart_puts("idle...\n");
         if(TaskManager.task_num == TaskManager.zombie_num+1) {
             break;
@@ -411,5 +413,6 @@ void final_idle()
         wait_cycles(1000000);
     }
     uart_puts("Test finished\n");
+    disable_irq();
     while(1);
 }

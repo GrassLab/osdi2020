@@ -35,6 +35,7 @@ struct user_context {
 struct task {
     struct cpu_context cpu_context;
     struct user_context user_context;
+    long asfas;
     long counter;
     long priority;  
     long state;
@@ -88,4 +89,4 @@ void final_user_test();
 void final_idle();
 
 #define N 3
-#define CNT 0x2000
+#define CNT 0x10

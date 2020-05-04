@@ -65,7 +65,7 @@ void exception_handler(unsigned int trapframe)
     struct task* current = get_current();
     current->trapframe = trapframe;
     current->state = EXC_CONTEXT;
-    uart_puts("\r\n++++++++++  exception_handler begin  ++++++++++\n");
+    // uart_puts("\r\n++++++++++  exception_handler begin  ++++++++++\n");
     unsigned long esr, elr, spsr; 
     unsigned long sys_ret_val;
     //  check exception level
@@ -115,7 +115,7 @@ void exception_handler(unsigned int trapframe)
                 asm volatile ("msr elr_el3, %0" : : "r" (elr+4)); break;  
         }  
     }
-    uart_puts("++++++++++  exception_handler end  ++++++++++\n\r\n");
+    // uart_puts("++++++++++  exception_handler end  ++++++++++\n\r\n");
 }
 
 
@@ -127,13 +127,13 @@ unsigned long el0_svc_handler(unsigned int trapframe)
     x8 = *(unsigned int*)(trapframe+8*8);
     unsigned long sys_ret_val = 0;
     struct task* current = get_current();
-    uart_puts("syscall ID: ");
-    uart_hex(x8);
-    uart_puts(",  el0_svc_handler....\n");
-    enable_irq(); 
+    // uart_puts("syscall ID: ");
+    // uart_hex(x8);
+    // uart_puts(",  el0_svc_handler....\n");
+    // enable_irq(); 
     switch (x8) {
         case SYS_CORE_TIMER_IRQ_ENABLE:
-            uart_puts("syscall core timer enable.\n");
+            // uart_puts("syscall core timer enable.\n");
             core_timer_enable(); 
             break;
         case SYS_GET_TASKID:
@@ -143,16 +143,16 @@ unsigned long el0_svc_handler(unsigned int trapframe)
             //     uart_puts("sys_get_taskid error!\n");
             // }
             sys_ret_val = current->task_id;
-            uart_puts("sys_get_taskid success!\n");
+            // uart_puts("sys_get_taskid success!\n");
             break;
         case SYS_EXEC:
             do_exec(x0);
             break;
         case SYS_FORK:
             sys_ret_val = fork();
-            uart_puts("fork_id: "); // child won't do this
-            uart_hex(sys_ret_val);
-            uart_puts("\n");
+            // uart_puts("fork_id: "); // child won't do this
+            // uart_hex(sys_ret_val);
+            // uart_puts("\n");
             break;
         case SYS_EXIT:
             sys_ret_val = exit(0);
@@ -166,11 +166,11 @@ unsigned long el0_svc_handler(unsigned int trapframe)
             uart_puts(x0);
             break;
         default:
-            uart_puts("syscall not found\n");
+            // uart_puts("syscall not found\n");
             break;
     }
 
-    disable_irq();
+    // disable_irq();
     return sys_ret_val;
 }
 
