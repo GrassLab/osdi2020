@@ -149,13 +149,13 @@ unsigned long el0_svc_handler(unsigned int trapframe)
             do_exec(x0);
             break;
         case SYS_FORK:
-            sys_ret_val = fork();
+            sys_ret_val = do_fork();
             // uart_puts("fork_id: "); // child won't do this
             // uart_hex(sys_ret_val);
             // uart_puts("\n");
             break;
         case SYS_EXIT:
-            sys_ret_val = exit(0);
+            sys_ret_val = do_exit(0);
             uart_puts("exit error!\n"); // exit should not come here, because schedule
             while(1);
             break;

@@ -44,9 +44,9 @@ void set_HCR_EL2_IMO()
 
 void core_timer_counter()
 {
-    // uart_puts("Core Timer interrupt received ");
-    // uart_hex(CORE_TIMER_COUNT++);
-    // uart_puts("\n");
+    uart_puts("Core Timer interrupt received ");
+    uart_hex(CORE_TIMER_COUNT++);
+    uart_puts("\n");
     timer_tick();  // set reschedule_flag
 }
 

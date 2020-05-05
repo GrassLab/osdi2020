@@ -35,11 +35,9 @@ struct user_context {
 struct task {
     struct cpu_context cpu_context;
     struct user_context user_context;
-    long asfas;
     long counter;
     long priority;  
     long state;
-    // long preempt_count;
     unsigned long task_id;
     unsigned long parent_id;
     int reschedule_flag;
@@ -49,12 +47,13 @@ struct task {
 
 struct task_manager {
     struct task task_pool[64];
-    char kstack_pool_prevent[4096];
+    char kstack_pool_prevent_stack_overflow[4096];
     char kstack_pool[64][4096];
     char ustack_pool[64][4096];
-    unsigned long queue_bitmap;
     unsigned long zombie_num;
     unsigned int task_num;
+    unsigned long queue_bitmap;
+    unsigned long avail_bitmap;
     // struct task*(*current)();
 };
 
@@ -66,22 +65,23 @@ struct trapframe_regs {
 	unsigned long spsr_el1; // pstate
 } __attribute__ ((aligned (8)));
 
+struct task* get_current();
+void set_current(struct task* task_struct);
+
 void task_manager_init(void(*func)());
 int privilege_task_create(void(*func)(), int fork_flag);
 void context_switch(struct task* next);
-struct task* get_current();
-void set_current(struct task* task_struct);
 void schedule();
+
+void do_exec(void(*func)());
+int do_fork();
+int do_exit(int status);
+void zombie_reaper(struct task* check_task);
+
 void kernel_test();
 void idle();
 void user_test();
 void foo();
-void _setup_user_content(void(*func)());
-
-void do_exec(void(*func)());
-int fork();
-int exit(int status);
-void zombie_reaper();
 
 void final_test_foo();
 void final_test(); 

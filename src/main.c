@@ -59,10 +59,10 @@ void main()
     /*
      ** el1 task
      */
-    // task_manager_init();
+    // task_manager_init(idle);
     // core_timer_enable();
     // for(int i = 0; i < N; ++i) { // N should > 2
-    //     privilege_task_create(kernel_test);
+    //     privilege_task_create(kernel_test, 0);
     // }
     // idle();
 
@@ -76,6 +76,11 @@ void main()
     //     privilege_task_create(user_test, 0);
     // }
     // idle();
+
+
+    char buf[0x100];
+    uart_readline(buf);
+    uart_puts(buf);
 
     /*
      ** final test

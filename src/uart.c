@@ -158,6 +158,20 @@ void uart_puts(char *s)
     }
 }
 
+void uart_readline(char* buf) 
+{
+    // char buf[0x100];
+    char tmp;
+    long len = 0;
+    while (1) {
+        tmp = uart_getc();
+        buf[len++] = tmp;
+        if(tmp == '\n' | tmp =='\0')
+            break;
+    }
+    buf[len++] = '\0';
+}
+
 /*
  * Transfer int to char
  */

@@ -32,11 +32,9 @@
 	mrs	x2, sp_el0
     mrs	x3, elr_el1
 	mrs	x4, spsr_el1
-    // mov x5, #2  // IN_OUT_KERNEL
     str x2, [x1, 8 * 13]
     str x3, [x1, 8 * 14]
     str x4, [x1, 8 * 15]
-    str x5, [x1, 8 * 16]
     
     mrs	x21, sp_el0
 	.else
@@ -57,8 +55,6 @@
 
 	.if	\el == 0
     mrs x1, tpidr_el1
-    // mov x5, #2  // IN_OUT_KERNEL
-    str x5, [x1, 8 * 16]
     ldr x2, [x1, 8 * 13]
     ldr x3, [x1, 8 * 14]
     ldr x4, [x1, 8 * 15]
@@ -92,17 +88,15 @@
     add    sp,  sp,  #16 * 17
 .endm
 
-.global ret_to_user
-ret_to_user:
+.global ret_from_fork // for child
+ret_from_fork:
     // bl disable_irq
     mrs x1, tpidr_el1
     ldr x0, [x1, 8 * 11]
     mov sp, x0
-    mov x5, #2  // IN_OUT_KERNEL
     ldr x2, [x1, 8 * 13]
     ldr x3, [x1, 8 * 14]
     ldr x4, [x1, 8 * 15]
-    str x5, [x1, 8 * 16]
 	msr	sp_el0, x2
     msr	elr_el1, x3
 	msr	spsr_el1, x4

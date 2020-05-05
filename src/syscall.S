@@ -6,20 +6,20 @@ call_sys_get_taskid:
     svc #0
     ret
 
-.global call_sys_exec
-call_sys_exec:
+.global exec
+exec:
     mov x8, #SYS_EXEC
     svc #0
     ret
 
-.global call_sys_fork
-call_sys_fork:
+.global fork
+fork:
     mov x8, #SYS_FORK
     svc #0
     ret
 
-.global call_sys_exit
-call_sys_exit:
+.global exit
+exit:
     mov x8, #SYS_EXIT
     svc #0
     ret

@@ -5,13 +5,6 @@
 #include "../include/syscall.h"
 
 
-// #define INIT_TASK \
-// { \
-// /* cpu_context */   {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-// /* user_context */   {0,0,0}, \
-// /* state etc */	    0,0,0,0,0,0 \
-// }
-
 struct task_manager TaskManager;
 
 extern struct task* get_current();
@@ -19,13 +12,12 @@ extern void set_current(struct task* task_struct);
 
 extern void switch_to(struct task* prev, struct task* next);
 extern void ret_from_fork();
-extern void ret_from_exec();
-extern void ret_to_user();
+extern void ret_from_create();
 
-// struct task* init_task = INIT_TASK;
 
 void task_manager_init(void(*func)())
 {
+    TaskManager.avail_bitmap = 0xffffffffffffffff;
     TaskManager.queue_bitmap = 0;
     TaskManager.zombie_num = 0;
     TaskManager.task_num = 0;
@@ -61,73 +53,38 @@ int privilege_task_create(void(*func)(), int fork_flag)
         new_task->user_context.sp_el0 = &TaskManager.ustack_pool[task_id];
         new_task->user_context.spsr_el1 = 0;
         new_task->user_context.elr_el1 = 0;
-        new_task->trapframe = 0;
         
-        // uart_hex((unsigned long) func);
-        new_task->cpu_context.pc = (unsigned long) ret_from_fork;
+        new_task->cpu_context.fp = 0;
+        new_task->cpu_context.pc = (unsigned long) ret_from_create;
         new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id];
     } else {
         struct task* current = get_current();
         new_task->parent_id = current->task_id;
         uart_memcpy(&current->cpu_context, &new_task->cpu_context, 8*10); // x19 - x28
-        // uart_memcpy(&current->user_context, &new_task->user_context, 8*3);
         stack_copy(&TaskManager.ustack_pool[current->task_id], &TaskManager.ustack_pool[task_id], 2048);
         stack_copy(&TaskManager.kstack_pool[current->task_id], &TaskManager.kstack_pool[task_id], 2048);
         
-        // uart_puts("kstack_pool: ");
-        // uart_hex(TaskManager.kstack_pool[0][0x100]);
-        // uart_puts(" ,ustack_pool: ");
-        // uart_hex(TaskManager.kstack_pool[1][0x100]);
-        // uart_puts(" ,ustack_pool: ");
-        // uart_hex(TaskManager.kstack_pool[2][0x100]);
-        // uart_puts("\n");
-
         struct trapframe_regs* kstack_regs = current->trapframe;
-        // *TaskManager.kstack_pool[task_id] = (unsigned long) 0x0;
-        // *(&TaskManager.kstack_pool[task_id][8*31]) = &TaskManager.ustack_pool[task_id];
-        // kstack_regs->regs[0] = 0;
-        // kstack_regs->sp = &TaskManager.ustack_pool[task_id];
 
         unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->sp_el0;
-        // uart_puts("ustack_offset: ");
-        // uart_hex(ustack_offset);
-        // uart_puts("\n");
+        unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[current->task_id]) - current->trapframe;
+        unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->regs[29];
 
 
         new_task->user_context.sp_el0 = (unsigned long) &TaskManager.ustack_pool[task_id] - ustack_offset;
         new_task->user_context.spsr_el1 = kstack_regs->spsr_el1;
         new_task->user_context.elr_el1 = kstack_regs->elr_el1;
-
-        unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[current->task_id]) - current->trapframe;
-        // uart_puts("trapframe_offset: ");
-        // uart_hex(trapframe_offset);
-        // uart_puts("\n");
-
-
-        unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->regs[29];
-        // uart_puts("fp_offset: ");
-        // uart_hex(fp_offset);
-        // uart_puts("\n");
-        // uart_puts("fp: ");
-        // uart_hex(current->cpu_context.fp);
-        // uart_puts("\n");
-        // unsigned long pc;
-        // asm volatile ("mrs %0, elr_el1" : "=r"(pc));
-        // new_task->cpu_context.x19 = (unsigned long) 0;
+        
         new_task->cpu_context.fp = (unsigned long) &TaskManager.ustack_pool[task_id] - fp_offset;
-        // new_task->cpu_context.fp = (unsigned long) current->cpu_context.fp;
-        new_task->cpu_context.pc = (unsigned long) ret_to_user;//current->cpu_context.pc;
+        new_task->cpu_context.pc = (unsigned long) ret_from_fork;
         new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id] - trapframe_offset;
     }
-
     
+    new_task->trapframe = 0;
     new_task->reschedule_flag = 0;
     new_task->state = RUN_IN_KERNEL_MODE;
     TaskManager.task_num++;
 
-    // put the task into the runqueue
-    // QUEUE_SET(RunQueue, (unsigned long) new_task);
-    // QUEUE_PUSH(RunQueue);
     return task_id;
 }
 
@@ -135,6 +92,7 @@ void context_switch(struct task* next)
 {
     struct task* current = get_current();
     struct task* prev = current;
+    // disable_irq();
     switch_to(prev, next);
 }
 
@@ -156,11 +114,11 @@ void schedule()
         uart_puts("OH NO ZOMBIE\n");
     }
     next->counter = CNT;
-    // uart_puts("switch to next task: ");
-    // uart_hex(next_task);
-    // uart_puts(", state: ");
-    // uart_hex(next->state);
-    // uart_puts("\n");
+    uart_puts("switch to next task: ");
+    uart_hex(next_task);
+    uart_puts(", state: ");
+    uart_hex(next->state);
+    uart_puts("\n");
     context_switch(next);
 
     // while (!QUEUE_EMPTY(RunQueue)) {
@@ -173,6 +131,78 @@ void schedule()
     //     context_switch(next);
     // }
     // uart_puts("++++++++++  scheduler end  ++++++++++\n\r\n");
+}
+
+/*
+ ** takes a function pointer to user code
+ ** System call for do_exec , user context is replace by the provided one
+ */
+void do_exec(void(*func)())
+{
+    // be triggered at the first time execute
+    struct task* current = get_current();
+
+    if (current->reschedule_flag == 1) {
+        uart_puts("kernel routine reschedule...\n");
+        current->reschedule_flag = 0;
+        schedule();
+    }
+
+    if (current->state == RUN_IN_KERNEL_MODE) { // first user task
+        // return to user mode
+        uart_puts("new user context\n");
+        current->state = RUN_IN_USER_MODE;
+        unsigned long user_stack = current->user_context.sp_el0;
+        unsigned long user_cpu_state = 0x0;
+        asm volatile("msr sp_el0, %0" :: "r" (user_stack));
+        asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
+        asm volatile("msr elr_el1, %0" :: "r" (func));
+        asm volatile("eret");
+
+    } else if (current->state == EXC_CONTEXT){ // exeception handler
+        struct trapframe_regs* kstack_regs = current->trapframe;
+        kstack_regs->sp_el0 = TaskManager.ustack_pool[current->task_id]; 
+        kstack_regs->elr_el1 = func;
+        kstack_regs->spsr_el1 = 0;
+
+    } else {
+        uart_puts("do_exec() error");
+        while(1);
+    }
+}
+
+
+int do_fork() 
+{
+    int pid;
+    pid = privilege_task_create(0, 1);
+    return pid;
+}
+
+
+int do_exit(int status)
+{
+    struct task* current = get_current();
+    // release most of its resource but keepping the kernel stack and task struct
+    // current->cpu_context = {0,0,0,0,0,0,0,0,0,0,0,0,0};
+    // current->user_context = {0,0,0};
+    // uart_memset(current, 0, 8*16);
+    // set its state to be zombie state and won’t be scheduled again.
+    current->state = ZOMBIE;
+    current->reschedule_flag = 1;
+    // TaskManager.zombie_bitmap &= (1<<current->task_id);
+    TaskManager.zombie_num++;
+    zombie_reaper(current);
+    schedule();
+    return 0;
+}
+
+void zombie_reaper(struct task* check_task)
+{
+    TaskManager.avail_bitmap &= (1 << (check_task->task_id));
+    // uart_puts("I kill a ZOMBIE task: ");
+    // uart_hex(check_task->task_id);
+    // uart_puts("\n");
 }
 
 
@@ -215,87 +245,6 @@ void user_test()
 {
     do_exec(foo);
 }
-/*
- ** takes a function pointer to user code
- ** System call for do_exec , user context is replace by the provided one
- */
-
-
-
-void do_exec(void(*func)())
-{
-    // be triggered at the first time execute
-    struct task* current = get_current();
-    // uart_puts("do_exec$ Task_id: ");
-    // uart_hex(current->task_id);
-    // uart_puts("\n");
-
-    // _setup_user_content(func);
-
-    if (current->reschedule_flag == 1) {
-        uart_puts("kernel routine reschedule...\n");
-        current->reschedule_flag = 0;
-        schedule();
-    }
-    if (current->state == RUN_IN_KERNEL_MODE) {
-        // return to user mode
-        uart_puts("new user context\n");
-        current->state = RUN_IN_USER_MODE;
-        unsigned long user_stack = current->user_context.sp_el0;
-        unsigned long user_cpu_state = 0x0;
-        asm volatile("msr sp_el0, %0" :: "r" (user_stack));
-        asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
-        asm volatile("msr elr_el1, %0" :: "r" (func));
-        asm volatile("eret");
-    } else if (current->state == EXC_CONTEXT){
-        struct trapframe_regs* kstack_regs = current->trapframe;
-        kstack_regs->sp_el0 = current->user_context.sp_el0;
-        kstack_regs->elr_el1 = func;
-        kstack_regs->spsr_el1 = 0;
-
-    } else {
-        uart_puts("do_exec() error");
-        while(1);
-    }
-}
-
-
-int fork() 
-{
-    int pid;
-    pid = privilege_task_create(0, 1);
-    return pid;
-}
-
-
-int exit(int status)
-{
-    struct task* current = get_current();
-    // release most of its resource but keepping the kernel stack and task struct
-    // current->cpu_context = {0,0,0,0,0,0,0,0,0,0,0,0,0};
-    // current->user_context = {0,0,0};
-    // uart_memset(current, 0, 8*16);
-    // set its state to be zombie state and won’t be scheduled again.
-    current->state = ZOMBIE;
-    current->reschedule_flag = 1;
-    // TaskManager.zombie_bitmap &= (1<<current->task_id);
-    TaskManager.zombie_num++;
-    schedule();
-    return 0;
-}
-
-void zombie_reaper()
-{
-    struct task* check_task;
-    for (int i=0; i<TaskManager.task_num; i++) {
-        check_task = &TaskManager.task_pool[i];
-        if (check_task->state == ZOMBIE) {
-            uart_puts("I found a ZOMBIE in task: ");
-            uart_hex(check_task->task_id);
-            uart_puts("\n");
-        } 
-    }
-}
 
 void hello()
 {
@@ -312,7 +261,7 @@ void foo() // in el0
 {
     unsigned long foo_count = 0;
     unsigned long sys_ret_val;
-    call_sys_exec(hello);
+    exec(hello);
     while(1) {
         uart_puts("foo: ");
         uart_hex(foo_count++);
@@ -342,18 +291,18 @@ void final_test_foo()
     uart_hex(tmp);
     uart_puts("\n");
 
-    call_sys_exit(0);
+    exit(0);
 }
 
 
 void final_test() 
 {
     int cnt = 1;
-    if (call_sys_fork() == 0) { // child
+    if (fork() == 0) { // child
         uart_puts("I am child\n");
-        call_sys_fork();
+        fork();
         wait_cycles(1000000);
-        call_sys_fork();
+        fork();
         unsigned long task_id = call_sys_get_taskid();
         uart_puts("#### Task id: ");
         uart_hex(task_id);
@@ -362,7 +311,7 @@ void final_test()
         uart_puts(", &cnt: ");
         uart_hex(&cnt);
         uart_puts(" ####\n");
-        while(cnt < 8) {
+        while(cnt < 10) {
             // printf("Task id: %d, cnt: %d\n", call_sys_get_taskid(), cnt);
             unsigned long task_id = call_sys_get_taskid();
             uart_puts("Task id: ");
@@ -376,7 +325,7 @@ void final_test()
             wait_cycles(1000000);
             ++cnt;
         }
-        call_sys_exit(0);
+        exit(0);
         // printf("Should not be printed\n");
         uart_puts("Should not be printed\n");
     } else { // parent
@@ -391,7 +340,7 @@ void final_test()
         uart_hex(cnt);
         uart_puts("\n");
         cnt = 5;
-        call_sys_exec(final_test_foo);
+        exec(final_test_foo);
     }
 }
 
