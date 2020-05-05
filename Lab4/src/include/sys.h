@@ -22,8 +22,8 @@ void kill(int pid,int signal);
 int exec(void(* func));
 void exit(int status);
 int get_taskid();
-size_t uart_write(const char buf[], size_t size);
-size_t uart_read(const char buf[],size_t size);
+size_t uart_write(char *buf, size_t size);
+size_t uart_read(char *buf,size_t size);
 int get_priority();
 
 #endif

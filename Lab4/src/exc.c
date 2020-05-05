@@ -72,7 +72,7 @@ void exception_handler(unsigned long type,unsigned long esr, \
 
 // Since my system call just need no more than two argument now
 unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
-	enable_irq();
+	//enable_irq();
 
 	switch(sys_call_num){
 		// Core timer
@@ -119,7 +119,6 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 		case 7:{
 			// Using blocking write for safety
 			preempt_disable();
-
 			int success = 0;
 			int ret = 0;
 			
@@ -128,7 +127,7 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 				if(ret==0)
 					++success;
 			}
-
+               
 			preempt_enable();
 		 	return success;	
 		}
