@@ -39,7 +39,7 @@ void irq_el1_handler(void)
     }
 
     /* check reschedule bit */
-    if(schedule_check_self_reschedule())
+    if(schedule_check_self_reschedule() && !task_is_guarded())
     {
       schedule_yield();
     }

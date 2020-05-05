@@ -42,6 +42,7 @@ void scheduler(void)
   if(current_privilege_task_id == 0)
   {
     /* Come from schedule_init */
+    /* No need to guard, there is no other task */
     /* Call schedule_idle_task */
     asm volatile("mov x0, %0\n"
                  "msr tpidr_el1, x0\n" : : "I"(1));
@@ -54,6 +55,7 @@ void scheduler(void)
   }
   else
   {
+    task_guard_section();
     uint64_t next_id = QUEUE_POP(schedule_run_queue);
     uint64_t next_idx = TASK_ID_TO_IDX(next_id);
     /* task in zombie or wait state will not be queued */
@@ -64,6 +66,7 @@ void scheduler(void)
     }
     QUEUE_PUSH(schedule_run_queue, next_id);
     schedule_context_switch(current_privilege_task_id, next_id);
+    task_unguard_section();
   }
 
   return;
@@ -74,8 +77,10 @@ void schedule_update_quantum_count(void)
   uint64_t current_task_id = task_get_current_task_id();
   uint64_t current_task_idx = TASK_ID_TO_IDX(current_task_id);
 
+  task_guard_section();
   if(CHECK_BIT(kernel_task_pool[current_task_idx].flag, TASK_STATE_RESCHEDULE))
   {
+    task_unguard_section();
     return;
   }
 
@@ -89,6 +94,7 @@ void schedule_update_quantum_count(void)
   {
     ++kernel_task_pool[current_task_idx].quantum_count;
   }
+  task_unguard_section();
 }
 
 int schedule_check_self_reschedule(void)
@@ -99,18 +105,24 @@ int schedule_check_self_reschedule(void)
 
 void schedule_enqueue(uint64_t id)
 {
+  task_guard_section();
   QUEUE_PUSH(schedule_run_queue, id);
+  task_unguard_section();
   return;
 }
 
 void schedule_enqueue_wait(uint64_t id)
 {
+  task_guard_section();
   QUEUE_PUSH(schedule_wait_queue, id);
+  task_unguard_section();
 }
 
 uint64_t schedule_dequeue_wait(void)
 {
+  task_guard_section();
   uint64_t id = QUEUE_POP(schedule_wait_queue);
+  task_unguard_section();
   return id;
 }
 
@@ -122,7 +134,9 @@ int schedule_check_queue_empty(void)
 void schedule_yield(void)
 {
   uint64_t current_task_id = task_get_current_task_id();
+  task_guard_section();
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
+  task_unguard_section();
   scheduler();
   return;
 }
@@ -141,6 +155,7 @@ void schedule_zombie_reaper(void)
       schedule_yield();
       continue;
     }
+    task_guard_section();
     for(unsigned task_idx = 0; task_idx < TASK_POOL_SIZE; ++task_idx)
     {
       schedule_zombie_exist = 0;
@@ -172,6 +187,7 @@ void schedule_zombie_reaper(void)
         uart_puts(" reaped!\n");
       }
     }
+    task_unguard_section();
     schedule_yield();
   }
 }

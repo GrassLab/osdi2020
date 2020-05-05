@@ -16,6 +16,7 @@ uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];
 
 uint64_t task_privilege_task_create(void(*start_func)())
 {
+  task_guard_section();
   unsigned new_id = 0;
 
   /* find usable position in task_pool */
@@ -54,6 +55,7 @@ uint64_t task_privilege_task_create(void(*start_func)())
 
   /* push into queue */
   schedule_enqueue(new_id);
+  task_guard_section();
   return new_id;
 }
 
@@ -323,7 +325,10 @@ void task_start_waiting(void)
   uart_puts(id_char);
   uart_puts(" has entered the wait queue\n");
 
+  task_guard_section();
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 2);
+  task_unguard_section();
+
   schedule_enqueue_wait(current_task_id);
   schedule_yield();
   return;
@@ -347,9 +352,30 @@ void task_end_waiting(void)
   uart_puts(id_char);
   uart_puts(" has left the wait queue\n");
 
+  task_guard_section();
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].flag, 2);
   schedule_enqueue(task_id);
+  task_unguard_section();
   return;
 }
 
+void task_guard_section(void)
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_GUARD);
+  return;
+}
+
+void task_unguard_section(void)
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_GUARD);
+  return;
+}
+
+int task_is_guarded(void)
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  return CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_GUARD);
+}
 

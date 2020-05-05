@@ -8,6 +8,7 @@
 #define TASK_STATE_RESCHEDULE 0
 #define TASK_STATE_ZOMBIE 1
 #define TASK_STATE_WAIT 2
+#define TASK_STATE_GUARD 3
 
 #define TASK_ID_TO_IDX(x) ((x - 1))
 
@@ -40,6 +41,7 @@ struct task_struct
   /* bit 0 -> reschedule */
   /* bit 1 -> zombie */
   /* bit 2 -> wait state */
+  /* bit 3 -> critical section */
   uint64_t flag;
   uint64_t signal;
   struct cpu_context_struct cpu_context;
@@ -57,6 +59,9 @@ void task_user_context2_demo(void);
 uint64_t task_get_current_task_signal(void);
 void task_start_waiting(void);
 void task_end_waiting(void);
+void task_guard_section(void);
+void task_unguard_section(void);
+int task_is_guarded(void);
 
 #endif
 
