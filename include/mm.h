@@ -9,5 +9,6 @@
 #endif
 
 extern char* kstack_pool[];
+extern char* ustack_pool[];
 
 void mm_init();
