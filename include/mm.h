@@ -1,0 +1,1 @@
+void mm_init();

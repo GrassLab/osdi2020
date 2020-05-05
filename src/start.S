@@ -61,7 +61,7 @@ el1_start:
     ldr     x1, =SPSR_EL1_VALUE
     msr     spsr_el1, x1
 
-    bl      boot_init
+    bl      kernel_main
 
 1:
     b       1b

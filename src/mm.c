@@ -1,0 +1,3 @@
+void mm_init() {
+    
+}
