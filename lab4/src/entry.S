@@ -33,6 +33,7 @@
 	stp	x26, x27, [sp, #16 * 13]
 	stp	x28, x29, [sp, #16 * 14]
 	str	x30, [sp, #16 * 15] 
+	mov    x0,  sp
 	.endm
 
 	.macro	kernel_exit
@@ -136,8 +137,9 @@ error_invalid_el0_32:
 
 sync_el0_64:
 	kernel_entry
-	mrs x0, esr_el1
-	mrs x1, elr_el1
+	//mrs x0, esr_el1
+	//mrs x1, elr_el1
+	mrs x1, esr_el1
 	bl	handle_el0_sync
 	kernel_exit 
 

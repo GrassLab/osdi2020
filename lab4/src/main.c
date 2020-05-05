@@ -71,6 +71,10 @@ void func(){
     while(1){
         printf("---\n");
         printf("user loop\n");
+        printf("stack location: %x\n",current->cpu_context.sp);
+        printf("stack location: %x\n",current->user_context.sp_el0);
+        printf("taskid: %d\n", get_taskid());
+
         delay(100000000);
     }
 }
@@ -79,6 +83,11 @@ void func2(){
     while(1){
         printf("---\n");
         printf("user loop2\n");
+        printf("kernel stack location: %x\n",current->cpu_context.sp);
+        printf("user stack location: %x\n",current->user_context.sp_el0);
+        printf("taskid: %d\n", get_taskid());
+
+
         delay(100000000);
     }
 }
@@ -90,10 +99,6 @@ void user_task2(){
 void user_task(){
     do_exec(func);
 }
-
-
-
-
 
 void main()
 {
@@ -113,6 +118,7 @@ void main()
     enable_interrupt_controller();
     core_timer_enable();
 	enable_irq();
+
 
     schedule();
 

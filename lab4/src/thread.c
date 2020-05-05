@@ -58,13 +58,19 @@ void do_exec(void(*func)()){
         current->rescheduled = 0;
         schedule();
     }
-    unsigned long user_stack = current->user_context.sp_el0;
-    unsigned long user_cpu_state = 0x0;
-    asm volatile("msr sp_el0, %0" :: "r" (user_stack));
-    asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
-    asm volatile("msr elr_el1, %0" :: "r" (func));
-    asm volatile("eret");
-    current->mode = USER_MODE;
+    if(current->mode == KERNEL_MODE){
+        unsigned long user_stack = current->user_context.sp_el0;
+        unsigned long user_cpu_state = 0x0;
+        asm volatile("msr sp_el0, %0" :: "r" (user_stack));
+        asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
+        asm volatile("msr elr_el1, %0" :: "r" (func));
+        asm volatile("eret");
+        current->mode = USER_MODE;
+    }
+    else if(current->mode == USER_MODE){
+        
+    }
+
 }
 
 extern struct task* get_current();

@@ -4,6 +4,7 @@
 #include "irq.h"
 #include "config.h"
 #include "thread.h"
+#include "syscall.h"
 
 unsigned int c = 0;
 unsigned int local_timer_count = 0;
@@ -57,13 +58,36 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 	_print("\n");
 }
 
-void handle_el0_sync(unsigned long esr, unsigned long address)
+unsigned int get_syscall_number(unsigned int trapframe){
+	unsigned int x8 = *(unsigned int*)(trapframe+8*8);
+	return x8;
+}
+
+void handle_el0_sync(unsigned int trapframe, unsigned long esr)
 {
-	printf("Exception return address 0x%x \r\n",address);
 	printf("Exception class (EC) 0x%x \r\n",esr >> 26);
 	printf("EInstruction  specific syndrome (ISS) 0x%x \r\n",esr & 0xffffff);
-
 	int num = (esr & 0xffffff);
+	if(num == 0){
+		unsigned int c;
+		unsigned int x8 = get_syscall_number(trapframe);
+		switch(x8){
+			case SYS_GET_TASKID:
+				printf("x8 value is %d\n",x8);
+				printf("[info] svc000 command \r\n");
+				break;
+			case SYS_UART_READ:
+				c = uart_getc();
+				printf("get input value is %d\n",c);
+				break;
+			case SYS_UART_WRITE:
+				printf("x8 value is %d\n",x8);
+            	break;
+			default:
+            	printf("syscall not found\n");
+            	break;
+		}
+	}
 	if (num == 1){
 		printf("[info] svc command \r\n");
 	}
@@ -119,6 +143,10 @@ void local_timer_handler(){
 void core_timer_handler() 
 {
 	printf("Arm core timer interrupt, jiffies %d \r\n",core_timer_count);
+	unsigned int timer_freq;
+	asm volatile("mrs %0, sp_el0": "=r"(timer_freq)::);
+	printf("now stack pointer is %x \r\n",timer_freq);
+
 	core_timer_count += 1;
 	current->counter--;
 	if(current->counter <= 0){

@@ -27,8 +27,8 @@ void enable_irq( void );
 void disable_irq( void );
 void local_timer_handler(void);
 void core_timer_handler(void);
-void handle_el0_sync(unsigned long esr, unsigned long address);
+void handle_el0_sync(unsigned int, unsigned long);
 void timestamp_handler();
-
+unsigned int get_syscall_number(unsigned int trapframe);
 
 #endif  /*_IRQ_H */
