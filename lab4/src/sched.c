@@ -27,6 +27,19 @@ void privilege_task_create(void(*func)()){
     ENQUEUE(runqueue, MAX_TASK_NUM, p);
 }
 
+void do_exec(void(*func)()){
+    asm volatile ("mov  x21, %0;"
+                  "msr	elr_el1, x21"
+                  ::"r"(func));
+    asm volatile ("mov  x21, #0;"
+                  "msr	spsr_el1, x21");
+    asm volatile ("mov  x21, %0;"
+                  "msr	sp_el0, x21"
+                  ::"r"(ustack_pool[current->taskid]));
+    asm volatile ("eret");
+    // func();
+}
+
 void context_switch(struct task* next){
   struct task* prev = current;
   switch_to(prev, next);
@@ -48,6 +61,7 @@ void schedule(){
     if (current->counter <= 0){
         current->counter = COUNT_NUM;
         uart_puts("reschedule flag set\n");
+        // enable_irq();
         _schedule();
     }
 }

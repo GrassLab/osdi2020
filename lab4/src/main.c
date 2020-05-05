@@ -8,16 +8,13 @@
 #define N 10
 
 extern void disable_irq();
+extern int get_taskid();
 
 void foo(){
   while(1) {
     printf("Task id: %d\n", current -> taskid);
     delay(1000000);
     schedule();
-    // if (current -> taskid != 10)
-    //     context_switch(&task_pool[current -> taskid + 1]);
-    // else
-    //     context_switch(&task_pool[1]);
   }
 }
 
@@ -29,35 +26,40 @@ void idle(){
   }
 }
 
+void test() {
+  int cnt = 1;
+  // if (fork() == 0) {
+  //   fork();
+  //   delay(100000);
+  //   fork();
+    while(cnt < 100) {
+      printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+      delay(100000);
+      ++cnt;
+      // schedule();
+    }
+    // exit(0);
+    // printf("Should not be printed\n");
+  // } 
+}
+
+void user_test(){
+  // test();
+  uart_puts("kernel calls do_exec in order to switch to user level\n");
+  do_exec(test);
+}
+
 void main()
 {
     PL011_uart_init(4000000);
     show_boot_msg();
-    // run_shell();
     init_printf(0, putc);
     init_task();
-    for(int i = 0; i < N; ++i)  // N should > 2
-         privilege_task_create(foo);
-    
-    // context_switch(&task_pool[1]);
-
+    for(int i = 0; i < N; ++i)  
+        //  privilege_task_create(foo);
+        privilege_task_create(user_test);
     // disable_irq();
     core_timer_enable();
     idle();
 
-    // privilege_task_create(foo);
-    // privilege_task_create(foo);
-    // printf("Task id: %d\n", current -> taskid);
-    // uart_hex(current); uart_puts("\n");
-    // uart_hex(&task_pool[0]); uart_puts("\n");
-    // uart_hex(&task_pool[1]); uart_puts("\n");
-    // while(1){
-    //     context_switch(&task_pool[0]);
-    //     uart_hex(current); uart_puts("...1\n");
-    //     printf("Task id: %d\n", current -> taskid);
-    //     context_switch(&init);
-    //     context_switch(&task_pool[1]);
-    //     uart_hex(current); uart_puts("...2\n");
-    //     printf("Task id: %d\n", current -> taskid);
-    // }
 }

@@ -33,9 +33,11 @@ extern struct task* get_current();
 
 struct task task_pool[MAX_TASK_NUM];
 char kstack_pool[MAX_TASK_NUM][STACK_SIZE];
+char ustack_pool[MAX_TASK_NUM][STACK_SIZE];
 
 void init_task();
 void privilege_task_create(void(*func)());
+void do_exec(void(*func)());
 void context_switch(struct task* next);
 void idle_schedule();
 void schedule();

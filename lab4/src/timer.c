@@ -1,7 +1,7 @@
 #define LOCAL_TIMER_CONTROL_REG       ((volatile unsigned int*)0x40000034)
 #define LOCAL_TIMER_IRQ_CLR           ((volatile unsigned int*)0x40000038)
 unsigned int CORE0_TIMER_IRQ_CTRL = 0x40000040;
-unsigned int EXPIRE_PERIOD = 0x1000000;
+unsigned int EXPIRE_PERIOD = 0x0080000;
 
 void core_timer_enable(){
     // can't use x0, x1 because CORE0_TIMER_IRQ_CTRL, EXPIRE_PERIOD will be assigned to them by the compiler

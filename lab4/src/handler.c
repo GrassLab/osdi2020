@@ -5,6 +5,13 @@
 
 #define CORE0_IRQ_SOURCE              ((volatile unsigned int*)0x40000060)
 #define IRQ_BASIC_PENDING             ((volatile unsigned int*)(MMIO_BASE+0x0000b200))
+#define S_FRAME_SIZE 272
+
+void set_trap_ret(int ret_val){
+    char *p;
+    p = kstack_pool[current->taskid] - S_FRAME_SIZE - 16; //kstack_pool[current->taskid] is stack top!
+    *p = ret_val;
+}
 
 void exception_handler(unsigned long esr, unsigned long elr)
 {
@@ -25,11 +32,15 @@ void exception_handler(unsigned long esr, unsigned long elr)
         core_timer_disable();
         local_timer_disable();
     }
+    else if(svc_type == 4){
+        // uart_puts("get task id\n");
+        set_trap_ret(current -> taskid);
+    }
 }
 
 void irq_handler()
 {
-    static core_cnt = 0;
+    static unsigned int core_cnt = 0;
     // uart_puts("irq\n");
     if (*CORE0_IRQ_SOURCE & (1 << 1)){
         ++core_cnt; 
@@ -37,6 +48,7 @@ void irq_handler()
         uart_dec(core_cnt); uart_puts("\n");
         set_core_timer_period();
         --current->counter;
+        schedule();
     }
     else if (*CORE0_IRQ_SOURCE & (1 << 11)){
         uart_puts("local timer interrupt\n");
