@@ -78,6 +78,11 @@ shell_interactive ()
 	  extern void test_fork_exec ();
 	  test_fork_exec ();
 	}
+      else if (!strcmp ("lab4t3", buf))
+	{
+	  extern void test_signal ();
+	  test_signal ();
+	}
       else
 	{
 	  uart_puts (buf);
