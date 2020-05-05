@@ -49,20 +49,20 @@ void exc_not_implemented(uint64_t code)
   asm volatile("mrs %0, elr_el1\n"
                "mrs %1, esr_el1\n":
                "=r"(ELR_EL1), "=r"(ESR_EL1));
-  uart_puts("Exception handler not implemented. Code: ");
+  uart_puts_blocking("Exception handler not implemented. Code: ");
   string_ulonglong_to_hex_char(string_buff, code);
-  uart_puts(string_buff);
-  uart_putc('\n');
-  uart_puts("Exception return address: ");
+  uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
+  uart_puts_blocking("Exception return address: ");
   string_ulonglong_to_hex_char(string_buff, ELR_EL1);
-  uart_puts(string_buff);
-  uart_putc('\n');
-  uart_puts("ESR_EL1: ");
+  uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
+  uart_puts_blocking("ESR_EL1: ");
   string_ulonglong_to_hex_char(string_buff, ESR_EL1);
-  uart_puts(string_buff);
-  uart_putc('\n');
+  uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
 
-  uart_puts("Enter busy infinite loop for debug purpose\n");
+  uart_puts_blocking("Enter busy infinite loop for debug purpose\n");
   while(1);
   return;
 }

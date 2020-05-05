@@ -191,6 +191,16 @@ void uart_puts(const char * string)
   }
 }
 
+void uart_puts_blocking(const char * string)
+{
+  /* BACKUP: Incase interrupt not working */
+  for(unsigned idx = 0; string[idx] != '\0'; ++idx)
+  {
+    while(!CHECK_BIT(*UART_FR, 7)); /* If txfe [7] bit is set, fifo is empty */
+    *UART_DR = (uint32_t)string[idx];
+  }
+}
+
 /* Write string from uart, blocking, beware size */
 void uart_gets(char * string, char delimiter, unsigned length)
 {
