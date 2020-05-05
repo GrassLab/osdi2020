@@ -137,12 +137,6 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
     return dst - dst_orig;  // return written bytes
 }
 
-unsigned int sprintf(char *dst, char *fmt, ...) {
-    __builtin_va_list args;
-    __builtin_va_start(args, fmt);
-    return vsprintf(dst, fmt, args);
-}
-
 int strcmp(const char *X, const char *Y) {
     while (*X) {
         if (*X != *Y)

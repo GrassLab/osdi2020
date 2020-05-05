@@ -4,6 +4,7 @@
 #include "mbox.h"
 #include "util.h"
 #include "mm.h"
+#include "schedule.h"
 
 #define CMD_LEN 128
 
@@ -28,6 +29,7 @@ void kernel_main() {
     uart_printf("\n");
 
     mm_init();
+    schedule_init();
 }
 
 int main() {

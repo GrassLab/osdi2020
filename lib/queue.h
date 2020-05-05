@@ -1,3 +1,5 @@
+#include "stdint.h"
+
 #ifndef QUEUE
 #define QUEUE
 
@@ -8,6 +10,13 @@ struct queue {  // circular queue
     int rear;
     int size;
     char buf[QUEUE_MAX_SIZE];
+};
+
+struct uint64_queue {  // circular queue
+    int front;
+    int rear;
+    int size;
+    uint64_t buf[QUEUE_MAX_SIZE];
 };
 
 #endif

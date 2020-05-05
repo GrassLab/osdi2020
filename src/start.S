@@ -50,7 +50,7 @@ _start:
 
 el1_start:
     // set stack pointer
-    ldr     x1, =0x60000
+    ldr     x1, =0x80000
     mov     sp, x1
 
     // load exception_table to VBAR_EL1

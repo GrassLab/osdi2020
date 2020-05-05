@@ -3,11 +3,7 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
-#define MAX_TASKS 64
-
-extern struct task_struct *current;
-extern struct task_struct *task_pool[MAX_TASKS];
-extern int running_tasks;
+#define TASK_POOL_SIZE 64
 
 struct cpu_context {
     // ARM calling convention
@@ -23,12 +19,13 @@ struct cpu_context {
     uint64_t x27;
     uint64_t x28;
     uint64_t fp;  // x29
-    uint64_t sp;  // x30
-    uint64_t pc;
+    uint64_t lr;  // x30
+    uint64_t sp;
 };
 
 enum task_state {
     RUNNING,
+    EXIT,
 };
 
 struct task_struct {
@@ -37,4 +34,11 @@ struct task_struct {
     struct cpu_context cpu_context;
 };
 
+#define INIT_TASK   {0, RUNNING, {0,0,0,0,0,0,0,0,0,0,0,0,0}}
+
 #endif
+
+void schedule_init();
+void privilege_task_create(void(*func)());
+void context_switch(struct task_struct *next);
+extern void switch_to(struct cpu_context* prev, struct cpu_context* next);

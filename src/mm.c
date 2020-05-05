@@ -1,12 +1,15 @@
 #include "mm.h"
+#include "schedule.h"
 
-char *intr_stack;
-char *kstack0;
-char *ustack0;
+char* kstack_pool[TASK_POOL_SIZE];
 
 void mm_init() {
-    extern volatile unsigned char _end;  // defined in linker
-    intr_stack = (char*)&_end + INTR_STK_SIZE;
-    kstack0 = intr_stack + KSTK_SIZE;
-    ustack0 = intr_stack + (TASK_POOL_SIZE * KSTK_SIZE) + USTK_SIZE;
+    extern char _end;  // defined in linker
+    char *kernel_end = ((char*) ((uint64_t) &_end & 0xfffffffffffffff0)) + PAGE_SIZE;  // sp need 16bit alignment, padding one page
+    char *kstack0 = kernel_end + KSTK_SIZE;
+    // char *ustack0 = kernel_end + (TASK_POOL_SIZE * KSTK_SIZE) + USTK_SIZE;
+
+    for (int i = 0; i < TASK_POOL_SIZE; i++) {
+        kstack_pool[i] = kstack0 + i * KSTK_SIZE;
+    }
 }
