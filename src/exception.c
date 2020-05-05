@@ -6,6 +6,7 @@
 #include "uart0.h"
 #include "exception.h"
 #include "schedule.h"
+#include "sys.h"
 
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
 uint64_t cntfrq_el0, cntpct_el0;
@@ -21,29 +22,50 @@ void irq_disable() {
 /*
  * Synchronous Exception
  */
+void _k_sys_get_cntfrq(struct trapframe* trapframe) {
+    uint64_t cntfrq_el0;
+    asm volatile ("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0)); // get current counter frequency
+    trapframe->x[0] = cntfrq_el0;
+}
+
+void _k_sys_get_cntpct(struct trapframe* trapframe) {
+    uint64_t cntpct_el0;
+    asm volatile ("mrs %0, cntpct_el0" : "=r" (cntpct_el0)); // read current counter
+    trapframe->x[0] = cntpct_el0;
+}
+
+void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
+    switch (sys_call_num) {
+        case SYS_GET_CNTFRQ:
+            _k_sys_get_cntfrq(trapframe);
+            break;
+
+        case SYS_GET_CNTPCT:
+            _k_sys_get_cntpct(trapframe);
+            break;
+    }
+}
 
 void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* trapframe) {
     int ec = (esr >> 26) & 0b111111;
     int iss = esr & 0x1FFFFFF;
     if (ec == 0b010101) {  // system call
-        uart_printf("sys: %d\n", trapframe->x[8]);
-        switch (iss) {
-            case 1:
-                uart_printf("Exception return address 0x%x\n", elr);
-                uart_printf("Exception class (EC) 0x%x\n", ec);
-                uart_printf("Instruction specific syndrome (ISS) 0x%x\n", iss);
-                break;
-            case 2:
-                arm_local_timer_enable();
-                break;
-            case 3:
-                arm_local_timer_disable();
-                break;
-            case 4:
-                asm volatile ("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0)); // get current counter frequency
-                asm volatile ("mrs %0, cntpct_el0" : "=r" (cntpct_el0)); // read current counter
-                break;
-        }
+        uint64_t syscall_num = trapframe->x[8];
+        sys_call_router(syscall_num, trapframe);
+
+        // switch (iss) {
+        //     case 1:
+        //         uart_printf("Exception return address 0x%x\n", elr);
+        //         uart_printf("Exception class (EC) 0x%x\n", ec);
+        //         uart_printf("Instruction specific syndrome (ISS) 0x%x\n", iss);
+        //         break;
+        //     case 2:
+        //         arm_local_timer_enable();
+        //         break;
+        //     case 3:
+        //         arm_local_timer_disable();
+        //         break;
+        // }
     }
     else {
         uart_printf("Exception return address 0x%x\n", elr);

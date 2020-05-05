@@ -4,6 +4,7 @@
 #include "queue.h"
 #include "exception.h"
 #include "sysregs.h"
+#include "util.h"
 
 struct runqueue runqueue;
 struct task_struct task_pool[TASK_POOL_SIZE] = {INIT_TASK, };
@@ -26,7 +27,7 @@ void demo_priviledge() {
 
 void demo_do_exec_user_mode() {
     while(1) {
-        uart_printf("hello from %d in user mode\n", current_task->id);
+        uart_printf("[%f] hello from %d in user mode\n", get_timestamp(), current_task->id);
         for (int i = 0; i < 100000; i++);
     }
 }
