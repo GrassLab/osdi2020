@@ -3,10 +3,10 @@
 #ifndef __SCHED_H__
 #define __SCHED_H__
 
-#define MAX_TASKS 64
+#define TASK_POOL_SIZE 64
 
 extern struct task_struct *current;
-extern struct task_struct *task_pool[MAX_TASKS];
+extern struct task_struct *task_pool[TASK_POOL_SIZE];
 extern int running_tasks;
 
 struct cpu_context {
