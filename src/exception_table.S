@@ -15,7 +15,7 @@
     .endm
 
     .macro kernel_entry
-    sub sp, sp, #256
+    sub sp, sp, #272
     stp x0, x1, [sp, #16 * 0]
     stp x2, x3, [sp, #16 * 1]
     stp x4, x5, [sp, #16 * 2]
@@ -31,25 +31,23 @@
     stp x24, x25, [sp, #16 * 12]
     stp x26, x27, [sp, #16 * 13]
     stp x28, x29, [sp, #16 * 14]
-    str x30, [sp, #16 * 15]
 
-    sub sp, sp, #32
     mrs x21, sp_el0
-    mrs x22, elr_el1
-    mrs x23, spsr_el1
-    stp x21, x22, [sp, #16 * 0]
-    str x23, [sp, #16 * 1]
+    stp x30, x21, [sp, #16 * 15]
+
+    mrs x21, elr_el1
+    mrs x22, spsr_el1
+    stp x21, x22, [sp, #16 * 16]
     .endm
 
     .macro kernel_exit
-    ldp x21, x22, [sp, #16 * 0]
-    ldr x23, [sp, #16 * 1]
-    msr sp_el0, x21
-    msr elr_el1, x22
-    msr spsr_el1, x23
-    add sp, sp, #32
+    ldp x21, x22, [sp, #16 * 16]
+    msr spsr_el1, x22
+    msr elr_el1, x21
 
-    ldr x30, [sp, #16 * 15]
+    ldp x30, x21, [sp, #16 * 15]
+    msr sp_el0, x21
+
     ldp x28, x29, [sp, #16 * 14]
     ldp x26, x27, [sp, #16 * 13]
     ldp x24, x25, [sp, #16 * 12]
@@ -65,7 +63,7 @@
     ldp x4, x5, [sp, #16 * 2]
     ldp x2, x3, [sp, #16 * 1]
     ldp x0, x1, [sp, #16 * 0]
-    add sp, sp, #256
+    add sp, sp, #272
     eret
     .endm
 
@@ -143,6 +141,7 @@ sync_exc_handler:
     kernel_entry
     mrs x0, esr_el1
     mrs x1, elr_el1
+    mov x2, sp  // trapframe pointer
     bl  sync_exc_router
     kernel_exit
 
