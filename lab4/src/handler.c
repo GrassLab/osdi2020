@@ -2,16 +2,10 @@
 #include "timer.h"
 #include "queue.h"
 #include "sched.h"
+#include "sys.h"
 
 #define CORE0_IRQ_SOURCE              ((volatile unsigned int*)0x40000060)
 #define IRQ_BASIC_PENDING             ((volatile unsigned int*)(MMIO_BASE+0x0000b200))
-#define S_FRAME_SIZE 272
-
-void set_trap_ret(int ret_val){
-    char *p;
-    p = kstack_pool[current->taskid] - 16 - S_FRAME_SIZE ; //kstack_pool[current->taskid] is stack top!
-    *((long long*)p) = ret_val; // 8byte per stack element
-}
 
 void exception_handler(unsigned long esr, unsigned long elr, unsigned long x2)
 {
@@ -34,7 +28,7 @@ void exception_handler(unsigned long esr, unsigned long elr, unsigned long x2)
     }
     else if(svc_type == 4){
         // uart_puts("get task id\n");
-        set_trap_ret(current -> taskid);
+        set_trap_ret(current, current -> taskid);
     }
     else if(svc_type == 5){
         
@@ -44,6 +38,9 @@ void exception_handler(unsigned long esr, unsigned long elr, unsigned long x2)
     }
     else if(svc_type == 7){
         do_exec((void*)x2);
+    }
+    else if(svc_type == 8){
+        do_fork();
     }
 }
 

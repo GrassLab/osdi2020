@@ -74,6 +74,11 @@ el0_irq:
     kernel_exit 0
     eret
 
+.global ret_from_child
+ret_from_child:
+    kernel_exit 0
+    eret
+
 .align 11 // vector table should be aligned to 0x800
 .global vector_table
 vector_table:

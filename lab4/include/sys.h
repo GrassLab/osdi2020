@@ -1,0 +1,1 @@
+void set_trap_ret(struct task* task_base, int ret_val);
