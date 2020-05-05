@@ -2,12 +2,14 @@
 #include "time.h"
 #include "syscall.h"
 #include "utility.h"
+#include "task.h"
 
 static void el0_svc_handler(unsigned long sp)
 {
-    unsigned long *spp = (unsigned long *)sp;
-    unsigned long x8 = *(spp+8);
-    unsigned long x0 = *(spp);
+    Task *task = get_current();
+    Trapframe *trapframe = task->trapframe;
+    unsigned long x8 = trapframe->regs[8];
+    unsigned long x0 = trapframe->regs[0];
     unsigned long syscallReturnValue = 0;
 
     if (x8 == SYSCALL_GET_TASK_ID) {
@@ -25,7 +27,7 @@ static void el0_svc_handler(unsigned long sp)
     } else if (x8 == SYSCALL_EXIT) {
         __exit(x0);
     }
-    *(spp) = syscallReturnValue;
+    trapframe->regs[0] = syscallReturnValue;
 }
 
 void exception_handler(unsigned long sp)
@@ -48,6 +50,10 @@ void exception_handler(unsigned long sp)
     ec = esr >> (32-6);
     iss = esr & (0xffffff);
     retaddr = elr;
+
+    // Set trapframe
+    Task *task = get_current();
+    task->trapframe = sp;
 
     // SVC
     if ((esr>>26) == 0b010101) {

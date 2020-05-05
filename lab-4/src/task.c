@@ -8,19 +8,29 @@ Task tasks[64];
 
 extern Task* get_current();
 extern void set_current();
-extern void switch_to(struct task* prev, struct task* next);
+extern void switch_to(Task* prev, Task* next);
 extern void switch_exit();
 
 void task_manager_init() {
     taskManager.taskCount = 0;
+    uart_puts("user stack start: ");
+    uart_print_hex(&taskManager.ustackPool);
+    uart_puts("\n");
+    uart_print_hex(&taskManager.ustackPool[1]);
+    uart_puts("\n");
+    uart_print_hex(&taskManager.ustackPool[2]);
+    uart_puts("\n");
+    uart_puts("kernel stack start: ");
+    uart_print_hex(&taskManager.kstackPool);
+    uart_puts("\n");
+    uart_print_hex(&taskManager.kstackPool[1]);
+    uart_puts("\n");
+    uart_print_hex(&taskManager.kstackPool[2]);
+    uart_puts("\n");
 }
 
 void privilege_task_create(void(*func)())
 {
-    if (func == 0) { // fork
-        return;
-    }
-
     int taskId = taskManager.taskCount;
     Task* task = &taskManager.taskPool[taskId];
     task->cpuContext.pc = (unsigned long) func;
@@ -64,25 +74,30 @@ void __exit(int status)
     schedule();
 }
 
-int fork()
+int __fork()
 {
-    int childTaskId = taskManager.taskCount;
-    Task *parent = get_current();
-    Task *child = &taskManager.taskPool[childTaskId];
-    // uart_puts("parent: ");
-    // uart_print_int(parent->id);
-    // uart_puts("\n");
-    child->parentId = 0;
-    memcpy(taskManager.kstackPool[parent->id], taskManager.kstackPool[childTaskId], 4096);
-    memcpy(taskManager.ustackPool[parent->id], taskManager.kstackPool[childTaskId], 4096);
-    // child->userContext.sp_el0 = ((unsigned long) &taskManager.ustackPool[parent->id]) - ;
+    // int childTaskId = taskManager.taskCount; // should find child id
+    // Task *parent = get_current();
+    // Task *child = &taskManager.taskPool[childTaskId];
+    // child->parentId = parent->id;
+    // memcpy(taskManager.kstackPool[parent->id], taskManager.kstackPool[childTaskId], 4096);
+    // memcpy(taskManager.ustackPool[parent->id], taskManager.kstackPool[childTaskId], 4096);
+
+    // unsigned long sp_el0_offset = ((unsigned long) &taskManager.ustackPool[parent->id])
+    //                             - (parent->userContext.sp_el0);
+    // child->userContext.sp_el0 = (unsigned long) &taskManager.ustackPool[child->id] - sp_el0_offset;
+
+    // unsigned long fp_offset = ((unsigned long) &taskManager.ustackPool[parent->id]) - kstack_regs->regs[29];
 }
 
 void foo()
 {
+    int count = 0;
     while(1) {
         uart_puts("TaskId: ");
         uart_print_int(get_taskid());
+        uart_puts(", Count: ");
+        uart_print_int(count++);
         uart_puts("\n");
         wait(100000000);
     }

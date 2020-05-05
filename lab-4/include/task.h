@@ -17,7 +17,7 @@ typedef struct cpuContext {
     unsigned long x27;
     unsigned long x28;
     unsigned long fp;
-    unsigned long sp;
+    unsigned long sp; // kstack sp
     unsigned long pc;
 } CpuContext;
 
@@ -27,6 +27,10 @@ typedef struct userContext {
     unsigned long spsr_el1; // user cpu state
 } UserContext;
 
+typedef struct trapframe {
+	unsigned long regs[31];
+} Trapframe;
+
 typedef struct task {
     CpuContext cpuContext;
     UserContext userContext;
@@ -35,6 +39,7 @@ typedef struct task {
     int timeCount;
     int state; // IN_KERNEL_MODE || IN_USER_MODE || ZOMBIE
     int parentId;
+    unsigned long trapframe;
 } Task;
 
 typedef struct taskManager {
@@ -51,8 +56,8 @@ void privilege_task_create(void(*func)());
 void context_switch(Task* next);
 void schedule();
 void do_exec(void(*func)());
-void exit(int status);
-int fork();
+void __exit(int status);
+int __fork();
 
 // Lab4 test case
 void user_test();
