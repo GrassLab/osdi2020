@@ -137,9 +137,9 @@ void task_schedule()
         context_switch(next);
         //after context switch
         next->start_coretime = _global_coretimer;
-        asm volatile("msr spsr_el1, %0"::"r"(next->spsr_el1):);
+        /*asm volatile("msr spsr_el1, %0"::"r"(next->spsr_el1):);
         asm volatile("msr elr_el1, %0"::"r"(next->elr_el1):);
-        asm volatile("msr sp_el0, %0"::"r"(next->sp_el0):);
+        asm volatile("msr sp_el0, %0"::"r"(next->sp_el0):);*/
         
         //asm volatile("mov %0, x30":"=r"(tmp)::);
         //uart_hex(tmp);

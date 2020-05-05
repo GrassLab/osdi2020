@@ -80,45 +80,6 @@ void task6()
 	do_exec(utask6, 0);
 }
 
-void utask1()
-{
-	//uart_puts("haha1\r\n");
-	unsigned long long int sp;
-	task *current_task;
-here:
-	asm volatile("mov %0,sp":"=r"(sp)::);
-	uart_hex(sp);
-	uart_puts("....1\r\n");
-	delay();
-	//context_switch(&task_pool[3]);
-	goto here;
-}
-
-void utask2()
-{
-	//uart_puts("haha2\r\n");
-	unsigned long long int sp;
-	task *current_task;
-here2:
-	asm volatile("mov %0,sp":"=r"(sp)::);
-	uart_hex(sp);
-	uart_puts(" ....2\r\n");
-	delay();
-	//context_switch(&task_pool[2]);
-	goto here2;
-}
-
-void task1()
-{
-	toggle_privilege();
-	do_exec(utask1, 0);
-}
-
-void task2()
-{
-	toggle_privilege();
-	do_exec(utask2, 0);
-}
 
 
 void kernel_init()
@@ -131,8 +92,6 @@ void kernel_init()
 	
 	int idleid = privilege_task_create(idle);
 	privilege_task_create(task6);
-	privilege_task_create(task1);
-	privilege_task_create(task2);
 
 	asm volatile("msr tpidr_el1, %0"::"r"(&task_pool[idleid]):);
 	asm volatile("mov sp, %0"::"r"(task_pool[idleid].ksp):);
