@@ -91,6 +91,11 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
             if (*fmt == '%') {
                 goto put;
             }
+            // char
+            if (*fmt == 'c') {
+                char c = __builtin_va_arg(args, int);
+                *dst++ = c;
+            }
             // string
             if (*fmt == 's') {
                 char *p = __builtin_va_arg(args, char *);

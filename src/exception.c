@@ -34,6 +34,31 @@ void _k_sys_get_cntpct(struct trapframe* trapframe) {
     trapframe->x[0] = cntpct_el0;
 }
 
+void _k_sys_uart_read(struct trapframe* trapframe) {
+    char* buf = (char*) trapframe->x[0];
+    uint32_t size = trapframe->x[1];
+
+    irq_enable();
+    for (int i = 0; i < size; i++) {
+        buf[i] = uart_read();
+    }
+    buf[size] = '\0';
+    irq_disable();
+    trapframe->x[0] = size;
+}
+
+void _k_sys_uart_write(struct trapframe* trapframe) {
+    const char* buf = (char*) trapframe->x[0];
+    uint32_t size = trapframe->x[1];
+
+    irq_enable();
+    for (int i = 0; i < size; i++) {
+        uart_write(buf[i]);
+    }
+    irq_disable();
+    trapframe->x[0] = size;
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_CNTFRQ:
@@ -42,6 +67,14 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_GET_CNTPCT:
             _k_sys_get_cntpct(trapframe);
+            break;
+
+        case SYS_UART_READ:
+            _k_sys_uart_read(trapframe);
+            break;
+
+        case SYS_UART_WRITE:
+            _k_sys_uart_write(trapframe);
             break;
     }
 }
@@ -105,7 +138,7 @@ void arm_core_timer_intr_handler() {
     if (current_task->counter > 0 || !current_task->preemptable_flag) {
         return;
     }
-    uart_printf("reschedule from %d\n", current_task->id);
+    // uart_printf("reschedule from %d\n", current_task->id);
     current_task->counter = 0;
     current_task->reschedule_flag = 1;
     irq_enable();

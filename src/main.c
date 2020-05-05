@@ -32,7 +32,7 @@ void kernel_main() {
     schedule_init();
 
     while (1) {
-        uart_printf("idle task!\n");
+        // uart_printf("idle task!\n");
         for (int i = 0; i < 1000000; i++);
         schedule();
     }

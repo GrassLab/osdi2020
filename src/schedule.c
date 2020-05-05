@@ -5,6 +5,7 @@
 #include "exception.h"
 #include "sysregs.h"
 #include "util.h"
+#include "sys.h"
 
 struct runqueue runqueue;
 struct task_struct task_pool[TASK_POOL_SIZE] = {INIT_TASK, };
@@ -26,8 +27,11 @@ void demo_priviledge() {
 }
 
 void demo_do_exec_user_mode() {
+    char buf[128];
     while(1) {
         uart_printf("[%f] hello from %d in user mode\n", get_timestamp(), current_task->id);
+        sys_uart_read(buf, 5);
+        sys_uart_write(buf, 5);
         for (int i = 0; i < 100000; i++);
     }
 }
@@ -71,8 +75,8 @@ void schedule_init() {
     QUEUE_PUSH(runqueue, current_task);
 
     privilege_task_create(demo_do_exec);
-    privilege_task_create(demo_priviledge);
-    privilege_task_create(demo_priviledge);
+    // privilege_task_create(demo_priviledge);
+    // privilege_task_create(demo_priviledge);
 
     arm_core_timer_enable();
     schedule();
