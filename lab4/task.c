@@ -134,15 +134,14 @@ void task_do_exec(void(*start_func)())
 
 void task_user_demo(void)
 {
-  char ann[] = ANSI_YELLOW"[Privilege task that will exec to user mode] "ANSI_RESET;
   char string_buff[0x10];
   uint64_t current_task_id = task_get_current_task_id();
 
+  irq_int_enable();
   string_longlong_to_char(string_buff, (int64_t)current_task_id);
-  uart_puts(ann);
+  uart_puts(ANSI_YELLOW"[Privilege task that will exec to user mode] "ANSI_RESET);
   uart_puts("In kernel mode with irq enable ID: ");
   uart_puts(string_buff);
-  irq_int_enable();
   uart_putc('\n');
 
   task_do_exec(task_user_context1_demo);
@@ -151,11 +150,11 @@ void task_user_demo(void)
 void task_user_context1_demo(void)
 {
   int demo_purpose_var_1 = 1;
-  char ann[] = ANSI_YELLOW"[Privilege task that exec\"ed\" to user mode] "ANSI_RESET;
+  ;
   char string_buff[0x20];
   uint64_t task_id = task_user_get_current_task_id();
 
-  syscall_uart_puts(ann);
+  syscall_uart_puts(ANSI_YELLOW"[Privilege task that exec\"ed\" to user mode] "ANSI_RESET);
   syscall_uart_puts("Task id: ");
   string_longlong_to_char(string_buff, (long)task_id);
   syscall_uart_puts(string_buff);
@@ -209,7 +208,7 @@ void task_user_context2_demo(void)
     if(third_meeseek_id == 0)
     {
       int fourth_meeseek_id = syscall_fork();
-      for(int i = 0; i < 10000000; ++i);
+      for(int i = 0; i < 100000; ++i);
       int fifth_meeseek_id = syscall_fork();
 
       if(fourth_meeseek_id == 0)
@@ -249,7 +248,7 @@ void task_user_context2_demo(void)
         syscall_uart_puts(" &demo_purpose_var_2: ");
         syscall_uart_puts(string_buff);
         syscall_uart_puts("\n");
-        for(int i = 0; i < 10000000; ++i);
+        for(int i = 0; i < 100000; ++i);
         ++demo_purpose_var_2;
       }
 

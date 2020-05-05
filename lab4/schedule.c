@@ -114,18 +114,14 @@ void schedule_yield(void)
 
 void schedule_zombie_reaper(void)
 {
-  char ann[] = ANSI_RED"[Zombie reaper/"ANSI_GREEN"idle] "ANSI_RESET;
+  char ann[0x80] = ANSI_RED"[Zombie reaper/"ANSI_GREEN"idle] "ANSI_RESET;
   uart_puts(ann);
   uart_puts("Allow me to introduce myself.\n");
   while(1)
   {
     if(schedule_zombie_exist == 0)
     {
-      /* nothing to do, try to exhaust quantum */
-      while(schedule_check_queue_empty())
-      {
-        asm volatile("wfi");
-      }
+      /* nothing to do, yield */
       schedule_yield();
       continue;
     }

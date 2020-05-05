@@ -64,30 +64,22 @@ void irq_el1_handler(void)
     // UART interrupt
     // [19] is GPU IRQ 59 which is uart_int (59)
     /* TX int: availible to write*/
+
     if(CHECK_BIT(*UART_MIS, 5) & CHECK_BIT(*UART_RIS, 5))
     {
       if(!tx_bug_fix)
       {
         tx_bug_fix = 1;
         /* clear intended interrupt */
-        *UART_ICR = 0x5;
+        *UART_ICR = 0x20;
         return;
       }
 
-      if(!QUEUE_EMPTY(uart_tx_queue))
+      /* start draining */
+      while(!QUEUE_EMPTY(uart_tx_queue))
       {
-        while(!CHECK_BIT(*UART_FR, 5)) /* while fifo is not full */
-        {
-          /* dump data */
-          if(!QUEUE_EMPTY(uart_tx_queue))
-          {
-            *UART_DR = (uint32_t)QUEUE_POP(uart_tx_queue);
-          }
-          else
-          {
-            break;
-          }
-        }
+        while(!CHECK_BIT(*UART_FR, 7));
+        *UART_DR = (uint32_t)QUEUE_POP(uart_tx_queue);
       }
       /* Nothing to do so clear tx interrupt */
       *UART_ICR = 0x20;

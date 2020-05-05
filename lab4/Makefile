@@ -3,7 +3,7 @@ LD = aarch64-linux-gnu-ld
 OBJCOPY = aarch64-linux-gnu-objcopy
 
 GENERAL_FLAGS =
-C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles
+C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles -mstrict-align
 ASM_FLAGS =
 
 KERNEL_C_SOURCE_FILES = shell.c string_util.c mailbox.c uart.c exc.c irq.c syscall.c timer.c schedule.c task.c sys.c
