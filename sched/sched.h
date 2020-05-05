@@ -37,8 +37,8 @@ struct task_struct
 {
   struct context ctx;
   size_t task_id;
-  char stack[STACK_SIZE] __attribute__ ((aligned (8)));
-  char kstack[STACK_SIZE] __attribute__ ((aligned (8)));
+  char stack[STACK_SIZE] __attribute__ ((aligned (16)));
+  char kstack[STACK_SIZE] __attribute__ ((aligned (16)));
   struct list_head list;
   char resched;
   size_t signal_map;
