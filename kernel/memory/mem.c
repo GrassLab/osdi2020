@@ -1,8 +1,8 @@
 #include "mem.h"
 
-#include "lib/math.h"
+#include "kernel/task/task.h"
 
-#include "task.h"
+#include "lib/math.h"
 
 /* 64 bit to maintain which one is in used */
 uint64_t KERNEL_SPACE_USAGE = 0;

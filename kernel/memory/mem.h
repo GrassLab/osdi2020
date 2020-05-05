@@ -2,10 +2,9 @@
 #define __SUS_MEM_H
 
 #include "kernel/peripherals/gpio.h"
+#include "kernel/task/task.h"
 
 #include "lib/type.h"
-
-#include "task.h"
 
 #define KERNEL_STACK_SIZE ( 1 << 13 ) /* 8K bytes */
 #define USER_STACK_SIZE   ( 1 << 22 ) /* 4M bytes */
@@ -22,6 +21,10 @@
 #define KERNEL_MEMORY_LOW  ( (volatile char *) ( (uint64_t) KERNEL_MEMORY_HIGH - KERNEL_SPACE_SIZE ) )
 #define USER_MEMORY_HGIH   KERNEL_MEMORY_LOW
 #define USER_MEMORY_LOW    ( (volatile char *) 0x90000 ) /* variable define in link.ld */
+
+#define TCR_CONFIG_REGION_48bit ( ( ( 64 - 48 ) << 0 ) | ( ( 64 - 48 ) << 16 ) )
+#define TCR_CONFIG_4KB          ( ( 0b00 << 14 ) | ( 0b10 << 30 ) )
+#define TCR_CONFIG_DEFAULT      ( TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB )
 
 typedef struct
 {

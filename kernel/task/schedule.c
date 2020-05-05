@@ -1,11 +1,11 @@
 #include "schedule.h"
 
 #include "kernel/exception/exception.h"
+#include "kernel/memory/mem.h"
 #include "kernel/peripherals/uart.h"
 
 #include "lib/task.h"
 
-#include "mem.h"
 #include "task.h"
 #include "task_queue.h"
 
