@@ -143,6 +143,7 @@ do_exit (int status)
   struct task_struct *cur = current;
   disable_irq ();
   list_del (&cur->list);
+  list_add_tail (&cur->list, zombiequeue);
   enable_irq ();
   switch_to (current, get_next_task ());
 }
