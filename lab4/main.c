@@ -52,16 +52,12 @@ void compair(char *buf) {
     irq();
   } else if (strcpy(buf, "lv")) {
     ellevel();
-  } else if (strcpy(buf, "scs")) {
-    asm volatile("mov x0, #3\n"
-                 "svc #0\n");
-  } else if (strcpy(buf, "ics")) {
-    asm volatile("mov x0, #4\n"
-                 "svc #0\n");
-  } else if (strcpy(buf, "doexec")) {
-    exec((unsigned long)&testfun);
-  } else if (strcpy(buf, "ucs")) {
-    ucs();
+  } else if (strcpy(buf, "test1")) {
+    test1();
+  } else if (strcpy(buf, "test2")) {
+    test2();
+  } else if (strcpy(buf, "test3")) {
+    test3();
   } else {
     printf("unknow command %s\n", buf);
   }

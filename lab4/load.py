@@ -7,7 +7,7 @@ from array import array
 
 
 #PORT = '/dev/ttyUSB0'
-PORT = '/dev/pts/2'
+PORT = '/dev/pts/0'
 BAUD_RATES = 115200
 
 ser = serial.Serial(PORT, BAUD_RATES)
@@ -17,7 +17,7 @@ ser.flushInput()
 ser.flushOutput()
 
 
-content = ["ucs\n"]
+content = ["test3\n"]
 try:
     for line in content:
         delay_time = 1.

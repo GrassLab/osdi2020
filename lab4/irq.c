@@ -18,8 +18,7 @@ void local_timer_handler() {
 
 void irq() {
   core_jf = 0;
-  asm volatile("mov x0, #0\n"
-               "svc #0\n");
+  core_timer_enable();
 }
 
 void core_timer_handler() {

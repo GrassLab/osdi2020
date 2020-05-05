@@ -22,13 +22,6 @@ void print_time() {
   printf("%d ms\n", result);
 }
 
-void print_lv() {
-  unsigned int el = 0;
-  asm volatile("MRS %[result], CurrentEL" : [result] "=r"(el));
-  el >>= 2;
-  printf("Exception level: %d \r\n", el);
-}
-
 void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
              unsigned int x3) {
   switch (x0) {
@@ -40,19 +33,13 @@ void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
     print_time();
     break;
   case 2:
-    print_lv();
+    do_exec(x1);
     break;
-  case 3:
-    scs();
+  case 7:
+    do_fork();
     break;
-  case 4:
-    ics();
-    break;
-  case 5:
-    do_exec();
-    break;
-  case 6:
-    do_ucs();
+  case 8:
+    do_exit();
     break;
   }
 }
@@ -74,7 +61,7 @@ void exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
       printf("Instruction specific syndrome (ISS) 0x%x\r\n", iss);
     }
   } else {
-    printf("OMG\n");
-    printf("Exception class (EC) 0x%x\r\n", ec);
+    // printf("OMG\n");
+    // printf("Exception class (EC) 0x%x\r\n", ec);
   }
 }
