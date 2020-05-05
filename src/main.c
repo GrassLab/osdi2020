@@ -5,6 +5,8 @@
 #include "mbox.h"
 #include "reset.h"
 #include "shell.h"
+#include "syscall.h"
+#include "task.h"
 #include "uart.h"
 
 #define GET_BOARD_REVISION 0x00010002
@@ -40,19 +42,63 @@ void run() {
     }
 }
 
+void idle() { schedule(); }
+
+void user0() {
+    print_s("user0\n");
+    while (1)
+        ;
+}
+
+void user1() {
+    /* uart_write('u'); */
+    /* uart_write('s'); */
+    /* uart_write('e'); */
+    /* uart_write('r'); */
+    /* uart_write(':'); */
+    print_s("user1\n");
+    /* exec(user0); */
+    while (1)
+        ;
+    /* char tmp; */
+    /* while (1) { */
+    /* tmp = uart_read(); */
+    /* uart_write(tmp); */
+    /* } */
+}
+
+void task1() {
+    print_s("task 1\n");
+    do_exec(user1);
+}
+
+void task2() {
+    print_s("task 2\n");
+    do_exec(user1);
+}
+
+void task3() {
+    print_s("task 3\n");
+    do_exec(user1);
+}
+
 int main() {
     // set up serial console
     uart_init();
     lfb_init();
     lfb_showpicture();
+    task_init();
+    asm volatile("svc #2");
 
-    /* long boot_start = (long)&_boot_start; */
-    /* long boot_end = (long)&_end; */
-    /* char *base = (char *)0xB000000; */
-    /* for (int i = 0; i < boot_end - boot_start; i++) { */
-    /* *(base + i) = *(char *)(boot_start + i); */
-    /* } */
+    struct task_t* t1 = &task_pool[0];
+    t1->func = idle;
+    t1->id = 0;
+    t1->used = 1;
+    t1->reschedule = 0;
+    privilege_task_create(task1);
+    privilege_task_create(task2);
+    privilege_task_create(task3);
+    privilege_task_run(t1);
 
-    /* ((void (*)())((long)*run + base - boot_start))(); */
-    run();
+    /* run(); */
 }

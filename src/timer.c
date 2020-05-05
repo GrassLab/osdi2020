@@ -1,5 +1,6 @@
 #include "io.h"
 #include "reset.h"
+#include "task.h"
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
 #define EXPIRE_PERIOD 0xffff
 #define LOCAL_TIMER_CONTROL 0x40000034
@@ -24,9 +25,14 @@ void core_timer_enable() {
 
 void core_timer_handler() {
     system_time_c++;
-    print_s("System timer interrupt ");
-    print_i(system_time_c);
-    print_s("\n");
+    struct task_t* task = get_current();
+    print_s("Time interrupt\n");
+    task->time++;
+    if (task->time >= 2) {
+        /* task->reschedule = 1; */
+        task->time = 0;
+        schedule();
+    }
 
     asm volatile("mov x0, 0x1");
     asm volatile("mrs x1, CNTFRQ_EL0");

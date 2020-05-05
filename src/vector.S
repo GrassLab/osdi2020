@@ -63,46 +63,44 @@
     ldr   x3, [sp], #16  
     ldr   x2, [sp], #16  
     ldr   x1, [sp], #16  
-    ldr   x0, [sp], #16
-  eret
 .endm
 
 _exc_handler:
   kernel_entry
-  mov     x0, #0
-  mrs     x1, esr_el1
-  mrs     x2, elr_el1
   bl exception_handler
   kernel_exit
+  ldr   x0, [sp], #16
+  eret
 
 _syn_handler:
   kernel_entry
-  mov     x0, #0
-  mrs     x1, esr_el1
-  mrs     x2, elr_el1
-  bl exception_handler
+  bl synchronize_handler
   kernel_exit
+  eret
 
 
 _irq_handler:
   kernel_entry
   bl irq_handler
   kernel_exit
+  ldr   x0, [sp], #16
+  msr daifclr, #2
+  eret
 
 .align 11
 .global exception_table
 exception_table:
     .align  7
-    b       _exc_handler
+    b       _syn_handler
     .align  7
-    b       _exc_handler
+    b       _irq_handler
     .align  7
     b       _exc_handler
     .align  7
     b       _exc_handler
 
     .align  7
-    b       _exc_handler
+    b       _syn_handler
     .align  7
     b       _irq_handler
     .align  7

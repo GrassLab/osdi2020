@@ -34,11 +34,8 @@ el2_entry:
     mov     x2, #0x0800
     movk    x2, #0x30d0, lsl #16
     msr     sctlr_el1, x2
-    // set up exception handlers
-    ldr     x2, =exception_table
-    msr     vbar_el1, x2
     // change execution level to EL1
-    mov     x2, #0x3c4
+    mov     x2, #0x344
     msr     spsr_el2, x2
     adr     x2, el1_entry
     msr     elr_el2, x2
@@ -57,14 +54,7 @@ el1_entry:
     ldr     x0, 0
     msr     spsr_el1, x0
 
-    adr     x0, el0_entry
-    msr     elr_el1, x0
-
-    bl      set_aux
-
-    eret
-
-el0_entry:
+clear_bss:
     // clear bss
     ldr     x1, =__bss_start
     ldr     w2, =__bss_size
@@ -73,12 +63,15 @@ el0_entry:
     sub     w2, w2, #1
     cbnz    w2, 3b
 
-    // load exception_table to VBAR_EL2
-    // ldr x0, =exception_table
-    // msr VBAR_EL2, x0
-
+go_main:
     // jump to C code, should not return
 4:  bl      main
     // for failsafe, halt this core too
+1:
     b       1b
+
+go_el0:
+
+
+el0_entry:
 

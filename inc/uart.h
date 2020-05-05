@@ -1,4 +1,5 @@
-#define BUFFER_MAX 200
+#ifndef UART_H
+#define UART_H
 
 /* Auxilary mini UART registers */
 #define AUX_ENABLE ((volatile unsigned int*)(MMIO_BASE + 0x00215004))
@@ -18,6 +19,8 @@
 #define IER_REG_INT (3 << 2)  // Must be set to receive interrupts
 #define IER_REG_VALUE (IER_REG_EN_REC_INT | IER_REG_INT)
 
+#define BUFFER_MAX 200
+
 void uart_init();
 void uart_send(unsigned int c);
 char uart_getb();
@@ -25,7 +28,4 @@ char uart_getc();
 void uart_puts(const char *s);
 void uart_hex(unsigned int d);
 void uart_flush();
-
-char buffer[BUFFER_MAX];
-int buffer_now;
-int buffer_read;
+#endif 

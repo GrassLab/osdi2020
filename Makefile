@@ -5,7 +5,7 @@ LD = $(ARM)-ld
 IDIR = inc
 SDIR = src
 BDIR = build
-CFLAGS = -Wall -I $(IDIR) -O0
+CFLAGS = -Wall -I $(IDIR) -O0 -g
 OBJCOPY = $(ARM)-objcopy
 S_SRCS = $(wildcard $(SDIR)/*.S)
 C_SRCS = $(wildcard $(SDIR)/*.c)
@@ -30,11 +30,11 @@ clean:
 	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img
 
 run: all
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial mon:stdio
 
 tty: all
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial "pty"
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial "pty"
 
 debug: all
-	terminator -e "qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio -s -S" --new-tab
+	terminator -e "qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial mon:stdio -s -S" --new-tab
 	terminator -e "aarch64-linux-gnu-gdb -x debug.txt" --new-tab
