@@ -5,6 +5,7 @@
 #include "queue.h"
 #include "uart0.h"
 #include "exception.h"
+#include "schedule.h"
 
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
 uint64_t cntfrq_el0, cntpct_el0;
@@ -32,11 +33,9 @@ void sync_exc_router(unsigned long esr, unsigned long elr) {
                 uart_printf("Instruction specific syndrome (ISS) 0x%x\n", iss);
                 break;
             case 2:
-                arm_core_timer_enable();
                 arm_local_timer_enable();
                 break;
             case 3:
-                arm_core_timer_disable();
                 arm_local_timer_disable();
                 break;
             case 4:
@@ -78,12 +77,13 @@ void uart_intr_handler() {
 void arm_core_timer_intr_handler() {
     register unsigned int expire_period = CORE_TIMER_EXPRIED_PERIOD;
     asm volatile("msr cntp_tval_el0, %0" : : "r"(expire_period));
-    uart_printf("Core timer interrupt, jiffies %d\n", ++arm_core_timer_jiffies);
-    // bottom half simulation
-    // irq_enable();
-    // unsigned long long x = 100000000000;
-    // while (x--) {
-    // }
+
+    current->counter--;
+    if (current->counter > 0 || !PREEMPTABLE(current->flag)) {
+        return;
+    }
+    current->counter = 0;
+    current->flag |= 1;
 }
 
 void arm_local_timer_intr_handler() {
