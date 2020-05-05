@@ -173,6 +173,7 @@ void context_switch(struct task_struct *next) {
 
 #define SIGHAND(who, code, arg)  {                                      \
     if (who->signals & code) {                                           \
+      who->signals &= ~code;                                             \
       (((sig_t *)who->sighand)[SIGKILL])(arg);                           \
     }                                                                   \
   }
