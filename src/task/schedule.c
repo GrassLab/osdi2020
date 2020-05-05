@@ -10,6 +10,12 @@ void contextSwitch(struct task *next)
 	if (current == next)
 		return;
 
+	if (current == 0)
+	{
+		current = next;
+		switchToWOS(&next->kernel_context);
+	}
+
 	if (current->task_state == ready)
 		pushQueue(current);
 
@@ -33,6 +39,7 @@ void schedule()
 	// uartPuts(" to ");
 	// uartInt(next_task->task_id);
 	// uartPuts("\n");
+
 	contextSwitch(next_task);
 
 	return;

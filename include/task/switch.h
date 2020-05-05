@@ -4,6 +4,7 @@
 #include "type.h"
 #include "task/taskStruct.h"
 
+void switchToWOS(struct cpu_context *next);
 void switchTo(struct cpu_context *prev, struct cpu_context *next);
 void switchToEL0(struct cpu_context *cur);
 void copyStack(uint64_t dst, uint64_t source, uint32_t size);

@@ -17,7 +17,7 @@ void enableCoreTimer()
     asm volatile("mov x0, 2");
     asm volatile("ldr x1, =0x40000040");
     asm volatile("str x0, [x1]");
-    asm volatile("mov x0, 0xffffff");
+    asm volatile("mov x0, 0xfffffff");
     asm volatile("msr cntp_tval_el0, x0");
 
     return;
@@ -32,7 +32,7 @@ void coreTimerHandler()
 
     current->re_schedule = true;
 
-    asm volatile("mov x0, 0x1fffff");
+    asm volatile("mov x0, 0x1ffffff");
     asm volatile("msr cntp_tval_el0, x0");
 
     return;

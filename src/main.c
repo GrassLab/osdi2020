@@ -30,31 +30,20 @@
 #include "task/switch.h"
 #include "task/runnableTask.h"
 
-#define INIT_TASK                                \
-    /*cpu_context*/ {                            \
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \
-            /* state etc */ 0, 0                 \
-    }
-
 void main()
 {
     // set up serial console
     uartInit();
 
-    // for(int i = 0; i < 3; ++i) { // N should > 2
+    // for (int i = 0; i < 3; ++i)
+    // { // N should > 2
     //     createPrivilegeTask(&kernelTask, 0);
     // }
     createPrivilegeTask(&zombieReaper, 0);
     createPrivilegeTask(&execTask, 0);
 
-    // Create a null init task
-    struct task init_task = INIT_TASK;
-    current = &init_task;
-
     // Enable core timer
     // asm volatile("svc #2");
-
     idleTask();
-
     // runShell();
 }

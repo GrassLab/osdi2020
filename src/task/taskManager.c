@@ -11,7 +11,7 @@ char kstack_pool[64][4096];
 char ustack_pool[64][4096];
 uint32_t task_count = 0;
 bool pool_occupied[64] = {false};
-struct task *current;
+struct task *current = 0;
 
 int32_t _getFreePoolNum()
 {
