@@ -76,9 +76,7 @@ rebase_stack_pointer (size_t fp, size_t old_base, size_t new_base)
   target = (size_t *) fp;
   while ((size_t) target - old_base < STACK_SIZE)
     {
-      printf ("before: %p | ", *target);
       *target = new_base + *target - old_base;
-      printf ("after: %p\r\n", *target);
       target = (size_t *) *target;
     }
 }
@@ -115,7 +113,7 @@ do_fork ()
   tf = get_syscall_trapframe (new);
   tf->fp = (size_t) new->stack + tf->fp - (size_t) current->stack;
   tf->sp_el0 = (size_t) new->stack + tf->sp_el0 - (size_t) current->stack;
-  rebase_stack_pointer (tf->fp, current->stack, new->stack);
+  rebase_stack_pointer (tf->fp, (size_t) current->stack, (size_t) new->stack);
 
   // add new task to runqeue tail
   disable_irq ();
