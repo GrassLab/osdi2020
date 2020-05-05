@@ -48,7 +48,7 @@ void preempt_disable() { current_task->preempt_count++; }
 
 int talloc(){
   for (int i = 0; i < TASK_SIZE; i++)
-    if (task_pool[i].status == none || task_pool[i].status == zombie)
+    if (task_pool[i].status == none) // || task_pool[i].status == zombie
       return i;
   return -1;
 }
@@ -96,9 +96,9 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
     p->cpu_ctx.fp = kfp_off  + (unsigned long)kstack_pool[p->pid % TASK_SIZE];
 
     /*
-    p->cpu_ctx.x19 = current_task->cpu_ctx.x19;
-    p->cpu_ctx.x20 = current_task->cpu_ctx.x20;
-    */
+       p->cpu_ctx.x19 = current_task->cpu_ctx.x19;
+       p->cpu_ctx.x20 = current_task->cpu_ctx.x20;
+       */
 
     memcpy(kstack_pool[p->pid % TASK_SIZE],
         kstack_pool[current_task->pid % TASK_SIZE],
@@ -137,33 +137,46 @@ int *show_sp(){
 }
 
 #define TASK_(n) void task_ ## n () { \
-  puts(#n " begin"); \
+  printf(NEWLINE "============      [%d] TASK" #n " daemon      ============"  NEWLINE, current_task->pid); \
   while(1){ \
-    puts(#n " running ..."); delay(500000000); \
+    printf(NEWLINE "============      [%d] TASK" #n " running     ============"  NEWLINE, current_task->pid); \
+    delay(500000000); \
     check_resched(); \
   } \
 }
 
 TASK_(1); TASK_(2); TASK_(3); TASK_(4);
 
-char* getline(){
-  static char buffer[1024];
+char* getline(char *buffer, char c){
   char *p = buffer;
-  while((*p++ = call_sys_read()) != '\r');
+  while((*p++ = call_sys_read()) != '\r')
+    if(c) print(c);
+  //printf("-------------------- %c == %c<", *(p - 1), current_task->buffer[0]);
   *--p = 0;
   return buffer;
 }
 
 void user_login(){
-  printf("[%d] input password:" NEWLINE, current_task->pid);
+  char buffer[128];
+  printf(NEWLINE "============      [%d] login daemon      ============"  NEWLINE, current_task->pid);
   while(1){
-    char *input = getline(), pw[10] = "root";
+    char *input = getline(buffer, '*'), pw[10] = "root";
     int d = strcmp(input, pw);
-    puts("diff");
     if(!d) break;
-    puts("input password:");
+    printf(NEWLINE "input password:");
   }
-  puts("login successfully!");
+  puts(NEWLINE "============     login successfully!     ============");
+  call_sys_exit();
+}
+
+void user_shell(){
+  char buffer[128];
+  printf(NEWLINE "============      [%d] shell daemon      ============"  NEWLINE, current_task->pid);
+  irq_shell_loop();
+  //while(1){
+  //  char *input = getline(buffer);
+  //  printf("exec command %s" NEWLINE, input);
+  //}
   call_sys_exit();
 }
 
@@ -225,29 +238,50 @@ void user_process_login(){
   do_exec((unsigned long)user_login);
 }
 
+void user_process_shell(){
+  do_exec((unsigned long)user_shell);
+}
+
+void zombie_reaper(){
+  printf(NEWLINE "============      [%d] zombie reaper     ============"  NEWLINE, current_task->pid);
+  while(1){
+    //printf(NEWLINE "============     [%d] zreaper running    ============"  NEWLINE, current_task->pid);
+    for(int i = 0; i < TASK_SIZE; i++){
+      if(tasks[i] && tasks[i]->status == zombie){
+        printf(NEWLINE "============ zombie_reaper kill zombie %d ============" NEWLINE, tasks[i]->pid);
+        tasks[i]->status = none;
+        tasks[i] = 0;
+      }
+    }
+    delay(500000000);
+    check_resched();
+  }
+}
+
 void exit(){
   preempt_disable();
   current_task->status = zombie;
-  puts("become zombie");
   preempt_enable();
 }
 
 void kernel_process(){
   puts("kernel process begin...");
   //printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
-  //privilege_task_create(user_process_login, 0, 2);
+  privilege_task_create(user_process_login, 0, 3);
+  privilege_task_create(user_process_shell, 0, 2);
   privilege_task_create(task_1, 0, current_task->priority);
   privilege_task_create(task_2, 0, current_task->priority);
+  privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_2, 0);
-  //privilege_task_create(irq_shell_loop, 0);
   //privilege_task_create(task_3, 0);
   //privilege_task_create(task_4, 0);
-  //do_exec((unsigned long)user_process);
   //irq_shell_loop();
   puts("kernel stack:");
   show_sp();
+  do_exec((unsigned long)user_process_exit);
+  //exit();
   //do_exec((unsigned long)user_process_fork);
-  exit();
+  //exit();
   //while(1){
   // puts("kernel process scheduling");
   // schedule();

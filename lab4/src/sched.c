@@ -79,9 +79,9 @@ void _schedule(){
 
   int max_priority = 0, max_count = 0, next = -1;
   for(int i = 0; i < TASK_SIZE; i++){
-    if(tasks[i] && (tasks[i]->status == idle)){
-      printf("[%d] c = %d, p = %d" NEWLINE,
-          tasks[i]->pid, tasks[i]->counter, tasks[i]->priority);
+    if(tasks[i] && (tasks[i]->status == idle || tasks[i]->status == running)){
+      //printf("[%d] c = %d, p = %d" NEWLINE,
+      //    tasks[i]->pid, tasks[i]->counter, tasks[i]->priority);
       if(tasks[i]->priority >= max_priority
           && tasks[i]->counter >= max_count){
         max_priority = tasks[i]->priority;
@@ -105,10 +105,12 @@ void _schedule(){
     current_task->status = idle;
 
   next_task = tasks[next];
+  /*
   printf("next is [%d](%d), %d %d",
       next_task->pid,
       next_task->status,
       next_task->priority, next_task->counter);
+  */
   next_task->counter = 0;
   context_switch(tasks[next]);
   //context_switch(tasks[i]);

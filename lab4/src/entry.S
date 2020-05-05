@@ -255,9 +255,9 @@ sync_invalid_el0_64:
     kexit_zero
 irq_invalid_el0_64:
     kentry_zero
-    //bl disable_irq
+    bl disable_irq
     bl irq_handler
-    //bl enable_irq
+    bl enable_irq
     kexit_zero
 fiq_invalid_el0_64:
     handle_invalid_entry  FIQ_INVALID_EL0_64
@@ -304,10 +304,10 @@ ret_from_fork:
 
 ret_to_user:
     bl disable_irq
-    ldp	x0, x1, [sp, #256]
-    bl show_addr
-    mov x0, sp
-    bl show_addr
-    ldp	x1, x0, [sp, #240]
-    bl show_addr
+    //ldp	x0, x1, [sp, #256]
+    //bl show_addr
+    //mov x0, sp
+    //bl show_addr
+    //ldp	x1, x0, [sp, #240]
+    //bl show_addr
     kexit_zero

@@ -10,7 +10,17 @@ extern Task *current_task;
 
 char sys_read(){
   uart_read_enqueue(current_task);
+  unsigned long elr, sp_el0, spsr_el1;
+  __asm__ volatile("mrs %0, elr_el1" : "=r"(elr));
+  __asm__ volatile("mrs %0, sp_el0" : "=r"(sp_el0));
+  __asm__ volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
+  enable_irq();
   schedule();
+  disable_irq();
+  __asm__ volatile("msr elr_el1, %0" ::"r"(elr));
+  __asm__ volatile("msr sp_el0, %0" ::"r"(sp_el0));
+  __asm__ volatile("msr spsr_el1, %0" ::"r"(spsr_el1));
+
   return current_task->buffer[0];
 }
 
@@ -30,7 +40,6 @@ int sys_fork() {
 void sys_exit(){
   preempt_disable();
   current_task->status = zombie;
-  puts("become zombie");
   preempt_enable();
 }
 

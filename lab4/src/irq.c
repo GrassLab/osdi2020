@@ -37,28 +37,66 @@ void uart_read_enqueue(Task *task){
   read_tasks[rtend] = task;
   rtend = (rtend + 1) % TASK_SIZE;
   task->status = block;
+  /*
   printf("block is [%d](%d), %d %d",
       task->pid,
       task->status,
       task->priority, task->counter);
+  */
+}
+
+int uart_read_front(){
+  int s = rtbeg;
+  for(int i = rtbeg + 1; i < rtend; i++){
+    if(read_tasks[s]->priority < read_tasks[i]->priority){
+      s = i;
+    }
+  }
+  return s;
+}
+
+void uart_read_dequeue(int s){
+  if(s == rtbeg) rtbeg++;
+  else{
+    for(int i = s; i < rtend - 1; i++){
+      read_tasks[i] = read_tasks[i + 1];
+    }
+    rtend--;
+  }
 }
 
 void handle_uart_irq(void) {
   // There may be more than one byte in the FIFO.
   while ((*(AUX_MU_IIR_REG)&IIR_REG_REC_NON_EMPTY) == IIR_REG_REC_NON_EMPTY) {
     if(rtbeg == rtend){
-      shell_stuff_line(uart_recv());
-      puts("<<<<<<<<<<<<<<<<<<<<<<<<< stuff shell");
+      uart_recv();
     }
     else{
+#if 1
+      int p = uart_read_front();
+      read_tasks[p]->buffer[0] = uart_recv();
+      //printf("stuff [%d] 's line with %c " NEWLINE, read_tasks[p]->pid, read_tasks[p]->buffer[0]);
+      read_tasks[p]->status = idle;
+      read_tasks[p]->priority = 10;
+      uart_read_dequeue(p);
+#else
       read_tasks[rtbeg]->buffer[0] = uart_recv();
       read_tasks[rtbeg]->status = idle;
-      rtbeg = (rtbeg + 1) % TASK_SIZE;
-      puts(">>>>>>>>>>>>>>>>>>   stuff task");
       read_tasks[rtbeg]->priority = 10;
+      rtbeg = (rtbeg + 1) % TASK_SIZE;
+      puts(NEWLINE ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>             stuff task");
+#endif
       current_task->flag |= RESCHED;
+      unsigned long elr, sp_el0, spsr_el1;
+      __asm__ volatile("mrs %0, elr_el1" : "=r"(elr));
+      __asm__ volatile("mrs %0, sp_el0" : "=r"(sp_el0));
+      __asm__ volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
       enable_irq();
       schedule();
+      disable_irq();
+      __asm__ volatile("msr elr_el1, %0" ::"r"(elr));
+      __asm__ volatile("msr sp_el0, %0" ::"r"(sp_el0));
+      __asm__ volatile("msr spsr_el1, %0" ::"r"(spsr_el1));
     }
   }
 }

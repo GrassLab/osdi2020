@@ -2,24 +2,25 @@
 #include "io.h"
 #include "irq.h"
 #include "map.h"
+#include "sys.h"
 #include "mbox.h"
 #include "power.h"
 #include "string.h"
 #include "time.h"
 #include "timer.h"
 #include "util.h"
+#include "task.h"
 
 #ifndef WITHOUT_LOADER
 #include "loadimg.h"
 #endif
 
-#define BUFFER_SIZE 1024
-char buffer[BUFFER_SIZE];
+#define BUFFER_SIZE 128
 
 char *exec_ptr = 0;
 extern unsigned int task_ptr;
 
-char *shell_read_line(char *ptr) {
+char *shell_read_line(char *ptr, char *buffer) {
   print("# ");
   char *beg = ptr--;
   do {
@@ -184,90 +185,83 @@ int shell_execute(char *cmd) {
   return 0;
 }
 
-char stuff_enable = 0;
-void shell_stuff_line(char c) {
+char *shell_stuff_line(char c, char **ptr, char *buffer) {
 
-  if (!stuff_enable)
-    return;
-
-  static char *ptr = buffer - 1;
-
-  *(++ptr) = c;
-  switch (*ptr) {
+  *(++(*ptr)) = c;
+  switch (**ptr) {
   case 4:
-    ptr = buffer + 1;
-    *ptr = '\r';
+    *ptr = buffer + 1;
+    **ptr = '\r';
     *buffer = 4;
     break;
   case 8:
   case 127:
-    ptr--;
-    if (ptr >= buffer) {
-      ptr--;
+    (*ptr)--;
+    if (*ptr >= buffer) {
+      (*ptr)--;
       print("\b \b");
     }
     break;
   case 12:
-    *ptr = 0;
-    ptr--;
+    **ptr = 0;
+    (*ptr)--;
     print("\e[1;1H\e[2J");
     print("# ", buffer);
     break;
   case 21:
-    ptr--;
-    while (ptr >= buffer) {
-      if (*ptr == '\t')
+    (*ptr)--;
+    while (*ptr >= buffer) {
+      if (**ptr == '\t')
         print("\b\b\b\b\b\b");
       else
         print("\b \b");
-      ptr--;
+      (*ptr)--;
     }
     break;
   default:
-    putchar(*ptr);
+    putchar(**ptr);
   }
 
-  if (ptr >= buffer && strchr("\r\n", *ptr)) {
-    exec_ptr = buffer;
-    while (ptr >= buffer && strchr(" \r\t", *ptr))
-      ptr--;
-    *(++ptr) = 0;
+  char *p = 0;
+  if ((*ptr) >= buffer && strchr("\r\n", **ptr)) {
+    p = buffer;
+    while ((*ptr) >= buffer && strchr(" \r\t", **ptr))
+      (*ptr)--;
+    *(++(*ptr)) = 0;
     puts("");
-    while (exec_ptr < ptr && strchr(" \r\t\n", *exec_ptr))
-      exec_ptr++;
-    ptr = buffer - 1;
-    // shell_execute(beg);
-    // exec_shell = 1;
-    // print("# ");
-    //__asm__ volatile("stp x8, x9, [sp, #-16]!");
-    //__asm__ volatile("mov x8, #4");
-    //__asm__ volatile("svc #0");
-    //__asm__ volatile("ldp x8, x9, [sp], #16");
-  } else if (ptr >= buffer + BUFFER_SIZE) {
+    while (p < (*ptr) && strchr(" \r\t\n", *p))
+      p++;
+    (*ptr) = buffer - 1;
+  } else if ((*ptr) >= buffer + BUFFER_SIZE) {
     puts("buffer size isn't enough... cleared.");
-    ptr = buffer - 1;
+    (*ptr) = buffer - 1;
   }
+  return p;
 }
 
 int busy_shell_loop() {
-  while (shell_execute(shell_read_line(buffer)) >= 0);
+  char buffer[BUFFER_SIZE];
+  while (shell_execute(shell_read_line(buffer, buffer)) >= 0);
   return 0;
 }
 
 void irq_shell_loop(){
+  char buffer[BUFFER_SIZE], *exec_ptr, *ptr;
+  ptr = buffer - 1;
   print("# ");
-    stuff_enable = 1;
     while (1) {
+      exec_ptr = shell_stuff_line(call_sys_read(), &ptr, buffer);
       if (exec_ptr) {
+        //printf("exec $ %x %x %s" NEWLINE, buffer, exec_ptr, exec_ptr);
         shell_execute(exec_ptr);
         exec_ptr = 0;
         print("# ");
-      } else if (task_ptr) {
+      } /*else if (task_ptr) {
         __asm__ volatile("stp x8, x9, [sp, #-16]!");
         __asm__ volatile("mov x8, #4");
         __asm__ volatile("svc #0");
         __asm__ volatile("ldp x8, x9, [sp], #16");
-      }
+      }*/
       // else  puts("hee");
     }
 }

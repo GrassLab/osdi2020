@@ -4,6 +4,6 @@
 int busy_shell_loop();
 void irq_shell_loop();
 int shell_execute(char *);
-void shell_stuff_line(char);
+char *shell_stuff_line(char c, char **ptr, char *buffer);
 
 #endif
