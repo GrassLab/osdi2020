@@ -5,6 +5,7 @@
 
 extern void switch_to(struct task_t* prev, struct task_t* next,
                       uint64_t nextfunc);
+extern void user_context(uint64_t sp, uint64_t func);
 
 struct task_t* get_current() {
     uint64_t res;
@@ -19,9 +20,6 @@ void context_switch(struct task_t* next) {
     struct task_t* prev = get_current();
     switch_to(prev, next, nextfunc);
 }
-
-char kstack_pool[64][4096];
-char ustack_pool[64][4096];
 
 void runqueue_push(struct task_t* task) {
     runqueue[runqueue_last].task = task;
@@ -76,12 +74,30 @@ void schedule() {
     context_switch(task);
 }
 
-void switch_to_user_mode(void (*func)()) {
-    asm volatile("tt:");
-    asm volatile("mov     x0, %0" : "=r"(func));
-    asm volatile("msr     elr_el1, x0");
+struct utask_t* get_current_utask() {
+    uint64_t res;
+    asm volatile("mrs %0, tpidr_el0" : "=r"(res));
+    struct utask_t* res_task = (struct utask_t*)res;
+
+    return res_task;
+}
+
+void switch_to_user_mode() {
+    struct utask_t* utask = get_current_utask();
+    uint64_t sp = utask->sp;
+    uint64_t func = (uint64_t)utask->func;
+    user_context(sp, func);
+}
+
+void do_exec(void (*func)()) {
+    struct task_t* task = get_current();
+    task->utask.func = func;
+    task->utask.sp = (uint64_t)ustack_pool[task->id];
+    uint64_t utask_addr = (uint64_t)&task->utask;
+    asm volatile("mov     x6, %0" : "=r"(utask_addr));
+    asm volatile("msr     tpidr_el0, x6");
+    asm volatile("ldr x2, =switch_to_user_mode");
+    asm volatile("msr     elr_el1, x2");
     asm volatile("bl      set_aux");
     asm volatile("eret");
 }
-
-void do_exec(void (*func)()) { switch_to_user_mode(func); }

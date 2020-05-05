@@ -57,7 +57,7 @@ void user1() {
     /* uart_write('r'); */
     /* uart_write(':'); */
     print_s("user1\n");
-    /* exec(user0); */
+    exec(user0);
     while (1)
         ;
     /* char tmp; */

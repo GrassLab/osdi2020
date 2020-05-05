@@ -39,11 +39,7 @@ void synchronize_handler() {
                 asm volatile("mov x0, %0" : "=r"(x0));
                 break;
             case 2:
-                asm volatile("hh:");
-                /* asm volatile("mov x0, %0" : "=r"(x0)); */
-                print_h(x0);
-                asm volatile("msr elr_el1, %0" : "=r"(x0));
-                asm volatile("mrs %0, elr_el1" : "=r"(elr));
+                do_exec((void (*)())x0);
                 break;
             case 3:
                 break;

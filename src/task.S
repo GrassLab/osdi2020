@@ -20,3 +20,7 @@ switch_to:
   msr tpidr_el1, x1
   br x2
 
+.global user_context
+user_context:
+    mov     sp, x0
+    br x1
