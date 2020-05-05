@@ -68,6 +68,16 @@ shell_interactive ()
 	  core_timer_enable ();
 	  local_timer_init ();
 	}
+      else if (!strcmp ("lab4t1", buf))
+	{
+	  extern void test_preemption ();
+	  test_preemption ();
+	}
+      else if (!strcmp ("lab4t2", buf))
+	{
+	  extern void test_fork_exec ();
+	  test_fork_exec ();
+	}
       else
 	{
 	  uart_puts (buf);

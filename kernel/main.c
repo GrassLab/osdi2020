@@ -19,42 +19,6 @@
                  "|_||_|\\___||_| |_|\\___/(_))   \\_/\\_/ \\___/|_|  |_|\\__,_|((_)\n" \
                  "                                                                  \n"
 
-void
-after_do_exec ()
-{
-  char buf[] = "after exec\n";
-  while (1)
-    {
-      uart_write (buf, 11);
-      uart_read (buf, 5);
-    }
-}
-
-void
-echo_and_delay ()
-{
-  double t;
-  char buf[10];
-  int c;
-  exec (after_do_exec);
-  c = uart_read (buf, 10);
-  printf ("%d: %s\r\n", c, buf);
-  while (1)
-    {
-      uart_write (buf, 10);
-      printf ("echo haha %f\r\n", t);
-      t = get_time ();
-      while (get_time () - t < 1);
-    }
-}
-
-void
-echo_and_do_exec ()
-{
-  printf ("echo kernel %d\r\n", (int) current->task_id);
-  do_exec (&echo_and_delay);
-}
-
 int
 main (int error, char *argv[])
 {
@@ -72,19 +36,6 @@ main (int error, char *argv[])
       uart_puts ("-----------------------------\n");
     }
 
-  extern void test_preemption ();
-  // test_preemption ();
-
-  extern void test_fork_exec ();
-  test_fork_exec ();
-
-  privilege_task_create (&echo_and_do_exec);
-  privilege_task_create (&echo_and_do_exec);
-  privilege_task_create (&echo_and_do_exec);
-  privilege_task_create (&echo_and_do_exec);
-  privilege_task_create (&echo_and_do_exec);
-  sys_core_timer_enable ();
-  switch_to (&fake, &task_pool[0]);
   shell_interactive ();
   return 0;
 }
