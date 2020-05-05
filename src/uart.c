@@ -99,6 +99,10 @@ void uart_puts(char *s) {
 
 void uart_int(unsigned int i)
 {
+    if (i == 0) {
+      uart_puts("0");
+      return;
+    }
     char buf[256];
     int buf_ptr = 0;
     while (i > 0)

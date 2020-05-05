@@ -17,7 +17,6 @@ void exc_function() {
 	    uart_puts("\n\r");
     } else if (iss == 2) {
         uart_puts("enable time\n");
-        //init_irq();
         enable_irq();
         core_timer_enable();
         local_timer_enable();
