@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "irq.h"
 #include "exc.h"
+#include "syscall.h"
 
 const char * shell_command_list[] = {
   "hello",
@@ -109,7 +110,7 @@ void shell(void)
   while(1)
   {
     uart_puts(ANSI_RED "# " ANSI_RESET);
-    uart_gets(string_buffer, '\n', 0x1000 - 1);
+    syscall_uart_gets(string_buffer, '\n', 0x1000 - 1);
     _shell_parser(string_buffer);
   }
 

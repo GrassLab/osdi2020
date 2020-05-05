@@ -103,6 +103,7 @@ void irq_el1_handler(void)
       }
       /* Cleart interrupt for safety */
       *UART_ICR = 0x10;
+      task_end_waiting();
       return;
     }
   }

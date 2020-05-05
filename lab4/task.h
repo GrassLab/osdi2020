@@ -5,6 +5,10 @@
 #define TASK_KERNEL_STACK_SIZE 0x1000
 #define TASK_USER_STACK_SIZE 0x1000
 
+#define TASK_STATE_RESCHEDULE 0
+#define TASK_STATE_ZOMBIE 1
+#define TASK_STATE_WAIT 2
+
 #define TASK_ID_TO_IDX(x) ((x - 1))
 
 struct cpu_context_struct
@@ -35,6 +39,7 @@ struct task_struct
   /* bit */
   /* bit 0 -> reschedule */
   /* bit 1 -> zombie */
+  /* bit 2 -> wait state */
   uint64_t flag;
   uint64_t signal;
   struct cpu_context_struct cpu_context;
@@ -50,6 +55,8 @@ void task_user_demo(void);
 void task_user_context1_demo(void);
 void task_user_context2_demo(void);
 uint64_t task_get_current_task_signal(void);
+void task_start_waiting(void);
+void task_end_waiting(void);
 
 #endif
 

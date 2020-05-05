@@ -2,6 +2,7 @@
 #include "mailbox.h"
 #include "gpio.h"
 #include "queue.h"
+#include "task.h"
 
 char_queue uart_tx_queue, uart_rx_queue;
 
@@ -135,10 +136,10 @@ char uart_getc(int echo)
   }
   else
   {
-    /* other interrupt might exit lower power mode, make sure the queue is load by ISR */
+    /* enter wait state until interrupt requeue the task */
     while(QUEUE_EMPTY(uart_rx_queue))
     {
-      asm volatile("wfi");
+      task_start_waiting();
     }
     /* ISR store the data in rx_queue */
     c = QUEUE_POP(uart_rx_queue);

@@ -17,6 +17,8 @@ void scheduler(void);
 void schedule_update_quantum_count(void);
 int schedule_check_self_reschedule(void);
 void schedule_enqueue(uint64_t id);
+void schedule_enqueue_wait(uint64_t id);
+uint64_t schedule_dequeue_wait(void);
 int schedule_check_queue_empty(void);
 void schedule_yield(void);
 void schedule_zombie_reaper(void);

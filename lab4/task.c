@@ -255,20 +255,6 @@ void task_user_context2_demo(void)
       /* busy waiting until the first meeseeks kill us all */
       while(1);
 
-      /*
-      asm volatile("mov %0, sp" : "=r"(current_sp));
-      string_ulonglong_to_hex_char(current_sp_hex, current_sp);
-      ann[0] = '\0';
-      while(1)
-      {
-        syscall_uart_puts(ann);
-        syscall_uart_puts("sp: ");
-        syscall_uart_puts(current_sp_hex);
-        syscall_uart_puts(" I can be killed by SIGKILL\n");
-        syscall_uart_gets(string_buff, '\n', 0x20 - 2);
-        syscall_uart_puts(string_buff);
-      }
-      */
     }
     else
     {
@@ -326,4 +312,44 @@ uint64_t task_get_current_task_signal(void)
   uint64_t current_task_id = task_get_current_task_id();
   return kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].signal;
 }
+
+void task_start_waiting(void)
+{
+  char id_char[0x10];
+  uint64_t current_task_id = task_get_current_task_id();
+
+  uart_puts(ANSI_GREEN"[scheduler]"ANSI_RESET" Task id: ");
+  string_longlong_to_char(id_char, (long)current_task_id);
+  uart_puts(id_char);
+  uart_puts(" has entered the wait queue\n");
+
+  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 2);
+  schedule_enqueue_wait(current_task_id);
+  schedule_yield();
+  return;
+}
+
+void task_end_waiting(void)
+{
+  char id_char[0x10];
+
+  /* put the first task in the wait queue back to running queue */
+  uint64_t task_id = schedule_dequeue_wait();
+
+  /* Some task in wait queue might be zombie */
+  while(CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].flag, TASK_STATE_ZOMBIE))
+  {
+    task_id = schedule_dequeue_wait();
+  }
+
+  uart_puts(ANSI_GREEN"[scheduler]"ANSI_RESET" Task id: ");
+  string_longlong_to_char(id_char, (long)task_id);
+  uart_puts(id_char);
+  uart_puts(" has left the wait queue\n");
+
+  CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].flag, 2);
+  schedule_enqueue(task_id);
+  return;
+}
+
 

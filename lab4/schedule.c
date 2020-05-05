@@ -8,11 +8,13 @@
 #include "queue.h"
 
 static uint64_t_queue schedule_run_queue;
+static uint64_t_queue schedule_wait_queue;
 int schedule_zombie_exist = 0;
 
 void scheduler_init(void)
 {
   QUEUE_INIT(schedule_run_queue);
+  QUEUE_INIT(schedule_wait_queue);
 
   asm volatile("mov x0, xzr\n"
                "msr tpidr_el1, x0\n");
@@ -53,10 +55,12 @@ void scheduler(void)
   else
   {
     uint64_t next_id = QUEUE_POP(schedule_run_queue);
-    while(CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(next_id)].flag, 1))
+    uint64_t next_idx = TASK_ID_TO_IDX(next_id);
+    /* task in zombie or wait state will not be queued */
+    while(CHECK_BIT(kernel_task_pool[next_idx].flag, TASK_STATE_ZOMBIE) || CHECK_BIT(kernel_task_pool[next_idx].flag, TASK_STATE_WAIT))
     {
-      /* zomebie will not be queued */
       next_id = QUEUE_POP(schedule_run_queue);
+      next_idx = TASK_ID_TO_IDX(next_id);
     }
     QUEUE_PUSH(schedule_run_queue, next_id);
     schedule_context_switch(current_privilege_task_id, next_id);
@@ -70,7 +74,7 @@ void schedule_update_quantum_count(void)
   uint64_t current_task_id = task_get_current_task_id();
   uint64_t current_task_idx = TASK_ID_TO_IDX(current_task_id);
 
-  if(CHECK_BIT(kernel_task_pool[current_task_idx].flag, 0))
+  if(CHECK_BIT(kernel_task_pool[current_task_idx].flag, TASK_STATE_RESCHEDULE))
   {
     return;
   }
@@ -90,13 +94,24 @@ void schedule_update_quantum_count(void)
 int schedule_check_self_reschedule(void)
 {
   uint64_t current_task_id = task_get_current_task_id();
-  return CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
+  return CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_RESCHEDULE);
 }
 
 void schedule_enqueue(uint64_t id)
 {
-  QUEUE_PUSH(schedule_run_queue, (unsigned)id);
+  QUEUE_PUSH(schedule_run_queue, id);
   return;
+}
+
+void schedule_enqueue_wait(uint64_t id)
+{
+  QUEUE_PUSH(schedule_wait_queue, id);
+}
+
+uint64_t schedule_dequeue_wait(void)
+{
+  uint64_t id = QUEUE_POP(schedule_wait_queue);
+  return id;
 }
 
 int schedule_check_queue_empty(void)
@@ -122,13 +137,14 @@ void schedule_zombie_reaper(void)
     if(schedule_zombie_exist == 0)
     {
       /* nothing to do, yield */
+      irq_int_enable();
       schedule_yield();
       continue;
     }
     for(unsigned task_idx = 0; task_idx < TASK_POOL_SIZE; ++task_idx)
     {
       schedule_zombie_exist = 0;
-      if(CHECK_BIT(kernel_task_pool[task_idx].flag, 1))
+      if(CHECK_BIT(kernel_task_pool[task_idx].flag, TASK_STATE_ZOMBIE))
       {
         char id_in_string[0x10];
 
