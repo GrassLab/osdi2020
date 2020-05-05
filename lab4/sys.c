@@ -73,8 +73,9 @@ int sys_fork(struct trapframe_struct * trapframe)
 {
   uint64_t current_task_id = task_get_current_task_id();
 
+  task_guard_section();
   /* new task should return to exception handler context restoration */
-  uint64_t new_task_id = task_privilege_task_create(__sys_fork_child_entry);
+  uint64_t new_task_id = task_privilege_task_create(__sys_fork_child_entry, (unsigned)kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].priority);
 
   /* new task will use context switch to restore */
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.x19 = trapframe -> x19;
@@ -119,6 +120,7 @@ int sys_fork(struct trapframe_struct * trapframe)
 
   /* child's sp_el0 (sp + 256) and fp (ignored) in trapframe needs update */
   *(uint64_t *)(((uint64_t)kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp) + 256) = kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp_el0;
+  task_unguard_section();
 
   return 0;
 }
@@ -127,15 +129,19 @@ int sys_exit(int status)
 {
   UNUSED(status);
   uint64_t current_task_id = task_get_current_task_id();
+  task_guard_section();
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 1);
   schedule_zombie_exist = 1;
+  task_unguard_section();
   schedule_yield();
   return 0;
 }
 
 int sys_signal(int task_id, int signalno)
 {
+  task_guard_section();
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].signal, signalno);
+  task_unguard_section();
   return 0;
 }
 

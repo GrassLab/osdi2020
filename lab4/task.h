@@ -10,6 +10,9 @@
 #define TASK_STATE_WAIT 2
 #define TASK_STATE_GUARD 3
 
+#define TASK_PRIORITY_LOW 0u
+#define TASK_PRIORITY_HIGH 1u
+
 #define TASK_ID_TO_IDX(x) ((x - 1))
 
 struct cpu_context_struct
@@ -44,11 +47,12 @@ struct task_struct
   /* bit 3 -> critical section */
   uint64_t flag;
   uint64_t signal;
+  uint64_t priority;
   struct cpu_context_struct cpu_context;
 };
 
 
-uint64_t task_privilege_task_create(void(*start_func)());
+uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority);
 uint64_t task_get_current_task_id(void);
 uint64_t task_user_get_current_task_id(void);
 void task_privilege_demo(void);

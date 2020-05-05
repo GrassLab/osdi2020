@@ -13,7 +13,7 @@ struct task_struct kernel_task_pool[TASK_POOL_SIZE];
 uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
 uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];
 
-uint64_t task_privilege_task_create(void(*start_func)())
+uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
 {
   task_guard_section();
   unsigned new_id = 0;
@@ -45,6 +45,9 @@ uint64_t task_privilege_task_create(void(*start_func)())
   /* reset signal */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].signal = 0;
 
+  /* set priority */
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].priority = (uint64_t)priority;
+
   /* assign context */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.lr = (uint64_t)start_func;
 
@@ -53,7 +56,7 @@ uint64_t task_privilege_task_create(void(*start_func)())
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool[new_id]);
 
   /* push into queue */
-  schedule_enqueue(new_id);
+  schedule_enqueue(new_id, (unsigned)priority);
   task_guard_section();
   return new_id;
 }
@@ -297,10 +300,10 @@ void task_user_context2_demo(void)
       {
         /* In the demo scenario, the thrid meeseeks has task id 2 */
         syscall_uart_puts(ann);
-        syscall_signal(2, SIGKILL);
-        syscall_signal(4, SIGKILL);
+        syscall_signal(3, SIGKILL);
         syscall_signal(5, SIGKILL);
         syscall_signal(6, SIGKILL);
+        syscall_signal(7, SIGKILL);
         syscall_uart_puts("SIGKILL sent.\n");
       }
     }
@@ -352,7 +355,7 @@ void task_end_waiting(void)
 
   task_guard_section();
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].flag, 2);
-  schedule_enqueue(task_id);
+  schedule_enqueue(task_id, (unsigned)kernel_task_pool[TASK_ID_TO_IDX(task_id)].priority);
   task_unguard_section();
   return;
 }

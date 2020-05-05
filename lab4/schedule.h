@@ -16,12 +16,13 @@ void schedule_context_switch(uint64_t current_id, uint64_t next_id);
 void scheduler(void);
 void schedule_update_quantum_count(void);
 int schedule_check_self_reschedule(void);
-void schedule_enqueue(uint64_t id);
+void schedule_enqueue(uint64_t id, unsigned priority);
 void schedule_enqueue_wait(uint64_t id);
 uint64_t schedule_dequeue_wait(void);
-int schedule_check_queue_empty(void);
+int schedule_check_queue_empty(unsigned priority);
 void schedule_yield(void);
 void schedule_zombie_reaper(void);
+void schedule_idle(void);
 
 extern void schedule_switch_context(struct cpu_context_struct * current_id_context_struct, struct cpu_context_struct * next_id_context_struct, uint64_t next_id);
 
