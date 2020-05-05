@@ -39,3 +39,12 @@ uint32_t sys_uart_write(const char buf[], uint32_t size) {
     asm volatile("mov %0, x0" : "=r"(ret_val));
     return ret_val;
 }
+
+int sys_exec(void(*func)()) {
+    asm volatile("mov x8, %0" : : "r"(SYS_EXEC));
+    asm volatile("mov x0, %0" : : "r"(func));
+    asm volatile("svc #0");
+    register int ret_val;
+    asm volatile("mov %0, x0" : "=r"(ret_val));
+    return ret_val;
+}

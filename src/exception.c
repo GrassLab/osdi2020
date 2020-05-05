@@ -59,6 +59,12 @@ void _k_sys_uart_write(struct trapframe* trapframe) {
     trapframe->x[0] = size;
 }
 
+void _k_sys_exec(struct trapframe* trapframe) {
+    void (*func)() = (void(*)()) trapframe->x[0];
+    do_exec(func);
+    trapframe->x[0] = 0;
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_CNTFRQ:
@@ -75,6 +81,10 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_UART_WRITE:
             _k_sys_uart_write(trapframe);
+            break;
+
+        case SYS_EXEC:
+            _k_sys_exec(trapframe);
             break;
     }
 }

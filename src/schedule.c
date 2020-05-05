@@ -26,12 +26,17 @@ void demo_priviledge() {
     }
 }
 
+void demo_sys_exec() {
+    while(1) {
+        uart_printf("sys_exec %d\n", current_task->id);
+        for (int i = 0; i < 100000; i++);
+    }
+}
+
 void demo_do_exec_user_mode() {
-    char buf[128];
     while(1) {
         uart_printf("[%f] hello from %d in user mode\n", get_timestamp(), current_task->id);
-        sys_uart_read(buf, 5);
-        sys_uart_write(buf, 5);
+        sys_exec(demo_sys_exec);
         for (int i = 0; i < 100000; i++);
     }
 }
