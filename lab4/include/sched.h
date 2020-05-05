@@ -3,6 +3,7 @@
 
 #include "task.h"
 void schedule();
+void check_resched();
 void context_switch(Task *next);
-
+void ret_from_fork(void);
 #endif

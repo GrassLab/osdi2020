@@ -103,6 +103,7 @@ void init_irq() {
 void enable_irq() {
   // delay(50000000);
   //*ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
+  get_current_el();
   __asm__ volatile("msr daifclr, #2" ::: "memory");
 }
 
@@ -111,4 +112,12 @@ void disable_irq() {
   // delay(500000000);
   //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
   __asm__ volatile("msr daifset, #2" ::: "memory");
+}
+
+void fuck_irq(){
+  puts("fuck irq");
+}
+
+void fuck_irqq(){
+  puts("fuck irqq");
 }

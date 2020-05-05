@@ -3,6 +3,14 @@
 
 #define TASK_SIZE 64
 #define STACK_SIZE 4096
+#define PSR_MODE_EL0t	0x00000000
+#define PSR_MODE_EL1t	0x00000004
+#define PSR_MODE_EL1h	0x00000005
+#define PSR_MODE_EL2t	0x00000008
+#define PSR_MODE_EL2h	0x00000009
+#define PSR_MODE_EL3t	0x0000000c
+#define PSR_MODE_EL3h	0x0000000d
+
 
 struct cpu_ctx {
   unsigned long x19;
@@ -41,6 +49,7 @@ typedef struct task_tag {
     none,
     pending,
     idle,
+    zombie,
     running,
   } status;
 } Task;
@@ -55,6 +64,7 @@ void preempt_disable();
 
 void init_task_pool();
 void kernel_process();
-Task *privilege_task_create(void (*func)());
+Task *privilege_task_create(void (*func)(), unsigned long arg);
+void do_exec(unsigned long);
 
 #endif

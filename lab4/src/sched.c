@@ -40,7 +40,6 @@ void _schedule(){
   }
 
   if(current_task == tasks[i]){
-    puts("return;");
     return;
   }
 
@@ -48,7 +47,26 @@ void _schedule(){
   context_switch(tasks[i]);
 }
 
+void schedule_tail() {
+  puts("achieve tail");
+  preempt_enable();
+}
+
+
+void show_addr(unsigned long a){
+  printf("addr %x" NEWLINE, a);
+}
+
 void schedule(){
   current_task->counter = 0;
   _schedule();
+}
+
+void check_resched(){
+  print("check_resched...");
+  if(current_task->flag & RESCHED){
+    puts("reschedule flag set");
+    schedule();
+  }
+  puts("nothing... do again");
 }

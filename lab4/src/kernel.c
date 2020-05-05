@@ -26,10 +26,6 @@ char *_kend, *_kbeg;
 
 #include "mm.h"
 
-extern char *exec_ptr;
-extern char stuff_enable;
-extern unsigned int task_ptr;
-
 int main(void) {
 
   uart_init();
@@ -76,30 +72,18 @@ int main(void) {
     flush();
 
     core_timer_init();
-    while (1) {
+
+    privilege_task_create(kernel_process, 0);
+
+    while(1){
+      puts("kernel main scheduling...");
       schedule();
-      //printf("%x %x" NEWLINE, schedule()->work, kernel_process);
-      //schedule()->work();
     }
 
 #ifdef UARTINT
-    print("# ");
-    stuff_enable = 1;
-    while (1) {
-      if (exec_ptr) {
-        shell_execute(exec_ptr);
-        exec_ptr = 0;
-        print("# ");
-      } else if (task_ptr) {
-        __asm__ volatile("stp x8, x9, [sp, #-16]!");
-        __asm__ volatile("mov x8, #4");
-        __asm__ volatile("svc #0");
-        __asm__ volatile("ldp x8, x9, [sp], #16");
-      }
-      // else  puts("hee");
-    }
+    irq_shell_loop();
 #else
-    shell_loop();
+    busy_shell_loop();
 #endif
   }
   return 0;
