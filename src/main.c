@@ -66,6 +66,12 @@ void user1() {
     /* uart_write(tmp); */
     /* } */
 }
+void user2() {
+    print_s("user2\n");
+    fork();
+    while (1)
+        ;
+}
 
 void task1() {
     print_s("task 1\n");
@@ -74,7 +80,7 @@ void task1() {
 
 void task2() {
     print_s("task 2\n");
-    do_exec(user1);
+    do_exec(user2);
 }
 
 void task3() {
@@ -90,14 +96,18 @@ int main() {
     task_init();
     asm volatile("svc #2");
 
+    uint64_t spsr_el1;
     struct task_t* t1 = &task_pool[0];
-    t1->func = idle;
+    t1->elr = (uint32_t)idle;
     t1->id = 0;
     t1->used = 1;
+    t1->time = 0;
+    t1->utask.sp = (uint64_t)kstack_pool[1];
+    asm volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
+    t1->spsr = spsr_el1;
     t1->reschedule = 0;
     privilege_task_create(task1);
     privilege_task_create(task2);
-    privilege_task_create(task3);
     privilege_task_run(t1);
 
     /* run(); */

@@ -26,18 +26,26 @@ void core_timer_enable() {
 void core_timer_handler() {
     system_time_c++;
     struct task_t* task = get_current();
-    print_s("Time interrupt\n");
+    print_s("Timer interrupt\n");
     task->time++;
-    if (task->time >= 2) {
-        /* task->reschedule = 1; */
-        task->time = 0;
-        schedule();
-    }
+    uint64_t elr, sp_el0, spsr_el1;
 
     asm volatile("mov x0, 0x1");
     asm volatile("mrs x1, CNTFRQ_EL0");
     asm volatile("mul x0, x0, x1");
     asm volatile("msr cntp_tval_el0, x0");
+    if (task->time >= 2) {
+        asm volatile("mrs %0, elr_el1" : "=r"(elr));
+        task->elr = elr;
+        asm volatile("mrs %0, sp_el0" : "=r"(sp_el0));
+        task->utask.sp = sp_el0;
+        asm volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
+        task->spsr = spsr_el1;
+        /* task->reschedule = 1; */
+        task->time = 0;
+        asm volatile("ldr x0, =schedule");
+        asm volatile("msr elr_el1, x0");
+    }
     return;
 }
 

@@ -42,10 +42,18 @@ void synchronize_handler() {
                 do_exec((void (*)())x0);
                 break;
             case 3:
+                do_fork(elr);
+                asm volatile("for:");
                 break;
         }
     } else if (iss == 2) {
         core_timer_enable();
+    } else {
+        print_s("Exception return address: 0x");
+        print_h(elr);
+        print_s("\n");
+        while (1)
+            ;
     }
 }
 /**
