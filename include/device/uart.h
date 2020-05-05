@@ -35,7 +35,7 @@ void _sysUartWrite();
 void _sysUartRead();
 char uartGetcWithCR();
 void uartPuts(const char *s);
-void uartHex(uint32_t d);
+void uartHex(uint64_t d);
 void uartInt(uint32_t i);
 void uartFloat(double f);
 

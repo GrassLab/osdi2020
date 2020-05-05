@@ -51,5 +51,5 @@ struct task *popQueue()
         return next;
     }
     else
-        return -1;
+        return 0;
 }

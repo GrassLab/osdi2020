@@ -28,7 +28,7 @@ void foo()
     uartPuts("Task ");
     uartInt(getTaskId());
     uartPuts(" after exec, tmp address ");
-    uartHex((uint32_t)&tmp);
+    uartHex((uint64_t)&tmp);
     uartPuts(", tmp value ");
     uartInt(tmp);
     uartPuts("\n");
@@ -37,7 +37,7 @@ void foo()
 
 void forkTask()
 {
-    asm volatile("svc #2"); // Enable timer
+    // asm volatile("svc #2"); // Enable timer
 
     uint32_t cnt = 1;
 
@@ -70,7 +70,7 @@ void forkTask()
         uartPuts("Task ");
         uartInt(getTaskId());
         uartPuts(" before exec, cnt address ");
-        uartHex((uint32_t)&cnt);
+        uartHex((uint64_t)&cnt);
         uartPuts(", cnt value ");
         uartInt(cnt);
         uartPuts("\n");

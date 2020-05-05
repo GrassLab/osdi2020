@@ -15,9 +15,7 @@ struct task *current = 0;
 
 int32_t _getFreePoolNum()
 {
-	if (task_count >= MAX_TASK_NUMBER)
-		return -1;
-	else
+	if (task_count < MAX_TASK_NUMBER)
 	{
 		for (int32_t i = 0; i < MAX_TASK_NUMBER; ++i)
 		{
@@ -29,12 +27,14 @@ int32_t _getFreePoolNum()
 			}
 		}
 	}
+
+	return -1;
 }
 
 void _sysGetTaskId()
 {
-	uint32_t sp_begin = &kstack_pool[current->task_id + 1];
-	*(uint32_t *)(sp_begin - 32 * 8) = current->task_id;
+	uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+	*(uint64_t *)(sp_begin - 32 * 8) = current->task_id;
 
 	return;
 }
@@ -50,31 +50,31 @@ void _sysFork()
 	uint64_t new_kstack = (uint64_t)&kstack_pool[free_pool_num + 1];
 	uint64_t new_ustack = (uint64_t)&ustack_pool[free_pool_num + 1];
 
-	uint32_t ksp_begin = &kstack_pool[current->task_id + 1];
-	uint32_t ksp_end;
+	uint64_t ksp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+	uint64_t ksp_end;
 	asm volatile("mov %0, sp"
 				 : "=r"(ksp_end));
-	uint32_t kstack_used = ksp_begin - ksp_end;
+	uint64_t kstack_used = ksp_begin - ksp_end;
 
-	uint32_t usp_begin = &ustack_pool[current->task_id + 1];
-	uint32_t usp_end;
+	uint64_t usp_begin = (uint64_t)&ustack_pool[current->task_id + 1];
+	uint64_t usp_end;
 	asm volatile("mrs %0, sp_el0"
 				 : "=r"(usp_end));
-	uint32_t ustack_used = usp_begin - usp_end;
-	uint32_t ufp = *(uint32_t *)(ksp_begin - 3 * 8);
-	uint32_t ufp_offset = usp_end - ufp;
+	uint64_t ustack_used = usp_begin - usp_end;
+	uint64_t ufp = *(uint64_t *)(ksp_begin - 3 * 8);
+	uint64_t ufp_offset = usp_end - ufp;
 
 	// Set parent return value
-	*(uint32_t *)(ksp_begin - 32 * 8) = free_pool_num;
+	*(uint64_t *)(ksp_begin - 32 * 8) = free_pool_num;
 
 	// Copy the kernel stack
-	copyStack(new_kstack, &kstack_pool[current->task_id + 1], kstack_used);
-	copyStack(new_ustack, &ustack_pool[current->task_id + 1], 4096);
+	copyStack(new_kstack, ksp_begin, 4096);
+	copyStack(new_ustack, usp_begin, 4096);
 
 	// Set child return value
-	*(uint32_t *)(new_kstack - 32 * 8) = 0;
+	*(uint64_t *)(new_kstack - 32 * 8) = 0;
 	// Set child fp
-	*(uint32_t *)(new_kstack - 3 * 8) = new_ustack - ustack_used + ufp_offset;
+	*(uint64_t *)(new_kstack - 3 * 8) = new_ustack - ustack_used + ufp_offset;
 	// Because the stack is copied, the stack pointer should be moved down
 	new_task->kernel_context.sp = new_kstack - kstack_used;
 	new_task->kernel_context.sp_el0 = new_ustack - ustack_used;
@@ -105,10 +105,10 @@ void doExec(void (*func)())
 
 void _sysexec()
 {
-	uint32_t sp_begin = &kstack_pool[current->task_id + 1];
-	uint32_t func = *(uint32_t *)(sp_begin - 32 * 8);
+	uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+	uint64_t func = *(uint64_t *)(sp_begin - 32 * 8);
 
-	doExec(func);
+	doExec((void (*)(void))func);
 }
 
 void zombieReaper()
@@ -129,8 +129,8 @@ void zombieReaper()
 
 void _sysexit()
 {
-	int32_t sp_begin = &kstack_pool[current->task_id + 1];
-	int32_t exit_code = *(int32_t *)(sp_begin - 32 * 8);
+	int64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+	int64_t exit_code = *(int64_t *)(sp_begin - 32 * 8);
 
 	uartPuts("Exit with code ");
 	uartInt(exit_code);
@@ -147,7 +147,7 @@ uint32_t createPrivilegeTask(void (*func)(), uint32_t priority)
 	int32_t free_pool_num = _getFreePoolNum();
 
 	if (free_pool_num == -1)
-		return;
+		return -1;
 
 	struct task *new_task = &task_pool[free_pool_num];
 	uint64_t new_kstask = (uint64_t)&kstack_pool[free_pool_num + 1];

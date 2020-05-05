@@ -1,5 +1,5 @@
-.global switchToWOS
-switchToWOS:
+.global switchTo
+switchTo:
     ldp x19, x20, [x1, 16 * 0]
     ldp x21, x22, [x1, 16 * 1]
     ldp x23, x24, [x1, 16 * 2]
@@ -13,8 +13,8 @@ switchToWOS:
     msr sp_el0, x9
     ret
 
-.global switchTo
-switchTo:
+.global copyAndSwitchTo
+copyAndSwitchTo:
     stp x19, x20, [x0, 16 * 0]
     stp x21, x22, [x0, 16 * 1]
     stp x23, x24, [x0, 16 * 2]

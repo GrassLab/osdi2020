@@ -48,7 +48,6 @@ handle_exc:
     save_reg
     mrs     x0, ESR_EL1
     mrs     x1, ELR_EL1
-    add     x9, sp, 32*8   // Store the sp for fork and exec
     bl       excHandler
     load_reg
     eret

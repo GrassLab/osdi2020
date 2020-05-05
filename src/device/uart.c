@@ -111,18 +111,18 @@ char uartGetc()
 
 void _sysUartWrite()
 {
-    uint32_t sp_begin = &kstack_pool[current->task_id + 1];
-    uint32_t c = *(uint32_t *)(sp_begin - 32 * 8);
+    uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+    uint64_t c = *(uint64_t *)(sp_begin - 32 * 8);
 
     uartSend(c);
 }
 
 void _sysUartRead()
 {
-    uint32_t sp_begin = &kstack_pool[current->task_id + 1];
+    uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
 
     char c = uartGetc();
-    *(uint32_t *)(sp_begin - 32 * 8) = c;
+    *(uint64_t *)(sp_begin - 32 * 8) = c;
 }
 
 /**
@@ -161,13 +161,13 @@ void uartPuts(char *s)
 /**
  * Display a binary value in hexadecimal
  */
-void uartHex(uint32_t d)
+void uartHex(uint64_t d)
 {
     uartPuts("0x");
 
     uint32_t n;
     int32_t c;
-    for (c = 28; c >= 0; c -= 4)
+    for (c = 60; c >= 0; c -= 4)
     {
         // get highest tetrad
         n = (d >> c) & 0xF;

@@ -43,7 +43,7 @@ void main()
     createPrivilegeTask(&execTask, 0);
 
     // Enable core timer
-    // asm volatile("svc #2");
+    asm volatile("svc #2");
     idleTask();
     // runShell();
 }

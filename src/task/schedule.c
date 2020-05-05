@@ -13,7 +13,7 @@ void contextSwitch(struct task *next)
 	if (current == 0)
 	{
 		current = next;
-		switchToWOS(&next->kernel_context);
+		switchTo(&next->kernel_context);
 	}
 
 	if (current->task_state == ready)
@@ -22,7 +22,7 @@ void contextSwitch(struct task *next)
 	struct task *prev = current;
 	current = next;
 
-	switchTo(&prev->kernel_context, &next->kernel_context);
+	copyAndSwitchTo(&prev->kernel_context, &next->kernel_context);
 
 	return;
 }
@@ -31,7 +31,7 @@ void schedule()
 {
 	struct task *next_task = popQueue();
 
-	if (next_task == -1)
+	if ((uint64_t)next_task == 0)
 		return;
 
 	// uartPuts("Reschedule from ");
