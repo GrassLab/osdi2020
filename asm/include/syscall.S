@@ -30,3 +30,8 @@ exit:
   mov x8, #7
   svc #0
   ret
+.global kill
+kill:
+  mov x8, #8
+  svc #0
+  ret

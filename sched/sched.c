@@ -29,10 +29,17 @@ schedule ()
 
   if (!pos->resched)
     return;
-  // move self to tail
-  pos->resched = 0;
-  list_move_tail (&current->list, runqueue);
-  switch_to (current, get_next_task ());
+  if (current->signal_map & (1 << SIGKILL))
+    {
+      do_exit (0);
+    }
+  else
+    {
+      // move self to tail
+      pos->resched = 0;
+      list_move_tail (&current->list, runqueue);
+      switch_to (current, get_next_task ());
+    }
 }
 
 void

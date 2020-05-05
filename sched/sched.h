@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <list.h>
+#include <signal.h>
 
 #define POOL_SIZE 64
 #define STACK_SIZE 0x1000
@@ -40,6 +41,7 @@ struct task_struct
   char kstack[STACK_SIZE] __attribute__ ((aligned (8)));
   struct list_head list;
   char resched;
+  size_t signal_map;
 } task_pool[POOL_SIZE];
 
 struct task_struct *privilege_task_create (void (*func) ());
@@ -61,5 +63,7 @@ void do_exit (int status);
 void zombie_reaper ();
 struct trapframe *get_syscall_trapframe (struct task_struct *task);
 struct task_struct *get_next_task ();
+int do_kill (size_t pid, int signal);
+int sys_kill (size_t pid, int signal);
 
 #endif /* ifndef SCHED */
