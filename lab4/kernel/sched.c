@@ -171,6 +171,12 @@ void context_switch(struct task_struct *next) {
   cpu_switch_to(prev, next);
 }
 
+#define SIGHAND(who, code, arg)  {                                      \
+    if (who->signals & code) {                                           \
+      (((sig_t *)who->sighand)[SIGKILL])(arg);                           \
+    }                                                                   \
+  }
+
 void timer_tick() {
   --current->counter;
 
@@ -179,10 +185,9 @@ void timer_tick() {
     return;
   }
 
-  if (current->signals & SIGKILL) {
-    exit_process();
-    return ;
-  }
+  /* handle the signal */
+  SIGHAND(current, SIGKILL, 0);
+
 
   /* used up its epoch or preemptiable */
   /* set the need_reched flag */
