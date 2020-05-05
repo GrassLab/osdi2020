@@ -47,7 +47,7 @@ thread_info_t * task_dequeue ( )
         if ( QUEUE_HEAD == QUEUE_TAIL && !IS_FULL )
             return IDLE;
 
-        temp = QUEUE[QUEUE_HEAD];
+        temp = QUEUE[QUEUE_HEAD % QUEUE_ACCOMMPDATION];
         QUEUE_HEAD++;
         IS_FULL = 0;
 
