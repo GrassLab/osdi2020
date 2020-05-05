@@ -6,7 +6,7 @@
 #include "task.h"
 #include "syscall_io.h"
 
-#define Idle_size 0x06fffff;
+#define Idle_size 0x007ffff;
 
 void exec(void(*func)());
 
@@ -35,7 +35,8 @@ void idle()
 			break;
 		}
 		//uart_puts("idle now\r\n");
-		task_schedule();
+		//task_schedule();
+		asm volatile("mov x0, 3\r\nsvc #0");
 		delay(1000000);
 	}
 	my_printf("Test finished\n");
@@ -76,42 +77,71 @@ void utask6()
 void task6()
 {
 	toggle_privilege();
-	do_exec(utask6);
+	do_exec(utask6, 0);
 }
 
+void utask1()
+{
+	//uart_puts("haha1\r\n");
+	unsigned long long int sp;
+	task *current_task;
+here:
+	asm volatile("mov %0,sp":"=r"(sp)::);
+	uart_hex(sp);
+	uart_puts("....1\r\n");
+	delay();
+	//context_switch(&task_pool[3]);
+	goto here;
+}
+
+void utask2()
+{
+	//uart_puts("haha2\r\n");
+	unsigned long long int sp;
+	task *current_task;
+here2:
+	asm volatile("mov %0,sp":"=r"(sp)::);
+	uart_hex(sp);
+	uart_puts(" ....2\r\n");
+	delay();
+	//context_switch(&task_pool[2]);
+	goto here2;
+}
+
+void task1()
+{
+	toggle_privilege();
+	do_exec(utask1, 0);
+}
+
+void task2()
+{
+	toggle_privilege();
+	do_exec(utask2, 0);
+}
 
 
 void kernel_init()
 {
-	//asm volatile("svc #0");
-	//ustack_pool = kstack_pool + (4096*64);
+	
 	uart_init();
-	/*unsigned long long int tmp;
-	asm volatile("mov %0, sp":"=r"(tmp)::);
-	uart_puts("spppppp: ");
-	uart_hex(tmp);
-    uart_puts("\r\n");*/
+	
 	_global_coretimer = 0;
 	task_struct_init();
 	
 	int idleid = privilege_task_create(idle);
-	//privilege_task_create(task1);
-	//privilege_task_create(task2);
-	//privilege_task_create(task3);
-	//privilege_task_create(task4);
 	privilege_task_create(task6);
-	//unsigned long long addrrr = &task_pool[t1];
-	
-	
-	//local_timer_init();
-	
+	privilege_task_create(task1);
+	privilege_task_create(task2);
+
 	asm volatile("msr tpidr_el1, %0"::"r"(&task_pool[idleid]):);
 	asm volatile("mov sp, %0"::"r"(task_pool[idleid].ksp):);
+
 	core_time_enable();
+	
 	idle();
 
-	//task_schedule(0);
-	//task1(); //80d60
+	
 }
 
 void exec(void(*func)())

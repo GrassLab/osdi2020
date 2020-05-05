@@ -49,5 +49,5 @@ void runqueue_push(task *input);
 void task_schedule();
 task *get_current_task();
 void toggle_privilege();
-void do_exec(void(*func)());
+void do_exec(void(*func)(), char signal);
 void runqueue_del(int id);

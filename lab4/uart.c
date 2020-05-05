@@ -49,8 +49,8 @@ void uart_init()
     *UART0_LCRH = 0b11<<5; // 8n1 Enable FIFO, now is not enable.
     *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
 
-    //*UART0_IMSC = 3 << 4; //bit 4,5 enable mask interrupt of Tx Rx
-    //*ENABLE_IRQ2 = 1 << 25; //enable uart irq
+    *UART0_IMSC = 3 << 4; //bit 4,5 enable mask interrupt of Tx Rx
+    *ENABLE_IRQ2 = 1 << 25; //enable uart irq
 
     //*UART0_IFLS = 0x9; //UART 16*8 transmit and 16*12 recive -> here we set 1/2 full for both Transmit and Recive p.175 187
     rec_buf.head=0;
@@ -64,7 +64,7 @@ void uart_init()
  */
 void uart_send(unsigned int c) {
     
-    /*if(*UART0_FR&0x20)
+    if(*UART0_FR&0x20)
     {
         //tran_buf.tail++;
         tran_buf.buf[tran_buf.tail++] = c;
@@ -72,11 +72,11 @@ void uart_send(unsigned int c) {
     else
     {
         *UART0_DR=c;
-    }*/
+    }
 
     /*-----------------old version for test-----------------*/
-    do{asm volatile("nop");}while(*UART0_FR&0x20);
-    *UART0_DR=c;
+    /*do{asm volatile("nop");}while(*UART0_FR&0x20);
+    *UART0_DR=c;*/
 
 }
  
@@ -86,7 +86,7 @@ void uart_send(unsigned int c) {
 char uart_getc() {
     char r;
 
-    /*while( !(rec_buf.tail - rec_buf.head) )
+    while( !(rec_buf.tail - rec_buf.head) )
         asm volatile("wfi");
     if( (rec_buf.tail - rec_buf.head) > 0)
     {
@@ -101,15 +101,15 @@ char uart_getc() {
     else
     {
         return 0;        
-    }*/
+    }
 
     //while(1){asm volatile("nop");}
 
     /*-----------------old version for test-----------------*/
     
-    do{asm volatile("nop");}while(*UART0_FR&0x10);
+    /*do{asm volatile("nop");}while(*UART0_FR&0x10);
     r=(char)(*UART0_DR);
-    return r=='\r'?'\n':r;
+    return r=='\r'?'\n':r;*/
 
 }
 

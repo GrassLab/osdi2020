@@ -14,7 +14,7 @@
 #define IRQ_ENABLE2 ((volatile unsigned int*)0x3f00b218)
 #define CORE0_TIMER_IRQ_CTRL ((volatile unsigned int*)0x40000040)
 #define CORE0_IRQ_SRC ((volatile unsigned int*)0x40000060)
-#define EXPIRE_PERIOD ((volatile unsigned int*)0x006ffff)
+#define EXPIRE_PERIOD ((volatile unsigned int*)0x005ffff)
 #define IRQ_BASIC_PENDING ((volatile unsigned int*)(MMIO_BASE + 0xb200))
 #define PM_PASSWORD 0x5a000000
 #define PM_RSTC ((volatile unsigned int*)0x3F10001c)
@@ -73,7 +73,7 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
             else if(x0 == 3) // schedule
             {
                 //uart_puts("syscall...\r\n");
-                asm volatile("msr daifclr, 0xf");
+                //asm volatile("msr daifclr, 0xf");
                 task_schedule();
             }
             else if(x0 == 4) //get task id
@@ -90,7 +90,7 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
             }
             else if(x0 == 7)
             {
-                do_exec((void *)x1);
+                do_exec((void *)x1, 1);
             }
             else if(x0 == 8)
             {
@@ -185,27 +185,16 @@ void irq_hanlder()
     }
     else if(c0_source & 0x00000002)  // core timer handler (CNTPNSIRQ interrupt)
     { 
-        task *current_task;
-        asm volatile("mrs %0, tpidr_el1":"=r"(current_task)::);
-        asm volatile("mov %0, sp":"=r"(tmp)::);
-        /*uart_puts("\r\nsp: ");
-        uart_hex(tmp);*/
+        task *current_task = get_current_task();
         core_count++;
-        /*uart_puts("\r\nCore timer interrupt: ");
-        uart_hex(current_task->rip);*/
-        //uart_puts("\r\n");
-        //uart_puts("interrupt\r\n");
+        
         _global_coretimer = core_count;
-
+        asm volatile("msr cntp_tval_el0, %0"::"r"(EXPIRE_PERIOD):);
         if( ((core_count - current_task->start_coretime) > 2) || ((core_count - current_task->start_coretime) < 0 ) ){
-            //uart_puts("\r\nset\r\n");
-            //current_task->reschedule = 1;
-            asm volatile("msr cntp_tval_el0, %0"::"r"(EXPIRE_PERIOD):);
-            asm volatile("msr daifclr, 0xf");
+            //uart_puts("schedule\r\n");
             task_schedule();
         }
-        /*asm volatile("msr DAIFclr, 0xf");
-        while(1){asm volatile("nop");}*/
+        
     }
     else if(c0_source & 0x00000100) //GPU interrupt ///*IRQ_BASIC_PENDING & 0x80000
     {
@@ -326,7 +315,7 @@ int sys_do_fork()
     //extern char kstack_pool[64][4096];
     task *current = get_current_task();
     int new_id = privilege_task_create((void *)current->fp_lr[1]); //will not use this ret address
-    
+    task_pool[new_id].privilege = current->privilege;
     task_pool[new_id].elr_el1 = current->elr_el1;
     task_pool[new_id].spsr_el1 = current->spsr_el1;
     unsigned long long sgap = (current->ubase - current->sp_el0);

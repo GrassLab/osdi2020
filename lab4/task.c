@@ -120,7 +120,7 @@ void task_schedule()
     if(current != next)
     {
         
-        if(current->privilege == 0)
+        /*if(current->privilege == 0)
         {
             //uart_puts("current privilege 0\n");
             unsigned long long int elr_el1, spsr_el1, sp_el0;
@@ -132,18 +132,14 @@ void task_schedule()
             current->spsr_el1 = spsr_el1;
             /*uart_puts("current privilege 0: ");
             uart_hex(sp_el0);
-            uart_puts("\r\n");*/
-        }
+            uart_puts("\r\n");
+        }*/
         context_switch(next);
         //after context switch
         next->start_coretime = _global_coretimer;
-
-        if(next->privilege == 0)
-        {
-            asm volatile("msr spsr_el1, %0"::"r"(next->spsr_el1):);
-            asm volatile("msr elr_el1, %0"::"r"(next->elr_el1):);
-            asm volatile("msr sp_el0, %0"::"r"(next->sp_el0):);
-        }
+        asm volatile("msr spsr_el1, %0"::"r"(next->spsr_el1):);
+        asm volatile("msr elr_el1, %0"::"r"(next->elr_el1):);
+        asm volatile("msr sp_el0, %0"::"r"(next->sp_el0):);
         
         //asm volatile("mov %0, x30":"=r"(tmp)::);
         //uart_hex(tmp);
@@ -154,13 +150,23 @@ void task_schedule()
 }
 
 
-void do_exec(void(*func)())
+void do_exec(void(*func)(), char signal)
 {
 	task *current = get_current_task();
-	asm volatile("msr sp_el0, %0"::"r"(current->sp_el0):);
-	asm volatile("msr spsr_el1, %0"::"r"(0):);
-	asm volatile("msr elr_el1, %0"::"r"(func):);
-	asm volatile("eret");
+    //current->spsr_el1 = 0;
+    //current->elr_el1 = func;
+    //current->spsr_el1 = 0;
+    if(signal == 0)
+    {
+        asm volatile("msr sp_el0, %0"::"r"(current->sp_el0):);
+        asm volatile("msr spsr_el1, %0"::"r"(0):);
+        asm volatile("msr elr_el1, %0"::"r"(func):);
+        asm volatile("eret");
+    }
+    else
+    {
+        current->elr_el1 = func;
+    }
 }
 
 
