@@ -10,7 +10,7 @@ struct task task_pool[64];
 char kstack_pool[64][4096];
 char ustack_pool[64][4096];
 uint32_t task_count = 0;
-bool pool_occupied[64] = {false};
+uint64_t pool_occupied = 0;
 struct task *current = 0;
 
 int32_t _getFreePoolNum()
@@ -21,10 +21,10 @@ int32_t _getFreePoolNum()
 	{
 		for (int32_t i = 0; i < MAX_TASK_NUMBER; ++i)
 		{
-			if (pool_occupied[i] == false)
+			if (!((pool_occupied >> i) & 1))
 			{
 				task_count++;
-				pool_occupied[i] = true;
+				pool_occupied |= (1 << i);
 				return i;
 			}
 		}
@@ -118,7 +118,9 @@ void zombieReaper()
 		for (uint32_t i = 0; i < MAX_TASK_NUMBER; ++i)
 		{
 			if (task_pool[i].task_state == zombie)
-				pool_occupied[i] = false;
+			{
+				pool_occupied &= ~(1 << i);
+			}
 		}
 
 		schedule();
