@@ -41,9 +41,7 @@ zombie_reaper ()
   struct task_struct *victim;
   if (list_empty (zombiequeue))
     return;
-  disable_irq ();
   victim = list_entry (zombiequeue->next, struct task_struct, list);
   list_del (&victim->list);
   victim->task_id = 0;
-  enable_irq ();
 }
