@@ -36,10 +36,11 @@ struct pt_regs {
 	unsigned long pstate;
 };
 
+#define TASK_BUFFER_SIZE 1024
 #define RESCHED 0x1
 typedef struct task_tag {
   struct cpu_ctx cpu_ctx;
-  //struct pt_regs regs;
+  char buffer[TASK_BUFFER_SIZE];
   unsigned long pid;
   unsigned long flag;
   unsigned long counter;
@@ -49,6 +50,7 @@ typedef struct task_tag {
     none,
     idle,
     zombie,
+    block,
     running,
   } status;
 } Task;
@@ -63,7 +65,7 @@ void preempt_disable();
 
 void init_task_pool();
 void kernel_process();
-Task *privilege_task_create(void (*func)(), unsigned long arg);
+Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long p);
 void do_exec(unsigned long);
 
 #endif

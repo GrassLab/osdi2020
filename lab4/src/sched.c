@@ -15,17 +15,28 @@ void context_switch(Task *next) {
   Task *prev = current_task;
   current_task = next;
   current_task->status = running;
-  printf("next[%d] lr=0x%x sp=0x%x" NEWLINE, next->pid, next->cpu_ctx.lr, next->cpu_ctx.sp);
-  printf("0x%x lr = 0x%x" NEWLINE, kernel_process, next->cpu_ctx.lr);
+  //printf("next[%d] lr=0x%x sp=0x%x" NEWLINE, next->pid, next->cpu_ctx.lr, next->cpu_ctx.sp);
+  //printf("0x%x lr = 0x%x" NEWLINE, kernel_process, next->cpu_ctx.lr);
   switch_to(prev, next);
 }
 
 void _schedule(){
   preempt_disable();
-  printf("current task = %x" NEWLINE, current_task);
+#if 0
+  //printf("current task = %x" NEWLINE, current_task);
 
   int beg = tasks_pos(current_task);
   int i = (beg + 1) % TASK_SIZE;
+
+  while(i != beg){
+    if(tasks[i] && (tasks[i]->status == idle)){
+      printf("task[%d], pc = 0x%x, status %d" NEWLINE, tasks[i]->pid, tasks[i]->cpu_ctx.lr, tasks[i]->status);
+      break;
+    }
+    i = (i + 1) % TASK_SIZE;
+  }
+  delay(500000000);
+
   while(i != beg){
     if(tasks[i] && (tasks[i]->status == idle)){
       printf("task[%d], pc = 0x%x, status %d" NEWLINE, tasks[i]->pid, tasks[i]->cpu_ctx.lr, tasks[i]->status);
@@ -34,7 +45,7 @@ void _schedule(){
     i = (i + 1) % TASK_SIZE;
   }
 
-  printf("select %d" NEWLINE, i);
+  //printf("select %d" NEWLINE, i);
   if(current_task){
     if(current_task->status == running)
       current_task->status = idle;
@@ -42,15 +53,69 @@ void _schedule(){
   }
 
   if(current_task == tasks[i]){
+    puts("return");
+    delay(500000000);
+    delay(500000000);
     return;
   }
 
+
+  printf("next is %d" NEWLINE, i);
+  delay(500000000);
+  delay(500000000);
   next_task = tasks[i];
   context_switch(tasks[i]);
+#else
+  int beg = tasks_pos(current_task);
+  int i = (beg + 1) % TASK_SIZE;
+
+  //while(i != beg){
+  //  if(tasks[i] && (tasks[i]->status == idle)){
+  //    printf("task[%d], pc = 0x%x, status %d" NEWLINE, tasks[i]->pid, tasks[i]->cpu_ctx.lr, tasks[i]->status);
+  //    break;
+  //  }
+  //  i = (i + 1) % TASK_SIZE;
+  //}
+
+  int max_priority = 0, max_count = 0, next = -1;
+  for(int i = 0; i < TASK_SIZE; i++){
+    if(tasks[i] && (tasks[i]->status == idle)){
+      printf("[%d] c = %d, p = %d" NEWLINE,
+          tasks[i]->pid, tasks[i]->counter, tasks[i]->priority);
+      if(tasks[i]->priority >= max_priority
+          && tasks[i]->counter >= max_count){
+        max_priority = tasks[i]->priority;
+        max_count = tasks[i]->counter;
+        next = i;
+      }
+      tasks[i]->counter++;
+    }
+  }
+
+  if(current_task){
+    current_task->flag &= ~RESCHED;
+  }
+
+  if(next < 0 || current_task == tasks[next]){
+    current_task->counter = 0;
+    return;
+  }
+
+  if(current_task->status == running)
+    current_task->status = idle;
+
+  next_task = tasks[next];
+  printf("next is [%d](%d), %d %d",
+      next_task->pid,
+      next_task->status,
+      next_task->priority, next_task->counter);
+  next_task->counter = 0;
+  context_switch(tasks[next]);
+  //context_switch(tasks[i]);
+#endif
 }
 
 void schedule_tail() {
-  puts("achieve tail");
   preempt_enable();
 }
 
@@ -65,13 +130,13 @@ void schedule(){
 }
 
 void check_resched(){
-  print("check_resched...");
+  //print("check_resched...");
   if(current_task->flag & RESCHED || current_task->status == zombie){
     if(current_task->status == zombie){
       printf("[%d] it's a zombie" NEWLINE, current_task->pid);
     }
-    puts("reschedule flag set");
+    //puts("reschedule flag set");
     schedule();
   }
-  puts("nothing... do again");
+  //puts("nothing... do again");
 }

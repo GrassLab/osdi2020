@@ -19,13 +19,13 @@ char ustack_pool[TASK_SIZE][STACK_SIZE];
 Task task_pool[TASK_SIZE] = {
   [0 ... TASK_SIZE - 1] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    /*{{[0 ... 30] = 0}, 0, 0, 0}, */0, 0, 0, 0, 0, none
+    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, none
   }
 };
 
 Task init_task = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-  /*{{[0 ... 30] = 0}, 0, 0, 0}, */0, 0, 0, 1, 0, none
+  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, none
 };
 
 Task *current_task = &init_task, *next_task;
@@ -53,7 +53,7 @@ int talloc(){
   return -1;
 }
 
-Task *privilege_task_create(void (*func)(), unsigned long arg) {
+Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long priority) {
 
 
   preempt_disable();
@@ -69,7 +69,8 @@ Task *privilege_task_create(void (*func)(), unsigned long arg) {
 
   p->pid = unique_pid();
   p->flag = 0;
-  p->counter = p->priority = current_task->priority;
+  p->counter = 1;
+  p->priority = priority;
   p->preempt_count = 1; // disable preemtion until schedule_tail
   p->status = idle;
 
@@ -138,20 +139,40 @@ int *show_sp(){
 #define TASK_(n) void task_ ## n () { \
   puts(#n " begin"); \
   while(1){ \
-    get_current_el(); \
     puts(#n " running ..."); delay(500000000); \
-    show_sp(); \
     check_resched(); \
   } \
 }
 
 TASK_(1); TASK_(2); TASK_(3); TASK_(4);
 
+char* getline(){
+  static char buffer[1024];
+  char *p = buffer;
+  while((*p++ = call_sys_read()) != '\r');
+  *--p = 0;
+  return buffer;
+}
+
+void user_login(){
+  printf("[%d] input password:" NEWLINE, current_task->pid);
+  while(1){
+    char *input = getline(), pw[10] = "root";
+    int d = strcmp(input, pw);
+    puts("diff");
+    if(!d) break;
+    puts("input password:");
+  }
+  puts("login successfully!");
+  call_sys_exit();
+}
+
 void user_process_read() {
   call_sys_write("user_process_read test" NEWLINE);
   while(1){
+    printf("input:");
     printf("read %d" NEWLINE, call_sys_read());
-    delay(100000000);
+    //delay(100000000);
   }
 }
 
@@ -200,10 +221,23 @@ void user_process_fork() {
   }
 }
 
+void user_process_login(){
+  do_exec((unsigned long)user_login);
+}
+
+void exit(){
+  preempt_disable();
+  current_task->status = zombie;
+  puts("become zombie");
+  preempt_enable();
+}
+
 void kernel_process(){
   puts("kernel process begin...");
-  printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
-  privilege_task_create(task_1, 0);
+  //printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
+  //privilege_task_create(user_process_login, 0, 2);
+  privilege_task_create(task_1, 0, current_task->priority);
+  privilege_task_create(task_2, 0, current_task->priority);
   //privilege_task_create(task_2, 0);
   //privilege_task_create(irq_shell_loop, 0);
   //privilege_task_create(task_3, 0);
@@ -212,7 +246,8 @@ void kernel_process(){
   //irq_shell_loop();
   puts("kernel stack:");
   show_sp();
-  do_exec((unsigned long)user_process_fork);
+  //do_exec((unsigned long)user_process_fork);
+  exit();
   //while(1){
   // puts("kernel process scheduling");
   // schedule();
@@ -221,11 +256,11 @@ void kernel_process(){
 
 void do_exec(unsigned long pc){
   struct pt_regs *regs = task_pt_regs(current_task);
-  printf("!! %x %x %x %x" NEWLINE,
-      current_task->cpu_ctx.sp,
-      kstack_pool[current_task->pid % TASK_SIZE],
-      kstack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE,
-      task_pt_regs(current_task));
+  //printf("!! %x %x %x %x" NEWLINE,
+  //    current_task->cpu_ctx.sp,
+  //    kstack_pool[current_task->pid % TASK_SIZE],
+  //    kstack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE,
+  //    task_pt_regs(current_task));
 
   memzero((unsigned long)regs, (unsigned long)regs + sizeof(struct pt_regs));
   regs->pc = pc;

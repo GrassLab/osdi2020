@@ -73,7 +73,7 @@ int main(void) {
 
     core_timer_init();
 
-    privilege_task_create(kernel_process, 0);
+    privilege_task_create(kernel_process, 0, 1);
 
     while(1){
       puts("kernel main scheduling...");

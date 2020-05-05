@@ -69,7 +69,6 @@ void core_timer_handler() {
   __asm__ volatile("mrs x0, cntfrq_el0");
   __asm__ volatile("msr cntp_tval_el0, x0");
   //printf("Core timer interrupt, %d" NEWLINE, jiffies++);
-  puts("timer");
   if(jiffies % RESCHED_INTERVAL == 0 && current_task){
     current_task->flag |= RESCHED;
   }

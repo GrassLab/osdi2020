@@ -5,6 +5,8 @@
 #include "timer.h"
 #include "uart.h"
 #include "util.h"
+#include "task.h"
+#include "sched.h"
 
 #define nb8p(bytes, n, p) (((1 << n) - 1) & (bytes >> (p)))
 
@@ -27,10 +29,37 @@ void bottom_half(void) {
   puts(NEWLINE "isr rest done.");
 }
 
+Task *read_tasks[TASK_SIZE];
+int rtbeg = 0, rtend = 0;
+
+extern Task *current_task;
+void uart_read_enqueue(Task *task){
+  read_tasks[rtend] = task;
+  rtend = (rtend + 1) % TASK_SIZE;
+  task->status = block;
+  printf("block is [%d](%d), %d %d",
+      task->pid,
+      task->status,
+      task->priority, task->counter);
+}
+
 void handle_uart_irq(void) {
   // There may be more than one byte in the FIFO.
   while ((*(AUX_MU_IIR_REG)&IIR_REG_REC_NON_EMPTY) == IIR_REG_REC_NON_EMPTY) {
-    shell_stuff_line(uart_recv());
+    if(rtbeg == rtend){
+      shell_stuff_line(uart_recv());
+      puts("<<<<<<<<<<<<<<<<<<<<<<<<< stuff shell");
+    }
+    else{
+      read_tasks[rtbeg]->buffer[0] = uart_recv();
+      read_tasks[rtbeg]->status = idle;
+      rtbeg = (rtbeg + 1) % TASK_SIZE;
+      puts(">>>>>>>>>>>>>>>>>>   stuff task");
+      read_tasks[rtbeg]->priority = 10;
+      current_task->flag |= RESCHED;
+      enable_irq();
+      schedule();
+    }
   }
 }
 
@@ -103,7 +132,6 @@ void init_irq() {
 void enable_irq() {
   // delay(50000000);
   //*ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
-  get_current_el();
   __asm__ volatile("msr daifclr, #2" ::: "memory");
 }
 

@@ -1,5 +1,6 @@
 #include "io.h"
 #include "sys.h"
+#include "irq.h"
 #include "mm.h"
 #include "sched.h"
 #include "task.h"
@@ -8,7 +9,9 @@
 extern Task *current_task;
 
 char sys_read(){
-  return 44;
+  uart_read_enqueue(current_task);
+  schedule();
+  return current_task->buffer[0];
 }
 
 void sys_write(char *buf) {
@@ -20,7 +23,7 @@ void sys_exec(unsigned long func){
 }
 
 int sys_fork() {
-  Task *ptr = privilege_task_create(0, 0);
+  Task *ptr = privilege_task_create(0, 0, current_task->priority);
   return ptr ? ptr->pid : 0;
 }
 
@@ -35,7 +38,6 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     long x5) {
   switch (code) {
     case SYSNUM_READ:
-      puts("call read");
       return sys_read();
     case SYSNUM_WRITE:
       sys_write((char*)x0);

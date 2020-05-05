@@ -2,6 +2,7 @@
 #define _IRQ_H__
 
 #include "gpio.h"
+#include "task.h"
 
 #define IRQ_BASIC_PENDING ((volatile unsigned int *)(MMIO_BASE + 0x0000B200))
 #define IRQ_PENDING_1 ((volatile unsigned int *)(MMIO_BASE + 0x0000B204))
@@ -27,7 +28,7 @@
 
 /* void enable_interrupt_controller( void ); */
 void irq_handler();
-
+void uart_read_enqueue(Task *task);
 /* irq.S */
 void init_irq();
 void disable_irq();
