@@ -3,6 +3,7 @@
 #include "uart0.h"
 #include "queue.h"
 #include "exception.h"
+#include "sysregs.h"
 
 struct runqueue runqueue;
 struct task_struct task_pool[TASK_POOL_SIZE] = {INIT_TASK, };
@@ -23,7 +24,7 @@ void reshedule() {
     schedule();
 }
 
-void task_demo() {
+void demo_priviledge() {
     while (1) {
         uart_printf("%d %d\n", current_task->id, current_task->flag);
         for (int i = 0; i < 100000; i++);
@@ -32,6 +33,23 @@ void task_demo() {
             reshedule();
         }
     }
+}
+
+void demo_do_exec_user_mode() {
+    while(1) {
+        uart_printf("hello from %d in user mode\n", current_task->id);
+        for (int i = 0; i < 100000; i++) {
+        }
+        if (RESHEDULE(current_task->flag)) {
+            QUEUE_PUSH(runqueue, current_task);
+            reshedule();
+        }
+    }
+}
+
+void demo_do_exec() {
+    uart_printf("task %d do_exec\n", current_task->id);
+    do_exec(demo_do_exec_user_mode);
 }
 
 void privilege_task_create(void(*func)()) {
@@ -66,9 +84,9 @@ void schedule_init() {
     current_task->state = RUNNING;
     QUEUE_PUSH(runqueue, current_task);
 
-    privilege_task_create(task_demo);
-    privilege_task_create(task_demo);
-    privilege_task_create(task_demo);
+    privilege_task_create(demo_do_exec);
+    privilege_task_create(demo_priviledge);
+    privilege_task_create(demo_priviledge);
 
     arm_core_timer_enable();
     schedule();
@@ -93,4 +111,12 @@ void schedule() {
     }
     context_switch(next);
     preempt_enable();
+}
+
+void do_exec(void (*func)()) {
+    uint64_t user_stk_top = (uint64_t)(ustack_pool[current_task->id]);
+    asm volatile("msr sp_el0, %0" : : "r"(user_stk_top));
+    asm volatile("msr elr_el1, %0": : "r"(func));
+    asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
+    asm volatile("eret");
 }
