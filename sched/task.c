@@ -92,11 +92,15 @@ do_fork ()
   size_t *sp_el0;
   size_t *x29;
 
+  // create a task not in runqueue
   disable_irq ();
-
   new = privilege_task_create (&&child);
+  list_del (&new->list);
+  enable_irq ();
+  // check allocated task
   if (!new)
     return -1;
+  // save current context and copy to new task
   switch_to (current, current);
   // setup kernel
   memcpy (new->kstack, current->kstack, STACK_SIZE);
@@ -113,7 +117,11 @@ do_fork ()
   tf->sp_el0 = (size_t) new->stack + tf->sp_el0 - (size_t) current->stack;
   rebase_stack_pointer (tf->fp, current->stack, new->stack);
 
+  // add new task to runqeue tail
+  disable_irq ();
+  list_add_tail (&new->list, runqueue);
   enable_irq ();
+
   pid = new->task_id;
   if (pid != 0)
     return pid;
