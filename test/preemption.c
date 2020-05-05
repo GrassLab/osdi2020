@@ -17,7 +17,7 @@ foo ()
 {
   while (1)
     {
-      printf ("Task id: %d\n", (int) current->task_id);
+      printf ("Task id: %d\r\n", (int) current->task_id);
       delay (1);
       current->resched = 1;
       schedule ();
