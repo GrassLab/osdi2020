@@ -138,7 +138,7 @@ do_exit (int status)
   disable_irq ();
   list_del (&cur->list);
   enable_irq ();
-  schedule ();
+  switch_to (current, get_next_task ());
 }
 
 void
