@@ -64,6 +64,7 @@ void task_4();
 
 void preempt_enable();
 void preempt_disable();
+int preempt_reschedable();
 
 void init_task_pool();
 void kernel_process();

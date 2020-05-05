@@ -15,7 +15,7 @@ char sys_read(){
   __asm__ volatile("mrs %0, sp_el0" : "=r"(sp_el0));
   __asm__ volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
   enable_irq();
-  schedule();
+  if(preempt_reschedable()) schedule();
   disable_irq();
   __asm__ volatile("msr elr_el1, %0" ::"r"(elr));
   __asm__ volatile("msr sp_el0, %0" ::"r"(sp_el0));

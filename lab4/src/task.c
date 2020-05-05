@@ -43,8 +43,15 @@ int unique_pid(){
   return pid++;
 }
 
-void preempt_enable() { current_task->preempt_count--; }
-void preempt_disable() { current_task->preempt_count++; }
+void preempt_enable() {
+  //printf("[%d] enable preempt" NEWLINE, current_task->pid);
+  current_task->preempt_count--;
+}
+int preempt_reschedable() { return !current_task->preempt_count; }
+void preempt_disable() {
+  current_task->preempt_count++;
+  //printf("[%d] disable preempt" NEWLINE, current_task->pid);
+}
 
 int talloc(){
   for (int i = 0; i < TASK_SIZE; i++)
@@ -165,8 +172,8 @@ void user_shell(){
   call_sys_exit();
 }
 
-void user_process_read() {
-  call_sys_write("user_process_read test" NEWLINE);
+void user_read() {
+  call_sys_write("user_read test" NEWLINE);
   while(1){
     printf("input:");
     printf("read %d" NEWLINE, call_sys_read());
@@ -177,7 +184,7 @@ void user_process_read() {
 void user_write() {
   printf(NEWLINE "============      [%d] WRITE testbeg     ============"  NEWLINE, current_task->pid);
   while(1){
-    call_sys_write("user_process_write test" NEWLINE);
+    call_sys_write(NEWLINE "============         WRITE   test        ============" NEWLINE);
     delay(100000000);
     if(current_task->signals & SIGKILL){
       printf(NEWLINE "============      [%d] WRITE sigkill     ============"  NEWLINE, current_task->pid);
@@ -187,31 +194,39 @@ void user_write() {
   }
 }
 
-void user_process_write(){
-  do_exec((unsigned long)user_write);
+void task_do_exec(unsigned long pc){
+  do_exec(pc);
 }
 
-void user_process_idle() {
+void user_idle() {
   while(1){
     call_sys_write("user_process idle..." NEWLINE);
   }
 }
 
-void user_process_exec() {
+void user_hang() {
+  printf(NEWLINE "============      [%d]  user  hang       ============"  NEWLINE, current_task->pid);
   while(1){
-    call_sys_write("user_process_exec test" NEWLINE);
-    call_sys_exec(user_process_idle);
+    delay(100000000);
+    printf(NEWLINE "============     [%d] user is hanging    ============"  NEWLINE, current_task->pid);
   }
 }
 
-void user_process_exit() {
+void user_exec() {
+  while(1){
+    call_sys_write("user_process_exec test" NEWLINE);
+    call_sys_exec(user_idle);
+  }
+}
+
+void user_exit() {
   while(1){
     call_sys_write("user_process_exit test" NEWLINE);
     call_sys_exit();
   }
 }
 
-void user_process_fork() {
+void user_fork() {
   int child = 0, k = 15;
   call_sys_write("user_process_fork test" NEWLINE);
   child = call_sys_fork();
@@ -228,14 +243,6 @@ void user_process_fork() {
   }
 }
 
-void user_process_login(){
-  do_exec((unsigned long)user_login);
-}
-
-void user_process_shell(){
-  do_exec((unsigned long)user_shell);
-}
-
 void zombie_reaper(){
   printf(NEWLINE "============      [%d] zombie reaper     ============"  NEWLINE, current_task->pid);
   while(1){
@@ -248,11 +255,12 @@ void zombie_reaper(){
       }
     }
     delay(500000000);
-    check_resched();
+    schedule();
   }
 }
 
 void exit(){
+  printf(NEWLINE "============     [%d] becomes zombie     ============" NEWLINE, current_task->pid);
   preempt_disable();
   current_task->status = zombie;
   preempt_enable();
@@ -263,8 +271,8 @@ void exit(){
   while(1){ \
     if(current_task->signals & SIGKILL){ \
       printf(NEWLINE "============      [%d] TASK" #n " sigkill     ============"  NEWLINE, current_task->pid); \
-      do_exec((unsigned long)user_process_exit); \
-      return; \
+      exit(); \
+      if(preempt_reschedable())schedule(); \
     } \
     printf(NEWLINE "============      [%d] TASK" #n " running     ============"  NEWLINE, current_task->pid); \
     delay(500000000); \
@@ -278,10 +286,12 @@ void kernel_process(){
   puts("kernel process begin...");
   //printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
   //privilege_task_create(user_process_login, 0, 3);
-  privilege_task_create(user_process_shell, 0, 2);
-  //privilege_task_create(task_1, 0, current_task->priority);
+  privilege_task_create(task_do_exec, (UL)user_shell, 2);
+  privilege_task_create(task_1, 0, current_task->priority);
   //privilege_task_create(task_2, 0, current_task->priority);
-  privilege_task_create(user_process_write, 0, current_task->priority);
+  //privilege_task_create(user_process_write, 0, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_write, current_task->priority);
+  privilege_task_create(task_do_exec, (UL)user_hang, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_2, 0);
   //privilege_task_create(task_3, 0);
@@ -289,7 +299,7 @@ void kernel_process(){
   //irq_shell_loop();
   puts("kernel stack:");
   show_sp();
-  do_exec((unsigned long)user_process_exit);
+  do_exec((unsigned long)user_exit);
   //exit();
   //do_exec((unsigned long)user_write);
   //exit();
@@ -300,6 +310,7 @@ void kernel_process(){
 }
 
 void do_exec(unsigned long pc){
+  printf("[%d] do exec" NEWLINE, current_task->pid);
   struct pt_regs *regs = task_pt_regs(current_task);
   //printf("!! %x %x %x %x" NEWLINE,
   //    current_task->cpu_ctx.sp,

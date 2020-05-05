@@ -2,6 +2,7 @@
 #include "io.h"
 #include "irq.h"
 #include "task.h"
+#include "sched.h"
 
 #define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int *)(0x40000034))
 #define LOCAL_TIMER_IRQ_CLR ((volatile unsigned int *)(0x40000038))
@@ -71,5 +72,21 @@ void core_timer_handler() {
   //printf("Core timer interrupt, %d" NEWLINE, jiffies++);
   if(jiffies % RESCHED_INTERVAL == 0 && current_task){
     current_task->flag |= RESCHED;
+  }
+  //puts("======== timer runing  =========");
+  if(!current_task->preempt_count){
+    unsigned long elr, sp_el0, spsr_el1;
+    __asm__ volatile("mrs %0, elr_el1" : "=r"(elr));
+    __asm__ volatile("mrs %0, sp_el0" : "=r"(sp_el0));
+    __asm__ volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
+    enable_irq();
+    if(preempt_reschedable()) schedule();
+    disable_irq();
+    __asm__ volatile("msr elr_el1, %0" ::"r"(elr));
+    __asm__ volatile("msr sp_el0, %0" ::"r"(sp_el0));
+    __asm__ volatile("msr spsr_el1, %0" ::"r"(spsr_el1));
+  }
+  else{
+    printf("preempt_count %d" NEWLINE, current_task->preempt_count);
   }
 }

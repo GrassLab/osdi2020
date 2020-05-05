@@ -116,7 +116,7 @@ void _schedule(){
 #endif
   next_task->counter = 0;
   context_switch(tasks[next]);
-  //context_switch(tasks[i]);
+  preempt_enable(); // tricky place
 #endif
 }
 
