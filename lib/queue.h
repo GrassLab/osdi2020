@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "schedule.h"
 
 #ifndef QUEUE
 #define QUEUE
@@ -12,11 +13,11 @@ struct queue {  // circular queue
     char buf[QUEUE_MAX_SIZE];
 };
 
-struct uint64_queue {  // circular queue
+struct runqueue {  // circular queue
     int front;
     int rear;
     int size;
-    uint64_t buf[QUEUE_MAX_SIZE];
+    struct task_struct* buf[QUEUE_MAX_SIZE];
 };
 
 #endif
@@ -29,6 +30,8 @@ struct uint64_queue {  // circular queue
 #define QUEUE_EMPTY(q) (q.front == q.rear)
 
 #define QUEUE_FULL(q) (q.front == (q.rear + 1) % q.size)
+
+#define QUEUE_SIZE(q) (q.rear - q.front)
 
 #define QUEUE_PUSH(q, val)              \
     if (!QUEUE_FULL(q)) {               \
