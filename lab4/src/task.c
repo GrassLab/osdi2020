@@ -19,13 +19,13 @@ char ustack_pool[TASK_SIZE][STACK_SIZE];
 Task task_pool[TASK_SIZE] = {
   [0 ... TASK_SIZE - 1] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, none
+    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, none
   }
 };
 
 Task init_task = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, none
+  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, none
 };
 
 Task *current_task = &init_task, *next_task;
@@ -69,6 +69,7 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
   p->pid = unique_pid();
   p->flag = 0;
+  p->signals = 0;
   p->counter = 1;
   p->priority = priority;
   p->preempt_count = 1; // disable preemtion until schedule_tail
@@ -136,17 +137,6 @@ int *show_sp(){
   return sp;
 }
 
-#define TASK_(n) void task_ ## n () { \
-  printf(NEWLINE "============      [%d] TASK" #n " daemon      ============"  NEWLINE, current_task->pid); \
-  while(1){ \
-    printf(NEWLINE "============      [%d] TASK" #n " running     ============"  NEWLINE, current_task->pid); \
-    delay(500000000); \
-    check_resched(); \
-  } \
-}
-
-TASK_(1); TASK_(2); TASK_(3); TASK_(4);
-
 char* getline(char *buffer, char c){
   char *p = buffer;
   while((*p++ = call_sys_read()) != '\r')
@@ -170,13 +160,8 @@ void user_login(){
 }
 
 void user_shell(){
-  char buffer[128];
   printf(NEWLINE "============      [%d] shell daemon      ============"  NEWLINE, current_task->pid);
-  irq_shell_loop();
-  //while(1){
-  //  char *input = getline(buffer);
-  //  printf("exec command %s" NEWLINE, input);
-  //}
+  irq_shell_loop(0);
   call_sys_exit();
 }
 
@@ -189,12 +174,21 @@ void user_process_read() {
   }
 }
 
-void user_process_write() {
-  call_sys_write("user_process_write start" NEWLINE);
+void user_write() {
+  printf(NEWLINE "============      [%d] WRITE testbeg     ============"  NEWLINE, current_task->pid);
   while(1){
     call_sys_write("user_process_write test" NEWLINE);
     delay(100000000);
+    if(current_task->signals & SIGKILL){
+      printf(NEWLINE "============      [%d] WRITE sigkill     ============"  NEWLINE, current_task->pid);
+      call_sys_exit();
+      while(1);
+    }
   }
+}
+
+void user_process_write(){
+  do_exec((unsigned long)user_write);
 }
 
 void user_process_idle() {
@@ -245,7 +239,7 @@ void user_process_shell(){
 void zombie_reaper(){
   printf(NEWLINE "============      [%d] zombie reaper     ============"  NEWLINE, current_task->pid);
   while(1){
-    //printf(NEWLINE "============     [%d] zreaper running    ============"  NEWLINE, current_task->pid);
+    printf(NEWLINE "============     [%d] zreaper running    ============"  NEWLINE, current_task->pid);
     for(int i = 0; i < TASK_SIZE; i++){
       if(tasks[i] && tasks[i]->status == zombie){
         printf(NEWLINE "============ zombie_reaper kill zombie %d ============" NEWLINE, tasks[i]->pid);
@@ -264,13 +258,30 @@ void exit(){
   preempt_enable();
 }
 
+#define TASK_(n) void task_ ## n () { \
+  printf(NEWLINE "============      [%d] TASK" #n " daemon      ============"  NEWLINE, current_task->pid); \
+  while(1){ \
+    if(current_task->signals & SIGKILL){ \
+      printf(NEWLINE "============      [%d] TASK" #n " sigkill     ============"  NEWLINE, current_task->pid); \
+      do_exec((unsigned long)user_process_exit); \
+      return; \
+    } \
+    printf(NEWLINE "============      [%d] TASK" #n " running     ============"  NEWLINE, current_task->pid); \
+    delay(500000000); \
+    check_resched(); \
+  } \
+}
+
+TASK_(1); TASK_(2); TASK_(3); TASK_(4);
+
 void kernel_process(){
   puts("kernel process begin...");
   //printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
-  privilege_task_create(user_process_login, 0, 3);
+  //privilege_task_create(user_process_login, 0, 3);
   privilege_task_create(user_process_shell, 0, 2);
-  privilege_task_create(task_1, 0, current_task->priority);
-  privilege_task_create(task_2, 0, current_task->priority);
+  //privilege_task_create(task_1, 0, current_task->priority);
+  //privilege_task_create(task_2, 0, current_task->priority);
+  privilege_task_create(user_process_write, 0, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_2, 0);
   //privilege_task_create(task_3, 0);
@@ -280,7 +291,7 @@ void kernel_process(){
   show_sp();
   do_exec((unsigned long)user_process_exit);
   //exit();
-  //do_exec((unsigned long)user_process_fork);
+  //do_exec((unsigned long)user_write);
   //exit();
   //while(1){
   // puts("kernel process scheduling");

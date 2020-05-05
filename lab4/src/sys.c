@@ -43,6 +43,15 @@ void sys_exit(){
   preempt_enable();
 }
 
+extern Task task_pool[TASK_SIZE];
+void sys_signal(unsigned long pid, int code){
+  for(int i = 0; i < TASK_SIZE; i++){
+    if(task_pool[i].status != none && task_pool[i].pid == pid){
+      task_pool[i].signals |= code;
+    }
+  }
+}
+
 int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     long x5) {
   switch (code) {
@@ -60,6 +69,9 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       return sys_fork();
     case SYSNUM_EXIT:
       sys_exit();
+      break;
+    case SYSNUM_SIGNAL:
+      sys_signal(x0, x1);
       break;
       // case 0:
       // sys_core_timer_enable();
@@ -107,4 +119,4 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
   return 0;
 }
 
-void *const sys_call_table[] = {sys_read, sys_write, sys_exec, sys_fork, sys_exit};
+void *const sys_call_table[] = {sys_read, sys_write, sys_exec, sys_fork, sys_exit, sys_signal};

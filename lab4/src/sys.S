@@ -29,3 +29,9 @@ call_sys_fork:
     mov w8, #SYSNUM_FORK
     svc #0
     ret
+
+.globl call_sys_signal
+call_sys_signal:
+    mov w8, #SYSNUM_SIGNAL
+    svc #0
+    ret

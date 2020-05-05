@@ -26,37 +26,37 @@ char *shell_read_line(char *ptr, char *buffer) {
   do {
     *(++ptr) = getchar();
     switch (*ptr) {
-    case 4:
-      ptr = buffer + 1;
-      *ptr = '\r';
-      *buffer = 4;
-      break;
-    case 8:
-    case 127:
-      ptr--;
-      if (ptr >= buffer) {
+      case 4:
+        ptr = buffer + 1;
+        *ptr = '\r';
+        *buffer = 4;
+        break;
+      case 8:
+      case 127:
         ptr--;
-        print("\b \b");
-      }
-      break;
-    case 12:
-      *ptr = 0;
-      ptr--;
-      print("\e[1;1H\e[2J");
-      print("# ", beg);
-      break;
-    case 21:
-      ptr--;
-      while (ptr >= buffer) {
-        if (*ptr == '\t')
-          print("\b\b\b\b\b\b");
-        else
+        if (ptr >= buffer) {
+          ptr--;
           print("\b \b");
+        }
+        break;
+      case 12:
+        *ptr = 0;
         ptr--;
-      }
-      break;
-    default:
-      putchar(*ptr);
+        print("\e[1;1H\e[2J");
+        print("# ", beg);
+        break;
+      case 21:
+        ptr--;
+        while (ptr >= buffer) {
+          if (*ptr == '\t')
+            print("\b\b\b\b\b\b");
+          else
+            print("\b \b");
+          ptr--;
+        }
+        break;
+      default:
+        putchar(*ptr);
     }
 
   } while (ptr < buffer || (!strchr("\r", *ptr)));
@@ -70,7 +70,7 @@ char *shell_read_line(char *ptr, char *buffer) {
 }
 
 #define EQS(xs, ys) (!strcmp(xs, ys))
-int shell_execute(char *cmd) {
+int shell_execute(char *cmd, int el) {
   if (EQS("hello", cmd)) {
     println("Hello World!");
   } else if (EQS("help", cmd)) {
@@ -85,9 +85,11 @@ int shell_execute(char *cmd) {
     println("BUILD @ ", xstr(BUILD_STAMP));
 #endif
   } else if (EQS("timestamp", cmd)) {
-    timestamp();
+    if(el) timestamp();
+    else puts("not support timestamp on el0 currently");
   } else if (EQS("sleep", cmd)) {
-    sleep(6);
+    if(el) sleep(6);
+    else puts("not support sleep on el0 currently");
   } else if (EQS("reboot", cmd)) {
     puts("rebooting...");
     reboot();
@@ -105,7 +107,8 @@ int shell_execute(char *cmd) {
   }
 #ifndef WITHOUT_LOADER
   else if (EQS("loadimg", cmd)) {
-    loadimg();
+    if(el) loadimg();
+    else puts("not support timestamp on el0 currently");
   }
 #endif
   else if (EQS("exc", cmd)) {
@@ -152,9 +155,12 @@ int shell_execute(char *cmd) {
     __asm__ volatile("brk #1");
     puts("ret from brk");
   } else if (EQS("irq", cmd)) {
-    sys_timer_init();
-    local_timer_init();
-    core_timer_init();
+    if(el){
+      sys_timer_init();
+      local_timer_init();
+      core_timer_init();
+    }
+    else puts("not support timer on el0 currently");
   } else if (EQS("board", cmd)) {
     if (get_board_revision())
       printf("0x%x" NEWLINE, mbox[5]);
@@ -178,6 +184,16 @@ int shell_execute(char *cmd) {
     }
   }
 #endif
+  else if (strbeg(cmd, "kill")) {
+    int pid = cmd[4] - '0';
+    if(pid >= 0 && pid < TASK_SIZE){
+      printf("kill pid %c" NEWLINE, cmd[4]);
+      call_sys_signal(pid, SIGKILL);
+    }
+    else{
+      printf("invalid pid %c" NEWLINE, cmd[4]);
+    }
+  }
   else if (strlen(cmd)) {
     print("command not found: ", cmd, NEWLINE);
     return 1;
@@ -189,37 +205,37 @@ char *shell_stuff_line(char c, char **ptr, char *buffer) {
 
   *(++(*ptr)) = c;
   switch (**ptr) {
-  case 4:
-    *ptr = buffer + 1;
-    **ptr = '\r';
-    *buffer = 4;
-    break;
-  case 8:
-  case 127:
-    (*ptr)--;
-    if (*ptr >= buffer) {
+    case 4:
+      *ptr = buffer + 1;
+      **ptr = '\r';
+      *buffer = 4;
+      break;
+    case 8:
+    case 127:
       (*ptr)--;
-      print("\b \b");
-    }
-    break;
-  case 12:
-    **ptr = 0;
-    (*ptr)--;
-    print("\e[1;1H\e[2J");
-    print("# ", buffer);
-    break;
-  case 21:
-    (*ptr)--;
-    while (*ptr >= buffer) {
-      if (**ptr == '\t')
-        print("\b\b\b\b\b\b");
-      else
+      if (*ptr >= buffer) {
+        (*ptr)--;
         print("\b \b");
+      }
+      break;
+    case 12:
+      **ptr = 0;
       (*ptr)--;
-    }
-    break;
-  default:
-    putchar(**ptr);
+      print("\e[1;1H\e[2J");
+      print("# ", buffer);
+      break;
+    case 21:
+      (*ptr)--;
+      while (*ptr >= buffer) {
+        if (**ptr == '\t')
+          print("\b\b\b\b\b\b");
+        else
+          print("\b \b");
+        (*ptr)--;
+      }
+      break;
+    default:
+      putchar(**ptr);
   }
 
   char *p = 0;
@@ -239,29 +255,29 @@ char *shell_stuff_line(char c, char **ptr, char *buffer) {
   return p;
 }
 
-int busy_shell_loop() {
+int busy_shell_loop(int el) {
   char buffer[BUFFER_SIZE];
-  while (shell_execute(shell_read_line(buffer, buffer)) >= 0);
+  while (shell_execute(shell_read_line(buffer, buffer), el) >= 0);
   return 0;
 }
 
-void irq_shell_loop(){
+void irq_shell_loop(int el){
   char buffer[BUFFER_SIZE], *exec_ptr, *ptr;
   ptr = buffer - 1;
   print("# ");
-    while (1) {
-      exec_ptr = shell_stuff_line(call_sys_read(), &ptr, buffer);
-      if (exec_ptr) {
-        //printf("exec $ %x %x %s" NEWLINE, buffer, exec_ptr, exec_ptr);
-        shell_execute(exec_ptr);
-        exec_ptr = 0;
-        print("# ");
-      } /*else if (task_ptr) {
+  while (1) {
+    exec_ptr = shell_stuff_line(call_sys_read(), &ptr, buffer);
+    if (exec_ptr) {
+      //printf("exec $ %x %x %s" NEWLINE, buffer, exec_ptr, exec_ptr);
+      shell_execute(exec_ptr, el);
+      exec_ptr = 0;
+      print("# ");
+    } /*else if (task_ptr) {
         __asm__ volatile("stp x8, x9, [sp, #-16]!");
         __asm__ volatile("mov x8, #4");
         __asm__ volatile("svc #0");
         __asm__ volatile("ldp x8, x9, [sp], #16");
-      }*/
-      // else  puts("hee");
-    }
+        }*/
+    // else  puts("hee");
+  }
 }

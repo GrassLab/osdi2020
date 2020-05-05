@@ -38,11 +38,13 @@ struct pt_regs {
 
 #define TASK_BUFFER_SIZE 1024
 #define RESCHED 0x1
+#define SIGKILL 0x1
 typedef struct task_tag {
   struct cpu_ctx cpu_ctx;
   char buffer[TASK_BUFFER_SIZE];
   unsigned long pid;
   unsigned long flag;
+  unsigned long signals;
   unsigned long counter;
   unsigned long priority;
   unsigned long preempt_count;

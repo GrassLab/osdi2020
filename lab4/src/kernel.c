@@ -12,6 +12,13 @@
 #include "test.h"
 #endif
 
+#ifdef RUN_ON_EL0
+#define EL 0
+#else
+#define EL 1
+#endif
+
+
 #ifdef BUGGY
 char *welcome = "              _                          " NEWLINE
 "__      _____| | ___ ___  _ __ ___   ___ " NEWLINE
@@ -81,9 +88,9 @@ int main(void) {
     }
 
 #ifdef UARTINT
-    irq_shell_loop();
+    irq_shell_loop(EL);
 #else
-    busy_shell_loop();
+    busy_shell_loop(EL);
 #endif
   }
   return 0;
