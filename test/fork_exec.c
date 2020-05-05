@@ -27,7 +27,7 @@ static void
 foo ()
 {
   int tmp = 5;
-  printf ("Task %d after exec, tmp address 0x%p, tmp value %d\n",
+  printf ("Task %d after exec, tmp address 0x%p, tmp value %d\r\n",
 	  (int) get_task_id (), &tmp, tmp);
   exit (0);
 }
@@ -43,16 +43,16 @@ test ()
       fork ();
       while (cnt < 10)
 	{
-	  printf ("Task id: %d, cnt: %d\n", (int) get_task_id (), cnt);
+	  printf ("Task id: %d, cnt: %d\r\n", (int) get_task_id (), cnt);
 	  user_delay (1);
 	  ++cnt;
 	}
       exit (0);
-      printf ("Should not be printed\n");
+      printf ("Should not be printed\r\n");
     }
   else
     {
-      printf ("Task %d before exec, cnt address 0x%p, cnt value %d\n",
+      printf ("Task %d before exec, cnt address 0x%p, cnt value %d\r\n",
 	      (int) get_task_id (), &cnt, cnt);
       exec (foo);
     }
