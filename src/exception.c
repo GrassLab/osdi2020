@@ -78,12 +78,12 @@ void arm_core_timer_intr_handler() {
     register unsigned int expire_period = CORE_TIMER_EXPRIED_PERIOD;
     asm volatile("msr cntp_tval_el0, %0" : : "r"(expire_period));
 
-    current->counter--;
-    if (current->counter > 0 || !PREEMPTABLE(current->flag)) {
+    current_task->counter--;
+    if (current_task->counter > 0 || !PREEMPTABLE(current_task->flag)) {
         return;
     }
-    current->counter = 0;
-    current->flag |= 1;
+    current_task->counter = 0;
+    current_task->flag |= 1;
 }
 
 void arm_local_timer_intr_handler() {

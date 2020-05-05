@@ -6,29 +6,29 @@
 
 struct runqueue runqueue;
 struct task_struct task_pool[TASK_POOL_SIZE] = {INIT_TASK, };
-struct task_struct *current;
+struct task_struct *current_task;
 
 void preempt_disable() {
-    current->flag &= !(1 << PREEMPTABLE_BIT);
+    current_task->flag &= !(1 << PREEMPTABLE_BIT);
 }
 
 void preempt_enable() {
-    current->flag |= (1 << PREEMPTABLE_BIT);
+    current_task->flag |= (1 << PREEMPTABLE_BIT);
 }
 
 void reshedule() {
-    uart_printf("reschedule from %d\n", current->id);
-    current->flag &= !(1 << RESHEDULE_BIT);
-    current->counter = current->priority;
+    uart_printf("reschedule from %d\n", current_task->id);
+    current_task->flag &= !(1 << RESHEDULE_BIT);
+    current_task->counter = current_task->priority;
     schedule();
 }
 
 void task_demo() {
     while (1) {
-        uart_printf("%d %d\n", current->id, current->flag);
+        uart_printf("%d %d\n", current_task->id, current_task->flag);
         for (int i = 0; i < 100000; i++);
-        if (RESHEDULE(current->flag)) {
-            QUEUE_PUSH(runqueue, current);
+        if (RESHEDULE(current_task->flag)) {
+            QUEUE_PUSH(runqueue, current_task);
             reshedule();
         }
     }
@@ -62,9 +62,9 @@ void schedule_init() {
         task_pool[i].counter = task_pool[i].priority;
     }
 
-    current = &task_pool[0];
-    current->state = RUNNING;
-    QUEUE_PUSH(runqueue, current);
+    current_task = &task_pool[0];
+    current_task->state = RUNNING;
+    QUEUE_PUSH(runqueue, current_task);
 
     privilege_task_create(task_demo);
     privilege_task_create(task_demo);
@@ -75,10 +75,10 @@ void schedule_init() {
 }
 
 void context_switch(struct task_struct *next) {
-    if (current->id == next->id) return;
+    if (current_task->id == next->id) return;
 
-    struct task_struct* prev = current;
-    current = next;
+    struct task_struct* prev = current_task;
+    current_task = next;
     switch_to(&prev->cpu_context, &next->cpu_context);
 }
 

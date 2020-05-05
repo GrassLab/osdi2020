@@ -53,7 +53,7 @@ struct task_struct {
 
 #endif
 
-extern struct task_struct *current;
+extern struct task_struct *current_task;
 
 void schedule_init();
 void privilege_task_create(void(*func)());
