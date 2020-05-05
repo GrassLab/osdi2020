@@ -7,6 +7,7 @@
 #include "exception.h"
 #include "schedule.h"
 #include "sys.h"
+#include "mm.h"
 
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
 uint64_t cntfrq_el0, cntpct_el0;
@@ -65,6 +66,35 @@ void _k_sys_exec(struct trapframe* trapframe) {
     trapframe->x[0] = 0;
 }
 
+void _k_sys_fork(struct trapframe* trapframe) {
+    int child_id = privilege_task_create(return_from_fork);
+
+    struct task_struct* child_task = &task_pool[child_id];
+    struct task_struct* parent_task = current_task;
+
+    char* child_kstack = kstack_pool[child_task->id];
+    char* parent_kstack = kstack_pool[parent_task->id];
+    char* child_ustack = ustack_pool[child_task->id];
+    char* parent_ustack = ustack_pool[parent_task->id];
+
+    for (int i = 0; i < KSTK_SIZE; i++) {
+        *(child_kstack - i) = *(parent_kstack - i);
+    }
+    for (int i = 0; i < USTK_SIZE; i++) {
+        *(child_ustack - i) = *(parent_ustack - i);
+    }
+
+    // place child's kernel stack to right place
+    child_task->cpu_context.sp = (uint64_t)child_kstack - (parent_kstack - (char*)trapframe);
+
+    // place child's user stack to right place
+    struct trapframe* child_trapframe = (struct trapframe*) child_task->cpu_context.sp;
+    child_trapframe->sp_el0 = (uint64_t)child_ustack - (parent_ustack - (char*)trapframe->sp_el0);
+
+    child_trapframe->x[0] = 0;
+    trapframe->x[0] = child_task->id;
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_CNTFRQ:
@@ -85,6 +115,10 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_EXEC:
             _k_sys_exec(trapframe);
+            break;
+
+        case SYS_FORK:
+            _k_sys_fork(trapframe);
             break;
     }
 }
@@ -148,7 +182,7 @@ void arm_core_timer_intr_handler() {
     if (current_task->counter > 0 || !current_task->preemptable_flag) {
         return;
     }
-    // uart_printf("reschedule from %d\n", current_task->id);
+    uart_printf("reschedule from %d\n", current_task->id);
     current_task->counter = 0;
     current_task->reschedule_flag = 1;
     irq_enable();

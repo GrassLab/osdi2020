@@ -149,3 +149,7 @@ irq_exc_handler:
     kernel_entry
     bl  irq_exc_router
     kernel_exit
+
+.global return_from_fork
+return_from_fork:
+    kernel_exit

@@ -48,3 +48,11 @@ int exec(void(*func)()) {
     asm volatile("mov %0, x0" : "=r"(ret_val));
     return ret_val;
 }
+
+int fork() {
+    asm volatile("mov x8, %0" : : "r"(SYS_FORK));
+    asm volatile("svc #0");
+    register int ret_val;
+    asm volatile("mov %0, x0" : "=r"(ret_val));
+    return ret_val;
+}

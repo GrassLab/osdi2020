@@ -19,6 +19,8 @@ void preempt_enable() {
     current_task->preemptable_flag = 1;
 }
 
+/* task can be executed */
+
 void demo_priviledge() {
     while (1) {
         uart_printf("pid: %d\n", current_task->id);
@@ -34,10 +36,11 @@ void demo_sys_exec() {
 }
 
 void demo_do_exec_user_mode() {
+    int id = fork();
+    uart_printf("id: %d fork: %d\n", current_task->id, id);
     while(1) {
         uart_printf("[%f] hello from %d in user mode\n", get_timestamp(), current_task->id);
-        exec(demo_sys_exec);
-        for (int i = 0; i < 100000; i++);
+        for (int i = 0; i < 1000000; i++);
     }
 }
 
@@ -46,7 +49,9 @@ void demo_do_exec() {
     do_exec(demo_do_exec_user_mode);
 }
 
-void privilege_task_create(void(*func)()) {
+/* scheduler */
+
+int privilege_task_create(void(*func)()) {
     struct task_struct *new_task;
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         if (task_pool[i].state == EXIT) {
@@ -61,6 +66,8 @@ void privilege_task_create(void(*func)()) {
     new_task->cpu_context.sp = (uint64_t)(kstack_pool[new_task->id]);
 
     QUEUE_PUSH(runqueue, new_task);
+
+    return new_task->id;
 }
 
 void schedule_init() {

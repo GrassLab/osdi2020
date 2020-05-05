@@ -44,10 +44,12 @@ struct task_struct {
 #endif
 
 extern struct task_struct *current_task;
+extern struct task_struct task_pool[];
 
 void schedule_init();
-void privilege_task_create(void(*func)());
+int privilege_task_create(void(*func)());
 void context_switch(struct task_struct *next);
 void schedule();
 void do_exec(void (*func)());
+int do_fork();
 extern void switch_to(struct cpu_context* prev, struct cpu_context* next);
