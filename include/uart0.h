@@ -8,7 +8,7 @@
 extern struct queue read_buf, write_buf;
 
 void uart_init();
-void uart_write(char c);
-char uart_read();
+void uart0_write(char c);
+char uart0_read();
 void uart_printf(char* fmt, ...);
 void uart_flush();

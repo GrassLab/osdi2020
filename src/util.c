@@ -6,8 +6,8 @@
 #define PM_WDOG         ((volatile unsigned int*)0x3F100024)
 
 float get_timestamp() {
-    uint64_t cntfrq_el0 = sys_get_cntfrq();
-    uint64_t cntpct_el0 = sys_get_cntpct();
+    uint64_t cntfrq_el0 = get_cntfrq();
+    uint64_t cntpct_el0 = get_cntpct();
     return (float) cntpct_el0 / cntfrq_el0;
 }
 

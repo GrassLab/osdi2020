@@ -40,7 +40,7 @@ void _k_sys_uart_read(struct trapframe* trapframe) {
 
     irq_enable();
     for (int i = 0; i < size; i++) {
-        buf[i] = uart_read();
+        buf[i] = uart0_read();
     }
     buf[size] = '\0';
     irq_disable();
@@ -53,7 +53,7 @@ void _k_sys_uart_write(struct trapframe* trapframe) {
 
     irq_enable();
     for (int i = 0; i < size; i++) {
-        uart_write(buf[i]);
+        uart0_write(buf[i]);
     }
     irq_disable();
     trapframe->x[0] = size;

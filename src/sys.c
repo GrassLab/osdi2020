@@ -1,6 +1,6 @@
 #include "sys.h"
 
-uint64_t sys_get_cntfrq() {
+uint64_t get_cntfrq() {
     asm volatile("mov x8, %0" : : "r"(SYS_GET_CNTFRQ));
     asm volatile("svc #0");
     register uint64_t ret_val;
@@ -8,7 +8,7 @@ uint64_t sys_get_cntfrq() {
     return ret_val;
 }
 
-uint64_t sys_get_cntpct() {
+uint64_t get_cntpct() {
     asm volatile("mov x8, %0" : : "r"(SYS_GET_CNTPCT));
     asm volatile("svc #0");
     register uint64_t ret_val;
@@ -16,7 +16,7 @@ uint64_t sys_get_cntpct() {
     return ret_val;
 }
 
-uint32_t sys_uart_read(char buf[], uint32_t size) {
+uint32_t uart_read(char buf[], uint32_t size) {
     register char* buf_reg = buf;
     register uint32_t size_reg = size;
     asm volatile("mov x8, %0" : : "r"(SYS_UART_READ));
@@ -28,7 +28,7 @@ uint32_t sys_uart_read(char buf[], uint32_t size) {
     return ret_val;
 }
 
-uint32_t sys_uart_write(const char buf[], uint32_t size) {
+uint32_t uart_write(const char buf[], uint32_t size) {
     register char* buf_reg = (char*) buf;
     register uint32_t size_reg = size;
     asm volatile("mov x8, %0" : : "r"(SYS_UART_WRITE));
@@ -40,7 +40,7 @@ uint32_t sys_uart_write(const char buf[], uint32_t size) {
     return ret_val;
 }
 
-int sys_exec(void(*func)()) {
+int exec(void(*func)()) {
     asm volatile("mov x8, %0" : : "r"(SYS_EXEC));
     asm volatile("mov x0, %0" : : "r"(func));
     asm volatile("svc #0");

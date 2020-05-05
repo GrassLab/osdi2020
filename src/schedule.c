@@ -28,7 +28,7 @@ void demo_priviledge() {
 
 void demo_sys_exec() {
     while(1) {
-        uart_printf("sys_exec %d\n", current_task->id);
+        uart_printf("exec %d\n", current_task->id);
         for (int i = 0; i < 100000; i++);
     }
 }
@@ -36,7 +36,7 @@ void demo_sys_exec() {
 void demo_do_exec_user_mode() {
     while(1) {
         uart_printf("[%f] hello from %d in user mode\n", get_timestamp(), current_task->id);
-        sys_exec(demo_sys_exec);
+        exec(demo_sys_exec);
         for (int i = 0; i < 100000; i++);
     }
 }

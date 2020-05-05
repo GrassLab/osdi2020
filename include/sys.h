@@ -11,8 +11,8 @@
 
 #endif
 
-uint64_t sys_get_cntfrq();
-uint64_t sys_get_cntpct();
-uint32_t sys_uart_read(char buf[], uint32_t size);
-uint32_t sys_uart_write(const char buf[], uint32_t size);
-int sys_exec(void(*func)());
+uint64_t get_cntfrq();
+uint64_t get_cntpct();
+uint32_t uart_read(char buf[], uint32_t size);
+uint32_t uart_write(const char buf[], uint32_t size);
+int exec(void(*func)());
