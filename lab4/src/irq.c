@@ -113,11 +113,3 @@ void disable_irq() {
   //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
   __asm__ volatile("msr daifset, #2" ::: "memory");
 }
-
-void fuck_irq(){
-  puts("fuck irq");
-}
-
-void fuck_irqq(){
-  puts("fuck irqq");
-}

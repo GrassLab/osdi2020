@@ -84,36 +84,20 @@ Task *privilege_task_create(void (*func)(), unsigned long arg) {
 
   }
   else{ // null fptr means fork
-#if 0
-    struct pt_regs *childregs = task_pt_regs(p);
-    memzero((unsigned long)childregs,
-        (unsigned long)childregs + sizeof(struct pt_regs));
-    struct pt_regs *cur_regs = task_pt_regs(current_task);
-    *childregs = *cur_regs;
-    childregs->regs[0] = 0;
-
-    childregs->sp = ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
-    p->cpu_ctx.sp = (unsigned long)childregs;
-    p->cpu_ctx.lr = (unsigned long)ret_from_fork;
-
-#else
 
     unsigned long ksp_off = current_task->cpu_ctx.sp
       - (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
 
     p->cpu_ctx.sp = ksp_off + (unsigned long)kstack_pool[p->pid % TASK_SIZE];
 
-    //unsigned long kfp_off = current_task->cpu_ctx.fp
-    //  - (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
-    //p->cpu_ctx.fp = kfp_off  + (unsigned long)kstack_pool[p->pid % TASK_SIZE];
-    //p->cpu_ctx.x19 = current_task->cpu_ctx.x19;
-    //p->cpu_ctx.x20 = current_task->cpu_ctx.x20;
-    //p->cpu_ctx.lr = current_task->cpu_ctx.lr;
-    //for(char *b = ustack_pool[current_task->pid % TASK_SIZE];
-    //    b < ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE; b++){
-    //  if(*b == 15) printf("find the magic k = [0x%x] = %d" NEWLINE, b, *b);
-    //  //printf("b = [0x%x] = %d" NEWLINE, b, *b);
-    //}
+    unsigned long kfp_off = current_task->cpu_ctx.fp
+      - (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
+    p->cpu_ctx.fp = kfp_off  + (unsigned long)kstack_pool[p->pid % TASK_SIZE];
+
+    /*
+    p->cpu_ctx.x19 = current_task->cpu_ctx.x19;
+    p->cpu_ctx.x20 = current_task->cpu_ctx.x20;
+    */
 
     memcpy(kstack_pool[p->pid % TASK_SIZE],
         kstack_pool[current_task->pid % TASK_SIZE],
@@ -123,21 +107,16 @@ Task *privilege_task_create(void (*func)(), unsigned long arg) {
         STACK_SIZE);
 
     struct pt_regs *childregs = task_pt_regs(p);
-    //memzero((unsigned long)childregs, (unsigned long)childregs + sizeof(struct pt_regs));
     struct pt_regs *cur_regs = task_pt_regs(current_task);
     *childregs = *cur_regs;     /* new pt_regs <- old pt_regs */
     childregs->regs[0] = 0;      /* aissgn the return value */
-
 
     unsigned long usp_off = cur_regs->sp
       - (unsigned long)ustack_pool[current_task->pid % TASK_SIZE];
 
     childregs->sp = usp_off + (unsigned long)ustack_pool[p->pid % TASK_SIZE];
-    //childregs->sp = (unsigned long)ustack_pool[p->pid % TASK_SIZE];
 
     p->cpu_ctx.lr = (unsigned long)ret_from_fork;
-    //p->cpu_ctx.x19 = 0;
-#endif
   }
 
   printf("new task [%d] sp = 0x%x pc = 0x%x" NEWLINE,
@@ -241,24 +220,15 @@ void kernel_process(){
 }
 
 void do_exec(unsigned long pc){
-  //printf("the ");
-  //show_addr(current_task->cpu_ctx.sp);
-
-  //struct pt_regs *regs = (struct pt_regs *)(current_task->cpu_ctx.sp);
-  //struct pt_regs *regs = (void*)kstack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
   struct pt_regs *regs = task_pt_regs(current_task);
   printf("!! %x %x %x %x" NEWLINE,
       current_task->cpu_ctx.sp,
       kstack_pool[current_task->pid % TASK_SIZE],
       kstack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE,
       task_pt_regs(current_task));
-  //struct pt_regs *regs = task_pt_regs(current_task);
 
   memzero((unsigned long)regs, (unsigned long)regs + sizeof(struct pt_regs));
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
   regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
-  //current_task->regs.pc = pc;
-  //current_task->regs.pstate = PSR_MODE_EL0t;
-  //current_task->regs.sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE];
 }

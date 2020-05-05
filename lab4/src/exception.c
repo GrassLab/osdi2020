@@ -80,7 +80,3 @@ int exception_handler(long x0, long x1, long x2, long x3, long x4, long x5) {
   //__asm__ volatile("msr	elr_el1, %0" :: "r"(elr_el1));
   //__asm__ volatile("msr	spsr_el1, %0" :: "r"(spsr_el1));
 }
-
-void debug(){
-  puts("fuck");
-}
