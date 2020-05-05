@@ -67,7 +67,9 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
      *  |               |
      *  | ^^^^^^^^^^^^  |
      *  |     stack     |
-     *  +---------------+ sp    = stack + PageSize(4KB)
+     *  +---------------+ sp    = childregs
+     *  |   childregs   |
+     *  +---------------+
      */
 
   } else if (clone_flags & PF_FORK) {
