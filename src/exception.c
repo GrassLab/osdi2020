@@ -79,11 +79,17 @@ void arm_core_timer_intr_handler() {
     asm volatile("msr cntp_tval_el0, %0" : : "r"(expire_period));
 
     current_task->counter--;
-    if (current_task->counter > 0 || !PREEMPTABLE(current_task->flag)) {
+    if (current_task->counter > 0 || !current_task->preemptable_flag) {
         return;
     }
+    uart_printf("reschedule from %d\n", current_task->id);
     current_task->counter = 0;
-    current_task->flag |= 1;
+    current_task->reschedule_flag = 1;
+    irq_enable();
+    schedule();
+    irq_disable();
+    current_task->reschedule_flag = 0;
+    current_task->counter = current_task->priority;
 }
 
 void arm_local_timer_intr_handler() {

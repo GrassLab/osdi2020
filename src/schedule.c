@@ -10,40 +10,24 @@ struct task_struct task_pool[TASK_POOL_SIZE] = {INIT_TASK, };
 struct task_struct *current_task;
 
 void preempt_disable() {
-    current_task->flag &= !(1 << PREEMPTABLE_BIT);
+    current_task->preemptable_flag = 0;
 }
 
 void preempt_enable() {
-    current_task->flag |= (1 << PREEMPTABLE_BIT);
-}
-
-void reshedule() {
-    uart_printf("reschedule from %d\n", current_task->id);
-    current_task->flag &= !(1 << RESHEDULE_BIT);
-    current_task->counter = current_task->priority;
-    schedule();
+    current_task->preemptable_flag = 1;
 }
 
 void demo_priviledge() {
     while (1) {
-        uart_printf("%d %d\n", current_task->id, current_task->flag);
+        uart_printf("pid: %d\n", current_task->id);
         for (int i = 0; i < 100000; i++);
-        if (RESHEDULE(current_task->flag)) {
-            QUEUE_PUSH(runqueue, current_task);
-            reshedule();
-        }
     }
 }
 
 void demo_do_exec_user_mode() {
     while(1) {
         uart_printf("hello from %d in user mode\n", current_task->id);
-        for (int i = 0; i < 100000; i++) {
-        }
-        if (RESHEDULE(current_task->flag)) {
-            QUEUE_PUSH(runqueue, current_task);
-            reshedule();
-        }
+        for (int i = 0; i < 100000; i++);
     }
 }
 
@@ -75,7 +59,8 @@ void schedule_init() {
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         task_pool[i].id = i;
         task_pool[i].state = EXIT;
-        task_pool[i].flag = INIT_FLAG;
+        task_pool[i].reschedule_flag = 0;
+        task_pool[i].preemptable_flag = 1;
         task_pool[i].priority = INIT_PRIORITY;
         task_pool[i].counter = task_pool[i].priority;
     }
@@ -93,6 +78,10 @@ void schedule_init() {
 }
 
 void context_switch(struct task_struct *next) {
+    if (current_task->id != 0 && current_task->state != EXIT) {
+        QUEUE_PUSH(runqueue, current_task);
+    }
+
     if (current_task->id == next->id) return;
 
     struct task_struct* prev = current_task;

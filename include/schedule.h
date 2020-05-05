@@ -32,24 +32,14 @@ struct task_struct {
     uint64_t id;
     enum task_state state;
     struct cpu_context cpu_context;
-    uint64_t flag;
-    /*
-     * bit 0: reschedule
-     * bit 1: preemptable
-     */
+    uint8_t reschedule_flag;
+    uint8_t preemptable_flag;
     uint64_t priority;
     uint64_t counter;
 };
 
 #define INIT_TASK       {0, RUNNING, {0,0,0,0,0,0,0,0,0,0,0,0,0}}
-#define INIT_FLAG       0b10
-#define INIT_PRIORITY   1
-
-#define RESHEDULE_BIT               0
-#define PREEMPTABLE_BIT             1
-
-#define RESHEDULE(flag)             (flag & (1 << RESHEDULE_BIT)) >> RESHEDULE_BIT
-#define PREEMPTABLE(flag)           (flag & (1 << PREEMPTABLE_BIT)) >> PREEMPTABLE_BIT
+#define INIT_PRIORITY   5
 
 #endif
 
