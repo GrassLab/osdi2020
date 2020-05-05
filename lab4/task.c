@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include "task.h"
-#include "queue.h"
 #include "schedule.h"
 #include "uart.h"
 #include "irq.h"
@@ -152,7 +151,6 @@ void task_user_demo(void)
 void task_user_context1_demo(void)
 {
   int demo_purpose_var_1 = 1;
-  ;
   char string_buff[0x20];
   uint64_t task_id = task_user_get_current_task_id();
 
@@ -167,7 +165,7 @@ void task_user_context1_demo(void)
   string_longlong_to_char(string_buff, demo_purpose_var_1);
   syscall_uart_puts(string_buff);
 
-  syscall_uart_puts("\nLet's exec in user mode\n");
+  syscall_uart_puts(ANSI_YELLOW"\n[Privilege task that exec\"ed\" to user mode] "ANSI_RESET"Let's exec in user mode\n");
   syscall_exec(task_user_context2_demo);
 }
 

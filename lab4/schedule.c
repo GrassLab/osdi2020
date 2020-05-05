@@ -33,6 +33,7 @@ void scheduler_init(void)
 void schedule_context_switch(uint64_t current_id, uint64_t next_id)
 {
   schedule_switch_context(&(kernel_task_pool[TASK_ID_TO_IDX(current_id)].cpu_context), &(kernel_task_pool[TASK_ID_TO_IDX(next_id)].cpu_context), next_id);
+  irq_int_enable();
   return;
 }
 
@@ -135,7 +136,8 @@ void schedule_yield(void)
 {
   uint64_t current_task_id = task_get_current_task_id();
   task_guard_section();
-  CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 0);
+  kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].quantum_count = 0;
+  CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_RESCHEDULE);
   task_unguard_section();
   scheduler();
   return;
@@ -151,7 +153,6 @@ void schedule_zombie_reaper(void)
     if(schedule_zombie_exist == 0)
     {
       /* nothing to do, yield */
-      irq_int_enable();
       schedule_yield();
       continue;
     }
