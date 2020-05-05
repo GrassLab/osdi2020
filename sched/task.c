@@ -119,7 +119,7 @@ do_fork ()
     return pid;
   else
     {
-child:
+    child:
       asm volatile ("mov x0, xzr");
       return 0;
     }
