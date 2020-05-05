@@ -39,7 +39,7 @@ struct pt_regs {
 #define RESCHED 0x1
 typedef struct task_tag {
   struct cpu_ctx cpu_ctx;
-  struct pt_regs regs;
+  //struct pt_regs regs;
   unsigned long pid;
   unsigned long flag;
   unsigned long counter;
@@ -47,7 +47,6 @@ typedef struct task_tag {
   unsigned long preempt_count;
   enum {
     none,
-    pending,
     idle,
     zombie,
     running,

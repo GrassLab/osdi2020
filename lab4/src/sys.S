@@ -25,28 +25,7 @@ call_sys_exit:
     ret
 
 .globl call_sys_fork
-call_sys_fork: // (fn, arg, stack)
-    /* Save args for the child.  */
-    mov	x10, x0					/*fn*/
-    mov	x11, x1					/*arg*/
-    mov	x12, x2					/*stack*/
-
-    /* Do the system call.  */
-    mov x0, x2					/* stack  */
-    mov	x8, #SYSNUM_FORK
-    svc	0x0
-
-    cmp	x0, #0
-    beq	thread_start
+call_sys_fork:
+    mov w8, #SYSNUM_FORK
+    svc #0
     ret
-
-thread_start:
-    mov	x29, 0
-
-    /* Pick the function arg and execute.  */
-    mov	x0, x11
-    blr	x10
-
-    /* We are done, pass the return value through x0.  */
-    mov	x8, #SYSNUM_EXIT
-    svc	0x0

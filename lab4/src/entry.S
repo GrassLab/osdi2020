@@ -250,6 +250,7 @@ sync_invalid_el0_64:
     //b.eq el0_svc
     // TODO otherwise exception_etnry (excpetion.c)
     bl   exception_handler
+    str	x0, [sp, #0]             // returned x0
     bl check_resched
     kexit_zero
 irq_invalid_el0_64:
@@ -303,6 +304,10 @@ ret_from_fork:
 
 ret_to_user:
     bl disable_irq
+    ldp	x0, x1, [sp, #256]
+    bl show_addr
     mov x0, sp
+    bl show_addr
+    ldp	x1, x0, [sp, #240]
     bl show_addr
     kexit_zero

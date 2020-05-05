@@ -7,8 +7,8 @@
 
 extern Task *current_task;
 
-void sys_read(){
-
+char sys_read(){
+  return 44;
 }
 
 void sys_write(char *buf) {
@@ -19,16 +19,16 @@ void sys_exec(unsigned long func){
   do_exec(func);
 }
 
-int sys_fork(unsigned long pc) {
-  privilege_task_create(do_exec, pc);
-  return 0;
+int sys_fork() {
+  Task *ptr = privilege_task_create(0, 0);
+  return ptr ? ptr->pid : 0;
 }
 
 void sys_exit(){
   preempt_disable();
   current_task->status = zombie;
+  puts("become zombie");
   preempt_enable();
-  schedule();
 }
 
 int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
@@ -36,7 +36,7 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
   switch (code) {
     case SYSNUM_READ:
       puts("call read");
-      break;
+      return sys_read();
     case SYSNUM_WRITE:
       sys_write((char*)x0);
       break;
@@ -46,8 +46,7 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       break;
     case SYSNUM_FORK:
       puts("call fork");
-      sys_fork(x0);
-      break;
+      return sys_fork();
     case SYSNUM_EXIT:
       sys_exit();
       break;

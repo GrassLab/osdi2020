@@ -18,3 +18,20 @@ unsigned int strlen(const char *s) {
     ++s;
   return s - p;
 }
+
+void *memset(void *s, int c, unsigned long n) {
+  unsigned char *p = (unsigned char *)s;
+
+  while (n--)
+    *p++ = (unsigned char)c;
+
+  return s;
+}
+
+void memcpy(void *dest, const void *src, unsigned long num) {
+  unsigned long *dest8 = (unsigned long *)dest;
+  const unsigned long *src8 = (const unsigned long *)src;
+  while (num--) {
+    *dest8++ = *src8++;
+  }
+}

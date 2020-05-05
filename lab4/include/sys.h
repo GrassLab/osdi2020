@@ -12,7 +12,7 @@
 int call_sys_read();
 void call_sys_write(char *);
 int call_sys_exec();
-int call_sys_fork(unsigned long fn, unsigned long arg, unsigned long stack);
+int call_sys_fork();
 void call_sys_exit();
 int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4, long x5);
 #endif

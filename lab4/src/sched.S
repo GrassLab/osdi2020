@@ -15,7 +15,6 @@ switch_to:
   ldp x25, x26, [x1, 16 * 3]
   ldp x27, x28, [x1, 16 * 4]
   ldp fp,  lr,  [x1, 16 * 5]
-  //ldp fp,  x9,  [x1, 16 * 5]
   ldr x9, [x1, 16 * 6]
   mov sp,  x9
   //msr tpidr_el1, x1
