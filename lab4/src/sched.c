@@ -36,7 +36,10 @@ void do_exec(void(*func)()){
     asm volatile ("mov  x21, %0;"
                   "msr	sp_el0, x21"
                   ::"r"(ustack_pool[current->taskid]));
+    asm volatile ("mov  sp, %0;"
+                  ::"r"(kstack_pool[current->taskid] - 16));
     asm volatile ("eret");
+    
     // func();
 }
 

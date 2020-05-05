@@ -9,11 +9,11 @@
 
 void set_trap_ret(int ret_val){
     char *p;
-    p = kstack_pool[current->taskid] - S_FRAME_SIZE - 16; //kstack_pool[current->taskid] is stack top!
-    *p = ret_val;
+    p = kstack_pool[current->taskid] - 16 - S_FRAME_SIZE ; //kstack_pool[current->taskid] is stack top!
+    *((long long*)p) = ret_val; // 8byte per stack element
 }
 
-void exception_handler(unsigned long esr, unsigned long elr)
+void exception_handler(unsigned long esr, unsigned long elr, unsigned long x2)
 {
     int svc_type = esr&0x1FFFFFF;
     if (svc_type == 1){
@@ -35,6 +35,15 @@ void exception_handler(unsigned long esr, unsigned long elr)
     else if(svc_type == 4){
         // uart_puts("get task id\n");
         set_trap_ret(current -> taskid);
+    }
+    else if(svc_type == 5){
+        
+    }
+    else if(svc_type == 6){
+        
+    }
+    else if(svc_type == 7){
+        do_exec((void*)x2);
     }
 }
 

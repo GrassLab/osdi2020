@@ -5,17 +5,15 @@
 #include "sched.h"
 #include "timer.h"
 
-#define N 10
+#define N 1
 
 extern void disable_irq();
 extern int get_taskid();
+extern int exec();
 
 void foo(){
-  while(1) {
-    printf("Task id: %d\n", current -> taskid);
-    delay(1000000);
-    schedule();
-  }
+  int tmp = 5;
+  printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
 }
 
 void idle(){
@@ -32,15 +30,18 @@ void test() {
   //   fork();
   //   delay(100000);
   //   fork();
-    while(cnt < 100) {
-      printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
-      delay(100000);
-      ++cnt;
-      // schedule();
-    }
-    // exit(0);
-    // printf("Should not be printed\n");
-  // } 
+    // while(cnt < 100) {
+    //   printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+    //   delay(100000);
+    //   ++cnt;
+    //   // schedule();
+    // }
+  //   exit(0);
+  //   printf("Should not be printed\n");
+  // } else {
+    printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
+    exec(foo);
+  // }
 }
 
 void user_test(){
