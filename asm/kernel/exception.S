@@ -98,7 +98,7 @@ irq_handler:
   # setup IRQ stack
   adr x9, _start
   mov x10, sp
-  sub sp, x9, 8
+  sub sp, x9, 16
   str x10, [sp]
 
   # interrupt handler

@@ -5,7 +5,7 @@
 .global system_call
 system_call:
   adr x9, syscall_tables
-  lsl x8, x8, #3
+  lsl x8, x8, #4
   add x8, x8, x9
   adr x10, end_syscall_tables
   cmp x8, x10
