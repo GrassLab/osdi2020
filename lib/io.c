@@ -22,10 +22,7 @@ int printf ( const char * format, ... )
     va_list arguments;
     format_t output_format;
 
-    int d;
-    char c;
-    char * s;
-    double f;
+    va_type_value value;
 
     va_start ( arguments, format );
 
@@ -40,35 +37,42 @@ int printf ( const char * format, ... )
             {
                 case LONG_INT:
                 case INT:
-                    d = va_arg ( arguments, int );
-                    itoa ( d, temp_buffer, 10 );
+                    value.d = va_arg ( arguments, int );
+                    itoa ( value.d, temp_buffer, 10 );
                     break;
                 case BINARY:
-                    d = va_arg ( arguments, int );
-                    itoa ( d, temp_buffer, 2 );
+                    value.d = va_arg ( arguments, int );
+                    itoa ( value.d, temp_buffer, 2 );
                     break;
                 case OCTAL:
-                    d = va_arg ( arguments, int );
-                    itoa ( d, temp_buffer, 8 );
+                    value.d = va_arg ( arguments, int );
+                    itoa ( value.d, temp_buffer, 8 );
                     break;
-                case HEXADECIMAL:
-                case POINTER:
-                    d              = va_arg ( arguments, int );
+                case HEXADECIMAL_LOWER:
+                    value.d        = va_arg ( arguments, int );
                     temp_buffer[0] = '0';
                     temp_buffer[1] = 'x';
-                    itoa ( d, temp_buffer + 2, 16 );
+                    itoa ( value.d, temp_buffer + 2, 16 );
+                    str_to_lower ( temp_buffer );
+                    break;
+                case HEXADECIMAL_UPPER:
+                case POINTER:
+                    value.d        = va_arg ( arguments, int );
+                    temp_buffer[0] = '0';
+                    temp_buffer[1] = 'X';
+                    itoa ( value.d, temp_buffer + 2, 16 );
                     break;
                 case DOUBLE:
-                    f = va_arg ( arguments, double );
-                    ftoa ( f, temp_buffer, output_format.after_point_length );
+                    value.f = va_arg ( arguments, double );
+                    ftoa ( value.f, temp_buffer, output_format.after_point_length );
                     break;
                 case CHAR:
-                    c              = va_arg ( arguments, int );
-                    temp_buffer[0] = c;
+                    value.c        = va_arg ( arguments, int );
+                    temp_buffer[0] = value.c;
                     temp_buffer[1] = '\0';
                     break;
                 case STRING:
-                    s = va_arg ( arguments, char * );
+                    value.s = va_arg ( arguments, char * );
                     break;
                 default:
                     break;
@@ -77,10 +81,10 @@ int printf ( const char * format, ... )
             /* output signed if needed */
             if ( output_format.signed_flag && output_format.type == INT )
             {
-                d = va_arg ( arguments, int );
+                value.d = va_arg ( arguments, int );
 
                 output_char_counts++;
-                buffer_enqueue ( d > 0 ? "+" : "-" );
+                buffer_enqueue ( value.d > 0 ? "+" : "-" );
             }
 
             /* padding zero or space */
@@ -99,15 +103,15 @@ int printf ( const char * format, ... )
                 }
             }
 
-            if ( output_format.type == INT && output_format.signed_flag && d < 0 )
+            if ( output_format.type == INT && output_format.signed_flag && value.d < 0 )
             {
                 output_char_counts += strlen ( temp_buffer + 1 );
                 buffer_enqueue ( temp_buffer + 1 );
             }
             else if ( output_format.type == STRING )
             {
-                output_char_counts += strlen ( s );
-                buffer_enqueue ( s );
+                output_char_counts += strlen ( value.s );
+                buffer_enqueue ( value.s );
                 ;
             }
             else
@@ -260,7 +264,10 @@ format_t parse_format ( const char ** input )
                     format.type = DOUBLE;
                     break;
                 case 'x':
-                    format.type = HEXADECIMAL;
+                    format.type = HEXADECIMAL_LOWER;
+                    break;
+                case 'X':
+                    format.type = HEXADECIMAL_UPPER;
                     break;
                 case 'o':
                     format.type = OCTAL;

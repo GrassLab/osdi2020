@@ -31,6 +31,14 @@ int islower ( int c )
     return 0;
 }
 
+/* http://www.cplusplus.com/reference/cctype/isupper/ */
+int isupper ( int c )
+{
+    if ( c <= 'Z' && c >= 'A' )
+        return 1;
+    return 0;
+}
+
 /* http://www.cplusplus.com/reference/cctype/tolower/ */
 int tolower ( int c )
 {

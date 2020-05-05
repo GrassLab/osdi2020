@@ -186,3 +186,29 @@ void reverse ( char * s )
         s[i]                    = temp;
     }
 }
+
+char * str_to_upper ( char * s )
+{
+    int i;
+
+    for ( i = 0; i < strlen ( s ); i++ )
+    {
+        if ( islower ( s[i] ) )
+            s[i] = toupper ( s[i] );
+    }
+
+    return s;
+}
+
+char * str_to_lower ( char * s )
+{
+    int i;
+
+    for ( i = 0; i < strlen ( s ); i++ )
+    {
+        if ( isupper ( s[i] ) )
+            s[i] = tolower ( s[i] );
+    }
+
+    return s;
+}

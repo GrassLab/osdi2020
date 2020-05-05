@@ -7,17 +7,18 @@
 
 enum type_t
 {
-    INT      = 0,
-    DOUBLE   = 1,
-    CHAR     = 2,
-    STRING   = 3,
-    LONG_INT = 4,
+    INT = 0,
+    DOUBLE,
+    CHAR,
+    STRING,
+    LONG_INT,
 
-    BINARY      = 5,
-    HEXADECIMAL = 6,
-    OCTAL       = 7,
+    BINARY,
+    HEXADECIMAL_UPPER,
+    HEXADECIMAL_LOWER,
+    OCTAL,
 
-    POINTER = 8,
+    POINTER,
 };
 
 /* echo '#include <stdlib.h>' | cpp -I/usr/include | grep <type> */
