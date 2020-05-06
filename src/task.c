@@ -24,7 +24,8 @@ void context_switch(struct task_t* next) {
         next->status = ZOMBIE;
         print_s("pid ");
         print_i(next->id);
-        print_s(" has been killed\n");
+        print_s("has been killed\n");
+        schedule();
     } else {
         switch_to(prev, next, nextfunc, next->spsr);
     }
@@ -34,13 +35,24 @@ void queue_push(struct queue* queue, struct task_t* task) {
     struct queue_element_t* queue_element = &queue_elements[queue_elements_now];
     queue_elements_now++;
     queue_element->task = task;
-    /* queue_elements[queue_elements_now].is_active = 1; */
-    if (queue->tail == 0) {
+    if (queue->head == 0) {
         queue->tail = queue_element;
         queue->head = queue_element;
+    } else if (queue->head->task->priority > task->priority) {
+        queue_element->next = queue->head;
+        queue->head = queue_element;
     } else {
-        queue->tail->next = queue_element;
-        queue->tail = queue_element;
+        struct queue_element_t* start = queue->head;
+        while (start->next != 0 &&
+               start->next->task->priority <= task->priority) {
+            start = start->next;
+        }
+        queue_element->next = start->next;
+        start->next = queue_element;
+        start = queue->head;
+        while (start != 0) {
+            start = start->next;
+        }
     }
 }
 
@@ -68,11 +80,11 @@ struct task_t* queue_pop(struct queue* queue) {
     }
 }
 
-struct task_t* privilege_task_create(void (*func)()) {
+struct task_t* privilege_task_create(void (*func)(), int priority) {
     struct task_t* task = 0;
     uint64_t spsr_el1;
     for (int i = 0; i < 64; i++) {
-        if (task_pool[i].status != ACTIVE) {
+        if (task_pool[i].status == INACTIVE) {
             task = &task_pool[i];
             task_pool[i].id = i;
             task_pool[i].sp = (uint64_t)kstack_pool[i + 1];
@@ -80,7 +92,7 @@ struct task_t* privilege_task_create(void (*func)()) {
             task_pool[i].time = 0;
             asm volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
             task_pool[i].spsr = spsr_el1;
-            task_pool[i].reschedule = 0;
+            task_pool[i].priority = priority;
             task_pool[i].status = ACTIVE;
             break;
         }
@@ -94,13 +106,23 @@ void task_init() {
     runqueue.tail = 0;
 }
 
-void privilege_task_run(struct task_t* this_task) {
-    asm volatile("msr tpidr_el1, %0" : "=r"(this_task));
-    ((void (*)())this_task->elr)();
+void privilege_task_run() {
+    struct task_t* task = queue_pop(&runqueue);
+    uint64_t pid = (uint64_t)task;
+    asm volatile("hh:");
+    print_s("schdule pid: ");
+    print_i(task->id);
+    print_s("\n");
+    queue_push(&runqueue, task);
+    asm volatile("msr tpidr_el1, %0" : "=r"(pid));
+    ((void (*)())task->elr)();
 }
 
 void schedule() {
     struct task_t* task = queue_pop(&runqueue);
+    print_s("schdule pid: ");
+    print_i(task->id);
+    print_s("\n");
     queue_push(&runqueue, task);
     context_switch(task);
 }
@@ -149,7 +171,7 @@ void do_fork(uint64_t elr) {
             task_pool[i].elr = elr;
             task_pool[i].time = 0;
             task_pool[i].spsr = task->spsr;
-            task_pool[i].reschedule = 0;
+            task_pool[i].priority = task->priority;
             task_pool[i].status = ACTIVE;
             task_pool[i].utask.elr = task->utask.elr;
             task_pool[i].utask.sp =

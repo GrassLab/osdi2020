@@ -82,6 +82,12 @@ void user3() {
         ;
 }
 
+void user4() {
+    uart_write("user 4\n", 7);
+    while (1)
+        ;
+}
+
 void task1() {
     uart_write("task 1\n", 7);
     /* do_exec(user1); */
@@ -96,6 +102,11 @@ void task2() {
 void task3() {
     uart_write("task 3\n", 7);
     do_exec(user3);
+}
+
+void task4() {
+    uart_write("task 3\n", 7);
+    do_exec(user4);
 }
 
 void zombie_killer() {
@@ -117,21 +128,13 @@ int main() {
     task_init();
     asm volatile("svc #2");
 
-    uint64_t spsr_el1;
-    struct task_t* t1 = &task_pool[0];
-    t1->elr = (uint32_t)idle;
-    t1->id = 0;
-    t1->status = ACTIVE;
-    t1->time = 0;
-    t1->utask.sp = (uint64_t)kstack_pool[1];
-    asm volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
-    t1->spsr = spsr_el1;
-    t1->reschedule = 0;
-    privilege_task_create(zombie_killer);
-    privilege_task_create(task1);
-    privilege_task_create(task2);
-    privilege_task_create(task3);
-    privilege_task_run(t1);
+    privilege_task_create(idle, 3);
+    privilege_task_create(zombie_killer, 0);
+    privilege_task_create(task1, 0);
+    privilege_task_create(task2, 0);
+    privilege_task_create(task3, 0);
+    privilege_task_create(task4, 0);
+    privilege_task_run();
 
     /* run(); */
 }

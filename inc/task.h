@@ -5,9 +5,9 @@
 #define QUEUE_ELE_SIZE 64
 #define STACK_SIZE 4096
 #define SIGKILL 1
+#define INACTIVE 0
 #define ACTIVE 1
 #define ZOMBIE 2
-#define INACTIVE 3
 
 struct utask_t {
     uint64_t sp;
@@ -26,7 +26,7 @@ struct task_t {
     int status;
     int time;
     int signal;
-    int reschedule;
+    int priority;
     uint64_t elr;
 };
 
@@ -45,14 +45,14 @@ struct task_t task_pool[64];
 struct queue_element_t queue_elements[QUEUE_ELE_SIZE];
 int queue_elements_now;
 struct task_t* get_current();
-struct task_t* privilege_task_create(void (*func)());
+struct task_t* privilege_task_create(void (*func)(), int priority);
 struct queue runqueue;
 struct queue waitqueue;
 char kstack_pool[64][STACK_SIZE];
 char ustack_pool[64][STACK_SIZE];
 
 void context_switch(struct task_t* next);
-void privilege_task_run(struct task_t* this_task);
+void privilege_task_run();
 void schedule();
 void task_init();
 void queue_push(struct queue* queue, struct task_t* task);
