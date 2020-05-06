@@ -1,7 +1,7 @@
 #include "exce.h"
 #include "mailbox.h"
 #include "printf.h"
-#include "sched.h"
+#include "schedule.h"
 #include "shell.h"
 #include "uart.h"
 

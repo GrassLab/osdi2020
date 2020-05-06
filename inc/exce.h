@@ -15,6 +15,10 @@
 // #define DISABLE_BASIC_IRQS   ((volatile unsigned int*)(INTE_REG_BASE+0x224))
 #define CORE0_IRQ_SRC        ((volatile unsigned int*)0x40000060)
 
+
+#define S_FRAME_SIZE         272 // size of all saved registers 
+#define S_X0                 0   // offset of x0 register in saved stack frame
+
 // #define IRQ_SYSTEM_TIMER_1	(1 << 1)
 // #define IRQ_SYSTEM_TIMER_3	(1 << 3)
 

@@ -1,7 +1,7 @@
 #include "exce.h"
 
 #include "printf.h"
-#include "sched.h"
+#include "schedule.h"
 #include "string.h"
 #include "timer.h"
 #include "uart.h"
@@ -31,7 +31,8 @@ void sync_router(unsigned long esr, unsigned long elr, unsigned long spsr, unsig
     }
 }
 
-void sync_svc_handler(unsigned long esr, unsigned long elr){
+void sync_svc_handler(unsigned long esr, unsigned long elr)
+{
     unsigned int time, time_count, time_freq;
     switch(esr&0xFFFFFF) {
         case 1: //exc
@@ -69,7 +70,7 @@ void irq_router(){
     // readirq source
     unsigned int src = *CORE0_IRQ_SRC;
     if (src & (1<<1)){
-        printf("[irq router] core timer interrupt trigerred!\n");
+        printf("[Irq router] core timer interrupt trigerred!\n");
         core_timer_handler();
         timer_tick();
         // printf("\nCore timer interrupt, jiffies %d", core_cnt++);
