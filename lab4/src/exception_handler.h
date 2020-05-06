@@ -1,9 +1,13 @@
 #ifndef EXCEP_HANDLER
 #define EXCEP_HANDLER
 
-#define CORE0_TIMER_IRQ_CTRL (volatile unsigned int*)0x40000040
+//#define CORE0_TIMER_IRQ_CTRL (volatile unsigned int*)0x40000040
 
-extern int reschedule; // define in kernel.h
+//extern int reschedule; // define in kernel.h
+
+//extern struct task_struct; // define in kernel.h
+
+//extern struct task_struct* get_current(); // define in context_switch.S
 
 void handler();
 

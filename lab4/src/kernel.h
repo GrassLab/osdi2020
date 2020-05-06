@@ -22,6 +22,7 @@ struct task_struct {
     int valid;
     int id;
     int status;
+    int t_quantum;
 };
 
 struct run_queue {
@@ -31,7 +32,7 @@ struct run_queue {
     int size;
 };
 
-int reschedule = 0;
+//int reschedule = 0;
 
 int kernel_init();
 

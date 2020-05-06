@@ -1,11 +1,12 @@
 #include "uart.h"
 #include "kernel.h"
+#include "my_string.h"
 
 struct task_struct task[64] __attribute__((aligned(16u)));
 char kstack_pool[64][4096] __attribute__((aligned(16u)));
 struct run_queue runqueue = {.start = 0, .end = 0, .size = 0};
 
-extern int reschedule;
+int reschedule = 0;
 
 int kernel_init(){
     uart_init();
