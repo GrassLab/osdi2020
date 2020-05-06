@@ -48,6 +48,9 @@ void synchronize_handler(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3,
                 asm volatile("ldr x0, =schedule");
                 asm volatile("msr elr_el1, x0");
                 break;
+            case 5:
+                do_kill(x0, x1);
+                break;
         }
     } else if (iss == 2) {
         core_timer_enable();

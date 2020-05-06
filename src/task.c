@@ -20,7 +20,14 @@ struct task_t* get_current() {
 void context_switch(struct task_t* next) {
     uint64_t nextfunc = next->elr;
     struct task_t* prev = get_current();
-    switch_to(prev, next, nextfunc, next->spsr);
+    if (next->signal == SIGKILL) {
+        next->status = ZOMBIE;
+        print_s("pid ");
+        print_i(next->id);
+        print_s(" has been killed\n");
+    } else {
+        switch_to(prev, next, nextfunc, next->spsr);
+    }
 }
 
 void runqueue_push(struct task_t* task) {
@@ -150,16 +157,16 @@ void do_fork(uint64_t elr) {
 
 void kexit(uint64_t status) {
     do_exit(status);
-
     schedule();
 }
 
 void do_exit(uint64_t status) {
     struct task_t* task = get_current();
     task->status = ZOMBIE;
-    task->status = status;
 
     print_s("Exited with status code: ");
     print_i(status);
     print_s("\n");
 }
+
+void do_kill(uint64_t pid, uint64_t signal) { task_pool[pid].signal = signal; }

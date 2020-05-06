@@ -44,7 +44,7 @@ void run() {
 
 void idle() { schedule(); }
 
-void user0() {
+void user1_1() {
     uart_write("user 0\n", 7);
     while (1)
         ;
@@ -52,10 +52,11 @@ void user0() {
 
 void user1() {
     uart_write("user 1\n", 7);
-    exec(user0);
+    exec(user1_1);
     while (1)
         ;
 }
+
 void user2() {
     print_s("user2\n");
     int a = fork();
@@ -70,7 +71,15 @@ void user2() {
         print_i(a);
         print_s("\n");
         exit(2);
+        print_s("Should not be printed\n");
     }
+}
+
+void user3() {
+    uart_write("user 3\n", 7);
+    kill(2, SIGKILL);
+    while (1)
+        ;
 }
 
 void task1() {
@@ -86,7 +95,7 @@ void task2() {
 
 void task3() {
     uart_write("task 3\n", 7);
-    do_exec(user1);
+    do_exec(user3);
 }
 
 void zombie_killer() {
@@ -121,6 +130,7 @@ int main() {
     privilege_task_create(zombie_killer);
     privilege_task_create(task1);
     privilege_task_create(task2);
+    privilege_task_create(task3);
     privilege_task_run(t1);
 
     /* run(); */

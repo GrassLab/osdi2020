@@ -29,3 +29,8 @@ void exit(int status) {
     asm volatile("mov x8, #4");
     asm volatile("svc 0");
 }
+
+void kill(int pid, int signal) {
+    asm volatile("mov x8, #5");
+    asm volatile("svc 0");
+}

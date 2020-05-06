@@ -6,4 +6,5 @@ size_t uart_read(char buf[], size_t size);
 void exec(void (*func)());
 int fork();
 void exit(int status);
+void kill(int pid, int signal);
 #endif

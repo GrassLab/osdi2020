@@ -4,9 +4,10 @@
 #include <stdint.h>
 #define RUNQUEUE_SIZE 64
 #define STACK_SIZE 4096
+#define SIGKILL 1
 #define ACTIVE 1
-#define ZOMBIE 1
-#define INACTIVE 1
+#define ZOMBIE 2
+#define INACTIVE 3
 
 struct utask_t {
     uint64_t sp;
@@ -24,7 +25,7 @@ struct task_t {
     int id;
     int status;
     int time;
-    int killed;
+    int signal;
     int reschedule;
     uint64_t elr;
 };
@@ -52,4 +53,5 @@ void do_exec(void (*func)());
 void do_fork(uint64_t elr);
 void do_exit(uint64_t status);
 void kexit(uint64_t status);
+void do_kill(uint64_t pid, uint64_t signal);
 #endif
