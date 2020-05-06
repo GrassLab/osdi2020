@@ -60,7 +60,9 @@ int privilege_task_create(void (*func)()){
     return new_task->taskid;
 }
 int fork(){
+    
     int id = privilege_task_create(0);
+    
     struct task_struct *fork_task = task[id];
     fork_task->counter = 3;
     fork_task->cpu_context.x19 = current->cpu_context.x19;
@@ -74,8 +76,24 @@ int fork(){
 	fork_task->cpu_context.x27 = current->cpu_context.x27;
 	fork_task->cpu_context.x28 = current->cpu_context.x28;
 	fork_task->cpu_context.fp = current->cpu_context.fp;
-    fork_task->taskid = n_task_id-1;
+    fork_task->cpu_context.pc = current->cpu_context.pc;
+    fork_task->taskid = n_task_id;
     fork_task->parentid = current->taskid;
+    fork_task->storeid = n_tasks;
+
+    struct task_struct *new_utask = u_task[id];
+    struct task_struct *old_utask = u_task[current->taskid];
+    new_utask->cpu_context.x19 = old_utask->cpu_context.x19;
+    new_utask->cpu_context.pc = old_utask->cpu_context.pc;
+    new_utask->cpu_context.sp = old_utask->cpu_context.sp;
+
+    u_task[n_tasks] = new_utask;
+    task[n_tasks] = (fork_task);
+
+
+    n_task_id++;
+    n_tasks++; 
+    n_tasks%=NR_TASKS;
 
     return 0;
 }
@@ -105,9 +123,7 @@ void foo_lab4(){
     uart_puts("\n");
     call_sys_exit();
 }
-void foo_exec(){
-    call_exec(foo);
-}
+
 // 1000000
 void test() {
     int cnt = 1;
@@ -116,7 +132,7 @@ void test() {
         // fork();
         delay(100000000);
         // fork();
-        while(cnt < 10) {
+        while(cnt < 5) {
             call_sys_write("Task id: ");
             uart_send_int(call_sys_get_taskid());
             call_sys_write(", Parent task id: ");
@@ -141,7 +157,11 @@ void test() {
         call_sys_exit();
     }
 }
+void foo_exec(){
+    call_exec(test);
+}
 void foo_sys(){
+    fork();
     uart_puts("Task id: ");
     uart_send_int(call_sys_get_taskid());
     uart_send('\n');
@@ -186,6 +206,9 @@ void init_init_task(void (*func)()){
     task[0] = current;
 
     struct task_struct *new_utask = (struct task_struct *) get_free_page();
+    new_utask->cpu_context.x19 = (unsigned long)func;
+    new_utask->cpu_context.pc = (unsigned long)ret_from_fork;
+    new_utask->cpu_context.sp = (unsigned long)current + THREAD_SIZE;
     u_task[0] = new_utask;
 }
 
@@ -209,6 +232,7 @@ void schedule(){
         if(task[i]&&task[i]->counter>c&&task[i]->state==TASK_RUNNING){
             c = task[i]->counter;
             next=i;
+            break;
         }
     }
         // if(c)break;
@@ -220,7 +244,7 @@ void schedule(){
     enable_preempt();
 }
 
-int N = 3;
+int N = 1;
 void create_foo(){
     for(int i = 1; i <= N; ++i) { // N should > 2
         privilege_task_create(foo_exec);
