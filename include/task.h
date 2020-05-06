@@ -1,4 +1,5 @@
 #include "tool.h"
+#define THREAD_SIZE				4096
 
 struct cpu_context {
 	unsigned long x19;
@@ -36,5 +37,6 @@ void idle();
 void privilege_task_create(void(*func)());
 void context_switch(struct task* next);
 void schedule();
+void counter_check();
 void create_tasks();
 extern void switch_to(struct task* prev, struct task* next);

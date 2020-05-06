@@ -20,10 +20,13 @@ void core_timer_enable() {
 }
 
 void core_timer_handler() {
+  /*
     core_timer_counter++;
     uart_puts("Core timer interrupt, ");
     uart_int(core_timer_counter);
     uart_puts(" times\n");
+    */
+    counter_check();
     asm volatile("mov x0, 0xffffff");
     asm volatile("msr cntp_tval_el0, x0");
 }
@@ -49,8 +52,8 @@ void irq_router ()
   unsigned int IRQ_SOURCE = *CORE0_IRQ_SOURCE;
   if (IRQ_SOURCE == 1 << 1)
     core_timer_handler();
-  else if (IRQ_SOURCE == 1 << 11)
-    local_timer_handler();
+  //else if (IRQ_SOURCE == 1 << 11)
+    //local_timer_handler();
   else
     return;
 }

@@ -19,8 +19,7 @@ void exc_function() {
         uart_puts("enable time\n");
         enable_irq();
         core_timer_enable();
-        local_timer_enable();
-        while(1);
+        //local_timer_enable();
     }
 }
 

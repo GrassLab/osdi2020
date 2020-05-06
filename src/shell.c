@@ -30,8 +30,6 @@ int strcmp (const char *p1, const char *p2) {
 }
 
 void put_shell() {
-  create_tasks();
-  return;
   // shell command
   char *help = "help";
   char *hello = "hello";
