@@ -29,8 +29,11 @@ timer.o: timer.S
 irq.o : irq.S
 	$(CC) $(CFLAGS) -c irq.S -o irq.o
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+sched.o : sched.S
+	$(CC) $(CFLAGS) -c sched.S -o sched.o
+
+# %.o: %.c
+# 	$(CC) $(CFLAGS) -c $< -o $@
 
 build/%_c.o: %.c
 	@mkdir -p $(@D)
@@ -44,6 +47,7 @@ kernel8: kernel8.elf
 
 clean:
 	rm kernel8.img kernel8.elf *.o $(DIR)/*.o */*.o >/dev/null 2>/dev/null || true
+	rm -r build >/dev/null 2>/dev/null || true
 
 debug: kernel8
 	$(QEMU) -M raspi3 -kernel kernel8.img -serial stdio -S -s

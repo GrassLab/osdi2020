@@ -46,6 +46,6 @@
 #define SPSR_EL1h           (0b0101 << 0)	
 #define SPSR_EL2t           (0b1000 << 0)	
 #define SPSR_EL2h           (0b1001 << 0)	
-#define SPSR_EL2_VALUE      (SPSR_MASK_A | SPSR_MASK_I | SPSR_MASK_F | SPSR_EL1h)
-//#define SPSR_EL2_VALUE      (SPSR_MASK_A | SPSR_MASK_F | SPSR_EL1h)
+// #define SPSR_EL2_VALUE      (SPSR_MASK_A | SPSR_MASK_I | SPSR_MASK_F | SPSR_EL1h)
+#define SPSR_EL2_VALUE      (SPSR_MASK_A | SPSR_MASK_F | SPSR_EL1h)
 #define SPSR_EL1_VALUE      (SPSR_EL0t)

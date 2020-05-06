@@ -41,18 +41,21 @@ struct task_struct *task[NR_TASKS];
 
 #define INIT_TASK \
 /*cpu_context*/	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-/* state etc */	0,0,1, 0 \
-}
+/* state etc */	0,0,0,1,0 }
 
 
 extern void cpu_switch_to(struct task_struct *, struct task_struct *);
 extern struct task_struct *get_current();
 extern void ret_from_fork();
+extern void delay();
 
 void context_switch(struct task_struct *next);
 void preempt_disable(void);
 void preempt_enable(void);
 struct task_struct *privilege_task_create(void (*func)(), unsigned long num);
 void schedule_tail(void);
+void _schedule();
+void schedule();
+void timer_tick();
 
 #endif

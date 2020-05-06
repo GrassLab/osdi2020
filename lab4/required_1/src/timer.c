@@ -1,4 +1,5 @@
 #include "timer.h"
+#include "sched.h"
 
 void local_timer_init(){
   unsigned int flag = 0x30000000; // enable timer and interrupt.
@@ -14,5 +15,6 @@ void local_timer_disable(){
 
 void local_timer_handler(){
   *LOCAL_TIMER_IRQ_CLR = 0xc0000000; // clear interrupt and reload timer
+  timer_tick();
   return;
 }
