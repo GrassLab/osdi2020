@@ -30,7 +30,7 @@ clean:
 	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img
 
 run: all
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial mon:stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio
 
 tty: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial "pty"

@@ -14,6 +14,9 @@
 #define AUX_IRQ (1 << 29)
 #define IIR_REG_REC_NON_EMPTY (2 << 1)
 
+int buffer_now = 0;
+int buffer_read = 0;
+
 extern void core_timer_enable();
 void synchronize_handler(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3,
                          uint64_t x4, uint64_t x5) {
@@ -96,7 +99,11 @@ void exception_handler() {
 void set_aux() { *(ENABLE_IRQS_1) = AUX_IRQ; }
 
 void irq_handler() {
-    if ((*CORE0_IRQ_SOURCE) & (1 << 11)) {
+    if ((*IRQ_BASIC_PENDING) & AUX_IRQ) {
+        if (*AUX_MU_LSR & 0x01) {
+            buffer[buffer_now++] = (char)(*AUX_MU_IO);
+        }
+    } else if ((*CORE0_IRQ_SOURCE) & (1 << 11)) {
         local_timer_handler();
     } else if ((*CORE0_IRQ_SOURCE) & (1 << 1)) {
         core_timer_handler();

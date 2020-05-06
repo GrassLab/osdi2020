@@ -21,6 +21,7 @@
 
 extern volatile unsigned int _boot_start;
 extern volatile unsigned int _end;
+extern volatile void set_aux();
 
 void run() {
     print_s("\033[2J\033[1;1H");
@@ -92,6 +93,9 @@ void user3() {
 
 void user4() {
     uart_write("user 4\n", 7);
+    char ch[10];
+    uart_read(ch, 7);
+    uart_write(ch, 7);
     while (1)
         ;
 }
@@ -136,16 +140,17 @@ int main() {
     lfb_init();
     lfb_showpicture();
     task_init();
+    set_aux();
     char tmp = uart_getc();
     tmp = uart_getc();
     tmp = uart_getc();
     asm volatile("svc #2");
 
     privilege_task_create(idle, 3);
-    privilege_task_create(zombie_killer, 0);
-    privilege_task_create(task1, 0);
-    privilege_task_create(task2, 0);
-    privilege_task_create(task3, 0);
+    /* privilege_task_create(zombie_killer, 0); */
+    /* privilege_task_create(task1, 0); */
+    /* privilege_task_create(task2, 0); */
+    /* privilege_task_create(task3, 0); */
     privilege_task_create(task4, 0);
     privilege_task_run();
 
