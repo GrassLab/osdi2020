@@ -13,7 +13,6 @@ static task_t init_task = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 task_t *task_pool[64] = {
     &(init_task),
 };
-int usr_first = 0;
 user_task_context user_pool[64];
 
 void init() {
@@ -39,7 +38,8 @@ int privilege_task_create(unsigned long func, int usr) {
 
   if (usr) {
     p->is_usr = 1;
-    user_pool[task_id].spsr = func;
+    user_pool[task_id].elr_el1 = func;
+    user_pool[task_id].sp = &ustack_pool[task_id][THREAD_SIZE];
     p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
   } else {
     p->cpu_context.x19 = func;
@@ -108,16 +108,13 @@ void jmp_to_usr() {
     current->switchflag = 0;
     schedule();
   }
-  printf("runforkfun = %x %x\n", user_pool[now].spsr, &ustack_pool[now]);
-  asm volatile("msr sp_el0, %0" ::"r"(ustack_pool[now]) :);
+  printf("jmp_to_usr = fun = %x  stack = %x\n", user_pool[now].elr_el1,
+         user_pool[now].sp);
+  asm volatile("msr sp_el0, %0" ::"r"(user_pool[now].sp) :);
   asm volatile("msr spsr_el1, %0" ::"r"(0) :);
-  asm volatile("msr elr_el1, %0" ::"r"(user_pool[now].spsr) :);
-  if (usr_first == 0) {
-    usr_first = 1;
-    ret_to_usr();
-  } else {
-    ret_to_fusr();
-  }
+  asm volatile("msr elr_el1, %0" ::"r"(user_pool[now].elr_el1) :);
+
+  ret_to_usr();
 }
 
 void do_exec(unsigned long fun) {
@@ -136,22 +133,33 @@ void exec(unsigned long rfun) {
 int fork() {
   asm volatile("mov x0, #7");
   asm volatile("svc #0");
-  return 0;
+  int rev;
+  unsigned long stack;
+  asm volatile("mov %[result], x0" : [result] "=r"(rev));
+  asm volatile("mov %[result], sp" : [result] "=r"(stack));
+  printf("ret stack = %x \n", stack);
+  return rev;
 }
 
 int do_fork() {
   unsigned long fun;
   asm volatile("MRS %[result], elr_el1" : [result] "=r"(fun));
-  printf("fork = %x\n", fun);
-
+  unsigned long stack;
+  asm volatile("MRS %[result], sp_el0" : [result] "=r"(stack));
   int task_id = task_count;
-
+  printf("fork new child => fun = %x user_stack = %x retsp = %x\n", fun,
+         &ustack_pool[task_id][THREAD_SIZE], stack);
   int nowid = get_current();
 
   memcpy((unsigned short *)ks[task_id], (unsigned short *)ks[nowid],
          THREAD_SIZE);
-  memcpy((unsigned short *)ustack_pool[task_id],
-         (unsigned short *)ustack_pool[nowid], THREAD_SIZE);
+  printf("copy user stack   %x <= %x\n", &ustack_pool[task_id][THREAD_SIZE],
+         &ustack_pool[nowid][THREAD_SIZE]);
+
+  for (int i = 0; i < THREAD_SIZE; i++) {
+    ustack_pool[task_id][i] = ustack_pool[nowid][i];
+  }
+
   task_t *p = (task_t *)&kstack_pool[task_id][0];
   task_pool[task_id] = p;
 
@@ -163,7 +171,9 @@ int do_fork() {
   p->state = TASK_RUNNING;
   p->counter = 2;
   p->is_usr = 1;
-  user_pool[task_id].spsr = fun;
+  user_pool[task_id].elr_el1 = fun;
+  user_pool[task_id].sp = (&ustack_pool[task_id][THREAD_SIZE]) -
+                          ((&ustack_pool[nowid][THREAD_SIZE]) - stack);
   p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
   p->cpu_context.pc = (unsigned long)ret_from_fork;
   p->cpu_context.sp = (unsigned long)&ks[task_id][THREAD_SIZE];
@@ -272,8 +282,10 @@ void test() {
   // int cnt = 1;
   printf("Task\n");
   wait_cycles(10000000);
-  fork();
+  int i = fork();
+  printf("i = %d\n", i);
   printf("endfork\n");
+  exit(0);
   exec((unsigned long)&tt);
 }
 

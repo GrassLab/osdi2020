@@ -45,7 +45,8 @@ typedef struct task_t
 
 typedef struct user_task_context
 {
-    unsigned long spsr;
+    unsigned long elr_el1;
+    unsigned long sp;
 } user_task_context;
 
 task_t *task_pool[64];
