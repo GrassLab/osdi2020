@@ -37,6 +37,7 @@ int do_fork_helper(uint64_t trapframe, uint64_t lr) {
 
   memcpy(kstack_pool[cid], kstack_pool[pid], MAX_STACK_SIZE);
   memcpy(ustack_pool[cid], ustack_pool[pid], MAX_STACK_SIZE);
+  memcpy(&task_pool[cid].context, &task_pool[pid].context, sizeof(struct task_context));
 
   uint64_t cksp = (uint64_t)kstack_pool[cid + 1] - ((uint64_t)kstack_pool[pid + 1] - pksp);
   uint64_t cusp = (uint64_t)ustack_pool[cid + 1] - ((uint64_t)ustack_pool[pid + 1] - pusp);
@@ -61,10 +62,11 @@ int do_fork_helper(uint64_t trapframe, uint64_t lr) {
 void do_exit(int status) {
   get_current_task()->state = TASK_ZOMBIE;
   get_current_task()->exit_status = status;
+  schedule();
 }
 
 int do_kill(uint32_t id, int sig) {
-  get_current_task()->sig_pending[sig] = true;
+  task_pool[id].sig_pending[sig] = true;
 }
 
 void *syscall_table[] = {
