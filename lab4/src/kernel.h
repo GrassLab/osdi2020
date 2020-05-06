@@ -41,6 +41,8 @@ int privilege_task_create(void(*func)());
 
 int do_exec(void(*func)());
 
+int do_fork();
+
 extern struct task_struct* get_current();
 
 extern void el1_to_el0(void(*func)(), unsigned long long ustack);

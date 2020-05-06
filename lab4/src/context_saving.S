@@ -50,10 +50,16 @@
     eret
 .endm
 
-.global test_handler
-test_handler:
+.global exception_handler
+exception_handler:
     save_all
-    bl handler
+    mov x0, sp
+    //mov x6, sp
+    //ldp x0, x1, [sp ,16 * 0]
+    //ldp x2, x3, [sp ,16 * 1]
+    //ldp x4, x5, [sp ,16 * 2]
+    bl excep_handler
+    //str x0, [sp ,16 * 0]
     load_all
 
 .global el1_irq_handler

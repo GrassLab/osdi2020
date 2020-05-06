@@ -9,7 +9,9 @@
 
 //extern struct task_struct* get_current(); // define in context_switch.S
 
-void handler();
+void excep_handler(unsigned long long sp);
+
+//void excep_handler();
 
 void el1_irq_isr();
 

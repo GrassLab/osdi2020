@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "kernel.h"
 #include "my_string.h"
+#include "sys_call.h"
 
 struct task_struct task[64] __attribute__((aligned(16u)));
 char kstack_pool[64][4096] __attribute__((aligned(16u)));
@@ -54,23 +55,47 @@ int privilege_task_create(void(*func)()){
             runqueue.queue[runqueue.end % QUEUE_SIZE] = &task[id];
             runqueue.end++;
             runqueue.size++;
-            break;
+            return id;
         }
         available_id++;
     }
 
     if (i == 64){
         uart_puts("There are no available process IDs\n");
-        return 1;
+        return -2;
     }
 
-    return 0;
+    return -1;
 }
 
 int do_exec(void(*func)()){
     struct task_struct *now = get_current();
     now->ustack_top = ustack_pool[now->id+1];
-    el1_to_el0(func, now->ustack_top);
+    el1_to_el0(func, (unsigned long long)now->ustack_top);
+}
+
+int do_fork(){
+    struct task_struct *now = get_current();
+    int child_id = privilege_task_create(0);
+    task[child_id].x19 = task[now->id].x19;
+    task[child_id].x20 = task[now->id].x20;
+    task[child_id].x21 = task[now->id].x21;
+    task[child_id].x22 = task[now->id].x22;
+    task[child_id].x23 = task[now->id].x23;
+    task[child_id].x24 = task[now->id].x24;
+    task[child_id].x25 = task[now->id].x25;
+    task[child_id].x26 = task[now->id].x26;
+    task[child_id].x27 = task[now->id].x27;
+    task[child_id].x28 = task[now->id].x28;
+    task[child_id].x29 = task[now->id].x29;
+    task[child_id].x30 = task[now->id].x30;
+    task[child_id].ustack_top = ustack_pool[child_id+1];
+    for (int i=0; i<4096; i++){
+        kstack_pool[child_id][i] = kstack_pool[now->id][i];
+        ustack_pool[child_id][i] = ustack_pool[now->id][i];
+    }
+
+    return child_id;
 }
 
 void init(){
@@ -120,21 +145,55 @@ void test_user3(){
     do_exec(user3);
 }
 
-void user(){
+void user4(){
     while(1){
-        uart_puts("user task 1111!!!\n");
+        uart_write("user task 4444!!!\n");
     }
 }
 
-void user2(){
+void user(){
     while(1){
-        uart_puts("user task 2222!!!\n");
+        char c[5];
+        c[1] = '\0';
+        c[0] = uart_read();
+        uart_write("user task 1!");
+        uart_write("  My word = ");
+        uart_write(c);
+        uart_write("\n");
+    }
+    //exec(user4);
+}
+
+void user2(){
+    /*int pid;
+    pid = fork();
+    while(1){
+        if (pid == 0)
+            uart_write("user task 4!!!\n");
+        else
+            uart_write("user task 2!!!\n");
+    }*/
+    while(1){
+        //char c[5];
+        //c[1] = '\0';
+        //c[0] = uart_read();
+        uart_write("User task 2!\n");
+        for (int i=0; i<10000000; i++);
+        //uart_write("  My word = ");
+        //uart_write(c);
+        //uart_write("\n");
     }
 }
 
 void user3(){
     while(1){
-        uart_puts("user task 3333!!!\n");
+        char c[5];
+        c[1] = '\0';
+        c[0] = uart_read();
+        uart_write("user task 3!");
+        uart_write("  My word = ");
+        uart_write(c);
+        uart_write("\n");
     }
 }
 int schedule(){

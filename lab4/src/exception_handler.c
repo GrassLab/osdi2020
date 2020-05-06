@@ -5,7 +5,8 @@
 
 extern int reschedule;
 
-void handler(){
+void excep_handler(unsigned long long sp){
+//void excep_handler(){
     unsigned long long elr;
     unsigned long long esr;
     int ec;
@@ -15,38 +16,74 @@ void handler(){
     asm volatile("mrs %0, ELR_EL1" : "=r"(elr));
     asm volatile("mrs %0, ESR_EL1" : "=r"(esr));
 
+    ec = (esr & 4227858432) >> 26;
+    iss = (esr & 33554431);
+
+    if (ec == 21 && iss == 0){
+        int syscall_num;
+
+        char *s;
+        char c;
+
+        char **ptr;
+
+        void (*func)();
+
+        int child_id;
+        struct task_struct* now;
+        int *val;
+        char res[10];
+
+        asm volatile("mov %0, x8" : "=r"(syscall_num));
+        switch (syscall_num){
+            case 0:
+                s = (char *)sp;
+                c = uart_getc();
+                *s = c;
+                break;
+            case 1:
+                ptr = (char **)sp;
+                uart_puts(*ptr);
+                break;
+            case 2:
+                func = (void (*)())sp;
+                do_exec(func);
+                break;
+            case 3:
+                child_id = do_fork();
+                struct task_struct* now = get_current();
+                itoa(child_id, res);
+                uart_puts("---------Current ID = ");
+                uart_puts(res);
+                uart_puts("\n");
+                if (now->id == child_id){
+                    val = (int *)sp;
+                    *val = 0;
+                }
+                else {
+                    val = (int *)sp;
+                    *val = child_id;
+                }
+                break;
+        }
+        return;
+    }
+
     unsign_itohexa(elr, res);
     uart_puts("Exception return address: 0x");
     uart_puts(res);
     uart_puts("\n");
 
-    ec = (esr & 4227858432) >> 26;
     unsign_itohexa(ec , res);
     uart_puts("Exception class (EC): 0x");
     uart_puts(res);
     uart_puts("\n");
 
-    iss = (esr & 33554431);
     unsign_itohexa(iss , res);
     uart_puts("Exception specfic syndrome (ISS): 0x");
     uart_puts(res);
     uart_puts("\n");
 
-    if (ec == 21 && iss == 0){
-        uart_puts("\n");
-        uart_puts("Enable system timer.\n");
-
-        asm(
-            "mov x0, 1;"
-            "msr cntp_ctl_el0, x0;"
-            "mrs x0, cntfrq_el0;"
-            "msr cntp_tval_el0, x0;"
-            "mov x0, 2;"
-            "ldr x1, =0x40000040;"
-            "str x0, [x1];"
-        );
-        *CORE0_TIMER_IRQ_CTRL = 2;
-    }
     return;
 }
 

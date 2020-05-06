@@ -5,7 +5,7 @@
 exception_table:
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler // branch to a handler function.
+    b exception_handler // branch to a handler function.
     .align 7 // entry size is 0x80, .align will pad 0
     //bl save_all
     //str x30, [sp, 16 * 15]
@@ -13,16 +13,16 @@ exception_table:
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
 
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
@@ -30,16 +30,16 @@ exception_table:
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
 
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
@@ -47,16 +47,16 @@ exception_table:
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
 
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
@@ -64,9 +64,9 @@ exception_table:
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
     //bl save_all
     //str x30, [sp, 16 * 15]
-    b test_handler
+    b exception_handler
     .align 7
