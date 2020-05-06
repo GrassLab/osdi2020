@@ -1,5 +1,6 @@
 #include "gpio.h"
 #include "io.h"
+#include "task.h"
 #include "uart.h"
 
 /**
@@ -54,10 +55,35 @@ void uart_send(unsigned int c) {
  * Receive a character
  */
 char uart_getc() {
-    do {
-        asm volatile("nop");
-    } while (buffer_read >= buffer_now);
+    struct task_t* task = get_current();
+    uint64_t sp;
+    task->status = WAIT;
+    task->uart_elr = task->elr;
+    uint64_t old_elr;
+    asm volatile("mrs %0, elr_el1" : "=r"(old_elr));
+    asm volatile("ldr x6, =wait_return");
+    asm volatile("mov %0, x6" : "=r"(task->elr));
+    queue_push(&waitqueue, task);
+
+    asm("msr DAIFClr, 0xf");
+
+    asm volatile("mov %0, sp" : "=r"(sp));
+    task->uart_sp = sp;
+
+    asm volatile("wait_return0:");
+    schedule();
+    asm volatile("wait_return:");
+    task = get_current();
+    uint64_t new_sp = task->uart_sp;
+    asm volatile("mov x6, %0" : "=r"(new_sp));
+    asm volatile("mov sp, x6");
+    task->elr = task->uart_elr;
+    uint64_t new_elr = old_elr;
+    asm volatile("msr elr_el1, %0" : "=r"(new_elr));
+
     char r = buffer[buffer_read++ % BUFFER_MAX];
+    asm volatile("v:");
+
     return r == '\r' ? '\n' : r;
 }
 
@@ -73,15 +99,13 @@ void uart_puts(const char* s) {
 }
 
 char uart_getb() {
-    char r;
     /* wait until something is in the buffer */
     do {
         asm volatile("nop");
     } while (!(*AUX_MU_LSR & 0x01));
     /* read it and return */
-    r = (char)(*AUX_MU_IO);
-    /* convert carrige return to newline */
-    return r;
+    char r = buffer[buffer_read++ % BUFFER_MAX];
+    return r == '\r' ? '\n' : r;
 }
 
 /**

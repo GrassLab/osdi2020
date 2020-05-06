@@ -100,8 +100,17 @@ void set_aux() { *(ENABLE_IRQS_1) = AUX_IRQ; }
 
 void irq_handler() {
     if ((*IRQ_BASIC_PENDING) & AUX_IRQ) {
+        print_s("irq\n");
         if (*AUX_MU_LSR & 0x01) {
-            buffer[buffer_now++] = (char)(*AUX_MU_IO);
+            if (waitqueue.head != 0) {
+                buffer[buffer_now++] = (char)(*AUX_MU_IO);
+                struct task_t *task = queue_pop(&waitqueue, WAIT);
+                task->status = ACTIVE;
+                queue_push(&runqueue, task);
+                print_s("irq2\n");
+            } else {
+                char tmp = (char)(*AUX_MU_IO);
+            }
         }
     } else if ((*CORE0_IRQ_SOURCE) & (1 << 11)) {
         local_timer_handler();

@@ -44,7 +44,7 @@ void run() {
 }
 
 void idle() {
-    if (runqueue.head == 0) {
+    if (runqueue.head->next == 0) {
         print_s("No task");
         while (1)
             ;
@@ -94,8 +94,10 @@ void user3() {
 void user4() {
     uart_write("user 4\n", 7);
     char ch[10];
-    uart_read(ch, 7);
-    uart_write(ch, 7);
+    uart_read(ch, 1);
+    print_s("your input: ");
+    uart_write(ch, 1);
+    print_s("\n");
     while (1)
         ;
 }
@@ -118,9 +120,9 @@ void task3() {
 
 void task4() {
     uart_write("task 4\n", 7);
-    while (1)
-        ;
-    /* do_exec(user4); */
+    /* while (1) */
+    /* ; */
+    do_exec(user4);
 }
 
 void zombie_killer() {
@@ -141,9 +143,9 @@ int main() {
     lfb_showpicture();
     task_init();
     set_aux();
-    char tmp = uart_getc();
-    tmp = uart_getc();
-    tmp = uart_getc();
+    /* char tmp = uart_getb(); */
+    /* tmp = uart_getb(); */
+    /* tmp = uart_getb(); */
     asm volatile("svc #2");
 
     privilege_task_create(idle, 3);

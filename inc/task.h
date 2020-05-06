@@ -6,6 +6,7 @@
 #define STACK_SIZE 4096
 #define SIGKILL 1
 #define INACTIVE 0
+#define WAIT 0
 #define ACTIVE 1
 #define ZOMBIE 2
 
@@ -28,6 +29,9 @@ struct task_t {
     int signal;
     int priority;
     int reschedule;
+    uint64_t uart_sp;
+    uint64_t uart_lr;
+    uint64_t uart_elr;
     uint64_t elr;
 };
 
@@ -57,10 +61,11 @@ void privilege_task_run();
 void schedule();
 void task_init();
 void queue_push(struct queue* queue, struct task_t* task);
-struct task_t* queue_pop(struct queue* queue);
+struct task_t* queue_pop(struct queue* queue, int status);
 void do_exec(void (*func)());
 void do_fork(uint64_t elr);
 void do_exit(uint64_t status);
 void kexit(uint64_t status);
 void do_kill(uint64_t pid, uint64_t signal);
+void switch_to_wait();
 #endif

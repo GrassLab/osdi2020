@@ -56,7 +56,7 @@ void queue_push(struct queue* queue, struct task_t* task) {
     }
 }
 
-struct task_t* queue_pop(struct queue* queue) {
+struct task_t* queue_pop(struct queue* queue, int status) {
     struct task_t* task;
     if (queue->head == 0) {
         return &task_pool[0];
@@ -64,16 +64,16 @@ struct task_t* queue_pop(struct queue* queue) {
         task = queue->head->task;
         queue->head = 0;
         queue->tail = 0;
-        if (task->status != ACTIVE) {
-            return queue_pop(&runqueue);
+        if (task->status != status) {
+            return queue_pop(&runqueue, status);
         } else {
             return task;
         }
     } else {
         task = queue->head->task;
         queue->head = queue->head->next;
-        if (task->status != ACTIVE) {
-            return queue_pop(&runqueue);
+        if (task->status != status) {
+            return queue_pop(&runqueue, status);
         } else {
             return task;
         }
@@ -107,7 +107,7 @@ void task_init() {
 }
 
 void privilege_task_run() {
-    struct task_t* task = queue_pop(&runqueue);
+    struct task_t* task = queue_pop(&runqueue, ACTIVE);
     struct task_t tmp;
     print_s("schdule pid: ");
     print_i(task->id);
@@ -117,7 +117,7 @@ void privilege_task_run() {
 }
 
 void schedule() {
-    struct task_t* task = queue_pop(&runqueue);
+    struct task_t* task = queue_pop(&runqueue, ACTIVE);
     print_s("schdule pid: ");
     print_i(task->id);
     print_s("\n");
