@@ -180,7 +180,7 @@ void foo12()
         uart_puts("Task id: ");
         uart_print_int(get_taskid());
         uart_puts("\n");
-        wait(1000000);
+        wait(100000000);
         schedule();
     }
 }

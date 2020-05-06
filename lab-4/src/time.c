@@ -55,6 +55,8 @@ void core_timer_init()
     asm volatile("svc #0");
 }
 
+#define CORE0_TIMER_IRQ_CTRL (unsigned int* )0x40000040
+#define EXPIRE_PERIOD 0xfffff
 void __core_timer_init()
 {
     asm volatile("mov x0, 1");
