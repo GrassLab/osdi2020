@@ -72,7 +72,7 @@ lower_el_aarch64_sync:
   cmp x0, #0
   beq 0f
 
-  bl enable_interrupt
+//  bl enable_interrupt
   ldr x8, [sp, 16 * 4]
   ldp x0, x1, [sp, 16 * 0]
   ldp x2, x3, [sp, 16 * 1]

@@ -28,6 +28,7 @@ void reaper(void) {
         printf("Task %u is reaped\n", i);
       }
     }
+    schedule();
   }
 }
 
@@ -90,6 +91,7 @@ int main(void) {
   gpio_init();
   mini_uart_init();
   exception_init();
+  asm("msr daifset, #0xf");
   core_timer_enable();
 //  el1_to_el0();
 //  shell();
