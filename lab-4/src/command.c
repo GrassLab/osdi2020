@@ -2,6 +2,7 @@
 #include "string.h"
 #include "uart.h"
 #include "utility.h"
+#include "syscall.h"
 #include "mailbox.h"
 #include "bootloader.h"
 #include "framebuffer.h"
@@ -78,7 +79,7 @@ void command_reboot()
 
 void command_timestamp()
 {
-    getTimestamp();
+    get_timestamp();
 }
 
 void command_hardware_info()

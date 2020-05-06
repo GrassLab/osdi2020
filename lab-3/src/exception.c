@@ -1,5 +1,6 @@
 #include "irq.h"
 #include "timer.h"
+#include "utility.h"
 
 void exception_handler()
 {
@@ -28,6 +29,8 @@ void exception_handler()
         __core_timer_init();
     } else if (iss == SYSCALL_LOCAL_TIMER_INIT) {
         __local_timer_init();
+    } else if (iss == GET_TIMESTAMP) {
+        __getTimestamp();
     }
 
     uart_puts("[info] Exception Level: 0x");

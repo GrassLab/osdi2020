@@ -1,0 +1,5 @@
+*.o
+*.img
+kernel8.elf
+peda*
+.gdb_history
