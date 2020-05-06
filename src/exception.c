@@ -66,16 +66,30 @@ void _k_sys_exec(struct trapframe* trapframe) {
     trapframe->x[0] = 0;
 }
 
+void _k_sys_exit(struct trapframe* trapframe) {
+    current_task->state = ZOMBIE;
+    current_task->exit_status = trapframe->x[0];
+}
+
 void _k_sys_fork(struct trapframe* trapframe) {
     int child_id = privilege_task_create(return_from_fork);
+    if (child_id < 0) { // create failed
+        trapframe->x[0] = child_id;
+        return;
+    }
 
     struct task_struct* child_task = &task_pool[child_id];
     struct task_struct* parent_task = current_task;
 
-    char* child_kstack = kstack_pool[child_task->id];
-    char* parent_kstack = kstack_pool[parent_task->id];
-    char* child_ustack = ustack_pool[child_task->id];
-    char* parent_ustack = ustack_pool[parent_task->id];
+    char* parent_kstack = parent_task->kstack;
+    char* parent_ustack = parent_task->ustack;
+    char* child_kstack = child_task->kstack;
+    char* child_ustack = get_avaliable_ustack();
+    if (!child_ustack) {
+        child_task->state = EXIT; // will ignore this task when scheduling
+        trapframe->x[0] = child_id;
+        return;
+    }
 
     for (int i = 0; i < KSTK_SIZE; i++) {
         *(child_kstack - i) = *(parent_kstack - i);
@@ -119,6 +133,10 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_FORK:
             _k_sys_fork(trapframe);
+            break;
+
+        case SYS_EXiT:
+            _k_sys_exit(trapframe);
             break;
     }
 }

@@ -9,6 +9,7 @@
 #define SYS_UART_WRITE      3
 #define SYS_EXEC            4
 #define SYS_FORK            5
+#define SYS_EXiT            6
 
 #endif
 
@@ -18,3 +19,4 @@ uint32_t uart_read(char buf[], uint32_t size);
 uint32_t uart_write(const char buf[], uint32_t size);
 int exec(void(*func)());
 int fork();
+void exit(int status);

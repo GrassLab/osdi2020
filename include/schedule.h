@@ -25,6 +25,7 @@ struct cpu_context {
 
 enum task_state {
     RUNNING,
+    ZOMBIE,
     EXIT,
 };
 
@@ -32,13 +33,17 @@ struct task_struct {
     uint64_t id;
     enum task_state state;
     struct cpu_context cpu_context;
-    uint8_t reschedule_flag;
-    uint8_t preemptable_flag;
     uint64_t priority;
     uint64_t counter;
+    int exit_status;
+    // stack position, decide after privilege_task_create
+    char *kstack;
+    char *ustack;
+    // flags
+    uint8_t reschedule_flag;
+    uint8_t preemptable_flag;
 };
 
-#define INIT_TASK       {0, RUNNING, {0,0,0,0,0,0,0,0,0,0,0,0,0}}
 #define INIT_PRIORITY   5
 
 #endif

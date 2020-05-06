@@ -8,7 +8,7 @@
 #include "sys.h"
 
 struct runqueue runqueue;
-struct task_struct task_pool[TASK_POOL_SIZE] = {INIT_TASK, };
+struct task_struct task_pool[TASK_POOL_SIZE];
 struct task_struct *current_task;
 
 void preempt_disable() {
@@ -53,19 +53,27 @@ void demo_do_exec() {
 
 int privilege_task_create(void(*func)()) {
     struct task_struct *new_task;
-    for (int i = 0; i < TASK_POOL_SIZE; i++) {
+    int i;
+    for (i = 0; i < TASK_POOL_SIZE; i++) {
         if (task_pool[i].state == EXIT) {
             new_task = &task_pool[i];
             break;
         }
     }
+    if (i == TASK_POOL_SIZE) return -1; // can not allocate task struct
+
+    // find avaliable kernel stack
+    new_task->kstack = get_avaliable_kstack();
+    if (!new_task->kstack) return -2; // can not allocate kernel stack
+
+    new_task->cpu_context.lr = (uint64_t)func;
+    new_task->cpu_context.fp = (uint64_t)(new_task->kstack);
+    new_task->cpu_context.sp = (uint64_t)(new_task->kstack);
+
+    if (QUEUE_FULL(runqueue)) return -3; // runqueue is full
+    QUEUE_PUSH(runqueue, new_task);
 
     new_task->state = RUNNING;
-    new_task->cpu_context.lr = (uint64_t)func;
-    new_task->cpu_context.fp = (uint64_t)(kstack_pool[new_task->id]);
-    new_task->cpu_context.sp = (uint64_t)(kstack_pool[new_task->id]);
-
-    QUEUE_PUSH(runqueue, new_task);
 
     return new_task->id;
 }
@@ -82,8 +90,10 @@ void schedule_init() {
         task_pool[i].counter = task_pool[i].priority;
     }
 
+    // initial task
     current_task = &task_pool[0];
     current_task->state = RUNNING;
+    current_task->kstack = (char*) KERNEL_BASE;
     QUEUE_PUSH(runqueue, current_task);
 
     privilege_task_create(demo_do_exec);
@@ -95,7 +105,7 @@ void schedule_init() {
 }
 
 void context_switch(struct task_struct *next) {
-    if (current_task->id != 0 && current_task->state != EXIT) {
+    if (current_task->id != 0 && current_task->state == RUNNING) {
         QUEUE_PUSH(runqueue, current_task);
     }
 
@@ -113,6 +123,9 @@ void schedule() {
         if (QUEUE_SIZE(runqueue) != 0) { // task idle is scheduled but there has other tasks
             next = QUEUE_POP(runqueue);
         }
+        while (next->state == ZOMBIE || next->state == EXIT) { // get runnable task
+            next = QUEUE_POP(runqueue);
+        }
         QUEUE_PUSH(runqueue, &task_pool[0]); // task idle must exist in runqueue
     }
     context_switch(next);
@@ -120,8 +133,8 @@ void schedule() {
 }
 
 void do_exec(void (*func)()) {
-    uint64_t user_stk_top = (uint64_t)(ustack_pool[current_task->id]);
-    asm volatile("msr sp_el0, %0" : : "r"(user_stk_top));
+    current_task->ustack = get_avaliable_ustack();
+    asm volatile("msr sp_el0, %0" : : "r"(current_task->ustack));
     asm volatile("msr elr_el1, %0": : "r"(func));
     asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
     asm volatile("eret");
