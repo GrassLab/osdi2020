@@ -1,5 +1,9 @@
 #include <uart.h>
 #include <lfb.h>
+#include <sched.h>
+#include <string.h>
+#include <timer.h>
+#include <syscall.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -20,7 +24,8 @@ main (int error, char *argv[])
 {
   // init stack guard. It should be random, but I'm lazy.
   __stack_chk_guard = (void *) 0xdeadbeef;
-  init_uart_irq ();
+
+  struct task_struct fake;
   uart_init ();
   lfb_init ();
   uart_puts (BOOT_MSG);
@@ -30,6 +35,7 @@ main (int error, char *argv[])
       uart_puts (argv[0]);
       uart_puts ("-----------------------------\n");
     }
+
   shell_interactive ();
   return 0;
 }

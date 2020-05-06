@@ -4,6 +4,7 @@
 #include <mbox.h>
 #include <lfb.h>
 #include <timer.h>
+#include <sched.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -15,6 +16,7 @@ void
 shell_interactive ()
 {
   char buf[CMD_SIZE];
+  size_t a, b;
 
   while (1)
     {
@@ -39,10 +41,7 @@ shell_interactive ()
 	}
       else if (!strcmp ("timestamp", buf))
 	{
-	  ftoa (get_time (), buf);
-	  uart_puts ("[");
-	  uart_puts (buf);
-	  uart_puts ("]\n");
+	  printf ("[%f]\r\n", get_time ());
 	}
       else if (!strcmp ("reboot", buf))
 	{
@@ -68,6 +67,21 @@ shell_interactive ()
 	{
 	  core_timer_enable ();
 	  local_timer_init ();
+	}
+      else if (!strcmp ("lab4t1", buf))
+	{
+	  extern void test_preemption ();
+	  test_preemption ();
+	}
+      else if (!strcmp ("lab4t2", buf))
+	{
+	  extern void test_fork_exec ();
+	  test_fork_exec ();
+	}
+      else if (!strcmp ("lab4t3", buf))
+	{
+	  extern void test_signal ();
+	  test_signal ();
 	}
       else
 	{
@@ -175,25 +189,6 @@ hardware ()
   uart_puts ("VC Core base address: ");
   uart_hex (base_addr);
   uart_puts ("\n");
-}
-
-double
-get_time ()
-{
-  double t;
-  asm volatile ("mov x1, %0\n" "mov x0, #1\n" "svc #0\n"::"r" (&t));
-  return t;
-}
-
-void
-sys_get_time (double *result)
-{
-  unsigned long freq;
-  unsigned long cnt;
-
-  asm volatile ("mrs %0, CNTFRQ_EL0\n"
-		"mrs %1, CNTPCT_EL0\n":"=r" (freq), "=r" (cnt));
-  *result = (double) cnt / (double) freq;
 }
 
 void
