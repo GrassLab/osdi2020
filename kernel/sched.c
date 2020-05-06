@@ -12,7 +12,7 @@
  */
 void idle_task_create() {
   if (privilege_task_init() != 0) {
-    printf("[ERROR] Task id 0 is already used" EOL);
+    printk("[ERROR] Task id 0 is already used" EOL);
     while (true) {}
   }
   asm volatile("msr tpidr_el1, %0" : : "r"(&task_pool[0]));
@@ -64,7 +64,7 @@ void schedule(void) {
       victim = dequeue(&runqueue);
     }
 
-    printf("Context switch is triggered: %u -> %u" EOL, do_get_taskid(), victim->id);
+    printk("Context switch is triggered: %u -> %u" EOL, do_get_taskid(), victim->id);
     get_current_task()->timeslice = DEFAULT_TIMESLICE;
     context_switch(victim);
   }

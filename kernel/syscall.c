@@ -16,9 +16,10 @@ size_t do_uart_read(void *buf, size_t count) {
 }
 
 size_t do_uart_write(const void *buf, size_t count) {
-  mutex_lock(&uart_lock);
-  mini_uart_putn(buf, count);
-  mutex_unlock(&uart_lock);
+//  mutex_lock(&uart_lock);
+//  mini_uart_putn(buf, count);
+    mini_uart_puts(buf);
+//  mutex_unlock(&uart_lock);
   /* For now, just assume all "count" bytes can be written. */
   return count;
 }

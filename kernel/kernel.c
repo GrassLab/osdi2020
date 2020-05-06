@@ -25,7 +25,7 @@ void reaper(void) {
     for (int i = 0; i < MAX_TASK_NUM; ++i) {
       if (task_inuse[i] == true && task_pool[i].state == TASK_ZOMBIE) {
         task_inuse[i] = false;
-        printf("Task %u is reaped\n", i);
+        printk("Task %u is reaped\n", i);
       }
     }
     schedule();
@@ -40,13 +40,13 @@ void idle(void) {
     schedule();
     delay(1000000);
   }
-  printf("Test finished\n");
+  printk("Test finished\n");
   while (true) {}
 }
 
 void foo(void) {
   int tmp = 5;
-  printf("Task %u after exec, tmp address 0x%x, tmp value %u\n", get_taskid(), &tmp, tmp);
+  printk("Task %u after exec, tmp address 0x%x, tmp value %u\n", get_taskid(), &tmp, tmp);
   exit(0);
 }
 
@@ -75,7 +75,7 @@ void user_test(void) {
 
 void signal_test_receiver(void) {
   while (true) {
-    printf("Task id: %u, Waiting for SIGKILL" EOL, do_get_taskid());
+    printk("Task id: %u, Waiting for SIGKILL" EOL, do_get_taskid());
     delay(100000);
   }
 }
@@ -83,7 +83,7 @@ void signal_test_receiver(void) {
 void signal_test_sender(void) {
   uint32_t receiver_id = privilege_task_create(signal_test_receiver);
   do_kill(receiver_id, SIGKILL);
-  printf("Task id: %u, Created and sent SIGKILL to %u" EOL, do_get_taskid(), receiver_id);
+  printk("Task id: %u, Created and sent SIGKILL to %u" EOL, do_get_taskid(), receiver_id);
   do_exit(0);
 }
 

@@ -42,21 +42,21 @@ void curr_el_spx_sync_handler(void) {
   if (ec == 0x15) {
     switch (iss) {
       case 1:
-        printf("Exception return address %#x" EOL, address);
-        printf("Exception class (EC) %#x" EOL, ec);
-        printf("Instruction specific syndrome (ISS) %#x" EOL, iss);
+        printk("Exception return address %#x" EOL, address);
+        printk("Exception class (EC) %#x" EOL, ec);
+        printk("Instruction specific syndrome (ISS) %#x" EOL, iss);
         break;
       case 2:
         core_timer_enable();
         system_timer_enable();
         break;
       default:
-        printf("[ERROR] Unknown SVC number %u" EOL, iss);
+        printk("[ERROR] Unknown SVC number %u" EOL, iss);
         break;
     }
   } else {
-    printf("[ERROR] Handler for EC %u isn't implemented yet" EOL, ec);
-    printf("ELR_EL1 = %#x\n", address);
+    printk("[ERROR] Handler for EC %u isn't implemented yet" EOL, ec);
+    printk("ELR_EL1 = %#x\n", address);
   }
 }
 
@@ -96,7 +96,7 @@ static uint64_t core_timer_jiffie = 0;
 static uint64_t system_timer_jiffie = 0;
 
 void core_timer_handler(void) {
-//  printf("Core timer interrupt, jiffies %u" EOL, ++core_timer_jiffie);
+//  printk("Core timer interrupt, jiffies %u" EOL, ++core_timer_jiffie);
 
   get_current_task()->timeslice -= 1;
 
@@ -121,7 +121,7 @@ void gpu_interrupt_handler(void) {
 }
 
 void system_timer_handler(void) {
-  printf("System timer interrupt, jiffies %u" EOL, ++system_timer_jiffie);
+  printk("System timer interrupt, jiffies %u" EOL, ++system_timer_jiffie);
 
   // Set the interval to be approximately 3 seconds
   *SYSTEM_TIMER_C1 = *SYSTEM_TIMER_CL0 + 3 * SYSTEM_TIMER_FREQUENCY;
