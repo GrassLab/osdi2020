@@ -118,7 +118,7 @@ void privilege_task_run() {
 
 void schedule() {
     struct task_t* task = queue_pop(&runqueue, ACTIVE);
-    print_s("schdule pid: ");
+    print_s("\nschdule pid: ");
     print_i(task->id);
     print_s("\n");
     queue_push(&runqueue, task);

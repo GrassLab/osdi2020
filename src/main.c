@@ -7,6 +7,7 @@
 #include "shell.h"
 #include "syscall.h"
 #include "task.h"
+#include "tests.h"
 #include "uart.h"
 
 #define GET_BOARD_REVISION 0x00010002
@@ -53,79 +54,8 @@ void idle() {
     }
 }
 
-void user1_1() {
-    uart_write("user 0\n", 7);
-    while (1)
-        ;
-}
-
-void user1() {
-    uart_write("user 1\n", 7);
-    exec(user1_1);
-    while (1)
-        ;
-}
-
-void user2() {
-    print_s("user2\n");
-    int a = fork();
-    if (a == 0) {
-        print_s("pid: ");
-        print_i(a);
-        print_s("\n");
-        while (1)
-            ;
-    } else {
-        print_s("pid: ");
-        print_i(a);
-        print_s("\n");
-        exit(2);
-        print_s("Should not be printed\n");
-    }
-}
-
-void user3() {
-    uart_write("user 3\n", 7);
-    kill(2, SIGKILL);
-    while (1)
-        ;
-}
-
-void user4() {
-    uart_write("user 4\n", 7);
-    char ch[10];
-    uart_read(ch, 1);
-    print_s("your input: ");
-    uart_write(ch, 1);
-    print_s("\n");
-    while (1)
-        ;
-}
-
-void task1() {
-    uart_write("task 1\n", 7);
-    /* do_exec(user1); */
-    kexit(3);
-}
-
-void task2() {
-    uart_write("task 2\n", 7);
-    do_exec(user2);
-}
-
-void task3() {
-    uart_write("task 3\n", 7);
-    do_exec(user3);
-}
-
-void task4() {
-    uart_write("task 4\n", 7);
-    /* while (1) */
-    /* ; */
-    do_exec(user4);
-}
-
 void zombie_killer() {
+    print_s("this is killer\n");
     while (1) {
         for (int i = 0; i < 64; i++) {
             if (task_pool[i].status == ZOMBIE) {
@@ -134,6 +64,38 @@ void zombie_killer() {
             }
         }
     }
+}
+
+void req1() {
+    privilege_task_create(sche_task, 0);
+    privilege_task_create(sche_task, 0);
+}
+
+void req3() {
+    privilege_task_create(loop_task, 0);
+    privilege_task_create(loop_task, 0);
+}
+
+void req4() {
+    privilege_task_create(exec_task, 0);
+    privilege_task_create(fork_exit_task, 0);
+}
+
+void ele1() {
+    privilege_task_create(loop_user, 0);
+    privilege_task_create(kill_task, 0);
+}
+
+void ele2() {
+    privilege_task_create(kexit_task, 0);
+    privilege_task_create(kexit_task, 0);
+}
+
+void ele3() { privilege_task_create(echo_task, 0); }
+
+void ele5() {
+    privilege_task_create(loop_ktask, 0);
+    privilege_task_create(loop_ktask, 0);
 }
 
 int main() {
@@ -153,7 +115,14 @@ int main() {
     /* privilege_task_create(task1, 0); */
     /* privilege_task_create(task2, 0); */
     /* privilege_task_create(task3, 0); */
-    privilege_task_create(task4, 0);
+
+    /* req1(); */
+    /* req3(); */
+    /* req4(); */
+    /* ele1(); */
+    ele2();
+    /* ele3(); */
+    /* ele5(); */
     privilege_task_run();
 
     /* run(); */
