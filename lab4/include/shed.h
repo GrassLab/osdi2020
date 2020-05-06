@@ -67,7 +67,9 @@ void privilege_task_create(void (*func)());
 void timer_tick();
 int move_to_user_mode();
 struct pt_regs * task_pt_regs(struct task_struct *tsk);
-void do_exec(void(*func)());
+void _do_exec(void(*func)());
+void _do_exit();
+void _do_fork();
 
 #define INIT_TASK \
 {   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \

@@ -156,6 +156,8 @@ el1_exception_table:
 
 el1_exception_handler:
     context_switch 0
+    mov     x5, x0
+    mov     x6, x1
     mov     x0, #0
     mrs     x1, esr_el1
     mrs     x2, elr_el1

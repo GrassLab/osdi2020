@@ -1,4 +1,5 @@
 #include "uart.h"
+#include "sys.h"
 
 void
 _el2_exception_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far)
@@ -14,7 +15,7 @@ _el2_exception_handler(unsigned long type, unsigned long esr, unsigned long elr,
 }
 
 void
-_el1_exception_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far)
+_el1_exception_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far, unsigned long sys_call, unsigned long arg)
 {
     unsigned int ec, iss;
     
@@ -36,8 +37,26 @@ _el1_exception_handler(unsigned long type, unsigned long esr, unsigned long elr,
         else if(iss == 0x0) {
             // svc #0 for time interrupts
             // uart_puts("#0\r\n");
-            local_timer_init();
-			core_timer_init();
+            uart_print_int(sys_call);
+            uart_puts("\r\n");
+            if(sys_call == SYS_WRITE_NUMBER) {
+                do_uart_write(arg);
+            } else if(sys_call == SYS_READ_NUMBER) {
+                do_uart_read(arg);
+            } else if(sys_call == SYS_EXEC_NUMBER) {
+                uart_puts("exec\r\n");
+                do_exec(arg);
+            } else if(sys_call == SYS_FORK_NUMBER) {
+                
+            } else if(sys_call == SYS_EXIT_NUMBER) {
+                
+            } else {
+                local_timer_init();
+			    core_timer_init();
+            }
+            // uart_print_int(sys_call);
+            // local_timer_init();
+			// core_timer_init();
         }
     }
 }

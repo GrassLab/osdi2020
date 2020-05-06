@@ -1,20 +1,24 @@
 #include "shed.h"
 #include "mm.h"
 
-void sys_write(char * buf){
-	
+void do_uart_write(char *arg) {
+	uart_puts(arg);
 }
 
-int sys_clone(unsigned long stack){
-	
+void do_uart_read(char *line) {
+	uart_read_line(line);
 }
 
-unsigned long sys_malloc(){
-	
+void do_exec(void(*func)()) {
+    _do_exec(func);
 }
 
-void sys_exit(){
-	
+void do_fork() {
+	_do_fork();
 }
 
-void * const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit};
+void do_exit() {
+	_do_exit();
+}
+
+void * const sys_call_table[] = {do_uart_write, do_uart_read, do_exec, do_fork, do_exit};

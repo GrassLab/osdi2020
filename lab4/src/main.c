@@ -7,6 +7,8 @@
 #include "irq.h"
 #include "asm.h"
 #include "shed.h"
+#include "sys.h"
+#include "unistd.h"
 
 #define	CMD_HELP	"help"
 #define	CMD_HELLO	"hello"
@@ -33,6 +35,7 @@ void _foo() {
 
 void foo(){
 	do_exec(_foo);
+	// schedule();
 	// while(1) {
 	// 	struct task_struct *current = get_current_task();
 	// 	uart_puts("Task id: ");
@@ -63,7 +66,7 @@ void main() {
 
 	// privilege_task_create(foo);
 
-	schedule();
+	// schedule();
 	// while (1){
 	// 	schedule();
 	// }

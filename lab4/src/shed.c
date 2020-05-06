@@ -155,7 +155,7 @@ void timer_tick() {
 //     move_to_user_mode(func);
 // }
 
-void do_exec(void(*func)()) {
+void _do_exec(void(*func)()) {
     struct pt_regs *regs = task_pt_regs(current);
     memzero((unsigned long)regs, sizeof(*regs));
     regs->pc = (unsigned long)func;
@@ -167,4 +167,14 @@ void do_exec(void(*func)()) {
     regs->sp = stack + PAGE_SIZE;
     current->stack = stack;
     uart_puts("do_exec done.\r\n");
+}
+
+void _do_exit() {
+    current->state = TASK_ZOMBIE;
+    current->counter = 0;
+    schedule();
+}
+
+void _do_fork() {
+    
 }
