@@ -20,13 +20,6 @@ delay:
 	bne delay
 	ret
 
-.globl memzero
-memzero:
-	str xzr, [x0], #8
-	subs x1, x1, #8
-	b.gt memzero
-	ret
-
 .global asm_delay
 asm_delay:
   // delay a second

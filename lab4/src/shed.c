@@ -29,33 +29,70 @@ void current_task_info() {
 }
 
 void privilege_task_create(void (*func)()) {
+    _privilege_task_create(func, 1, n_task_id);
+}
+
+void _privilege_task_create(void (*func)(), int clone_flags, unsigned long stack) {
     disable_preempt();
-    struct task_struct *new_task = (struct task_struct *) get_free_page();
-    if(!new_task) {
+    struct task_struct *p = (struct task_struct *) get_free_page();
+    if(!p) {
         uart_puts("Fail to create a new task...\r\n");
         return;
     }
 
-    new_task->task_id = n_task_id;
-    new_task->counter = 5;
-    new_task->state = TASK_RUNNING;
-    new_task->preempt_count = 1;
-    new_task->cpu_context.x19 = (unsigned long) func;
-    new_task->cpu_context.pc = (unsigned long) ret_from_fork;
-    new_task->cpu_context.sp = (unsigned long) new_task + THREAD_SIZE;
-    new_task->parent_id = current->task_id;
+    struct pt_regs *childregs = task_pt_regs(p);
+	memzero((unsigned long)childregs, sizeof(struct pt_regs));
+	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
+
+    if (clone_flags & PF_KTHREAD) {
+		p->cpu_context.x19 = func;
+	} else {
+		struct pt_regs * cur_regs = task_pt_regs(current);
+		*childregs = *cur_regs;
+		childregs->regs[0] = 0;
+		childregs->sp = stack + PAGE_SIZE;
+		p->stack = stack;
+	}
+
+    p->task_id = n_task_id;
+    p->counter = 5;
+    p->state = TASK_RUNNING;
+    p->preempt_count = 1;
+    p->cpu_context.x19 = (unsigned long) func;
+    p->cpu_context.pc = (unsigned long) ret_from_fork;
+    p->cpu_context.sp = (unsigned long) p + THREAD_SIZE;
+    p->parent_id = current->task_id;
     n_task_id++;
 
-    task[n_tasks] = new_task;
+    task[n_tasks] = p;
     n_tasks %= NR_TASKS;
     n_tasks++;
 
     // print created message
     uart_puts("Create new task: ");
-    uart_print_int(new_task->task_id);
+    uart_print_int(p->task_id);
     uart_puts("\r\n");
     enable_preempt();
     return;
+}
+
+int move_to_user_mode(unsigned long pc) {
+    struct pt_regs *regs = task_pt_regs(current);
+    memzero((unsigned long)regs, sizeof(*regs));
+    regs->pc = pc;
+    regs->pstate = PSR_MODE_EL0t;
+    unsigned long stack = get_free_page(); //allocate new user stack
+    if (!stack) {
+        return -1;
+    }
+    regs->sp = stack + PAGE_SIZE;
+    current->stack = stack;
+    return 0;
+}
+
+struct pt_regs * task_pt_regs(struct task_struct *tsk){
+	unsigned long p = (unsigned long)tsk + THREAD_SIZE - sizeof(struct pt_regs);
+	return (struct pt_regs *)p;
 }
 
 void switch_to(struct task_struct * next)  {
@@ -81,22 +118,13 @@ void _schedule() {
             next = i;
         }
     }
-    // if(c) {
-    //     break;
-    // }
-    // for(int i=0; i<NR_TASKS; i++) {
-    //     p = task[i];
-    //     if(p) {
-    //         p->counter = 3;
-    //     }
-    // }
     switch_to(task[next]);
     enable_preempt();
 }
 
 void schedule() {
     // current->counter = 0;
-    // _schedule();
+    _schedule();
     // timer_tick();
 }
 
@@ -120,4 +148,8 @@ void timer_tick() {
     uart_puts("Rescheduling...\r\n");
 	_schedule();
 	disable_irq();
+}
+
+void do_exec(void(*func)()) {
+    move_to_user_mode(func);
 }
