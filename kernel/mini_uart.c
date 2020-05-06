@@ -1,3 +1,4 @@
+#include "lock.h"
 #include "mini_uart.h"
 
 void gpio_init(void) {
@@ -23,6 +24,8 @@ void gpio_init(void) {
   *GPPUD = 0;
   // Remove the clock.
   *GPPUDCLK0 = 0;
+
+  mutex_init(&uart_lock);
 }
 
 void mini_uart_init(void) {
@@ -73,8 +76,14 @@ void mini_uart_putc(uint8_t c) {
   *AUX_MU_IO_REG = c;
 }
 
-void mini_uart_puts(uint8_t *s) {
-  for (uint8_t *iter = s; *iter != '\0'; ++iter) {
-    mini_uart_putc(*iter);
+void mini_uart_putn(const uint8_t *buf, uint32_t n) {
+  for (uint32_t i = 0; i < n; ++i) {
+    mini_uart_putc(buf[i]);
+  }
+}
+
+void mini_uart_puts(const uint8_t *buf) {
+  for (; *buf != '\0'; ++buf) {
+    mini_uart_putc(*buf);
   }
 }

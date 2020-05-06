@@ -24,7 +24,7 @@ uint32_t get_board_revision() {
   return mailbox[5];
 }
 
-uint32_t get_vc_memory(void) {
+uint64_t get_vc_memory(void) {
   uint32_t __attribute__((aligned(16))) mailbox[8];
 
   // buffer size in bytes.
@@ -44,7 +44,7 @@ uint32_t get_vc_memory(void) {
   mailbox[7] = 0;
 
   mailbox_call(mailbox);
-  return mailbox[5];
+  return *((uint64_t *)&mailbox[5]);
 }
 
 void mailbox_call(uint32_t *mailbox) {

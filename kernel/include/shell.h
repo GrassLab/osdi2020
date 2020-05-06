@@ -5,16 +5,9 @@
 
 #define MAX_CMD_LEN 1024
 #define MAX_TIMER_FRACTION_LEN 6
-#define EOL "\n"
 
 extern char __text_start[];
 extern char __text_end[];
-
-int strcmp(const char *s1, const char *s2);
-uint32_t strlen(const char *s);
-int isspace(char c);
-char *strtrim(char *s);
-char *uitos(uint64_t num, char *buf);
 
 #define PM_RSTC ((uint32_t *)0x3f10001c)
 #define PM_WDOG ((uint32_t *)0x3f100024)

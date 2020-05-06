@@ -1,18 +1,18 @@
 CFLAGS = -ffreestanding -nostartfiles -nostdlib -g
+INCS = -I kernel/include -I lib/include
 
-ASM_FILES = $(wildcard src/*.S)
-C_FILES = $(wildcard src/*.c)
-OBJS = $(ASM_FILES:.S=.o)
-OBJS += $(C_FILES:.c=.o)
+ASM_FILES = $(shell find kernel lib -name "*.S")
+C_FILES = $(shell find kernel lib -name "*.c")
+OBJS = $(ASM_FILES:%.S=%_s.o) $(C_FILES:%.c=%_c.o)
 
 .PHONY: all clean
 
 all: kernel8.img
 
-src/%.o: src/%.c
-	aarch64-linux-gnu-gcc $(CFLAGS) -c -o $@ $<
+%_c.o: %.c
+	aarch64-linux-gnu-gcc $(INCS) $(CFLAGS) -c -o $@ $<
 
-src/%.o: src/%.S
+%_s.o: %.S
 	aarch64-linux-gnu-gcc -c -o $@ $<
 
 kernel8.img: $(OBJS)
@@ -26,4 +26,4 @@ debug:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s -serial null -serial stdio
 
 clean:
-	@rm src/*.o kernel8.*
+	@rm -rf $(OBJS) kernel8.*
