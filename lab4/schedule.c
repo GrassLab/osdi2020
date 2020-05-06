@@ -40,6 +40,7 @@ int privilege_task_create(unsigned long func, int usr) {
     p->is_usr = 1;
     user_pool[task_id].elr_el1 = func;
     user_pool[task_id].sp = &ustack_pool[task_id][THREAD_SIZE];
+    printf(" sp = > %x\n", user_pool[task_id].sp);
     p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
   } else {
     p->cpu_context.x19 = func;
@@ -81,6 +82,7 @@ void schedule() {
       break;
     }
   }
+  printf("====switch  to %d ====\n", task_id);
   context_switch(task_id);
 }
 
@@ -124,11 +126,20 @@ void do_exec(unsigned long fun) {
 
 void exec(unsigned long rfun) {
   unsigned long rf = rfun;
-  printf("exec = %x\n", rf);
+  printf("exec = %x", rf);
   asm volatile("mov x0, #2");
   asm volatile("mov x1, %0" ::"r"(rf) :);
   asm volatile("svc #0");
 }
+int get_taskid() {
+  asm volatile("mov x0, #9");
+  asm volatile("svc #0");
+  unsigned long current;
+  asm volatile("mov %[result], x0" : [result] "=r"(current));
+  printf("ret = %x \n", current);
+  return current;
+}
+int do_get_current() { return get_current(); }
 
 int fork() {
   asm volatile("mov x0, #7");
@@ -153,8 +164,8 @@ int do_fork() {
 
   memcpy((unsigned short *)ks[task_id], (unsigned short *)ks[nowid],
          THREAD_SIZE);
-  printf("copy user stack   %x <= %x\n", &ustack_pool[task_id][THREAD_SIZE],
-         &ustack_pool[nowid][THREAD_SIZE]);
+  // printf("copy user stack   %x <= %x\n", &ustack_pool[task_id][THREAD_SIZE],
+  //        &ustack_pool[nowid][THREAD_SIZE]);
 
   for (int i = 0; i < THREAD_SIZE; i++) {
     ustack_pool[task_id][i] = ustack_pool[nowid][i];
@@ -244,14 +255,14 @@ void ut1() {
   while (1) {
     int cnt = 1;
     printf("test1 %x \n", &cnt);
-    wait_cycles(100000000);
+    wait_cycles(10000000);
   }
 }
 void ut2() {
   while (1) {
     int cnt = 1;
     printf("test2 %x \n", &cnt);
-    wait_cycles(100000000);
+    wait_cycles(10000000);
   }
 }
 void user_test1() { do_exec((unsigned long)&ut1); }
@@ -278,15 +289,43 @@ void test2() {
   schedule();
 }
 
+// void test() {
+//   // int cnt = 1;
+//   printf("Task\n");
+//   wait_cycles(10000000);
+//   int i = fork();
+//   printf("i = %d\n", i);
+//   printf("endfork\n");
+//   exit(0);
+//   exec((unsigned long)&tt);
+// }
+
 void test() {
+  exec((unsigned long)&foo);
   // int cnt = 1;
-  printf("Task\n");
-  wait_cycles(10000000);
-  int i = fork();
-  printf("i = %d\n", i);
-  printf("endfork\n");
-  exit(0);
-  exec((unsigned long)&tt);
+  // if (fork() == 0) {
+  //   // fork();
+  //   // wait_cycles(100000);
+  //   // fork();
+  //   printf("child\n");
+  //   while (cnt < 10) {
+  //     printf("cTask id: %d, cnt: %d\n", get_taskid(), cnt);
+  //     wait_cycles(100000);
+  //     ++cnt;
+  //   }
+  //   exit(0);
+  //   printf("Should not be printed\n");
+  // } else {
+  //   while (cnt < 10) {
+  //     printf("fTask id: %d, cnt: %d\n", get_taskid(), cnt);
+  //     wait_cycles(100000);
+  //     ++cnt;
+  //   }
+  //   exit(0);
+  // printf("Task %d before exec, cnt address 0x%x, cnt value %d\n",
+  //        get_taskid(), &cnt, cnt);
+  // exec((unsigned long)&foo);
+  // }
 }
 
 void user_test() { do_exec((unsigned long)&test); }

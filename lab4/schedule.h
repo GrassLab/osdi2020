@@ -16,7 +16,8 @@ void jmp_to_usr();
 int do_fork();
 void exit(int i);
 void do_exit();
-
+int get_taskid();
+int do_get_current();
 typedef struct cpu_context_t
 {
     unsigned long x19;

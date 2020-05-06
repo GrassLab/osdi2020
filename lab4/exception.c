@@ -22,8 +22,9 @@ void print_time() {
   printf("%d ms\n", result);
 }
 
-void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
-             unsigned int x3) {
+int syscall(unsigned int x0, unsigned int x1, unsigned int x2,
+            unsigned int x3) {
+  int rev = 0;
   switch (x0) {
   case 0:
     core_timer_enable();
@@ -36,16 +37,21 @@ void syscall(unsigned int x0, unsigned int x1, unsigned int x2,
     do_exec(x1);
     break;
   case 7:
-    do_fork();
+    rev = do_fork();
     break;
   case 8:
     do_exit();
     break;
+  case 9:
+    rev = do_get_current();
+    break;
   }
+  return rev;
 }
 
-void exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
-                      unsigned int x3) {
+int exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
+                     unsigned int x3) {
+  int rev = 0;
   unsigned int elr_el1, esr_el1;
   unsigned int ec, iss;
   asm volatile("MRS %[result], elr_el1" : [result] "=r"(elr_el1));
@@ -54,7 +60,7 @@ void exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
   iss = esr_el1 & 0xffffff;
   if (ec == 0x15) {
     if (iss == 0) {
-      syscall(x0, x1, x2, x3);
+      rev = syscall(x0, x1, x2, x3);
     } else {
       printf("Exception return address 0x%x\r\n", elr_el1);
       printf("Exception class (EC) 0x%x\r\n", ec);
@@ -64,4 +70,5 @@ void exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
     // printf("OMG\n");
     // printf("Exception class (EC) 0x%x\r\n", ec);
   }
+  return rev;
 }
