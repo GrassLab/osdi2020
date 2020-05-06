@@ -35,7 +35,7 @@ uint32_t privilege_task_init(void) {
   return id;
 }
 
-void privilege_task_create(void(*func)(void)) {
+uint32_t privilege_task_create(void(*func)(void)) {
   uint32_t id = privilege_task_init();
 
   task_pool[id].context.x19 = (uint64_t)func;
@@ -43,6 +43,7 @@ void privilege_task_create(void(*func)(void)) {
   /* "+1" because stack grows toward lower address. */
   task_pool[id].context.sp = (uint64_t)kstack_pool[id + 1];
   enqueue(&runqueue, &task_pool[id]);
+  return id;
 }
 
 void context_switch(struct task *next) {

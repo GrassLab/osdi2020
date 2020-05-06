@@ -72,6 +72,20 @@ void user_test(void) {
   do_exec(test);
 }
 
+void signal_test_receiver(void) {
+  while (true) {
+    printf("Task id: %u, Waiting for SIGKILL" EOL, do_get_taskid());
+    delay(100000);
+  }
+}
+
+void signal_test_sender(void) {
+  uint32_t receiver_id = privilege_task_create(signal_test_receiver);
+  do_kill(receiver_id, SIGKILL);
+  printf("Task id: %u, Created and sent SIGKILL to %u" EOL, do_get_taskid(), receiver_id);
+  do_exit(0);
+}
+
 int main(void) {
   gpio_init();
   mini_uart_init();
@@ -83,9 +97,10 @@ int main(void) {
   idle_task_create();
   privilege_task_create(reaper);
   for (int i = 0; i < 1; ++i) {
-    //privilege_task_create(foo);
     privilege_task_create(user_test);
   }
+
+  privilege_task_create(signal_test_sender);
 
   idle();
 }

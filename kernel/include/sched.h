@@ -53,7 +53,7 @@ uint8_t __attribute__((aligned(16))) ustack_pool[MAX_TASK_NUM][MAX_STACK_SIZE];
 
 void idle_task_create(void);
 uint32_t privilege_task_init(void);
-void privilege_task_create(void(*func)(void));
+uint32_t privilege_task_create(void(*func)(void));
 void context_switch(struct task *next);
 void schedule();
 
