@@ -8,6 +8,7 @@
 #include "schedule.h"
 #include "sys.h"
 #include "mm.h"
+#include "signal.h"
 
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
 uint64_t cntfrq_el0, cntpct_el0;
@@ -109,6 +110,17 @@ void _k_sys_fork(struct trapframe* trapframe) {
     trapframe->x[0] = child_task->id;
 }
 
+void _k_sys_kill(struct trapframe* trapframe) {
+    uint32_t pid = trapframe->x[0];
+    int sig = trapframe->x[1];
+
+    switch (sig) {
+        case SIG_KILL:
+            SET(task_pool[pid].flag, KILL_BIT);
+            break;
+    }
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_CNTFRQ:
@@ -135,8 +147,12 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
             _k_sys_fork(trapframe);
             break;
 
-        case SYS_EXiT:
+        case SYS_EXIT:
             _k_sys_exit(trapframe);
+            break;
+
+        case SYS_KILL:
+            _k_sys_kill(trapframe);
             break;
     }
 }
@@ -196,17 +212,23 @@ void arm_core_timer_intr_handler() {
     register unsigned int expire_period = CORE_TIMER_EXPRIED_PERIOD;
     asm volatile("msr cntp_tval_el0, %0" : : "r"(expire_period));
 
+    // check flag has SIGKILL
+    if (HAS(current_task->flag, KILL_BIT)) {
+        do_exit(0);
+        return;
+    }
+
     current_task->counter--;
-    if (current_task->counter > 0 || !current_task->preemptable_flag) {
+    if (current_task->counter > 0) {
         return;
     }
     uart_printf("reschedule from %d\n", current_task->id);
     current_task->counter = 0;
-    current_task->reschedule_flag = 1;
+    SET(current_task->flag, RESCHEDULE_BIT);
     irq_enable();
     schedule();
     irq_disable();
-    current_task->reschedule_flag = 0;
+    CLR(current_task->flag, RESCHEDULE_BIT);
     current_task->counter = current_task->priority;
 }
 

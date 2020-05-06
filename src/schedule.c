@@ -6,20 +6,45 @@
 #include "sysregs.h"
 #include "util.h"
 #include "sys.h"
+#include "signal.h"
 
 struct runqueue runqueue;
 struct task_struct task_pool[TASK_POOL_SIZE];
 struct task_struct *current_task;
 
 void preempt_disable() {
-    current_task->preemptable_flag = 0;
+    CLR(current_task->flag, PREEMPTABLE_BIT);
 }
 
 void preempt_enable() {
-    current_task->preemptable_flag = 1;
+    SET(current_task->flag, PREEMPTABLE_BIT);
 }
 
 /* task can be executed */
+
+void demo_sigkill_user() {
+    int cnt = 3;
+    int id = fork();
+    uart_printf("task id: %d fork return: %d\n", current_task->id, id);
+    if (id > 0) { // parent process
+        while(cnt--) {
+            uart_printf("Hello from parent %d\n", current_task->id);
+            for(int i = 0; i < 100000; i++);
+        }
+        kill(id, SIG_KILL);
+        exit(0);
+    }
+    else if (id == 0) { // child process
+        while(1) {
+            uart_printf("Hello from child %d\n", current_task->id);
+            for(int i = 0; i < 100000; i++);
+        }
+    }
+}
+
+void demo_sigkill() {
+    do_exec(demo_sigkill_user);
+}
 
 void demo_priviledge() {
     while (1) {
@@ -113,8 +138,7 @@ void schedule_init() {
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         task_pool[i].id = i;
         task_pool[i].state = EXIT;
-        task_pool[i].reschedule_flag = 0;
-        task_pool[i].preemptable_flag = 1;
+        task_pool[i].flag = INIT_FLAG;
         task_pool[i].priority = INIT_PRIORITY;
         task_pool[i].counter = task_pool[i].priority;
     }
@@ -124,9 +148,11 @@ void schedule_init() {
     current_task->state = RUNNING;
     current_task->kstack = (char*) KERNEL_BASE;
     QUEUE_PUSH(runqueue, current_task);
-
     privilege_task_create(zombie_reaper);
-    privilege_task_create(demo_do_exec);
+
+    // demo tasks
+    privilege_task_create(demo_sigkill);
+    // privilege_task_create(demo_do_exec);
     // privilege_task_create(demo_priviledge);
     // privilege_task_create(demo_priviledge);
 

@@ -7,7 +7,6 @@ get_cntfrq:
     svc #0
     ret
 
-
 .global get_cntpct
 get_cntpct:
     mov x8, SYS_GET_CNTPCT
@@ -40,6 +39,12 @@ fork:
 
 .global exit
 exit:
-    mov x8, SYS_EXiT
+    mov x8, SYS_EXIT
+    svc #0
+    ret
+
+.global kill
+kill:
+    mov x8, SYS_KILL
     svc #0
     ret
