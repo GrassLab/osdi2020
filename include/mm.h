@@ -26,6 +26,7 @@ extern struct stack_struct ustack_pool[];
 void mm_init();
 char* get_avaliable_ustack();
 char* get_avaliable_kstack();
-void release_ustack(int id);
+void release_ustack(int task_id);
+void release_kstack(int task_id);
 
 #endif

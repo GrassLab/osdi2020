@@ -36,9 +36,9 @@ struct task_struct {
     uint64_t priority;
     uint64_t counter;
     int exit_status;
-    // stack position, decide after privilege_task_create
-    char *kstack;
-    char *ustack;
+    // stack pointer
+    char *kstack;  // decide after privilege_task_create
+    char *ustack;  // decide after exec / fork
     // flags
     uint8_t reschedule_flag;
     uint8_t preemptable_flag;

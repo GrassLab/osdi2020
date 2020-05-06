@@ -24,6 +24,15 @@ char* get_avaliable_ustack() {
     return 0;
 }
 
+void release_kstack(int task_id) {
+    for (int i = 0; i < TASK_POOL_SIZE; i++) {
+        if (kstack_pool[i].task_id == task_id) {
+            kstack_pool[i].avaliable = 1;
+            break;
+        }
+    }
+}
+
 void release_ustack(int task_id) {
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         if (ustack_pool[i].task_id == task_id) {

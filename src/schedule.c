@@ -83,6 +83,20 @@ int privilege_task_create(void(*func)()) {
     return new_task->id;
 }
 
+void zombie_reaper() {
+    while (1) {
+        for (int i = 0; i < TASK_POOL_SIZE; i++) {
+            if (task_pool[i].state == ZOMBIE) {
+                uart_printf("reaper %d!\n", i);
+                task_pool[i].state = EXIT;
+                // release kernel stack
+                release_kstack(i);
+            }
+        }
+        schedule();
+    }
+}
+
 void schedule_init() {
     QUEUE_INIT(runqueue, TASK_POOL_SIZE);
 
@@ -101,6 +115,7 @@ void schedule_init() {
     current_task->kstack = (char*) KERNEL_BASE;
     QUEUE_PUSH(runqueue, current_task);
 
+    privilege_task_create(zombie_reaper);
     privilege_task_create(demo_do_exec);
     // privilege_task_create(demo_priviledge);
     // privilege_task_create(demo_priviledge);
