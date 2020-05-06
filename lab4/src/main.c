@@ -20,7 +20,7 @@
 
 void get_timestamp();
 
-void foo(){
+void _foo() {
 	while(1) {
 		struct task_struct *current = get_current_task();
 		uart_puts("Task id: ");
@@ -29,6 +29,18 @@ void foo(){
 		delay(1000000000);
 		schedule();
 	}
+}
+
+void foo(){
+	do_exec(_foo);
+	// while(1) {
+	// 	struct task_struct *current = get_current_task();
+	// 	uart_puts("Task id: ");
+	// 	uart_print_int(current -> task_id);
+	// 	uart_puts("\r\n");
+	// 	delay(1000000000);
+	// 	schedule();
+	// }
 }
 
 void idle(){
@@ -44,12 +56,17 @@ void main() {
 	asm volatile ("mov x0, #0\n" "svc #0\n");
 	
 
-	for(int i = 0; i < 3; ++i) { // N should > 2
+	for(int i = 0; i < 10; ++i) { // N should > 2
 		// uart_puts("hihi\r\n");
 		privilege_task_create(foo);
 	}
 
-	idle();
+	// privilege_task_create(foo);
+
+	schedule();
+	// while (1){
+	// 	schedule();
+	// }
 }
 
 // void main()

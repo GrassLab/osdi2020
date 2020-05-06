@@ -29,7 +29,7 @@ void current_task_info() {
 }
 
 void privilege_task_create(void (*func)()) {
-    _privilege_task_create(func, 1, n_task_id);
+    _privilege_task_create(func, PF_KTHREAD, n_task_id);
 }
 
 void _privilege_task_create(void (*func)(), int clone_flags, unsigned long stack) {
@@ -54,13 +54,14 @@ void _privilege_task_create(void (*func)(), int clone_flags, unsigned long stack
 		p->stack = stack;
 	}
 
+    p->flag = clone_flags;
     p->task_id = n_task_id;
     p->counter = 5;
     p->state = TASK_RUNNING;
     p->preempt_count = 1;
     p->cpu_context.x19 = (unsigned long) func;
     p->cpu_context.pc = (unsigned long) ret_from_fork;
-    p->cpu_context.sp = (unsigned long) p + THREAD_SIZE;
+    p->cpu_context.sp = (unsigned long) childregs;
     p->parent_id = current->task_id;
     n_task_id++;
 
@@ -150,6 +151,20 @@ void timer_tick() {
 	disable_irq();
 }
 
+// void do_exec(void(*func)()) {
+//     move_to_user_mode(func);
+// }
+
 void do_exec(void(*func)()) {
-    move_to_user_mode(func);
+    struct pt_regs *regs = task_pt_regs(current);
+    memzero((unsigned long)regs, sizeof(*regs));
+    regs->pc = (unsigned long)func;
+    regs->pstate = PSR_MODE_EL0t;
+    unsigned long stack = get_free_page(); //allocate new user stack
+    if (!stack) {
+        return -1;
+    }
+    regs->sp = stack + PAGE_SIZE;
+    current->stack = stack;
+    uart_puts("do_exec done.\r\n");
 }
