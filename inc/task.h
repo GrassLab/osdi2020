@@ -2,7 +2,7 @@
 #define TASK_H
 
 #include <stdint.h>
-#define RUNQUEUE_SIZE 64
+#define QUEUE_ELE_SIZE 64
 #define STACK_SIZE 4096
 #define SIGKILL 1
 #define ACTIVE 1
@@ -32,15 +32,22 @@ struct task_t {
 
 struct queue_element_t {
     struct task_t* task;
+    struct queue_element_t* next ;
     int is_active;
 };
 
+struct queue{
+    struct queue_element_t* head;
+    struct queue_element_t* tail;
+};
+
 struct task_t task_pool[64];
-struct queue_element_t runqueue[RUNQUEUE_SIZE];
-int runqueue_now;
-int runqueue_last;
+struct queue_element_t queue_elements[QUEUE_ELE_SIZE];
+int queue_elements_now;
 struct task_t* get_current();
 struct task_t* privilege_task_create(void (*func)());
+struct queue runqueue;
+struct queue waitqueue;
 char kstack_pool[64][STACK_SIZE];
 char ustack_pool[64][STACK_SIZE];
 
@@ -48,7 +55,8 @@ void context_switch(struct task_t* next);
 void privilege_task_run(struct task_t* this_task);
 void schedule();
 void task_init();
-void runqueue_push(struct task_t* task);
+void queue_push(struct queue* queue, struct task_t* task);
+struct task_t* queue_pop(struct queue* queue);
 void do_exec(void (*func)());
 void do_fork(uint64_t elr);
 void do_exit(uint64_t status);

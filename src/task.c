@@ -30,29 +30,42 @@ void context_switch(struct task_t* next) {
     }
 }
 
-void runqueue_push(struct task_t* task) {
-    runqueue[runqueue_last].task = task;
-    runqueue[runqueue_last].is_active = 1;
-    runqueue_last = (runqueue_last + 1) % RUNQUEUE_SIZE;
+void queue_push(struct queue* queue, struct task_t* task) {
+    struct queue_element_t* queue_element = &queue_elements[queue_elements_now];
+    queue_elements_now++;
+    queue_element->task = task;
+    /* queue_elements[queue_elements_now].is_active = 1; */
+    if (queue->tail == 0) {
+        queue->tail = queue_element;
+        queue->head = queue_element;
+    } else {
+        queue->tail->next = queue_element;
+        queue->tail = queue_element;
+    }
 }
 
-struct task_t* runqueue_pop() {
+struct task_t* queue_pop(struct queue* queue) {
     struct task_t* task;
-    int now;
-    for (int i = 0; i < RUNQUEUE_SIZE; i++) {
-        now = (runqueue_now + i) % RUNQUEUE_SIZE;
-        if (runqueue[now].is_active) {
-            /* runqueue[runqueue_now].is_active = 0; */
-            task = runqueue[now].task;
-            if (task->status != ACTIVE) {
-                runqueue[now].is_active = 0;
-                continue;
-            }
-            runqueue_now = (now + 1) % RUNQUEUE_SIZE;
+    if (queue->head == 0) {
+        return &task_pool[0];
+    } else if (queue->head == queue->tail) {
+        task = queue->head->task;
+        queue->head = 0;
+        queue->tail = 0;
+        if (task->status != ACTIVE) {
+            return queue_pop(&runqueue);
+        } else {
+            return task;
+        }
+    } else {
+        task = queue->head->task;
+        queue->head = queue->head->next;
+        if (task->status != ACTIVE) {
+            return queue_pop(&runqueue);
+        } else {
             return task;
         }
     }
-    return &task_pool[0];
 }
 
 struct task_t* privilege_task_create(void (*func)()) {
@@ -72,13 +85,13 @@ struct task_t* privilege_task_create(void (*func)()) {
             break;
         }
     }
-    runqueue_push(task);
+    queue_push(&runqueue, task);
     return task;
 }
 
 void task_init() {
-    runqueue_now = 0;
-    runqueue_last = 0;
+    runqueue.head = 0;
+    runqueue.tail = 0;
 }
 
 void privilege_task_run(struct task_t* this_task) {
@@ -87,7 +100,8 @@ void privilege_task_run(struct task_t* this_task) {
 }
 
 void schedule() {
-    struct task_t* task = runqueue_pop();
+    struct task_t* task = queue_pop(&runqueue);
+    queue_push(&runqueue, task);
     context_switch(task);
 }
 
@@ -152,7 +166,7 @@ void do_fork(uint64_t elr) {
             break;
         }
     }
-    runqueue_push(child_task);
+    queue_push(&runqueue, child_task);
 }
 
 void kexit(uint64_t status) {
