@@ -113,47 +113,53 @@ int shell_execute(char *cmd, int el) {
 #endif
   else if (EQS("exc", cmd)) {
 
+    if(!el) puts("cannot do exc on el0 currently");
+    else{
 #if defined(RUN_ON_EL1) || defined(RUN_ON_EL2)
-    get_current_el();
+      get_current_el();
 #endif
 
 #if 1
-    int *sp;
-    __asm__ volatile("mov %0, sp" : "=r"(sp));
-    printf("sp = 0x%x\n", sp);
+      int *sp;
+      __asm__ volatile("mov %0, sp" : "=r"(sp));
+      printf("sp = 0x%x\n", sp);
 #endif
 
-    //        unsigned long gpr_ctx[31];
-    //        unsigned long ret_ctx[31];
-    //#define SAVE_GPRCTX(x, ctxp)  __asm__ volatile ("str x" #x ", %0" :
-    //"=m"(ctxp[x])); #define save_ctx 1 #if save_ctx #define SAVE_PRECTX(x)
-    // SAVE_GPRCTX(x, gpr_ctx)
-    //        MAP(SAVE_PRECTX, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-    //                10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-    //                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30);
-    //#endif
+      //        unsigned long gpr_ctx[31];
+      //        unsigned long ret_ctx[31];
+      //#define SAVE_GPRCTX(x, ctxp)  __asm__ volatile ("str x" #x ", %0" :
+      //"=m"(ctxp[x])); #define save_ctx 1 #if save_ctx #define SAVE_PRECTX(x)
+      // SAVE_GPRCTX(x, gpr_ctx)
+      //        MAP(SAVE_PRECTX, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+      //                10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+      //                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30);
+      //#endif
 
-    __asm__ volatile("svc #1");
+      __asm__ volatile("svc #1");
 
-    //#define SAVE_RETCTX(x) SAVE_GPRCTX(x, ret_ctx)
-    //        MAP(SAVE_RETCTX, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-    //                10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-    //                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30);
-    //
-    //#define diffctx
-    //#ifdef diffctx
-    //        for(int i = 0; i < 31; i++)
-    //            printf("ctx diff (pre:ret) x%d (%d:%d)\n", i, gpr_ctx[i],
-    //            ret_ctx[i]);
-    //#endif
+      //#define SAVE_RETCTX(x) SAVE_GPRCTX(x, ret_ctx)
+      //        MAP(SAVE_RETCTX, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+      //                10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+      //                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30);
+      //
+      //#define diffctx
+      //#ifdef diffctx
+      //        for(int i = 0; i < 31; i++)
+      //            printf("ctx diff (pre:ret) x%d (%d:%d)\n", i, gpr_ctx[i],
+      //            ret_ctx[i]);
+      //#endif
+    }
   } else if (EQS("brk", cmd)) {
+    if(!el) puts("cannot do exc on el0 currently");
+    else{
 #if 1
-    int *sp;
-    __asm__ volatile("mov %0, sp" : "=r"(sp));
-    printf("sp = 0x%x\n", sp);
+      int *sp;
+      __asm__ volatile("mov %0, sp" : "=r"(sp));
+      printf("sp = 0x%x\n", sp);
 #endif
-    __asm__ volatile("brk #1");
-    puts("ret from brk");
+      __asm__ volatile("brk #1");
+      puts("ret from brk");
+    }
   } else if (EQS("irq", cmd)) {
     if(el){
       sys_timer_init();

@@ -297,8 +297,8 @@ void kernel_process(){
   //privilege_task_create(task_3, 0);
   //privilege_task_create(task_4, 0);
   //irq_shell_loop();
-  puts("kernel stack:");
-  show_sp();
+  //puts("kernel stack:");
+  //show_sp();
   do_exec((unsigned long)user_exit);
   //exit();
   //do_exec((unsigned long)user_write);
