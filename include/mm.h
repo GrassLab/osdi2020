@@ -12,13 +12,20 @@
 
 #ifndef IN_ASM // asm may also include this header file
 
-extern char* kstack_pool[];
-extern char* ustack_pool[];
-extern int kstack_avaliable[];
-extern int ustack_avaliable[];
+#include "stdint.h"
+
+struct stack_struct {
+    char* top;
+    uint64_t task_id;
+    uint8_t avaliable;
+};
+
+extern struct stack_struct kstack_pool[];
+extern struct stack_struct ustack_pool[];
 
 void mm_init();
 char* get_avaliable_ustack();
 char* get_avaliable_kstack();
+void release_ustack(int id);
 
 #endif

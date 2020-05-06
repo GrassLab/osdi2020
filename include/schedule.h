@@ -57,4 +57,5 @@ void context_switch(struct task_struct *next);
 void schedule();
 void do_exec(void (*func)());
 int do_fork();
+void do_exit(int status);
 extern void switch_to(struct cpu_context* prev, struct cpu_context* next);

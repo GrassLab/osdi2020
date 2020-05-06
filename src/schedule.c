@@ -38,9 +38,14 @@ void demo_sys_exec() {
 void demo_do_exec_user_mode() {
     int id = fork();
     uart_printf("id: %d fork: %d\n", current_task->id, id);
+    if (id == 0) {
+        uart_printf("%d exit!\n", current_task->id);
+        exit(0);
+    }
+
     while(1) {
         uart_printf("[%f] hello from %d in user mode\n", get_timestamp(), current_task->id);
-        for (int i = 0; i < 1000000; i++);
+        for (int i = 0; i < 100000000; i++);
     }
 }
 
@@ -138,4 +143,13 @@ void do_exec(void (*func)()) {
     asm volatile("msr elr_el1, %0": : "r"(func));
     asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
     asm volatile("eret");
+}
+
+void do_exit(int status) {
+    current_task->state = ZOMBIE;
+    current_task->exit_status = status;
+
+    // release user stack
+    release_ustack(current_task->id);
+    schedule();
 }

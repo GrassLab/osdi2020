@@ -67,8 +67,7 @@ void _k_sys_exec(struct trapframe* trapframe) {
 }
 
 void _k_sys_exit(struct trapframe* trapframe) {
-    current_task->state = ZOMBIE;
-    current_task->exit_status = trapframe->x[0];
+    do_exit(trapframe->x[0]);
 }
 
 void _k_sys_fork(struct trapframe* trapframe) {

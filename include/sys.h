@@ -1,5 +1,3 @@
-#include "stdint.h"
-
 #ifndef __SYS_H__
 #define __SYS_H__
 
@@ -13,6 +11,10 @@
 
 #endif
 
+#ifndef IN_ASM
+
+#include "stdint.h"
+
 uint64_t get_cntfrq();
 uint64_t get_cntpct();
 uint32_t uart_read(char buf[], uint32_t size);
@@ -20,3 +22,5 @@ uint32_t uart_write(const char buf[], uint32_t size);
 int exec(void(*func)());
 int fork();
 void exit(int status);
+
+#endif
