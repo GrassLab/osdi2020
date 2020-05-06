@@ -47,8 +47,8 @@ void switch_to(task_t * next)
 }
 
 void check_reschedule(){
-    printf("rescheduleeee!!!\n");
-    printf("currr %d\n", current->task_id);
+    printf("check reschedule!!!\n");
+    printf("now task id is %d\n", current->task_id);
 
     if(current->rescheduled){
         printf("reschedul!!!\n");

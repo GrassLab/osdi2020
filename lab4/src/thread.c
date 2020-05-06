@@ -68,9 +68,38 @@ void do_exec(void(*func)()){
         current->mode = USER_MODE;
     }
     else if(current->mode == USER_MODE){
-        
+
     }
 
+}
+
+int do_fork(){
+    // int task_id = TaskManager.task_num;
+    // printf("task id %d create by fork\n", task_id);
+
+    // task_t* new_task = &TaskManager.task_pool[task_id]; 
+
+    // _memcpy(TaskManager.kstack_pool[current->task_id],TaskManager.kstack_pool[task_id],STACK_SIZE);
+    // _memcpy(TaskManager.ustack_pool[current->task_id],TaskManager.ustack_pool[task_id],STACK_SIZE);
+
+    // new_task->counter = 1;
+    // new_task->state = THREAD_RUNNABLE;
+
+    // new_task->cpu_context.x19 = (unsigned long) fn;
+    // new_task->cpu_context.x20 = 0;
+
+    // new_task->user_context.sp_el0 = &TaskManager.ustack_pool[task_id];
+    // new_task->user_context.spsr_el1 = 0;
+    // new_task->user_context.elr_el1 = 0;
+    // new_task->trapframe = 0;
+    // new_task->mode = KERNEL_MODE;
+    
+    // new_task->cpu_context.pc = (unsigned long)ret_from_fork;
+    // new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id];
+    
+    // TaskManager.task_num++;
+
+    // return pid;
 }
 
 extern struct task* get_current();

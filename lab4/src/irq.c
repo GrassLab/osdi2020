@@ -83,6 +83,12 @@ void handle_el0_sync(unsigned int trapframe, unsigned long esr)
 			case SYS_UART_WRITE:
 				printf("x8 value is %d\n",x8);
             	break;
+			case SYS_EXEC:
+				// do_exec(x0);
+				break;
+			case SYS_FORK:
+				do_fork();
+				break;
 			default:
             	printf("syscall not found\n");
             	break;

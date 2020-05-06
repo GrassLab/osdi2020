@@ -63,10 +63,11 @@ enum {
 
 enum {
     KERNEL_MODE,
-    USER_MODE
+    USER_MODE,
+    INTERRUPT_MODE,
 };
 
-task_t* privilege_task_create();
+task_t* privilege_task_create(unsigned long fn);
 void create_idle_task();
 void idle_task();
 void init_task_manager();

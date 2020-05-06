@@ -10,6 +10,28 @@ void *_memset(void *dst, int val, int count){
 	return dst;
 }
 
+
+void *_memcpy(const void *from, void *dst, int count){
+	char *f = from;
+	char *d = dst;
+
+	while (count--)
+		*d++ = *f++;
+
+	return dst;
+}
+
+
+void *_copy_stack(const void *from, void *dst, int count){
+	char *f = from;
+	char *d = dst;
+
+	while (count--)
+		*d-- = *f--;
+
+	return dst;
+}
+
 void _print(char * c){
     uart_puts(c);
 }
@@ -37,3 +59,4 @@ void _unsign_arr_to_digit(unsigned num, char* buf, unsigned len){
 		num /= 10;
 	}
 }
+

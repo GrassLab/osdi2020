@@ -71,9 +71,9 @@ void func(){
     while(1){
         printf("---\n");
         printf("user loop\n");
-        printf("stack location: %x\n",current->cpu_context.sp);
-        printf("stack location: %x\n",current->user_context.sp_el0);
-        printf("taskid: %d\n", get_taskid());
+        printf("kernel stack location: %x\n",current->cpu_context.sp);
+        printf("user stack location: %x\n",current->user_context.sp_el0);
+        // printf("taskid: %d\n", get_taskid());
 
         delay(100000000);
     }
@@ -85,7 +85,7 @@ void func2(){
         printf("user loop2\n");
         printf("kernel stack location: %x\n",current->cpu_context.sp);
         printf("user stack location: %x\n",current->user_context.sp_el0);
-        printf("taskid: %d\n", get_taskid());
+        // printf("taskid: %d\n", get_taskid());
 
 
         delay(100000000);
