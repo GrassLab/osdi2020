@@ -14,7 +14,7 @@ src/%.o: src/%.S
 	aarch64-linux-gnu-gcc -c $< -nostdlib -o $@
 
 src/%.o: src/%.c
-	aarch64-linux-gnu-gcc -g -c $< -nostdlib -o $@
+	aarch64-linux-gnu-gcc -c $< -nostdlib -o $@
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio

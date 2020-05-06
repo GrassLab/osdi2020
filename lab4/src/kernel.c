@@ -1,24 +1,27 @@
 #include "uart.h"
 #include "kernel.h"
 
-struct task_struct task[64];
-char kstack_pool[64][4096];
+struct task_struct task[64] __attribute__((aligned(16u)));
+char kstack_pool[64][4096] __attribute__((aligned(16u)));
 struct run_queue runqueue = {.start = 0, .end = 0, .size = 0};
 
 
 int kernel_init(){
     uart_init();
 
-    uart_puts("Init Kernel\n");
+    uart_puts("Init Kernel...\n");
 
     task[0].valid = 1;
     task[0].id = 0;
     task[0].kstack_top = kstack_pool[1];
     task[0].x29 = kstack_pool[1];
     task[0].x30 = (unsigned long long)&init;
+    //unsigned long long ptr = (unsigned long long) &task[0];
+    //asm volatile("msr tpidr_el1, %0" : "=r"(ptr));
     //privilege_task_create(init);
 
-    context_switch(&task[0]);
+    //context_switch(&task[0]);
+    init();
 
     return 0;
 }
@@ -85,7 +88,7 @@ void test(){
         uart_puts("ID = ");
         uart_puts(res);
         uart_puts("\n");
-        for (int i=0; i<100000000; i++) asm volatile("nop");
+        for (int i=0; i<1000000; i++) asm volatile("nop");
         schedule();
     }
 }
