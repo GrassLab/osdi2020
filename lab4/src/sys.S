@@ -6,6 +6,12 @@ call_sys_write:
 	svc #0
 	ret
 
+.globl call_sys_write_char
+call_sys_write_char:
+	mov w8, #SYS_WRITE_CHAR_NUMBER	
+	svc #0
+	ret
+
 .globl call_sys_read
 call_sys_read:
 	mov w8, #SYS_READ_NUMBER	
@@ -48,29 +54,16 @@ call_sys_get_taskid:
 	svc #0
 	ret
 
-.globl call_sys_clone
-call_sys_clone:
-	/* Save args for the child.  */
-	mov	x10, x0					/*fn*/
-	mov	x11, x1					/*arg*/
-	mov	x12, x2					/*stack*/
-
-	/* Do the system call.  */
-	mov 	x0, x2					/* stack  */
-	mov	x8, #SYS_CLONE_NUMBER
-	svc	0x0
-
-	cmp	x0, #0
-	beq	thread_start
+.globl  call_fork
+call_fork:
+    mov w8, #SYS_FORK
+	svc #0
 	ret
 
-thread_start:
-	mov	x29, 0
+.globl  call_exec
+call_exec:
+    mov w8, #SYS_EXEC
+	svc #0
+	ret
 
-	/* Pick the function arg and execute.  */
-	mov	x0, x11
-	blr	x10
 
-	/* We are done, pass the return value through x0.  */
-	mov	x8, #SYS_EXIT_NUMBER
-	svc	0x0

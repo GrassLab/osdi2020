@@ -35,6 +35,7 @@ struct task_struct {
 	long counter;
 	long priority;
 	long preempt_count;
+	int storeid;
     int taskid;
 	int parentid;
 };
@@ -51,6 +52,8 @@ void update_task_counter();
 void exit();
 int get_taskid();
 void enable_preempt();
+int fork();
+void exec(void (*func)());
 
 extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 

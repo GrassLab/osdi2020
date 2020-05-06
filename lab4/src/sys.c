@@ -3,8 +3,18 @@
 void sys_write(char * buf){
 	uart_puts(buf);
 }
+void sys_write_char(char buf){
+	uart_send(buf);
+}
 int sys_read(){
-	uart_getc();
+	return uart_getc();
+}
+
+int sys_fork(){
+	return fork();
+}
+void sys_exec(void (*func)()){
+	exec(func);
 }
 
 int sys_clone(unsigned long stack){
@@ -55,4 +65,17 @@ int sys_get_taskid(){
 }
 
 
-void * const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit, sys_chk_exl, sys_enable_time, sys_chk_exl_info, sys_get_taskid, sys_read};
+void * const sys_call_table[] = {
+    sys_write,
+    sys_malloc, 
+    sys_clone, 
+    sys_exit, 
+    sys_chk_exl, 
+    sys_enable_time, 
+    sys_chk_exl_info, 
+    sys_get_taskid, 
+    sys_read, 
+    sys_write_char, 
+    sys_fork, 
+    sys_exec,
+};

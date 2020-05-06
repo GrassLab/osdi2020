@@ -6,26 +6,20 @@
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
 struct task_struct * task[NR_TASKS] = {&(init_task), };
+struct task_struct * u_task[NR_TASKS] = {&(init_task), };
 
 int n_tasks = 1;
 int n_task_id = 1;
 
 
 void enable_preempt(){
-    current->preempt_count=1;
+    current->preempt_count++;
 }
 void disable_preempt(){
-    current->preempt_count=0;
+    current->preempt_count--;
 }
-void foo(){
-  while(1) {
-    uart_puts("Task id: ");
-    uart_send_int(current -> taskid);
-    uart_send('\n');
-    delay(100000000);
-  }
-}
-void privilege_task_create(void (*func)()){
+
+int privilege_task_create(void (*func)()){
     disable_preempt();
     struct task_struct *new_task = (struct task_struct *) get_free_page();
     new_task->taskid = n_task_id;
@@ -36,11 +30,19 @@ void privilege_task_create(void (*func)()){
     new_task->cpu_context.sp = (unsigned long)new_task + THREAD_SIZE;
     new_task->parentid = current->taskid;
     n_task_id++;
+    
 
+    
+    new_task->storeid = n_tasks;
+    struct task_struct *new_utask = (struct task_struct *) get_free_page();
+    u_task[n_tasks] = new_utask;
+    
     task[n_tasks] = (new_task);
+
+    n_tasks++; 
     n_tasks%=NR_TASKS;
 
-    n_tasks++;    
+       
     // if(n_tasks>=NR_TASKS)
     //     for(int i=1;i<NR_TASKS;i++){
     //         if(task[i]->state==TASK_ZOMBIE){
@@ -55,11 +57,11 @@ void privilege_task_create(void (*func)()){
     uart_send_int(new_task->taskid);
     uart_send('\n');
     enable_preempt();
-
+    return new_task->taskid;
 }
 int fork(){
-    privilege_task_create(0);
-    struct task_struct *fork_task = task[n_tasks-1];
+    int id = privilege_task_create(0);
+    struct task_struct *fork_task = task[id];
     fork_task->counter = 3;
     fork_task->cpu_context.x19 = current->cpu_context.x19;
 	fork_task->cpu_context.x20 = current->cpu_context.x20;
@@ -78,9 +80,19 @@ int fork(){
     return 0;
 }
 void exec(void (*func)()){
+    asm volatile("msr sp_el0, %0"::"r"(u_task[current->taskid]):);
 	asm volatile("msr spsr_el1, %0"::"r"(0):);
 	asm volatile("msr elr_el1, %0"::"r"(func):);
 	asm volatile("eret");
+}
+
+void foo(){
+  while(1) {
+    uart_puts("Task id: ");
+    uart_send_int(current -> taskid);
+    uart_send('\n');
+    delay(100000000);
+  }
 }
 void foo_lab4(){
     int tmp = 5;
@@ -93,13 +105,17 @@ void foo_lab4(){
     uart_puts("\n");
     call_sys_exit();
 }
+void foo_exec(){
+    call_exec(foo);
+}
+// 1000000
 void test() {
     int cnt = 1;
-    delay(10000000);
+    delay(100000000);
     if (fork() == 0) {
-        fork();
-        delay(10000000);
-        fork();
+        // fork();
+        delay(100000000);
+        // fork();
         while(cnt < 10) {
             call_sys_write("Task id: ");
             uart_send_int(call_sys_get_taskid());
@@ -108,7 +124,7 @@ void test() {
             call_sys_write(", cnt: ");
             uart_send_int(cnt);
             call_sys_write("\n");
-            delay(10000000);
+            delay(100000000);
             ++cnt;
         }
         call_sys_exit();
@@ -121,8 +137,8 @@ void test() {
         uart_puts(", cnt value ");
         uart_send_int(cnt);
         uart_puts("\n");
-        exec(foo_lab4);
-        call_sys_exit(0);
+        foo_exec(foo_lab4);
+        call_sys_exit();
     }
 }
 void foo_sys(){
@@ -150,12 +166,15 @@ void exit(){
     //         break;
     //     }
     // }
+    int id = current->storeid;
     current->state = TASK_ZOMBIE;
-    free_page((unsigned long)current);
+    free_page((unsigned long)task[id]);
+    free_page((unsigned long)u_task[id]);
     enable_preempt();
     schedule();
 }
 void init_init_task(void (*func)()){
+    current = (struct task_struct *) get_free_page();
     current->taskid = 0;
     current->state = TASK_RUNNING;
     current->counter = 0;
@@ -163,6 +182,11 @@ void init_init_task(void (*func)()){
     current->cpu_context.pc = (unsigned long)ret_from_fork;
     current->cpu_context.sp = (unsigned long)current + THREAD_SIZE;
     current->parentid = -1;
+    current->storeid = 0;
+    task[0] = current;
+
+    struct task_struct *new_utask = (struct task_struct *) get_free_page();
+    u_task[0] = new_utask;
 }
 
 void switch_to(struct task_struct *next) 
@@ -196,15 +220,16 @@ void schedule(){
     enable_preempt();
 }
 
-int N = 1;
+int N = 3;
 void create_foo(){
     for(int i = 1; i <= N; ++i) { // N should > 2
-        privilege_task_create(test);
+        privilege_task_create(foo_exec);
     }
+    // schedule();
 }
 
 void update_task_counter(){
-    if(current->preempt_count==0)return;
+    if(current->preempt_count<0)return;
     current->counter--;
     // uart_puts("current counter: \n");
     // uart_send_int(current->counter);
@@ -215,5 +240,5 @@ void update_task_counter(){
     current->counter=0;
     enable_irq();
     schedule();
-    disable_irq();
+    // disable_irq();
 }

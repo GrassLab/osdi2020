@@ -10,6 +10,7 @@ void main(){
     get_arm_information();
     get_serial();
     get_board_revision();
+    call_sys_enable_time();
 
     print_hello();    
     uart_puts("# ");
@@ -18,5 +19,5 @@ void main(){
     
     // echo everything back
     shell();
-    
+   
 }	

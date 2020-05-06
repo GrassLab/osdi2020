@@ -89,19 +89,19 @@ void shell(){
         if(in!='\n'){            
             if((unsigned int)in>=32 && (unsigned int)in<=126)
             command[command_index++] = in;
-            uart_send(in);
+            sys_write_char(in);
         }
         else if(in == 8 || in ==46){
-            uart_send('\b');
+            sys_write_char('\b');
             command_index--;
         }
         else{
             command[command_index] = '\0';            
             if(command_index>0){
-                uart_puts("\n");
+                sys_write("\n");
                 process_cmd(command);
             }
-            uart_puts("\n# ");
+            sys_write("\n# ");
             command_index = 0;
         }
         
