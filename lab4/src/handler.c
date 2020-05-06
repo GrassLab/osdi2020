@@ -42,6 +42,9 @@ void exception_handler(unsigned long esr, unsigned long elr, unsigned long x2)
     else if(svc_type == 8){
         do_fork();
     }
+    else if(svc_type == 9){
+        do_exit();
+    }
 }
 
 void irq_handler()

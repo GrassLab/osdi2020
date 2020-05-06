@@ -5,11 +5,14 @@
 
 #define COUNT_NUM 3
 #define CPU_CONTEXT_NUM 13
+#define TASK_RUNNING 1
+#define TASK_ZOMBIE -1
 
 extern void  switch_to();
 extern void  ret_from_child();
 
 // struct task init = INIT_TASK;
+static int task_num = 1;
 
 void init_task(){
     // task_pool[0] = INIT_TASK;
@@ -27,7 +30,9 @@ int privilege_task_create(void(*func)()){
     p -> cpu_context.lr = (unsigned long)func;
     p -> taskid = task_id++;
     p -> counter = COUNT_NUM;
+    p -> state = TASK_RUNNING;
     ENQUEUE(runqueue, MAX_TASK_NUM, p);
+    ++task_num;
     return p -> taskid;
 }
 
@@ -39,8 +44,11 @@ void context_switch(struct task* next){
 void _schedule(){
     struct task *p;
     DEQUEUE(runqueue, MAX_TASK_NUM, p);
-    ENQUEUE(runqueue, MAX_TASK_NUM, p);
-    context_switch(p);
+    if(task_num == 1)
+        context_switch(&task_pool[0]);
+    if(p -> state == TASK_RUNNING){
+        context_switch(p);
+    }
 }
 
 void idle_schedule(){
@@ -53,6 +61,7 @@ void schedule(){
         current->counter = COUNT_NUM;
         uart_puts("reschedule flag set\n");
         // enable_irq();
+        ENQUEUE(runqueue, MAX_TASK_NUM, current);
         _schedule();
     }
 }
@@ -72,9 +81,6 @@ void do_exec(void(*func)()){
     
     // func();
 }
-void print_debug(){
-    uart_puts("ret_from_child\n");
-}
 
 void do_fork(){
     int child_id = privilege_task_create(ret_from_child);
@@ -91,4 +97,14 @@ void do_fork(){
     set_trap_ret(&task_pool[child_id], (unsigned long)kstack_pool[child_id]+offset, 29);
     offset = get_trap_arg(31) - (unsigned long)ustack_pool[current->taskid];
     set_trap_ret(&task_pool[child_id], (unsigned long)ustack_pool[child_id]+offset, 31);
+}
+
+void do_exit(){
+    current -> state = TASK_ZOMBIE;
+    --task_num;
+    _schedule();
+}
+
+int num_runnable_tasks(){
+    return task_num;
 }

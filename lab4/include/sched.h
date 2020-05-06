@@ -22,9 +22,7 @@ struct task {
 	struct cpu_context cpu_context;
 	int taskid;
 	int counter;
-	// long state;	
-	// long priority;
-	// long preempt_count;
+	long state;	
 };
 
 extern struct task* get_current();
@@ -41,6 +39,8 @@ void idle_schedule();
 void schedule();
 void do_exec(void(*func)());
 void do_fork();
+void do_exit();
+int num_runnable_tasks();
 
 struct run_queue{
     struct task* buf[MAX_TASK_NUM];

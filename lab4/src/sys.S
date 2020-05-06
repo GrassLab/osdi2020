@@ -20,3 +20,9 @@ exec:
 fork:
   svc FORK
   ret
+
+.global exit
+exit:
+  mov x2, x0
+  svc EXIT
+  ret

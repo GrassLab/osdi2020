@@ -11,12 +11,13 @@ extern void disable_irq();
 extern int get_taskid();
 extern int fork();
 extern void exec();
+extern void exit();
 
 void foo()
 {
   int tmp = 5;
   printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
-  // exit(0);
+  exit(0);
 }
 
 void test()
@@ -31,7 +32,7 @@ void test()
       delay(100000);
       ++cnt;
     }
-    // exit(0);
+    exit(0);
     printf("Should not be printed\n");
   }
   else{
@@ -54,9 +55,9 @@ void idle()
   //   delay(1000000);
   // }
   while (1){
-    // if (num_runnable_tasks() == 1){
-    //   break;
-    // }
+    if (num_runnable_tasks() == 1){
+      break;
+    }
     idle_schedule();
     delay(1000000);
   }
