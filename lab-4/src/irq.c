@@ -53,11 +53,11 @@ void irq_reschedule()
 {
     Task* task = get_current();
     if (task->rescheduleFlag == 1) {
-        uart_puts("[IRQ reschedule]: TaskId: ");
+        // uart_puts("[IRQ reschedule]: Previous TaskId: ");
         uart_print_int(task->id);
-        uart_puts("\n");
+        // uart_puts("\n");
         task->rescheduleFlag = 0;
         schedule();
-        uart_puts("[IRQ reschedule]: Finish.\n");
+        // uart_puts("[IRQ reschedule]: Finish.\n");
     }
 }

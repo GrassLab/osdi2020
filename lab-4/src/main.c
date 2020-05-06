@@ -12,14 +12,10 @@ int main()
     // printPowerOnMessage();
     enable_irq();
     core_timer_init();
-    task_manager_init();
+    task_manager_init(idle);
 
-    for(int i = 0; i < 3; ++i) {
-        privilege_task_create(user_test);
-    }
     // for(int i = 0; i < 3; ++i) {
-    //     exec(foo);
+        privilege_task_create(user_test);
     // }
     idle();
-    interative();
 }

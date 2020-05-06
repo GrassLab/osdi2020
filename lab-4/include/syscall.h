@@ -12,6 +12,7 @@
 #define SYSCALL_LOCAL_TIMER_INIT 8
 #define SYSCALL_SYS_TIMER_INIT 9
 #define SYSCALL_EXIT 10
+#define SYSCALL_FORK 11
 
 int uart_read();
 int __uart_read();

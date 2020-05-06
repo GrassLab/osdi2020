@@ -26,6 +26,8 @@ static void el0_svc_handler(unsigned long sp)
         do_exec(x0);
     } else if (x8 == SYSCALL_EXIT) {
         __exit(x0);
+    } else if (x8 == SYSCALL_FORK) {
+        syscallReturnValue = __fork();
     }
     trapframe->regs[0] = syscallReturnValue;
 }
@@ -35,6 +37,7 @@ void exception_handler(unsigned long sp)
     unsigned int el_level;
     unsigned int esr, elr, spsr, far;
     unsigned int ec, iss, retaddr;
+    unsigned int sp_el0, elr_el1, spsr_el1;
     asm volatile ("mrs %0, CurrentEL" : "=r" (el_level));
     if (el_level == 0x4) {
         asm volatile ("mrs %0, esr_el1" : "=r" (esr));
@@ -51,9 +54,27 @@ void exception_handler(unsigned long sp)
     iss = esr & (0xffffff);
     retaddr = elr;
 
+    asm volatile ("mrs %0, sp_el0" : "=r" (sp_el0));
+    asm volatile ("mrs %0, elr_el1" : "=r" (elr_el1));
+    asm volatile ("mrs %0, spsr_el1" : "=r" (spsr_el1));
+
     // Set trapframe
     Task *task = get_current();
+    task->userContext.sp_el0 = sp_el0;
+    task->userContext.elr_el1 = elr_el1;
+    task->userContext.spsr_el1 = spsr_el1;
     task->trapframe = sp;
+    // Trapframe *trapframe = task->trapframe;
+
+    // unsigned long *trapframe = (unsigned long *)task->trapframe;
+
+    // *(trapframe+31) = 1;
+    // *(trapframe+32) = 1;
+    // *(trapframe+33) = 1; 
+    // uart_puts("save user context!!!!!!!\n");
+    // trapframe->sp_el0 = sp_el0;
+    // trapframe->elr_el1 = elr_el1;
+    // trapframe->spsr_el1 = spsr_el1;
 
     // SVC
     if ((esr>>26) == 0b010101) {

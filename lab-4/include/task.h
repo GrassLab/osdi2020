@@ -19,17 +19,20 @@ typedef struct cpuContext {
     unsigned long fp;
     unsigned long sp; // kstack sp
     unsigned long pc;
-} CpuContext;
+} __attribute__ ((aligned (8))) CpuContext;
 
 typedef struct userContext {
     unsigned long sp_el0;   // user stack
     unsigned long elr_el1;  // user pc 
     unsigned long spsr_el1; // user cpu state
-} UserContext;
+} __attribute__ ((aligned (8))) UserContext;
 
 typedef struct trapframe {
 	unsigned long regs[31];
-} Trapframe;
+    unsigned long sp_el0; // sp
+	unsigned long elr_el1; // pc
+	unsigned long spsr_el1; // pstate
+} __attribute__ ((aligned (8))) Trapframe;
 
 typedef struct task {
     CpuContext cpuContext;
@@ -51,7 +54,7 @@ typedef struct taskManager {
 } TaskManager;
 
 
-void task_manager_init();
+void task_manager_init(void(*func)());
 void privilege_task_create(void(*func)());
 void context_switch(Task* next);
 void schedule();

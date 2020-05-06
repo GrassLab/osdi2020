@@ -70,10 +70,8 @@ void memset(void* mem, int value, int size) {
 void memcpy(void *src, void *dst, int size) {
     char *s = src;
     char *d = dst;
-    while(size--) {
-        (*d) = (*s);
-        d++;
-        s++;
+    while (size--) {
+        *d-- = *s--;
     }
 }
 
