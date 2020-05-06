@@ -79,11 +79,12 @@ void _k_sys_fork(struct trapframe* trapframe) {
 
     struct task_struct* child_task = &task_pool[child_id];
     struct task_struct* parent_task = current_task;
+    child_task->ustack = get_avaliable_ustack();
 
     char* parent_kstack = parent_task->kstack;
     char* parent_ustack = parent_task->ustack;
     char* child_kstack = child_task->kstack;
-    char* child_ustack = get_avaliable_ustack();
+    char* child_ustack = child_task->ustack;
     if (!child_ustack) {
         child_task->state = EXIT; // will ignore this task when scheduling
         trapframe->x[0] = child_id;

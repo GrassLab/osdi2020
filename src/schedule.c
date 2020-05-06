@@ -29,23 +29,33 @@ void demo_priviledge() {
 }
 
 void demo_sys_exec() {
-    while(1) {
-        uart_printf("exec %d\n", current_task->id);
-        for (int i = 0; i < 100000; i++);
-    }
+    int tmp = 5;
+    uart_printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", current_task->id, &tmp, tmp);
+    exit(0);
 }
 
 void demo_do_exec_user_mode() {
+    int cnt = 1;
     int id = fork();
-    uart_printf("id: %d fork: %d\n", current_task->id, id);
-    if (id == 0) {
-        uart_printf("%d exit!\n", current_task->id);
-        exit(0);
+    uart_printf("task id: %d fork return: %d\n", current_task->id, id);
+    if (id > 0) { // parent process
+        uart_printf("Message from parent %d\n", current_task->id);
+        exec(demo_sys_exec);
     }
-
-    while(1) {
-        uart_printf("[%f] hello from %d in user mode\n", get_timestamp(), current_task->id);
-        for (int i = 0; i < 100000000; i++);
+    else if (id == 0) { // child process
+        fork();
+        for (int i = 0; i < 100000; i++);
+        fork();
+        while (cnt < 10) {
+            uart_printf("Task id: %d, cnt: %d\n", current_task->id, cnt);
+            for (int i = 0; i < 100000; i++);
+            ++cnt;
+        }
+        exit(0);
+        uart_printf("Should not be printed\n");
+    }
+    else {
+        uart_printf("Fork failed with code: %d", id);
     }
 }
 
