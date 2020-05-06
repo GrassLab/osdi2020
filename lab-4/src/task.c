@@ -90,10 +90,10 @@ void print_task_context(Task *task)
             uart_print_hex(taskManager.taskPool[i].userContext.sp_el0);
             uart_puts(", elr_el1 = ");
             uart_print_hex(taskManager.taskPool[i].userContext.elr_el1);
-            uart_puts(", spsr_el1 = ");
-            uart_print_hex(taskManager.taskPool[i].userContext.spsr_el1);
             uart_puts(", sp = ");
             uart_print_hex(taskManager.taskPool[i].cpuContext.sp);
+            uart_puts(", fp = ");
+            uart_print_hex(taskManager.taskPool[i].cpuContext.fp);
             uart_puts("\n");
         }
     }
@@ -143,7 +143,6 @@ int __fork()
     unsigned long trapframe_offset = ((unsigned long) &taskManager.kstackPool[parent->id]) 
                                 - parent->trapframe;
 
-
     child->trapframe = (unsigned long) &taskManager.kstackPool[child->id] - trapframe_offset;
 
     child->userContext.sp_el0 = (unsigned long) &taskManager.ustackPool[child->id] - sp_el0_offset;
@@ -171,7 +170,6 @@ void hello()
         uart_puts("hello world\n");
         wait(1000000);
     }
-
 }
 
 void foo12()
@@ -180,8 +178,7 @@ void foo12()
         uart_puts("Task id: ");
         uart_print_int(get_taskid());
         uart_puts("\n");
-        wait(100000000);
-        schedule();
+        wait(1000000);
     }
 }
 
@@ -253,12 +250,15 @@ void test() {
         uart_puts(", cnt value ");
         uart_print_int(cnt);
         uart_puts("\n");
-        // printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
         exec(foo);
     }
 }
 
-void user_test() {
+void req12_test() {
+    do_exec(foo12);
+}
+
+void req34_test() {
     do_exec(test);
 }
 

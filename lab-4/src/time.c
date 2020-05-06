@@ -57,15 +57,22 @@ void core_timer_init()
 
 #define CORE0_TIMER_IRQ_CTRL (unsigned int* )0x40000040
 #define EXPIRE_PERIOD 0xfffff
+
 void __core_timer_init()
 {
+    // asm volatile("mov x0, 1");
+    // asm volatile("msr cntp_ctl_el0, x0");
+    // asm volatile("mov x0, 0xffffff");
+    // asm volatile("msr cntp_tval_el0, x0");
+    // asm volatile("mov x0, 2");
+    // asm volatile("ldr x1, =0x40000040");
+    // asm volatile("str x0, [x1]");
+    unsigned int val = EXPIRE_PERIOD;
+    asm volatile("msr cntp_tval_el0, %0" :: "r" (val));
+    
     asm volatile("mov x0, 1");
-    asm volatile("msr cntp_ctl_el0, x0");
-    asm volatile("mov x0, 0xffffff");
-    asm volatile("msr cntp_tval_el0, x0");
-    asm volatile("mov x0, 2");
-    asm volatile("ldr x1, =0x40000040");
-    asm volatile("str x0, [x1]");
+	asm volatile("msr cntp_ctl_el0, x0");
+    *CORE0_TIMER_IRQ_CTRL = 0x2;
 }
 
 void core_timer_handler()

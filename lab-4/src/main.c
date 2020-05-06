@@ -15,13 +15,13 @@ int main()
     task_manager_init(idle);
 
     // for(int i = 0; i < 4; ++i) {
-    //     privilege_task_create(foo12);
-    // } 
+    //     privilege_task_create(req12_test);
+    // }
     // idle12();
 
     // privilege_task_create(uart_test);
     // idle12();
 
-    privilege_task_create(user_test);
+    privilege_task_create(req34_test);
     idle();
 }

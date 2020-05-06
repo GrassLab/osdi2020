@@ -60,7 +60,8 @@ void __exit(int status);
 int __fork();
 
 // Lab4 test case
-void user_test();
+void req12_test();
+void req34_test();
 void uart_test();
 void test();
 void hello();

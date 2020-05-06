@@ -10,22 +10,6 @@ switch_to:
     stp x29, x9,  [x0, 16 * 5] // fp, sp
     str x30,      [x0, 16 * 6] // lr
 
-    // save user context
-    //mrs	x20, sp_el0
-    //mrs	x21, elr_el1
-	//mrs	x22, spsr_el1
-    //str x20, [x0, 8 * 13]
-    //str x21, [x0, 8 * 14]
-    //str x22, [x0, 8 * 15]
-
-    // restore user context
-    //ldr x20, [x1, 8 * 13]
-    //ldr x21, [x1, 8 * 14]
-    //ldr x22, [x1, 8 * 15]
-    //msr	sp_el0, x20
-    //msr	elr_el1, x21 
-	//msr	spsr_el1, x22 
-
     ldp x19, x20, [x1, 16 * 0]
     ldp x21, x22, [x1, 16 * 1]
     ldp x23, x24, [x1, 16 * 2]
@@ -63,6 +47,9 @@ fork_child_exit:
     msr	sp_el0, x21
     msr	elr_el1, x22
     msr	spsr_el1, x23
+
+    ldr x29, [x1, 8 * 10]
+
     ldp	x0, x1, [sp, #16 * 0]
     ldp	x2, x3, [sp, #16 * 1]
     ldp	x4, x5, [sp, #16 * 2]
@@ -77,8 +64,8 @@ fork_child_exit:
     ldp	x22, x23, [sp, #16 * 11]
     ldp	x24, x25, [sp, #16 * 12]
     ldp	x26, x27, [sp, #16 * 13]
-    ldp	x28, x29, [sp, #16 * 14]
-    ldr	x30, [sp, #16 * 15] 
+    ldr x28, [sp, #16 * 14]
+    ldr x30, [sp, #16 * 15] 
     add	sp, sp, #280
     mov x0, 0 // fork child
     eret

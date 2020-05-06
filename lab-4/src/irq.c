@@ -19,7 +19,7 @@ void disable_irq()
 
 void __enable_irq()
 {
-    asm volatile("msr daifclr, #2");
+    asm volatile("msr daifclr, 0xf");
 }
 
 void __disable_irq()
@@ -53,11 +53,11 @@ void irq_reschedule()
 {
     Task* task = get_current();
     if (task->rescheduleFlag == 1) {
-        uart_puts("[IRQ reschedule]: Previous TaskId: ");
-        uart_print_int(task->id);
-        uart_puts("\n");
+        // uart_puts("[IRQ reschedule]");
+        // uart_print_int(task->id);
+        // uart_puts("\n");
         task->rescheduleFlag = 0;
         schedule();
-        uart_puts("[IRQ reschedule]: Finish.\n");
+        // uart_puts("[IRQ reschedule]: Finish.\n");
     }
 }
