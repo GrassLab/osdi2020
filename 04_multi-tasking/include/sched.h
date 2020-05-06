@@ -36,6 +36,7 @@ struct task_struct {
     long counter;
     long priority;
     int preempt_count;
+    unsigned long fork_flag;
     // unsigned long stack;
     // unsigned long flags;
     // unsigned long kill_flag;

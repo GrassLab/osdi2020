@@ -53,4 +53,11 @@
 #define EL1_SPSR_EL0 (15 << 0)
 #define EL1_SPSR_VALUE (EL1_SPSR_MASK & ~EL1_SPSR_EL0)
 
+// ***************************************
+// ESR_EL1, Exception Syndrome Register (EL1). Page 2431 of AArch64-Reference-Manual.
+// ***************************************
+
+#define ESR_ELx_EC_SHIFT        26
+#define ESR_ELx_EC_SVC64        0x15
+
 #endif

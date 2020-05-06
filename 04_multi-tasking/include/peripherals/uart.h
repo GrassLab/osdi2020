@@ -22,6 +22,7 @@ void uart_send(char);
 void uart_puts(const char *);
 void uart_send_hex(unsigned int);
 void uart_send_ulong(unsigned long);
+char uart_getc();
 // void handle_uart_irq();
 
 #endif

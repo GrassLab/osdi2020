@@ -1,3 +1,4 @@
+#include "arm/sysregs.h"
 #include "entry.h"
 #include "timer.h"
 
@@ -96,13 +97,13 @@ el1_vector:
     ventry  fiq_invalid_el1t            // FIQ EL1t
     ventry  error_invalid_el1t          // Error EL1t
 
-    ventry  sync_invalid_el1h           // Synchronous EL1h (this one)
+    ventry  sync_invalid_el1h           // Synchronous EL1h
     ventry  el1_irq                     // IRQ EL1h
     ventry  fiq_invalid_el1h            // FIQ EL1h
     ventry  error_invalid_el1h          // Error EL1h
 
-    ventry  sync_invalid_el0_64         // Synchronous 64-bit EL0
-    ventry  irq_invalid_el0_64          // IRQ 64-bit EL0
+    ventry  el0_sync                    // Synchronous 64-bit EL0
+    ventry  el0_irq                     // IRQ 64-bit EL0
     ventry  fiq_invalid_el0_64          // FIQ 64-bit EL0
     ventry  error_invalid_el0_64        // Error 64-bit EL0
 
@@ -165,14 +166,25 @@ error_invalid_el0_32:
 
 
 /* handle defined exception */
-sync_el0_64:
+el0_sync:
     kernel_entry 0
-    // TODO: Understand here
+    mrs x25, esr_el1
+    lsr x24, x25, #ESR_ELx_EC_SHIFT
+    cmp x24, #ESR_ELx_EC_SVC64
+    b.eq el0_svc
+    handle_invalid_entry 0, SYNC_ERROR
+
+el0_svc:
     bl handle_el0_sync
-    str x0, [sp, #0]
+    bl ret_from_syscall
+    bl uart_send_ulong
     kernel_exit 0
 
-irq_el0_64:
+ret_from_syscall:
+    str x0, [sp, #0]
+    ret
+
+el0_irq:
     kernel_entry 0
     bl handle_irq
     kernel_exit 0
@@ -193,5 +205,15 @@ el1_irq:
 .global ret_from_fork
 ret_from_fork:
     bl  schedule_tail
-    mov x0, x20 
     blr x19            //should never return
+
+.global ret_from_fork_user
+ret_from_fork_user:
+    bl  schedule_tail
+    mov x0, x19
+    bl  move_to_user_mode
+    bl  ret_to_user
+    blr x19
+ret_to_user:
+    bl disable_irq
+    kernel_exit 0

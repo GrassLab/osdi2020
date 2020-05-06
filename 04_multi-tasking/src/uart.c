@@ -18,6 +18,16 @@ char uart_recv() {
     return (get32(AUX_MU_IO_REG) & 0xFF);
 }
 
+char uart_getc() {
+    char r;
+    /* wait until something is in the buffer */
+    do{asm volatile("nop");}while(!(*(volatile unsigned int*)AUX_MU_LSR_REG&0x01));
+    /* read it and return */
+    r=(char)(*(volatile unsigned int*)AUX_MU_IO_REG);
+    /* convert carrige return to newline */
+    return r=='\r'?'\n':r;
+}
+
 void uart_puts(const char *str) {
     char c = str[0];
     int i = 0;
