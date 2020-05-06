@@ -31,6 +31,7 @@ set_cur_task:
 
 .global go_to
 go_to:
+	msr 	tpidr_el1, x0
 	ldp 	fp, lr, [x0, 8 * 10]
 	ldr 	x9, [x0, 8 * 12]
 	mov 	sp,  x9

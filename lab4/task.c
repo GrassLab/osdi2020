@@ -11,6 +11,7 @@ int new_taskId = 0;
 int ReSchedule = 0;
 queue_t runQueue;
 task_t *idle_pcb = &task_pcb_pool[0];
+task_t *zombieReaper_pcb = &task_pcb_pool[1];
 
 /* ======================= queue =======================*/
 void init_Queue(queue_t *q){
@@ -160,11 +161,10 @@ void schedule(){
 void idle(){
 	while(1){
 		int next_taskId = deQueue(&runQueue);
-		if(next_taskId != -1){
-			set_cur_task( &task_pcb_pool[next_taskId] );
-			switch_to(&task_pcb_pool[0].context, &task_pcb_pool[next_taskId].context);
+		if(next_taskId != 0 && next_taskId != -1){
+			context_switch(next_taskId);
 		}else{
-			uart_puts("i'm idle");
+			uart_puts("i'm idle\n");
 			sleep();
 		}
 	}
@@ -260,6 +260,7 @@ void do_exit(int status){
 	int ustack_id = curTask->ustack_id;
 	CLR(&user_stack_allocate_status, ustack_id);
 
+	zombieReaper_pcb->pstatus = ready;
 	ReSchedule = 1;
 	schedule();
 }
@@ -272,6 +273,7 @@ void zombieReaper(){
 			}
 		}
 
+		zombieReaper_pcb->pstatus = wait;
 		ReSchedule = 1;
 		schedule();
 	}

@@ -61,7 +61,7 @@ void restore_umode_lr_sp(unsigned long long elr_el1, unsigned long long ustack);
 void switch_to(context_t *prev, context_t *next);
 task_t* get_cur_task( void );
 void set_cur_task(task_t *task);
-void go_to(context_t *idle_context);
+void go_to(task_t *task);
 void restore_all_reg( void );
 
 

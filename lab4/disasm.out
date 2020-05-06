@@ -1578,43 +1578,43 @@ Disassembly of section .text:
    81ed0:	d65f03c0 	ret
 
 0000000000081ed4 <go_to>:
-   81ed4:	a945781d 	ldp	x29, x30, [x0, #80]
-   81ed8:	f9403009 	ldr	x9, [x0, #96]
-   81edc:	9100013f 	mov	sp, x9
-   81ee0:	d65f03c0 	ret
+   81ed4:	d518d080 	msr	tpidr_el1, x0
+   81ed8:	a945781d 	ldp	x29, x30, [x0, #80]
+   81edc:	f9403009 	ldr	x9, [x0, #96]
+   81ee0:	9100013f 	mov	sp, x9
+   81ee4:	d65f03c0 	ret
 
-0000000000081ee4 <store_umode_lr_sp>:
-   81ee4:	d5384029 	mrs	x9, elr_el1
-   81ee8:	d538410a 	mrs	x10, sp_el0
-   81eec:	f9000009 	str	x9, [x0]
-   81ef0:	f900002a 	str	x10, [x1]
-   81ef4:	d65f03c0 	ret
+0000000000081ee8 <store_umode_lr_sp>:
+   81ee8:	d5384029 	mrs	x9, elr_el1
+   81eec:	d538410a 	mrs	x10, sp_el0
+   81ef0:	f9000009 	str	x9, [x0]
+   81ef4:	f900002a 	str	x10, [x1]
+   81ef8:	d65f03c0 	ret
 
-0000000000081ef8 <restore_umode_lr_sp>:
-   81ef8:	d5184020 	msr	elr_el1, x0
-   81efc:	d5184101 	msr	sp_el0, x1
-   81f00:	d65f03c0 	ret
+0000000000081efc <restore_umode_lr_sp>:
+   81efc:	d5184020 	msr	elr_el1, x0
+   81f00:	d5184101 	msr	sp_el0, x1
+   81f04:	d65f03c0 	ret
 
-0000000000081f04 <restore_all_reg>:
-   81f04:	a94007e0 	ldp	x0, x1, [sp]
-   81f08:	a9410fe2 	ldp	x2, x3, [sp, #16]
-   81f0c:	a94217e4 	ldp	x4, x5, [sp, #32]
-   81f10:	a9431fe6 	ldp	x6, x7, [sp, #48]
-   81f14:	a94427e8 	ldp	x8, x9, [sp, #64]
-   81f18:	a9452fea 	ldp	x10, x11, [sp, #80]
-   81f1c:	a94637ec 	ldp	x12, x13, [sp, #96]
-   81f20:	a9473fee 	ldp	x14, x15, [sp, #112]
-   81f24:	a94847f0 	ldp	x16, x17, [sp, #128]
-   81f28:	a9494ff2 	ldp	x18, x19, [sp, #144]
-   81f2c:	a94a57f4 	ldp	x20, x21, [sp, #160]
-   81f30:	a94b5ff6 	ldp	x22, x23, [sp, #176]
-   81f34:	a94c67f8 	ldp	x24, x25, [sp, #192]
-   81f38:	a94d6ffa 	ldp	x26, x27, [sp, #208]
-   81f3c:	a94e77fc 	ldp	x28, x29, [sp, #224]
-   81f40:	f9407bfe 	ldr	x30, [sp, #240]
-   81f44:	910403ff 	add	sp, sp, #0x100
-   81f48:	d69f03e0 	eret
-   81f4c:	00000000 	.inst	0x00000000 ; undefined
+0000000000081f08 <restore_all_reg>:
+   81f08:	a94007e0 	ldp	x0, x1, [sp]
+   81f0c:	a9410fe2 	ldp	x2, x3, [sp, #16]
+   81f10:	a94217e4 	ldp	x4, x5, [sp, #32]
+   81f14:	a9431fe6 	ldp	x6, x7, [sp, #48]
+   81f18:	a94427e8 	ldp	x8, x9, [sp, #64]
+   81f1c:	a9452fea 	ldp	x10, x11, [sp, #80]
+   81f20:	a94637ec 	ldp	x12, x13, [sp, #96]
+   81f24:	a9473fee 	ldp	x14, x15, [sp, #112]
+   81f28:	a94847f0 	ldp	x16, x17, [sp, #128]
+   81f2c:	a9494ff2 	ldp	x18, x19, [sp, #144]
+   81f30:	a94a57f4 	ldp	x20, x21, [sp, #160]
+   81f34:	a94b5ff6 	ldp	x22, x23, [sp, #176]
+   81f38:	a94c67f8 	ldp	x24, x25, [sp, #192]
+   81f3c:	a94d6ffa 	ldp	x26, x27, [sp, #208]
+   81f40:	a94e77fc 	ldp	x28, x29, [sp, #224]
+   81f44:	f9407bfe 	ldr	x30, [sp, #240]
+   81f48:	910403ff 	add	sp, sp, #0x100
+   81f4c:	d69f03e0 	eret
 
 0000000000081f50 <uart_init>:
    81f50:	d28a0081 	mov	x1, #0x5004                	// #20484
@@ -1916,7 +1916,7 @@ Disassembly of section .text:
 
 0000000000082370 <privilege_task_create>:
    82370:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
-   82374:	d0000004 	adrp	x4, 84000 <idle_pcb>
+   82374:	d0000004 	adrp	x4, 84000 <zombieReaper_pcb>
    82378:	910003fd 	mov	x29, sp
    8237c:	f9000bf3 	str	x19, [sp, #16]
    82380:	f9403883 	ldr	x3, [x4, #112]
@@ -1935,11 +1935,11 @@ Disassembly of section .text:
    823b4:	9ad32041 	lsl	x1, x2, x19
    823b8:	ea01007f 	tst	x3, x1
    823bc:	54ffff61 	b.ne	823a8 <privilege_task_create+0x38>  // b.any
-   823c0:	d0000002 	adrp	x2, 84000 <idle_pcb>
+   823c0:	d0000002 	adrp	x2, 84000 <zombieReaper_pcb>
    823c4:	93407e67 	sxtw	x7, w19
    823c8:	aa010063 	orr	x3, x3, x1
    823cc:	910004ed 	add	x13, x7, #0x1
-   823d0:	f9402441 	ldr	x1, [x2, #72]
+   823d0:	f9402841 	ldr	x1, [x2, #80]
    823d4:	8b0d302d 	add	x13, x1, x13, lsl #12
    823d8:	f9003883 	str	x3, [x4, #112]
    823dc:	52800005 	mov	w5, #0x0                   	// #0
@@ -1951,17 +1951,17 @@ Disassembly of section .text:
    823f4:	9ac52023 	lsl	x3, x1, x5
    823f8:	ea0300df 	tst	x6, x3
    823fc:	54ffff61 	b.ne	823e8 <privilege_task_create+0x78>  // b.any
-   82400:	d0000001 	adrp	x1, 84000 <idle_pcb>
+   82400:	d0000001 	adrp	x1, 84000 <zombieReaper_pcb>
    82404:	93407caa 	sxtw	x10, w5
    82408:	aa0300c6 	orr	x6, x6, x3
    8240c:	9100054c 	add	x12, x10, #0x1
-   82410:	f9400823 	ldr	x3, [x1, #16]
+   82410:	f9400c23 	ldr	x3, [x1, #24]
    82414:	8b0c306c 	add	x12, x3, x12, lsl #12
-   82418:	d000000b 	adrp	x11, 84000 <idle_pcb>
-   8241c:	f9402442 	ldr	x2, [x2, #72]
+   82418:	d000000b 	adrp	x11, 84000 <zombieReaper_pcb>
+   8241c:	f9402842 	ldr	x2, [x2, #80]
    82420:	8b0710e8 	add	x8, x7, x7, lsl #4
    82424:	9101c089 	add	x9, x4, #0x70
-   82428:	f9401d6e 	ldr	x14, [x11, #56]
+   82428:	f940216e 	ldr	x14, [x11, #64]
    8242c:	91400444 	add	x4, x2, #0x1, lsl #12
    82430:	d374cce3 	lsl	x3, x7, #12
    82434:	8b020062 	add	x2, x3, x2
@@ -1974,7 +1974,7 @@ Disassembly of section .text:
    82450:	3800145f 	strb	wzr, [x2], #1
    82454:	eb02007f 	cmp	x3, x2
    82458:	54ffffc1 	b.ne	82450 <privilege_task_create+0xe0>  // b.any
-   8245c:	f9400820 	ldr	x0, [x1, #16]
+   8245c:	f9400c20 	ldr	x0, [x1, #24]
    82460:	d374cd42 	lsl	x2, x10, #12
    82464:	91400401 	add	x1, x0, #0x1, lsl #12
    82468:	8b000040 	add	x0, x2, x0
@@ -1982,29 +1982,29 @@ Disassembly of section .text:
    82470:	3800141f 	strb	wzr, [x0], #1
    82474:	eb01001f 	cmp	x0, x1
    82478:	54ffffc1 	b.ne	82470 <privilege_task_create+0x100>  // b.any
-   8247c:	f9401d62 	ldr	x2, [x11, #56]
+   8247c:	f9402162 	ldr	x2, [x11, #64]
    82480:	8b0710e7 	add	x7, x7, x7, lsl #4
-   82484:	d0000000 	adrp	x0, 84000 <idle_pcb>
+   82484:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
    82488:	12800004 	mov	w4, #0xffffffff            	// #-1
    8248c:	52800023 	mov	w3, #0x1                   	// #1
    82490:	2a1303e1 	mov	w1, w19
    82494:	8b070c42 	add	x2, x2, x7, lsl #3
-   82498:	f9401400 	ldr	x0, [x0, #40]
+   82498:	f9401800 	ldr	x0, [x0, #48]
    8249c:	29100c44 	stp	w4, w3, [x2, #128]
    824a0:	97ffff66 	bl	82238 <enQueue>
    824a4:	2a1303e0 	mov	w0, w19
    824a8:	f9400bf3 	ldr	x19, [sp, #16]
    824ac:	a8c27bfd 	ldp	x29, x30, [sp], #32
    824b0:	d65f03c0 	ret
-   824b4:	d0000002 	adrp	x2, 84000 <idle_pcb>
+   824b4:	d0000002 	adrp	x2, 84000 <zombieReaper_pcb>
    824b8:	12800013 	mov	w19, #0xffffffff            	// #-1
    824bc:	92800007 	mov	x7, #0xffffffffffffffff    	// #-1
-   824c0:	f940244d 	ldr	x13, [x2, #72]
+   824c0:	f940284d 	ldr	x13, [x2, #80]
    824c4:	17ffffc5 	b	823d8 <privilege_task_create+0x68>
-   824c8:	d0000001 	adrp	x1, 84000 <idle_pcb>
+   824c8:	d0000001 	adrp	x1, 84000 <zombieReaper_pcb>
    824cc:	12800005 	mov	w5, #0xffffffff            	// #-1
    824d0:	9280000a 	mov	x10, #0xffffffffffffffff    	// #-1
-   824d4:	f940082c 	ldr	x12, [x1, #16]
+   824d4:	f9400c2c 	ldr	x12, [x1, #24]
    824d8:	17ffffd0 	b	82418 <privilege_task_create+0xa8>
    824dc:	2a0303f3 	mov	w19, w3
    824e0:	17fffff1 	b	824a4 <privilege_task_create+0x134>
@@ -2018,11 +2018,11 @@ Disassembly of section .text:
    824f8:	f9000bf3 	str	x19, [sp, #16]
    824fc:	aa0003f3 	mov	x19, x0
    82500:	97fffe71 	bl	81ec4 <get_cur_task>
-   82504:	d0000004 	adrp	x4, 84000 <idle_pcb>
-   82508:	d0000003 	adrp	x3, 84000 <idle_pcb>
+   82504:	d0000004 	adrp	x4, 84000 <zombieReaper_pcb>
+   82508:	d0000003 	adrp	x3, 84000 <zombieReaper_pcb>
    8250c:	694f0402 	ldpsw	x2, x1, [x0, #120]
-   82510:	f9402484 	ldr	x4, [x4, #72]
-   82514:	f9400863 	ldr	x3, [x3, #16]
+   82510:	f9402884 	ldr	x4, [x4, #80]
+   82514:	f9400c63 	ldr	x3, [x3, #24]
    82518:	91000442 	add	x2, x2, #0x1
    8251c:	91000421 	add	x1, x1, #0x1
    82520:	8b023082 	add	x2, x4, x2, lsl #12
@@ -2046,9 +2046,9 @@ Disassembly of section .text:
    82560:	b9408400 	ldr	w0, [x0, #132]
    82564:	7100041f 	cmp	w0, #0x1
    82568:	54000180 	b.eq	82598 <context_switch+0x50>  // b.none
-   8256c:	d0000001 	adrp	x1, 84000 <idle_pcb>
+   8256c:	d0000001 	adrp	x1, 84000 <zombieReaper_pcb>
    82570:	52801100 	mov	w0, #0x88                  	// #136
-   82574:	f9401c21 	ldr	x1, [x1, #56]
+   82574:	f9402021 	ldr	x1, [x1, #64]
    82578:	9b200673 	smaddl	x19, w19, w0, x1
    8257c:	aa1303e0 	mov	x0, x19
    82580:	97fffe53 	bl	81ecc <set_cur_task>
@@ -2057,19 +2057,19 @@ Disassembly of section .text:
    8258c:	a94153f3 	ldp	x19, x20, [sp, #16]
    82590:	a8c27bfd 	ldp	x29, x30, [sp], #32
    82594:	17fffe3b 	b	81e80 <switch_to>
-   82598:	d0000000 	adrp	x0, 84000 <idle_pcb>
+   82598:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
    8259c:	b9407a81 	ldr	w1, [x20, #120]
-   825a0:	f9401400 	ldr	x0, [x0, #40]
+   825a0:	f9401800 	ldr	x0, [x0, #48]
    825a4:	97ffff25 	bl	82238 <enQueue>
    825a8:	17fffff1 	b	8256c <context_switch+0x24>
    825ac:	d503201f 	nop
 
 00000000000825b0 <schedule.part.0>:
    825b0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-   825b4:	d0000000 	adrp	x0, 84000 <idle_pcb>
-   825b8:	d0000001 	adrp	x1, 84000 <idle_pcb>
+   825b4:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
+   825b8:	d0000001 	adrp	x1, 84000 <zombieReaper_pcb>
    825bc:	910003fd 	mov	x29, sp
-   825c0:	f9401400 	ldr	x0, [x0, #40]
+   825c0:	f9401800 	ldr	x0, [x0, #48]
    825c4:	b900803f 	str	wzr, [x1, #128]
    825c8:	97ffff30 	bl	82288 <deQueue>
    825cc:	a8c17bfd 	ldp	x29, x30, [sp], #16
@@ -2077,7 +2077,7 @@ Disassembly of section .text:
    825d4:	d503201f 	nop
 
 00000000000825d8 <schedule>:
-   825d8:	d0000000 	adrp	x0, 84000 <idle_pcb>
+   825d8:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
    825dc:	b9408000 	ldr	w0, [x0, #128]
    825e0:	35000040 	cbnz	w0, 825e8 <schedule+0x10>
    825e4:	d65f03c0 	ret
@@ -2085,200 +2085,200 @@ Disassembly of section .text:
    825ec:	d503201f 	nop
 
 00000000000825f0 <idle>:
-   825f0:	a9bc7bfd 	stp	x29, x30, [sp, #-64]!
+   825f0:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
    825f4:	910003fd 	mov	x29, sp
    825f8:	a90153f3 	stp	x19, x20, [sp, #16]
-   825fc:	d0000014 	adrp	x20, 84000 <idle_pcb>
-   82600:	a9025bf5 	stp	x21, x22, [sp, #32]
-   82604:	d0000015 	adrp	x21, 84000 <idle_pcb>
-   82608:	f9401e94 	ldr	x20, [x20, #56]
-   8260c:	52801116 	mov	w22, #0x88                  	// #136
-   82610:	f94016b5 	ldr	x21, [x21, #40]
-   82614:	f9001bf7 	str	x23, [sp, #48]
-   82618:	b0000017 	adrp	x23, 83000 <ullToStr.part.0+0x38>
-   8261c:	911582f7 	add	x23, x23, #0x560
-   82620:	aa1503e0 	mov	x0, x21
-   82624:	97ffff19 	bl	82288 <deQueue>
-   82628:	3100041f 	cmn	w0, #0x1
-   8262c:	54000160 	b.eq	82658 <idle+0x68>  // b.none
-   82630:	9b365013 	smaddl	x19, w0, w22, x20
-   82634:	aa1303e0 	mov	x0, x19
-   82638:	97fffe25 	bl	81ecc <set_cur_task>
-   8263c:	aa1303e1 	mov	x1, x19
-   82640:	aa1403e0 	mov	x0, x20
-   82644:	97fffe0f 	bl	81e80 <switch_to>
-   82648:	aa1503e0 	mov	x0, x21
-   8264c:	97ffff0f 	bl	82288 <deQueue>
-   82650:	3100041f 	cmn	w0, #0x1
-   82654:	54fffee1 	b.ne	82630 <idle+0x40>  // b.any
-   82658:	aa1703e0 	mov	x0, x23
-   8265c:	97fffe91 	bl	820a0 <uart_puts>
-   82660:	97fffde4 	bl	81df0 <sleep>
-   82664:	17ffffef 	b	82620 <idle+0x30>
+   825fc:	d0000013 	adrp	x19, 84000 <zombieReaper_pcb>
+   82600:	b0000014 	adrp	x20, 83000 <ullToStr.part.0+0x38>
+   82604:	91158294 	add	x20, x20, #0x560
+   82608:	f9401a73 	ldr	x19, [x19, #48]
+   8260c:	d503201f 	nop
+   82610:	aa1303e0 	mov	x0, x19
+   82614:	97ffff1d 	bl	82288 <deQueue>
+   82618:	11000401 	add	w1, w0, #0x1
+   8261c:	7100043f 	cmp	w1, #0x1
+   82620:	540000e9 	b.ls	8263c <idle+0x4c>  // b.plast
+   82624:	97ffffc9 	bl	82548 <context_switch>
+   82628:	aa1303e0 	mov	x0, x19
+   8262c:	97ffff17 	bl	82288 <deQueue>
+   82630:	11000401 	add	w1, w0, #0x1
+   82634:	7100043f 	cmp	w1, #0x1
+   82638:	54ffff68 	b.hi	82624 <idle+0x34>  // b.pmore
+   8263c:	aa1403e0 	mov	x0, x20
+   82640:	97fffe98 	bl	820a0 <uart_puts>
+   82644:	97fffdeb 	bl	81df0 <sleep>
+   82648:	17fffff2 	b	82610 <idle+0x20>
+   8264c:	d503201f 	nop
 
-0000000000082668 <kernel_routine_entry>:
-   82668:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
-   8266c:	910003fd 	mov	x29, sp
-   82670:	97fffe15 	bl	81ec4 <get_cur_task>
-   82674:	9101a001 	add	x1, x0, #0x68
-   82678:	a8c17bfd 	ldp	x29, x30, [sp], #16
-   8267c:	9101c000 	add	x0, x0, #0x70
-   82680:	17fffe19 	b	81ee4 <store_umode_lr_sp>
-   82684:	d503201f 	nop
+0000000000082650 <kernel_routine_entry>:
+   82650:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+   82654:	910003fd 	mov	x29, sp
+   82658:	97fffe1b 	bl	81ec4 <get_cur_task>
+   8265c:	9101a001 	add	x1, x0, #0x68
+   82660:	a8c17bfd 	ldp	x29, x30, [sp], #16
+   82664:	9101c000 	add	x0, x0, #0x70
+   82668:	17fffe20 	b	81ee8 <store_umode_lr_sp>
+   8266c:	d503201f 	nop
 
-0000000000082688 <kernel_routine_exit>:
+0000000000082670 <kernel_routine_exit>:
+   82670:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+   82674:	910003fd 	mov	x29, sp
+   82678:	97fffe13 	bl	81ec4 <get_cur_task>
+   8267c:	a8c17bfd 	ldp	x29, x30, [sp], #16
+   82680:	a9468001 	ldp	x1, x0, [x0, #104]
+   82684:	17fffe1e 	b	81efc <restore_umode_lr_sp>
+
+0000000000082688 <leave_fork>:
    82688:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    8268c:	910003fd 	mov	x29, sp
-   82690:	97fffe0d 	bl	81ec4 <get_cur_task>
+   82690:	97fffff8 	bl	82670 <kernel_routine_exit>
    82694:	a8c17bfd 	ldp	x29, x30, [sp], #16
-   82698:	a9468001 	ldp	x1, x0, [x0, #104]
-   8269c:	17fffe17 	b	81ef8 <restore_umode_lr_sp>
+   82698:	17fffe1c 	b	81f08 <restore_all_reg>
+   8269c:	d503201f 	nop
 
-00000000000826a0 <leave_fork>:
-   826a0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+00000000000826a0 <do_fork>:
+   826a0:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
    826a4:	910003fd 	mov	x29, sp
-   826a8:	97fffff8 	bl	82688 <kernel_routine_exit>
-   826ac:	a8c17bfd 	ldp	x29, x30, [sp], #16
-   826b0:	17fffe15 	b	81f04 <restore_all_reg>
-   826b4:	d503201f 	nop
+   826a8:	f9000bf3 	str	x19, [sp, #16]
+   826ac:	97fffe06 	bl	81ec4 <get_cur_task>
+   826b0:	aa0003f3 	mov	x19, x0
+   826b4:	90000000 	adrp	x0, 82000 <uart_init+0xb0>
+   826b8:	911a2000 	add	x0, x0, #0x688
+   826bc:	97ffff2d 	bl	82370 <privilege_task_create>
+   826c0:	d000000e 	adrp	x14, 84000 <zombieReaper_pcb>
+   826c4:	93407c00 	sxtw	x0, w0
+   826c8:	b9807e67 	ldrsw	x7, [x19, #124]
+   826cc:	d0000009 	adrp	x9, 84000 <zombieReaper_pcb>
+   826d0:	f94021c1 	ldr	x1, [x14, #64]
+   826d4:	8b001002 	add	x2, x0, x0, lsl #4
+   826d8:	b9407a64 	ldr	w4, [x19, #120]
+   826dc:	d000000c 	adrp	x12, 84000 <zombieReaper_pcb>
+   826e0:	f940326d 	ldr	x13, [x19, #96]
+   826e4:	d374ccf0 	lsl	x16, x7, #12
+   826e8:	8b020c22 	add	x2, x1, x2, lsl #3
+   826ec:	f9400d23 	ldr	x3, [x9, #24]
+   826f0:	93407c84 	sxtw	x4, w4
+   826f4:	f9402981 	ldr	x1, [x12, #80]
+   826f8:	f85e81af 	ldur	x15, [x13, #-24]
+   826fc:	8b03020b 	add	x11, x16, x3
+   82700:	b9807c46 	ldrsw	x6, [x2, #124]
+   82704:	d374cc88 	lsl	x8, x4, #12
+   82708:	4b0b01e2 	sub	w2, w15, w11
+   8270c:	91400425 	add	x5, x1, #0x1, lsl #12
+   82710:	8b01010a 	add	x10, x8, x1
+   82714:	8b0800a5 	add	x5, x5, x8
+   82718:	d374ccc6 	lsl	x6, x6, #12
+   8271c:	aa0a03e1 	mov	x1, x10
+   82720:	8b22c0c2 	add	x2, x6, w2, sxtw
+   82724:	cb0433e4 	neg	x4, x4, lsl #12
+   82728:	d374cc08 	lsl	x8, x0, #12
+   8272c:	8b030042 	add	x2, x2, x3
+   82730:	f81001bf 	stur	xzr, [x13, #-256]
+   82734:	f81e81a2 	stur	x2, [x13, #-24]
+   82738:	8b040022 	add	x2, x1, x4
+   8273c:	39400023 	ldrb	w3, [x1]
+   82740:	91000421 	add	x1, x1, #0x1
+   82744:	eb05003f 	cmp	x1, x5
+   82748:	38286843 	strb	w3, [x2, x8]
+   8274c:	54ffff61 	b.ne	82738 <do_fork+0x98>  // b.any
+   82750:	f9400d24 	ldr	x4, [x9, #24]
+   82754:	aa0b03e1 	mov	x1, x11
+   82758:	cb0733e5 	neg	x5, x7, lsl #12
+   8275c:	91400484 	add	x4, x4, #0x1, lsl #12
+   82760:	8b100084 	add	x4, x4, x16
+   82764:	d503201f 	nop
+   82768:	8b050022 	add	x2, x1, x5
+   8276c:	39400023 	ldrb	w3, [x1]
+   82770:	91000421 	add	x1, x1, #0x1
+   82774:	eb04003f 	cmp	x1, x4
+   82778:	38266843 	strb	w3, [x2, x6]
+   8277c:	54ffff61 	b.ne	82768 <do_fork+0xc8>  // b.any
+   82780:	f81001a0 	stur	x0, [x13, #-256]
+   82784:	8b001000 	add	x0, x0, x0, lsl #4
+   82788:	f81e81af 	stur	x15, [x13, #-24]
+   8278c:	f94021ce 	ldr	x14, [x14, #64]
+   82790:	a9460a61 	ldp	x1, x2, [x19, #96]
+   82794:	8b000dc0 	add	x0, x14, x0, lsl #3
+   82798:	f9400d29 	ldr	x9, [x9, #24]
+   8279c:	51040021 	sub	w1, w1, #0x100
+   827a0:	4b0b0042 	sub	w2, w2, w11
+   827a4:	4b0a0021 	sub	w1, w1, w10
+   827a8:	f940298c 	ldr	x12, [x12, #80]
+   827ac:	f9403a63 	ldr	x3, [x19, #112]
+   827b0:	8b22c0c2 	add	x2, x6, w2, sxtw
+   827b4:	8b21c101 	add	x1, x8, w1, sxtw
+   827b8:	f9400bf3 	ldr	x19, [sp, #16]
+   827bc:	8b090042 	add	x2, x2, x9
+   827c0:	8b0c0021 	add	x1, x1, x12
+   827c4:	a9060801 	stp	x1, x2, [x0, #96]
+   827c8:	f9003803 	str	x3, [x0, #112]
+   827cc:	a8c27bfd 	ldp	x29, x30, [sp], #32
+   827d0:	d65f03c0 	ret
+   827d4:	d503201f 	nop
 
-00000000000826b8 <do_fork>:
-   826b8:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
-   826bc:	910003fd 	mov	x29, sp
-   826c0:	f9000bf3 	str	x19, [sp, #16]
-   826c4:	97fffe00 	bl	81ec4 <get_cur_task>
-   826c8:	aa0003f3 	mov	x19, x0
-   826cc:	90000000 	adrp	x0, 82000 <uart_init+0xb0>
-   826d0:	911a8000 	add	x0, x0, #0x6a0
-   826d4:	97ffff27 	bl	82370 <privilege_task_create>
-   826d8:	d000000e 	adrp	x14, 84000 <idle_pcb>
-   826dc:	93407c00 	sxtw	x0, w0
-   826e0:	b9807e67 	ldrsw	x7, [x19, #124]
-   826e4:	d0000009 	adrp	x9, 84000 <idle_pcb>
-   826e8:	f9401dc1 	ldr	x1, [x14, #56]
-   826ec:	8b001002 	add	x2, x0, x0, lsl #4
-   826f0:	b9407a64 	ldr	w4, [x19, #120]
-   826f4:	d000000c 	adrp	x12, 84000 <idle_pcb>
-   826f8:	f940326d 	ldr	x13, [x19, #96]
-   826fc:	d374ccf0 	lsl	x16, x7, #12
-   82700:	8b020c22 	add	x2, x1, x2, lsl #3
-   82704:	f9400923 	ldr	x3, [x9, #16]
-   82708:	93407c84 	sxtw	x4, w4
-   8270c:	f9402581 	ldr	x1, [x12, #72]
-   82710:	f85e81af 	ldur	x15, [x13, #-24]
-   82714:	8b03020b 	add	x11, x16, x3
-   82718:	b9807c46 	ldrsw	x6, [x2, #124]
-   8271c:	d374cc88 	lsl	x8, x4, #12
-   82720:	4b0b01e2 	sub	w2, w15, w11
-   82724:	91400425 	add	x5, x1, #0x1, lsl #12
-   82728:	8b01010a 	add	x10, x8, x1
-   8272c:	8b0800a5 	add	x5, x5, x8
-   82730:	d374ccc6 	lsl	x6, x6, #12
-   82734:	aa0a03e1 	mov	x1, x10
-   82738:	8b22c0c2 	add	x2, x6, w2, sxtw
-   8273c:	cb0433e4 	neg	x4, x4, lsl #12
-   82740:	d374cc08 	lsl	x8, x0, #12
-   82744:	8b030042 	add	x2, x2, x3
-   82748:	f81001bf 	stur	xzr, [x13, #-256]
-   8274c:	f81e81a2 	stur	x2, [x13, #-24]
-   82750:	8b040022 	add	x2, x1, x4
-   82754:	39400023 	ldrb	w3, [x1]
-   82758:	91000421 	add	x1, x1, #0x1
-   8275c:	eb05003f 	cmp	x1, x5
-   82760:	38286843 	strb	w3, [x2, x8]
-   82764:	54ffff61 	b.ne	82750 <do_fork+0x98>  // b.any
-   82768:	f9400924 	ldr	x4, [x9, #16]
-   8276c:	aa0b03e1 	mov	x1, x11
-   82770:	cb0733e5 	neg	x5, x7, lsl #12
-   82774:	91400484 	add	x4, x4, #0x1, lsl #12
-   82778:	8b100084 	add	x4, x4, x16
-   8277c:	d503201f 	nop
-   82780:	8b050022 	add	x2, x1, x5
-   82784:	39400023 	ldrb	w3, [x1]
-   82788:	91000421 	add	x1, x1, #0x1
-   8278c:	eb04003f 	cmp	x1, x4
-   82790:	38266843 	strb	w3, [x2, x6]
-   82794:	54ffff61 	b.ne	82780 <do_fork+0xc8>  // b.any
-   82798:	f81001a0 	stur	x0, [x13, #-256]
-   8279c:	8b001000 	add	x0, x0, x0, lsl #4
-   827a0:	f81e81af 	stur	x15, [x13, #-24]
-   827a4:	f9401dce 	ldr	x14, [x14, #56]
-   827a8:	a9460a61 	ldp	x1, x2, [x19, #96]
-   827ac:	8b000dc0 	add	x0, x14, x0, lsl #3
-   827b0:	f9400929 	ldr	x9, [x9, #16]
-   827b4:	51040021 	sub	w1, w1, #0x100
-   827b8:	4b0b0042 	sub	w2, w2, w11
-   827bc:	4b0a0021 	sub	w1, w1, w10
-   827c0:	f940258c 	ldr	x12, [x12, #72]
-   827c4:	f9403a63 	ldr	x3, [x19, #112]
-   827c8:	8b22c0c2 	add	x2, x6, w2, sxtw
-   827cc:	8b21c101 	add	x1, x8, w1, sxtw
-   827d0:	f9400bf3 	ldr	x19, [sp, #16]
-   827d4:	8b090042 	add	x2, x2, x9
-   827d8:	8b0c0021 	add	x1, x1, x12
-   827dc:	a9060801 	stp	x1, x2, [x0, #96]
-   827e0:	f9003803 	str	x3, [x0, #112]
-   827e4:	a8c27bfd 	ldp	x29, x30, [sp], #32
-   827e8:	d65f03c0 	ret
-   827ec:	d503201f 	nop
+00000000000827d8 <do_exit>:
+   827d8:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
+   827dc:	910003fd 	mov	x29, sp
+   827e0:	f9000bf3 	str	x19, [sp, #16]
+   827e4:	2a0003f3 	mov	w19, w0
+   827e8:	97fffdb7 	bl	81ec4 <get_cur_task>
+   827ec:	d0000002 	adrp	x2, 84000 <zombieReaper_pcb>
+   827f0:	d0000001 	adrp	x1, 84000 <zombieReaper_pcb>
+   827f4:	9101c021 	add	x1, x1, #0x70
+   827f8:	52800063 	mov	w3, #0x3                   	// #3
+   827fc:	f9400045 	ldr	x5, [x2]
+   82800:	b9407c02 	ldr	w2, [x0, #124]
+   82804:	f9400424 	ldr	x4, [x1, #8]
+   82808:	29100c13 	stp	w19, w3, [x0, #128]
+   8280c:	d2800023 	mov	x3, #0x1                   	// #1
+   82810:	f9400bf3 	ldr	x19, [sp, #16]
+   82814:	9ac22060 	lsl	x0, x3, x2
+   82818:	b9001023 	str	w3, [x1, #16]
+   8281c:	8a200080 	bic	x0, x4, x0
+   82820:	b90084a3 	str	w3, [x5, #132]
+   82824:	f9000420 	str	x0, [x1, #8]
+   82828:	a8c27bfd 	ldp	x29, x30, [sp], #32
+   8282c:	17ffff61 	b	825b0 <schedule.part.0>
 
-00000000000827f0 <do_exit>:
-   827f0:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
-   827f4:	910003fd 	mov	x29, sp
-   827f8:	f9000bf3 	str	x19, [sp, #16]
-   827fc:	2a0003f3 	mov	w19, w0
-   82800:	97fffdb1 	bl	81ec4 <get_cur_task>
-   82804:	b9407c04 	ldr	w4, [x0, #124]
-   82808:	d0000002 	adrp	x2, 84000 <idle_pcb>
-   8280c:	9101c042 	add	x2, x2, #0x70
-   82810:	d2800021 	mov	x1, #0x1                   	// #1
-   82814:	52800065 	mov	w5, #0x3                   	// #3
-   82818:	29101413 	stp	w19, w5, [x0, #128]
-   8281c:	f9400443 	ldr	x3, [x2, #8]
-   82820:	f9400bf3 	ldr	x19, [sp, #16]
-   82824:	b9001041 	str	w1, [x2, #16]
-   82828:	9ac42021 	lsl	x1, x1, x4
-   8282c:	8a210061 	bic	x1, x3, x1
-   82830:	f9000441 	str	x1, [x2, #8]
-   82834:	a8c27bfd 	ldp	x29, x30, [sp], #32
-   82838:	17ffff5e 	b	825b0 <schedule.part.0>
-   8283c:	d503201f 	nop
-
-0000000000082840 <zombieReaper>:
-   82840:	a9bd7bfd 	stp	x29, x30, [sp, #-48]!
-   82844:	910003fd 	mov	x29, sp
-   82848:	a9025bf5 	stp	x21, x22, [sp, #32]
-   8284c:	d0000015 	adrp	x21, 84000 <idle_pcb>
-   82850:	a90153f3 	stp	x19, x20, [sp, #16]
-   82854:	d2800033 	mov	x19, #0x1                   	// #1
-   82858:	f9401eb5 	ldr	x21, [x21, #56]
-   8285c:	2a1303f6 	mov	w22, w19
-   82860:	d0000014 	adrp	x20, 84000 <idle_pcb>
-   82864:	d503201f 	nop
-   82868:	f9403a83 	ldr	x3, [x20, #112]
-   8286c:	910212a1 	add	x1, x21, #0x84
-   82870:	52800005 	mov	w5, #0x0                   	// #0
-   82874:	52800000 	mov	w0, #0x0                   	// #0
-   82878:	9ac02262 	lsl	x2, x19, x0
-   8287c:	11000400 	add	w0, w0, #0x1
-   82880:	ea03005f 	tst	x2, x3
-   82884:	540000e0 	b.eq	828a0 <zombieReaper+0x60>  // b.none
-   82888:	b9400024 	ldr	w4, [x1]
-   8288c:	71000c9f 	cmp	w4, #0x3
-   82890:	54000081 	b.ne	828a0 <zombieReaper+0x60>  // b.any
-   82894:	8a220063 	bic	x3, x3, x2
-   82898:	52800025 	mov	w5, #0x1                   	// #1
-   8289c:	d503201f 	nop
-   828a0:	91022021 	add	x1, x1, #0x88
-   828a4:	7101001f 	cmp	w0, #0x40
-   828a8:	54fffe81 	b.ne	82878 <zombieReaper+0x38>  // b.any
-   828ac:	350000a5 	cbnz	w5, 828c0 <zombieReaper+0x80>
-   828b0:	9101c280 	add	x0, x20, #0x70
+0000000000082830 <zombieReaper>:
+   82830:	a9bc7bfd 	stp	x29, x30, [sp, #-64]!
+   82834:	910003fd 	mov	x29, sp
+   82838:	a90153f3 	stp	x19, x20, [sp, #16]
+   8283c:	d0000014 	adrp	x20, 84000 <zombieReaper_pcb>
+   82840:	a9025bf5 	stp	x21, x22, [sp, #32]
+   82844:	d2800033 	mov	x19, #0x1                   	// #1
+   82848:	f9402294 	ldr	x20, [x20, #64]
+   8284c:	2a1303f6 	mov	w22, w19
+   82850:	a90363f7 	stp	x23, x24, [sp, #48]
+   82854:	52800055 	mov	w21, #0x2                   	// #2
+   82858:	d0000017 	adrp	x23, 84000 <zombieReaper_pcb>
+   8285c:	d0000018 	adrp	x24, 84000 <zombieReaper_pcb>
+   82860:	f9403ae3 	ldr	x3, [x23, #112]
+   82864:	91021281 	add	x1, x20, #0x84
+   82868:	52800005 	mov	w5, #0x0                   	// #0
+   8286c:	52800000 	mov	w0, #0x0                   	// #0
+   82870:	9ac02262 	lsl	x2, x19, x0
+   82874:	11000400 	add	w0, w0, #0x1
+   82878:	ea03005f 	tst	x2, x3
+   8287c:	540000e0 	b.eq	82898 <zombieReaper+0x68>  // b.none
+   82880:	b9400024 	ldr	w4, [x1]
+   82884:	71000c9f 	cmp	w4, #0x3
+   82888:	54000081 	b.ne	82898 <zombieReaper+0x68>  // b.any
+   8288c:	8a220063 	bic	x3, x3, x2
+   82890:	52800025 	mov	w5, #0x1                   	// #1
+   82894:	d503201f 	nop
+   82898:	91022021 	add	x1, x1, #0x88
+   8289c:	7101001f 	cmp	w0, #0x40
+   828a0:	54fffe81 	b.ne	82870 <zombieReaper+0x40>  // b.any
+   828a4:	350000e5 	cbnz	w5, 828c0 <zombieReaper+0x90>
+   828a8:	f9400301 	ldr	x1, [x24]
+   828ac:	9101c2e0 	add	x0, x23, #0x70
+   828b0:	b9008435 	str	w21, [x1, #132]
    828b4:	b9001016 	str	w22, [x0, #16]
    828b8:	97ffff3e 	bl	825b0 <schedule.part.0>
-   828bc:	17ffffeb 	b	82868 <zombieReaper+0x28>
-   828c0:	f9003a83 	str	x3, [x20, #112]
-   828c4:	17fffffb 	b	828b0 <zombieReaper+0x70>
+   828bc:	17ffffe9 	b	82860 <zombieReaper+0x30>
+   828c0:	f9003ae3 	str	x3, [x23, #112]
+   828c4:	17fffff9 	b	828a8 <zombieReaper+0x78>
 
 00000000000828c8 <foo>:
    828c8:	a9b37bfd 	stp	x29, x30, [sp, #-208]!
@@ -2499,21 +2499,21 @@ Disassembly of section .text:
    82c0c:	910003fd 	mov	x29, sp
    82c10:	97fffcd0 	bl	81f50 <uart_init>
    82c14:	94000221 	bl	83498 <core_timer_enable>
-   82c18:	d0000000 	adrp	x0, 84000 <idle_pcb>
-   82c1c:	f9401400 	ldr	x0, [x0, #40]
+   82c18:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
+   82c1c:	f9401800 	ldr	x0, [x0, #48]
    82c20:	97fffd78 	bl	82200 <init_Queue>
-   82c24:	d0000000 	adrp	x0, 84000 <idle_pcb>
-   82c28:	f9401800 	ldr	x0, [x0, #48]
+   82c24:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
+   82c28:	f9401c00 	ldr	x0, [x0, #56]
    82c2c:	97fffdd1 	bl	82370 <privilege_task_create>
-   82c30:	d0000000 	adrp	x0, 84000 <idle_pcb>
-   82c34:	f9400c00 	ldr	x0, [x0, #24]
+   82c30:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
+   82c34:	f9401000 	ldr	x0, [x0, #32]
    82c38:	97fffdce 	bl	82370 <privilege_task_create>
    82c3c:	90000000 	adrp	x0, 82000 <uart_init+0xb0>
    82c40:	912fe000 	add	x0, x0, #0xbf8
    82c44:	97fffdcb 	bl	82370 <privilege_task_create>
-   82c48:	d0000000 	adrp	x0, 84000 <idle_pcb>
+   82c48:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
    82c4c:	a8c17bfd 	ldp	x29, x30, [sp], #16
-   82c50:	f9401000 	ldr	x0, [x0, #32]
+   82c50:	f9401400 	ldr	x0, [x0, #40]
    82c54:	f9400000 	ldr	x0, [x0]
    82c58:	17fffc9f 	b	81ed4 <go_to>
    82c5c:	00000000 	.inst	0x00000000 ; undefined
@@ -2618,10 +2618,10 @@ Disassembly of section .text:
    82dc0:	f1001a7f 	cmp	x19, #0x6
    82dc4:	54000381 	b.ne	82e34 <sysCall_handler_el0+0xa4>  // b.any
    82dc8:	b8548020 	ldur	w0, [x1, #-184]
-   82dcc:	97fffe89 	bl	827f0 <do_exit>
+   82dcc:	97fffe83 	bl	827d8 <do_exit>
    82dd0:	f9400bf3 	ldr	x19, [sp, #16]
    82dd4:	a8c37bfd 	ldp	x29, x30, [sp], #48
-   82dd8:	17fffe2c 	b	82688 <kernel_routine_exit>
+   82dd8:	17fffe26 	b	82670 <kernel_routine_exit>
    82ddc:	f100067f 	cmp	x19, #0x1
    82de0:	54000400 	b.eq	82e60 <sysCall_handler_el0+0xd0>  // b.none
    82de4:	54000168 	b.hi	82e10 <sysCall_handler_el0+0x80>  // b.pmore
@@ -2629,21 +2629,21 @@ Disassembly of section .text:
    82dec:	f8100020 	stur	x0, [x1, #-256]
    82df0:	f9400bf3 	ldr	x19, [sp, #16]
    82df4:	a8c37bfd 	ldp	x29, x30, [sp], #48
-   82df8:	17fffe24 	b	82688 <kernel_routine_exit>
+   82df8:	17fffe1e 	b	82670 <kernel_routine_exit>
    82dfc:	f8548020 	ldur	x0, [x1, #-184]
    82e00:	97fffdbc 	bl	824f0 <do_exec>
    82e04:	f9400bf3 	ldr	x19, [sp, #16]
    82e08:	a8c37bfd 	ldp	x29, x30, [sp], #48
-   82e0c:	17fffe1f 	b	82688 <kernel_routine_exit>
+   82e0c:	17fffe19 	b	82670 <kernel_routine_exit>
    82e10:	f8548020 	ldur	x0, [x1, #-184]
    82e14:	97fffca3 	bl	820a0 <uart_puts>
    82e18:	f9400bf3 	ldr	x19, [sp, #16]
    82e1c:	a8c37bfd 	ldp	x29, x30, [sp], #48
-   82e20:	17fffe1a 	b	82688 <kernel_routine_exit>
-   82e24:	97fffe25 	bl	826b8 <do_fork>
+   82e20:	17fffe14 	b	82670 <kernel_routine_exit>
+   82e24:	97fffe1f 	bl	826a0 <do_fork>
    82e28:	f9400bf3 	ldr	x19, [sp, #16]
    82e2c:	a8c37bfd 	ldp	x29, x30, [sp], #48
-   82e30:	17fffe16 	b	82688 <kernel_routine_exit>
+   82e30:	17fffe10 	b	82670 <kernel_routine_exit>
    82e34:	b0000000 	adrp	x0, 83000 <ullToStr.part.0+0x38>
    82e38:	911ae000 	add	x0, x0, #0x6b8
    82e3c:	97fffc99 	bl	820a0 <uart_puts>
@@ -2654,11 +2654,11 @@ Disassembly of section .text:
    82e50:	97fffc94 	bl	820a0 <uart_puts>
    82e54:	f9400bf3 	ldr	x19, [sp, #16]
    82e58:	a8c37bfd 	ldp	x29, x30, [sp], #48
-   82e5c:	17fffe0b 	b	82688 <kernel_routine_exit>
+   82e5c:	17fffe05 	b	82670 <kernel_routine_exit>
    82e60:	97fffdde 	bl	825d8 <schedule>
    82e64:	f9400bf3 	ldr	x19, [sp, #16]
    82e68:	a8c37bfd 	ldp	x29, x30, [sp], #48
-   82e6c:	17fffe07 	b	82688 <kernel_routine_exit>
+   82e6c:	17fffe01 	b	82670 <kernel_routine_exit>
    82e70:	a901d7b4 	stp	x20, x21, [x29, #24]
    82e74:	a974d434 	ldp	x20, x21, [x1, #-184]
    82e78:	710002bf 	cmp	w21, #0x0
@@ -2676,7 +2676,7 @@ Disassembly of section .text:
    82ea8:	a941d7b4 	ldp	x20, x21, [x29, #24]
    82eac:	f9400bf3 	ldr	x19, [sp, #16]
    82eb0:	a8c37bfd 	ldp	x29, x30, [sp], #48
-   82eb4:	17fffdf5 	b	82688 <kernel_routine_exit>
+   82eb4:	17fffdef 	b	82670 <kernel_routine_exit>
 
 0000000000082eb8 <sync_exc0_handler>:
    82eb8:	a9be7bfd 	stp	x29, x30, [sp, #-32]!
@@ -2695,7 +2695,7 @@ Disassembly of section .text:
    82eec:	97ffff71 	bl	82cb0 <show_esr_elr>
    82ef0:	a8c27bfd 	ldp	x29, x30, [sp], #32
    82ef4:	d65f03c0 	ret
-   82ef8:	97fffddc 	bl	82668 <kernel_routine_entry>
+   82ef8:	97fffdd6 	bl	82650 <kernel_routine_entry>
    82efc:	f9400ba0 	ldr	x0, [x29, #16]
    82f00:	f240601f 	tst	x0, #0x1ffffff
    82f04:	54ffff61 	b.ne	82ef0 <sync_exc0_handler+0x38>  // b.any
@@ -2743,9 +2743,9 @@ Disassembly of section .text:
    82f94:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
    82f98:	910003fd 	mov	x29, sp
    82f9c:	9400013b 	bl	83488 <core_timer_handler>
-   82fa0:	d0000000 	adrp	x0, 84000 <idle_pcb>
+   82fa0:	d0000000 	adrp	x0, 84000 <zombieReaper_pcb>
    82fa4:	52800021 	mov	w1, #0x1                   	// #1
-   82fa8:	f9402000 	ldr	x0, [x0, #64]
+   82fa8:	f9402400 	ldr	x0, [x0, #72]
    82fac:	b9000001 	str	w1, [x0]
    82fb0:	a8c17bfd 	ldp	x29, x30, [sp], #16
    82fb4:	17fffd89 	b	825d8 <schedule>

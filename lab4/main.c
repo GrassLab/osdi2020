@@ -106,5 +106,5 @@ void main()
 
     privilege_task_create(user_test);
 
-    go_to(&idle_pcb->context);
+    go_to(idle_pcb);
 }
