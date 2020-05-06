@@ -20,7 +20,9 @@ struct task_t {
     uint64_t spsr;
     int id;
     int used;
+    int status;
     int time;
+    int killed;
     int reschedule;
     uint64_t elr;
 };
@@ -46,4 +48,5 @@ void task_init();
 void runqueue_push(struct task_t* task);
 void do_exec(void (*func)());
 void do_fork(uint64_t elr);
+void do_exit(uint64_t status);
 #endif

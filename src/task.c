@@ -37,6 +37,10 @@ struct task_t* runqueue_pop() {
         if (runqueue[now].is_active) {
             /* runqueue[runqueue_now].is_active = 0; */
             task = runqueue[now].task;
+            if (!task->used) {
+                runqueue[now].is_active = 0;
+                continue;
+            }
             runqueue_now = (now + 1) % RUNQUEUE_SIZE;
             return task;
         }
@@ -110,28 +114,49 @@ void do_exec(void (*func)()) {
 
 void do_fork(uint64_t elr) {
     struct task_t *task = get_current(), *child_task = 0;
+    uint64_t sp_el0;
+    asm volatile("mrs %0, sp_el0" : "=r"(sp_el0));
+    task->utask.sp = sp_el0;
     for (int i = 0; i < 64; i++) {
         if (!task_pool[i].used) {
             child_task = &task_pool[i];
             task_pool[i].id = i;
             asm volatile("gg:");
-            task_pool[i].sp = task->sp - (uint64_t)&kstack_pool[task->id] +
-                              (uint64_t)&kstack_pool[i];
+            /* task_pool[i].sp = task->sp - (uint64_t)&kstack_pool[task->id + 1]
+             * + */
+            /* (uint64_t)&kstack_pool[i + 1]; */
             task_pool[i].elr = elr;
             task_pool[i].time = 0;
             task_pool[i].spsr = task->spsr;
             task_pool[i].reschedule = 0;
             task_pool[i].used = 1;
             task_pool[i].utask.elr = task->utask.elr;
-            task_pool[i].utask.sp = task->utask.sp -
-                                    (uint64_t)&ustack_pool[task->id] +
-                                    (uint64_t)&ustack_pool[i];
+            task_pool[i].utask.sp =
+                (uint64_t)&ustack_pool[i + 1] -
+                ((uint64_t)&ustack_pool[task->id + 1] - sp_el0);
+            task_pool[i].sp = task_pool[i].utask.sp;
             task_pool[i].utask.fork_id = 0;
-            memcpy(kstack_pool[i], kstack_pool[task->id], STACK_SIZE);
-            memcpy(ustack_pool[i], ustack_pool[task->id], STACK_SIZE);
+            memcpy(&kstack_pool[i - 1] + 1, &kstack_pool[task->id - 1] + 1,
+                   STACK_SIZE * sizeof(char));
+            memcpy(&ustack_pool[i - 1] + 1, &ustack_pool[task->id - 1] + 1,
+                   STACK_SIZE * sizeof(char));
+            asm volatile("gg2:");
             task->utask.fork_id = task_pool[i].id;
             break;
         }
     }
     runqueue_push(child_task);
+}
+
+void do_exit(uint64_t status) {
+    struct task_t* task = get_current();
+    task->used = 0;
+    task->status = status;
+
+    print_s("Exited with status code: ");
+    print_i(status);
+    print_s("\n");
+
+    asm volatile("ldr x0, =schedule");
+    asm volatile("msr elr_el1, x0");
 }

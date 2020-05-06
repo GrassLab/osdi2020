@@ -45,46 +45,46 @@ void run() {
 void idle() { schedule(); }
 
 void user0() {
-    print_s("user0\n");
+    uart_write("user 0\n", 7);
     while (1)
         ;
 }
 
 void user1() {
-    /* uart_write('u'); */
-    /* uart_write('s'); */
-    /* uart_write('e'); */
-    /* uart_write('r'); */
-    /* uart_write(':'); */
-    print_s("user1\n");
+    uart_write("user 1\n", 7);
     exec(user0);
     while (1)
         ;
-    /* char tmp; */
-    /* while (1) { */
-    /* tmp = uart_read(); */
-    /* uart_write(tmp); */
-    /* } */
 }
 void user2() {
     print_s("user2\n");
-    fork();
-    while (1)
-        ;
+    int a = fork();
+    if (a == 0) {
+        print_s("pid: ");
+        print_i(a);
+        print_s("\n");
+        while (1)
+            ;
+    } else {
+        print_s("pid: ");
+        print_i(a);
+        print_s("\n");
+        exit(2);
+    }
 }
 
 void task1() {
-    print_s("task 1\n");
+    uart_write("task 1\n", 7);
     do_exec(user1);
 }
 
 void task2() {
-    print_s("task 2\n");
+    uart_write("task 2\n", 7);
     do_exec(user2);
 }
 
 void task3() {
-    print_s("task 3\n");
+    uart_write("task 3\n", 7);
     do_exec(user1);
 }
 

@@ -15,15 +15,10 @@
 #define IIR_REG_REC_NON_EMPTY (2 << 1)
 
 extern void core_timer_enable();
-void synchronize_handler() {
-    uint64_t syscall, x0, x1, x2, x3, x4, x5;
+void synchronize_handler(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3,
+                         uint64_t x4, uint64_t x5) {
+    uint64_t syscall;
     uint64_t esr, elr;
-    asm volatile("mov %0, x0" : "=r"(x0));
-    asm volatile("mov %0, x1" : "=r"(x1));
-    asm volatile("mov %0, x2" : "=r"(x2));
-    asm volatile("mov %0, x3" : "=r"(x3));
-    asm volatile("mov %0, x4" : "=r"(x4));
-    asm volatile("mov %0, x5" : "=r"(x5));
     asm volatile("mov %0, x8" : "=r"(syscall));
     asm volatile("mrs %0, esr_el1" : "=r"(esr));
     asm volatile("mrs %0, elr_el1" : "=r"(elr));
@@ -32,10 +27,14 @@ void synchronize_handler() {
     if (iss == 0) {
         switch (syscall) {
             case 0:
-                uart_send(x0);
+                for (uint64_t i = 0; i < x1; i++) {
+                    uart_send(*((char *)x0 + i));
+                }
                 break;
             case 1:
-                x0 = uart_getc();
+                for (uint64_t i = 0; i < x1; i++) {
+                    *((char *)x0 + i) = uart_getc();
+                }
                 asm volatile("mov x0, %0" : "=r"(x0));
                 break;
             case 2:
@@ -43,7 +42,9 @@ void synchronize_handler() {
                 break;
             case 3:
                 do_fork(elr);
-                asm volatile("for:");
+                break;
+            case 4:
+                do_exit(x0);
                 break;
         }
     } else if (iss == 2) {
