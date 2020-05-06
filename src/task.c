@@ -108,14 +108,15 @@ void task_init() {
 
 void privilege_task_run() {
     struct task_t* task = queue_pop(&runqueue);
+    struct task_t tmp;
     uint64_t pid = (uint64_t)task;
-    asm volatile("hh:");
     print_s("schdule pid: ");
     print_i(task->id);
     print_s("\n");
     queue_push(&runqueue, task);
-    asm volatile("msr tpidr_el1, %0" : "=r"(pid));
-    ((void (*)())task->elr)();
+    /* asm volatile("msr tpidr_el1, %0" : "=r"(pid)); */
+    /* ((void (*)())task->elr)(); */
+    switch_to(&tmp, task, task->elr, task->spsr);
 }
 
 void schedule() {

@@ -27,6 +27,7 @@ struct task_t {
     int time;
     int signal;
     int priority;
+    int reschedule;
     uint64_t elr;
 };
 

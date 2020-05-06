@@ -41,7 +41,6 @@ void core_timer_handler() {
         task->utask.sp = sp_el0;
         asm volatile("mrs %0, spsr_el1" : "=r"(spsr_el1));
         task->spsr = spsr_el1;
-        /* task->reschedule = 1; */
         task->time = 0;
         asm volatile("ldr x0, =schedule");
         asm volatile("msr elr_el1, x0");
