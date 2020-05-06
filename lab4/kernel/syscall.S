@@ -34,8 +34,8 @@ do_sys:
     cts_s
     lsl     x0, x0, #2
     ldr     x10, =syscall_table
-	add		x0, x0, x10
-	blr		x0
+    add		x0, x0, x10
+    blr		x0
     cts_l
     ret
 
@@ -53,8 +53,11 @@ syscall_table:
     b sys_get_current_el        // 10
     b do_fork               // 11
     b get_running_task      // 12
-    //b sys_exec              // 9
-
+    b sys_exec              // 13
+    b sys_get_current       // 14
+    b sys_exit              // 15
+    b sys_read              // 16
+    b sys_write             // 17
 
 
 .global fork_ret
@@ -84,3 +87,8 @@ fork_ret:
   cbnz x9, 3b
 2:
   ret
+
+
+.global sys_get_current
+sys_get_current:
+  mrs x0, tpidr_el1

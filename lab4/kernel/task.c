@@ -56,18 +56,21 @@ void set_trap_ret(uint64_t retval, uint32_t id)
 	task_pool[id].trapframe = retval;
 }
 
-int32_t do_exec(void (*func)(), int is_privilege)
+void exec(void (*func)())
+{
+	asm volatile("mov x1, %0\n\t"
+		     "mov x0, #13\n\t"
+		     "svc #0" ::"r"(func)
+		     :);
+}
+void sys_exec(int num, void (*func)())
 {
 	/* do non privilege */
 	struct task_t *current = &task_pool[current_task];
-	// print("Task id: %d\n", current->task_id);
 	asm volatile("msr sp_el0, %0" ::"r"(current->sp_el0) :);
 	asm volatile("msr spsr_el1, %0" ::"r"(0) :);
 	asm volatile("msr elr_el1, %0" ::"r"(func) :);
-	// current->privilege = 0;
 	asm volatile("eret");
-	// current->elr_el1 = (uint64_t)func;
-	return 1;
 }
 
 void *memcpy(void *dest, const void *src, int32_t len)
@@ -100,11 +103,6 @@ int32_t do_fork()
 	uint32_t child_pid = -1;
 	uint64_t pc;
 	asm volatile("mrs %0, elr_el1" : "=r"(pc)::);
-	// uint32_t child = privilege_task_create((void *)pc);
-	// struct task_t *child_proc = &task_pool[child];
-	// child_proc->privilege = current->privilege;
-	// child_proc->elr_el1 = current->elr_el1;
-	// child_proc->
 	if (POOL_FULL(bitmap))
 		return -1;
 	for (int32_t i = 0; i < POOL_SIZE; i++) {
@@ -135,7 +133,6 @@ int32_t do_fork()
 		/* setup trapframe */
 		current->trapframe = child_pid;
 		child->trapframe = 0;
-		print("ELR_EL1 %x\n", child->elr_el1);
 		return child_pid;
 	}
 }

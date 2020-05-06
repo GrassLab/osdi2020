@@ -1,5 +1,7 @@
 #include "kernel/task.h"
 #include "kernel.h"
+#include "uart.h"
+
 #define POOL_SIZE 64
 #define TASK_STATE_NEW 0
 #define TASK_STATE_READY 1
@@ -33,6 +35,7 @@ uint32_t get_el()
 }
 void enable_irq();
 void disable_irq();
+
 void sched_next()
 {
 	uint32_t next_task;
@@ -58,29 +61,27 @@ void sched_next()
 					      &task_pool[current_task];
 		struct task_t *next = &task_pool[next_task];
 		current_task = next_task;
-		// if (prev->privilege == 0) {
-		// asm volatile("mrs %0, spsr_el1" : "=r"(prev->spsr_el1)::);
-		// asm volatile("mrs %0, elr_el1" : "=r"(prev->elr_el1)::);
-		// asm volatile("mrs %0, sp_el0" : "=r"(prev->sp_el0)::);
-		// }
+		asm volatile("mrs %0, spsr_el1" : "=r"(prev->spsr_el1)::);
+		asm volatile("mrs %0, elr_el1" : "=r"(prev->elr_el1)::);
+		asm volatile("mrs %0, sp_el0" : "=r"(prev->sp_el0)::);
 		// print("BEFORE CTX\n");
 		// print_task(prev);
 		// print_task(next);
 		print("CTX from %d to %d.\n", prev->task_id, next->task_id);
-		enable_irq();
-		context_switch(prev, next); //prev_task == -1 ? &fake_task :
-		disable_irq();
+		context_switch(prev, next);
 		// print("AFTER CTX\n");
 		// print_task(prev);
 		// print_task(next);
-		// if (next->privilege == 0) {
-		// asm volatile("msr spsr_el1, %0" ::"r"(next->spsr_el1) :);
-		// asm volatile("msr elr_el1, %0" ::"r"(next->elr_el1) :);
-		// asm volatile("msr sp_el0, %0" ::"r"(next->sp_el0) :);
-		// }
-		// if (next->privilege == 0) {
-		// 	asm volatile("eret");
-		// }
-		// disable_irq();
+		next = &task_pool[current_task];
+		asm volatile("msr spsr_el1, %0" ::"r"(next->spsr_el1) :);
+		asm volatile("msr elr_el1, %0" ::"r"(next->elr_el1) :);
+		asm volatile("msr sp_el0, %0" ::"r"(next->sp_el0) :);
 	}
+}
+
+void sys_exit()
+{
+	bitmap &= ~(1 << current_task);
+	uart_hex(bitmap);
+	sched_next();
 }

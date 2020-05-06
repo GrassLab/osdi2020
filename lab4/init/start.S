@@ -196,24 +196,16 @@ ret2EL0:
 
 .global exception_handler
 exception_handler:
-    //cts_s
-    SAVE_REG
-    SAVE_RET
+    cts_s
     bl do_sys
-    LOAD_RET
-    LOAD_REG
-    //cts_l
+    cts_l
     eret
 
 .global interrupt_handler
 interrupt_handler:
-    //intr_cts_s
-    SAVE_REG
-    SAVE_RET
+    intr_cts_s
     bl irq_handler
-    LOAD_RET
-    LOAD_REG
-    //intr_cts_l
+    intr_cts_l
     eret
 
     .align 11

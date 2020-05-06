@@ -96,23 +96,24 @@ void delay(uint32_t tick)
 		asm volatile("nop");
 	}
 }
+// #define REQ12
+#define REQ34
 void foo()
 {
+#ifdef REQ34
 	int tmp = 5;
 	print("Task %d after exec, tmp address 0x%x, tmp value %d\n",
 	      current_task, &tmp, tmp);
+	exit();
+#endif
+#ifdef REQ12
 	while (1) {
-		// uint64_t sp;
-		// asm volatile("mov %0, sp" : "=r"(sp)::);
-		// print("Task id: %d with sp %x ",
-		//       task_pool[current_task].task_id, sp);
-		// print("in EL%d ", sys_get_current_el());
-		// print("with level %d\n", task_pool[current_task].privilege);
-		print("haha\n");
-		for (int i = 10; i < 100; i++)
-			delay(1000000);
-		// sched_next();
+		print("Task id: %d ", task_pool[current_task].task_id);
+		print("with level %d\n", task_pool[current_task].privilege);
+		delay(1000000);
+		schedule();
 	}
+#endif
 }
 int do_sys(int num);
 void schedule()
@@ -121,14 +122,15 @@ void schedule()
 	asm volatile("mov x0, #9\n\t"
 		     "svc #0");
 }
+
 void idle()
 {
 	while (1) {
-		schedule();
-		uart_puts("Idle\n");
+		sched_next();
 		delay(1000000);
 	}
 }
+
 void init()
 {
 	uart_init();
@@ -153,6 +155,11 @@ void shell()
 		// sched_next();
 	}
 }
+void exit()
+{
+	asm volatile("mov x0, #15\n\t"
+		     "svc #0");
+}
 int32_t fork()
 {
 	asm volatile("mov x0, #11\n\t"
@@ -160,39 +167,103 @@ int32_t fork()
 	struct task_t *current = &task_pool[current_task];
 	return current->trapframe;
 }
+int32_t get_taskid()
+{
+	int64_t ret;
+	asm volatile("mov x0, #14\n\t"
+		     "svc #0");
+	asm volatile("mov %0, x0" : "=r"(ret)::);
+	return ret;
+}
 void foo1()
 {
 	// print("PID: %d\n", fork());
-	// int cnt = 0;
-	// int32_t pid = fork();
-	// if (pid == -1) {
-	// 	print("Fork error\n");
-	// 	return;
-	// } else if (pid == 0) {
-	// 	/* child */
-	// 	print("child cnt %x\n", &cnt);
+#ifdef REQ34
+	int cnt = 0;
+	int32_t pid = fork();
+	if (pid == -1) {
+		print("Fork error\n");
+		return;
+	} else if (pid == 0) {
+		/* child */
+		print("child cnt %x\n", &cnt);
+		exit();
+	} else {
+		print("parent cnt %x\n", &cnt);
+		exit();
+	}
+	// int cnt = 1;
+	// if (fork() == 0) {
+	// 	// fork();
+	// 	delay(100000);
+	// 	// fork();
+	// 	// while (cnt < 10) {
+	// 	// 	print("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+	// 	// 	delay(100000);
+	// 	// 	++cnt;
+	// 	// }
+	// 	exit();
+	// 	print("Should not be printed\n");
 	// } else {
-	// 	print("parent cnt %x\n", &cnt);
+	// 	print("Task %d before exec, cnt address 0x%x, cnt value %d\n",
+	// 	      get_taskid(), &cnt, cnt);
+	// 	exit();
+	// 	// exec(foo);
 	// }
+#endif
+#ifdef REQ12
 	while (1) {
 		print("Task id: %d ", task_pool[current_task].task_id);
 		print("with level %d\n", task_pool[current_task].privilege);
 		delay(1000000);
-		// sched_next();
+		schedule();
 	}
+#endif
 }
 void user_test()
 {
-	do_exec(foo1, 0);
+	exec(foo1);
+}
+void user_test1()
+{
+	exec(foo);
 }
 void jmp_to_el0();
+
+char sys_read()
+{
+	return uart_getc();
+}
+char uart_read()
+{
+	char ret;
+	asm volatile("mov x0, #16\n\t"
+		     "svc #0");
+	asm volatile("mov %0, x0" : "=r"(ret)::);
+	return ret;
+}
+
+void sys_write(int num, char *c)
+{
+	uart_puts(c);
+}
+void uart_write(char *c)
+{
+	asm volatile("mov x1, %0\n\t"
+		     "mov x0, #17\n\t"
+		     "svc #0" ::"r"(c)
+		     :);
+}
 int main()
 {
 	init();
-	// privilege_task_create(idle);
+	// uart_write("test\n");
+	// print(uart_read());
 	// for (int i = 0; i < 2; i++) {
-	privilege_task_create(foo);
+	// 	privilege_task_create(foo);
 	// }
+	privilege_task_create(idle);
+	privilege_task_create(user_test1);
 	privilege_task_create(user_test);
 	// jmp_to_el0();
 	idle();
