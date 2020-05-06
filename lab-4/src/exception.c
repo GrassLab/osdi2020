@@ -28,6 +28,10 @@ static void el0_svc_handler(unsigned long sp)
         __exit(x0);
     } else if (x8 == SYSCALL_FORK) {
         syscallReturnValue = __fork();
+    } else if (x8 == SYSCALL_UART_READ) {
+        syscallReturnValue = uart_getc();
+    } else if (x8 == SYSCALL_UART_WRITE) {
+        uart_puts(x0);
     }
     trapframe->regs[0] = syscallReturnValue;
 }
@@ -64,17 +68,6 @@ void exception_handler(unsigned long sp)
     task->userContext.elr_el1 = elr_el1;
     task->userContext.spsr_el1 = spsr_el1;
     task->trapframe = sp;
-    // Trapframe *trapframe = task->trapframe;
-
-    // unsigned long *trapframe = (unsigned long *)task->trapframe;
-
-    // *(trapframe+31) = 1;
-    // *(trapframe+32) = 1;
-    // *(trapframe+33) = 1; 
-    // uart_puts("save user context!!!!!!!\n");
-    // trapframe->sp_el0 = sp_el0;
-    // trapframe->elr_el1 = elr_el1;
-    // trapframe->spsr_el1 = spsr_el1;
 
     // SVC
     if ((esr>>26) == 0b010101) {

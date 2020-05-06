@@ -14,15 +14,13 @@
 #define SYSCALL_EXIT 10
 #define SYSCALL_FORK 11
 
-int uart_read();
-int __uart_read();
-int uart_write();
-int __uart_write();
 int get_taskid();
 int __get_taskid();
 void get_timestamp();
 void __get_timestamp();
 void __exit();
 int exec(void(*func)());
+char uart_read();
+void uart_write(char *c);
 
 #endif

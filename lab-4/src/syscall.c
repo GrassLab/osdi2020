@@ -2,34 +2,6 @@
 #include "task.h"
 #include "uart.h"
 
-int uart_read()
-{
-    unsigned long x0;
-    asm volatile("mov x8, %0" : :"r"(SYSCALL_UART_READ));
-    asm volatile("svc #0");
-    asm volatile("mov %0, x0" : "=r"(x0) :);
-    return x0;   
-}
-
-int __uart_read()
-{
-
-}
-
-int uart_write()
-{
-    unsigned long x0;
-    asm volatile("mov x8, %0" : :"r"(SYSCALL_UART_WRITE));
-    asm volatile("svc #0");
-    asm volatile("mov %0, x0" : "=r"(x0) :);
-    return x0;   
-}
-
-int __uart_write()
-{
-
-}
-
 int get_taskid()
 {
     unsigned long x0;
@@ -65,6 +37,7 @@ void __get_timestamp()
     uart_puts(".");
     uart_print_int(floatPart);
     uart_puts("]");
+int __uart_write();
     uart_puts("\n");
 }
 
@@ -92,3 +65,21 @@ int fork()
     asm volatile("mov %0, x0" : "=r"(x0) :);
     return x0;  
 }
+
+char uart_read() 
+{
+    unsigned long x0;
+    asm volatile("mov x8, %0" : :"r"(SYSCALL_UART_READ));
+    asm volatile("svc #0");
+    asm volatile("mov %0, x0" : "=r"(x0) :);
+    return x0;  
+}
+
+void uart_write(char *c)
+{
+    unsigned long x0;
+    asm volatile("mov x8, %0" : :"r"(SYSCALL_UART_WRITE));
+    asm volatile("mov x0, %0" : :"r"(c));
+    asm volatile("svc #0");
+}
+

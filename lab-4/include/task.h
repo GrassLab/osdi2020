@@ -29,9 +29,6 @@ typedef struct userContext {
 
 typedef struct trapframe {
 	unsigned long regs[31];
-    unsigned long sp_el0; // sp
-	unsigned long elr_el1; // pc
-	unsigned long spsr_el1; // pstate
 } __attribute__ ((aligned (8))) Trapframe;
 
 typedef struct task {
@@ -64,7 +61,11 @@ int __fork();
 
 // Lab4 test case
 void user_test();
+void uart_test();
 void test();
+void hello();
+void idle12();
 void idle();
+void foo12();
 void foo();
 #endif

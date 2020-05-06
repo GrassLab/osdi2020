@@ -62,9 +62,7 @@ void context_switch(Task* next)
     uart_puts(", next taskid: ");
     uart_print_int(next->id);
     uart_puts("\n");
-    // for(int i= 0; i<taskManager.taskCount; i++) {
-    //     print_task_context(&taskManager.taskPool[i]);
-    // }
+    // print_task_context();
     switch_to(prev, next);
 }
 
@@ -83,18 +81,23 @@ void schedule()
 }
 
 void print_task_context(Task *task)
-{
-    uart_puts("Task id = ");
-    uart_print_int(task->id);
-    uart_puts(", sp_el0 = ");
-    uart_print_hex(task->userContext.sp_el0);
-    uart_puts(", elr_el1 = ");
-    uart_print_hex(task->userContext.elr_el1);
-    uart_puts(", spsr_el1 = ");
-    uart_print_hex(task->userContext.spsr_el1);
-    uart_puts(", sp = ");
-    uart_print_hex(task->cpuContext.sp);
-    uart_puts("\n");
+{    
+    for(int i= 0; i<64; i++) {
+        if (taskManager.taskPool[i].state != ZOMBIE) {
+            uart_puts("Task id = ");
+            uart_print_int(taskManager.taskPool[i].id);
+            uart_puts(", sp_el0 = ");
+            uart_print_hex(taskManager.taskPool[i].userContext.sp_el0);
+            uart_puts(", elr_el1 = ");
+            uart_print_hex(taskManager.taskPool[i].userContext.elr_el1);
+            uart_puts(", spsr_el1 = ");
+            uart_print_hex(taskManager.taskPool[i].userContext.spsr_el1);
+            uart_puts(", sp = ");
+            uart_print_hex(taskManager.taskPool[i].cpuContext.sp);
+            uart_puts("\n");
+        }
+    }
+
 }
 
 void __exit(int status)
@@ -107,12 +110,12 @@ void __exit(int status)
 
 int __fork()
 {
-    int childTaskId;
+    int childTaskId = taskManager.taskCount;
     for(int i = 0; i < 64; i++) {
-        if (taskManager.taskPool[i].state == ZOMBIE) {
-            childTaskId = i;
+        if (taskManager.taskPool[childTaskId].state == ZOMBIE) {
             break;
         }
+        childTaskId = (childTaskId + i) % 64;
     }
     Task *parent = get_current();
     Task *child = &taskManager.taskPool[childTaskId];
@@ -157,20 +160,51 @@ int __fork()
     uart_puts("Task ");
     uart_print_int(parent->id);
     uart_puts(" called fork\n");
-    // print_task_context(child);
     return child->id;
+}
+
+void hello()
+{
+    char read_char;
+    while(1) {
+        read_char = uart_read(); // it will wait but still can be interrupt
+        uart_puts("hello world\n");
+        wait(1000000);
+    }
+
+}
+
+void foo12()
+{
+    while(1) {
+        uart_puts("Task id: ");
+        uart_print_int(get_taskid());
+        uart_puts("\n");
+        wait(1000000);
+        schedule();
+    }
 }
 
 void foo()
 {
-    int count = 0;
+    int tmp = 5;
     while(1) {
-        uart_puts("TaskId: ");
+        uart_puts("Task ");
         uart_print_int(get_taskid());
-        uart_puts(", Count: ");
-        uart_print_int(count++);
+        uart_puts(" after exec, tmp address 0x");
+        uart_print_hex(&tmp);
+        uart_puts(", tmp value ");
+        uart_print_int(tmp);
         uart_puts("\n");
         wait(100000000);
+    }
+}
+
+void idle12()
+{
+    while(1) {
+        schedule();
+        wait(1000000);
     }
 }
 
@@ -193,6 +227,11 @@ void test() {
         fork();
         wait(100000);
         fork();
+        // uart_puts("TaskId: ");
+        // uart_print_int(get_taskid());
+        // uart_puts("......cnt: ");
+        // uart_print_int(cnt);
+        // uart_puts("\n");
         while(cnt < 10) {
             uart_puts("TaskId: ");
             uart_print_int(get_taskid());
@@ -221,6 +260,10 @@ void test() {
 
 void user_test() {
     do_exec(test);
+}
+
+void uart_test() {
+    do_exec(hello);
 }
 
 void do_exec(void(*func)())
