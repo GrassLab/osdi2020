@@ -21,11 +21,7 @@ void (*pop_deffered(void))() { return task_queue[--task_ptr]; }
 
 void bottom_half(void) {
   // puts("doing bottom_half...");
-#ifdef ON_QEMU
-  delay(500000000);
-#else
   delay(5000000);
-#endif
   puts(NEWLINE "isr rest done.");
 }
 
@@ -77,7 +73,7 @@ void handle_uart_irq(void) {
       read_tasks[p]->buffer[0] = uart_recv();
       //printf("stuff [%d] 's line with %c " NEWLINE, read_tasks[p]->pid, read_tasks[p]->buffer[0]);
       read_tasks[p]->status = idle;
-      read_tasks[p]->priority = 10;
+      read_tasks[p]->counter += 100;
       uart_read_dequeue(p);
 #else
       read_tasks[rtbeg]->buffer[0] = uart_recv();

@@ -153,6 +153,13 @@ char* getline(char *buffer, char c){
   return buffer;
 }
 
+void user_exit() {
+  while(1){
+    call_sys_write("user_process_exit test" NEWLINE);
+    call_sys_exit();
+  }
+}
+
 void user_login(){
   char buffer[128];
   printf(NEWLINE "============      [%d] login daemon      ============"  NEWLINE, current_task->pid);
@@ -163,13 +170,13 @@ void user_login(){
     printf(NEWLINE "input password:");
   }
   puts(NEWLINE "============     login successfully!     ============");
-  call_sys_exit();
+  user_exit();
 }
 
 void user_shell(){
   printf(NEWLINE "============      [%d] shell daemon      ============"  NEWLINE, current_task->pid);
   irq_shell_loop(0);
-  call_sys_exit();
+  user_exit();
 }
 
 void user_read() {
@@ -177,7 +184,7 @@ void user_read() {
   while(1){
     printf("input:");
     printf("read %d" NEWLINE, call_sys_read());
-    //delay(100000000);
+    //delay(1000000);
   }
 }
 
@@ -185,11 +192,10 @@ void user_write() {
   printf(NEWLINE "============      [%d] WRITE testbeg     ============"  NEWLINE, current_task->pid);
   while(1){
     call_sys_write(NEWLINE "============         WRITE   test        ============" NEWLINE);
-    delay(100000000);
+    delay(1000000);
     if(current_task->signals & SIGKILL){
       printf(NEWLINE "============      [%d] WRITE sigkill     ============"  NEWLINE, current_task->pid);
-      call_sys_exit();
-      while(1);
+      user_exit();
     }
   }
 }
@@ -207,7 +213,7 @@ void user_idle() {
 void user_hang() {
   printf(NEWLINE "============      [%d]  user  hang       ============"  NEWLINE, current_task->pid);
   while(1){
-    delay(100000000);
+    delay(1000000);
     printf(NEWLINE "============     [%d] user is hanging    ============"  NEWLINE, current_task->pid);
   }
 }
@@ -216,13 +222,6 @@ void user_exec() {
   while(1){
     call_sys_write("user_process_exec test" NEWLINE);
     call_sys_exec(user_idle);
-  }
-}
-
-void user_exit() {
-  while(1){
-    call_sys_write("user_process_exit test" NEWLINE);
-    call_sys_exit();
   }
 }
 
@@ -238,9 +237,25 @@ void user_fork() {
     printf("[%d] fork return %d" NEWLINE, current_task->pid, child);
     printf("k = [0x%x] = %d" NEWLINE, &k, k);
     call_sys_write(NEWLINE);
-    delay(100000000);
+    delay(1000000);
     if(!child) k++;
   }
+}
+
+Mutex gmtx = {0, 0};
+
+void user_mutex(){
+  call_sys_mutex_lock(&gmtx);
+  for(int i = 0; i < 5; i++){
+    printf(NEWLINE "============      [%d] hold mtx [%d]      ============"  NEWLINE, current_task->pid, i);
+    delay(1000000);
+  }
+  call_sys_mutex_unlock(&gmtx);
+  user_exit();
+  //while(1){
+  //  call_sys_exit();
+  //  delay(1000000);
+  //}
 }
 
 void zombie_reaper(){
@@ -254,7 +269,7 @@ void zombie_reaper(){
         tasks[i] = 0;
       }
     }
-    delay(500000000);
+    delay(5000000);
     schedule();
   }
 }
@@ -275,7 +290,7 @@ void exit(){
       if(preempt_reschedable())schedule(); \
     } \
     printf(NEWLINE "============      [%d] TASK" #n " running     ============"  NEWLINE, current_task->pid); \
-    delay(500000000); \
+    delay(5000000); \
     check_resched(); \
   } \
 }
@@ -285,13 +300,18 @@ TASK_(1); TASK_(2); TASK_(3); TASK_(4);
 void kernel_process(){
   puts("kernel process begin...");
   //printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
-  //privilege_task_create(user_process_login, 0, 3);
+  //privilege_task_create(task_do_exec, (UL)user_login, 3);
   privilege_task_create(task_do_exec, (UL)user_shell, 2);
   privilege_task_create(task_1, 0, current_task->priority);
-  //privilege_task_create(task_2, 0, current_task->priority);
+  privilege_task_create(task_2, 0, current_task->priority);
+  privilege_task_create(task_3, 0, current_task->priority);
+  privilege_task_create(task_4, 0, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(user_process_write, 0, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_write, current_task->priority);
-  privilege_task_create(task_do_exec, (UL)user_hang, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_hang, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_2, 0);
   //privilege_task_create(task_3, 0);
@@ -323,26 +343,4 @@ void do_exec(unsigned long pc){
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
   regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
-}
-
-int mutex = 0;
-unsigned long owner = 0;
-void mutex_lock(){
-  preempt_disable();
-  while(mutex){
-    puts("fetch mutex failed");
-    schedule();
-  }
-  mutex = 1;
-  owner = current_task->pid;
-  preempt_enable();
-}
-
-void mutex_unlock(){
-  preempt_disable();
-  if(owner == current_task->pid){
-    mutex = 0;
-  }
-  else puts("not the mutex owner");
-  preempt_enable();
 }

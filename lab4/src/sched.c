@@ -35,7 +35,7 @@ void _schedule(){
     }
     i = (i + 1) % TASK_SIZE;
   }
-  delay(500000000);
+  delay(5000000);
 
   while(i != beg){
     if(tasks[i] && (tasks[i]->status == idle)){
@@ -54,15 +54,15 @@ void _schedule(){
 
   if(current_task == tasks[i]){
     puts("return");
-    delay(500000000);
-    delay(500000000);
+    delay(5000000);
+    delay(5000000);
     return;
   }
 
 
   printf("next is %d" NEWLINE, i);
-  delay(500000000);
-  delay(500000000);
+  delay(5000000);
+  delay(5000000);
   next_task = tasks[i];
   context_switch(tasks[i]);
 #else
@@ -100,6 +100,7 @@ void _schedule(){
 
   if(next < 0 || current_task == tasks[next]){
     current_task->counter = 0;
+    preempt_enable(); // tricky place
     return;
   }
 

@@ -57,9 +57,9 @@ void uart_init() {
   r |= (4 << 12) | (4 << 15);    // alt0
   *GPFSEL1 = r;
   *GPPUD = 0; // enable pins 14 and 15
-  delay(150);
+  DELAY(150);
   *GPPUDCLK0 = (1 << 14) | (1 << 15);
-  delay(150);
+  DELAY(150);
   *GPPUDCLK0 = 0; // flush GPIO setup
 
   *UART0_ICR = 0x7FF; // clear interrupts

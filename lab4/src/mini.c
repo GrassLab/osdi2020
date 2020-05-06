@@ -36,9 +36,9 @@ void uart_init(void) {
   *(GPFSEL1) = reg;
 
   *(GPPUD) = 0;
-  delay(150);
+  DELAY(150);
   *(GPPUDCLK0) = (1 << 14) | (1 << 15);
-  delay(150);
+  DELAY(150);
   *(GPPUDCLK0) = 0;
   *(AUX_ENABLES) = 1;
   *(AUX_MU_CNTL_REG) = 0;

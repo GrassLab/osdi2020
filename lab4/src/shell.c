@@ -274,7 +274,6 @@ void irq_shell_loop(int el){
   while (1) {
     exec_ptr = shell_stuff_line(call_sys_read(), &ptr, buffer);
     if (exec_ptr) {
-      //printf("exec $ %x %x %s" NEWLINE, buffer, exec_ptr, exec_ptr);
       shell_execute(exec_ptr, el);
       exec_ptr = 0;
       print("# ");

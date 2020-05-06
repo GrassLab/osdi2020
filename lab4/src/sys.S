@@ -35,3 +35,15 @@ call_sys_signal:
     mov w8, #SYSNUM_SIGNAL
     svc #0
     ret
+
+.globl call_sys_mutex_lock
+call_sys_mutex_lock:
+    mov w8, #SYSNUM_MUTEX_LOCK
+    svc #0
+    ret
+
+.globl call_sys_mutex_unlock
+call_sys_mutex_unlock:
+    mov w8, #SYSNUM_MUTEX_UNLOCK
+    svc #0
+    ret

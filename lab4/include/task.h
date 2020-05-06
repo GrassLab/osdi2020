@@ -12,6 +12,7 @@
 #define PSR_MODE_EL3h	0x0000000d
 
 
+#ifndef __ASSEMBLER__
 struct cpu_ctx {
   unsigned long x19;
   unsigned long x20;
@@ -36,6 +37,11 @@ struct pt_regs {
 	unsigned long pstate;
 };
 
+typedef struct mutex_tag {
+  int lock;
+  unsigned long pid;
+} Mutex;
+
 #define TASK_BUFFER_SIZE 1024
 #define RESCHED 0x1
 #define SIGKILL 0x1
@@ -48,11 +54,13 @@ typedef struct task_tag {
   unsigned long counter;
   unsigned long priority;
   unsigned long preempt_count;
+  Mutex* mtx;
   enum {
     none,
     idle,
     zombie,
     block,
+    sleep,
     running,
   } status;
 } Task;
@@ -70,5 +78,5 @@ void init_task_pool();
 void kernel_process();
 Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long p);
 void do_exec(unsigned long);
-
+#endif
 #endif
