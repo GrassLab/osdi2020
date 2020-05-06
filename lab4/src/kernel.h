@@ -2,6 +2,8 @@
 #define KERNEL
 #define QUEUE_SIZE 64
 
+#define CORE0_TIMER_IRQ_CTRL (volatile unsigned int*)0x40000040
+
 struct task_struct {
     unsigned long long x19;
     unsigned long long x20;
@@ -29,6 +31,8 @@ struct run_queue {
     int size;
 };
 
+int reschedule = 0;
+
 int kernel_init();
 
 int privilege_task_create(void(*func)());
@@ -40,5 +44,9 @@ void init();
 void context_switch(struct task_struct* next);
 
 void test();
+
+int schedule();
+
+void enable_sys_timer();
 
 #endif

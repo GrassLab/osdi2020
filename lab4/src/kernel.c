@@ -5,6 +5,7 @@ struct task_struct task[64] __attribute__((aligned(16u)));
 char kstack_pool[64][4096] __attribute__((aligned(16u)));
 struct run_queue runqueue = {.start = 0, .end = 0, .size = 0};
 
+extern int reschedule;
 
 int kernel_init(){
     uart_init();
@@ -72,6 +73,9 @@ void init(){
     privilege_task_create(test);
     privilege_task_create(test);
 
+
+    enable_sys_timer();
+    asm ("msr DAIFClr, 0xf");
     schedule();
 }
 
@@ -83,13 +87,16 @@ void context_switch(struct task_struct *next){
 void test(){
     struct task_struct *now = get_current();
     char res[4];
+    itoa(now->id, res);
     while(1){
-        itoa(now->id, res);
-        uart_puts("ID = ");
-        uart_puts(res);
-        uart_puts("\n");
-        for (int i=0; i<1000000; i++) asm volatile("nop");
-        schedule();
+        //for (int i=0; i<100000000; i++) asm volatile("nop");
+        if (reschedule == 1){
+            uart_puts("ID = ");
+            uart_puts(res);
+            uart_puts(" is schedule out\n");
+            reschedule = 0;
+            schedule();
+        }
     }
 }
 
@@ -111,4 +118,20 @@ int schedule(){
     context_switch(next);
 
     return 0;
+}
+
+void enable_sys_timer(){
+    uart_puts("\n");
+    uart_puts("Enable system timer.\n");
+
+    asm(
+        "mov x0, 1;"
+        "msr cntp_ctl_el0, x0;"
+        "mrs x0, cntfrq_el0;"
+        "msr cntp_tval_el0, x0;"
+        "mov x0, 2;"
+        "ldr x1, =0x40000040;"
+        "str x0, [x1];"
+    );
+    *CORE0_TIMER_IRQ_CTRL = 2;
 }

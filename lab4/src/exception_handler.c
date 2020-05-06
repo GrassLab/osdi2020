@@ -47,13 +47,31 @@ void handler(){
     return;
 }
 
-void isr(){
+void el1_irq_isr(){
     static int jiffies=0;
     char res[10];
 
     jiffies++;
     unsign_itoa(jiffies, res);
-    uart_puts("Core timer interrupt, jiffies ");
+    uart_puts("In EL1, Core timer interrupt, jiffies ");
+    uart_puts(res);
+    uart_puts("\n");
+    asm(
+        "mrs x0, cntfrq_el0;"
+        "msr cntp_tval_el0, x0;"
+    );
+
+    reschedule = 1;
+    return;
+}
+
+void el0_irq_isr(){
+    static int jiffies=0;
+    char res[10];
+
+    jiffies++;
+    unsign_itoa(jiffies, res);
+    uart_puts("In EL0, Core timer interrupt, jiffies ");
     uart_puts(res);
     uart_puts("\n");
     asm(

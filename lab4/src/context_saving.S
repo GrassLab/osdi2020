@@ -45,8 +45,14 @@ test_handler:
     bl handler
     load_all
 
-.global irq_handler
-irq_handler:
+.global el1_irq_handler
+el1_irq_handler:
     save_all
-    bl isr
+    bl el1_irq_isr
+    load_all
+
+.global el0_irq_handler
+el0_irq_handler:
+    save_all
+    bl el0_irq_isr
     load_all
