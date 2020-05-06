@@ -1,5 +1,5 @@
 .macro save_all
-    sub sp, sp, 32 * 8
+    sub sp, sp, 34 * 8
     stp x0, x1, [sp ,16 * 0]
     stp x2, x3, [sp ,16 * 1]
     stp x4, x5, [sp ,16 * 2]
@@ -15,10 +15,22 @@
     stp x24, x25, [sp ,16 * 12]
     stp x26, x27, [sp ,16 * 13]
     stp x28, x29, [sp ,16 * 14]
-    str x30, [sp, 16 * 15]
+
+    mrs x0, SP_EL0
+    mrs x1, ELR_EL1
+    mrs x2, SPSR_EL1
+    stp x30, x0, [sp ,16 * 15]
+    stp x1, x2, [sp ,16 * 16]
+
 .endm
 
 .macro load_all
+    ldp x30, x0, [sp ,16 * 15]
+    ldp x1, x2, [sp ,16 * 16]
+    msr SP_EL0, x0
+    msr ELR_EL1, x1
+    msr SPSR_EL1, x2
+
     ldp x0, x1, [sp ,16 * 0]
     ldp x2, x3, [sp ,16 * 1]
     ldp x4, x5, [sp ,16 * 2]
@@ -34,8 +46,7 @@
     ldp x24, x25, [sp ,16 * 12]
     ldp x26, x27, [sp ,16 * 13]
     ldp x28, x29, [sp ,16 * 14]
-    ldr x30, [sp, 16 * 15]
-    add sp, sp, 32 * 8
+    add sp, sp, 34 * 8
     eret
 .endm
 
@@ -49,10 +60,12 @@ test_handler:
 el1_irq_handler:
     save_all
     bl el1_irq_isr
+    bl check_resched_flag
     load_all
 
 .global el0_irq_handler
 el0_irq_handler:
     save_all
     bl el0_irq_isr
+    bl check_resched_flag
     load_all

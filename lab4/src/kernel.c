@@ -4,6 +4,7 @@
 
 struct task_struct task[64] __attribute__((aligned(16u)));
 char kstack_pool[64][4096] __attribute__((aligned(16u)));
+char ustack_pool[64][4096] __attribute__((aligned(16u)));
 struct run_queue runqueue = {.start = 0, .end = 0, .size = 0};
 
 int reschedule = 0;
@@ -66,17 +67,23 @@ int privilege_task_create(void(*func)()){
     return 0;
 }
 
+int do_exec(void(*func)()){
+    struct task_struct *now = get_current();
+    now->ustack_top = ustack_pool[now->id+1];
+    el1_to_el0(func, now->ustack_top);
+}
+
 void init(){
     unsigned long long ptr = (unsigned long long) &task[0];
     asm volatile("msr tpidr_el1, %0" : "=r"(ptr));
 
-    privilege_task_create(test);
-    privilege_task_create(test);
-    privilege_task_create(test);
+    privilege_task_create(test_user);
+    privilege_task_create(test_user2);
+    privilege_task_create(test_user3);
 
 
     enable_sys_timer();
-    asm ("msr DAIFClr, 0xf");
+    //asm ("msr DAIFClr, 0xf");
     schedule();
 }
 
@@ -91,16 +98,45 @@ void test(){
     itoa(now->id, res);
     while(1){
         //for (int i=0; i<100000000; i++) asm volatile("nop");
-        if (reschedule == 1){
-            uart_puts("ID = ");
-            uart_puts(res);
-            uart_puts(" is schedule out\n");
-            reschedule = 0;
-            schedule();
-        }
+        //if (reschedule == 1){
+            //uart_puts("ID = ");
+            //uart_puts(res);
+            //uart_puts(" is schedule out\n");
+            //reschedule = 0;
+            //schedule();
+        //}
     }
 }
 
+void test_user(){
+    do_exec(user);
+}
+
+void test_user2(){
+    do_exec(user2);
+}
+
+void test_user3(){
+    do_exec(user3);
+}
+
+void user(){
+    while(1){
+        uart_puts("user task 1111!!!\n");
+    }
+}
+
+void user2(){
+    while(1){
+        uart_puts("user task 2222!!!\n");
+    }
+}
+
+void user3(){
+    while(1){
+        uart_puts("user task 3333!!!\n");
+    }
+}
 int schedule(){
     if (!runqueue.size){
         uart_puts("Runqueue is EMPTY!\n");
@@ -135,4 +171,11 @@ void enable_sys_timer(){
         "str x0, [x1];"
     );
     *CORE0_TIMER_IRQ_CTRL = 2;
+}
+
+void check_resched_flag(){
+    if (reschedule == 1){
+        reschedule = 0;
+        schedule();
+    }
 }

@@ -29,15 +29,5 @@ init_bss:
     msr SP_EL1, x0
     eret
 
-/*from_el1_to_el0:
-    mov x0, 0x1000
-    msr SP_EL0, x0
-    mov x0, 0 // EL0 with interrupt enabled
-    msr SPSR_EL1, x0
-    adr x0, main // return to shell run in EL0
-    msr elr_el1, x0
-    msr DAIFClr, 0xf
-    eret*/
-
 1:
     b 1b

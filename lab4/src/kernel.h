@@ -18,6 +18,7 @@ struct task_struct {
     unsigned long long x29;
     unsigned long long x30;
     char *kstack_top;
+    char *ustack_top;
 
     int valid;
     int id;
@@ -38,7 +39,11 @@ int kernel_init();
 
 int privilege_task_create(void(*func)());
 
+int do_exec(void(*func)());
+
 extern struct task_struct* get_current();
+
+extern void el1_to_el0(void(*func)(), unsigned long long ustack);
 
 void init();
 
@@ -46,8 +51,22 @@ void context_switch(struct task_struct* next);
 
 void test();
 
+void test_user();
+
+void test_user2();
+
+void test_user3();
+
+void user();
+
+void user2();
+
+void user3();
+
 int schedule();
 
 void enable_sys_timer();
+
+void check_resched_flag();
 
 #endif

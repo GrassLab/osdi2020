@@ -74,6 +74,7 @@ void el1_irq_isr(){
 }
 
 void el0_irq_isr(){
+    struct task_struct* now = get_current();
     static int jiffies=0;
     char res[10];
 
@@ -87,5 +88,10 @@ void el0_irq_isr(){
         "msr cntp_tval_el0, x0;"
     );
 
+    now->t_quantum++;
+    if (now->t_quantum == 3){
+        reschedule = 1;
+        now->t_quantum = 0;
+    }
     return;
 }
