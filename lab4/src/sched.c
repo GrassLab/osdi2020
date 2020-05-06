@@ -72,17 +72,23 @@ void do_exec(void(*func)()){
     
     // func();
 }
+void print_debug(){
+    uart_puts("ret_from_child\n");
+}
 
 void do_fork(){
     int child_id = privilege_task_create(ret_from_child);
-    unsigned long *parent_context = (unsigned long *)&task_pool[current->taskid].cpu_context;
-    unsigned long *child_context = (unsigned long *)&task_pool[child_id].cpu_context;
-    for(int i=0; i < CPU_CONTEXT_NUM; ++i)
-        *(child_context + i) = *(parent_context + i);
     for(int i=1; i<=4096; ++i){ 
         *(kstack_pool[child_id]-i) = *(kstack_pool[current->taskid]-i);
         *(ustack_pool[child_id]-i) = *(ustack_pool[current->taskid]-i);
     }
-    set_trap_ret(current, child_id);
-    set_trap_ret(&task_pool[child_id], 0);
+    set_trap_ret(current, child_id, 0);
+    set_trap_ret(&task_pool[child_id], 0, 0);
+
+    // fp, sp_el0
+    int offset;
+    offset = get_trap_arg(29) - (unsigned long)kstack_pool[current->taskid];
+    set_trap_ret(&task_pool[child_id], (unsigned long)kstack_pool[child_id]+offset, 29);
+    offset = get_trap_arg(31) - (unsigned long)ustack_pool[current->taskid];
+    set_trap_ret(&task_pool[child_id], (unsigned long)ustack_pool[child_id]+offset, 31);
 }

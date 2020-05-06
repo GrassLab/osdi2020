@@ -22,22 +22,22 @@ void foo()
 void test()
 {
   int cnt = 1;
-  // if (fork() == 0){
-  //   fork();
-  //   delay(100000);
-  //   fork();
-  //   while (cnt < 10){
-  //     printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
-  //     delay(100000);
-  //     ++cnt;
-  //   }
-  //   // exit(0);
-  //   printf("Should not be printed\n");
-  // }
-  // else{
+  if (fork() == 0){
+    fork();
+    delay(100000);
+    fork();
+    while (cnt < 100){
+      printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+      delay(100000);
+      ++cnt;
+    }
+    // exit(0);
+    printf("Should not be printed\n");
+  }
+  else{
     printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
     exec(foo);
-  // }
+  }
 }
 
 void user_test()

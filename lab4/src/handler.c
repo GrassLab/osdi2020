@@ -28,7 +28,7 @@ void exception_handler(unsigned long esr, unsigned long elr, unsigned long x2)
     }
     else if(svc_type == 4){
         // uart_puts("get task id\n");
-        set_trap_ret(current, current -> taskid);
+        set_trap_ret(current, current -> taskid, 0);
     }
     else if(svc_type == 5){
         

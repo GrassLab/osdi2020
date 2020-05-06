@@ -76,6 +76,8 @@ el0_irq:
 
 .global ret_from_child
 ret_from_child:
+    sub sp, sp, 16
+    sub	sp, sp, #S_FRAME_SIZE
     kernel_exit 0
     eret
 
