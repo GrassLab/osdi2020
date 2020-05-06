@@ -31,10 +31,10 @@ void exception_handler(unsigned long esr, unsigned long elr, unsigned long x2)
         set_trap_ret(current, current -> taskid, 0);
     }
     else if(svc_type == 5){
-        
+        uart_gets((char *)x2);
     }
     else if(svc_type == 6){
-        
+        uart_puts((char *)x2);
     }
     else if(svc_type == 7){
         do_exec((void*)x2);

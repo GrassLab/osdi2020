@@ -10,6 +10,18 @@ get_taskid:
   svc GET_TASKID
   ret
 
+.global uart_read
+uart_read:
+  mov x2, x0
+  svc UART_READ
+  ret
+
+.global uart_write
+uart_write:
+  mov x2, x0
+  svc UART_WRITE
+  ret
+
 .global exec
 exec:
   mov x2, x0
