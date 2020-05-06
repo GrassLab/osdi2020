@@ -312,14 +312,37 @@ void kernel_process(){
 void do_exec(unsigned long pc){
   printf("[%d] do exec" NEWLINE, current_task->pid);
   struct pt_regs *regs = task_pt_regs(current_task);
-  //printf("!! %x %x %x %x" NEWLINE,
-  //    current_task->cpu_ctx.sp,
-  //    kstack_pool[current_task->pid % TASK_SIZE],
-  //    kstack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE,
-  //    task_pt_regs(current_task));
-
+#if 0
+  printf("!! %x %x %x %x" NEWLINE,
+     current_task->cpu_ctx.sp,
+     kstack_pool[current_task->pid % TASK_SIZE],
+     kstack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE,
+     task_pt_regs(current_task));
+#endif
   memzero((unsigned long)regs, (unsigned long)regs + sizeof(struct pt_regs));
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
   regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
+}
+
+int mutex = 0;
+unsigned long owner = 0;
+void mutex_lock(){
+  preempt_disable();
+  while(mutex){
+    puts("fetch mutex failed");
+    schedule();
+  }
+  mutex = 1;
+  owner = current_task->pid;
+  preempt_enable();
+}
+
+void mutex_unlock(){
+  preempt_disable();
+  if(owner == current_task->pid){
+    mutex = 0;
+  }
+  else puts("not the mutex owner");
+  preempt_enable();
 }
