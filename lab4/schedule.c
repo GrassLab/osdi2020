@@ -26,22 +26,33 @@ static char kstack_pool[64][THREAD_SIZE] = {0};
 static char ks[64][THREAD_SIZE] = {0};
 static char ustack_pool[64][THREAD_SIZE] = {0};
 
-int privilege_task_create(unsigned long func, int usr) {
-  int task_id = task_count;
+int privilege_task_create(unsigned long func, int usr, int isexec) {
+  int task_id;
+  task_id = task_count;
+  task_count++;
+  runtaskcount++;
+
   task_t *p = (task_t *)&kstack_pool[task_id][0];
   task_pool[task_id] = p;
 
-  if (!p)
+  if (!p) {
+    printf("errrrr");
     return -1;
+  }
   p->state = TASK_RUNNING;
   p->counter = 2;
 
   if (usr) {
     p->is_usr = 1;
     user_pool[task_id].elr_el1 = func;
-    user_pool[task_id].sp = &ustack_pool[task_id][THREAD_SIZE];
+    user_pool[task_id].sp = (unsigned long)&ustack_pool[task_id][THREAD_SIZE];
     printf(" sp = > %x\n", user_pool[task_id].sp);
-    p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
+    if (isexec == 1) {
+      printf("nnnew\n");
+      p->cpu_context.x19 = (unsigned long)&jmp_to_new_usr;
+    } else {
+      p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
+    }
   } else {
     p->cpu_context.x19 = func;
   }
@@ -49,14 +60,13 @@ int privilege_task_create(unsigned long func, int usr) {
   p->cpu_context.pc = (unsigned long)ret_from_fork;
   p->cpu_context.sp = (unsigned long)&ks[task_id][THREAD_SIZE];
 
-  task_count++;
-  runtaskcount++;
   return task_id;
 }
 
 void task_init() {
-  int task_id = privilege_task_create((unsigned long)init, 0);
+  int task_id = privilege_task_create((unsigned long)init, 0, 0);
   task_pool[task_id]->state = TASK_IDLE;
+  runtaskcount--;
   set_current(task_id);
 }
 
@@ -65,7 +75,7 @@ void context_switch(int task_id) {
   set_current(task_id);
   task_t *now = task_pool[task_id];
   if (now->is_usr) {
-    now->cpu_context.pc = (unsigned long)&jmp_to_usr;
+    now->cpu_context.pc = now->cpu_context.x19;
   }
   switch_to(task_pool[prev_id], task_pool[task_id]);
 }
@@ -119,14 +129,33 @@ void jmp_to_usr() {
   ret_to_usr();
 }
 
+void jmp_to_new_usr() {
+  int now;
+  printf("jmp_new_task\n");
+  now = get_current();
+  asm volatile("msr sp_el0, %0" ::"r"(user_pool[now].sp) :);
+  asm volatile("msr spsr_el1, %0" ::"r"(0) :);
+  asm volatile("msr elr_el1, %0" ::"r"(user_pool[now].elr_el1) :);
+  asm volatile("eret");
+}
+
 void do_exec(unsigned long fun) {
-  privilege_task_create(fun, 1);
-  do_exit();
+  int task_id = get_current();
+  for (int i = 0; i < THREAD_SIZE; i++) {
+    ustack_pool[task_id][THREAD_SIZE] = 0;
+  }
+  user_pool[task_id].elr_el1 = fun;
+  user_pool[task_id].sp = (unsigned long)&ustack_pool[task_id][THREAD_SIZE];
+  printf("exec success , goto %x\n", fun);
+  asm volatile("msr sp_el0, %0" ::"r"(user_pool[task_id].sp) :);
+  asm volatile("msr spsr_el1, %0" ::"r"(0) :);
+  asm volatile("msr elr_el1, %0" ::"r"(user_pool[task_id].elr_el1) :);
+  asm volatile("eret");
 };
 
 void exec(unsigned long rfun) {
   unsigned long rf = rfun;
-  printf("exec = %x", rf);
+  printf("exec = %x\n", rf);
   asm volatile("mov x0, #2");
   asm volatile("mov x1, %0" ::"r"(rf) :);
   asm volatile("svc #0");
@@ -187,8 +216,12 @@ int do_fork() {
                           ((&ustack_pool[nowid][THREAD_SIZE]) - stack);
   p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
   p->cpu_context.pc = (unsigned long)ret_from_fork;
-  p->cpu_context.sp = (unsigned long)&ks[task_id][THREAD_SIZE];
-
+  unsigned long getsp = 0;
+  asm volatile("mov %[result], sp" : [result] "=r"(getsp));
+  p->cpu_context.sp =
+      (&ks[task_id][THREAD_SIZE]) - (&ks[nowid][THREAD_SIZE] - getsp);
+  printf("ksp : %x -> %x %x\n", getsp, p->cpu_context.sp,
+         &ks[nowid][THREAD_SIZE]);
   task_count++;
   runtaskcount++;
   return task_id;
@@ -206,6 +239,7 @@ void exit(int i) {
 }
 
 void foo1() {
+  printf("foo");
   while (1) {
     printf("Task id: %d\n", get_current());
     wait_cycles(10000000);
@@ -230,15 +264,16 @@ void idle1() {
 void test1() {
   task_init();
   for (int i = 0; i < 4; ++i) { // N should > 2
-    privilege_task_create((unsigned long)&foo1, 0);
+    privilege_task_create((unsigned long)&foo1, 0, 0);
   }
-  privilege_task_create((unsigned long)&idle1, 0);
+  privilege_task_create((unsigned long)&idle1, 0, 0);
   core_timer_enable();
   schedule();
 }
 
 void foo() {
-  int tmp = 5;
+  int tmp;
+  tmp = 5;
   printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_current(),
          &tmp, tmp);
   exit(0);
@@ -269,7 +304,7 @@ void user_test1() { do_exec((unsigned long)&ut1); }
 void user_test2() { do_exec((unsigned long)&ut2); }
 void idle() {
   while (1) {
-    if (runtaskcount == 0) {
+    if (runtaskcount == 1) {
       break;
     }
     schedule();
@@ -282,58 +317,55 @@ void idle() {
 
 void test2() {
   task_init();
-  privilege_task_create((unsigned long)&idle, 0);
-  privilege_task_create((unsigned long)&user_test1, 0);
-  privilege_task_create((unsigned long)&user_test2, 0);
+  privilege_task_create((unsigned long)&idle, 0, 0);
+  privilege_task_create((unsigned long)&user_test1, 0, 0);
+  privilege_task_create((unsigned long)&user_test2, 0, 0);
   core_timer_enable();
   schedule();
 }
 
-// void test() {
-//   // int cnt = 1;
-//   printf("Task\n");
-//   wait_cycles(10000000);
-//   int i = fork();
-//   printf("i = %d\n", i);
-//   printf("endfork\n");
-//   exit(0);
-//   exec((unsigned long)&tt);
-// }
+void foo2() {
+  printf("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+  exit(0);
+}
 
 void test() {
-  exec((unsigned long)&foo);
-  // int cnt = 1;
-  // if (fork() == 0) {
-  //   // fork();
-  //   // wait_cycles(100000);
-  //   // fork();
-  //   printf("child\n");
-  //   while (cnt < 10) {
-  //     printf("cTask id: %d, cnt: %d\n", get_taskid(), cnt);
-  //     wait_cycles(100000);
-  //     ++cnt;
-  //   }
-  //   exit(0);
-  //   printf("Should not be printed\n");
-  // } else {
-  //   while (cnt < 10) {
-  //     printf("fTask id: %d, cnt: %d\n", get_taskid(), cnt);
-  //     wait_cycles(100000);
-  //     ++cnt;
-  //   }
-  //   exit(0);
-  // printf("Task %d before exec, cnt address 0x%x, cnt value %d\n",
-  //        get_taskid(), &cnt, cnt);
-  // exec((unsigned long)&foo);
-  // }
+
+  int cnt = 1;
+  printf("run tests");
+  int pid = fork();
+  if (pid == 0) {
+    fork();
+    fork();
+    printf("child\n");
+    while (cnt < 10) {
+      printf("cTask id: %d, cnt: %d\n", get_taskid(), cnt);
+      wait_cycles(100000);
+      ++cnt;
+    }
+    exit(0);
+    printf("Should not be printed\n");
+  } else {
+    printf("parent\n");
+    printf("cnt = %d , %x\n", cnt, &cnt);
+    while (cnt < 10) {
+      printf("fTask id: %d, cnt: %d\n", get_taskid(), cnt);
+      wait_cycles(100000);
+      ++cnt;
+    }
+    exec(&foo2);
+    exit(0);
+  }
 }
 
 void user_test() { do_exec((unsigned long)&test); }
 
 void test3() {
   task_init();
-  privilege_task_create((unsigned long)&idle, 0);
-  privilege_task_create((unsigned long)&user_test, 0);
-  core_timer_enable();
+  privilege_task_create((unsigned long)&idle, 0, 0);
+
+  privilege_task_create((unsigned long)&user_test, 0, 0);
+  // core_timer_enable();
+  printf("runtaskcount = %d\n", runtaskcount);
   schedule();
 }
