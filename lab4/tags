@@ -1,0 +1,359 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ARMGNU	Makefile	/^ARMGNU ?= aarch64-linux-gnu$/;"	m
+ASMOPS	Makefile	/^ASMOPS = -ggdb -fPIC -Iinclude -Wno-unused-variable$/;"	m
+ASM_FILES	Makefile	/^ASM_FILES = $(wildcard $(SRC_DIR)\/*.S) $/;"	m
+AUX_ENABLES	include/peripherals.h	83;"	d
+AUX_MU_BAUD_REG	include/peripherals.h	94;"	d
+AUX_MU_CNTL_REG	include/peripherals.h	92;"	d
+AUX_MU_IER_REG	include/peripherals.h	85;"	d
+AUX_MU_IIR_REG	include/peripherals.h	86;"	d
+AUX_MU_IO_REG	include/peripherals.h	84;"	d
+AUX_MU_LCR_REG	include/peripherals.h	87;"	d
+AUX_MU_LSR_REG	include/peripherals.h	89;"	d
+AUX_MU_MCR_REG	include/peripherals.h	88;"	d
+AUX_MU_MSR_REG	include/peripherals.h	90;"	d
+AUX_MU_SCRATCH	include/peripherals.h	91;"	d
+AUX_MU_STAT_REG	include/peripherals.h	93;"	d
+BUILD_DIR	Makefile	/^BUILD_DIR = build$/;"	m
+COPS	Makefile	/^COPS = -ggdb -fPIC -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -Wno-unused-variable$/;"	m
+CORE0_IRQ_SOURCE	include/peripherals.h	75;"	d
+CORE0_TIMER_IRQ_CTRL	src/timer.S	/^#define CORE0_TIMER_IRQ_CTRL 0x40000040$/;"	d
+CORE1_IRQ_SOURCE	include/peripherals.h	76;"	d
+CORE2_IRQ_SOURCE	include/peripherals.h	77;"	d
+CORE3_IRQ_SOURCE	include/peripherals.h	78;"	d
+C_FILES	Makefile	/^C_FILES = $(wildcard $(SRC_DIR)\/*.c) $/;"	m
+DEP_FILES	Makefile	/^DEP_FILES = $(OBJ_FILES:%.o=%.d)$/;"	m
+DISABLE_BASIC_IRQS	include/peripherals.h	67;"	d
+DISABLE_IRQS_1	include/peripherals.h	65;"	d
+DISABLE_IRQS_2	include/peripherals.h	66;"	d
+ENABLE_BASIC_IRQS	include/peripherals.h	64;"	d
+ENABLE_IRQS_1	include/peripherals.h	62;"	d
+ENABLE_IRQS_2	include/peripherals.h	63;"	d
+ERROR_INVALID_EL0_32	include/entry.h	24;"	d
+ERROR_INVALID_EL0_64	include/entry.h	19;"	d
+ERROR_INVALID_EL1h	include/entry.h	14;"	d
+ERROR_INVALID_EL1t	include/entry.h	9;"	d
+EXPIRE_PERIOD	src/timer.S	/^#define EXPIRE_PERIOD 0xfffffff$/;"	d
+FIQ_CONTROL	include/peripherals.h	61;"	d
+FIQ_INVALID_EL0_32	include/entry.h	23;"	d
+FIQ_INVALID_EL0_64	include/entry.h	18;"	d
+FIQ_INVALID_EL1h	include/entry.h	13;"	d
+FIQ_INVALID_EL1t	include/entry.h	8;"	d
+FLAG_FORK	include/multitask.h	30;"	d
+FLAG_KERNEL	include/multitask.h	29;"	d
+GPCLR0	include/gpio.h	14;"	d
+GPEDS0	include/gpio.h	17;"	d
+GPEDS1	include/gpio.h	18;"	d
+GPFSEL0	include/gpio.h	6;"	d
+GPFSEL1	include/gpio.h	7;"	d
+GPFSEL2	include/gpio.h	8;"	d
+GPFSEL3	include/gpio.h	9;"	d
+GPFSEL4	include/gpio.h	10;"	d
+GPFSEL5	include/gpio.h	11;"	d
+GPHEN0	include/gpio.h	19;"	d
+GPHEN1	include/gpio.h	20;"	d
+GPIO_H	include/gpio.h	2;"	d
+GPLEV0	include/gpio.h	15;"	d
+GPLEV1	include/gpio.h	16;"	d
+GPPUD	include/gpio.h	21;"	d
+GPPUDCLK0	include/gpio.h	22;"	d
+GPPUDCLK1	include/gpio.h	23;"	d
+GPSET0	include/gpio.h	12;"	d
+GPSET1	include/gpio.h	13;"	d
+HCR_RW	include/peripherals.h	24;"	d
+HCR_VALUE	include/peripherals.h	25;"	d
+HIGH_MEMORY	include/multitask.h	14;"	d
+IRQ_BASIC_PENDING	include/peripherals.h	58;"	d
+IRQ_INVALID_EL0_32	include/entry.h	22;"	d
+IRQ_INVALID_EL0_64	include/entry.h	17;"	d
+IRQ_INVALID_EL1h	include/entry.h	12;"	d
+IRQ_INVALID_EL1t	include/entry.h	7;"	d
+IRQ_PENDING_1	include/peripherals.h	59;"	d
+IRQ_PENDING_2	include/peripherals.h	60;"	d
+LFB_H	include/lfb.h	2;"	d
+LOCAL_TIMER_CONTROL_AND_STATUS	src/timer.c	5;"	d	file:
+LOCAL_TIMER_IRQ_CLR	src/timer.c	6;"	d	file:
+LOW_MEMORY	include/mm.h	11;"	d
+LOW_MEMORY	include/multitask.h	13;"	d
+MAX_THREAD_NUM	include/multitask.h	41;"	d
+MBOX_CH_BTNS	include/mbox.h	15;"	d
+MBOX_CH_COUNT	include/mbox.h	17;"	d
+MBOX_CH_FB	include/mbox.h	11;"	d
+MBOX_CH_LEDS	include/mbox.h	14;"	d
+MBOX_CH_POWER	include/mbox.h	10;"	d
+MBOX_CH_PROP	include/mbox.h	18;"	d
+MBOX_CH_TOUCH	include/mbox.h	16;"	d
+MBOX_CH_VCHIQ	include/mbox.h	13;"	d
+MBOX_CH_VUART	include/mbox.h	12;"	d
+MBOX_CONFIG	src/mbox.c	13;"	d	file:
+MBOX_EMPTY	src/mbox.c	17;"	d	file:
+MBOX_FULL	src/mbox.c	16;"	d	file:
+MBOX_H	include/mbox.h	2;"	d
+MBOX_POLL	src/mbox.c	10;"	d	file:
+MBOX_READ	src/mbox.c	9;"	d	file:
+MBOX_REQUEST	include/mbox.h	7;"	d
+MBOX_RESPONSE	src/mbox.c	15;"	d	file:
+MBOX_SENDER	src/mbox.c	11;"	d	file:
+MBOX_STATUS	src/mbox.c	12;"	d	file:
+MBOX_TAG_GETBOARDREVISION	include/mbox.h	22;"	d
+MBOX_TAG_GETSERIAL	include/mbox.h	21;"	d
+MBOX_TAG_GETVCMEMORYADDR	include/mbox.h	23;"	d
+MBOX_TAG_LAST	include/mbox.h	25;"	d
+MBOX_TAG_SETCLKRATE	include/mbox.h	24;"	d
+MBOX_WRITE	src/mbox.c	14;"	d	file:
+MMIO_BASE	include/gpio.h	4;"	d
+OBJ_FILES	Makefile	/^OBJ_FILES = $(C_FILES:$(SRC_DIR)\/%.c=$(BUILD_DIR)\/%_c.o)$/;"	m
+PAGE_SHIFT	include/mm.h	4;"	d
+PAGE_SHIFT	include/multitask.h	8;"	d
+PAGE_SIZE	include/mm.h	8;"	d
+PAGE_SIZE	include/multitask.h	11;"	d
+PAGING_MEMORY	include/multitask.h	15;"	d
+PAGING_PAGES	include/multitask.h	16;"	d
+PBASE	include/peripherals.h	46;"	d
+PSTATE_EL0t	include/multitask.h	32;"	d
+PSTATE_EL1h	include/multitask.h	34;"	d
+PSTATE_EL1t	include/multitask.h	33;"	d
+PSTATE_EL2h	include/multitask.h	36;"	d
+PSTATE_EL2t	include/multitask.h	35;"	d
+PSTATE_EL3h	include/multitask.h	38;"	d
+PSTATE_EL3t	include/multitask.h	37;"	d
+SCR_NS	include/peripherals.h	33;"	d
+SCR_RESERVED	include/peripherals.h	31;"	d
+SCR_RW	include/peripherals.h	32;"	d
+SCR_VALUE	include/peripherals.h	34;"	d
+SCTLR_D_CACHE_DISABLED	include/peripherals.h	14;"	d
+SCTLR_EE_LITTLE_ENDIAN	include/peripherals.h	11;"	d
+SCTLR_EOE_LITTLE_ENDIAN	include/peripherals.h	12;"	d
+SCTLR_I_CACHE_DISABLED	include/peripherals.h	13;"	d
+SCTLR_MMU_DISABLED	include/peripherals.h	15;"	d
+SCTLR_MMU_ENABLED	include/peripherals.h	16;"	d
+SCTLR_RESERVED	include/peripherals.h	10;"	d
+SCTLR_VALUE_MMU_DISABLED	include/peripherals.h	18;"	d
+SECTION_SHIFT	include/mm.h	6;"	d
+SECTION_SHIFT	include/multitask.h	10;"	d
+SECTION_SIZE	include/mm.h	9;"	d
+SECTION_SIZE	include/multitask.h	12;"	d
+SPSR_EL1h	include/peripherals.h	41;"	d
+SPSR_MASK_ALL	include/peripherals.h	40;"	d
+SPSR_VALUE	include/peripherals.h	42;"	d
+SRC_DIR	Makefile	/^SRC_DIR = src$/;"	m
+SYNC_INVALID_EL0_32	include/entry.h	21;"	d
+SYNC_INVALID_EL0_64	include/entry.h	16;"	d
+SYNC_INVALID_EL1h	include/entry.h	11;"	d
+SYNC_INVALID_EL1t	include/entry.h	6;"	d
+SYSTEM_TIMER_IRQ_0	include/peripherals.h	69;"	d
+SYSTEM_TIMER_IRQ_1	include/peripherals.h	70;"	d
+SYSTEM_TIMER_IRQ_2	include/peripherals.h	71;"	d
+SYSTEM_TIMER_IRQ_3	include/peripherals.h	72;"	d
+S_FRAME_SIZE	include/entry.h	4;"	d
+TABLE_SHIFT	include/mm.h	5;"	d
+TABLE_SHIFT	include/multitask.h	9;"	d
+TASK_IDLE	include/multitask.h	26;"	d
+TASK_RUNNING	include/multitask.h	25;"	d
+TASK_ZOMBIE	include/multitask.h	27;"	d
+THREAD_SIZE	include/multitask.h	40;"	d
+TIMER_C0	include/peripherals.h	101;"	d
+TIMER_C1	include/peripherals.h	102;"	d
+TIMER_C2	include/peripherals.h	103;"	d
+TIMER_C3	include/peripherals.h	104;"	d
+TIMER_CHI	include/peripherals.h	100;"	d
+TIMER_CLO	include/peripherals.h	99;"	d
+TIMER_CS	include/peripherals.h	98;"	d
+TIMER_CS_M0	include/peripherals.h	106;"	d
+TIMER_CS_M1	include/peripherals.h	107;"	d
+TIMER_CS_M2	include/peripherals.h	108;"	d
+TIMER_CS_M3	include/peripherals.h	109;"	d
+TOOLS_H	include/tools.h	2;"	d
+UART0_CR	src/uart.c	12;"	d	file:
+UART0_DR	src/uart.c	7;"	d	file:
+UART0_FBRD	src/uart.c	10;"	d	file:
+UART0_FR	src/uart.c	8;"	d	file:
+UART0_IBRD	src/uart.c	9;"	d	file:
+UART0_ICR	src/uart.c	14;"	d	file:
+UART0_IMSC	src/uart.c	13;"	d	file:
+UART0_LCRH	src/uart.c	11;"	d	file:
+UART_DR	src/uart.c	17;"	d	file:
+UART_FR	src/uart.c	16;"	d	file:
+UART_H	include/uart.h	2;"	d
+VIDEOCORE_MBOX	src/mbox.c	8;"	d	file:
+_ENTRY_H	include/entry.h	2;"	d
+_IRQ_H	include/irq.h	2;"	d
+_MM_H	include/mm.h	2;"	d
+_MULTITASK_H_	include/multitask.h	2;"	d
+_PERIPHERALS_H	include/peripherals.h	2;"	d
+_TIMER_H	include/timer.h	2;"	d
+_UTILS_H	include/utils.h	2;"	d
+__TFP_PRINTF__	include/printf.h	2;"	d
+_cpu_context	include/multitask.h	/^	struct cpu_context _cpu_context;$/;"	m	struct:task_struct	typeref:struct:task_struct::cpu_context
+_start	src/start.S	/^_start:$/;"	l
+a2d	src/printf.c	/^static int a2d(char ch)$/;"	f	file:
+a2i	src/printf.c	/^static char a2i(char ch, char** src,int base,int* nump)$/;"	f	file:
+atoulli	src/tools.c	/^unsigned long long int atoulli(char* str){ $/;"	f
+bar1	src/main.c	/^void bar1(){$/;"	f
+bar2	src/main.c	/^void bar2(){$/;"	f
+branch_to_address	src/utils.S	/^branch_to_address:$/;"	l
+check_reschedule	src/multitask.c	/^int check_reschedule(){$/;"	f
+clear_bss	src/start.S	/^clear_bss:$/;"	l
+context_switch	src/multitask.c	/^void context_switch(int pid){$/;"	f
+copy_process	src/multitask.c	/^int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long free_old_stack){$/;"	f
+core_timer_enable	src/timer.S	/^core_timer_enable:$/;"	l
+core_timer_handler	src/timer.S	/^core_timer_handler:$/;"	l
+counter	include/multitask.h	/^	long counter;$/;"	m	struct:task_struct
+cpu_context	include/multitask.h	/^struct cpu_context {$/;"	s
+current_thread_number	src/multitask.c	/^static int current_thread_number = 0;$/;"	v	file:
+delay	src/utils.S	/^delay:$/;"	l
+disable_irq	src/irq.S	/^disable_irq:$/;"	l
+do_exec	src/multitask.c	/^int do_exec(unsigned long address){$/;"	f
+do_fork	src/multitask.c	/^int do_fork(){$/;"	f
+el0_irq_handler	src/entry.S	/^el0_irq_handler:$/;"	l
+el0_sync_handler	src/entry.S	/^el0_sync_handler:$/;"	l
+el1_irq_handler	src/entry.S	/^el1_irq_handler:$/;"	l
+el1_sync_handler	src/entry.S	/^el1_sync_handler:$/;"	l
+el2_to_el1	src/start.S	/^el2_to_el1:$/;"	l
+enable_irq	src/irq.S	/^enable_irq:$/;"	l
+enable_timer1_interrupt_controller	src/irq.c	/^void enable_timer1_interrupt_controller(){$/;"	f
+entry_error_messages	src/irq.c	/^const char *entry_error_messages[] = {$/;"	v
+err_hang	src/entry.S	/^err_hang: b err_hang$/;"	l
+error_invalid_el0_32	src/entry.S	/^error_invalid_el0_32:$/;"	l
+error_invalid_el0_64	src/entry.S	/^error_invalid_el0_64:$/;"	l
+error_invalid_el1h	src/entry.S	/^error_invalid_el1h:$/;"	l
+error_invalid_el1t	src/entry.S	/^error_invalid_el1t:$/;"	l
+exec	src/main.c	/^void exec(unsigned long func){$/;"	f
+exit	src/main.c	/^void exit(int ret){$/;"	f
+exit_process	src/multitask.c	/^void exit_process(int pid){$/;"	f
+fiq_invalid_el0_32	src/entry.S	/^fiq_invalid_el0_32:$/;"	l
+fiq_invalid_el0_64	src/entry.S	/^fiq_invalid_el0_64:$/;"	l
+fiq_invalid_el1h	src/entry.S	/^fiq_invalid_el1h:$/;"	l
+fiq_invalid_el1t	src/entry.S	/^fiq_invalid_el1t:$/;"	l
+flags	include/multitask.h	/^	long flags;$/;"	m	struct:task_struct
+foo	src/main.c	/^void foo(){$/;"	f
+foo1	src/main.c	/^void foo1(){$/;"	f
+foo2	src/main.c	/^void foo2(){$/;"	f
+foo3	src/main.c	/^void foo3(){$/;"	f
+foo4	src/main.c	/^void foo4(){$/;"	f
+fork	src/main.c	/^int fork(){$/;"	f
+fp	include/multitask.h	/^	unsigned long fp;	\/\/ x29$/;"	m	struct:cpu_context
+free_page	src/multitask.c	/^void free_page(unsigned long p){$/;"	f
+get32	src/utils.S	/^get32:$/;"	l
+get_VC_memory	src/mbox.c	/^void get_VC_memory(){$/;"	f
+get_board_revision	src/mbox.c	/^void get_board_revision(){$/;"	f
+get_current	src/multitask.S	/^get_current:$/;"	l
+get_el	src/utils.S	/^get_el:$/;"	l
+get_free_page	src/multitask.c	/^unsigned long get_free_page(){$/;"	f
+get_serial_number	src/mbox.c	/^void get_serial_number(){$/;"	f
+get_taskid	src/main.c	/^int get_taskid(){$/;"	f
+handle_irq	src/irq.c	/^void handle_irq(void){$/;"	f
+height	src/lfb.c	/^unsigned int width, height, pitch, isrgb;   \/* dimensions and channel order *\/$/;"	v
+hexChar2int	src/tools.c	/^unsigned long long int hexChar2int(char ch){$/;"	f
+i2a	src/printf.c	/^static void i2a (int num, char * bf)$/;"	f	file:
+init	src/multitask.c	/^void init(){$/;"	f
+init_printf	src/printf.c	/^void init_printf(void* putp,void (*putf) (void*,char))$/;"	f
+irq_handler	src/irq.c	/^void irq_handler(){$/;"	f
+irq_invalid_el0_32	src/entry.S	/^irq_invalid_el0_32:$/;"	l
+irq_invalid_el0_64	src/entry.S	/^irq_invalid_el0_64:$/;"	l
+irq_invalid_el1h	src/entry.S	/^irq_invalid_el1h:$/;"	l
+irq_invalid_el1t	src/entry.S	/^irq_invalid_el1t:$/;"	l
+irq_vector_init	src/irq.S	/^irq_vector_init:$/;"	l
+isrgb	src/lfb.c	/^unsigned int width, height, pitch, isrgb;   \/* dimensions and channel order *\/$/;"	v
+itoa	src/tools.c	/^char* itoa(unsigned long long int num, char* str, unsigned long long int base) { $/;"	f
+lfb	src/lfb.c	/^unsigned char *lfb;                         \/* raw frame buffer address *\/$/;"	v
+lfb_init	src/lfb.c	/^void lfb_init()$/;"	f
+lfb_showpicture	src/lfb.c	/^void lfb_showpicture()$/;"	f
+li2a	src/printf.c	/^static void li2a (long num, char * bf)$/;"	f	file:
+local_timer_handler	src/timer.c	/^void local_timer_handler(){$/;"	f
+local_timer_init	src/timer.c	/^void local_timer_init(){$/;"	f
+main	src/main.c	/^void main()$/;"	f
+mbox	src/mbox.c	/^volatile unsigned int  __attribute__((aligned(16))) mbox[36];$/;"	v
+mbox_call	src/mbox.c	/^int mbox_call(unsigned char ch)$/;"	f
+mem_map	src/multitask.c	/^static unsigned short mem_map[PAGING_PAGES] = {0,};$/;"	v	file:
+memcpy	src/tools.c	/^void memcpy(void *destt, void *sourcet, int size){$/;"	f
+memzero	src/utils.S	/^memzero:$/;"	l
+pc	include/multitask.h	/^	unsigned long pc;	\/\/ x30$/;"	m	struct:cpu_context
+pc	include/multitask.h	/^	unsigned long pc;$/;"	m	struct:user_context
+pitch	src/lfb.c	/^unsigned int width, height, pitch, isrgb;   \/* dimensions and channel order *\/$/;"	v
+preempt_count	include/multitask.h	/^	long preempt_count;$/;"	m	struct:task_struct
+printf	include/printf.h	13;"	d
+priority	include/multitask.h	/^	long priority;$/;"	m	struct:task_struct
+proc_hang	src/start.S	/^proc_hang: $/;"	l
+pstate	include/multitask.h	/^	unsigned long pstate;$/;"	m	struct:user_context
+put32	src/utils.S	/^put32:$/;"	l
+putc	src/uart.c	/^void putc(void *p, char c){$/;"	f
+putcf	src/printf.c	/^typedef void (*putcf) (void*,char);$/;"	t	file:
+putchw	src/printf.c	/^static void putchw(void* putp,putcf putf,int n, char z, char* bf)$/;"	f	file:
+putcp	src/printf.c	/^static void putcp(void* p,char c)$/;"	f	file:
+regs	include/multitask.h	/^	unsigned long regs[31];$/;"	m	struct:user_context
+ret_from_fork	src/entry.S	/^ret_from_fork:$/;"	l
+ret_to_user	src/entry.S	/^ret_to_user:$/;"	l
+reverse	src/tools.c	/^void reverse(char str[], int length) { $/;"	f
+schedule	src/multitask.c	/^void schedule(){$/;"	f
+schedule_cnt_add	src/multitask.c	/^void schedule_cnt_add(int num){$/;"	f
+schedule_loop	src/main.c	/^void schedule_loop(){$/;"	f
+schedule_timer_count	src/multitask.c	/^static int schedule_timer_count = 0;$/;"	v	file:
+schedule_turn	src/multitask.c	/^static int schedule_turn = 0;$/;"	v	file:
+set_current	src/multitask.S	/^set_current:$/;"	l
+shell	src/start.S	/^shell:$/;"	l
+show_invalid_entry_message	src/irq.c	/^void show_invalid_entry_message(unsigned long type, unsigned long esr, unsigned long address){$/;"	f
+sp	include/multitask.h	/^	unsigned long sp;$/;"	m	struct:cpu_context
+sp	include/multitask.h	/^	unsigned long sp;$/;"	m	struct:user_context
+sprintf	include/printf.h	14;"	d
+stack	include/multitask.h	/^	long stack;$/;"	m	struct:task_struct
+stack_pointer_set	src/start.S	/^stack_pointer_set:$/;"	l
+state	include/multitask.h	/^	long state;$/;"	m	struct:task_struct
+stay_el1	src/start.S	/^stay_el1:$/;"	l
+stdout_putf	src/printf.c	/^static putcf stdout_putf;$/;"	v	file:
+stdout_putp	src/printf.c	/^static void* stdout_putp;$/;"	v	file:
+strcmp	src/tools.c	/^int strcmp(const char *X, const char *Y){$/;"	f
+strlen	src/tools.c	/^int strlen(const char *str){$/;"	f
+svc_call_1	src/irq.S	/^svc_call_1:$/;"	l
+switch_to	src/multitask.S	/^switch_to:$/;"	l
+sync_handler	src/irq.c	/^void sync_handler(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3, unsigned long x4, unsigned long x5){$/;"	f
+sync_invalid_el0_32	src/entry.S	/^sync_invalid_el0_32:$/;"	l
+sync_invalid_el0_64	src/entry.S	/^sync_invalid_el0_64:$/;"	l
+sync_invalid_el1h	src/entry.S	/^sync_invalid_el1h:$/;"	l
+sync_invalid_el1t	src/entry.S	/^sync_invalid_el1t:$/;"	l
+sys_uart_read	src/main.c	/^char sys_uart_read(){$/;"	f
+sys_uart_write	src/main.c	/^void sys_uart_write(int c){$/;"	f
+system_call	src/irq.c	/^void system_call(unsigned long syscall_number, unsigned long x0, unsigned long x1){$/;"	f
+task_1	src/main.c	/^void task_1(){$/;"	f
+task_2	src/main.c	/^void task_2(){$/;"	f
+task_3	src/main.c	/^void task_3(){$/;"	f
+task_pool	src/multitask.c	/^struct task_struct *task_pool[MAX_THREAD_NUM] = {0};$/;"	v	typeref:struct:task_struct
+task_struct	include/multitask.h	/^struct task_struct {$/;"	s
+test	src/main.c	/^void test(){$/;"	f
+tfp_format	src/printf.c	/^void tfp_format(void* putp,putcf putf,char *fmt, va_list va)$/;"	f
+tfp_printf	src/printf.c	/^void tfp_printf(char *fmt, ...)$/;"	f
+tfp_sprintf	src/printf.c	/^void tfp_sprintf(char* s,char *fmt, ...)$/;"	f
+timer_tick	src/multitask.c	/^void timer_tick(){$/;"	f
+timestamp	src/tools.c	/^void timestamp(int *integer_part, int *decimal_point_part){$/;"	f
+uart_get_string	src/uart.c	/^int uart_get_string(char * s){$/;"	f
+uart_get_string_with_echo	src/uart.c	/^int uart_get_string_with_echo(char * s){$/;"	f
+uart_getc	src/uart.c	/^char uart_getc() {$/;"	f
+uart_hex	src/uart.c	/^void uart_hex(unsigned int d) {$/;"	f
+uart_init	src/uart.c	/^void uart_init()$/;"	f
+uart_int	src/uart.c	/^void uart_int(int n){$/;"	f
+uart_puts	src/uart.c	/^void uart_puts(char *s) {$/;"	f
+uart_send	src/uart.c	/^void uart_send(unsigned int c) {$/;"	f
+ui2a	src/printf.c	/^static void ui2a(unsigned int num, unsigned int base, int uc,char * bf)$/;"	f	file:
+uli2a	src/printf.c	/^static void uli2a(unsigned long int num, unsigned int base, int uc,char * bf)$/;"	f	file:
+user_context	include/multitask.h	/^struct user_context {$/;"	s
+user_syscall_test	src/main.c	/^void user_syscall_test(){$/;"	f
+user_task_3	src/main.c	/^void user_task_3(){$/;"	f
+user_task_4	src/main.c	/^void user_task_4(){$/;"	f
+user_test	src/main.c	/^void user_test(){$/;"	f
+vectors	src/entry.S	/^vectors:$/;"	l
+width	src/lfb.c	/^unsigned int width, height, pitch, isrgb;   \/* dimensions and channel order *\/$/;"	v
+x19	include/multitask.h	/^	unsigned long x19;$/;"	m	struct:cpu_context
+x20	include/multitask.h	/^	unsigned long x20;$/;"	m	struct:cpu_context
+x21	include/multitask.h	/^	unsigned long x21;$/;"	m	struct:cpu_context
+x22	include/multitask.h	/^	unsigned long x22;$/;"	m	struct:cpu_context
+x23	include/multitask.h	/^	unsigned long x23;$/;"	m	struct:cpu_context
+x24	include/multitask.h	/^	unsigned long x24;$/;"	m	struct:cpu_context
+x25	include/multitask.h	/^	unsigned long x25;$/;"	m	struct:cpu_context
+x26	include/multitask.h	/^	unsigned long x26;$/;"	m	struct:cpu_context
+x27	include/multitask.h	/^	unsigned long x27;$/;"	m	struct:cpu_context
+x28	include/multitask.h	/^	unsigned long x28;$/;"	m	struct:cpu_context
