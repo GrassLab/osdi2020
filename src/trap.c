@@ -45,6 +45,8 @@ void synchronize_handler(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3,
                 break;
             case 4:
                 do_exit(x0);
+                asm volatile("ldr x0, =schedule");
+                asm volatile("msr elr_el1, x0");
                 break;
         }
     } else if (iss == 2) {
