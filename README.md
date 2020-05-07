@@ -1,4 +1,4 @@
-# My OSDI 2020 - LAB 03
+# My OSDI 2020 - LAB 04
 
 ## Author
 
@@ -6,7 +6,7 @@
 | -----------| -------------- | ---- | -------------------------- |
 | 0856009    | JingWangTW     | 王靖  | jingwang.cs08g@nctu.edu.tw |
 
-## LAB 3 Project
+## LAB 4 Project
 
 ### How to build
 ```bash
@@ -18,66 +18,73 @@ make
 make run 
 ```
 
-### Simple Shell
-| command       | description                       | 
-| --------------| --------------------------------- | 
-| hello         | print Hello World!                |
-| help          | print all available commands      |
-| timestamp     | print current timestamp           |
-| reboot        | reset rpi3                        |
-| vc_base_addr  | print vc core base address        |
-| board_revision| print boarf revision              |
-| exc           | trap into el1                     |
-| hvc           | trap into el2                     |
-| timer         | enable core and local timer intr  |
-| timer-stp     | disable core and local timer intr |
-| irq           | enable interrupt                  |
-| irq-stp       | disable all interrupt             |
-
 ## Directory structure
-
 ```
 .
 ├── LICENSE
 ├── Makefile
 ├── README.md
-├── include                 # header file of code in src
+├── include
 │   ├── command.h
-│   ├── img_data.h
-│   └── shell.h
-├── kernel                  
-│   ├── exception           # code associated with exception
-│   │   ├── exception.S     # exception handler
-│   │   ├── exception.c     # exception controller
+│   ├── shell.h
+│   └── test_task.h
+├── kernel
+│   ├── boot.S                  # booting setup
+│   ├── exception
+│   │   ├── exception.S
+│   │   ├── exception.c         # exception controller
 │   │   ├── exception.h
-│   │   ├── irq.S           # interript handler
-│   │   ├── irq.c           # interrupt controller
+│   │   ├── irq.S
+│   │   ├── irq.c               # interrupt controller
 │   │   ├── irq.h
-│   │   ├── timer.c         # code to controller core and local timer
+│   │   ├── sys_call_def.h      # system call type define
+│   │   ├── timer.c             # system timer hanlder
 │   │   ├── timer.h
-│   │   ├── utility.c       # exception utility function
+│   │   ├── utility.c           # some exception relative utility functions
 │   │   └── utility.h
-│   ├── peripherals         # code to deal with peripher
+│   ├── peripherals
 │   │   ├── gpio.h
 │   │   ├── mailbox.c
 │   │   ├── mailbox.h
 │   │   ├── time.c
 │   │   ├── time.h
-│   │   ├── uart.c
-│   │   └── uart.h          # uart_printf
-│   └── start.S             # booting process
-├── lib                     # some standard function and definition
-│   ├── ctype.c
+│   │   ├── uart.c              # uart handler
+│   │   └── uart.h
+│   └── task
+│       ├── mem.c               # memory allocator
+│       ├── mem.h
+│       ├── schedule.S
+│       ├── schedule.c          # scheduling controller
+│       ├── schedule.h
+│       ├── task.S
+│       ├── task.c              # task(thread) creater, hanlder
+│       ├── task.h
+│       ├── task_queue.c        # task(thread) queue controller
+│       └── task_queue.h
+├── kernel8.img
+├── lib                         # some system libraries
+│   ├── ctype.c                 # define some common type
 │   ├── ctype.h
+│   ├── io.S
+│   ├── io.c                    # io, printf, gets
+│   ├── io.h
 │   ├── math.c
 │   ├── math.h
 │   ├── stdarg.h
 │   ├── string.c
 │   ├── string.h
+│   ├── sys.S                   # function to get some system info
+│   ├── sys.h
+│   ├── task.S
+│   ├── task.c                  # idle(), zombie, reaper
+│   ├── task.h
+│   ├── time.S                  # wait, get_time_stamp
+│   ├── time.h
 │   └── type.h
-├── link.ld                 # linker file
-└── src                     # code to some application
+├── link.ld
+└── src
     ├── command.c
     ├── main.c
-    └── shell.c
+    ├── shell.c
+    └── test_task.c             # task testing functions
 ```

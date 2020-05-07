@@ -1,17 +1,18 @@
-#include "kernel/peripherals/uart.h"
+
+#include "lib/io.h"
+#include "lib/task.h"
+#include "lib/time.h"
 
 #include "shell.h"
+#include "test_task.h"
 
-int main()
+int main ( )
 {
-    // set up serial console
-    uart_init();
+    printf ( "This is main before test_task!!\n" );
 
-    // say hello
-    uart_printf("Hello World\n");
+    exec ( test_task );
 
-    // start shell
-    shell_start();
-    
+    printf ( "This shall never be touched!!\n" );
+
     return 0;
 }

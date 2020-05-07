@@ -1,7 +1,8 @@
-#ifndef TIME_H
-#define TIME_H
+#ifndef __SYS_TIME_H
+#define __SYS_TIME_H
 
-void print_current_timestamp ( );
-void wait_cycles ( unsigned int n );
+double sys_get_current_timestamp ( );
+void sys_wait_cycles ( unsigned int n );
+void sys_wait_msec ( unsigned int n );
 
 #endif

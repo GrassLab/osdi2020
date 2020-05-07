@@ -3,4 +3,5 @@
 *.o
 .vscode/*
 *.out
+.clang-format
 raspbootocm

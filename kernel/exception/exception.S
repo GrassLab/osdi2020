@@ -8,29 +8,41 @@
 # save general registers to stack
 .macro save_reg
 
-    sub     sp,     sp,     32 * 8
-    stp     x0,     x1,     [sp ,16 * 0]
-    stp     x2,     x3,     [sp ,16 * 1]
-    stp     x4,     x5,     [sp ,16 * 2]
-    stp     x6,     x7,     [sp ,16 * 3]
-    stp     x8,     x9,     [sp ,16 * 4]
-    stp     x10,    x11,    [sp ,16 * 5]
-    stp     x12,    x13,    [sp ,16 * 6]
-    stp     x14,    x15,    [sp ,16 * 7]
-    stp     x16,    x17,    [sp ,16 * 8]
-    stp     x18,    x19,    [sp ,16 * 9]
-    stp     x20,    x21,    [sp ,16 * 10]
-    stp     x22,    x23,    [sp ,16 * 11]
-    stp     x24,    x25,    [sp ,16 * 12]
-    stp     x26,    x27,    [sp ,16 * 13]
-    stp     x28,    x29,    [sp ,16 * 14]
-    str     x30,            [sp, 16 * 15]
+    stp     x0,     x1,     [sp, 16 * 0]
+    stp     x2,     x3,     [sp, 16 * 1]
+    stp     x4,     x5,     [sp, 16 * 2]
+    stp     x6,     x7,     [sp, 16 * 3]
+    stp     x8,     x9,     [sp, 16 * 4]
+    stp     x10,    x11,    [sp, 16 * 5]
+    stp     x12,    x13,    [sp, 16 * 6]
+    stp     x14,    x15,    [sp, 16 * 7]
+    stp     x16,    x17,    [sp, 16 * 8]
+    stp     x18,    x19,    [sp, 16 * 9]
+    stp     x20,    x21,    [sp, 16 * 10]
+    stp     x22,    x23,    [sp, 16 * 11]
+    stp     x24,    x25,    [sp, 16 * 12]
+    stp     x26,    x27,    [sp, 16 * 13]
+    stp     x28,    fp,     [sp, 16 * 14]
+    str     lr,             [sp, 16 * 15]
+    
+    mrs     x9,     SP_EL0  
+    str     x9,             [sp, 16 * 15 + 8]       // save the location of the current user stack
+
+    mrs     x9,     ELR_EL1  
+    str     x9,             [sp, 16 * 16 + 8]       // the program counter after return to el0
 
 .endm
 
 # load general registers from stack
 .macro load_reg
 
+    ldr     x0,     [sp ,16 * 15 + 8]   // get the location of the user stack
+    msr     SP_EL0, x0                  // save it to the sp_el0
+
+    ldr     x0,     [sp ,16 * 16 + 8]   // get the program counter used in user mode
+    msr     ELR_EL1, x0                 // save it to the elr_el1
+    
+    # load other general register 
     ldp     x0,     x1,     [sp ,16 * 0]
     ldp     x2,     x3,     [sp ,16 * 1]
     ldp     x4,     x5,     [sp ,16 * 2]
@@ -45,43 +57,55 @@
     ldp     x22,    x23,    [sp ,16 * 11]
     ldp     x24,    x25,    [sp ,16 * 12]
     ldp     x26,    x27,    [sp ,16 * 13]
-    ldp     x28,    x29,    [sp ,16 * 14]
-    ldr     x30,            [sp, 16 * 15]
-    add     sp,     sp,     32 * 8
-    eret
+    ldp     x28,    fp,     [sp ,16 * 14]
+    ldr     lr,             [sp, 16 * 15]
 
 .endm
 
-_exception__handler_el1:
-    save_reg
-    bl      exec_controller_el1
+.macro kernel_entry
+    # let sp go the right place
+    stp     x0,     x1,     [sp]    // save the x0, x1 first 
+                                    // the sp here is el1_sp
+
+    mrs     x0,     TPIDR_EL0       // get what is going on in the el0
+    mov     x1,     sp              // save the location that are going to save the register
+
+    mov     sp,     x0              // move the sp to the correct kernel stack
+
+    # retrieve user register
+    ldp     x0,     x1,     [x1]
+
+    # save the user register
+    save_reg            
+
+    mrs     x0,     TPIDR_EL0
+    ldr     x0,     [x0, 8 * 32]    // get kernel stack of the current task
+    mov     sp,     x0
+
+    mov     x0,     x8              // the exception argument here      
+.endm
+
+.macro kernel_exit
+    mrs     x0,     TPIDR_EL0       // retrieve what is going to do next 
+    mov     sp,     x0
+
+    # load the user registers
     load_reg
+    
+    # location for the el1 for the next trapped 
+    mov     sp,     #0x70000        
+    eret
+.endm
+
+_exception__handler_el1:
+    kernel_entry
+    bl      exec_controller_el1
+    kernel_exit
 
 _irq__handler_el1:
-    # how to make macro gloabl?
-    save_reg
+    kernel_entry
     bl      irq_controller_el1
-    load_reg
-
-_exception__handler_el2:
-
-    # ESR_EL2:  Holds syndrome information for an exception taken to EL2.
-    # ELR_EL2:  When taking an exception to EL2, holds the address to return to.
-    # SPSR_EL2: Holds the saved process state when an exception is taken to EL2.
-    # FAR_EL2:  Holds the faulting Virtual Address for all synchronous Instruction or Data Abort, PC alignment fault and Watchpoint exceptions that are taken to EL2.
-
-    save_reg
-    # mrs     x0, ELR_EL2
-    # mrs     x1, ESR_EL2
-    # mrs     x2, SPSR_EL2
-    # mrs     x3, FAR_EL2
-    bl      exec_controller_el2
-    load_reg
-
-_irq__handler_el2:
-    save_reg
-    bl      irq_controller_el2
-    load_reg
+    kernel_exit
 
 _not_implemented:
     save_reg
@@ -120,11 +144,11 @@ exception_table_el1:
     # Exception from the current EL while using SP_ELx
     # ==================================================
     # Synchronous
-    b   _not_implemented
+    b   _exception__handler_el1
     .align 7
 
     # IRQ
-    b   _not_implemented
+    b   _irq__handler_el1
     .align 7
     
     # FIQ
@@ -224,11 +248,11 @@ exception_table_el2:
     # Exception from a lower EL and at least one lower EL is AArch64
     # ==================================================
     # Synchronous    
-    b   _exception__handler_el2
+    b   _not_implemented
     .align 7
 
     # IRQ
-    b   _irq__handler_el2
+    b   _not_implemented
     .align 7
     
     # FIQ
