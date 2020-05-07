@@ -1,4 +1,7 @@
+#define IN_ASM
+
 #include "sysregs.h"
+#include "mm.h"
 
 .section ".text.boot"
 
@@ -50,7 +53,7 @@ _start:
 
 el1_start:
     // set stack pointer
-    ldr     x1, =0x60000
+    ldr     x1, =KERNEL_BASE
     mov     sp, x1
 
     // load exception_table to VBAR_EL1
@@ -60,6 +63,11 @@ el1_start:
     // mask all interrupt, and set exception level to el0
     ldr     x1, =SPSR_EL1_VALUE
     msr     spsr_el1, x1
+
+    bl      kernel_main
+
+1:
+    b       1b
 
     adr     x1, el0_start
     msr     elr_el1, x1
