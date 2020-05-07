@@ -2,7 +2,7 @@ SRCS = $(wildcard src/*.c)
 ASMS = $(wildcard src/*.S)
 OBJS = $(SRCS:.c=.o)
 CC = aarch64-linux-gnu-gcc 
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
+CFLAGS = -Wall -O0 -ffreestanding -nostdinc -nostdlib -nostartfiles
 
 .PHONY: all clean run gdb objdump readelf copy
 

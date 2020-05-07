@@ -38,14 +38,14 @@ _setup_el1:
     // change execution level to EL1
     mov     x0, 0x5//#0x3c4
     msr     spsr_el2, x0
-    adr     x0, _el2_to_el1
+    adr     x0, _run_main  // from el2 return to el1
     msr     elr_el2, x0
     eret
 
 
 #define USER_STACK 0x1000
 
-_el2_to_el1:
+_setup_el0:
     // disable exception of access SIMD register in EL1
     mrs     x0, cpacr_el1
     orr     x0, x0, #(3 << 20)
@@ -58,11 +58,12 @@ _el2_to_el1:
     // spsr_el1 clear daif and switch to EL0
     mov     x1, 0x0
     msr     spsr_el1, x1
-    adr     x1, main
+    adr     x1, _run_main  // from el1 return to el0
     msr     elr_el1, x1
     eret
 
-_el1_to_el0:
+
+_run_main:
     // // set up stack
     // ldr     x0, =_start
     // mov     sp, x0

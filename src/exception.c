@@ -1,10 +1,15 @@
 #include "../include/uart.h"
 #include "../include/info.h"
 #include "../include/interrupt.h"
+#include "../include/syscall.h"
+#include "../include/task.h"
+#include "../include/exception.h"
 
-void exception_not_implement()
+void exception_not_implement(unsigned int offset)
 {
-    uart_puts("Exception not implement!\n"); 
+    uart_puts("Exception not implement! offset is "); 
+    uart_hex(offset);
+    uart_puts("\n");
     while (1);
 }
 
@@ -48,16 +53,21 @@ void decode_exception(unsigned long esr, unsigned long elr, unsigned long spsr)
     uart_hex(spsr>>16);
     uart_hex(spsr);
     uart_puts("\n");
+    while(1);
 }
 /**
  * common exception handler
  */
 // follow aarch64 calling convention in system call
 // syscall_x0 (x1, x2, x3)
-void exception_handler(unsigned int x0, unsigned int x1, unsigned int x2, unsigned int x3)
+void exception_handler(unsigned int trapframe)
 {
+    struct task* current = get_current();
+    current->trapframe = trapframe;
+    current->state = EXC_CONTEXT;
+    // uart_puts("\r\n++++++++++  exception_handler begin  ++++++++++\n");
     unsigned long esr, elr, spsr; 
-
+    unsigned long sys_ret_val;
     //  check exception level
     int level = show_exception_level();
     switch(level) {
@@ -76,15 +86,21 @@ void exception_handler(unsigned int x0, unsigned int x1, unsigned int x2, unsign
             return;
     }    
 
-    if ((esr>>26==0b010101) && ((esr&0x1ffffff)==0)) {
-        switch (x0) {
-            case 0:
-                uart_puts("syscall core timer enable.\n");
-                core_timer_enable(); 
-                break;
+    // syscall - svc #0
+    if ((esr>>26)==0b010101) {
+        if ((esr&0x1ffffff)==0) {
+            // decode_exception(esr, elr, spsr);
+
+            unsigned long sys_ret_val = 0;
+            //asm volatile ("ldr %0, [%1, #8 * 8]" :"=r" (x8) :"r"(trapframe));
+            sys_ret_val = el0_svc_handler(trapframe);
+            *(unsigned int*)trapframe = sys_ret_val;
         }
     } 
     else {
+        uart_hex(current->user_context.sp_el0);
+        uart_hex(current->user_context.spsr_el1);
+        uart_hex(current->user_context.elr_el1);
         decode_exception(esr, elr, spsr);
     }
 
@@ -99,5 +115,92 @@ void exception_handler(unsigned int x0, unsigned int x1, unsigned int x2, unsign
                 asm volatile ("msr elr_el3, %0" : : "r" (elr+4)); break;  
         }  
     }
+    // uart_puts("++++++++++  exception_handler end  ++++++++++\n\r\n");
 }
 
+
+unsigned long el0_svc_handler(unsigned int trapframe)
+{
+    unsigned int x0; 
+    unsigned int x8;  // syscall number
+    x0 = *(unsigned int*)(trapframe+8*0);
+    x8 = *(unsigned int*)(trapframe+8*8);
+    unsigned long sys_ret_val = 0;
+    struct task* current = get_current();
+    // uart_puts("syscall ID: ");
+    // uart_hex(x8);
+    // uart_puts(",  el0_svc_handler....\n");
+    // enable_irq(); 
+    switch (x8) {
+        case SYS_CORE_TIMER_IRQ_ENABLE:
+            // uart_puts("syscall core timer enable.\n");
+            core_timer_enable(); 
+            break;
+        case SYS_GET_TASKID:
+            // if(sys_get_taskid() == 0){
+            //     uart_puts("sys_get_taskid success!\n");
+            // } else {
+            //     uart_puts("sys_get_taskid error!\n");
+            // }
+            sys_ret_val = current->task_id;
+            // uart_puts("sys_get_taskid success!\n");
+            break;
+        case SYS_EXEC:
+            do_exec(x0);
+            break;
+        case SYS_FORK:
+            sys_ret_val = do_fork();
+            // uart_puts("fork_id: "); // child won't do this
+            // uart_hex(sys_ret_val);
+            // uart_puts("\n");
+            break;
+        case SYS_EXIT:
+            sys_ret_val = do_exit(0);
+            uart_puts("exit error!\n"); // exit should not come here, because schedule
+            while(1);
+            break;
+        case SYS_UART_READ:
+            sys_ret_val = uart_getc();
+            break;
+        case SYS_UART_WRITE:
+            uart_puts(x0);
+            break;
+        default:
+            // uart_puts("syscall not found\n");
+            break;
+    }
+
+    // disable_irq();
+    return sys_ret_val;
+}
+
+
+
+// int get_syscall_no()
+// {
+//     // get syscall number in x8
+//     return 0;
+// }
+
+// // general interface for all system calls in kernel.
+// // may handle trapframe related things here.
+// int sys_get_taskid() 
+// {
+//     set_trap_ret(do_get_taskid());
+//     return 0;
+// }
+
+// void set_trap_ret(unsigned long x0)
+// {
+//     // update trapframe
+//     // save x0 to trapframe
+//     return;
+// }
+
+// // real working space for a system call.
+// // may also be called by other kernel functions.
+// unsigned long do_get_taskid() 
+// {
+//     struct task* current = get_current();
+//     return current->task_id;
+// }

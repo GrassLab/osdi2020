@@ -90,10 +90,10 @@ int show_exception_level()
     el = el >> 2;
     uart_atoi(level, el);
 
-    uart_puts("Exception Level: ");
-    //uart_hex(el);
-    //uart_puts("     ");
-    uart_puts(level);
-    uart_puts("\n");
+    // uart_puts("Exception Level: ");
+    // //uart_hex(el);
+    // //uart_puts("     ");
+    // uart_puts(level);
+    // uart_puts("\n");
     return el;
 }
