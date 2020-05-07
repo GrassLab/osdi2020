@@ -77,9 +77,15 @@ void main()
     // }
     // idle();
 
-
+    // while(1) {
+    //     uart_send(uart_getc());
+    // }
+    uart_send('>'); // to interactive with raspbootcom 
     char buf[0x100];
     uart_readline(buf);
+    // char tmp;
+    // tmp = uart_getc();
+    uart_puts("ddddddddd\n");
     uart_puts(buf);
 
     /*
