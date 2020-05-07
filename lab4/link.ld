@@ -13,7 +13,11 @@ SECTIONS
         __bss_end = .;
     }
     _end = .;
-
+    .userspace (NOLOAD) : {
+        . = ALIGN(16);
+        *(.userspace);
+        *(COMMON)
+    }
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;

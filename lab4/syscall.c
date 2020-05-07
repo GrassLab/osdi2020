@@ -3,6 +3,7 @@
 
 
 
+
 void cal_time(unsigned long long int time_FRQ, unsigned long long int time_CT, char *char_time)
 {
 	int tmp,count=0;
@@ -37,7 +38,7 @@ void timestamp()
 
 void core_time_enable()
 {
-	asm volatile("mov x0, %0\r\n" "svc #0" ::"r"(0):);
+	asm volatile("mov x0, 0\r\n" "svc #0");
 }
 
 void reboot()
@@ -47,7 +48,7 @@ void reboot()
 
 void show_svc_info()
 {
-	unsigned int par[5]; // Exc Class, ISS, return address, current EL, current SP
+	unsigned long long par[5]; // Exc Class, ISS, return address, current EL, current SP
 	asm volatile("mov x0, %0" ::"r"(1):);
 	asm volatile("mov x1, %0" ::"r"(par):);
 	asm volatile("svc #1");
@@ -63,3 +64,4 @@ void show_svc_info()
     uart_hex(par[4]);
     uart_puts("\r\n");
 }
+

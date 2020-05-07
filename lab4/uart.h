@@ -12,12 +12,16 @@
 #define ENABLE_IRQ2     ((volatile unsigned int*)(MMIO_BASE+0x0000b214))
 #define UART0_RIS       ((volatile unsigned int*)(MMIO_BASE+0x0020103C))
 #define UART0_IFLS      ((volatile unsigned int*)(MMIO_BASE+0x00201034))
+#define TMP_SOR ((volatile unsigned int*)0x20000)
+
 
 void uart_init();
 void uart_send(unsigned int c);
 char uart_getc();
 void uart_puts(char *s);
 void uart_hex(unsigned int d);
+void my_printf(const char *fmt, ...);
+
 
 struct myqueue
 {
