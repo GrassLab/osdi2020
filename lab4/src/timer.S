@@ -1,4 +1,5 @@
-#define CORE0_TIMER_IRQ_CTRL 0x40000040
+#define __ASSEMBLY__
+#include "timer.h"
 
 .globl core_timer_enable
 core_timer_enable:
@@ -9,7 +10,7 @@ core_timer_enable:
     str x0, [x1] // enable timer interrupt
     ret
 
-#define EXPIRE_PERIOD 0xfffffff
+#define EXPIRE_PERIOD 0xffffff
 
 .globl clean_core_timer
 clean_core_timer:

@@ -36,13 +36,11 @@ struct task {
     cpu_context_t cpu_context; 
     user_context_t user_context; 
     int task_id;
-    int trapframe;
     long state;
     long counter;
-    long priority;
-    int preempt_count; 
     int mode;
     int rescheduled; 
+    unsigned long trapframe;
 };
 
 typedef struct task task_t;

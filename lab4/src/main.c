@@ -10,6 +10,7 @@
 task_manager_t TaskManager;
 task_t* current;
 
+
 void init_uart(){
     // uart_init();
     get_board_revision();
@@ -68,27 +69,35 @@ void print3(){
 }
 
 void func(){
+    int cnt = 1;
     while(1){
         printf("---\n");
         printf("user loop\n");
         printf("kernel stack location: %x\n",current->cpu_context.sp);
         printf("user stack location: %x\n",current->user_context.sp_el0);
-        // printf("taskid: %d\n", get_taskid());
+        printf("taskid: %d\n", get_taskid());
+        printf("user loop cnt: %d, address of cnt: %d\n", cnt, &cnt);
 
-        delay(100000000);
+        cnt++;
+        // printf("---\n");
+
+        delay(10000000);
     }
 }
 
 void func2(){
+    int cnt = 1;
     while(1){
         printf("---\n");
         printf("user loop2\n");
         printf("kernel stack location: %x\n",current->cpu_context.sp);
         printf("user stack location: %x\n",current->user_context.sp_el0);
-        // printf("taskid: %d\n", get_taskid());
+        printf("taskid: %d\n", get_taskid());
+        printf("user loop cnt: %d, address of cnt: %d\n", cnt, &cnt);
+        cnt++;
+        // printf("---\n");
 
-
-        delay(100000000);
+        delay(10000000);
     }
 }
  

@@ -1,3 +1,4 @@
+#undef __ASSEMBLY__
 #include "utils.h"
 #include "timer.h"
 #include "base.h"

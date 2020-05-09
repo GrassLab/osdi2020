@@ -15,9 +15,8 @@ proc_hang:
 	b 	proc_hang
 
 master:
-    ldr     x1, =_start
-    msr     sp_el1, x1
-
+	ldr	x0, =SCTLR_VALUE_MMU_DISABLED
+	msr	sctlr_el1, x0		
 
 	ldr	x0, =HCR_VALUE
 	msr	hcr_el2, x0
@@ -28,17 +27,11 @@ master:
 	ldr	x0, =SPSR_VALUE
 	msr	spsr_el2, x0
 
+	adr	x0, el1_start		
+	msr	elr_el2, x0
 
-    ldr     x2, =vectors
-    msr     vbar_el1, x2
-    ldr     x2, =vectors
-    msr     vbar_el2, x2
+	eret				
 
-	adr	    x0, main_start		
-	msr	    elr_el2, x0
-    eret
-
-/* 
 el1_start:
 	adr	x0, __bss_begin
 	adr	x1, __bss_end
@@ -49,7 +42,7 @@ el1_start:
 
 
 
-	ldr x0, =vectors
+	adr x0, vectors		// load VBAR_EL1 with virtual
 	msr	vbar_el1, x0		// vector table address
 
 	bl main
@@ -64,17 +57,10 @@ el1_start:
 	adr	x0, el0_start		
 	msr	elr_el1, x0
 
-    eret*/
+    eret
 
 
-main_start:
-    // clear bss
-    ldr     x1, =__bss_begin
-    ldr     w2, =__bss_size
-3:  cbz     w2, 4f
-    str     xzr, [x1], #8
-    sub     w2, w2, #1
-    cbnz    w2, 3b
-
-4:  bl      main   // jump to C code, should not return
-    b       proc_hang     // for failsafe, halt this core too
+el0_start:
+	mov	sp, #EL0_LOW_MEMORY
+	bl	main
+	b 	proc_hang		// should never come here

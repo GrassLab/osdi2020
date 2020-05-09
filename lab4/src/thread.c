@@ -54,22 +54,13 @@ task_t* privilege_task_create(unsigned long fn){
 }
 
 void do_exec(void(*func)()){
-    if(current->rescheduled){
-        current->rescheduled = 0;
-        schedule();
-    }
-    if(current->mode == KERNEL_MODE){
-        unsigned long user_stack = current->user_context.sp_el0;
-        unsigned long user_cpu_state = 0x0;
-        asm volatile("msr sp_el0, %0" :: "r" (user_stack));
-        asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
-        asm volatile("msr elr_el1, %0" :: "r" (func));
-        asm volatile("eret");
-        current->mode = USER_MODE;
-    }
-    else if(current->mode == USER_MODE){
-
-    }
+    unsigned long user_stack = current->user_context.sp_el0;
+    unsigned long user_cpu_state = 0x0;
+    asm volatile("msr sp_el0, %0" :: "r" (user_stack));
+    asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
+    asm volatile("msr elr_el1, %0" :: "r" (func));
+    current->mode = USER_MODE;
+    asm volatile("eret");
 
 }
 

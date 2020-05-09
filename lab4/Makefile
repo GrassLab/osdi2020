@@ -34,6 +34,10 @@ clean:
 
 run:
 	make all
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none
+
+run_excp:
+	make all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -d int
 
 pipe:

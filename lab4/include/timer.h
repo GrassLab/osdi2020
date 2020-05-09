@@ -19,17 +19,24 @@
 #define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int*)0x40000034)
 #define LOCAL_TIMER_IRQ_CLR ((volatile unsigned int*)0x40000038)
 
-void timer_init ();
-void handle_sys_timer_irq();
-void local_timer_init();
 
-void core_timer_enable();
-void clean_core_timer();
-void core_timer_disable();
-void disable_timer_controller();
-void disable_all_timer();
-void write_cntp_tval(unsigned int val);
-unsigned int read_cntfrq(void);
-unsigned int read_cntp_tval(void);
+#ifdef __ASSEMBLY__
+    #define CORE0_TIMER_IRQ_CTRL 0x40000040
+#else
+    void timer_init ();
+    void handle_sys_timer_irq();
+    void local_timer_init();
+
+    void core_timer_enable();
+    void clean_core_timer();
+    void core_timer_disable();
+    void disable_timer_controller();
+    void disable_all_timer();
+    void write_cntp_tval(unsigned int val);
+    unsigned int read_cntfrq(void);
+    unsigned int read_cntp_tval(void);
+#endif
+
+
 
 #endif  /*_TIMER_H */

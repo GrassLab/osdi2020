@@ -11,4 +11,3 @@ SECTIONS
     .bss : { *(.bss*) } 
     __bss_end = .;
 }
-__bss_size = (__bss_end - __bss_begin)>>3;

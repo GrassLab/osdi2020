@@ -58,68 +58,6 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 	_print("\n");
 }
 
-unsigned int get_syscall_number(unsigned int trapframe){
-	unsigned int x8 = *(unsigned int*)(trapframe+8*8);
-	return x8;
-}
-
-void handle_el0_sync(unsigned int trapframe, unsigned long esr)
-{
-	printf("Exception class (EC) 0x%x \r\n",esr >> 26);
-	printf("EInstruction  specific syndrome (ISS) 0x%x \r\n",esr & 0xffffff);
-	int num = (esr & 0xffffff);
-	if(num == 0){
-		unsigned int c;
-		unsigned int x8 = get_syscall_number(trapframe);
-		switch(x8){
-			case SYS_GET_TASKID:
-				printf("x8 value is %d\n",x8);
-				printf("[info] svc000 command \r\n");
-				break;
-			case SYS_UART_READ:
-				c = uart_getc();
-				printf("get input value is %d\n",c);
-				break;
-			case SYS_UART_WRITE:
-				printf("x8 value is %d\n",x8);
-            	break;
-			case SYS_EXEC:
-				// do_exec(x0);
-				break;
-			case SYS_FORK:
-				do_fork();
-				break;
-			default:
-            	printf("syscall not found\n");
-            	break;
-		}
-	}
-	if (num == 1){
-		printf("[info] svc command \r\n");
-	}
-	else if(num == 2){
-		printf("[info] enable timer interrupt \r\n");
-
-		enable_interrupt_controller();
-		local_timer_init();
-
-		unsigned int cntfrq;
-        unsigned int val;
-		cntfrq = read_cntfrq();
-        write_cntp_tval(cntfrq);  
-        val = read_cntp_tval();    
-		
-		core_timer_enable();
-	}
-	else if(num == 3){
-		disable_all_timer();
-	}
-	else if(num == 4){
-		timestamp_handler();
-	}
-	check_reschedule();
-
-}
 
 void timestamp_handler(){
 	unsigned int time, timer_counter, timer_freq;
@@ -151,7 +89,6 @@ void core_timer_handler()
 	printf("Arm core timer interrupt, jiffies %d \r\n",core_timer_count);
 	unsigned int timer_freq;
 	asm volatile("mrs %0, sp_el0": "=r"(timer_freq)::);
-	printf("now stack pointer is %x \r\n",timer_freq);
 
 	core_timer_count += 1;
 	current->counter--;

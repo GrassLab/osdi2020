@@ -23,7 +23,13 @@ cpu_switch_to:
 
 .global get_current
 get_current:
-  mrs x0, tpidr_el1
+    mrs x0, tpidr_el1
+    ret
+	
+.global set_current
+set_current:
+    msr tpidr_el1, x0
+    ret
 
 .globl ret_from_fork
 ret_from_fork:
