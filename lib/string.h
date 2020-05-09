@@ -13,5 +13,7 @@ char * itoa ( int value, char * str, int base );
 int atoi ( const char * str );
 void ftoa ( double n, char * res, int afterpoint );
 void reverse ( char * s );
+char * str_to_upper ( char * s );
+char * str_to_lower ( char * s );
 
 #endif
