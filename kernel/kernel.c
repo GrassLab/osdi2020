@@ -2,6 +2,7 @@
 #include "ioutil.h"
 #include "libsyscall.h"
 #include "mini_uart.h"
+#include "mm.h"
 #include "sched.h"
 #include "shell.h"
 #include "syscall.h"
@@ -88,6 +89,7 @@ void signal_test_sender(void) {
 }
 
 int main(void) {
+//  vm_init();
   gpio_init();
   mini_uart_init();
   exception_init();
