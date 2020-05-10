@@ -28,6 +28,16 @@ setup_va:
   )
   msr mair_el1, x0
 
+  # init page tables
+  mov x1, 0x0
+  mov x2, 0x4000
+  b cmp_adr
+set_zero:
+  str xzr, [x1]
+  add x1, x1, #8
+cmp_adr:
+  cmp x2, x1
+  b.hi set_zero
   // allocate 2MB for kernel
   // ffff000000000000-ffff000000200000 -> 000000000000-000000200000
   mov x0, 0x0         // PGD
