@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stddef.h>
 #include "tlb.h"
 
@@ -33,6 +34,7 @@ page_alloc ()
   if (!PAGE_MAP_VALID (i))
     return NULL;
   PAGE_MAP_SET (i);
+  bzero ((void *) i, 0x1000);
   return (void *) i;
 }
 
