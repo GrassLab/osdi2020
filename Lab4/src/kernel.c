@@ -88,8 +88,9 @@ void idle(){
 
 void uart_test(){
 	/* uart_write test*/
-	char buffer[5]={0};
-	buffer[0]='c';
+	//char buffer[5]={0};
+	//buffer[0]='c';
+	char buffer[]="Hello";
 	int success_write=0;
 	success_write = uart_write(buffer,sizeof(buffer));
 	printf("\r\nWrite byte: %d\r\n",success_write);

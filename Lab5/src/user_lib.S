@@ -1,4 +1,15 @@
-#include "include/sys.h"
+.section ".text.user"
+
+.set CORE_TIMER, 0   // syscal numbers
+.set DAIF,     1
+.set SYS_KILL, 2
+.set SYS_FORK, 3
+.set SYS_EXEC, 4
+.set SYS_EXIT, 5
+.set SYS_GET_TASKID, 6
+.set SYS_UART_WRITE, 7
+.set SYS_UART_READ, 8
+.set SYS_GET_PRIORITY, 9
 
 .global call_core_timer
 call_core_timer:

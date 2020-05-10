@@ -10,6 +10,7 @@ extern unsigned long long get_timer_counts();
 extern unsigned long get_SP();
 extern unsigned long get_FP();
 extern unsigned long get_el();
+extern void set_pgd(unsigned long pgd);
 
 void print_entry();
 void print_exit();

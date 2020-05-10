@@ -8,7 +8,7 @@ void free_pid(int i);
 
 int privilege_task_create(void(* func),int priority);
 int user_task_create();
-int do_exec(void(* func));
+int do_exec(unsigned long start, unsigned long size, unsigned long pc);
 struct trapframe* get_task_trapframe(struct task_struct *task);
 
 struct trapframe{

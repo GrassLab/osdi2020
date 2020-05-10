@@ -5,6 +5,7 @@
 #include "include/queue.h"
 #include "include/printf.h"
 #include "include/mm.h"
+#include "include/utils.h"
 
 static unsigned short pid_map[64] = {0,};
 
@@ -34,6 +35,7 @@ int privilege_task_create(void(* fn),int priority){
 	struct trapframe *childregs = get_task_trapframe(p);
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
+	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
 	
 	p->cpu_context.x19 = (unsigned long)fn;
 	
@@ -67,6 +69,7 @@ int user_task_create()
 	struct trapframe *childregs = get_task_trapframe(p);
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
+	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
 		
 	struct trapframe * cur_regs = get_task_trapframe(current);
 	*childregs = *cur_regs; //copy content of parent register
@@ -78,7 +81,7 @@ int user_task_create()
 	if (!stack) {
 		return -1;
 	}
-	//childregs->sp = stack + PAGE_SIZE;
+	
 	childregs->regs[29] = (stack+PAGE_SIZE) - copy_byte;
 	childregs->sp = childregs->regs[29];
 	
@@ -97,8 +100,6 @@ int user_task_create()
 	int pid = get_availible_pid();
 	task[pid] = p;
 	p->pid = pid;
-
-	//dump_mem((void *)childregs->regs[29],copy_byte);
 	
 	priorityQ_push(&runqueue,p->priority,p->pid);	
 	preempt_enable();
@@ -120,11 +121,16 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	regs->elr_el1 = pc;             // copy to elr_el1 
 	regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0 
 	regs->sp = 2 * PAGE_SIZE; // allocate the second page to the stack.
-	unsigned long code_page = allocate_user_page(); 
+	unsigned long code_page = allocate_user_page(current,0); 
 	if (!code_page) {
 		return -1;
 	}
-	regs->sp = stack + PAGE_SIZE;	
-	current->stack = stack;
+
+	memcpy(code_page,start,size);
+	//dump_mem((void *)code_page,size);
+	unsigned long user_pgd = current->mm.pgd; 
+	printf("User PGD at : 0x%x%x\r\n",user_pgd>>32,user_pgd);
+	set_pgd(user_pgd);
+	
 	return 0;
 }

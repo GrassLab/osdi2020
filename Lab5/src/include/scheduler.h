@@ -31,6 +31,19 @@ struct cpu_context {
     unsigned long pc;
 };
 
+#define MAX_PROCESS_PAGES	16	
+struct user_page {
+	unsigned long phy_addr;
+	unsigned long vir_addr;
+};
+
+struct mm_struct {
+	unsigned long pgd;	
+	int user_pages_count;
+	struct user_page user_pages[MAX_PROCESS_PAGES];
+	int kernel_pages_count;
+	unsigned long kernel_pages[MAX_PROCESS_PAGES];
+};
 
 struct signal_struct{
 	int pending;
@@ -40,6 +53,7 @@ struct signal_struct{
 struct task_struct{
 	struct cpu_context cpu_context;
 	struct signal_struct signal;
+	struct mm_struct mm;
 
 	int pid;
 	long state;
@@ -64,7 +78,9 @@ extern void exit_process();
 
 #define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 	{0,0}, \
-	0,0,1,0,0,0} 
+	{0,0,{{0}},0,{0}}, \
+	0,0,1,0,0,0}
+
 
 #endif
 #endif /*_SCHEDULER_H */

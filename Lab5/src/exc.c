@@ -19,8 +19,7 @@ void exception_handler(unsigned long type,unsigned long esr, \
 		case 1:uart_send_string("\r\nIRQ");break;
 		case 2:uart_send_string("\r\nFIQ");break;	
 		case 3:uart_send_string("\r\nSError");break;	
-		case 4:uart_send_string("\r\nSynchronous at 0x400");break;
-		
+		case 4:uart_send_string("\r\nSynchronous at 0x400");break;	
 		case 5:uart_send_string("\r\nIRQ at 0x480");break;
 	}
 	uart_send_string(":");
@@ -34,12 +33,14 @@ void exception_handler(unsigned long type,unsigned long esr, \
                 case 0b100101: uart_send_string("Data abort, same EL"); break;
 		case 0b011000: uart_send_string("Exception from MSR, MRS, or System instruction execution in AArch64 state");
 		case 0b111100: uart_send_string("BRK instruction execution in AArch64 state");break;			       
+		case 0b100000: uart_send_string("Instruction Abort from a lower Exception level");break;
 		case 0b100001: uart_send_string("Instruction Abort taken without a change in Exception level");break;
+		
 		default: uart_send_string("Unknown...?"); break;
         }
         
 	// decode data abort cause
-        if(esr>>26==0b100100 || esr>>26==0b100101 || esr>>26==0b100001 ) {
+        if(esr>>26==0b100100 || esr>>26==0b100101 || esr>>26==0b100000  ||esr>>26==0b100001 ) {
         	uart_send_string(", ");
         	switch((esr>>2)&0x3) {
             		case 0: uart_send_string("Address size fault"); break;
@@ -58,6 +59,7 @@ void exception_handler(unsigned long type,unsigned long esr, \
 
 	// elr: return address
         uart_send_string("\r\nException return address: 0x");
+	uart_hex(elr>>32);
 	uart_hex(elr);
 
 	// EC[31:26]: Exception class
@@ -105,7 +107,7 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 		}
 		// exec
 		case 4:{
-		 	return do_exec((void *)arg0);      
+		 	//return do_exec((void *)arg0);      
 		}
 		// exit
 		case 5:{
@@ -119,10 +121,11 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 		//  uart write
 		case 7:{
 			// Using blocking write for safety
-			preempt_disable();
-
+			preempt_disable();	
+			
 			int success = 0;
 			int ret = 0;
+			printf("Uart write byte: %d\r\n",arg1);	
 			
 			for(int i=0; i<arg1;i++){
 				ret = uart_send(((char*)arg0)[i]);

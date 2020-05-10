@@ -6,13 +6,15 @@
 #include "include/framebuffer.h"
 #include "include/irq.h"
 #include "include/timer.h"
-#include "include/sys.h"
 #include "include/fork.h"
 #include "include/mm.h"
 #include "include/scheduler.h"
 #include "include/printf.h"
 #include "include/signal.h"
 #include "include/queue.h"
+#include "include/kernel.h"
+#include "include/user_lib.h"
+
 int check_string(char * str){
 	char* cmd_help = "help";
 	char* cmd_hello = "hello";
@@ -97,12 +99,15 @@ void idle(){
 
 void kernel_process(){
     printf("Kernel process started. EL %d\r\n", get_el());
-   
-    unsigned long begin = (unsigned long)&user_begin;
-    unsigned long end = (unsigned long)&user_end;
-    unsigned long process = (unsigned long)&user_process;
 
-    int err = do_exec(begin, end - begin, process - begin);
+    unsigned long begin = (unsigned long)&_binary_user_img_start;
+    unsigned long end = (unsigned long)&_binary_user_img_end;
+    
+    printf("begin 0x%x%x\r\n",begin>>32,begin);
+    printf("end 0x%x%x\r\n",end>>32,end);
+    printf("size: 0x%x\r\n",end-begin);
+
+    int err = do_exec(begin, end - begin, 0);
     if (err < 0){
         printf("Error while moving process to user mode\n\r");
     }
@@ -115,7 +120,7 @@ void kernel_main(void)
     uart_init();   
     init_printf(0, putc);
     printf("Hello, world!\r\n");
-	
+    
     enable_irq();        //clear PSTATE.DAIF
     //core_timer_enable(); //enable core timer
    
@@ -128,11 +133,11 @@ void kernel_main(void)
     init_idle_task(task[0]); // must init 'current' as idle task first 
     init_page_struct();
 
-    int res = privilege_task_create(kernel_process, 1);
-    
+    int res = privilege_task_create(kernel_process, 1); 
+
     if (res < 0) {
-		printf("error while starting kernel process");
-		return;
+		printf("error while starting kernel process\r\n");
+		while(1);
     }
 
     idle();  

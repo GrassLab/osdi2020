@@ -40,3 +40,11 @@ get_el:
 	lsr x0,x0,#2
 	and x0,x0,#3
 	ret
+
+.globl set_pgd
+set_pgd:
+	msr	ttbr0_el1, x0
+	tlbi vmalle1is // invalidate all TLB entries
+  	dsb ish        // ensure completion of TLB invalidatation
+	isb            // clear pipeline
+	ret

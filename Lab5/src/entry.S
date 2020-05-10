@@ -1,4 +1,4 @@
-#include "include/sys.h"
+
 
 /*****************Vector Table********************/
 
@@ -113,7 +113,6 @@ after_push_el0:
     bl	el0_svc_handler
     b   ret_from_syscall
   
-
     // IRQ 0x0480
     .align  7
     b push_reg_el0_irq //so stupid...right?
@@ -139,7 +138,6 @@ after_push_el0_irq:
     mrs     x2, elr_el1
     bl      exception_handler
     b err_hang
-
 
 // Lower EL using AArch32
     // Synchronous 0x600
@@ -181,6 +179,8 @@ after_push_el0_irq:
     .align 7
 
 not_syscall:	
+        cmp x24, #0x24
+        b.eq     el0_da
 	mov     x0, #4
     	mrs     x1, esr_el1
     	mrs     x2, elr_el1
@@ -191,9 +191,18 @@ ret_from_syscall:
         bl disable_irq // disable interrupts before pulling preserved data off the stack
 	str	x0, [sp, #0] // save x0 on stack for return
     
-end_of_exc:
-	bl      signal_handler // Signal handler before you exit kernel
-        b pop_reg_el0
+end:
+	bl     disable_irq
+	bl     signal_handler // Signal handler before you exit kernel
+        b      pop_reg_el0
+
+el0_da:
+	bl enable_irq
+	mrs x0, far_el1
+	mrs x1, esr_el1
+	bl do_mem_abort
+	cmp x0,0
+	b.eq end
 
 
 .global err_hang
@@ -335,5 +344,5 @@ ret_from_fork:
 	cbz	x19, ret_to_user			// not a kernel thread
 	blr	x19 //after kernel thread finish, go to ret_to_user
 ret_to_user:
-	bl disable_irq				
+	bl disable_irq
 	b pop_reg_el0
