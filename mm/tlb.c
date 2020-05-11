@@ -2,19 +2,44 @@
 #include <stddef.h>
 #include "tlb.h"
 
+/* assume we just need 2MB memory
+ * PGD, PUD, PMD, PTE are physical address
+ * mapping rule:
+ * phys = virt[47:12] << 12
+ * ex:
+ * 0x3000 = 0xffff000000003000[47:12] << 12
+ */
 void
 tlb_init ()
 {
-  size_t i;
   extern char _kernel_end[];
+  size_t *PGD, *PUD, *PMD, *PTE;
+  size_t i;
+  bzero (0, 0x4000);
+  PGD = 0;
+  PUD = (size_t *) 0x1000;
+  PMD = (size_t *) 0x2000;
+  PTE = (size_t *) 0x3000;
+  // PGD -> PUD -> PMD -> PTE
+  PGD[0] = pd_encode_table (PUD);
+  PUD[0] = pd_encode_table (PMD);
+  PMD[0] = pd_encode_table (PTE);
+  // page table
+  // ffff000000000000-ffff000000004000 -> 00000000-00004000
+  PTE[0] = pd_encode_ram (PGD);
+  PTE[1] = pd_encode_ram (PUD);
+  PTE[2] = pd_encode_ram (PMD);
+  PTE[3] = pd_encode_ram (PTE);
   // kernel
-  // ffff000000000000-ffff000000200000 -> 000000000000-000000200000
-  // already called setup_va, just setup page map
+  // start from kernel stack
+  for (i = 0x7e000; i < ((size_t) _kernel_end & 0xffffffffffff); i += 0x1000)
+    PTE[i >> 12] = pd_encode_ram ((size_t *) i);
+  mmu_enable (PGD);
+  // set used pages
   PAGE_MAP_SET (0);
   PAGE_MAP_SET (0x1000);
   PAGE_MAP_SET (0x2000);
   PAGE_MAP_SET (0x3000);
-  // start from kernel stack
   for (i = 0x7e000; i < ((size_t) _kernel_end & 0xffffffffffff); i += 0x1000)
     PAGE_MAP_SET (i);
   // peripheral

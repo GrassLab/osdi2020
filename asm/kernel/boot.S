@@ -31,7 +31,7 @@ check_EL2:
   # setup exception table before switch EL
   bl setup_exception_vector_table
   # setup EL1 stack
-  ldr x0, =_start
+  adr x0, _start
   msr sp_el1, x0
   # set RW (AArch64)
   mov x0, #(1 << 31)
@@ -45,13 +45,14 @@ check_EL2:
   eret
 ret2EL1:
   # setup tlb for EL1 & EL0
-  bl setup_va
+  bl tlb_init
   # jump to virtual address
   ldr x2, =boot_rest
   br x2
 boot_rest:
-  # setup pheripheral page
-  bl tlb_init
+  # reset sp
+  mov x0, =_start
+  mov sp, x0
   # disable exception of access SIMD register in EL1
   mrs x0, CPACR_EL1
   orr x0, x0, #(3 << 20)

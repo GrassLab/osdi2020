@@ -15,10 +15,23 @@
 #define PD_RAM (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
 
 .section ".text"
-.global setup_va
-setup_va:
+.global pd_encode_table
+pd_encode_table:
+  ldr x1, =PD_TABLE
+  orr x0, x0, x1
+  ret
+.global pd_encode_ram
+pd_encode_ram:
+  ldr x1, =PD_RAM
+  orr x0, x0, x1
+  ret
+.global mmu_enable
+mmu_enable:
+  msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
+  msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
+
   // set 4K page and 48bit address space
-  ldr x0, = TCR_CONFIG_DEFAULT
+  ldr x0, =TCR_CONFIG_DEFAULT
   msr tcr_el1, x0
 
   // device memory for peripheral, normal memory for ram
@@ -27,52 +40,6 @@ setup_va:
     (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8)) \
   )
   msr mair_el1, x0
-
-  # init page tables
-  mov x1, 0x0
-  mov x2, 0x4000
-  b cmp_adr
-set_zero:
-  str xzr, [x1]
-  add x1, x1, #8
-cmp_adr:
-  cmp x2, x1
-  b.hi set_zero
-  // allocate 2MB for kernel
-  // ffff000000000000-ffff000000200000 -> 000000000000-000000200000
-  mov x0, 0x0         // PGD
-  mov x1, 0x1000      // PUD
-  mov x2, 0x2000      // PMD
-  mov x3, 0x3000      // PTE
-
-  ldr x4, =PD_TABLE
-  orr x4, x1, x4
-  str x4, [x0, 0x8 * 0x0] // put PUD into PGD
-
-  ldr x4, =PD_TABLE
-  orr x4, x2, x4
-  str x4, [x1, 0x8 * 0x0] // put PMD into PUD
-
-  ldr x4, =PD_TABLE
-  orr x4, x3, x4
-  str x4, [x2, 0x8 * 0x0] // put PTE into PMD
-
-  // setup PTE entries
-  mov x5, 0x0          // for (x5 = 0; x5 < 0x200; ++x5)
-loop:
-  cmp x5, 0x200
-  b.ge end_loop
-  lsl x6, x5, #12    // x6 = 4KB block
-  ldr x4, =PD_RAM
-  orr x4, x6, x4     // set attribute
-  lsl x6, x5, #3
-  str x4, [x3, x6]   // put 4KB block into PTE
-  add x5, x5, 1	     // ++x5
-  b loop
-end_loop:
-
-  msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
-  msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
 
   mrs x2, sctlr_el1
   orr x2 , x2, 1
