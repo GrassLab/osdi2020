@@ -25,6 +25,11 @@ pd_encode_ram:
   ldr x1, =PD_RAM
   orr x0, x0, x1
   ret
+.global pd_encode_peripheral
+pd_encode_peripheral:
+  ldr x1, =PD_PERIPHERAL
+  orr x0, x0, x1
+  ret
 .global mmu_enable
 mmu_enable:
   msr ttbr0_el1, x0 // load PGD to the buttom translation based register.

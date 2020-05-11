@@ -16,6 +16,7 @@
 #define PAGE_MAP_CLR(paddr) ({page_map[paddr >> 12 >> 3] &= ~(1 << ((paddr >> 12) & 0x7));})
 #define PAGE_MAP_EMPTY(paddr) (!(page_map[paddr >> 12 >> 3] & (1 << ((paddr >> 12) & 0x7))))
 #define PAGE_MAP_VALID(paddr) ((paddr >> 12 >> 3) < PAGE_MAP_SIZE)
+#define PD_DECODE(pd) ((size_t *)((size_t) pd & 0xfffffffff000 | 0xffff000000000000))
 
 char page_map[PAGE_MAP_SIZE];
 void *page_alloc ();
@@ -23,6 +24,7 @@ void page_free (void *paddr);
 void tlb_init ();
 extern size_t pd_encode_table (size_t *page_table);
 extern size_t pd_encode_ram (size_t *addr);
+extern size_t pd_encode_peripheral (size_t *addr);
 extern void mmu_enable (size_t *PGD);
 
 #endif /* ifndef TLB */

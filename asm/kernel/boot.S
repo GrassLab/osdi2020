@@ -51,7 +51,7 @@ ret2EL1:
   br x2
 boot_rest:
   # reset sp
-  mov x0, =_start
+  ldr x0, =_start
   mov sp, x0
   # disable exception of access SIMD register in EL1
   mrs x0, CPACR_EL1
