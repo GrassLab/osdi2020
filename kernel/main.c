@@ -25,7 +25,6 @@ main (int error, char *argv[])
   // init stack guard. It should be random, but I'm lazy.
   __stack_chk_guard = (void *) 0xdeadbeef;
 
-  struct task_struct fake;
   uart_init ();
   lfb_init ();
   uart_puts (BOOT_MSG);
