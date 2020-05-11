@@ -111,16 +111,23 @@ void exit_process(){
 
 	for (int i = 0; i < NR_TASKS; i++){
 		if (task[i] == current) {
-			printf(">>> Done task %d, now exit\r\n",current->pid);
 			task[i]->state = TASK_ZOMBIE;
 			break;
 		}
 	}
 
-	if (current->stack) {
-		free_page(current->stack);
+	//reclaim user task page
+	for(int i=0;i<current->mm.user_pages_count;i++){
+		free_page(current->mm.user_pages[i].phy_addr);
 	}
 
+	//reclaim page table	
+	for(int i=0;i<current->mm.kernel_pages_count;i++){
+		free_page(current->mm.kernel_pages[i]);
+	}
+
+	printf(">>> Done task %d, now exit\r\n",current->pid);
+	
 	disable_irq();	
 	preempt_enable();
 	

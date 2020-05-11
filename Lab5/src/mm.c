@@ -14,7 +14,7 @@ unsigned long get_free_page() // this function can only call by
 	for (int i = FIRST_AVAILIBLE_PAGE; i < PAGE_ENTRY; i++){
 		// finding availible memory space for your process
 		if (page[i].used == NOT_USED){
-			//printf("Using Page: 0x%x\r\n",i*PAGE_SIZE);
+			//printf("Using Page: %d\r\n",i);
 			page[i].used = USED_NOW;
 			// initialize to zero
 			memzero((unsigned long) (i * PAGE_SIZE) + VA_START, PAGE_SIZE);
@@ -50,7 +50,7 @@ void map_page(struct task_struct *task, unsigned long vir_addr, \
 	
 	if(!task->mm.pgd){
 		task->mm.pgd = get_free_page();
-		task->mm.kernel_pages[++task->mm.kernel_pages_count] = task->mm.pgd;
+		task->mm.kernel_pages[task->mm.kernel_pages_count++] = task->mm.pgd;
 	}
 	pgd = task->mm.pgd;
 
@@ -79,7 +79,7 @@ unsigned long map_table(unsigned long *table, unsigned long shift, \
         	unsigned long next_level_table = get_free_page();
         	unsigned long entry = next_level_table | PD_TABLE;
         	table[index] = entry;
-        	task->mm.kernel_pages[++task->mm.kernel_pages_count] = next_level_table;
+        	task->mm.kernel_pages[task->mm.kernel_pages_count++] = next_level_table;
 		return next_level_table;
     	}
     
@@ -95,10 +95,11 @@ void map_entry(unsigned long *pte, unsigned long vir_addr,\
     pte[index] = entry;
 }
 
-void free_page(unsigned long p){
-	//printf("Free Page %d\r\n", p/PAGE_SIZE);	
-	if(page[ p / PAGE_SIZE].used==USED_NOW)
-		page[ p / PAGE_SIZE].used = NOT_USED;
+void free_page(unsigned long p){ //input should be physical address
+	unsigned long pfn = physical_to_pfn(p);
+	//printf("Free Page %d\r\n", pfn);	
+	if(page[pfn].used==USED_NOW)
+		page[pfn].used = NOT_USED;
 }
 
 void fork_memcpy (void *dest, const void *src, unsigned long len)
@@ -149,7 +150,7 @@ void dump_mem(void *src,unsigned long len){
 
 int do_mem_abort(unsigned long addr, unsigned long esr){
 	//printf("Fault address at 0x%x%x\r\n",addr>>32,addr);
-	if ( (esr&0x7) == 0x7  ) { // translation fault
+	if ((esr & 0b111100) == 0b100) { //translation fault
 		unsigned long page = get_free_page();
 		if (page == 0) 
 			return -1;

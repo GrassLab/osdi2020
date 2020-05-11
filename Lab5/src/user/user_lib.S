@@ -1,4 +1,9 @@
-.section ".text.user"
+.section ".text.entry"
+
+.global _user_entry
+_user_entry:
+	bl main
+	bl exit
 
 .set CORE_TIMER, 0   // syscal numbers
 .set DAIF,     1
@@ -9,7 +14,7 @@
 .set SYS_GET_TASKID, 6
 .set SYS_UART_WRITE, 7
 .set SYS_UART_READ, 8
-.set SYS_GET_PRIORITY, 9
+.set SYS_USER_PRINT, 9
 
 .global call_core_timer
 call_core_timer:
@@ -66,8 +71,8 @@ uart_read:
 	ret
 
 	
-.global get_priority
-get_priority:
-	mov x8,SYS_GET_PRIORITY
+.global user_printf
+user_printf:
+	mov x8,SYS_USER_PRINT
 	svc #0
 	ret

@@ -58,6 +58,7 @@ int privilege_task_create(void(* fn),int priority){
 
 int user_task_create()
 {
+	/*
 	preempt_disable();
 	struct task_struct *p;
 
@@ -103,7 +104,8 @@ int user_task_create()
 	
 	priorityQ_push(&runqueue,p->priority,p->pid);	
 	preempt_enable();
-	return pid;
+	return pid;*/
+	return 0;
 }
 
 
@@ -120,16 +122,14 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	
 	regs->elr_el1 = pc;             // copy to elr_el1 
 	regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0 
-	regs->sp = 2 * PAGE_SIZE; // allocate the second page to the stack.
-	unsigned long code_page = allocate_user_page(current,0); 
+	regs->sp =  0x0000ffffffffe000; 
+	unsigned long code_page = allocate_user_page(current,pc); 
 	if (!code_page) {
 		return -1;
 	}
-
 	memcpy(code_page,start,size);
 	//dump_mem((void *)code_page,size);
 	unsigned long user_pgd = current->mm.pgd; 
-	printf("User PGD at : 0x%x%x\r\n",user_pgd>>32,user_pgd);
 	set_pgd(user_pgd);
 	
 	return 0;

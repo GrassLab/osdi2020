@@ -10,6 +10,6 @@ void exit(int status);
 int get_taskid();
 unsigned long uart_write(char *buf, unsigned long size);
 unsigned long uart_read(char *buf,unsigned long size);
-int get_priority();
+int user_printf(char *fmt, ...);
 
 #endif  

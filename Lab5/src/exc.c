@@ -125,7 +125,6 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			
 			int success = 0;
 			int ret = 0;
-			printf("Uart write byte: %d\r\n",arg1);	
 			
 			for(int i=0; i<arg1;i++){
 				ret = uart_send(((char*)arg0)[i]);
@@ -174,9 +173,10 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			preempt_disable();
 			return i;	
 		}
-		// get priority
+		// user_printf: allow only one argument now
 		case 9:{
-			return current->priority;
+			printf((char *)arg0,arg1);
+			return 0;
 		}
 
 	}

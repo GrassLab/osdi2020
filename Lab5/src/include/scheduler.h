@@ -60,7 +60,6 @@ struct task_struct{
 	long priority;
 	long counter;
 	long preempt_lock;
-	unsigned long stack;
 	
 };
 
@@ -79,7 +78,7 @@ extern void exit_process();
 #define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 	{0,0}, \
 	{0,0,{{0}},0,{0}}, \
-	0,0,1,0,0,0}
+	0,0,1,0,0}
 
 
 #endif

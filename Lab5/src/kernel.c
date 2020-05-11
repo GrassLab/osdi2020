@@ -13,35 +13,6 @@
 #include "include/signal.h"
 #include "include/queue.h"
 #include "include/kernel.h"
-#include "include/user_lib.h"
-
-int check_string(char * str){
-	char* cmd_help = "help";
-	char* cmd_hello = "hello";
-	char* cmd_reboot = "reboot";
-
-	if(strcmp(str,cmd_help)==0){
-	// print all available commands
-		uart_send_string("\r\nhello : print Hello World!\r\n");
-		uart_send_string("help : help\r\n");
-		uart_send_string("reboot: reboot rpi3\r\n");
-	}
-	else if(strcmp(str,cmd_hello)==0){
-	// print hello
-		uart_send_string("\r\nHello World!\r\n");
-	}
-	else if(strcmp(str,cmd_reboot)==0){
-		uart_send_string("\r\nBooting......\r\n");
-		reset(10000);
-		return 1;	
-	}
-	else{
-		uart_send_string("\r\nErr:command ");
-		uart_send_string(str);
-		uart_send_string(" not found, try <help>\r\n");
-	}
-	return 0;
-}
 
 void get_board_revision_info(){
   mbox[0] = 7 * 4; // buffer size in bytes
@@ -97,17 +68,31 @@ void idle(){
 }
 
 
-void kernel_process(){
-    printf("Kernel process started. EL %d\r\n", get_el());
+void zombie_reaper(){
+	while(1){
+		schedule(); // It's Ok to let others doing first
+		delay(10000);
+		struct task_struct *p;
+		for (int i=0; i < NR_TASKS;i++){
+			p = task[i];
+			if(p && p->state==TASK_ZOMBIE){
+				//reclaim the resource
+				// 1. pid
+				free_pid(i);
+				// 2.kernel_stack(memory)
+				free_page(virtual_to_physical((unsigned long)p));
+				task[i] = 0;
+			}
+		}
+	}
+}
 
+
+void kernel_process(){
     unsigned long begin = (unsigned long)&_binary_user_img_start;
     unsigned long end = (unsigned long)&_binary_user_img_end;
     
-    printf("begin 0x%x%x\r\n",begin>>32,begin);
-    printf("end 0x%x%x\r\n",end>>32,end);
-    printf("size: 0x%x\r\n",end-begin);
-
-    int err = do_exec(begin, end - begin, 0);
+    int err = do_exec(begin, end - begin, 0x0);
     if (err < 0){
         printf("Error while moving process to user mode\n\r");
     }
@@ -133,12 +118,10 @@ void kernel_main(void)
     init_idle_task(task[0]); // must init 'current' as idle task first 
     init_page_struct();
 
-    int res = privilege_task_create(kernel_process, 1); 
+    // Here init a task being zombie reaper
+    privilege_task_create(zombie_reaper,1);
 
-    if (res < 0) {
-		printf("error while starting kernel process\r\n");
-		while(1);
-    }
+    privilege_task_create(kernel_process, 1); 
 
     idle();  
 }
