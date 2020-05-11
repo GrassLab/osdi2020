@@ -22,7 +22,7 @@ void irq() {
 }
 
 void core_timer_handler() {
-  printf("arm core timer , %d \n", core_jf);
+  // printf("arm core timer , %d \n", core_jf);
   core_jf += 1;
   asm volatile("mov x0, 0xfffffff"); // write tval
   asm volatile("msr cntp_tval_el0, x0");

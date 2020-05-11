@@ -32,7 +32,7 @@ set_current:
 .globl ret_from_fork
 ret_from_fork:
   mov	x29, 0
-  mov x0, x20
+  mov x0, 0
   blr x19         //should never return
 
 .global ret_to_usr

@@ -3,7 +3,7 @@
 #include "task.h"
 #include "timer.h"
 #include "uart.h"
-int runtaskcount;
+unsigned int runtaskcount;
 static task_t init_task = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                            0, /* state etc */
                            0,
@@ -98,10 +98,10 @@ void schedule() {
 
 void timer_tick() {
   task_t *current = task_pool[get_current()];
-  printf("counter = %d\n", current->counter);
+  // printf("counter = %d\n", current->counter);
   --current->counter;
   if (current->counter > 0) {
-    printf("nono\n");
+    // printf("nono\n");
     return;
   }
   printf("switch\n");
@@ -156,8 +156,8 @@ void do_exec(unsigned long fun) {
 void exec(unsigned long rfun) {
   unsigned long rf = rfun;
   printf("exec = %x\n", rf);
-  asm volatile("mov x0, #2");
   asm volatile("mov x1, %0" ::"r"(rf) :);
+  asm volatile("mov x0, #2");
   asm volatile("svc #0");
 }
 int get_taskid() {
@@ -271,14 +271,6 @@ void test1() {
   schedule();
 }
 
-void foo() {
-  int tmp;
-  tmp = 5;
-  printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_current(),
-         &tmp, tmp);
-  exit(0);
-}
-
 void tt() {
   while (1) {
     printf("tt\n");
@@ -302,17 +294,13 @@ void ut2() {
 }
 void user_test1() { do_exec((unsigned long)&ut1); }
 void user_test2() { do_exec((unsigned long)&ut2); }
+
 void idle() {
   while (1) {
-    if (runtaskcount == 1) {
-      break;
-    }
+    printf("idle\n");
     schedule();
     wait_cycles(10000000);
   }
-  printf("Test finished\n");
-  while (1)
-    ;
 }
 
 void test2() {
@@ -325,7 +313,7 @@ void test2() {
 }
 
 void foo2() {
-  printf("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+  printf("i hate exec\n");
   exit(0);
 }
 
@@ -353,7 +341,7 @@ void test() {
       wait_cycles(100000);
       ++cnt;
     }
-    exec(&foo2);
+    exec((unsigned long)&foo2);
     exit(0);
   }
 }
@@ -365,7 +353,7 @@ void test3() {
   privilege_task_create((unsigned long)&idle, 0, 0);
 
   privilege_task_create((unsigned long)&user_test, 0, 0);
-  // core_timer_enable();
+  core_timer_enable();
   printf("runtaskcount = %d\n", runtaskcount);
   schedule();
 }
