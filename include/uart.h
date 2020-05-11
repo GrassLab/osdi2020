@@ -9,3 +9,4 @@ int uart_strncmp(const char *cs, const char *ct, int len);
 void uart_memcpy (const void *src, void *dst, int len);
 void uart_memset (void *dst, char s, int len);
 char* uart_readline();
+void printf(char *fmt, ...);

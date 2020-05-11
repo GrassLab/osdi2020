@@ -8,6 +8,8 @@
 #include "../include/interrupt.h"
 #include "../include/shell.h"
 #include "../include/task.h"
+#include "../include/mm.h"
+
 
 #define WELCOME \
     "                                                 \n" \
@@ -22,24 +24,14 @@
 #define SPLASH_ON 0
 #define HW_INFO_ON 0
 
-// void main()
-// {
-//     uart_irq_enable();
-//     uart_init();
-//     for (int i=0; i<16; i++)
-//         uart_send('a');
-//     uart_send('\r');
-//     uart_send('\n');
-//     while(1);
-// }
-
 
 void main()
 {
     // set up serial console and linear frame buffer
     // uart_irq_enable();
     uart_init();
-    uart_puts(WELCOME);
+    printf(WELCOME);
+    while(1);
 
     // display a pixmap
     # if SPLASH_ON
@@ -77,27 +69,24 @@ void main()
     // }
     // idle();
 
-    // while(1) {
-    //     uart_send(uart_getc());
-    // }
-    uart_send('>'); // to interactive with raspbootcom 
-    char buf[0x100];
-    uart_readline(buf);
-    // char tmp;
-    // tmp = uart_getc();
-    uart_puts("ddddddddd\n");
-    uart_puts(buf);
 
     /*
      ** final test
      */
-    task_manager_init(final_idle);
-    enable_irq();
-    core_timer_enable();
-    privilege_task_create(final_user_test, 0);
-    final_idle();
-     
+    // task_manager_init(final_idle);
+    // enable_irq();
+    // core_timer_enable();
+    // privilege_task_create(final_user_test, 0);
+    // final_idle();
     
+    /*
+     ** test uart_readline 
+     */
+    uart_send('>'); // to interactive with raspbootcom 
+    char buf[0x100];
+    uart_readline(buf);
+    uart_puts("ddddddddd\n");
+    uart_puts(buf);
     
 }
 

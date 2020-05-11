@@ -270,3 +270,25 @@ void uart_memset (void *dst, char s, int len)
     }
 }
 
+/**
+ * Display a string
+ */
+extern volatile unsigned char __kernel_end;
+void printf(char *fmt, ...) {
+    __builtin_va_list args;
+    __builtin_va_start(args, fmt);
+    // we don't have memory allocation yet, so we
+    // simply place our string after our code
+    char *s = (char*)&__kernel_end;
+    // char buf[0x100];
+    // char *s = buf;
+    // use sprintf to format our string
+    vsprintf(s,fmt,args);
+    // print out as usual
+    while(*s) {
+        /* convert newline to carrige return + newline */
+        if(*s=='\n')
+            uart_send('\r');
+        uart_send(*s++);
+    }
+}
