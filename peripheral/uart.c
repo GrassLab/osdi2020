@@ -34,48 +34,19 @@ uart_init ()
   *UART0_FBRD = 0xB;
   *UART0_LCRH = 3 << 5;		// 8n1
   *UART0_CR = 0x301;		// enable Tx, Rx, FIFO
-  // enable interrupt
-  *UART0_IMSC = 3 << 4;		// Tx, Rx
-  // init uart buf
-  read_buf.head = 0;
-  read_buf.tail = 0;
-  write_buf.head = 0;
-  write_buf.tail = 0;
 }
 
 void
 uart_send (char c)
 {
-  char r;
-  if (*UART0_FR & 0x80)
+  /* wait until we can send */
+  do
     {
-      // we need to send one character to trigger interrupt.
-      // because the interrupt only set after data transmitted
-      if (QUEUE_EMPTY (write_buf))
-	{
-	  *UART0_DR = c;
-	}
-      else
-	{
-	  r = QUEUE_GET (write_buf);
-	  QUEUE_POP (write_buf);
-	  QUEUE_SET (write_buf, c);
-	  QUEUE_PUSH (write_buf);
-	  *UART0_DR = r;
-	}
+      asm volatile ("nop");
     }
-  else
-    {
-      // Raspberry PI is toooooo slow
-      // We need push the data into queue
-      if (!QUEUE_FULL (write_buf))
-	{
-	  QUEUE_SET (write_buf, c);
-	  QUEUE_PUSH (write_buf);
-	}
-      // else: drop that :(
-    }
-  return;
+  while (*UART0_FR & 0x20);
+  /* write the character to the buffer */
+  *(char *) UART0_DR = c;
 }
 
 void
@@ -94,11 +65,15 @@ char
 uart_getc ()
 {
   char r;
-
-  while (QUEUE_EMPTY (read_buf))
-    asm volatile ("wfi");
-  r = QUEUE_GET (read_buf);
-  QUEUE_POP (read_buf);
+  /* wait until something is in the buffer */
+  do
+    {
+      asm volatile ("nop");
+    }
+  while (*UART0_FR & 0x10);
+  /* read it and return */
+  r = (char) (*UART0_DR);
+  /* convert carrige return to newline */
   return r == '\r' ? '\n' : r;
 }
 
@@ -142,9 +117,32 @@ _putchar (char character)
   uart_send (character);
 }
 
-void
-uart_read (char *buf, unsigned long count)
+size_t
+do_uart_read (char *buf, size_t count)
 {
-  while (count--)
+  int i;
+  for (i = 0; i < count; ++i)
     *buf++ = uart_getc ();
+  return i;
+}
+
+size_t
+sys_uart_read (char *buf, size_t count)
+{
+  return do_uart_read (buf, count);
+}
+
+size_t
+do_uart_write (char *buf, size_t size)
+{
+  int i;
+  for (i = 0; i < size; ++i)
+    uart_send (*buf++);
+  return i;
+}
+
+size_t
+sys_uart_write (char *buf, size_t size)
+{
+  return do_uart_write (buf, size);
 }

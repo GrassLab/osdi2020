@@ -2,6 +2,7 @@
 #define UART
 
 #include <mm.h>
+#include <stddef.h>
 
 /* Mini UART registers */
 #define AUX_ENABLE      ((volatile unsigned int*)(MMIO_BASE+0x00215004))
@@ -49,6 +50,9 @@ void uart_puts (char *s);
 char uart_getc () __attribute__ ((section (".bootloader")));
 int uart_readline (int size, char *buf);
 void uart_hex (unsigned int d);
-void uart_read (char *buf, unsigned long count)
+size_t sys_uart_read (char *buf, size_t count);
+size_t do_uart_read (char *buf, size_t count)
   __attribute__ ((section (".bootloader")));
+size_t do_uart_write (char *buf, size_t size);
+size_t sys_uart_write (char *buf, size_t size);
 #endif /* ifndef UART */

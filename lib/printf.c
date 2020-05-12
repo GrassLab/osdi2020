@@ -10,6 +10,7 @@ printf (const char *format, ...)
   double val_double;
   unsigned long val_ulong;
   unsigned long val_hex;
+  unsigned long dividend, divisor;
   va_start (args, format);
   while (*format != '\0')
     {
@@ -23,7 +24,15 @@ printf (const char *format, ...)
 	      ltoa (val_ulong, buf);
 	      uart_puts (buf);
 	      break;
+	    case 'q':
+	      // kernel space float point
+	      dividend = va_arg (args, unsigned long);
+	      divisor = va_arg (args, unsigned long);
+	      fdivtoa (dividend, divisor, buf);
+	      uart_puts (buf);
+	      break;
 	    case 'f':
+	      // user space float point
 	      val_double = va_arg (args, double);
 	      ftoa (val_double, buf);
 	      uart_puts (buf);
@@ -72,6 +81,8 @@ ltoa (unsigned long val, char *buf)
 	*buf++ += '0';
       scan /= 10;
     }
+  if (!met_num)
+    *buf++ = '0';
   *buf = '\0';
 }
 
@@ -93,8 +104,38 @@ ftoa (double val, char *buf)
       if (scan < 1)
 	cnt++;
       if (scan == 1)
-	*buf++ = '.';
+	{
+	  if (!met_num)
+	    {
+	      *buf++ = '0';
+	      met_num = 1;
+	    }
+	  *buf++ = '.';
+	}
       scan /= 10;
     }
   *buf = 0;
+}
+
+void
+fdivtoa (unsigned long dividend, unsigned long divisor, char *buf)
+{
+  unsigned long quot = dividend / divisor;
+  unsigned long remainder = dividend % divisor;
+  int cnt = 0;
+
+  ltoa (quot, buf);
+  while (*buf != '\0')
+    ++buf;
+  *buf++ = '.';
+  // postfix 6 points
+  remainder *= 1000000;
+  buf += 6;
+  *buf-- = '\0';
+  quot = remainder / divisor;
+  for (cnt = 0; cnt < 6; cnt++)
+    {
+      *buf-- = quot % 10 + '0';
+      quot /= 10;
+    }
 }
