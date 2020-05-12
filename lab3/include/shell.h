@@ -1,5 +1,5 @@
-#ifndef	__SHELL_H__
-#define	__SHELL_H__
+#ifndef __SHELL_H__
+#define __SHELL_H__
 
 int shell_loop();
 int shell_execute(char *);

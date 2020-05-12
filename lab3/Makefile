@@ -3,7 +3,8 @@ ARMGNU ?= aarch64-linux-gnu
 ASMOPS = -fPIC -Iinclude -g
 COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g
 
-EL=-DRUN_ON_EL0
+# -DRUN_ON_EL[0-2]
+EL=-DRUN_ON_EL1
 COPS += $(EL)
 ASMOPS += $(EL) 
 
@@ -19,10 +20,8 @@ OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
 DEFAULT_TARGET = kernel8
 DEFAULT_KERNEL_LOC = 0x80000
 DEFAULT_STAMP_LOC = 0x80000
-#DEFAULT_STAMP_LOC = 0x200000
 LINKER_SCRIPT = $(SRC_DIR)/linker.ld
 IMG = $(DEFAULT_TARGET).img
-
 
 # boot image flags
 # -DMOVPI   moving rpi boot img
@@ -40,8 +39,8 @@ COPS += -DMINIUART
 
 # elective 2
 # enable uart interrupt
-COPS += -DUARTINT
-ASMOPS += -DUARTINT
+COPS += -DUARTINT -DMINIUART
+ASMOPS += -DUARTINT -DMINIUART
 
 # elective 3
 # enable deffered interrupt handle
@@ -51,8 +50,8 @@ ASMOPS += -DUARTINT
 #ASMOPS += -DDEFFERED
 
 # longer bottom half delay if on qemu
-#COPS += -DON_QEMU
-#ASMOPS += -DON_QEMU
+COPS += -DON_QEMU
+ASMOPS += -DON_QEMU
 
 all : $(IMG)
 
@@ -95,7 +94,8 @@ runmini: $(IMG)
 	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
 
 run: $(IMG)
-	@$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none
+	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
+	#@$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none
 
 runt: stamp.img
 	@$(QEMU) -serial stdio -M raspi3 -kernel stamp.img

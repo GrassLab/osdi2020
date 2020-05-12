@@ -6,4 +6,4 @@ Debug/*
 *.img
 *.elf
 linker.ld
-
+out
