@@ -144,14 +144,18 @@ void uart_IRQhandler(){
 
 		while(get32(UART0_FR)&0x40){//receive FIFO full
 			c = get32(UART0_DR)&0xFF;
-
+			if(waitqueue.heap_size>0){ //If input, task in waitQ will be put back to runQ
+				int target = priorityQ_pop(&waitqueue);
+				struct task_struct *p = task[target];
+				p->state = TASK_RUNNING;
+				priorityQ_push(&runqueue,p->priority,p->pid);
+			}
 			if(!isfull(read_buf_head,read_buf_tail)){
 				push(read_buf,&read_buf_tail,c);
 			}
 		}
 
 		put32(UART0_ICR,status); //clear interrupt
-
 	}
 	else{	
 		while(!isempty(write_buf_head,write_buf_tail)){

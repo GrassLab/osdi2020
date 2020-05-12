@@ -33,7 +33,6 @@ void _schedule(void)
 		
 		if(runqueue.heap_size>0){ //not empty queue
 			next = priorityQ_pop(&runqueue);
-			//printf("next %d\r\n",next);
 			p = task[next];
 		  	if (p && p->state == TASK_RUNNING && p->counter>0){
 				priorityQ_push(&runqueue,p->priority,next);
@@ -84,6 +83,7 @@ void context_switch(struct task_struct * next)
 	if (current == next)
 		return;
 	struct task_struct * prev = current;
+	set_pgd(next->mm.pgd); //set page table for next task
 	switch_to(prev, next);
 }
 
@@ -93,19 +93,17 @@ void schedule_tail(void) {
 
 void timer_tick(){
 	--current->counter;
-
 	if (current->counter>0 || current->preempt_lock >0) {
 		return;
 	}
 	// If counter <=0, it means reschedule flag set.
 	current->counter=0;
-	printf("\r\n### No timeslice fot pid %d, reschedule\r\n",current->pid);
+	//printf("\r\n### No timeslice fot pid %d, reschedule\r\n",current->pid);
 	
 	_schedule();
 }
 
-void exit_process(){
-	
+void exit_process(){	
 	preempt_disable();
 	enable_irq();
 
@@ -119,11 +117,13 @@ void exit_process(){
 	//reclaim user task page
 	for(int i=0;i<current->mm.user_pages_count;i++){
 		free_page(current->mm.user_pages[i].phy_addr);
+		//printf("Free pid: %d, phy: %x/vir: %x\r\n",current->pid, current->mm.user_pages[i].phy_addr,current->mm.user_pages[i].vir_addr);
 	}
 
 	//reclaim page table	
 	for(int i=0;i<current->mm.kernel_pages_count;i++){
 		free_page(current->mm.kernel_pages[i]);
+		//printf("Free pid: %d, phy: %x\r\n",current->pid, current->mm.kernel_pages[i]);
 	}
 
 	printf(">>> Done task %d, now exit\r\n",current->pid);

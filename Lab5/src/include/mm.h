@@ -39,6 +39,7 @@ struct page_struct{
 	int used;
 };
 
+int remain_page;
 struct page_struct page[PAGE_ENTRY];
 
 void init_page_struct();
@@ -60,7 +61,9 @@ void memcpy(unsigned long dst, unsigned long src, unsigned long n);
 void fork_memcpy(void *dest, const void *src, unsigned long len);
 void free_page(unsigned long p);
 void dump_mem(void *src,unsigned long len);
-int do_mem_abort(unsigned long addr, unsigned long esr);
+int page_fault_handler(unsigned long addr, unsigned long esr);
+int copy_virt_memory(struct task_struct *dst);
+
 #endif
 
 #endif  /*_MM_H */

@@ -91,8 +91,9 @@ void zombie_reaper(){
 void kernel_process(){
     unsigned long begin = (unsigned long)&_binary_user_img_start;
     unsigned long end = (unsigned long)&_binary_user_img_end;
-    
-    int err = do_exec(begin, end - begin, 0x0);
+   
+    // Note: we naive assume that there's only one shell   
+    int err = do_exec(begin, end - begin, 0x1000);
     if (err < 0){
         printf("Error while moving process to user mode\n\r");
     }
@@ -107,7 +108,7 @@ void kernel_main(void)
     printf("Hello, world!\r\n");
     
     enable_irq();        //clear PSTATE.DAIF
-    //core_timer_enable(); //enable core timer
+    core_timer_enable(); //enable core timer
    
     //get hardware information by mailbox
     get_board_revision_info();

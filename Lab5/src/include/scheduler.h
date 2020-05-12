@@ -9,10 +9,10 @@
 
 #define TASK_RUNNING	0
 #define TASK_ZOMBIE     1
+#define TASK_WAIT       2
 
 #define current get_current()
 
-extern int uart_read_lock;
 extern struct task_struct *task[NR_TASKS];
 
 struct cpu_context {
@@ -32,6 +32,9 @@ struct cpu_context {
 };
 
 #define MAX_PROCESS_PAGES	16	
+#define TYPE_NORMAL 0
+#define TYPE_STACK 1
+
 struct user_page {
 	unsigned long phy_addr;
 	unsigned long vir_addr;

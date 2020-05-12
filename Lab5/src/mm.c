@@ -4,6 +4,7 @@
 #include "include/arm/sysreg.h"
 #include "include/scheduler.h"
 
+int remain_page = PAGE_ENTRY;
 unsigned long get_free_page() // this function can only call by 
 	                      // 1.alloc kernel pg
        			      // 2. alloc user pg	
@@ -16,6 +17,7 @@ unsigned long get_free_page() // this function can only call by
 		if (page[i].used == NOT_USED){
 			//printf("Using Page: %d\r\n",i);
 			page[i].used = USED_NOW;
+			remain_page--;
 			// initialize to zero
 			memzero((unsigned long) (i * PAGE_SIZE) + VA_START, PAGE_SIZE);
 			return i * PAGE_SIZE;
@@ -100,6 +102,7 @@ void free_page(unsigned long p){ //input should be physical address
 	//printf("Free Page %d\r\n", pfn);	
 	if(page[pfn].used==USED_NOW)
 		page[pfn].used = NOT_USED;
+	remain_page++;
 }
 
 void fork_memcpy (void *dest, const void *src, unsigned long len)
@@ -113,6 +116,7 @@ void fork_memcpy (void *dest, const void *src, unsigned long len)
 void init_page_struct(){	
 	for(int i=0;i<FIRST_AVAILIBLE_PAGE;i++){
 		page[i].used = PRESERVE;
+		remain_page--;
 	}
 }
 
@@ -148,14 +152,20 @@ void dump_mem(void *src,unsigned long len){
 	 printf("\r\n");
 }
 
-int do_mem_abort(unsigned long addr, unsigned long esr){
-	//printf("Fault address at 0x%x%x\r\n",addr>>32,addr);
-	if ((esr & 0b111100) == 0b100) { //translation fault
-		unsigned long page = get_free_page();
-		if (page == 0) 
+int copy_virt_memory(struct task_struct *dst){
+	for(int i=0;i<current->mm.user_pages_count;i++){
+		struct user_page src = current->mm.user_pages[i];
+		unsigned long page = allocate_user_page(dst, src.vir_addr);
+		if(!page)
 			return -1;
-		map_page(current, addr, page); 
-		return 0;
+
+		memcpy(page,(src.vir_addr>>12)<<12,PAGE_SIZE); //page aligned
 	}
+	return 0;
+}
+
+int page_fault_handler(unsigned long addr, unsigned long esr){
+	printf("Page fault address at 0x%x%x, killed\r\n",addr>>32,addr);
+	exit_process(); 	
 	return -1;
 }

@@ -19,6 +19,7 @@ struct priority_queue{
 
 // A priority base runQ
 struct priority_queue runqueue;
+struct priority_queue waitqueue;
 
 int isempty(int head,int tail);
 int isfull(int head,int tail);

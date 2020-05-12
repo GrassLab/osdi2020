@@ -7,7 +7,7 @@
 #include "include/peripherals/irq.h"
 
 unsigned int sys_timer_jiffies = 0;
-unsigned int core_timer_jiffies = 0;
+//unsigned int core_timer_jiffies = 0;
 
 void irq_handler()
 {	
@@ -32,15 +32,6 @@ void irq_handler()
 		
 	else if(irq_zero==2){
 		core_timer_handler();
-	        
-		if (core_timer_jiffies>0){
-			uart_send_string("Core timer interrupt, jiffies, ");
-			char buffer[16];
-			itos(core_timer_jiffies,buffer,10);
-			uart_send_string(buffer);
-			uart_send_string("\r\n");
-		}
-		core_timer_jiffies++;
 	}		
 	else if(irq_two == 0x02000000){
 		uart_IRQhandler();	

@@ -11,5 +11,8 @@ int get_taskid();
 unsigned long uart_write(char *buf, unsigned long size);
 unsigned long uart_read(char *buf,unsigned long size);
 int user_printf(char *fmt, ...);
+void reboot();
+void user_delay (unsigned long t);
+int get_remain_page_num();
 
 #endif  

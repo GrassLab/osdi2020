@@ -10,7 +10,7 @@
 #include "include/peripherals/uart.h"
 #include "include/signal.h"
 #include "include/queue.h"
-
+#include "include/reboot.h"
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
         
@@ -39,7 +39,6 @@ void exception_handler(unsigned long type,unsigned long esr, \
 		default: uart_send_string("Unknown...?"); break;
         }
         
-	// decode data abort cause
         if(esr>>26==0b100100 || esr>>26==0b100101 || esr>>26==0b100000  ||esr>>26==0b100001 ) {
         	uart_send_string(", ");
         	switch((esr>>2)&0x3) {
@@ -73,8 +72,9 @@ void exception_handler(unsigned long type,unsigned long esr, \
 	uart_send_string("\r\n");
 }
 
-// Since my system call just need no more than two argument now
-unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
+// Now I just use no more than 5 argument
+unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
+		size_t arg4,size_t sys_call_num){
 	enable_irq();
 
 	switch(sys_call_num){
@@ -140,10 +140,12 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 		      char recv_char;
 		      int i = 0;
 		      int flag = 0;
-		      
-		      preempt_disable();
-
+		   
 		      for(;i<arg1;i++){
+		      		// put task in waitQ and wait
+			        current->state = TASK_WAIT;
+		      		priorityQ_push(&waitqueue,1,current->pid); 
+				
 				//recv and send
 				recv_char = uart_recv();		
 				uart_send(recv_char);
@@ -158,6 +160,10 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			}
 			
 			while(flag==0){
+		      		// put task in waitQ and wait
+			        current->state = TASK_WAIT;
+				priorityQ_push(&waitqueue,1,current->pid); 
+				
 				//recv and send
 				recv_char = uart_recv();
 				uart_send(recv_char);
@@ -169,16 +175,25 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			// send "\r\n"
 			uart_send('\r');
 			uart_send('\n');
-
-			preempt_disable();
 			return i;	
 		}
 		// user_printf: allow only one argument now
 		case 9:{
-			printf((char *)arg0,arg1);
+			printf((char *)arg0,arg1,arg2,arg3,arg4);
 			return 0;
 		}
-
+		// reboot
+		case 10:{
+			reset(10000);	
+		}
+		// delay
+		case 11:{
+			delay(arg0);
+		}
+		// remain page num
+		case 12:{
+			return remain_page;
+		}
 	}
 	// Not here if no bug happened!
 	return -1;
