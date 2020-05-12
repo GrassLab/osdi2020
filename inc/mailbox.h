@@ -2,6 +2,19 @@
 #define _MAILBOX_H
 
 
+typedef struct{
+    volatile unsigned int READ;      // +0x00
+    volatile unsigned int RESERVED0; // +0x04
+    volatile unsigned int RESERVED1; // +0x08
+    volatile unsigned int RESERVED2; // +0x0C
+    volatile unsigned int POLL;      // +0x10
+    volatile unsigned int SENDER;    // +0x14
+    volatile unsigned int STATUS;    // +0x18
+    volatile unsigned int CONFIG;    // +0x1C
+    volatile unsigned int WRITE;     // +0x20
+} MBOX_Typedef;
+#define MBOX_REG ((MBOX_Typedef *)MBOX_REG_BASE)
+
 /* a properly aligned buffer */
 extern volatile unsigned int mbox[36];
 

@@ -32,26 +32,14 @@ master:
 
 el1_entry:
     ldr     w1, =__bss_size       // clear_bss
-    cbz     w1, pseudo_main
+    cbz     w1, main_entry
     ldr     x0, =__bss_start
     bl      memzero
 
     ldr     x0, =exception_table  // set up el1 exception table
     msr     vbar_el1, x0
 
-    ldr     x0, SPSR_EL1_VALUE
-    msr     spsr_el1, x0
-
-    adr     x0, el0_entry
-    msr     elr_el1, x0
-
-    eret                          // from el1 to el0
-
-el0_entry:
-    ldr     x0, =EL0_LOW_MEMORY 
-    mov     sp, x0
-
-
-pseudo_main:
-    bl      main                  // jump to C code, should not return
+main_entry:
+    mov     sp, #(2 * SECTION_SIZE)
+    bl      kernel_main           // jump to C code, should not return
     b       pe_hang               // for failsafe, halt this core too

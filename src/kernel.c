@@ -1,18 +1,18 @@
 #include "exce.h"
 #include "mailbox.h"
 #include "printf.h"
+#include "schedule.h"
 #include "shell.h"
 #include "uart.h"
 
-int main()
+
+int kernel_main()
 {
-    // unsigned long el;
     uart_init();
     init_printf(0, uart_putc);  
     get_board_info();
-    // asm volatile ("mrs %0, CurrentEL" : "=r" (el));
-    // printf("Current EL is: %u\n", (el>>2)&3);
+    sched_init(); // create init
 
-    run_shell();
+    // run_shell();
     return -1;
 }

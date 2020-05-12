@@ -16,12 +16,26 @@
 // #define TIMER_CS_M2	(1 << 2)
 // #define TIMER_CS_M3	(1 << 3)
 
+/*
+ * local timer
+ */
+#define LOCAL_TIMER_CTRL_REG                   ((volatile unsigned int*)0x40000034)
+#define LOCAL_TIMER_IRQ_CLR_REG                ((volatile unsigned int*)0x40000038)
+#define LOCAL_TIMER_CTRL_INTEN                 (1<<29) //interrupt enable
+#define LOCAL_TIMER_CTRL_TIMEN                 (1<<28) //timer enable
+#define LOCAL_TIMER_CTRL_RELOAD_MASK           (0xFFFFFFF)
+#define LOCAL_TIMER_CLR_CLEAR                  (1<<31)
+#define LOCAL_TIMER_CLR_RELOAD                 (1<<30)
+
+#define LOCAL_TIMER_CTRL_FLAG                  (LOCAL_TIMER_CTRL_TIMEN | LOCAL_TIMER_CTRL_INTEN)
 
 // void sys_timer_init();
 // void sys_timer_handler();
 void core_timer_enable();
+void core_timer_disable();
 void core_timer_handler();
-void local_timer_init();
+void local_timer_enable();
+void local_timer_disable();
 void local_timer_handler();
 
 #endif  /*_TIMER_H */
