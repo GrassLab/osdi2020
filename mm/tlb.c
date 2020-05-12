@@ -101,6 +101,8 @@ tlb_init ()
 		    pd_encode_peripheral (0));
   // arm local
   // ffffaaaa01000000-ffffaaaa01040000 -> 000040000000-000040040000
+  map_virt_to_phys (KPGD, 0xffffaaaa01000000, 0x40000000, 0x40000,
+		    pd_encode_peripheral (0));
 }
 
 /* Return a page address (physical address)
