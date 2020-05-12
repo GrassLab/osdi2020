@@ -13,20 +13,27 @@
 #define PD_ACCESS (1 << 10)
 #define PD_PERIPHERAL (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
 #define PD_RAM (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
+#define PD_OUTPUT_MASK 0xfffffffff000
 
 .section ".text"
 .global pd_encode_table
 pd_encode_table:
+  ldr x2, =PD_OUTPUT_MASK
+  and x0, x0, x2
   ldr x1, =PD_TABLE
   orr x0, x0, x1
   ret
 .global pd_encode_ram
 pd_encode_ram:
+  ldr x2, =PD_OUTPUT_MASK
+  and x0, x0, x2
   ldr x1, =PD_RAM
   orr x0, x0, x1
   ret
 .global pd_encode_peripheral
 pd_encode_peripheral:
+  ldr x2, =PD_OUTPUT_MASK
+  and x0, x0, x2
   ldr x1, =PD_PERIPHERAL
   orr x0, x0, x1
   ret

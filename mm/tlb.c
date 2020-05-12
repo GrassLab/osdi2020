@@ -3,20 +3,32 @@
 #include "tlb.h"
 
 void *
-page_table_alloc ()
+page_alloc_virt (size_t virt_addr)
 {
   void *new;
   size_t *PTE;
+  int retval;
 
   new = page_alloc ();
   if (!new)
     return NULL;
-  PTE = PD_DECODE (*((size_t *) KPGD));	// PUD
-  PTE = PD_DECODE (*PTE);	// PMD
-  PTE = PD_DECODE (*PTE);	// PTE
-  PTE[(size_t) new >> 12] = pd_encode_ram (new);
-  bzero (new, PAGE_SIZE);
-  return new;
+  if (!virt_addr)
+    {
+      /* to prevent recursive with map_virt_to_phys
+       * we need promise the page tables of this
+       * virtual address are already exist
+       */
+      virt_addr = (size_t) new | 0xffff000000000000;
+    }
+  retval = map_virt_to_phys (KPGD, virt_addr, (size_t) new,
+			     PAGE_SIZE, pd_encode_ram (0));
+  if (retval)
+    {
+      page_free (new);
+      return NULL;
+    }
+  bzero ((void *) virt_addr, PAGE_SIZE);
+  return (void *) virt_addr;
 }
 
 /* Return -1 for memory not enough
@@ -41,7 +53,7 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	  page_ind = (virt >> tlb_ind) & 0x1ff;
 	  if (!table[page_ind])
 	    {
-	      table[page_ind] = pd_encode_table (page_table_alloc ());
+	      table[page_ind] = pd_encode_table (page_alloc_virt (0));
 	      if (table[page_ind] == pd_encode_table (0))
 		return -1;
 	    }
@@ -68,6 +80,7 @@ tlb_init ()
   extern char _kernel_end[];
   size_t *PGD, *PUD, *PMD, *PTE;
   size_t i;
+  // setup default page tables to prevent recursive
   bzero (0, 0x4000);
   PGD = 0;
   PUD = (size_t *) 0x1000;
