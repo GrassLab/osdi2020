@@ -3,8 +3,6 @@
 #include "../include/mailbox.h"
 #include "../include/sprintf.h"
 
-
-
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
@@ -55,11 +53,6 @@ void uart_init()
 
     // enable interrupt
     *UART0_IMSC = 0b11 << 4;		// Tx, Rx
-    // init uart buf
-    // read_buf.head = 0;
-    // read_buf.tail = 0;
-    // write_buf.head = 0;
-    // write_buf.tail = 0;
 }
 
 /**
@@ -71,46 +64,6 @@ void uart_send(unsigned int c) {
     /* write the character to the buffer */
     *UART0_DR=c;
 }
-// void uart_send(unsigned int c) { 
-//     char a;
-//     TX_BUF[0] = 0;
-//     while (TX_FIFO_FULL) { asm volatile("nop"); } // TX FIFO is empty
-//     //*UART0_IMSC = 0b10 << 4; // enable Tx
-//     if (TX_BUF[0] == 0) {
-//         *UART0_DR = c;
-//     } else {
-//         a = TX_BUF[0]; 
-//         TX_BUF[0] = c; 
-//         *UART0_DR = a;
-//     }
-    
-// }
-// void uart_send(char c)
-// {
-//     char r;
-//     if (TX_FIFO_EMPTY)
-//     {
-//         // we need to send one character to trigger interrupt.
-//         // because the interrupt only set after data transmitted
-//         if (QUEUE_EMPTY (write_buf)) {
-//             *UART0_DR = c;
-//         } else {
-//             r = QUEUE_GET (write_buf);
-//             QUEUE_POP (write_buf);
-//             QUEUE_SET (write_buf, c);
-//             QUEUE_PUSH (write_buf);
-//             *UART0_DR = r;
-//         }
-//     } else {
-//         // Raspberry PI is toooooo slow
-//         // We need push the data into queue
-//         if (!QUEUE_FULL (write_buf)) {
-//             QUEUE_SET (write_buf, c);
-//             QUEUE_PUSH (write_buf);
-//         }
-//         // else: drop that :(
-//     }
-// }
 
 /**
  * Receive a character
@@ -124,27 +77,7 @@ char uart_getc() {
     /* convert carrige return to newline */
     return r=='\r'?'\n':r;
 }
-// char uart_getc() 
-// {
-//     RX_BUF[0] = 0;
-//     char a;
-//     //*UART0_IMSC = 0b01 << 4; // enable Rx
-//     while(RX_BUF[0] == 0) { asm volatile ("wfi"); } // if BUF is empty, wait for interrupt
-//     //if(BUF[0]){
-//     a = RX_BUF[0]; 
-//     RX_BUF[0] = 0; 
-//     return a=='\r'?'\n':a;
-//     //}
-// }
-// char uart_getc() 
-// {
-//     char r;
 
-//     while (QUEUE_EMPTY (read_buf)) asm volatile ("wfi");
-//     r = QUEUE_GET (read_buf);
-//     QUEUE_POP (read_buf);
-//     return r == '\r' ? '\n' : r;
-// }
 /**
  * Display a string
  */

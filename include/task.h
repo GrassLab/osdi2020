@@ -1,3 +1,4 @@
+// task->state
 #define INIT                0
 #define RUN_IN_USER_MODE    1
 #define IN_OUT_KERNEL       2

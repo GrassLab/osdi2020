@@ -31,7 +31,7 @@ void main()
     // uart_irq_enable();
     uart_init();
     printf(WELCOME);
-    while(1);
+    // while(1);
 
     // display a pixmap
     # if SPLASH_ON

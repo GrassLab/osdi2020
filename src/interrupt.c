@@ -114,29 +114,10 @@ void interrupt_handler()
     if (interrupt_src & (1<<8)) {
         // uart interrupt
         if (*UART0_RIS & (1<<4)) {	// UARTRXINTR - uart_getc()
-            // while (RX_FIFO_FULL) {
-            //     // receive
-            //     r = (char) (*UART0_DR);
-            //     if (!QUEUE_FULL (read_buf)) {
-            //         QUEUE_SET (read_buf, r);
-            //         QUEUE_PUSH (read_buf);
-            //     }
-            // }
-	        // *UART0_ICR = 1 << 4;
             while (RX_FIFO_FULL) { RX_BUF[0] = (char)(*UART0_DR); }
             *UART0_ICR = 1<<4; // Clears the UARTTXINTR interrupt.
 
 	    } else if (*UART0_RIS & (1<<5))	{// UARTTXINTR - uart_send()
-            
-            // while (!QUEUE_EMPTY (write_buf)) {
-            //     r = QUEUE_GET (write_buf);
-            //     QUEUE_POP (write_buf);
-            //     while (TX_FIFO_FULL) asm volatile ("nop");
-            //     *UART0_DR = r;
-            // }
-            // *UART0_ICR = 1<<5;
-
-
 	        while (!(TX_BUF[0] == 0)) {
                 r = TX_BUF[0];
                 TX_BUF[0] = 0;
@@ -144,10 +125,6 @@ void interrupt_handler()
                 *UART0_DR = r;
             }
             *UART0_ICR = 1<<5; // Clears the UARTRTINTR interrupt.
-
-
-            // while (TX_FIFO_FULL) asm volatile ("nop");
-            // *UART0_ICR = 1<<5; // Clears the UARTRTINTR interrupt.
 	    }
     }
     // local timer interrupt
