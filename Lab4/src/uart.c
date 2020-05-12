@@ -1,9 +1,12 @@
 #include "include/mbox.h"
 #include "include/peripherals/uart.h"
 #include "include/uart.h"
+#include "include/printf.h"
 #include "include/peripherals/gpio.h"
 #include "include/utils.h"
 #include "include/queue.h"
+#include "include/scheduler.h"
+#include "include/irq.h"
 
 #define IRQ_ENABLE1 0x3f00b214
 
@@ -62,14 +65,8 @@ void uart_init(){
 }
 
 
-void uart_send ( char c )
+int uart_send ( char c ) // If fail to send, return -1 
 {	
-	/*
-	while(get32(UART0_FR)&0x20){
-	}
-	put32(UART0_DR,c);
-	*/
-
 	char tmp;
 
 	if(get32(UART0_FR)&0x80){ //transmit FIFO empty
@@ -87,9 +84,13 @@ void uart_send ( char c )
 		if(!isfull(write_buf_head,write_buf_tail)){
 			push(write_buf,&write_buf_tail,c);
 		}
+		else{
 		// If FIFO, also the queue if full, then char will be 
 		// dropped...
+			return -1;
+		}
 	}
+	return 0;
 }
 
 char uart_recv ()
@@ -141,15 +142,17 @@ void uart_hex(unsigned int d) {
 void uart_IRQhandler(){
 	unsigned int status = get32(UART0_MIS);	
 	char c;
-	if(status&0x10){ // for receive
-		
+	
+	if(status&0x10){ // for receive	
+
 		while(get32(UART0_FR)&0x40){//receive FIFO full
 			c = get32(UART0_DR)&0xFF;
-			
+
 			if(!isfull(read_buf_head,read_buf_tail)){
 				push(read_buf,&read_buf_tail,c);
 			}
 		}
+
 		put32(UART0_ICR,status); //clear interrupt
 
 	}
@@ -164,3 +167,8 @@ void uart_IRQhandler(){
 	}
 }
 
+// This function is required by printf function
+void putc ( void* p, char c)
+{
+	uart_send(c);
+}

@@ -8,57 +8,11 @@
 #include "include/timer.h"
 #include "include/sys.h"
 #include "include/fork.h"
+#include "include/mm.h"
 #include "include/scheduler.h"
-
-int check_string(char * str){
-	char* cmd_help = "help";
-	char* cmd_hello = "hello";
-	char* cmd_reboot = "reboot";
-	char* cmd_exc = "exc";
-	char* cmd_irq = "irq";
-
-	if(strcmp(str,cmd_help)==0){
-	// print all available commands
-		uart_send_string("\r\nhello : print Hello World!\r\n");
-		uart_send_string("help : help\r\n");
-		uart_send_string("exc: trigger an exception instruction\r\n");
-		uart_send_string("irq: enable core timer and system timer\r\n");
-		uart_send_string("reboot: reboot rpi3\r\n");
-	}
-	else if(strcmp(str,cmd_hello)==0){
-	// print hello
-		uart_send_string("\r\nHello World!\r\n");
-	}
-	else if(strcmp(str,cmd_reboot)==0){
-		uart_send_string("\r\nBooting......\r\n");
-		reset(10000);
-		return 1;	
-	}
-	else if(strcmp(str,cmd_exc)==0){		
-		uart_send_string("\r\n");
-		// issue exception                	
-		asm volatile(
-			"mov x8,#10;" // invalid system call will return back
-			"svc #1;"
-    		);
-
-		/*
-		asm volatile(
-			"brk #1;"
-		);*/
-	}
-	else if(strcmp(str,cmd_irq)==0){
-		uart_send_string("\r\n");	
-		call_core_timer();
-		sys_timer_init();//don't need system call for this!
-	}
-	else{
-		uart_send_string("\r\nErr:command ");
-		uart_send_string(str);
-		uart_send_string(" not found, try <help>\r\n");
-	}
-	return 0;
-}
+#include "include/printf.h"
+#include "include/signal.h"
+#include "include/queue.h"
 
 void get_board_revision_info(){
   mbox[0] = 7 * 4; // buffer size in bytes
@@ -106,67 +60,183 @@ void get_VC_core_base_addr(){
   }
 }
 
-void process(void)
-{
-	while (1){
-		uart_hex(current->pid);
-		uart_send_string("...\n");
-		delay(100000000);	
-		// After process finish, tell scheduler that     you are done
-		//schedule(); // If trigger schedule in interrput
-			      // You can also schedule without this!  
+void foo_kernel(){
+  	while(1) {
+    		printf("Task id: %d\n", current -> pid);
+    		delay(1000000);
+    		schedule();
+  	}
+}
+
+
+void foo(){
+  	int tmp = 5;
+  	printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+  	exit(0);
+}
+
+void idle(){
+  	while(1){
+ 		//if(num_runnable_tasks() == 1) 
+      		//	break;
+    		schedule();
+    		delay(100000);
+  	}
+  	printf("Test finished\n");
+  	while(1);
+}
+
+void uart_test(){
+	/* uart_write test*/
+	//char buffer[5]={0};
+	//buffer[0]='c';
+	char buffer[]="Hello";
+	int success_write=0;
+	success_write = uart_write(buffer,sizeof(buffer));
+	printf("\r\nWrite byte: %d\r\n",success_write);
+
+	/* uart_read test 
+	char buffer_1[16];
+	int success_read;
+	printf("### Task %d, call UART_READ\r\n",get_taskid());
+	success_read = uart_read(buffer_1,sizeof(buffer_1));
+	printf("\r\nRead byte %d: ", success_read);
+
+	if(success_read>0){
+		for(int i=0;i<success_read;i++)
+			printf("%c",buffer_1[i]);
+	}
+
+	printf("\r\n");*/
+
+	exit(0);
+}
+
+void mytest(){
+	int cnt = 1;
+	int pid = fork();
+	
+	while(cnt < 10) {
+		printf("Task id: %d (priority %d), cnt addr: 0x%x, value: %d\r\n", get_taskid(),get_priority(), &cnt, cnt);
+		delay(100000);
+		++cnt;
+		if(pid>0&&cnt>7)
+			kill(pid,SIGKILL);
+	}
+	exit(0);
+}
+
+void test() {
+  	int cnt = 1;
+  	if (fork() == 0) {
+    		fork();
+    		delay(100000);
+    		fork();
+    		while(cnt < 10) {
+      			printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+      			delay(100000);
+      			++cnt;
+   		 }
+    		exit(0);
+    		printf("Should not be printed\n");
+  	} else {
+    		printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
+    		exec(foo);
+ 	 }
+}
+
+void user_test(){
+  	do_exec(test);
+}
+
+void kernel_process_b(){
+	int err = do_exec(uart_test);
+    	if (err < 0){
+        	printf("Error while moving process to user mode\r\n");
+    	}
+}
+
+void kernel_process(){
+	int err = do_exec(mytest);
+    	if (err < 0){
+        	printf("Error while moving process to user mode\r\n");
+    	}
+}
+
+void zombie_reaper(){
+	while(1){
+		schedule(); // It's Ok to let others doing first
+		delay(10000);
+		struct task_struct *p;
+		for (int i=0; i < NR_TASKS;i++){
+			p = task[i];
+			if(p && p->state==TASK_ZOMBIE){
+				//reclaim the resource
+				// 1. pid
+				free_pid(i);
+				// 2.kernel_stack(memory)	
+				free_page((unsigned long)p);
+				task[i] = 0;
+			}
+		}
 	}
 }
+
 
 void kernel_main(void)
 {	
     uart_init();  
+    init_printf(0, putc);
     
-    uart_hex(get_reg());
-    uart_send_string("Hello, world!\r\n");
-
-    unsigned long el;
-    // read the current level from system register
-    asm volatile ("mrs %0, CurrentEL" : "=r" (el));
-    uart_send_string("Current EL is: ");
-    uart_hex((el>>2)&3);
-    uart_send_string("\r\n");
-
-    //async_exc_routing(); //set HCR_EL2.IMO
-                           // Do not set HCR_EL2.IMO if you want your interrupt directly goto kernel in EL1 
-
+    printf("Hello, world!\r\n");
+ 
     enable_irq();        //clear PSTATE.DAIF
     core_timer_enable(); //enable core timer
-
-    //fb_init();
-    //fb_show();
    
     //get hardware information by mailbox
     get_board_revision_info();
     get_VC_core_base_addr();
+ 
+    //init_runQ(); 
+    init_priority_queue(runqueue);
+    init_idle_task(task[0]); // must init 'current' as idle task first 
    
-    init_runQ(); 
-    for (int task_num=0;task_num<3;task_num++){
-    	int res = privilege_task_create(process,1);
-    	if (res != 0) {
-        	uart_send_string("error while starting process");
+
+    // Here init a task being zombie reaper
+    int res = privilege_task_create(zombie_reaper,1);
+    if (res < 0) {
+        	printf("error while starting process");
+        	return;
+    }
+    
+    /* Test case 1: 
+    for(int i = 0; i < 2; ++i) { // N should > 2
+    	privilege_task_create(foo_kernel,1);
+    }     */
+
+    /* Test case 2: 
+    privilege_task_create(user_test,1);*/
+    
+    /* My test 
+    for(int num=0;num<2;num++){ 
+    	int res = privilege_task_create(kernel_process,num+1);
+
+    	if (res < 0) {
+        	printf("error while starting process");
         	return;
     	}
-    }
+    }*/	
+   	
+    
+    /* Test with uart*/
+    for(int num=0;num<2;num++){ 
+    	int res = privilege_task_create(kernel_process_b,num+1);
 
-   
-    while (1){
-        schedule();
-    }
+    	if (res < 0) {
+        	printf("error while starting process");
+        	return;
+    	}
+     }
     
-    /*
-    // simple shell implement
-    char str[128];
-    
-    while (1) {
-    	uart_send_string(">>");
-	uart_recv_string(128,str);	
-	check_string(str); 
-    }
-    */
+    idle();
 }

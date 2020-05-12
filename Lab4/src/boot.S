@@ -1,5 +1,14 @@
 .section ".text.boot"
 
+#define SCTLR_RESERVED                  (3 << 28) | (3 << 22) | (1 << 20) | (1 << 11)
+#define SCTLR_EE_LITTLE_ENDIAN          (0 << 25)
+#define SCTLR_I_CACHE_DISABLED          (0 << 12)
+#define SCTLR_D_CACHE_DISABLED          (0 << 2)
+#define SCTLR_MMU_DISABLED              (0 << 0)
+
+
+#define SCTLR_VALUE_MMU_DISABLED	(SCTLR_RESERVED | SCTLR_EE_LITTLE_ENDIAN | SCTLR_I_CACHE_DISABLED | SCTLR_D_CACHE_DISABLED | SCTLR_MMU_DISABLED)
+
 #include "include/mm.h"
 
 .global _start
@@ -19,6 +28,11 @@ proc_hang:
 
 master:    
     /*** Now return from el2 to el1 ***/ 
+    
+    //disable MMU
+    ldr	x0, =SCTLR_VALUE_MMU_DISABLED
+    msr	sctlr_el1, x0	
+
     mov x1,#LOW_MEMORY
     msr sp_el1,x1  //set stack pointer
     
@@ -41,6 +55,11 @@ master:
     eret
 
 el1_entry: 
+    //disable exception of access SIMD register in EL1(for printf)
+    mrs x0, CPACR_EL1
+    orr x0, x0, #(3 << 20)
+    msr CPACR_EL1, x0
+
     // clear bss
     ldr     x1, =_bss_begin
     ldr     w2, =__bss_size

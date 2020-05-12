@@ -1,5 +1,15 @@
 #include "include/uart.h"
+#include "include/string.h"
 #include "include/utils.h"
+#include "include/timer.h"
+#include "include/mm.h"
+#include "include/scheduler.h"
+#include "include/fork.h"
+#include "include/printf.h"
+#include "include/irq.h"
+#include "include/peripherals/uart.h"
+#include "include/signal.h"
+#include "include/queue.h"
 
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
@@ -58,5 +68,114 @@ void exception_handler(unsigned long type,unsigned long esr, \
 	uart_hex(( ((unsigned int)esr)<<7)>>7);
 
 	uart_send_string("\r\n");
-
 }
+
+// Since my system call just need no more than two argument now
+unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
+	//enable_irq();
+
+	switch(sys_call_num){
+		// Core timer
+		case 0:{
+			core_timer_enable();
+			return 0;
+		}
+		// DAIF information
+		case 1:{
+			unsigned int daif;
+          		asm volatile ("mrs %0, daif" : "=r" (daif));
+          		printf("DAIF is %x\r\n",daif);
+			
+			return 0;
+		}
+		// kill
+		case 2:{
+			struct task_struct *p = task[arg0];
+			if(p && p->signal.pending!=SIGKILL)
+				p -> signal.pending = SIGKILL;
+
+			else
+				printf("@@@ Signal failed\r\n");
+			return 0;
+		}
+		// fork
+		case 3:{
+			return user_task_create();
+		}
+		// exec
+		case 4:{
+		 	return do_exec((void *)arg0);      
+		}
+		// exit
+		case 5:{
+			exit_process();
+			return 0;
+		}
+		// get task pid
+		case 6:{
+			return current->pid;
+		}
+		//  uart write
+		case 7:{
+			// Using blocking write for safety
+			preempt_disable();
+			int success = 0;
+			int ret = 0;
+			
+			for(int i=0; i<arg1;i++){
+				ret = uart_send(((char*)arg0)[i]);
+				if(ret==0)
+					++success;
+			}
+               
+			preempt_enable();
+		 	return success;	
+		}
+		// uart read
+		case 8:{	 
+		      char recv_char;
+		      int i = 0;
+		      int flag = 0;
+		      
+		      preempt_disable();
+
+		      for(;i<arg1;i++){
+				//recv and send
+				recv_char = uart_recv();		
+				uart_send(recv_char);
+
+				if(recv_char =='\n' || recv_char == '\r'){
+					flag = 1;
+					break;
+				}
+				else{ 
+					((char*)arg0)[i] = recv_char;
+				}
+			}
+			
+			while(flag==0){
+				//recv and send
+				recv_char = uart_recv();
+				uart_send(recv_char);
+
+				if(recv_char =='\n' || recv_char == '\r')
+					break;
+			}	
+			
+			// send "\r\n"
+			uart_send('\r');
+			uart_send('\n');
+
+			preempt_disable();
+			return i;	
+		}
+		// get priority
+		case 9:{
+			return current->priority;
+		}
+
+	}
+	// Not here if no bug happened!
+	return -1;
+}
+
