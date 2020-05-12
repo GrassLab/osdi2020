@@ -1,0 +1,7 @@
+#ifndef BASE_H_
+#define BASE_H_
+
+#define GPU_PERIPHERAL_BASE   0xffff00003f000000
+#define LOCAL_PERIPHERAL_BASE 0xffff000040000000
+
+#endif // BASE_H_

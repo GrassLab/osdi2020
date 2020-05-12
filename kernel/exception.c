@@ -55,7 +55,7 @@ void curr_el_spx_sync_handler(void) {
         break;
     }
   } else {
-    printk("[ERROR] Handler for EC %u isn't implemented yet" EOL, ec);
+    printk("[ERROR] Handler for EC %u and ISS %u isn't implemented yet" EOL, ec, iss);
     printk("ELR_EL1 = %#x\n", address);
   }
 }

@@ -1,20 +1,22 @@
 #ifndef EXCEPTION_H_
 #define EXCEPTION_H_
 
-#define SYSTEM_TIMER_CS ((volatile uint32_t *)0x3f003000)
-#define SYSTEM_TIMER_CL0 ((volatile uint32_t *)0x3f003004)
-#define SYSTEM_TIMER_C1 ((volatile uint32_t *)0x3f003010)
+#include "base.h"
+
+#define SYSTEM_TIMER_CS  ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x3000))
+#define SYSTEM_TIMER_CL0 ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x3004))
+#define SYSTEM_TIMER_C1  ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x3010))
 // https://wiki.osdev.org/BCM_System_Timer
 #define SYSTEM_TIMER_FREQUENCY 1000000
 
-#define IRQ_BASIC_PENDING ((volatile uint32_t *)0x3f00b200)
-#define IRQ_PENDING1 ((volatile uint32_t *)0x3f00b204)
-#define IRQ_PENDING2 ((volatile uint32_t *)0x3f00b208)
-#define IRQ_ENABLE1 ((volatile uint32_t *)0x3f00b210)
+#define IRQ_BASIC_PENDING ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0xb200))
+#define IRQ_PENDING1      ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0xb204))
+#define IRQ_PENDING2      ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0xb208))
+#define IRQ_ENABLE1       ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0xb210))
 
 // https://github.com/raspberrypi/documentation/blob/master/hardware/raspberrypi/bcm2836/QA7_rev3.4.pdf
-#define CORE0_TIMER_IRQ_CTRL ((volatile uint32_t *)0x40000040)
-#define CORE0_INTERRUPT_SRC ((volatile uint32_t *)0x40000060)
+#define CORE0_TIMER_IRQ_CTRL ((volatile uint32_t *)(LOCAL_PERIPHERAL_BASE + 0x40))
+#define CORE0_INTERRUPT_SRC  ((volatile uint32_t *)(LOCAL_PERIPHERAL_BASE + 0x60))
 
 extern unsigned vector_table[];
 

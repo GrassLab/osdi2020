@@ -1,6 +1,7 @@
 SECTIONS
 {
-  . = 0x80000;
+  . = 0xffff000000000000; /* Kernel space */
+  . += 0x80000;
   __text_start = .;
   .text : { *(.text.boot) *(.text) }
   __text_end = .;

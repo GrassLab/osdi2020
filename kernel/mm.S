@@ -56,10 +56,6 @@ vm_init:
   str x3, [x1, 8]
 
   msr ttbr0_el1, x0
-
-  /* Enable MMU for EL1 and EL0 stage 1 address translation. */
-  mrs x2, sctlr_el1
-  orr x2, x2, 1
-  msr sctlr_el1, x2
+  msr ttbr1_el1, x0
 
   ret
