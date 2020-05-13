@@ -22,54 +22,96 @@
 
 void get_timestamp();
 
-void _foo() {
-	while(1) {
-		struct task_struct *current = get_current_task();
-		uart_puts("Task id: ");
-		uart_print_int(current -> task_id);
-		uart_puts("\r\n");
-		delay(1000000000);
-		schedule();
-	}
+void foo(){
+  int tmp = 5;
+  uart_puts("Task ");
+  uart_print_int(get_taskid());
+  uart_puts(" after exec, tmp address 0x");
+  uart_print_int(&tmp);
+  uart_puts(", tmp value ");
+  uart_print_int(tmp);
+  uart_puts("\r\n");
+//   printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+  exit(0);
 }
 
-void foo(){
-	do_exec(_foo);
-	// schedule();
+void test() {
 	// while(1) {
-	// 	struct task_struct *current = get_current_task();
-	// 	uart_puts("Task id: ");
-	// 	uart_print_int(current -> task_id);
-	// 	uart_puts("\r\n");
-	// 	delay(1000000000);
-	// 	schedule();
+	// 	uart_puts("hihi\r\n");
+	// 	delay(100000000000000);
 	// }
+	
+  int cnt = 1;
+  int f;
+  f = fork();
+  uart_puts("fork ret: ");
+  uart_print_int(f);
+  uart_puts(" #run: ");
+  uart_print_int(num_runnable_tasks());
+  uart_puts("\r\n");
+  if (f == 0) {
+    fork();
+    delay(100000);
+    fork();
+    while(cnt < 10) {
+		uart_puts("Task id: ");
+		uart_print_int(get_taskid());
+		uart_puts(", cnt: ");
+		uart_print_int(cnt);
+		uart_puts("\r\n");
+		// printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+		delay(100000);
+		++cnt;
+    }
+    exit(0);
+	uart_puts("Should not be printed\r\n");
+    // printf("Should not be printed\n");
+  } else {
+	  	uart_puts("Task ");
+		uart_print_int(get_taskid());
+		uart_puts(" before exec, cnt address 0x");
+		uart_print_int(&cnt);
+		uart_puts(", cnt value ");
+		uart_print_int(cnt);
+		uart_puts("\r\n");
+		// printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
+		exec(foo);
+  }
+}
+
+// -----------above is user code-------------
+// -----------below is kernel code-------------
+
+void user_test(){
+  do_exec(test);
 }
 
 void idle(){
-	while(1){
-		schedule();
-		delay(1000000);
-	}
+	uart_puts("idle\r\n");
+  while(1){
+    if(num_runnable_tasks() == 1) {
+		uart_puts("idle\r\n");
+      break;
+    }
+    schedule();
+	uart_puts("schedule\r\n");
+    delay(1000000);
+  }
+  uart_puts("Test finished\n");
+  while(1);
 }
 
 void main() {
-	uart_init();
-	uart_puts("hihi\r\n");
-	asm volatile ("mov x0, #0\n" "svc #0\n");
-	
+  // ...
+  // boot setup
+  // ...
+  uart_init();
+  asm volatile ("mov x0, #0\n" "svc #0\n");
 
-	for(int i = 0; i < 10; ++i) { // N should > 2
-		// uart_puts("hihi\r\n");
-		privilege_task_create(foo);
-	}
+  privilege_task_create(user_test);
+//   privilege_task_create(user_test);
 
-	// privilege_task_create(foo);
-
-	// schedule();
-	// while (1){
-	// 	schedule();
-	// }
+//   idle();
 }
 
 // void main()

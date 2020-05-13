@@ -69,7 +69,10 @@ int move_to_user_mode();
 struct pt_regs * task_pt_regs(struct task_struct *tsk);
 void _do_exec(void(*func)());
 void _do_exit();
-void _do_fork();
+int _do_fork();
+int get_taskid();
+int num_runnable_tasks();
+struct task_struct *get_current_task();
 
 #define INIT_TASK \
 {   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \

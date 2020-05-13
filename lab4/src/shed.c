@@ -7,9 +7,11 @@
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
 struct task_struct *task[NR_TASKS] = {&(init_task), };
+extern void fork_child_exit();
 
 int n_tasks = 1;
 int n_task_id = 1;
+
 
 void enable_preempt() {
     current->preempt_count = 1;
@@ -26,6 +28,23 @@ void current_task_info() {
         uart_puts("\r\n");
         delay(100000);
     }
+}
+
+int num_runnable_tasks() {
+    int cnt = 0;
+    for(int i=0; i<NR_TASKS; i++) {
+        if(task[i]) {
+            if(task[i]->state == TASK_RUNNING) {
+                cnt++;
+            }
+        }
+    }
+
+    return cnt;
+}
+
+int get_taskid() {
+    return current->task_id;
 }
 
 void privilege_task_create(void (*func)()) {
@@ -119,6 +138,9 @@ void _schedule() {
             next = i;
         }
     }
+    uart_puts("switch to pid: ");
+    uart_print_int(task[next]->task_id);
+    uart_puts("\r\n");
     switch_to(task[next]);
     enable_preempt();
 }
@@ -151,10 +173,6 @@ void timer_tick() {
 	disable_irq();
 }
 
-// void do_exec(void(*func)()) {
-//     move_to_user_mode(func);
-// }
-
 void _do_exec(void(*func)()) {
     struct pt_regs *regs = task_pt_regs(current);
     memzero((unsigned long)regs, sizeof(*regs));
@@ -166,7 +184,9 @@ void _do_exec(void(*func)()) {
     }
     regs->sp = stack + PAGE_SIZE;
     current->stack = stack;
-    uart_puts("do_exec done.\r\n");
+    uart_puts("Task ");
+    uart_print_int(current->task_id);
+    uart_puts(" do_exec done.\r\n");
 }
 
 void _do_exit() {
@@ -175,6 +195,69 @@ void _do_exit() {
     schedule();
 }
 
-void _do_fork() {
+int _do_fork() {
+    disable_preempt();
+    struct task_struct *p = (struct task_struct *) get_free_page();
+    if(!p) {
+        uart_puts("Fail to create a new task...\r\n");
+        return;
+    }
+
+    struct pt_regs *childregs = task_pt_regs(p);
+	memzero((unsigned long)childregs, sizeof(struct pt_regs));
+	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
+
+    p->cpu_context.x19 = current->cpu_context.x19;
+    p->cpu_context.x20 = current->cpu_context.x20;
+    p->cpu_context.x21 = current->cpu_context.x21;
+    p->cpu_context.x22 = current->cpu_context.x22;
+    p->cpu_context.x23 = current->cpu_context.x23;
+    p->cpu_context.x24 = current->cpu_context.x24;
+    p->cpu_context.x25 = current->cpu_context.x25;
+    p->cpu_context.x26 = current->cpu_context.x26;
+    p->cpu_context.x27 = current->cpu_context.x27;
+    p->cpu_context.x28 = current->cpu_context.x28;
+
+    p->task_id = n_task_id;
+    p->counter = 3;
+    p->state = TASK_RUNNING;
+    p->preempt_count = 1;
+    p->cpu_context.pc = fork_child_exit;
+    p->cpu_context.sp = (unsigned long) childregs;
+    p->parent_id = current->task_id;
+    n_task_id++;
+
+    task[n_tasks] = p;
+    n_tasks %= NR_TASKS;
+    n_tasks++;
+
+    struct pt_regs *cur_regs = task_pt_regs(current);
+    struct pt_regs *regs = task_pt_regs(p);
+
+    memzero((unsigned long)regs, sizeof(*regs));
+    regs->pc = cur_regs->pc;
+    regs->pstate = cur_regs->pstate;
+    unsigned long stack = get_free_page(); //allocate new user stack
+    if (!stack) {
+        return -1;
+    }
+    regs->sp = stack + PAGE_SIZE;
+    p->stack = stack;
+
+    // print created message
+    uart_puts("===========================================\r\n");
+    uart_puts("Task ");
+    uart_print_int(current->task_id);
+    uart_puts(" called fork\r\n");
+
+    uart_puts("Create new task: ");
+    uart_print_int(p->task_id);
+    uart_puts(" Current run: ");
+    uart_print_int(n_task_id);
+    uart_puts("\r\n");
+    uart_puts("===========================================\r\n");
     
+    enable_preempt();
+    return p->task_id;
 }
+
