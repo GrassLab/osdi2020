@@ -18,8 +18,7 @@ int cmd_load_images(int);
 int cmd_exc(int);
 int cmd_brk(int);
 int cmd_irq(int);
-int cmd_delay(int);
-int cmd_delay_without_bottom_half(int);
+int cmd_kill(int);
 int cmd_not_find(int);
 
 int symbol();

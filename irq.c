@@ -12,7 +12,7 @@ void irq_uart0_handler()
     uart_send_hex(*UART0_RIS);
 }
 
-void irq()
+void irq_router()
 {
     char r;
 
@@ -33,10 +33,10 @@ void irq()
         local_timer_handler();
     }
     // CNTPNSIRQ interrupt
+    // Core timer interrupt
     else if ((*CORE0_IRQ_SOURCE) & (1 << 1))
     {
         unsigned int delay_time = 1; // miilisecond
-        // core timer interrupt
         /*
         uart_puts("arm core timer: dalay ");
         uart_send_int(delay_time);

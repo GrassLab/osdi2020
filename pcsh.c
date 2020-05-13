@@ -12,9 +12,12 @@ pc means Po-Chun, NOT personal computer
 #include "pcsh.h"
 #include "timer.h"
 
-#include "bottom_half.h"
+#include "syscall.h"
+#include "signal.h"
 
-#define INPUT_BUFFER_SIZE 256
+#include "printf.h"
+
+#define INPUT_BUFFER_SIZE 64
 
 extern char __bss_end[];
 
@@ -28,8 +31,7 @@ static cmd_t default_cmd_arr[] = {
     {"exc", "svc #1", cmd_exc},
     {"brk", "brk #1", cmd_brk},
     {"irq", "start irq", cmd_irq},
-    {"delay", "delay and print ....", cmd_delay},
-    {"delay_x", "delay and print ....(in exception)", cmd_delay_without_bottom_half},
+    {"kill", "kill process 1, can't choose process now!", cmd_kill},
     {NULL, NULL, cmd_not_find}};
 
 int cmd_exit(int i)
@@ -57,7 +59,7 @@ int cmd_help(int i)
 
 int cmd_hello(int i)
 {
-    uart_print("Hello World!\n");
+    printf("Hello World!\n");
     return 0;
 }
 
@@ -68,18 +70,11 @@ int cmd_reboot(int i)
 
 int cmd_timestamp(int i)
 {
-    double t;
-    asm volatile("mov x1, %0\n"
-                 "mov x0, #2\n"
-                 "svc #0x80\n" ::"r"(&t));
+    double t = gettime();
+    printf("[");
     uart_send_float((float)t, 4);
-    uart_send('\n');
-    return 0;
-
-    // can't run in el0
-    /*
-    float t = gettime();
-    */
+    printf("]\n\r");
+    //uart_send('\n');
 }
 
 int cmd_load_images(int i)
@@ -139,23 +134,14 @@ int cmd_irq(int i)
     return 0;
 }
 
-int cmd_delay(int i)
+int cmd_kill(int i)
 {
-    asm volatile("mov x0, #0x100");
-    asm volatile("svc #0x80");
-    return 0;
-}
-
-int cmd_delay_without_bottom_half(int i)
-{
-    asm volatile("mov x0, #0x101");
-    asm volatile("svc #0x80");
-    return 0;
+    kill(1, SIGKILL);
 }
 
 int cmd_not_find(int i)
 {
-    uart_print("Command not find, Try 'help'\n");
+    printf("Command not find, Try 'help'\n");
     return 0;
 }
 
@@ -170,6 +156,8 @@ int sh_default_command(char *cmd)
         }
         ptr++;
     }
+
+    printf("\"%s\", ", cmd);
     cmd_not_find(0);
 
     return 0;
@@ -177,8 +165,7 @@ int sh_default_command(char *cmd)
 
 int symbol()
 {
-    uart_send('\r');
-    uart_send('>');
+    printf("\r>");
 }
 
 void pcsh()
@@ -186,6 +173,7 @@ void pcsh()
     char cmd[INPUT_BUFFER_SIZE];
     int x = 0;
 
+    printf("Shell start\n");
     // main loop
     while (x != -1)
     {
@@ -203,9 +191,5 @@ void pcsh()
 
         // default command
         x = sh_default_command(cmd);
-
-        // bottom half
-        // I don't have scheduler, so i implement bottom half here
-        bottom_half_router();
     }
 }

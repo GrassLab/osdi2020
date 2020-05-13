@@ -1,4 +1,5 @@
 #include "uart.h"
+#include "printf.h"
 #include "pcsh.h"
 #include "screen.h"
 #include "string.h"
@@ -7,9 +8,14 @@
 #include "irq.h"
 #include "bottom_half.h"
 
+#include "exception.h"
 #include "task.h"
 
-#define INPUT_BUFFER_SIZE 1024
+#include "signal.h"
+
+#include "mmu.h"
+
+#define INPUT_BUFFER_SIZE 64
 
 void system_start()
 {
@@ -17,108 +23,179 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 3.1.0\n");
+    uart_print("Version : 4.4.2\n");
     uart_print("-------------------------\n");
+    get_board_revision();
+    get_vc_memory();
+    /*
+    get_frame_buffer();
+    showpicture();
+    */
 }
 
-void make_exc()
+void delay_c(char c)
 {
-    uart_puts("exception happen!!!!!\n");
-    unsigned int r;
-    r = *((volatile unsigned int *)0xFFFFFFFFFF000000);
-
-    r++;
-}
-
-void bottom_half_0()
-{
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 10000; i++)
     {
-        uart_puts(".");
+        uart_send(c);
         // very very very slow in real rpi3, but very very very fast in qemu
         asm volatile(
             "mov  x0, #0xfffff\n"
-            "loop_bottom_half_0: subs  x0, x0, #1\n"
-            "bne   loop_bottom_half_0\n");
+            "loop_delay_c_0: subs  x0, x0, #1\n"
+            "bne   loop_delay_c_0\n");
     }
-    uart_send('\n');
 }
 
-
-void task_1(){
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    for (int i = 0; i < 10000; i++)
+void delay(unsigned long num)
+{
+    for (unsigned long i = 0; i < num; i++)
     {
-        uart_puts("1...\n");
-        // very very very slow in real rpi3, but very very very fast in qemu
-        asm volatile(
-            "mov  x0, #0xffffff\n"
-            "loop_task_1_0: subs  x0, x0, #1\n"
-            "bne   loop_task_1_0\n");
+        asm volatile("nop");
+    }
+}
 
-        if(check_reschedule())
+/* User task */
+void user_task_3()
+{
+    // delay_c, depend on cpu frequency, so in rpi3 B+ and qemu is different
+    delay_c('3');
+}
+
+void user_task_4()
+{
+    // delay_c, depend on cpu frequency, so in rpi3 B+ and qemu is different
+    delay_c('4');
+}
+
+void user_syscall_test()
+{
+    int pid = fork();
+    //int pid = 0;
+    if (pid == 0)
+    {
+        printf("\nPID: %d\n\r", pid);
+        exec((unsigned long)user_task_4);
+    }
+    else
+    {
+        printf("\nPID: %d\n\r", pid);
+        exec((unsigned long)pcsh);
+        exit(0);
+    }
+}
+
+/* Kernel task */
+void task_1()
+{
+    printf("\ntask_id: %d\n", get_taskid());
+    delay_c('1');
+}
+
+void task_11()
+{
+    printf("\ntask_id: %d\n", get_taskid());
+    delay_c('_');
+}
+
+void task_111()
+{
+    printf("\ntask_id: %d\n", get_taskid());
+    delay_c('?');
+}
+
+void task_2()
+{
+    do_exec((unsigned long)user_syscall_test);
+    while (check_reschedule())
+        schedule();
+}
+
+void task_3()
+{
+    do_exec((unsigned long)user_task_3);
+    //do_exec((unsigned long)&pcsh);
+    while (check_reschedule())
+        schedule();
+}
+
+void task_4()
+{
+    while (1)
+    {
+        bottom_half_router();
+        if (check_reschedule())
             schedule();
     }
 }
 
-void task_2(){
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    for (int i = 0; i < 10000; i++)
-    {
-        uart_puts("2...\n");
-        // very very very slow in real rpi3, but very very very fast in qemu
-        asm volatile(
-            "mov  x0, #0xffffff\n"
-            "loop_task_2_0: subs  x0, x0, #1\n"
-            "bne   loop_task_2_0\n");
-        if(check_reschedule())
-            schedule();
-    }
+void foo()
+{
+    int tmp = 5;
+    printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+    exit(0);
 }
 
-void task_3(){
-    // delay, depend on cpu frequency, so in rpi3 B+ and qemu is different
-    for (int i = 0; i < 10000; i++)
+void test()
+{
+    // int cnt = 1;
+    register int cnt = 1;
+    if (fork() == 0)
     {
-        uart_puts("3...\n");
-        // very very very slow in real rpi3, but very very very fast in qemu
-        asm volatile(
-            "mov  x0, #0xffffff\n"
-            "loop_task_3_0: subs  x0, x0, #1\n"
-            "bne   loop_task_3_0\n");
-
-        if(check_reschedule())
-            schedule();
+        fork();
+        delay(10000);
+        fork();
+        while (cnt < 10)
+        {
+            // printf("Task id: %d, cnt: %d address: %x\n\r", get_taskid(), cnt, &cnt);
+            printf("Task id: %d, cnt: %d \n\r", get_taskid(), cnt);
+            delay(1000000);
+            ++cnt;
+        }
+        exit(0);
+        printf("Should not be printed\n\r");
+    }
+    else
+    {
+        // printf("Task %d before exec, cnt address 0x%x, cnt value %d\n\r", get_taskid(), &cnt, cnt);
+        printf("Task %d before exec, cnt value %d\n\r", get_taskid(), cnt);
+        //kill(1, SIGKILL);
+        exec(foo);
     }
 }
+void user_test()
+{
+    do_exec((unsigned long)test);
+}
+
+#define KERNEL_UART0_DR        ((volatile unsigned int*)0xFFFFFFFFFFE00000)
+#define KERNEL_UART0_FR        ((volatile unsigned int*)0xFFFFFFFFFFE00018)
 
 int main()
 {
-    //_irq_init();
-
-    *ENABLE_IRQ2 = 1 << 25;
-
     // set uart
     uart_init();
 
+    char *s="Writing through MMIO mapped in higher half!\r\n";
+
+
+    mmu_init();
+
+    uart_puts("Writing through identity mapped MMIO.\n");
+
+    // test mapping
+    while(*s) {
+        /* wait until we can send */
+        do{asm volatile("nop");}while(*KERNEL_UART0_FR&0x20);
+        /* write the character to the buffer */
+        *KERNEL_UART0_DR=*s++;
+    }
+
+    init_printf(0, putc);
+    signal_init();
+
     system_start();
 
-    get_board_revision();
-    get_vc_memory();
-
-    get_frame_buffer();
-    showpicture();
-
-    // enroll system call to bottom_half
-    bottom_half_t n = {
-        0,
-        bottom_half_0};
-    bottom_half_enroll(n);
-
-    unsigned long t;
-    asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(t));
-    uart_send_int(t);
+    // enable_irq();
 
     /* You can't know Current EL, if you in EL0 */
     /*
@@ -127,24 +204,26 @@ int main()
     uart_puts("\n");
     */
 
-    // core timer enable, every 1ms 
-    syscall1(0, 1);
+    task_init();
+    /*
+    privilege_task_create((unsigned long)task_11, 0);
+    privilege_task_create((unsigned long)task_111, 0);
+    */
+    privilege_task_create((unsigned long)task_1, 0);
+    privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
+    privilege_task_create((unsigned long)task_3, 0);
+    privilege_task_create((unsigned long)task_4, 0);
+    privilege_task_create((unsigned long)user_test, 0);
 
-    privilege_task_create(task_1);
-    privilege_task_create(task_2);
-    privilege_task_create(task_3);
-
-    schedule();
-
-
-/*
+    // core timer enable, every 1ms
+    core_timer(1);
+    //_core_timer_enable();
     while (1)
     {
-        uart_puts("=Shell Start=\n");
-        pcsh();
-        uart_puts("=Shell End=\n");
+        /*
+        schedule();
+    */
     }
-*/
 
     return 0;
 }

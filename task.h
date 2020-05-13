@@ -1,66 +1,104 @@
+#ifndef _TASK_H_
+#define _TASK_H_
 
+#include "irq.h"
 
-typedef struct task_t{
-    int id;
-    void (*func)();
-}task_t;
+#define PSR_MODE_EL0t 0x00000000
+#define PSR_MODE_EL1t 0x00000004
+#define PSR_MODE_EL1h 0x00000005
+#define PSR_MODE_EL2t 0x00000008
+#define PSR_MODE_EL2h 0x00000009
+#define PSR_MODE_EL3t 0x0000000c
+#define PSR_MODE_EL3h 0x0000000d
 
-task_t task_pool[64];
+#define PF_KTHREAD 0x00000002
+#define PF_FORK 0x00000004
 
-static int task_pool_len = 0;
+#define TASK_NUM 16
+enum
+{
+    TASK_IDLE,
+    TASK_RUNNING,
+    TASK_ZOMBIE
+};
 
-static char kstack_pool[64][4096];
+typedef struct cpu_context_t
+{
+    unsigned long x19;
+    unsigned long x20;
+    unsigned long x21;
+    unsigned long x22;
+    unsigned long x23;
+    unsigned long x24;
+    unsigned long x25;
+    unsigned long x26;
+    unsigned long x27;
+    unsigned long x28;
+    unsigned long fp;
+    unsigned long sp;
+    unsigned long pc;
+} cpu_context_t;
 
-static int runqueue[64];
+/*
+SP_EL0: The address of user mode’s stack pointer.
 
-static int runqueue_len = 0;
+ELR_EL1: The program counter of user mode’s procedure.
 
-void privilege_task_create(void(*func)()){
+SPSR_EL1: The CPU state of user mode.
+*/
+typedef struct user_context_t
+{
+    unsigned long regs[31];
+    unsigned long sp;
+    unsigned long pc;
+    unsigned long pstate;
+} user_context_t;
 
-    task_t task = {
-        task_pool_len,
-        func
-    };
+typedef struct task_t
+{
+    cpu_context_t cpu_context;
+    long state;
+    long counter;
+    long priority;
+    long preempt_count;
+    unsigned long stack;
+    unsigned long flags;
+    unsigned long signal_source;
+    //unsigned long user_context_num;
+} task_t;
 
-    task_pool[task_pool_len++] = task;
+extern int get_current();
+extern void set_current(int);
+extern unsigned long ret_from_fork();
+extern void switch_to(task_t *, task_t *, unsigned long);
 
-    char *stack = kstack_pool[task.id];
+void schedule();
 
-    // asm volatile("mov sp, %0" : "=r"(stack));
+int privilege_task_create(unsigned long func, unsigned long arg);
+user_context_t *task_user_context(task_t *task);
 
-    runqueue[runqueue_len++] = task.id;
+int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack);
 
-}
+int do_exec(unsigned long pc);
 
-extern void switch_to(task_t*, task_t*);
+int do_fork();
 
-extern struct task_t* get_current();
+void task_init();
 
-void context_switch(task_t *next){
-    next->func();
-    // switch_to(get_current(), next);
-}
+void context_switch(int task_id);
 
-static int schedule_index = 0;
+void schedule();
 
-int schedule_cnt = 0;
+int check_reschedule();
 
-void schedule(){
-    // uart_send_int(schedule_cnt);
-    
-    schedule_index = (schedule_index + 1) % task_pool_len;
-    int task_id = schedule_index;
-    task_pool[task_id].func();
+void timer_tick();
 
+void schedule_cnt_add(int n);
 
-}
+void exit_process(int task_id);
 
-int check_reschedule(){
-    // every 500ms, reschdule
-    if(schedule_cnt > 500){
-        schedule_cnt = 0;
-        return 1;
-    }
-    else
-        return 0;
-}
+task_t *task(int task_id);
+
+unsigned long task_signal_source();
+
+#endif

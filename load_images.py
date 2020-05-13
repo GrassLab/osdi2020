@@ -24,7 +24,7 @@ ser.flush()
 ser.flushInput()
 ser.flushOutput()
 
-kernel_path = './other_kernels/kernel8.img'
+#kernel_path = './other_kernels/kernel8.img'
 kernel_path = args.kernel
 #kernel_path = './other_kernels/kernel8_2.img'
 #kernel_path = './kernel8.img'

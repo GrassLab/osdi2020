@@ -3,6 +3,7 @@
 #include "string.h"
 #include "mailbox.h"
 #include "uart.h"
+#include "syscall.h"
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -61,41 +62,40 @@ void uart_init()
     *UART0_CR = 0x301;       // enable Tx, Rx, FIFO
 }
 
-void uart_send(unsigned int c)
+void _uart_send(unsigned int c)
 {
-    /* wait until we can send */
     do
     {
         asm volatile("nop");
     } while (*UART0_FR & 0x20);
-    /* write the character to the buffer */
     *UART0_DR = c;
+}
+
+char _uart_recv()
+{
+    do
+    {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x10);
+    return (char)(*UART0_DR);
+}
+
+void _uart_puts(char *s)
+{
+    while (*s)
+    {
+        /* convert newline to carrige return + newline */
+        if (*s == '\n')
+            _uart_send('\r');
+        _uart_send(*s++);
+    }
 }
 
 char uart_getc()
 {
-    char r;
-    /* wait until something is in the buffer */
-    do
-    {
-        asm volatile("nop");
-        // asm volatile("wfi");
-    } while (*UART0_FR & 0x10);
-    /* read it and return */
-    r = (char)(*UART0_DR);
+    char r = uart_recv();
     /* convert carrige return to newline */
     return r == '\r' ? '\n' : r;
-}
-
-char uart_recv()
-{
-    /* wait until something is in the buffer */
-    do
-    {
-        asm volatile("nop");
-    } while (*UART0_FR & 0x10);
-    /* read it and return */
-    return (char)(*UART0_DR);
 }
 
 void uart_puts(char *s)
@@ -195,4 +195,14 @@ int uart_gets(char *buf, int buf_size)
         return -1;
 
     return i;
+}
+
+void putc(void *p, char c)
+{
+    uart_send(c);
+}
+
+void _putc(void *p, char c)
+{
+    _uart_send(c);
 }

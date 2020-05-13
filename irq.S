@@ -1,13 +1,17 @@
-.global _irq_init
-_irq_init:
-    msr DAIFclr, #0xf
-    mrs x0, hcr_el2
-    orr x0, x0, #16
-    msr hcr_el2, x0
-    
+/*
+.global irq_vector_init
+irq_vector_init:
+    adr x0, vectors     // load VBAR_EL1 with virtual
+    msr vbar_el1, x0        // vector table address
+    ret
+*/
+
+.global enable_irq
+enable_irq:
+    msr    daifclr, #2 
     ret
 
-.global _irq_end
-_irq_end:
-    msr DAIFset, #0xf
+.global disable_irq
+disable_irq:
+    msr daifset, #2
     ret
