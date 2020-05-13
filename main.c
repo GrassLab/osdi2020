@@ -13,6 +13,8 @@
 
 #include "signal.h"
 
+#include "mmu.h"
+
 #define INPUT_BUFFER_SIZE 64
 
 void system_start()
@@ -165,10 +167,29 @@ void user_test()
     do_exec((unsigned long)test);
 }
 
+#define KERNEL_UART0_DR        ((volatile unsigned int*)0xFFFFFFFFFFE00000)
+#define KERNEL_UART0_FR        ((volatile unsigned int*)0xFFFFFFFFFFE00018)
+
 int main()
 {
     // set uart
     uart_init();
+
+    char *s="Writing through MMIO mapped in higher half!\r\n";
+
+
+    mmu_init();
+
+    uart_puts("Writing through identity mapped MMIO.\n");
+
+    // test mapping
+    while(*s) {
+        /* wait until we can send */
+        do{asm volatile("nop");}while(*KERNEL_UART0_FR&0x20);
+        /* write the character to the buffer */
+        *KERNEL_UART0_DR=*s++;
+    }
+
     init_printf(0, putc);
     signal_init();
 

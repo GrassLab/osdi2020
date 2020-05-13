@@ -24,10 +24,11 @@ SECTIONS
     _end = .;
 }
 __bss_size = (__bss_end - __bss_start)>>3;
-*/ 
+*/
 
 SECTIONS
 {
+    /*
     . = 0x80000;
     .text : { *(.text) }
     .data : { *(.data) }
@@ -37,6 +38,30 @@ SECTIONS
         *(.bootloader) ;
         __stop_bootloader = . ;
     }
+    */
+
+    //. = 0xffff000000000000;
+    . = 0x80000;
+    .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
+    .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
+    . = ALIGN(4096);
+    PROVIDE(_data = .);
+    .data : { *(.data .data.* .gnu.linkonce.d*) }
+    .bss (NOLOAD) : {
+        . = ALIGN(16);
+        __bss_start = .;
+        *(.bss .bss.*)
+        *(COMMON)
+        __bss_end = .;
+    }
+    .bootloader : {
+        __start_bootloader = . ;
+        *(.bootloader) ;
+        __stop_bootloader = . ;
+    }
+    . = ALIGN(4096);
+    _end = .;
+
 }
 
 /*

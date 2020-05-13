@@ -1,4 +1,4 @@
-.section ".text"
+.section ".text.boot"
 _start:
   # get cpuid
   mrs x1, mpidr_el1
@@ -37,7 +37,7 @@ check_EL2:
   # switch to EL1
   mov x0, 0x5
   msr spsr_el2, x0
-  adr x0, ret2EL1 
+  adr x0, ret2EL1
   msr elr_el2, x0
   eret
 
@@ -66,7 +66,7 @@ ret2EL0:
 
 
 b main
- 
+
 loop:
   wfe
   b loop
