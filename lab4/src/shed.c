@@ -203,52 +203,58 @@ int _do_fork() {
         return;
     }
 
-    struct pt_regs *childregs = task_pt_regs(p);
-	memzero((unsigned long)childregs, sizeof(struct pt_regs));
-	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
+    // struct pt_regs *childregs = task_pt_regs(p);
+    // struct pt_regs *cur_regs = task_pt_regs(current);
+    // *childregs = *cur_regs;
+    // childregs->regs[0] = 0;
 
-    p->cpu_context.x19 = current->cpu_context.x19;
-    p->cpu_context.x20 = current->cpu_context.x20;
-    p->cpu_context.x21 = current->cpu_context.x21;
-    p->cpu_context.x22 = current->cpu_context.x22;
-    p->cpu_context.x23 = current->cpu_context.x23;
-    p->cpu_context.x24 = current->cpu_context.x24;
-    p->cpu_context.x25 = current->cpu_context.x25;
-    p->cpu_context.x26 = current->cpu_context.x26;
-    p->cpu_context.x27 = current->cpu_context.x27;
-    p->cpu_context.x28 = current->cpu_context.x28;
+	// memzero((unsigned long)childregs, sizeof(struct pt_regs));
+	// memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
 
-    p->task_id = n_task_id;
-    p->counter = 3;
-    p->state = TASK_RUNNING;
-    p->preempt_count = 1;
-    p->cpu_context.pc = fork_child_exit;
-    p->cpu_context.sp = (unsigned long) childregs;
-    p->parent_id = current->task_id;
-    n_task_id++;
+    // p->cpu_context.x19 = current->cpu_context.x19;
+    // p->cpu_context.x20 = current->cpu_context.x20;
+    // p->cpu_context.x21 = current->cpu_context.x21;
+    // p->cpu_context.x22 = current->cpu_context.x22;
+    // p->cpu_context.x23 = current->cpu_context.x23;
+    // p->cpu_context.x24 = current->cpu_context.x24;
+    // p->cpu_context.x25 = current->cpu_context.x25;
+    // p->cpu_context.x26 = current->cpu_context.x26;
+    // p->cpu_context.x27 = current->cpu_context.x27;
+    // p->cpu_context.x28 = current->cpu_context.x28;
 
-    task[n_tasks] = p;
-    n_tasks %= NR_TASKS;
-    n_tasks++;
+    // p->task_id = n_task_id;
+    // p->counter = 3;
+    // p->state = TASK_RUNNING;
+    // p->preempt_count = 1;
+    // p->cpu_context.pc = fork_child_exit;
+    // p->cpu_context.sp = (unsigned long) childregs;
+    // p->parent_id = current->task_id;
+    // n_task_id++;
 
-    struct pt_regs *cur_regs = task_pt_regs(current);
-    struct pt_regs *regs = task_pt_regs(p);
+    // task[n_tasks] = p;
+    // n_tasks %= NR_TASKS;
+    // n_tasks++;
 
-    memzero((unsigned long)regs, sizeof(*regs));
-    regs->pc = cur_regs->pc;
-    regs->pstate = cur_regs->pstate;
-    unsigned long stack = get_free_page(); //allocate new user stack
-    if (!stack) {
-        return -1;
-    }
-    regs->sp = stack + PAGE_SIZE;
-    p->stack = stack;
+    // // struct pt_regs *cur_regs = task_pt_regs(current);
+    // // struct pt_regs *regs = task_pt_regs(p);
+
+    // // memzero((unsigned long)regs, sizeof(*regs));
+    // // regs->pc = cur_regs->pc;
+    // // regs->pstate = cur_regs->pstate;
+    // unsigned long stack = get_free_page(); //allocate new user stack
+    // if (!stack) {
+    //     return -1;
+    // }
+    // // regs->sp = stack + PAGE_SIZE;
+    // p->stack = stack;
 
     // print created message
     uart_puts("===========================================\r\n");
     uart_puts("Task ");
     uart_print_int(current->task_id);
     uart_puts(" called fork\r\n");
+
+    _privilege_task_create(0, 0, 0);
 
     uart_puts("Create new task: ");
     uart_print_int(p->task_id);
@@ -258,6 +264,6 @@ int _do_fork() {
     uart_puts("===========================================\r\n");
     
     enable_preempt();
-    return p->task_id;
+    return task[n_tasks-1]->task_id;
 }
 

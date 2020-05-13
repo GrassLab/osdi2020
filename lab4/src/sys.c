@@ -19,7 +19,7 @@ int do_fork() {
 	uart_puts("[In do_fork()] ret: ");
 	uart_print_int(f);
 	uart_puts("\r\n");
-	return _do_fork();
+	return f;
 }
 
 void do_exit() {
