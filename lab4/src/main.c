@@ -6,6 +6,7 @@
 #include "irq.h"
 #include "config.h"
 #include "thread.h"
+#include "syscall.h"
 
 task_manager_t TaskManager;
 task_t* current;
@@ -114,6 +115,8 @@ void main()
     init_uart();
     init_lfb();
     init_printf(0, putc);
+    printf("fsaf\n");
+
     init_task_manager();
 
 

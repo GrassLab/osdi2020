@@ -5,7 +5,7 @@
 
 
 extern task_t* current;
-extern check_reschedule();
+extern int check_reschedule();
 
 unsigned int get_syscall_number(unsigned int trapframe){
 	unsigned int x8 = *(unsigned int*)(trapframe+8*8);

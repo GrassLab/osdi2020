@@ -10,7 +10,7 @@ unsigned int c = 0;
 unsigned int local_timer_count = 0;
 unsigned int core_timer_count = 0;
 extern task_t* current;
-extern check_reschedule();
+extern int check_reschedule();
 
 const char *entry_error_messages[] = {
 	"SYNC_INVALID_EL1t",

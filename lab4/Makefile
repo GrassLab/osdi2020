@@ -1,7 +1,7 @@
 ARMGNU ?= aarch64-linux-gnu
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only 
 ASMOPS = -Iinclude
 BUILD_DIR = build
 SRC_DIR = src
