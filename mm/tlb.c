@@ -83,7 +83,8 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	  if (!table[page_ind])
 	    {
 	      // alloc new page for page table
-	      table[page_ind] = pd_encode_table (page_alloc_virt (KPGD, 0, 1));
+	      table[page_ind] =
+		pd_encode_table (page_alloc_virt (KPGD, 0, 1));
 	      if (table[page_ind] == pd_encode_table (0))
 		return -1;
 	    }
