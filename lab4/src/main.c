@@ -90,15 +90,18 @@ void user_test(){
 }
 
 void idle(){
-	uart_puts("idle\r\n");
+	// uart_puts("idle\r\n");
   while(1){
+    uart_puts("#run tasks: ");
+    uart_print_int(num_runnable_tasks());
+    uart_puts("\r\n");
     if(num_runnable_tasks() == 1) {
-		uart_puts("idle\r\n");
+		// uart_puts("idle\r\n");
       break;
     }
     schedule();
-	uart_puts("schedule\r\n");
-    delay(1000000);
+	  uart_puts("schedule\r\n");
+    delay(1000000000);
   }
   uart_puts("Test finished\n");
   while(1);
@@ -114,7 +117,7 @@ void main() {
   privilege_task_create(user_test);
 //   privilege_task_create(user_test);
 
-//   idle();
+  // idle();
 }
 
 // void main()

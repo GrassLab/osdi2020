@@ -34,7 +34,7 @@ int num_runnable_tasks() {
     int cnt = 0;
     for(int i=0; i<NR_TASKS; i++) {
         if(task[i]) {
-            if(task[i]->state == TASK_RUNNING) {
+            if(task[i]->state == TASK_RUNNING && task[i]->counter > 0) {
                 cnt++;
             }
         }
@@ -181,7 +181,7 @@ void _do_exec(void(*func)()) {
     memzero((unsigned long)regs, sizeof(*regs));
     regs->pc = (unsigned long)func;
     regs->pstate = PSR_MODE_EL0t;
-    unsigned long stack = get_free_page(); //allocate new user stack
+    unsigned long stack = get_user_page(current->task_id); //allocate new user stack
     if (!stack) {
         return -1;
     }
@@ -190,6 +190,8 @@ void _do_exec(void(*func)()) {
     uart_puts("Task ");
     uart_print_int(current->task_id);
     uart_puts(" do_exec done.\r\n");
+    // switch_to(current);
+    return;
 }
 
 void _do_exit() {

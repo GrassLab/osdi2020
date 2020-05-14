@@ -38,9 +38,9 @@ _el1_exception_handler(unsigned long type, unsigned long esr, unsigned long elr,
         else if(iss == 0x0) {
             // svc #0 for time interrupts
             // uart_puts("#0\r\n");
-            uart_puts("sys #call: ");
+            uart_puts("[sys #call: ");
             uart_print_int(sys_call);
-            uart_puts("\r\n");
+            uart_puts("]\r\n");
 
             struct task_struct *current = get_current_task();
             struct pt_regs *current_regs = task_pt_regs(current);
@@ -51,7 +51,7 @@ _el1_exception_handler(unsigned long type, unsigned long esr, unsigned long elr,
             } else if(sys_call == SYS_READ_NUMBER) {
                 do_uart_read(arg);
             } else if(sys_call == SYS_EXEC_NUMBER) {
-                uart_puts("exec\r\n");
+                uart_puts("sys exec\r\n");
                 do_exec(arg);
             } else if(sys_call == SYS_FORK_NUMBER) {
                 ret = do_fork();

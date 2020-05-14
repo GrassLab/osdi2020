@@ -9,7 +9,7 @@
 #define SECTION_SIZE			(1 << SECTION_SHIFT)	
 
 #define PBASE 0x3F000000
-#define LOW_MEMORY              	(2 * SECTION_SIZE)
+#define LOW_MEMORY              	(SECTION_SIZE)
 #define HIGH_MEMORY             PBASE
 
 #define LOW_KERNEL_STACK        LOW_MEMORY
