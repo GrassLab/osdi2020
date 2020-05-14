@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stddef.h>
+#include <irq.h>
 #include "tlb.h"
 
 void *
@@ -161,6 +162,7 @@ void *
 page_alloc (size_t page_num)
 {
   size_t i, cnt, target;
+  critical_entry ();
   cnt = 0;
   for (i = 0; i < PAGE_POOL_SIZE; ++i)
     {
@@ -183,12 +185,14 @@ page_alloc (size_t page_num)
 	  // just set in_used bit
 	  for (i = 0; i < cnt; ++i)
 	    page_init (&page_pool[target + i], 0, 0);
+	  critical_exit ();
 	  return (void *) (target << 12);
 	}
     }
   // physical address 0x0 for kernel PGD
   // it is already in used and impossible alloc again
   // so return NULL for error
+  critical_exit ();
   return NULL;
 }
 
@@ -197,6 +201,7 @@ page_free (void *paddr, size_t page_num)
 {
   struct page_struct *p;
   size_t i;
+  critical_entry ();
   p = &page_pool[(size_t) paddr >> 12];
   for (i = 0; i < page_num; ++i)
     {
@@ -205,6 +210,7 @@ page_free (void *paddr, size_t page_num)
       p->virt_addr = 0;
       ++p;
     }
+  critical_exit ();
 }
 
 void
