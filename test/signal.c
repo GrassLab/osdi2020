@@ -6,7 +6,7 @@
 #include <uart.h>
 
 static void
-delay (int sec)
+delay (size_t sec)
 {
   size_t t, cnt, freq;
   sys_get_time (&cnt, &freq);

@@ -120,7 +120,7 @@ _putchar (char character)
 size_t
 do_uart_read (char *buf, size_t count)
 {
-  int i;
+  size_t i;
   for (i = 0; i < count; ++i)
     *buf++ = uart_getc ();
   return i;
@@ -135,7 +135,7 @@ sys_uart_read (char *buf, size_t count)
 size_t
 do_uart_write (char *buf, size_t size)
 {
-  int i;
+  size_t i;
   for (i = 0; i < size; ++i)
     uart_send (*buf++);
   return i;

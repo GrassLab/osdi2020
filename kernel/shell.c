@@ -107,7 +107,7 @@ loadimg (unsigned long address)
   uart_hex (address);
   uart_puts ("\n");
   uart_puts ("Please give me the image.\n");
-  uart_read ((char *) &img_size, 4);
+  do_uart_read ((char *) &img_size, 4);
   ftoa (get_time (), buf);
   uart_puts ("[");
   uart_puts (buf);
@@ -137,7 +137,7 @@ void
 loadimg_jmp (void *address, unsigned long img_size)
 {
   // save image base
-  uart_read ((char *) address, img_size);
+  do_uart_read ((char *) address, img_size);
   ((void (*)(void)) (address)) ();
 }
 

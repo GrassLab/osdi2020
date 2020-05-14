@@ -103,7 +103,7 @@ lfb_init ()
 void
 lfb_showpicture (char buf[3])
 {
-  int x, y;
+  unsigned int x, y;
   unsigned char *ptr = lfb;
   char *data = homer_data, pixel[4];
 
