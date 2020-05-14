@@ -40,12 +40,15 @@ void syscall_router(unsigned int trapframe){
             uart_puts(x0);
             break;
         case SYS_EXEC:
+            printf("[info] svc exec sys_call command \r\n");
             do_exec(x0);
             break;
         case SYS_FORK:
-            do_fork();
+            printf("[info] svc fork sys_call command \r\n");
+            syscall_return_value = do_fork();
             break;
         case SYS_EXIT:
+            printf("[info] svc exit sys_call command \r\n");
             do_exit();
             break;
         default:
@@ -94,6 +97,7 @@ void exception_handler(unsigned int trapframe)
     // Set trapframe
     task_t *task = get_current();
     printf("In the exception_handler , current task id is %d\n", current->task_id);
+    // printf("In the exception_handler , current task id2 is %d\n", task->task_id);
 
     //set user mode conetxt
     task->user_context.sp_el0 = sp_el0;

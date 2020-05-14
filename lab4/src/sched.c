@@ -41,8 +41,8 @@ void _schedule(){
         if (TaskManager.task_pool[next_task_id].state != ZOMBIE) {
             // TaskManager.runningTaskId = next_task_id;
             task_t* new_task = &TaskManager.task_pool[next_task_id]; 
-            switch_to(new_task);
             printf("next is %d!\n", next_task_id);
+            switch_to(new_task);
             return;
         }
         next_task_id = (next_task_id + 1) % TaskManager.task_num;
@@ -52,15 +52,23 @@ void _schedule(){
 
 void switch_to(task_t * next) 
 {
-	if (current == next){
+    if (current == next){
         // printf("the same task!\n");
 		return;
     }
+    printf("---\n");
+    printf("current number address is %x\n", current);
+    printf("current number address is %x\n", get_current());
+    set_current(next);
+    printf("current number address is %x\n", next);
+    printf("current number address is %x\n", get_current());
+    printf("---\n");
+
 	struct task_struct * prev = current;
 	current = next;
+    printf("switch start\n");
 	cpu_switch_to(prev, next);
     printf("switch finished\n");
-
 }
 
 void check_reschedule(){

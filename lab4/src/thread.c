@@ -56,13 +56,14 @@ task_t* privilege_task_create(unsigned long fn){
 }
 
 void do_exec(void(*func)()){
-    printf("exec--- id is: %d\n", current->task_id);
+    task_t *task = get_current();
+    printf("exec--- id is: %d\n", task->task_id);
+    task->mode = USER_MODE;
     unsigned long user_stack = current->user_context.sp_el0;
     unsigned long user_cpu_state = 0x0;
     asm volatile("msr sp_el0, %0" :: "r" (user_stack));
     asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
     asm volatile("msr elr_el1, %0" :: "r" (func));
-    current->mode = USER_MODE;
     asm volatile("eret");
 }
 
@@ -104,6 +105,7 @@ int do_fork(){
     // unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[current->task_id]) - current->trapframe;
     // unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->regs[29];
 
+    child->trapframe = (unsigned long) &TaskManager.kstack_pool[child->task_id] - trapframe_offset;
 
     child->user_context.sp_el0 = (unsigned long) &TaskManager.ustack_pool[child->task_id] - ustack_offset;
     child->user_context.spsr_el1 = parent->user_context.spsr_el1;
@@ -111,7 +113,9 @@ int do_fork(){
     
     child->cpu_context.fp = (unsigned long) &TaskManager.ustack_pool[child->task_id] - fp_offset;
     child->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[child->task_id] - trapframe_offset;
-    child->cpu_context.pc = (unsigned long) ret_from_fork;
+    child->cpu_context.pc = (unsigned long) fork_child_exit;
+
+    printf("pc location is: %x\n", fork_child_exit);
 
     child->state = THREAD_RUNNABLE;
     child->mode = KERNEL_MODE;
@@ -129,13 +133,11 @@ int do_fork(){
 
 extern struct task* get_current();
 
-void context_switch(struct task* next){
-    struct task* prev = current;
-
-    current = next;
-    
-    cpu_switch_to(prev, next);
-}
+// void context_switch(struct task* next){
+//     struct task* prev = current;
+//     current = next;
+//     cpu_switch_to(prev, next);
+// }
 
 void schedule_tail(void) 
 {
@@ -144,7 +146,7 @@ void schedule_tail(void)
 
 void do_exit()
 {
-    printf("current id is %d\n", current->task_id);
+    printf("In the exit, current id is %d\n", current->task_id);
     current->state = ZOMBIE;
     TaskManager.task_num--;
     schedule();

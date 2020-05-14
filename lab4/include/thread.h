@@ -79,6 +79,7 @@ void context_switch(struct task* next);
 void cpu_switch_to(struct task*,struct task*);
 struct task* get_current();
 void ret_from_fork();
+void fork_child_exit();
 void schedule_tail(void);
 void preempt_enable(void);
 void do_exit();

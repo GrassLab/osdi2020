@@ -90,12 +90,11 @@ void core_timer_handler() {
 	core_timer_count += 1;
 
 	printf("now current id is: %d\n", current->task_id);
-	// current->counter--;
-	// if(current->counter <= 0){
-	// 	current->rescheduled = 1;
-	// 	printf("reshedule flag is set: %d\n", current->task_id);
-	// }
-	schedule();
+	current->counter--;
+	if(current->counter <= 0){
+		current->rescheduled = 1;
+		printf("reshedule flag is set: %d\n", current->task_id);
+	}
 	clean_core_timer();
 	return;
 }
@@ -111,6 +110,6 @@ void handle_irq(void) {
 	else{
 		printf("%%%%%%%%%%%%%%%%%%%%%%\n");
 	}
-	// check_reschedule();
+	check_reschedule();
 }
 

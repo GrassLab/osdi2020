@@ -110,6 +110,7 @@ void foo(){
 
 void test_fork(){
     int cnt = 1;
+    printf("ready for fork\n");
     if (fork() == 0) {
         fork();
         delay(100000);
@@ -129,15 +130,15 @@ void test_fork(){
 
 
 void user_task2(){
-    exec(func2);
+    do_exec(func2);
 }
 
 void user_task(){
-    exec(func);
+    do_exec(func);
 }
 
 void exec_fork(){
-    exec(test_fork);
+    do_exec(test_fork);
 }
 
 void main()
