@@ -3,7 +3,7 @@
 #include "tlb.h"
 
 void *
-page_alloc_virt (size_t virt_addr)
+page_alloc_virt (size_t PGD, size_t virt_addr)
 {
   void *new;
   size_t *PTE;
@@ -18,9 +18,9 @@ page_alloc_virt (size_t virt_addr)
        * we need promise the page tables of this
        * virtual address are already exist
        */
-      virt_addr = (size_t) new | 0xffff000000000000;
+      virt_addr = (size_t) new | KPGD;
     }
-  retval = map_virt_to_phys (KPGD, virt_addr, (size_t) new,
+  retval = map_virt_to_phys (PGD, virt_addr, (size_t) new,
 			     PAGE_SIZE, pd_encode_ram (0));
   if (retval)
     {
@@ -53,7 +53,8 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	  page_ind = (virt >> tlb_ind) & 0x1ff;
 	  if (!table[page_ind])
 	    {
-	      table[page_ind] = pd_encode_table (page_alloc_virt (0));
+	      // alloc new page for page table
+	      table[page_ind] = pd_encode_table (page_alloc_virt (KPGD, 0));
 	      if (table[page_ind] == pd_encode_table (0))
 		return -1;
 	    }
@@ -98,16 +99,14 @@ tlb_init ()
   PTE[3] = pd_encode_ram (PTE);
   // kernel
   // start from kernel stack
-  for (i = 0x7e000; i < ((size_t) _kernel_end & 0xffffffffffff); i += 0x1000)
+  for (i = 0x7e000; i < ((size_t) _kernel_end & ~KPGD); i += PAGE_SIZE)
     PTE[i >> 12] = pd_encode_ram ((size_t *) i);
   mmu_enable (PGD);
   // set used pages
-  PAGE_MAP_SET (0);
-  PAGE_MAP_SET (0x1000);
-  PAGE_MAP_SET (0x2000);
-  PAGE_MAP_SET (0x3000);
-  for (i = 0x7e000; i < ((size_t) _kernel_end & 0xffffffffffff); i += 0x1000)
-    PAGE_MAP_SET (i);
+  for (i = 0; i < 0x4000; i += PAGE_SIZE)
+    page_init (&page_pool[i >> 12], KPGD, i | KPGD);
+  for (i = 0x7e000; i < ((size_t) _kernel_end & ~KPGD); i += PAGE_SIZE)
+    page_init (&page_pool[i >> 12], KPGD, i | KPGD);
   // peripheral
   // ffffaaaa00000000-ffffaaaa01000000 -> 00003f000000-000040000000
   map_virt_to_phys (KPGD, 0xffffaaaa00000000, 0x3f000000, 0x1000000,
@@ -119,6 +118,7 @@ tlb_init ()
 }
 
 /* Return a page address (physical address)
+ * NULL for alloc fail
  * Note: not initialize
  * TODO: quickly
  */
@@ -126,16 +126,33 @@ void *
 page_alloc ()
 {
   size_t i;
-  for (i = 0; !PAGE_MAP_EMPTY (i) && PAGE_MAP_VALID (i); i += 0x1000);
-  if (!PAGE_MAP_VALID (i))
-    return NULL;
-  PAGE_MAP_SET (i);
-  return (void *) i;
+  for (i = 0; i < PAGE_POOL_SIZE; ++i)
+    if (!page_pool[i].in_used)
+      {
+	// just set in_used bit
+	page_init (&page_pool[i], 0, 0);
+	return (void *) (i << 12);
+      }
+  // physical address 0x0 for kernel PGD
+  // it is already in used and impossible alloc again
+  // so return NULL for error
+  return NULL;
 }
 
 void
 page_free (void *paddr)
 {
-  if (PAGE_MAP_VALID ((size_t) paddr))
-    PAGE_MAP_CLR ((size_t) paddr);
+  struct page_struct *p;
+  p = &page_pool[(size_t) paddr >> 12];
+  p->in_used = 0;
+  p->PGD = 0;
+  p->virt_addr = 0;
+}
+
+void
+page_init (struct page_struct *page, size_t PGD, size_t virt_addr)
+{
+  page->PGD = PGD;
+  page->virt_addr = virt_addr;
+  page->in_used = 1;
 }
