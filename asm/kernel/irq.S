@@ -1,6 +1,6 @@
 .section ".data"
 prev_daif:
-.qword 0
+.quad 0
 .section ".text"
 .globl enable_irq
 enable_irq:
