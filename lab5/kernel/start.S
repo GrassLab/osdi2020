@@ -78,12 +78,6 @@ el1_entry:
     orr x3, x2, x3
     str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 
-    // Map
-    mov x3, 0x40000000
-    orr x3, x2, x3
-    str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
-
-
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
 
