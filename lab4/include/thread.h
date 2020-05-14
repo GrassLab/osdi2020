@@ -32,10 +32,15 @@ struct user_context {
 
 typedef struct user_context user_context_t;
 
+typedef struct trapframe {
+	unsigned long regs[31];
+} __attribute__ ((aligned (8))) Trapframe;
+
 struct task {
     cpu_context_t cpu_context; 
     user_context_t user_context; 
     int task_id;
+    int parent_id;
     long state;
     long counter;
     int mode;
@@ -57,6 +62,7 @@ typedef struct task_manager task_manager_t;
 enum {
     THREAD_RUNNABLE,
     THREAD_NOT_RUNNABLE,
+    ZOMBIE,
 };
 
 enum {
@@ -75,8 +81,5 @@ struct task* get_current();
 void ret_from_fork();
 void schedule_tail(void);
 void preempt_enable(void);
-
-
-
-
+void do_exit();
 #endif

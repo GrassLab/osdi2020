@@ -34,13 +34,11 @@ const char *entry_error_messages[] = {
 	"ERROR_INVALID_EL0_32"	
 };
 
-void enable_interrupt_controller()
-{
+void enable_interrupt_controller() {
 	put32(ENABLE_IRQS_1, SYSTEM_TIMER_IRQ_1);
 }
 
-void show_invalid_entry_message(int type, unsigned long esr, unsigned long address)
-{
+void show_invalid_entry_message(int type, unsigned long esr, unsigned long address) {
 	_print("Type: ");
 	uart_send_int(type);
 	_print("\n");
@@ -59,7 +57,7 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 }
 
 
-void timestamp_handler(){
+void timestamp_handler() {
 	unsigned int time, timer_counter, timer_freq;
 	char buf[10];
     _memset(buf,'\0',10);
@@ -77,30 +75,32 @@ void timestamp_handler(){
 	uart_puts("\n");
 }
 
-void local_timer_handler(){
+void local_timer_handler() {
 	printf("Local timer interrupt, jiffies %d \r\n",local_timer_count);
 	local_timer_count += 1;
 	*LOCAL_TIMER_IRQ_CLR = (0xc0000000);// clear interrupt and reload.
 	return;
 }
 
-void core_timer_handler() 
-{
+void core_timer_handler() {
 	printf("Arm core timer interrupt, jiffies %d \r\n",core_timer_count);
 	unsigned int timer_freq;
 	asm volatile("mrs %0, sp_el0": "=r"(timer_freq)::);
 
 	core_timer_count += 1;
-	current->counter--;
-	if(current->counter <= 0){
-		current->rescheduled = 1;
-	}
+
+	printf("now current id is: %d\n", current->task_id);
+	// current->counter--;
+	// if(current->counter <= 0){
+	// 	current->rescheduled = 1;
+	// 	printf("reshedule flag is set: %d\n", current->task_id);
+	// }
+	schedule();
 	clean_core_timer();
 	return;
 }
 
-void handle_irq(void)
-{
+void handle_irq(void) {
 	unsigned int arm_local = *CORE0_INTR_SRC;
   	if (arm_local & 0x800){
 		local_timer_handler();
@@ -111,6 +111,6 @@ void handle_irq(void)
 	else{
 		printf("%%%%%%%%%%%%%%%%%%%%%%\n");
 	}
-	check_reschedule();
+	// check_reschedule();
 }
 

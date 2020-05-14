@@ -101,13 +101,43 @@ void func2(){
         delay(10000000);
     }
 }
- 
+
+void foo(){
+    int tmp = 5;
+    printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+    exit(0);
+}
+
+void test_fork(){
+    int cnt = 1;
+    if (fork() == 0) {
+        fork();
+        delay(100000);
+        fork();
+        while(cnt < 10) {
+            printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+            delay(100000);
+            ++cnt;
+        }
+        exit(0);
+        printf("Should not be printed\n");
+    } else {
+        printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
+        exec(foo);
+    }
+}
+
+
 void user_task2(){
-    do_exec(func2);
+    exec(func2);
 }
 
 void user_task(){
-    do_exec(func);
+    exec(func);
+}
+
+void exec_fork(){
+    exec(test_fork);
 }
 
 void main()
@@ -115,7 +145,6 @@ void main()
     init_uart();
     init_lfb();
     init_printf(0, putc);
-    printf("fsaf\n");
 
     init_task_manager();
 
@@ -123,19 +152,15 @@ void main()
     // task_t* new_task1 = privilege_task_create((unsigned long)&print);
     // task_t* new_task2 = privilege_task_create((unsigned long)&print2);
     // task_t* new_task3 = privilege_task_create((unsigned long)&print3);
-    task_t* new_task4 = privilege_task_create((unsigned long)&user_task);
-    task_t* new_task5 = privilege_task_create((unsigned long)&user_task2);
+    // task_t* new_task4 = privilege_task_create((unsigned long)&user_task);
+    // task_t* new_task5 = privilege_task_create((unsigned long)&user_task2);
+    task_t* new_task6 = privilege_task_create((unsigned long)&exec_fork);
 
     // shell();
     enable_interrupt_controller();
-    core_timer_enable();
 	enable_irq();
-
-
+    core_timer_enable();
     schedule();
-
-
-
 
     // echo everything back
     while(1) {

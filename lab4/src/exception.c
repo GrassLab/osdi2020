@@ -37,12 +37,16 @@ void syscall_router(unsigned int trapframe){
             printf("get input value is %d\n",c);
             break;
         case SYS_UART_WRITE:
+            uart_puts(x0);
             break;
         case SYS_EXEC:
             do_exec(x0);
             break;
         case SYS_FORK:
             do_fork();
+            break;
+        case SYS_EXIT:
+            do_exit();
             break;
         default:
             printf("syscall not found\n");
@@ -89,7 +93,7 @@ void exception_handler(unsigned int trapframe)
 
     // Set trapframe
     task_t *task = get_current();
-    printf("In the exception_handler , current task id is %d\n", task->task_id);
+    printf("In the exception_handler , current task id is %d\n", current->task_id);
 
     //set user mode conetxt
     task->user_context.sp_el0 = sp_el0;

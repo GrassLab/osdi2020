@@ -7,6 +7,7 @@
 #define SYS_UART_WRITE 17
 #define SYS_EXEC 19
 #define SYS_FORK 20
+#define SYS_EXIT 21
 
 int get_taskid();
 void get_input();

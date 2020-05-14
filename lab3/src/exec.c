@@ -21,7 +21,6 @@ struct cmd cmd_list[] = {
 
 
 void exec_exc(){
-    printf("fsdafasdf\n");
     _print("exec svc \n");
     asm volatile ("svc #1");
     // asm volatile ("brk #1");
