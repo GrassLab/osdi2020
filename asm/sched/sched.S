@@ -16,9 +16,13 @@ switch_to:
   ldp x25, x26, [x1, 16 * 3]
   ldp x27, x28, [x1, 16 * 4]
   ldp fp, lr, [x1, 16 * 5]
-  ldr x9, x10, [x1, 16 * 6]
+  ldp x9, x10, [x1, 16 * 6]
   mov sp,  x9
+  dsb ish
   msr ttbr0_el1, x10
+  tlbi vmalle1is
+  dsb ish
+  isb
   msr tpidr_el1, x1
   ret
 
