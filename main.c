@@ -23,7 +23,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 4.4.2\n");
+    uart_print("Version : 5.0.0\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -167,30 +167,37 @@ void user_test()
     do_exec((unsigned long)test);
 }
 
-#define KERNEL_UART0_DR        ((volatile unsigned int*)0xFFFFFFFFFFE00000)
-#define KERNEL_UART0_FR        ((volatile unsigned int*)0xFFFFFFFFFFE00018)
+#define KERNEL_UART0_DR ((volatile unsigned int *)0xFFFFFFFFFFE00000)
+#define KERNEL_UART0_FR ((volatile unsigned int *)0xFFFFFFFFFFE00018)
 
 int main()
 {
+
+    char *s = "Writing through MMIO mapped in higher half!\r\n";
+
     // set uart
     uart_init();
-
-    char *s="Writing through MMIO mapped in higher half!\r\n";
-
+    init_printf(0, putc);
 
     mmu_init();
 
+    init_printf(0, putc);
+
     uart_puts("Writing through identity mapped MMIO.\n");
+    printf("MMU Test\n");
 
     // test mapping
-    while(*s) {
+    while (*s)
+    {
         /* wait until we can send */
-        do{asm volatile("nop");}while(*KERNEL_UART0_FR&0x20);
+        do
+        {
+            asm volatile("nop");
+        } while (*KERNEL_UART0_FR & 0x20);
         /* write the character to the buffer */
-        *KERNEL_UART0_DR=*s++;
+        *KERNEL_UART0_DR = *s++;
     }
 
-    init_printf(0, putc);
     signal_init();
 
     system_start();
