@@ -2,6 +2,12 @@
 #include "timer.h"
 #include "libc.h"
 
+int bh_mod_mask;
+char bh_mask[32];
+char bh_active[32];
+
+bh_handler bh_base[32];
+
 void bottom_half_enable() {
   sys_core_timer_enable();
 }
