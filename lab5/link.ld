@@ -1,6 +1,8 @@
 SECTIONS
 {
-    . = 0x80000;
+    . = 0xffff000000000000;
+    . += 0x80000;
+    _kernel_start = .;
     .text : { *(.text) }
     .data : { *(.data) }
     .bss  : {

@@ -15,7 +15,7 @@ clean:
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@ -O0
 
 kernel8.img: $(OBJS)
-	aarch64-linux-gnu-ld  -nostartfiles $(OBJS) -T link.ld -o kernel8.elf
+	aarch64-linux-gnu-ld  $(OBJS) -T link.ld -o kernel8.elf
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
 
 debug: kernel8.img

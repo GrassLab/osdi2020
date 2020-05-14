@@ -63,6 +63,7 @@ void compair(char *buf) {
   }
   return;
 }
+
 void main() {
   uart_init();
   // wait_cycles(10000);
