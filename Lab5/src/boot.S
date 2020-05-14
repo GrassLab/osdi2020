@@ -86,8 +86,12 @@ main:
 
 page_table_create:
     mov x29,x30
-
-    adrp x0, pg_dir // PGD's page frame 
+    
+    // use physical address of page table
+    ldr x0, =pg_dir
+    lsl x0,x0,#16
+    lsr x0,x0,#16
+ 
     add  x1, x0, #PAGE_SIZE // PUD's page frame
     add  x2, x1, #PAGE_SIZE  // 1st PMD's page frame
     add  x14, x2, #PAGE_SIZE // 2nd PMD's page frame

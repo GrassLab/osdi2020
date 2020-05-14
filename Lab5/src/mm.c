@@ -1,8 +1,8 @@
 #include "include/mm.h"
-#include "include/printf.h"
 #include "include/uart.h"
 #include "include/arm/sysreg.h"
 #include "include/scheduler.h"
+#include "include/kernel.h"
 
 int remain_page = PAGE_ENTRY;
 unsigned long get_free_page() // this function can only call by 
@@ -41,19 +41,21 @@ unsigned long allocate_user_page(struct task_struct *task, \
 	if(page == 0){
 		return 0;
 	}
-	map_page(task,vir_addr,page); // maps it to the provided virtual address
+	map_page(task,vir_addr,page,MMU_PTE_FLAGS); // maps it to the provided virtual address
 	return page + VA_START;
 }
 
 void map_page(struct task_struct *task, unsigned long vir_addr, \
-		unsigned long page)
+		unsigned long page,unsigned long page_attr)
 {
 	unsigned long pgd;
 	
+	// If it is the first time to map this task
 	if(!task->mm.pgd){
 		task->mm.pgd = get_free_page();
 		task->mm.kernel_pages[task->mm.kernel_pages_count++] = task->mm.pgd;
 	}
+	
 	pgd = task->mm.pgd;
 
 	unsigned long table = pgd;
@@ -65,9 +67,9 @@ void map_page(struct task_struct *task, unsigned long vir_addr, \
 	}
 	
 	// last table will be pte table
-	map_entry((unsigned long *)(table+VA_START), vir_addr, page);
+	map_entry((unsigned long *)(table+VA_START), vir_addr, page, page_attr);
 
-	struct user_page p = {page, vir_addr};
+	struct user_page p = {page, (vir_addr>>12)<<12};
 	task->mm.user_pages[task->mm.user_pages_count++] = p;
 }
 
@@ -77,23 +79,20 @@ unsigned long map_table(unsigned long *table, unsigned long shift, \
 	unsigned long index = vir_addr >> shift;
     	index = index & (PTRS_PER_TABLE - 1);
     	
-	if (!table[index]){
-        	unsigned long next_level_table = get_free_page();
-        	unsigned long entry = next_level_table | PD_TABLE;
-        	table[index] = entry;
-        	task->mm.kernel_pages[task->mm.kernel_pages_count++] = next_level_table;
-		return next_level_table;
-    	}
-    
-	return table[index] & PAGE_MASK;
+        unsigned long next_level_table = get_free_page();
+        unsigned long entry = next_level_table | PD_TABLE;
+        table[index] = entry;
+        task->mm.kernel_pages[task->mm.kernel_pages_count++] = next_level_table;
+	
+	return next_level_table;
 }
 
 void map_entry(unsigned long *pte, unsigned long vir_addr,\
-	       	unsigned long phy_addr) {
+	       	unsigned long phy_addr,unsigned long page_attr) {
 
     unsigned long index = vir_addr >> 12;
     index = index & (PTRS_PER_TABLE - 1);
-    unsigned long entry = phy_addr | MMU_PTE_FLAGS;
+    unsigned long entry = phy_addr | page_attr;
     pte[index] = entry;
 }
 
@@ -164,8 +163,96 @@ int copy_virt_memory(struct task_struct *dst){
 	return 0;
 }
 
-int page_fault_handler(unsigned long addr, unsigned long esr){
-	printf("Page fault address at 0x%x%x, killed\r\n",addr>>32,addr);
-	exit_process(); 	
-	return -1;
+int page_fault_handler(unsigned long addr){
+	// check if user access a map region
+	struct mm_struct mm = current->mm;
+	int flag = 0;
+	for(int i=0;i< mm.vm_area_count;i++){
+		if(addr > mm.mmap[i].vm_start && addr < mm.mmap[i].vm_end){
+			flag = 1;
+			unsigned long page = get_free_page();
+			if (page == 0) 
+            			return -1;
+        			
+			unsigned long long page_attr;	
+			int prot = mm.mmap[i].vm_prot;
+			if(prot == 0){ //non accessible
+				page_attr = MMU_NONE;
+			}
+			else{
+				page_attr = MMU_PTE_FLAGS;
+				if( (prot&0b110) == 0b100){ //read only
+					page_attr |= PD_READONLY;
+				}
+				if( (prot&0b001) == 0b000){ //non exec
+					page_attr |= PD_NON_EXEC_EL0;
+				}
+			}
+
+				
+			map_page(current, addr, page, page_attr);
+			break;
+		}
+	}
+
+	if(flag == 0){
+		printf("### Page fault address at 0x%x, killed\r\n",addr);
+		exit_process(); 	
+		return -1;
+	}
+	else{
+		return 0;
+	}
 }
+
+ void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset){
+	 if(file_start == NULL){
+		struct vm_area_struct *vm_area = &current->mm.mmap[current->mm.vm_area_count];
+	 	// For address:
+		if(addr==NULL){ //kernel decides the new region’s start address	
+			unsigned long vir_addr = 0x1000;
+			int flag = 0;
+		        while(1){ //not so smart...... but anyway	
+				flag = 0;
+				for(int i=0;i<current->mm.user_pages_count;i++){
+					if(vir_addr == current->mm.user_pages[i].vir_addr){
+						flag = 1;
+						vir_addr+=PAGE_SIZE;
+						break;
+					}
+				}
+				if(flag==0)
+					break;
+			}
+			
+		        printf("Map to vir addr at 0x%x\r\n",vir_addr);	
+			vm_area->vm_start = vir_addr;
+		}
+		else{
+			vm_area->vm_start = (unsigned long)addr;
+		}
+
+		// For len:
+		// Memory region created by mmap should be page aligned
+		if( len % PAGE_SIZE != 0)
+			len += PAGE_SIZE - (len % PAGE_SIZE);
+	
+	 	vm_area->vm_end = vm_area->vm_start + len;
+		vm_area->vm_prot = prot;
+	 	current->mm.vm_area_count++;
+	 	
+		return (void *)vm_area->vm_start;
+	 }
+	 else{ // for file, not implement yet
+		
+		struct vm_area_struct *vm_area = &current->mm.mmap[current->mm.vm_area_count];
+	 	vm_area->vm_start = (unsigned long)file_start;
+	 	vm_area->vm_end = vm_area->vm_start + file_offset;
+		vm_area->vm_prot = prot;
+		vm_area->vm_flags = flags;
+	 	current->mm.vm_area_count++;
+
+		return 0;
+	 }
+ }
+

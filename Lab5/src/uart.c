@@ -1,13 +1,15 @@
 #include "include/mbox.h"
 #include "include/peripherals/uart.h"
 #include "include/uart.h"
-#include "include/printf.h"
 #include "include/peripherals/gpio.h"
 #include "include/utils.h"
 #include "include/queue.h"
 #include "include/scheduler.h"
 #include "include/irq.h"
 #include "include/mm.h"
+#include "include/sprintf.h"
+
+extern volatile unsigned char _kernel_end;
 
 void uart_init(){
     //init uart irq
@@ -168,8 +170,24 @@ void uart_IRQhandler(){
 	}
 }
 
-// This function is required by printf function
-void putc ( void* p, char c)
-{
-	uart_send(c);
+/**
+ * Display a string
+ */
+void printf(char *fmt, ...) {
+	__builtin_va_list args;
+	__builtin_va_start(args, fmt);
+    	// we don't have memory allocation yet, so we
+    	// simply place our string after our code
+   	char *s = (char*)&_kernel_end;
+    
+	// use sprintf to format our string
+    	vsprintf(s,fmt,args);
+    	
+	// print out as usual
+    	while(*s) {
+        /* convert newline to carrige return + newline */
+        	if(*s=='\n')
+            		uart_send('\r');
+        	uart_send(*s++);
+    	}
 }

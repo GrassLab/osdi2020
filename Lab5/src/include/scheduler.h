@@ -32,21 +32,43 @@ struct cpu_context {
 };
 
 #define MAX_PROCESS_PAGES	16	
-#define TYPE_NORMAL 0
-#define TYPE_STACK 1
+#define MAX_AREA                16
 
 struct user_page {
 	unsigned long phy_addr;
 	unsigned long vir_addr;
 };
 
+//prot
+#define PROT_NONE 0b000  // non-executable page frame for EL0
+#define PROT_READ 0b100  // rwx bit represent
+#define PROT_WRITE 0b110  
+#define PROT_EXEC 0b101  
+
+//flag
+#define MAP_FIXED 0
+#define MAP_ANONYMOUS 1
+#define MAP_POPULATE 2
+
+struct vm_area_struct{
+	unsigned long vm_end;
+	unsigned long vm_start;
+	int vm_prot;
+	int vm_flags;
+};
+
 struct mm_struct {
 	unsigned long pgd;	
 	int user_pages_count;
 	struct user_page user_pages[MAX_PROCESS_PAGES];
+	
 	int kernel_pages_count;
 	unsigned long kernel_pages[MAX_PROCESS_PAGES];
+	
+	int vm_area_count;
+	struct vm_area_struct mmap[MAX_AREA];
 };
+
 
 struct signal_struct{
 	int pending;
@@ -62,8 +84,7 @@ struct task_struct{
 	long state;
 	long priority;
 	long counter;
-	long preempt_lock;
-	
+	long preempt_lock;	
 };
 
 extern void switch_to(struct task_struct* prev, struct task_struct* next);
@@ -80,7 +101,7 @@ extern void exit_process();
 
 #define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 	{0,0}, \
-	{0,0,{{0}},0,{0}}, \
+	{0,0,{{0}},0,{0},0,{{0}}}, \
 	0,0,1,0,0}
 
 

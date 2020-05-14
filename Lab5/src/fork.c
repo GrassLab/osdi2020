@@ -3,7 +3,6 @@
 #include "include/entry.h"
 #include "include/scheduler.h"
 #include "include/queue.h"
-#include "include/printf.h"
 #include "include/mm.h"
 #include "include/utils.h"
 
@@ -69,7 +68,7 @@ int user_task_create()
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
 	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
-		
+	
 	struct trapframe * cur_regs = get_task_trapframe(current);
 	*childregs = *cur_regs; //copy content of parent register
 	childregs->regs[0] = 0; //x0 in the new state is set to 0, because x0 will be interpreted by the caller as a return value of the syscall.
@@ -108,6 +107,7 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	regs->elr_el1 = pc;             // copy to elr_el1 
 	regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0 
 	regs->sp =  0x0000ffffffffe000; 
+	
 	unsigned long code_page = allocate_user_page(current,pc); 
 	unsigned long stack_page = allocate_user_page(current,regs->sp-8); //since stack grow down
 	if (!code_page||!stack_page) {

@@ -117,7 +117,7 @@ void fb_init(){
 
 void fb_show()
 {
-    int x,y;
+    unsigned int x,y;
     unsigned char *ptr=fb; 
     char pixel[4];
    

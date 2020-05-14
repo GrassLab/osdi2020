@@ -3,7 +3,6 @@
 #include "include/timer.h"
 #include "include/uart.h"
 #include "include/string.h"
-#include "include/printf.h"
 #include "include/peripherals/irq.h"
 
 unsigned int sys_timer_jiffies = 0;

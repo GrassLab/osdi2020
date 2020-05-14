@@ -1,9 +1,8 @@
 #include "include/scheduler.h"
 #include "include/signal.h"
-#include "include/printf.h"
 #include "include/irq.h"
 
-void signal_handler(unsigned long x){
+void signal_handler(){
 	preempt_disable();
 	enable_irq();
 

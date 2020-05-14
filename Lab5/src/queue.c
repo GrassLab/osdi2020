@@ -1,6 +1,6 @@
-#include "include/printf.h"
 #include "include/queue.h"
 #include "include/scheduler.h"
+#include "include/uart.h"
 
 int isempty(int head,int tail){
 	return head==tail;

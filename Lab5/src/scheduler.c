@@ -4,7 +4,6 @@
 #include "include/string.h"
 #include "include/mm.h"
 #include "include/utils.h"
-#include "include/printf.h"
 #include "include/fork.h"
 
 static struct task_struct idle_task = IDLE_TASK;

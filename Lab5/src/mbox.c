@@ -24,7 +24,7 @@ int mbox_call(unsigned char ch){
 	while(1){
 		// check if Mailbox 0 status register's empty flag is set
 		while(get32(MAILBOX_STATUS) & MAILBOX_EMPTY){}
-		int mailbox_read = get32(MAILBOX_READ);
+		unsigned int mailbox_read = get32(MAILBOX_READ);
 		// if not, read from mailbox0 read_write reg
 		if(addr == mailbox_read){
 			return mbox[1]==REQUEST_SUCCEED;
