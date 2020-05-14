@@ -44,15 +44,18 @@ void test() {
   int cnt = 1;
   int f;
   f = fork();
-  uart_puts("fork ret: ");
-  uart_print_int(f);
-  uart_puts(" #run: ");
-  uart_print_int(num_runnable_tasks());
-  uart_puts("\r\n");
+  // uart_puts("fork ret: ");
+  // uart_print_int(f);
+  // uart_puts(" #run: ");
+  // uart_print_int(num_runnable_tasks());
+  // uart_puts("\r\n");
   if (f == 0) {
     fork();
-    delay(100000);
+    delay(100);
     fork();
+    uart_puts("CNT value: ");
+    uart_print_int(cnt);
+    uart_puts("\r\n");
     while(cnt < 10) {
 		uart_puts("Task id: ");
 		uart_print_int(get_taskid());

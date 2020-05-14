@@ -53,7 +53,8 @@ void privilege_task_create(void (*func)()) {
 
 void _privilege_task_create(void (*func)(), int clone_flags, unsigned long stack) {
     disable_preempt();
-    struct task_struct *p = (struct task_struct *) get_free_page();
+    int page_id = get_free_page_id();
+    struct task_struct *p = (struct task_struct *) (LOW_MEMORY + page_id*PAGE_SIZE);
     if(!p) {
         uart_puts("Fail to create a new task...\r\n");
         return;
@@ -69,7 +70,8 @@ void _privilege_task_create(void (*func)(), int clone_flags, unsigned long stack
 		struct pt_regs * cur_regs = task_pt_regs(current);
 		*childregs = *cur_regs;
 		childregs->regs[0] = 0;
-		childregs->sp = stack + PAGE_SIZE;
+		childregs->regs[29] = cur_regs->regs[29] + get_user_page(page_id) - get_user_page(current->task_id);
+		childregs->sp       = cur_regs->sp + get_user_page(page_id) - get_user_page(current->task_id);
 		p->stack = stack;
 	}
 
@@ -138,6 +140,7 @@ void _schedule() {
             next = i;
         }
     }
+    uart_puts("===========================================\r\n");
     uart_puts("switch to pid: ");
     uart_print_int(task[next]->task_id);
     uart_puts("\r\n");
@@ -249,19 +252,19 @@ int _do_fork() {
     // p->stack = stack;
 
     // print created message
-    uart_puts("===========================================\r\n");
+    uart_puts("*******************************************\r\n");
     uart_puts("Task ");
     uart_print_int(current->task_id);
     uart_puts(" called fork\r\n");
 
     _privilege_task_create(0, 0, 0);
 
-    uart_puts("Create new task: ");
-    uart_print_int(p->task_id);
-    uart_puts(" Current run: ");
+    // uart_puts("Create new task: ");
+    // uart_print_int(task[n_tasks-1]->task_id);
+    uart_puts("Current #threads: ");
     uart_print_int(n_task_id);
     uart_puts("\r\n");
-    uart_puts("===========================================\r\n");
+    uart_puts("*******************************************\r\n");
     
     enable_preempt();
     return task[n_tasks-1]->task_id;
