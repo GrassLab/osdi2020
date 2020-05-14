@@ -3,13 +3,13 @@
 #include "tlb.h"
 
 void *
-page_alloc_virt (size_t PGD, size_t virt_addr)
+page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num)
 {
   void *new;
   size_t *PTE;
   int retval;
 
-  new = page_alloc ();
+  new = page_alloc (page_num);
   if (!new)
     return NULL;
   if (!virt_addr)
@@ -21,13 +21,13 @@ page_alloc_virt (size_t PGD, size_t virt_addr)
       virt_addr = (size_t) new | KPGD;
     }
   retval = map_virt_to_phys (PGD, virt_addr, (size_t) new,
-			     PAGE_SIZE, pd_encode_ram (0));
+			     page_num * PAGE_SIZE, pd_encode_ram (0));
   if (retval)
     {
-      page_free (new);
+      page_free (new, page_num);
       return NULL;
     }
-  bzero ((void *) virt_addr, PAGE_SIZE);
+  bzero ((void *) virt_addr, page_num * PAGE_SIZE);
   return (void *) virt_addr;
 }
 
@@ -54,7 +54,7 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	  if (!table[page_ind])
 	    {
 	      // alloc new page for page table
-	      table[page_ind] = pd_encode_table (page_alloc_virt (KPGD, 0));
+	      table[page_ind] = pd_encode_table (page_alloc_virt (KPGD, 0, 1));
 	      if (table[page_ind] == pd_encode_table (0))
 		return -1;
 	    }
@@ -123,16 +123,34 @@ tlb_init ()
  * TODO: quickly
  */
 void *
-page_alloc ()
+page_alloc (size_t page_num)
 {
-  size_t i;
+  size_t i, cnt, target;
+  cnt = 0;
   for (i = 0; i < PAGE_POOL_SIZE; ++i)
-    if (!page_pool[i].in_used)
-      {
-	// just set in_used bit
-	page_init (&page_pool[i], 0, 0);
-	return (void *) (i << 12);
-      }
+    {
+      if (!page_pool[i].in_used)
+	{
+	  if (cnt == 0)
+	    {
+	      target = i;
+	      cnt = 1;
+	    }
+	  else
+	    ++cnt;
+	}
+      else
+	{
+	  cnt = 0;
+	}
+      if (cnt == page_num)
+	{
+	  // just set in_used bit
+	  for (i = 0; i < cnt; ++i)
+	    page_init (&page_pool[target + i], 0, 0);
+	  return (void *) (target << 12);
+	}
+    }
   // physical address 0x0 for kernel PGD
   // it is already in used and impossible alloc again
   // so return NULL for error
@@ -140,13 +158,18 @@ page_alloc ()
 }
 
 void
-page_free (void *paddr)
+page_free (void *paddr, size_t page_num)
 {
   struct page_struct *p;
+  size_t i;
   p = &page_pool[(size_t) paddr >> 12];
-  p->in_used = 0;
-  p->PGD = 0;
-  p->virt_addr = 0;
+  for (i = 0; i < page_num; ++i)
+    {
+      p->in_used = 0;
+      p->PGD = 0;
+      p->virt_addr = 0;
+      ++p;
+    }
 }
 
 void
