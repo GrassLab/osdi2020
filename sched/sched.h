@@ -6,7 +6,7 @@
 #include <signal.h>
 
 #define POOL_SIZE 64
-#define STACK_SIZE 0x1000
+#define STACK_SIZE 0x2000
 
 struct trapframe
 {
@@ -37,8 +37,8 @@ struct task_struct
 {
   struct context ctx;
   size_t task_id;
-  char stack[STACK_SIZE] __attribute__ ((aligned (16)));
-  char kstack[STACK_SIZE] __attribute__ ((aligned (16)));
+  void *stack;
+  void *kstack;
   struct list_head list;
   char resched;
   size_t signal_map;

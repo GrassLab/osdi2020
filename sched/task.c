@@ -1,6 +1,7 @@
 #include <list.h>
 #include <string.h>
 #include <irq.h>
+#include <tlb.h>
 #include "sched.h"
 
 struct task_struct *
@@ -16,7 +17,8 @@ privilege_task_create (void (*func) ())
   bzero (&task_pool[i].ctx, sizeof (task_pool[i].ctx));
   task_pool[i].task_id = i + 1;
   task_pool[i].ctx.lr = (size_t) func;
-  task_pool[i].ctx.sp = (size_t) &task_pool[i].kstack[STACK_SIZE];
+  task_pool[i].kstack = page_alloc_virt (KPGD, 0, STACK_SIZE >> 12);
+  task_pool[i].ctx.sp = (size_t) task_pool[i].kstack + STACK_SIZE;
   task_pool[i].signal_map = 0;
   list_add_tail (&task_pool[i].list, runqueue);
   return &task_pool[i];
@@ -39,7 +41,7 @@ do_exec (void (*func) ())
 		"mov x24, xzr\n" "mov x25, xzr\n" "mov x26, xzr\n"
 		"mov x27, xzr\n" "mov x28, xzr\n" "mov x29, xzr\n"
 		"mov x30, xzr\n" "eret\n"::"r" (&current->stack[STACK_SIZE]),
-		"r" (&current->kstack[STACK_SIZE]), "r" (func):"x0");
+		"r" (&current->kstack + STACK_SIZE), "r" (func):"x0");
   return 0;
 }
 
@@ -66,7 +68,7 @@ struct trapframe *
 get_syscall_trapframe (struct task_struct *task)
 {
   struct trapframe *tf;
-  tf = (struct trapframe *) (&task->kstack[STACK_SIZE] - sizeof (*tf));
+  tf = (struct trapframe *) (&task->kstack + STACK_SIZE - sizeof (*tf));
   return tf;
 }
 
@@ -143,6 +145,8 @@ do_exit (int status)
 {
   struct task_struct *cur = current;
   disable_irq ();
+  page_free_virt (KPGD, (size_t) cur->kstack, STACK_SIZE >> 12);
+  cur->kstack = 0;
   list_del (&cur->list);
   list_add_tail (&cur->list, zombiequeue);
   enable_irq ();
