@@ -27,7 +27,8 @@
 
 SECTIONS
 {
-    . = 0x80000;
+    . = 0xffff000000000000;  /* kernel space */
+    . += 0x80000; /* kernel load address */
     /* __relocate = .; */
     /* .relocate : { KEEP(*(.text.relocate)) } */
     /* . = ALIGN(4096); /\* align to page size *\/ */
@@ -48,4 +49,4 @@ SECTIONS
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;
-__stack_top = 0x80000;
+__stack_top = 0xffff000000000000 + 0x80000;

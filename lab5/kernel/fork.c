@@ -1,6 +1,6 @@
 #include "fork.h"
 #include "entry.h"
-#include "mem.h"
+#include "mm.h"
 #include "sched.h"
 #include "libc.h"
 #include "signal.h"

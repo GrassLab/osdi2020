@@ -51,8 +51,8 @@ stdio: $(TARGET)
 stdio_int: $(TARGET)
 	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -serial null -serial stdio -d int
 
-# debug: $(TARGET)
-#	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -S -s
+gdb: $(TARGET)
+	$(QEMU) -M raspi3 -kernel $(TARGET) -display none -S -s
 
 debug:
 	make clean

@@ -45,3 +45,25 @@
 
 #define ESR_ELx_EC_SHIFT		26
 #define ESR_ELx_EC_SVC64		0x15
+
+
+// ***************************************
+// TCR (translation control register)
+// ***************************************
+
+#define TCR_CONFIG_REGION_48bit (((64 - 48) << 0) | ((64 - 48) << 16))
+#define TCR_CONFIG_4KB ((0b00 << 14) |  (0b10 << 30))
+#define TCR_CONFIG_DEFAULT (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
+
+
+// ***************************************
+// MAIR (memory attribute indirection register)
+// ***************************************
+
+#define MAIR_DEVICE_nGnRnE 0b00000000
+#define MAIR_NORMAL_NOCACHE 0b01000100
+#define MAIR_IDX_DEVICE_nGnRnE 0
+#define MAIR_IDX_NORMAL_NOCACHE 1
+#define MAIR_CONFIG_DEFAULT                                             \
+  (MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) |                \
+  (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8))
