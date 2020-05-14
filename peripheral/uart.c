@@ -73,8 +73,7 @@ uart_getc ()
   while (*UART0_FR & 0x10);
   /* read it and return */
   r = (char) (*UART0_DR);
-  /* convert carrige return to newline */
-  return r == '\r' ? '\n' : r;
+  return r;
 }
 
 int
