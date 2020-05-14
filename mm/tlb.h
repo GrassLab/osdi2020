@@ -27,6 +27,7 @@ void page_init (struct page_struct *page, size_t PGD, size_t virt_addr);
 void *page_alloc (size_t page_num);
 void *page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num);
 void page_free (void *paddr, size_t page_num);
+void page_free_virt (size_t PGD, size_t virt_addr, size_t page_num);
 void tlb_init ();
 int map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 		      size_t size, size_t attr);
