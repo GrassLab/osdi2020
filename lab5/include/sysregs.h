@@ -59,10 +59,17 @@
 // ***************************************
 // MAIR (memory attribute indirection register)
 // ***************************************
-
-#define MAIR_DEVICE_nGnRnE 0b00000000
-#define MAIR_NORMAL_NOCACHE 0b01000100
-#define MAIR_IDX_DEVICE_nGnRnE 0
+/**
+ * Memory region attributes:
+ *
+ *   n = AttrIndx[2:0]
+ *            n    MAIR
+ *   DEVICE_nGnRnE    000    00000000
+ *   NORMAL_NC        001    01000100
+ */
+#define MAIR_DEVICE_nGnRnE      0b00000000
+#define MAIR_NORMAL_NOCACHE     0b01000100
+#define MAIR_IDX_DEVICE_nGnRnE  0
 #define MAIR_IDX_NORMAL_NOCACHE 1
 #define MAIR_CONFIG_DEFAULT                                             \
   (MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) |                \

@@ -135,13 +135,14 @@ void idle() {
 void el1_main() {
   uart_init();
 
-  /* uart_println("Hello world"); */
-  {
-    #include "gpio.h"
-    #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
-    while (1)
-      *AUX_MU_IO = 's';
-  }
+  uart_println("Hello world");
+  /* uart_print("%x\n", &s); */
+  /* { */
+  /*   #include "gpio.h" */
+  /*   #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040)) */
+  /*   while (1) */
+  /*     *AUX_MU_IO = 's'; */
+  /* } */
 
   {
 #include "mm.h"

@@ -1,12 +1,8 @@
 #pragma once
 
-int bh_mod_mask;
-char bh_mask[32];
-char bh_active[32];
-
 typedef void (*bh_handler)();
 
-bh_handler bh_base[32];
+extern int bh_mod_mask;
 
 void bottom_half_enable();
 bh_handler extract_bh_handler();

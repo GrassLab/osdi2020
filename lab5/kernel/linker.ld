@@ -28,7 +28,9 @@
 SECTIONS
 {
     . = 0xffff000000000000;  /* kernel space */
-    . += 0x80000; /* kernel load address */
+    . = 0x80000; /* kernel load address */
+    _kernel_start = . ;
+    /* . = 0x80000; */
     /* __relocate = .; */
     /* .relocate : { KEEP(*(.text.relocate)) } */
     /* . = ALIGN(4096); /\* align to page size *\/ */
@@ -44,6 +46,10 @@ SECTIONS
         __bss_end = .;
     }
     /* . = ALIGN(4096); /\* align to page size *\/ */
+    . = ALIGN(0x00001000);
+    pg_dir = .;
+    .data.pgd : { . += (3 * (1 << 12)); }
+
     __end = .;
 
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
