@@ -64,6 +64,11 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
       if (table[page_ind])
 	return -2;
       table[page_ind] = phys | attr;
+      if (phys < USED_MEMSIZE)
+	{
+	  // setup page_struct
+	  page_init (&page_pool[phys >> 12], PGD, virt);
+	}
     }
   return 0;
 }
