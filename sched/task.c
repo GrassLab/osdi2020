@@ -27,6 +27,19 @@ privilege_task_create (void (*func) ())
 int
 do_exec (void (*func) ())
 {
+  if (!current->ctx.PGD)
+    {
+      current->ctx.PGD = (size_t) page_alloc_virt (KPGD, 0, 1) & ~KPGD;
+      asm volatile ("msr ttbr0_el1, %0"::"r" (current->ctx.PGD));
+    }
+  if (!current->stack)
+    {
+      current->stack =
+	page_alloc_virt (current->ctx.PGD | KPGD, USER_STACK_ADDR,
+			 STACK_SIZE >> 12);
+      if (!current->stack)
+	return -1;
+    }
   asm volatile ("mov x0, %0\n" "mov sp, %1\n"
 		"msr sp_el0, x0\n" "msr spsr_el1, xzr\n" "msr elr_el1, %2\n"
 		// prevent kernel address leakage
@@ -40,7 +53,7 @@ do_exec (void (*func) ())
 		"mov x21, xzr\n" "mov x22, xzr\n" "mov x23, xzr\n"
 		"mov x24, xzr\n" "mov x25, xzr\n" "mov x26, xzr\n"
 		"mov x27, xzr\n" "mov x28, xzr\n" "mov x29, xzr\n"
-		"mov x30, xzr\n" "eret\n"::"r" (&current->stack[STACK_SIZE]),
+		"mov x30, xzr\n" "eret\n"::"r" (&current->stack + STACK_SIZE),
 		"r" (&current->kstack + STACK_SIZE), "r" (func):"x0");
   return 0;
 }

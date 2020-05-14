@@ -7,6 +7,7 @@
 
 #define POOL_SIZE 64
 #define STACK_SIZE 0x2000
+#define USER_STACK_ADDR 0x0000ffffffffe000
 
 struct trapframe
 {
@@ -31,6 +32,7 @@ struct context
   size_t fp;
   size_t lr;
   size_t sp;
+  size_t PGD;
 };
 
 struct task_struct

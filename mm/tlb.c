@@ -22,7 +22,7 @@ page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num)
       virt_addr = (size_t) new | KPGD;
     }
   retval = map_virt_to_phys (PGD, virt_addr, (size_t) new,
-			     page_num * PAGE_SIZE, pd_encode_ram (0));
+			     page_num * PAGE_SIZE, pd_encode_ram (0) | PD_RW);
   if (retval)
     {
       page_free (new, page_num);
