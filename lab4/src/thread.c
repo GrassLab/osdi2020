@@ -8,7 +8,8 @@ extern schedule();
 void idle_task(){
     while(1){
         printf("idle....\n");
-        delay(10000000);
+        // delay(10000000);
+        delay(100000);
         schedule();
     }
 }
@@ -57,6 +58,9 @@ task_t* privilege_task_create(unsigned long fn){
 
 void do_exec(void(*func)()){
     task_t *task = get_current();
+    unsigned int el_level;
+    asm volatile ("mrs %0, CurrentEL" : "=r" (el_level));
+    printf("now level is: %d\n", el_level);
     printf("exec--- id is: %d\n", task->task_id);
     task->mode = USER_MODE;
     unsigned long user_stack = current->user_context.sp_el0;
@@ -68,7 +72,8 @@ void do_exec(void(*func)()){
 }
 
 int do_fork(){
-    int child_taskId = TaskManager.task_num;
+    printf("fork -----------------------------------\n");
+    int child_taskId = -1;
     for(int i = 0; i < 64; i++) {
         if (TaskManager.task_pool[child_taskId].state == ZOMBIE) {
             break;
@@ -79,8 +84,8 @@ int do_fork(){
     task_t *child = &TaskManager.task_pool[child_taskId];
     child->task_id = child_taskId;
     child->parent_id = parent->task_id;
-    _memcpy(TaskManager.kstack_pool[parent->task_id], TaskManager.kstack_pool[child_taskId], 4096);
-    _memcpy(TaskManager.ustack_pool[parent->task_id], TaskManager.ustack_pool[child_taskId], 4096);
+    _copy_stack(TaskManager.kstack_pool[parent->task_id], TaskManager.kstack_pool[child_taskId], 4096);
+    _copy_stack(TaskManager.ustack_pool[parent->task_id], TaskManager.ustack_pool[child_taskId], 4096);
 
     child->cpu_context.x19 = parent->cpu_context.x19;
     child->cpu_context.x20 = parent->cpu_context.x20;

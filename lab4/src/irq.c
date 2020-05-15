@@ -86,8 +86,10 @@ void core_timer_handler() {
 	printf("Arm core timer interrupt, jiffies %d \r\n",core_timer_count);
 	unsigned int timer_freq;
 	asm volatile("mrs %0, sp_el0": "=r"(timer_freq)::);
+	printf("Arm core timer freq value %x \r\n",timer_freq);
 
 	core_timer_count += 1;
+	clean_core_timer();
 
 	printf("now current id is: %d\n", current->task_id);
 	current->counter--;
@@ -95,21 +97,17 @@ void core_timer_handler() {
 		current->rescheduled = 1;
 		printf("reshedule flag is set: %d\n", current->task_id);
 	}
-	clean_core_timer();
 	return;
 }
 
 void handle_irq(void) {
 	unsigned int arm_local = *CORE0_INTR_SRC;
-  	if (arm_local & 0x800){
+  	if (arm_local & 0x800)
 		local_timer_handler();
-    }
-  	else if (arm_local & 0x2){
+  	else if (arm_local & 0x2)
     	core_timer_handler();
-    }
-	else{
-		printf("%%%%%%%%%%%%%%%%%%%%%%\n");
-	}
+	else
+		printf("this irq not be handled\n");
 	check_reschedule();
 }
 

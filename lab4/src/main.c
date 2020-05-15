@@ -13,12 +13,12 @@ task_t* current;
 
 
 void init_uart(){
-    // uart_init();
+    uart_init();
     get_board_revision();
     get_vc_memory();
     get_UART_clock();
-    set_UART_clock();
-    get_UART_clock();
+    // set_UART_clock();
+    // get_UART_clock();
 }
 
 void init_lfb(){
@@ -96,7 +96,6 @@ void func2(){
         printf("taskid: %d\n", get_taskid());
         printf("user loop cnt: %d, address of cnt: %d\n", cnt, &cnt);
         cnt++;
-        // printf("---\n");
 
         delay(10000000);
     }
@@ -144,7 +143,7 @@ void exec_fork(){
 void main()
 {
     init_uart();
-    init_lfb();
+    // init_lfb();
     init_printf(0, putc);
 
     init_task_manager();
