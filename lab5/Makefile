@@ -50,8 +50,8 @@ ASMOPS += -DUARTINT -DMINIUART
 #ASMOPS += -DDEFFERED
 
 # longer bottom half delay if on qemu
-#COPS += -DON_QEMU
-#ASMOPS += -DON_QEMU
+COPS += -DON_QEMU
+ASMOPS += -DON_QEMU
 
 all : $(IMG)
 

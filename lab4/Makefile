@@ -1,7 +1,7 @@
 ARMGNU ?= aarch64-linux-gnu
 
-ASMOPS = -fPIC -Iinclude -g
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g
+ASMOPS = -fPIC -Iinclude -g -Wall
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g -fPIC
 
 # -DRUN_ON_EL[0-2]
 EL=-DRUN_ON_EL1

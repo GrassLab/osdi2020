@@ -15,8 +15,8 @@ hang:
 
 continue:
 
-    ldr     x0, =__stack_top
-    mov     sp, x0
+    ldr x0, =__stack_top
+    mov sp, x0
 
     // init bss
     adr x0, __bss_beg
@@ -43,7 +43,7 @@ continue:
     ldr	x0, =SPSR_VALUE
     msr	spsr_el2, x0
 
-    adr	x0, el1_entry		
+    adr	x0, el1_entry
     msr	elr_el2, x0
 
     eret
@@ -58,8 +58,8 @@ el1_entry:
     //mov	sp, x0
 
     // need?
-    ldr     x0, =__stack_top
-    mov     sp, x0
+    ldr x0, =__stack_top
+    mov sp, x0
 
     ldr x0, =exception_table
     msr vbar_el1, x0
@@ -70,11 +70,11 @@ el1_entry:
     b kernel_entry
 #endif
 
-    ldr     x0, 0
-    msr     spsr_el1, x0
+    ldr x0, 0
+    msr spsr_el1, x0
 
-    adr     x0, el0_entry
-    msr     elr_el1, x0
+    adr x0, el0_entry
+    msr elr_el1, x0
 
     // goto el0
     eret
@@ -82,7 +82,7 @@ el1_entry:
 el0_entry:
 
     mov x0, #LOW_MEMORY
-    mov sp, x0 
+    mov sp, x0
 
-kernel_entry: 
+kernel_entry:
     bl main
