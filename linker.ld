@@ -1,6 +1,8 @@
 SECTIONS
 {
-    . = 0x80000;
+    . = 0xffff000000000000; /* kernel space */
+    . += 0x80000; /* kernel load address */
+    __kernel_start = .;
     __stack_start = .;
     
     __text_start = .;
