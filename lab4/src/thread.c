@@ -99,19 +99,15 @@ int do_fork(){
     child->cpu_context.x28 = parent->cpu_context.x28;
 
     Trapframe *trapframe = parent->trapframe;
-    unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id])
-                                - (parent->user_context.sp_el0);
-    unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id])
-                                - trapframe->regs[29];
-    unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[parent->task_id]) 
-                                - parent->trapframe;
+    unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id]) - (parent->user_context.sp_el0);
+    unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id]) - trapframe->regs[29];
+    unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[parent->task_id])  - parent->trapframe;
 
     // unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->sp_el0;
     // unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[current->task_id]) - current->trapframe;
     // unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->regs[29];
 
     child->trapframe = (unsigned long) &TaskManager.kstack_pool[child->task_id] - trapframe_offset;
-
     child->user_context.sp_el0 = (unsigned long) &TaskManager.ustack_pool[child->task_id] - ustack_offset;
     child->user_context.spsr_el1 = parent->user_context.spsr_el1;
     child->user_context.elr_el1 = parent->user_context.elr_el1;

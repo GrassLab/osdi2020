@@ -147,5 +147,7 @@ char uart_recv() {
 
 // This function is required by printf function
 void putc (char *p , char c) {
+    if(c == '\n')
+        uart_send('\r');
 	uart_send(c);
 }
