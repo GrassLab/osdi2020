@@ -18,10 +18,36 @@
                  "| __ |/ -_)| | | |/ _ \\ /(   \\ \\/\\/ // _ \\| '_|| |/ _` | )\\\n" \
                  "|_||_|\\___||_| |_|\\___/(_))   \\_/\\_/ \\___/|_|  |_|\\__,_|((_)\n" \
                  "                                                                  \n"
+static void
+delay (size_t sec)
+{
+  size_t t, cnt, freq;
+  sys_get_time (&cnt, &freq);
+  t = cnt;
+  while ((cnt - t) / freq < sec)
+    sys_get_time (&cnt, &freq);
+}
+
+static void
+idle ()
+{
+  while (1)
+    {
+      delay (1);
+    }
+}
+
+static void
+user_shell ()
+{
+  extern void _binary_bin_shell_start ();
+  do_exec (_binary_bin_shell_start);
+}
 
 int
 main (int error, char *argv[])
 {
+  struct task_struct fake;
   // init stack guard. It should be random, but I'm lazy.
   __stack_chk_guard = (void *) 0xdeadbeef;
 
@@ -35,6 +61,10 @@ main (int error, char *argv[])
       uart_puts ("-----------------------------\n");
     }
 
+  privilege_task_create (idle);
+  privilege_task_create (user_shell);
+  sys_core_timer_enable ();
+  switch_to (&fake, &task_pool[0]);
   shell_interactive ();
   return 0;
 }
