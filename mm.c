@@ -27,7 +27,7 @@
 #include "uart.h"
 
 #include "printf.h"
-#include "mmu.h"
+#include "mm.h"
 
 // get addresses from linker
 extern volatile unsigned char _data;
@@ -37,21 +37,21 @@ typedef struct page_t
 {
     unsigned long pfn;
     unsigned long pa;
+    int used;
 } page_t;
 
 page_t page_table[1000];
 
 unsigned long pa_to_pfn(unsigned long pa)
 {
-    return (pa >> 12);
+    return 0;
+    return ((pa - 0xffff000000000000) - (unsigned long)&mem_map[0]) / PAGE_SIZE;
 }
 
 unsigned long virtual_to_physical(unsigned long vir)
 {
-    unsigned long pfn = (vir << 16) >> 16;
-    unsigned long offset = (vir << 52) >> 52;
-    pfn = (pfn) >> PTE_SHIFT;
-    return pfn * PAGESIZE | offset;
+    return 0;
+    return page_table[vir].pa;
 }
 
 /**
@@ -121,7 +121,6 @@ void mmu_init()
                       */
 
     // PUD: 1GB
-
     paging[0 + 512 + 1] = (unsigned long)((unsigned char *)0x40000000) | // physical address
                           BOOT_PUD_ATTR;
 
@@ -145,23 +144,36 @@ void mmu_init()
     }
     */
 
+    // TTBR1, PGD
+    paging[512 * 2] = (unsigned long)((unsigned char *)&paging[512 * 3]) | // physical address
+                      BOOT_PGD_ATTR;
+    // PUD: 1GB
+    paging[512 * 3] = (unsigned long)((unsigned char *)&mem_map[0]) | // physical address
+                      BOOT_PUD_ATTR;
+    /*
+    paging[0 + 512] = (unsigned long)((unsigned char *)&paging[0 + 512 * 2]) | // physical address
+                      BOOT_PUD_ATTR;
+                      */
+
+    set_mem_map();
+
     uart_send_hex(paging[0 + 512 + 0]);
-    uart_send('\n');
+    _uart_send('\n');
 
     uart_send_hex(paging[0 + 512 + 1]);
-    uart_send('\n');
+    _uart_send('\n');
 
     // Require 1-3: Set up identity mapping. Enable MMU
     // tell the MMU where our translation tables are. TTBR_CNP bit not documented, but required
-    // lower half, user space
+    // lower half, kernel space
     asm volatile("msr ttbr0_el1, %0"
                  :
-                 : "r"((unsigned long)&_end + TTBR_CNP));
+                 : "r"((unsigned long)(&paging[0] + TTBR_CNP)));
 
-    // upper half, kernel space
+    // upper half, user space
     asm volatile("msr ttbr1_el1, %0"
                  :
-                 : "r"((unsigned long)&_end + TTBR_CNP));
+                 : "r"((unsigned long)(&paging[512 * 2] + TTBR_CNP)));
 
     // finally, toggle some bits in system control register to enable page translation
     asm volatile("dsb ish; isb; mrs %0, sctlr_el1"
@@ -171,4 +183,38 @@ void mmu_init()
     asm volatile("msr sctlr_el1, %0; isb"
                  :
                  : "r"(r));
+}
+
+void set_mem_map()
+{
+    for (int i = 0; i < 1000; i++)
+    {
+        page_table[i].pa = (unsigned long)&mem_map[i];
+        page_table[i].pfn = i;
+        page_table[i].used = 0;
+    }
+}
+
+unsigned long get_free_page()
+{
+    for (int i = 0; i < PAGING_PAGES; i++)
+    {
+        if (page_table[i].used == 0)
+        {
+            page_table[i].used = 1;
+            //page_table[i].pa = (unsigned long)&mem_map[i] + i * PAGE_SIZE;
+
+            // return LOW_MEMORY + i * PAGE_SIZE;
+            // return 0xffff000000000000 + (unsigned long)&mem_map[i] + i * PAGE_SIZE;
+
+            // return 0xffff000000000000 + i * PAGE_SIZE;
+            return 0xffff000000000000 + page_table[i].pa;
+        }
+    }
+    return 0;
+}
+
+void free_page(unsigned long p)
+{
+    //mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
 }

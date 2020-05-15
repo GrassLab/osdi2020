@@ -68,6 +68,20 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 
     //p = (task_t *)&kstack_pool[task_id][0];
     p = (task_t *)get_free_page();
+
+    // test visual memory
+    //uart_send_hex((unsigned long)p >> 32);
+    uart_send_hex(sizeof(mem_page_t));
+    uart_send('\n');
+    uart_send_hex((unsigned long)p >> 32);
+    uart_send_hex(p);
+    *(unsigned long *)p = task_id;
+    uart_send('\n');
+    uart_send_int(*(unsigned long *)p);
+    uart_send(' ');
+    uart_send_int(*(unsigned long *)((unsigned long)p - 0xffff000000000000));
+    uart_send('\n');
+
     memset((unsigned short *)p, 0, PAGE_SIZE);
 
     user_context_t *childregs = task_user_context(p);

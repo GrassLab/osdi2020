@@ -13,7 +13,7 @@
 
 #include "signal.h"
 
-#include "mmu.h"
+#include "mm.h"
 
 #define INPUT_BUFFER_SIZE 64
 
@@ -238,9 +238,11 @@ int main()
     uart_puts("\n");
     */
 
+    /*
     unsigned long t = virtual_to_physical(0xffff000000000000);
     t = virtual_to_physical(0xffffffff00030010);
     uart_send_hex(t);
+    */
 
     task_init();
     /*
