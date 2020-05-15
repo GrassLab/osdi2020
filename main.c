@@ -238,16 +238,20 @@ int main()
     uart_puts("\n");
     */
 
+    unsigned long t = virtual_to_physical(0xffff000000000000);
+    t = virtual_to_physical(0xffffffff00030010);
+    uart_send_hex(t);
+
     task_init();
     /*
-    privilege_task_create((unsigned long)task_11, 0);
     privilege_task_create((unsigned long)task_111, 0);
     */
     privilege_task_create((unsigned long)task_1, 0);
-    privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
-    privilege_task_create((unsigned long)task_3, 0);
+    privilege_task_create((unsigned long)task_11, 0);
+    // privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
+    //privilege_task_create((unsigned long)task_3, 0);
     privilege_task_create((unsigned long)task_4, 0);
-    privilege_task_create((unsigned long)user_test, 0);
+    // privilege_task_create((unsigned long)user_test, 0);
 
     // core timer enable, every 1ms
     core_timer(1);

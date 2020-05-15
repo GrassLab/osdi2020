@@ -27,45 +27,32 @@
 #include "uart.h"
 
 #include "printf.h"
-
-#define PAGESIZE 4096
-#define PAGE (PAGESIZE / 8)
-
-// granularity
-#define PT_PAGE 0b11  // 4k granule
-#define PT_BLOCK 0b01 // 2M granule
-
-#define PT_PGD 0b11 // 2M granule
-#define PT_PUD 0b01 // 2M granule
-#define PT_PMD 0b01 // 2M granule
-#define PT_PTE 0b11 // 2M granule
-// accessibility
-#define PT_KERNEL (0 << 6) // privileged, supervisor EL1 access only
-#define PT_USER (1 << 6)   // unprivileged, EL0 access allowed
-#define PT_RW (0 << 7)     // read-write
-#define PT_RO (1 << 7)     // read-only
-#define PT_AF (1 << 10)    // accessed flag
-#define PT_NX (1UL << 54)  // no execute
-// shareability
-#define PT_OSH (2 << 8) // outter shareable
-#define PT_ISH (3 << 8) // inner shareable
-// defined in MAIR register
-#define PT_MEM (0 << 2) // normal memory
-#define PT_DEV (1 << 2) // device MMIO
-#define PT_NC (2 << 2)  // non-cachable
-
-#define TTBR_CNP 1
+#include "mmu.h"
 
 // get addresses from linker
 extern volatile unsigned char _data;
 extern volatile unsigned char _end;
 
-/*
 typedef struct page_t
 {
-    char p[512];
+    unsigned long pfn;
+    unsigned long pa;
 } page_t;
-*/
+
+page_t page_table[1000];
+
+unsigned long pa_to_pfn(unsigned long pa)
+{
+    return (pa >> 12);
+}
+
+unsigned long virtual_to_physical(unsigned long vir)
+{
+    unsigned long pfn = (vir << 16) >> 16;
+    unsigned long offset = (vir << 52) >> 52;
+    pfn = (pfn) >> PTE_SHIFT;
+    return pfn * PAGESIZE | offset;
+}
 
 /**
  * Set up page translation tables and enable virtual memory
@@ -113,44 +100,56 @@ void mmu_init()
 
     // Require 1-3: Set up identity mapping
     /* create MMU translation tables at _end */
-
-    printf("%x\n", &_end);
-
-    printf("%x\n", ((unsigned long)&_end + TTBR_CNP + PAGESIZE));
-    printf("%x\n", ((unsigned long)&paging[512]));
-
 #define PD_TABLE 0b11
 #define PD_BLOCK 0b01
 #define PD_ACCESS (1 << 10)
 #define BOOT_PGD_ATTR PD_TABLE
 #define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PMD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PTE_ATTR (PD_ACCESS | PD_TABLE)
 
     // TTBR0, PGD
-    paging[0] = (unsigned long)((unsigned char *)&_end + 0x1000) | // physical address
+    paging[0] = (unsigned long)((unsigned char *)&paging[0 + 512]) | // physical address
                 BOOT_PGD_ATTR;
 
+    // PUD: 1GB
     paging[0 + 512] = (unsigned long)((unsigned char *)0) | // physical address
                       BOOT_PUD_ATTR;
+    /*
+    paging[0 + 512] = (unsigned long)((unsigned char *)&paging[0 + 512 * 2]) | // physical address
+                      BOOT_PUD_ATTR;
+                      */
+
+    // PUD: 1GB
 
     paging[0 + 512 + 1] = (unsigned long)((unsigned char *)0x40000000) | // physical address
                           BOOT_PUD_ATTR;
+
+    /*
+    // PMD 1:
+    paging[0 + 512 * 2] = (unsigned long)((unsigned char *)&paging[0 + 512 * 4]) | // physical address
+                          BOOT_PMD_ATTR;
+
+    paging[0 + 512 * 3] = (unsigned long)((unsigned char *)&paging[0 + 512 * 5]) | // physical address
+                          BOOT_PMD_ATTR;
+
+    for (int i = 0; i < 512; i++)
+    {
+        paging[0 + 512 * 4 + i] = (unsigned long)((unsigned char *)((1 << 21) * i)) | // physical address
+                                  BOOT_PTE_ATTR;
+    }
+    for (int i = 0; i < 512; i++)
+    {
+        paging[0 + 512 * 5 + i] = (unsigned long)((unsigned char *)(0x40000000 + (1 << 21) * i)) | // physical address
+                                  BOOT_PTE_ATTR;
+    }
+    */
 
     uart_send_hex(paging[0 + 512 + 0]);
     uart_send('\n');
 
     uart_send_hex(paging[0 + 512 + 1]);
-
-    /*
-    r = 0;
-    *((unsigned long *)r) = 0x1000 | BOOT_PGD_ATTR;
-
-    r = 0x1000;
-    *((unsigned long *)r) = 0x00000000 | BOOT_PUD_ATTR;
-    uart_send_hex(*((unsigned long *)r));
-
-    r = 0x1000 + 8;
-    *((unsigned long *)r) = 0x40000000 | BOOT_PUD_ATTR;
-    */
+    uart_send('\n');
 
     // Require 1-3: Set up identity mapping. Enable MMU
     // tell the MMU where our translation tables are. TTBR_CNP bit not documented, but required
