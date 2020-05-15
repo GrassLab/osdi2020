@@ -24,14 +24,42 @@ privilege_task_create (void (*func) ())
   return &task_pool[i];
 }
 
+size_t
+load_binary (size_t bin_addr)
+{
+#define DEFAULT_VIRT_ADDR 0x55f75c12d000
+#define NULL_PADDING_SIZE 0x200
+#define ENTRY_POINT_OFFSET 0xc0c
+  // we only have shell program, hard code it
+  extern char _binary_bin_shell_size[];
+  extern char _binary_bin_shell_start[];
+  extern char _binary_bin_shell_end[];
+  size_t size;
+  void *virt_addr;
+  if (bin_addr != (size_t) _binary_bin_shell_start)
+    return -1;
+  size = (size_t) _binary_bin_shell_size + NULL_PADDING_SIZE;
+  size = (size % PAGE_SIZE) ? 1 + size / PAGE_SIZE : size / PAGE_SIZE;
+  virt_addr =
+    page_alloc_virt (current->ctx.PGD | KPGD, DEFAULT_VIRT_ADDR, size);
+  if (virt_addr == NULL)
+    return -1;
+  memcpy (virt_addr + NULL_PADDING_SIZE, _binary_bin_shell_start,
+	  (size_t) _binary_bin_shell_size);
+  return (size_t) virt_addr + ENTRY_POINT_OFFSET;
+}
+
 int
 do_exec (void (*func) ())
 {
+  size_t entry_point;
+
   if (!current->ctx.PGD)
     {
       current->ctx.PGD = (size_t) page_alloc_virt (KPGD, 0, 1) & ~KPGD;
       asm volatile ("msr ttbr0_el1, %0"::"r" (current->ctx.PGD));
     }
+  entry_point = load_binary ((size_t) func);
   if (!current->stack)
     {
       current->stack =
@@ -53,8 +81,8 @@ do_exec (void (*func) ())
 		"mov x21, xzr\n" "mov x22, xzr\n" "mov x23, xzr\n"
 		"mov x24, xzr\n" "mov x25, xzr\n" "mov x26, xzr\n"
 		"mov x27, xzr\n" "mov x28, xzr\n" "mov x29, xzr\n"
-		"mov x30, xzr\n" "eret\n"::"r" (&current->stack + STACK_SIZE),
-		"r" (&current->kstack + STACK_SIZE), "r" (func):"x0");
+		"mov x30, xzr\n" "eret\n"::"r" (current->stack + STACK_SIZE),
+		"r" (current->kstack + STACK_SIZE), "r" (entry_point):"x0");
   return 0;
 }
 

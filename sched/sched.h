@@ -68,5 +68,6 @@ struct trapframe *get_syscall_trapframe (struct task_struct *task);
 struct task_struct *get_next_task ();
 int do_kill (size_t pid, int signal);
 int sys_kill (size_t pid, int signal);
+size_t load_binary (size_t bin_addr);
 
 #endif /* ifndef SCHED */
