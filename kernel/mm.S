@@ -21,7 +21,12 @@
 #define PD_BLOCK 0b01
 #define PD_ACCESS (1 << 10)
 #define BOOT_PGD_ATTR PD_TABLE
-#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PUD_ATTR PD_TABLE
+#define BOOT_PMD_ATTR PD_TABLE
+#define BOOT_PTE_NORMAL_ATTR (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | 0b11)
+#define BOOT_PTE_DEVICE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | 0b11)
+
+#define PAGE_SIZE 4096
 
 .global vm_init
 vm_init:
@@ -40,22 +45,82 @@ vm_init:
   )
   msr mair_el1, x0
 
-  mov x0, 0
-  mov x1, 0x1000
+  /* Initialize page tables */
+  mov x29, x30
+  bl init_page_tables
+  mov x30, x29
 
+  adrp x0, page_table_start
+  msr ttbr0_el1, x0
+  msr ttbr1_el1, x0
+
+  ret
+
+.global init_page_tables
+init_page_tables:
+  /* Setup PGD */
+  adrp x0, page_table_start
+  adrp x1, page_table_start
+  add x1, x1, PAGE_SIZE
   ldr x2, =BOOT_PGD_ATTR
   orr x2, x1, x2
   str x2, [x0]
 
+  /* Setup PUD */
+  add x0, x0, PAGE_SIZE
+  add x1, x1, PAGE_SIZE
   ldr x2, =BOOT_PUD_ATTR
-  mov x3, 0x00000000
-  orr x3, x2, x3
-  str x3, [x1]
-  mov x3, 0x40000000
-  orr x3, x2, x3
-  str x3, [x1, 8]
+  orr x1, x1, x2
+  str x1, [x0]
+  add x1, x1, PAGE_SIZE
+  str x1, [x0, 8]
 
-  msr ttbr0_el1, x0
-  msr ttbr1_el1, x0
+  /* Setup PMD */
+  add x0, x0, PAGE_SIZE
+  add x1, x1, PAGE_SIZE
+  mov x3, 2
+1:
+  sub x3, x3, #1
+  mov x4, #512
+2:
+  sub x4, x4, #1
+  ldr x2, =BOOT_PMD_ATTR
+  orr x2, x1, x2
+  str x2, [x0]
+  add x0, x0, #8
+  add x1, x1, PAGE_SIZE
+  cbnz x4, 2b
+  cbnz x3, 1b
+
+  /* Setup PTE for normal region */
+  mov x1, xzr
+  mov x3, #(0x3f000000 / (512 * 4096))
+3:
+  sub x3, x3, #1
+  mov x4, #512
+4:
+  sub x4, x4, #1
+  ldr x2, =BOOT_PTE_NORMAL_ATTR
+  orr x2, x1, x2
+  str x2, [x0]
+  add x0, x0, #8
+  add x1, x1, PAGE_SIZE
+  cbnz x4, 4b
+  cbnz x3, 3b
+
+  /* Setup PTE for MMIO region */
+  mov x3, #(512 - (0x3f000000 / (512 * 4096)) + 512)
+5:
+  sub x3, x3, #1
+  mov x4, #512
+6:
+  sub x4, x4, #1
+  ldr x2, =BOOT_PTE_DEVICE_ATTR
+  orr x2, x1, x2
+  str x2, [x0]
+  add x0, x0, #8
+  add x1, x1, PAGE_SIZE
+  cbnz x4, 6b
+  cbnz x3, 5b
 
   ret

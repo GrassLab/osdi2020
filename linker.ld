@@ -2,6 +2,7 @@ SECTIONS
 {
   . = 0xffff000000000000; /* Kernel space */
   . += 0x80000;
+
   __text_start = .;
   .text : { *(.text.boot) *(.text) }
   __text_end = .;
@@ -12,6 +13,9 @@ SECTIONS
   __bss_start = .;
   .bss : { *(.bss) }
   __bss_end = .;
+
+  . = ALIGN(0x1000);
+  page_table_start = .;
 
   ENTRY(_start)
 }

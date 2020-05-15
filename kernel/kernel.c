@@ -75,7 +75,7 @@ void idle(void) {
 void print1(void) {
   while (true) {
     printk("1..." EOL);
-    delay(100000000);
+    delay(1000000);
     schedule();
   }
 }
@@ -83,7 +83,7 @@ void print1(void) {
 void print2(void) {
   while (true) {
     printk("2..." EOL);
-    delay(100000000);
+    delay(1000000);
     schedule();
   }
 }
@@ -93,7 +93,7 @@ int main(void) {
   mini_uart_init();
   exception_init();
   asm("msr daifset, #0xf");
-//  core_timer_enable();
+  core_timer_enable();
 //  el1_to_el0();
 //  shell();
 

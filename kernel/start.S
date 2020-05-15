@@ -44,16 +44,10 @@ el2_to_el1:
   eret
 
 el1_entry:
-  bl vm_init
-  /* Enable MMU for EL1 and EL0 stage 1 address translation. */
-  mrs x2, sctlr_el1
-  orr x2, x2, 1
-  msr sctlr_el1, x2
-
-  ldr x0, =_start
+  adr x0, _start
   mov sp, x0
-  ldr x0, =__bss_start
-  ldr x1, =__bss_end
+  adr x0, __bss_start
+  adr x1, __bss_end
   sub x1, x1, x0
   lsr x1, x1, #3
 1:
@@ -62,6 +56,13 @@ el1_entry:
   add x0, x0, #8
   sub x1, x1, #1
   b 1b
-
 2:
-  bl main
+  bl vm_init
+
+  /* Enable MMU for EL1 and EL0 stage 1 address translation. */
+  mrs x2, sctlr_el1
+  orr x2, x2, 1
+  msr sctlr_el1, x2
+
+  ldr x1, =main
+  br x1
