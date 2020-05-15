@@ -8,8 +8,8 @@ ASM_FLAGS =
 
 KERNEL_C_SOURCE_FILES = shell.c string_util.c mailbox.c uart.c exc.c irq.c syscall.c timer.c schedule.c task.c sys.c queue.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
-KERNEL_ASSEMBLY_SOURCE_FILES = start.s exc_vector.s timer.s schedule.s
-KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.s=.asmo)
+KERNEL_ASSEMBLY_SOURCE_FILES = start.S exc_vector.S timer.S schedule.S mmu.S
+KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.S=.asmo)
 
 all: kernel8.img
 
@@ -23,7 +23,7 @@ kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES}
 %.o: %.c
 	${CC} -c ${GENERAL_FLAGS} ${C_FLAGS} $^ -o $@
 
-%.asmo: %.s
+%.asmo: %.S
 	${CC} -c ${GENERAL_FLAGS} ${ASM_FLAGS} $^ -o $@
 
 debug: GENERAL_FLAGS += -DDEBUG -g3
