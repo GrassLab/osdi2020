@@ -1,17 +1,21 @@
+// TCR_EL1
 #define TCR_CONFIG_REGION_48bit (((64 - 48) << 0) | ((64 - 48) << 16))
 #define TCR_CONFIG_4KB ((0b00 << 14) |  (0b10 << 30))
 #define TCR_CONFIG_DEFAULT (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
-
+// MAIR_EL1
 #define MAIR_DEVICE_nGnRnE 0b00000000
 #define MAIR_NORMAL_NOCACHE 0b01000100
 #define MAIR_IDX_DEVICE_nGnRnE 0
 #define MAIR_IDX_NORMAL_NOCACHE 1
-
+// identity mapping
 #define PD_TABLE 0b11
 #define PD_BLOCK 0b01
 #define PD_ACCESS (1 << 10)
 #define BOOT_PGD_ATTR PD_TABLE
-#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PUD_ATTR PD_TABLE
+#define BOOT_PMD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+
+# define page_size (1<<21)
 
 .section ".text"
 _start:
@@ -81,19 +85,37 @@ loop:
 
 set_vm:
     mov x0, 0 // PGD's page frame at 0x0
-    mov x1, 0x1000 // PUD's page frame at 0x1000
+    add x1, x0, page_size // PUD's page frame
+    add x2, x1, page_size // PMD's page 1 frame
+    add x3, x2, page_size // PMD's page 2 frame
 
-    ldr x2, = BOOT_PGD_ATTR
-    orr x2, x1, x2 // combine the physical address of next level page with attribute.
-    str x2, [x0]
+    // set PGD
+    ldr x6, = BOOT_PGD_ATTR
+    orr x4, x6, x1 // combine the physical address of next level page with attribute.
+    str x4, [x0]
 
-    ldr x2, = BOOT_PUD_ATTR
-    mov x3, 0x00000000
-    orr x3, x2, x3 
-    str x3, [x1] // 1st 1GB mapped by the 1st entry of PUD
-    mov x3, 0x40000000
-    orr x3, x2, x3
-    str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
+    // set PUD
+    ldr x6, = BOOT_PUD_ATTR
+    orr x4, x6, x2 
+    str x4, [x1] // 1st 1GB mapped by the 1st entry of PUD
+
+    ldr x6, = BOOT_PUD_ATTR
+    orr x4, x6, x3
+    str x4, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
+
+    // set PMD
+    mov x1, #0 // x1 page_offset
+    mov x4, #0
+    mov x5, #1024 // PMD = 512 * 2 (page1 and 2)
+
+set_PMD:
+    ldr x6, = BOOT_PMD_ATTR
+    orr x7, x6 , x1
+    str x7, [x2 , x4, lsl #3]
+    add x1 , x1 , page_size
+    add x4, x4, #1
+    cmp x4, x5
+    b.ls set_PMD
 
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
