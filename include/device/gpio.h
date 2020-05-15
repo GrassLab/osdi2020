@@ -28,7 +28,8 @@
 
 #include "type.h"
 
-#define MMIO_BASE 0x3F000000
+#define VA_START 0xffff000000000000
+#define MMIO_BASE (VA_START + 0x3F000000)
 
 #define GPFSEL0 ((volatile uint32_t *)(MMIO_BASE + 0x00200000))
 #define GPFSEL1 ((volatile uint32_t *)(MMIO_BASE + 0x00200004))

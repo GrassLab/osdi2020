@@ -35,15 +35,17 @@ void main()
     // set up serial console
     uartInit();
 
+    uartPuts("test message\n");
+
     // for (int i = 0; i < 3; ++i)
     // { // N should > 2
     //     createPrivilegeTask(&kernelTask, 0);
     // }
-    createPrivilegeTask(&zombieReaper, 0);
-    createPrivilegeTask(&execTask, 0);
+    // createPrivilegeTask(&zombieReaper, 0);
+    // createPrivilegeTask(&execTask, 0);
 
     // Enable core timer
-    asm volatile("svc #2");
-    idleTask();
+    // asm volatile("svc #2");
+    // idleTask();
     // runShell();
 }
