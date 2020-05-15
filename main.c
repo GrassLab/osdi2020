@@ -23,7 +23,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 5.0.0\n");
+    uart_print("Version : 5.1.3\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -167,8 +167,26 @@ void user_test()
     do_exec((unsigned long)test);
 }
 
+#define GB 0x40000000
+#define MB2 (1 << 21)
+//#define OFF (0 << 21) // 2MB
+//#define OFF -4096 // 4KB
+//#define OFF (-GB + 48)
+//#define OFF -MB2 // 2MB
+#define OFF 0x0
+
+/*
 #define KERNEL_UART0_DR ((volatile unsigned int *)0xFFFFFFFFFFE00000)
 #define KERNEL_UART0_FR ((volatile unsigned int *)0xFFFFFFFFFFE00018)
+*/
+
+#define KERNEL_UART0_DR ((volatile unsigned int *)(0xFFFF000000000000 - OFF))
+#define KERNEL_UART0_FR ((volatile unsigned int *)(0xFFFF000000000018 - OFF))
+
+/*
+#define KERNEL_UART0_DR ((volatile unsigned int *)0xffffff8000000000)
+#define KERNEL_UART0_FR ((volatile unsigned int *)0xffffff8000000018)
+*/
 
 int main()
 {
@@ -179,24 +197,33 @@ int main()
     uart_init();
     init_printf(0, putc);
 
+    int x = 0;
+    uart_send_hex(&x);
+    uart_send('\n');
+
     mmu_init();
 
-    init_printf(0, putc);
+    uart_send_hex(&x);
+    uart_send('\n');
+
+    /*
+    unsigned long *t = (unsigned long *)0xFFFF000000000000;
+    *(t) = 0xffffffffffffffff;
+    uart_send_int(t);
+    uart_send('\n');
 
     uart_puts("Writing through identity mapped MMIO.\n");
-    printf("MMU Test\n");
 
     // test mapping
     while (*s)
     {
-        /* wait until we can send */
         do
         {
             asm volatile("nop");
         } while (*KERNEL_UART0_FR & 0x20);
-        /* write the character to the buffer */
         *KERNEL_UART0_DR = *s++;
     }
+    */
 
     signal_init();
 
