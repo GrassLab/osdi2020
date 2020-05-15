@@ -24,7 +24,7 @@
 
 // setup FSEL{n1 * 10 + n2} = val
 #define SET_FSEL(n1, n2, val) (*GPFSEL##n1 = \
-			       *GPFSEL##n1 & ~(7 << (n2 * 3)) | val << (n2 * 3))
+			       (*GPFSEL##n1 & ~(7 << (n2 * 3))) | val << (n2 * 3))
 #define WAIT_CONTROL_SIG \
   for (int i = 0; i < 150; ++i) asm volatile ("nop");
 

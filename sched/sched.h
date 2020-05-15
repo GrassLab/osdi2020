@@ -44,6 +44,7 @@ struct task_struct
   struct list_head list;
   char resched;
   size_t signal_map;
+  int exit_status;
 } task_pool[POOL_SIZE];
 
 struct task_struct *privilege_task_create (void (*func) ());

@@ -7,7 +7,6 @@ void *
 page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num)
 {
   void *new;
-  size_t *PTE;
   int retval;
 
   new = page_alloc (page_num);

@@ -26,7 +26,6 @@ user_delay (double sec)
 static void
 test ()
 {
-  int cnt = 1;
   int pid = fork ();
   if (pid == 0)
     {
@@ -78,20 +77,6 @@ idle ()
     }
   uart_puts ("test finished");
   while (1);
-}
-
-static void
-zombie_reaper_loop ()
-{
-  enable_irq ();
-  while (1)
-    {
-      if (get_runable_task_num () == 2)
-	break;
-      zombie_reaper ();
-      delay (1);
-    }
-  exit (0);
 }
 
 void

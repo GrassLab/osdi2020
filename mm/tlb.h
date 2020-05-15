@@ -14,7 +14,7 @@
 #define INVALID_PHYS_ADDR ((void *) 0xaaaaaaaaaaaaaaaa)
 #define INVALID_VIRT_ADDR ((void *) 0x5555555555555555)
 
-#define PD_DECODE(pd) ((size_t *)((size_t) pd & 0xfffffffff000 | 0xffff000000000000))
+#define PD_DECODE(pd) ((size_t *)(((size_t) pd & 0xfffffffff000) | 0xffff000000000000))
 #define PD_RW (0x1 << 6)
 #define PD_RO (0x3 << 6)
 #define PD_XN (0x1 << 54)

@@ -16,7 +16,6 @@ void
 shell_interactive ()
 {
   char buf[CMD_SIZE];
-  size_t a, b;
 
   while (1)
     {
@@ -150,7 +149,6 @@ picture (char buf[3])
 void
 hardware ()
 {
-  char *buf;
   unsigned int base_addr;
   unsigned int revision;
   struct mbox_msg *msg;

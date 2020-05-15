@@ -6,7 +6,7 @@ HEADER := $(wildcard */*.h)
 SRC := $(wildcard */*.c)
 ASM := $(wildcard asm/*/*.S)
 OBJECTS := $(patsubst %.S,%.o,$(ASM)) $(patsubst %.c,%.o,$(SRC))
-CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched -Ikernel -Imm -Wextra
+CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched -Ikernel -Imm -Wextra -Wall
 ASFLAGS =
 
 .PHONY: all clean qemu debug indent

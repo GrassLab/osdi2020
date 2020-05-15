@@ -103,8 +103,6 @@ do_fork ()
   struct task_struct *new;
   struct trapframe *tf;
   int pid;
-  size_t *sp_el0;
-  size_t *x29;
 
   // create a task not in runqueue
   disable_irq ();
@@ -158,8 +156,7 @@ do_exit (int status)
 {
   struct task_struct *cur = current;
   disable_irq ();
-  page_free_virt (KPGD, (size_t) cur->kstack, STACK_SIZE >> 12);
-  cur->kstack = 0;
+  cur->exit_status = status;
   list_del (&cur->list);
   list_add_tail (&cur->list, zombiequeue);
   enable_irq ();

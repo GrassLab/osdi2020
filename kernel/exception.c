@@ -6,7 +6,7 @@
 #include "panic.h"
 
 void
-exception_router (size_t x0, size_t x1, size_t x2, size_t x3)
+exception_router ()
 {
   unsigned long elr_el1, esr_el1;
   unsigned int ec, iss;

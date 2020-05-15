@@ -93,20 +93,6 @@ idle ()
   while (1);
 }
 
-static void
-zombie_reaper_loop ()
-{
-  enable_irq ();
-  while (1)
-    {
-      if (get_runable_task_num () == 2)
-	break;
-      zombie_reaper ();
-      delay (1);
-    }
-  exit (0);
-}
-
 void
 test_fork_exec ()
 {
