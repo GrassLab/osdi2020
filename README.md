@@ -20,7 +20,6 @@
 
 ## Architecture
 
-![architecture figure]()
 
 ## Directory structure
 
