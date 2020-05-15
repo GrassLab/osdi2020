@@ -315,8 +315,8 @@ void kernel_process(){
   privilege_task_create(task_2, 0, current_task->priority);
   privilege_task_create(task_3, 0, current_task->priority);
   privilege_task_create(task_4, 0, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_fork, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_exec, current_task->priority);
+  privilege_task_create(task_do_exec, (UL)user_fork, current_task->priority);
+  privilege_task_create(task_do_exec, (UL)user_exec, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
