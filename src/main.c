@@ -3,6 +3,7 @@
 #include "frame_buffer.h"
 #include "mbox.h"
 #include "util.h"
+#include "schedule.h"
 
 #define CMD_LEN 128
 
@@ -25,6 +26,8 @@ void boot_init() {
     mbox_board_revision();
     mbox_vc_memory();
     uart_printf("\n");
+
+    schedule_init();
 }
 
 int main() {
