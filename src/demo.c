@@ -44,6 +44,16 @@ void demo_syscall_get_task_id() {
     }
 }
 
+void demo_syscall_uart() {
+    while(1) {
+        char buf[256];
+        uart_read(buf, 1);
+        uart_printf("%d: ", get_taskid());
+        uart_write(buf, 1);
+        uart_printf("\n");
+    }
+}
+
 void demo_syscall() {
-    do_exec(demo_syscall_get_task_id);
+    do_exec(demo_syscall_uart);
 }

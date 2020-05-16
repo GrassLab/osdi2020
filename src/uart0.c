@@ -69,7 +69,7 @@ void uart_init() {
     queue_init(&write_buf, UART0_BUF_MAX_SIZE);
 }
 
-char uart_read() {
+char uart0_read() {
     while (queue_empty(&read_buf)) {
         asm volatile ("nop");
     }
@@ -77,7 +77,7 @@ char uart_read() {
     return r == '\r' ? '\n' : r;
 }
 
-void uart_write(char c) {
+void uart0_write(char c) {
     if (*UART0_FR & 0x80) { // TX FIFO Empty
         // trigger interrupt by sending one character
         if (queue_empty(&write_buf)) {
@@ -102,8 +102,8 @@ void uart_printf(char* fmt, ...) {
     vsprintf(s, fmt, args);
 
     while (*s) {
-        if (*s == '\n') uart_write('\r');
-        uart_write(*s++);
+        if (*s == '\n') uart0_write('\r');
+        uart0_write(*s++);
     }
 }
 

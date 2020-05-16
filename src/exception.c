@@ -29,10 +29,43 @@ void sys_get_task_id(struct trapframe* trapframe) {
     trapframe->x[0] = task_id;
 }
 
+void sys_uart_read(struct trapframe* trapframe) {
+    char* buf = (char*) trapframe->x[0];
+    uint32_t size = trapframe->x[1];
+
+    irq_enable();
+    for (int i = 0; i < size; i++) {
+        buf[i] = uart0_read();
+    }
+    buf[size] = '\0';
+    irq_disable();
+    trapframe->x[0] = size;
+}
+
+void sys_uart_write(struct trapframe* trapframe) {
+    const char* buf = (char*) trapframe->x[0];
+    uint32_t size = trapframe->x[1];
+
+    irq_enable();
+    for (int i = 0; i < size; i++) {
+        uart0_write(buf[i]);
+    }
+    irq_disable();
+    trapframe->x[0] = size;
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_TASK_ID:
             sys_get_task_id(trapframe);
+            break;
+
+        case SYS_UART_READ:
+            sys_uart_read(trapframe);
+            break;
+
+        case SYS_UART_WRITE:
+            sys_uart_write(trapframe);
             break;
     }
 }
