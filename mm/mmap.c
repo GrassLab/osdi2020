@@ -8,6 +8,7 @@ do_mmap (void *addr, size_t len, int prot,
 	 int flags, void *file_start, int file_offset)
 {
   int page_num;
+  int i;
   size_t attr;
   if (flags & MAP_FIXED)
     {
@@ -28,7 +29,13 @@ do_mmap (void *addr, size_t len, int prot,
   // align address
   addr = (void *) ((size_t) addr & ~0xfff);
   if (addr == NULL)
-    addr = (size_t *) (current->task_id << 21);
+    {
+      // find possible address
+      for (i = 0; i < VA_MAP_SIZE; ++i)
+	if (current->va_maps[i].size == 0)
+	  break;
+      addr = (size_t *) ((current->task_id << 30) | (i << 21));
+    }
   // allocate pages
   addr =
     page_alloc_virt (current->ctx.PGD | KPGD, (size_t) addr, page_num,
