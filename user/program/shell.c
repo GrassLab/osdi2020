@@ -65,6 +65,18 @@ show_page ()
   printf ("free: %d\r\nalloc: %d\r\n", free, alloc);
 }
 
+static void
+mmap_read ()
+{
+  if (fork () == 0)
+    {
+      int *ptr = mmap (NULL, 4096, PROT_READ, MAP_ANONYMOUS, -1, 0);
+      printf ("addr: %p\n", ptr);
+      printf ("%d\n", ptr[1000]);	// should be 0
+      printf ("%d\n", ptr[4097]);	// should be seg fault
+    }
+}
+
 int
 main ()
 {
@@ -73,7 +85,9 @@ main ()
     {.name = "fork",.description = "test fork",.func = cmd_fork},
     {.name = "page",.description = "page status",.func = show_page},
     {.name = "segfault",.description = "trigger segmentation fault",.func =
-     segfault}
+     segfault},
+    {.name = "mmap_read",.description = "read beyond boundary",.func =
+     mmap_read},
   };
   int i;
   int cmd_num = sizeof (cmd_array) / sizeof (struct cmd_struct);
