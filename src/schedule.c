@@ -47,7 +47,7 @@ void schedule_init() {
     schedule();
 }
 
-void privilege_task_create(void (*func)(), int priority) {
+int privilege_task_create(void (*func)(), int priority) {
     struct task_t *new_task;
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         if (task_pool[i].state == EXIT) {
@@ -65,6 +65,8 @@ void privilege_task_create(void (*func)(), int priority) {
     new_task->cpu_context.sp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_SIZE - 1]);
 
     task_queue_push(&runqueue, get_runqueue_elmt(new_task));
+
+    return new_task->id;
 }
 
 void context_switch(struct task_t* next) {

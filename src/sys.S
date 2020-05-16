@@ -24,3 +24,9 @@ exec:
     mov x8, SYS_EXEC
     svc #0
     ret
+
+.global fork
+fork:
+    mov x8, SYS_FORK
+    svc #0
+    ret

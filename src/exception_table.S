@@ -150,3 +150,7 @@ irq_exc_handler:
     bl  irq_stk_switcher
     bl  reschedule
     kernel_exit
+
+.global return_from_fork
+return_from_fork:
+    kernel_exit

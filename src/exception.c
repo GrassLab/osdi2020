@@ -60,6 +60,38 @@ void sys_exec(struct trapframe* trapframe) {
     trapframe->x[0] = 0;
 }
 
+void sys_fork(struct trapframe* trapframe) {
+    struct task_t* parent_task = get_current_task();
+
+    int child_id = privilege_task_create(return_from_fork, parent_task->priority);
+    struct task_t* child_task = &task_pool[child_id];
+
+    char* child_kstack = &kstack_pool[child_task->id][KSTACK_SIZE - 1];
+    char* parent_kstack = &kstack_pool[parent_task->id][KSTACK_SIZE - 1];
+    char* child_ustack = &ustack_pool[child_task->id][USTACK_SIZE - 1];
+    char* parent_ustack = &ustack_pool[parent_task->id][USTACK_SIZE - 1];
+
+    uint64_t kstack_offset = parent_kstack - (char*)trapframe;
+    uint64_t ustack_offset = parent_ustack - (char*)trapframe->sp_el0;
+
+    for (int i = 0; i < kstack_offset; i++) {
+        *(child_kstack - i) = *(parent_kstack - i);
+    }
+    for (int i = 0; i < ustack_offset; i++) {
+        *(child_ustack - i) = *(parent_ustack - i);
+    }
+
+    // place child's kernel stack to right place
+    child_task->cpu_context.sp = (uint64_t)child_kstack - kstack_offset;
+
+    // place child's user stack to right place
+    struct trapframe* child_trapframe = (struct trapframe*) child_task->cpu_context.sp;
+    child_trapframe->sp_el0 = (uint64_t)child_ustack - ustack_offset;
+
+    child_trapframe->x[0] = 0;
+    trapframe->x[0] = child_task->id;
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_TASK_ID:
@@ -76,6 +108,10 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_EXEC:
             sys_exec(trapframe);
+            break;
+
+        case SYS_FORK:
+            sys_fork(trapframe);
             break;
     }
 }

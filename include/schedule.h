@@ -1,4 +1,4 @@
-#include "stdint.h"
+#include "typedef.h"
 
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
@@ -53,7 +53,7 @@ extern void switch_to(struct cpu_context* prev, struct cpu_context* next);
 /* Function in schedule.c */
 void task_init();
 void schedule_init();
-void privilege_task_create(void (*func)(), int priority);
+int privilege_task_create(void (*func)(), int priority);
 void context_switch(struct task_t* next);
 void schedule();
 void reschedule();

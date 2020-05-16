@@ -1,4 +1,4 @@
-#include "stdint.h"
+#include "typedef.h"
 #include "schedule.h"
 
 struct task_queue_elmt_t {  /* priority queue */

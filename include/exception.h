@@ -1,4 +1,4 @@
-#include "stdint.h"
+#include "typedef.h"
 
 #ifndef __EXC_H__
 #define __EXC_H__
@@ -19,6 +19,10 @@ extern char intr_stack[INTR_STK_SIZE];
 extern uint64_t arm_core_timer_jiffies, arm_local_timer_jiffies;
 extern uint64_t cntfrq_el0, cntpct_el0;
 
+/* Function in exception_table.S */
+extern void return_from_fork();
+
+/* Function in exception.c */
 void irq_enable();
 void irq_disable();
 void arm_core_timer_enable();

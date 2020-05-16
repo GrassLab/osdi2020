@@ -56,6 +56,24 @@ void demo_syscall_exec() {
     exec(demo_syscall_uart);
 }
 
+void demo_syscall_fork() {
+    int id = fork();
+    if (id == 0) { // child
+        char buf[] = "hello from child\n";
+        while (1) {
+            uart_write(buf, 256);
+            delay(100000000);
+        }
+    }
+    else if (id > 0) {
+        char buf[] = "hello from parnt\n";
+        while (1) {
+            uart_write(buf, 256);
+            delay(100000000);
+        }
+    }
+}
+
 void demo_syscall() {
-    do_exec(demo_syscall_exec);
+    do_exec(demo_syscall_fork);
 }
