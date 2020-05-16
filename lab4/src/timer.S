@@ -10,7 +10,7 @@ core_timer_enable:
     str x0, [x1] // enable timer interrupt
     ret
 
-#define EXPIRE_PERIOD 0xffffff
+#define EXPIRE_PERIOD 0xfffff
 
 .globl clean_core_timer
 clean_core_timer:
