@@ -230,11 +230,36 @@ sys_fork ()
 }
 
 void
+page_table_free (size_t *table, int depth)
+{
+  int i;
+  for (i = 0; i < PAGE_SIZE / 8; ++i)
+    {
+      if (table[i])
+	{
+	  if (depth >= 3)
+	    {
+	      // TODO: handle impossible
+	      printf ("%s\r\n", "impossible: page_table_free");
+	    }
+	  else
+	    {
+	      page_table_free (PD_DECODE (table[i]), depth + 1);
+	      page_free_virt (KPGD, (size_t) PD_DECODE (table[i]), 1);
+	      table[i] = 0;
+	    }
+	}
+    }
+}
+
+void
 do_exit (int status)
 {
   struct task_struct *cur = current;
   critical_entry ();
   va_map_clear ();
+  page_table_free ((size_t *) (cur->ctx.PGD | KPGD), 0);
+  page_free_virt (KPGD, cur->ctx.PGD | KPGD, 1);
   cur->exit_status = status;
   list_del (&cur->list);
   list_add_tail (&cur->list, zombiequeue);
