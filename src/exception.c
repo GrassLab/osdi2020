@@ -23,10 +23,11 @@ void irq_disable() {
  * Synchronous Exception
  */
 
-void sync_exc_router(unsigned long esr, unsigned long elr) {
+void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* trapframe) {
     int ec = (esr >> 26) & 0b111111;
     int iss = esr & 0x1FFFFFF;
     if (ec == 0b010101) {  // system call
+        uart_printf("syscall number: %d\n", trapframe->x[8]);
         switch (iss) {
             case 1:
                 uart_printf("Exception return address 0x%x\n", elr);

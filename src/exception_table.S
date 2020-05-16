@@ -141,6 +141,7 @@ sync_exc_handler:
     kernel_entry
     mrs x0, esr_el1
     mrs x1, elr_el1
+    mov x2, sp
     bl  sync_exc_router
     kernel_exit
 

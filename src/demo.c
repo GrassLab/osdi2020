@@ -1,5 +1,6 @@
 #include "schedule.h"
 #include "uart0.h"
+#include "sys.h"
 
 void delay(int period) {
     while (period--);
@@ -28,4 +29,11 @@ void demo_do_exec_el0() {
 
 void demo_do_exec() {
     do_exec(demo_do_exec_el0);
+}
+
+void demo_syscall() {
+    while(1) {
+        uart_printf("%d\n", get_taskid());
+        delay(100000000);
+    }
 }
