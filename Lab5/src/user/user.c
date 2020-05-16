@@ -36,6 +36,7 @@ void read_beyond_boundary(){
  	if(fork() == 0) {	
     		int* ptr = mmap(NULL, 4096, PROT_READ, MAP_ANONYMOUS, NULL, 0);
 		printf("addr: 0x%x\n", ptr);
+		fork();
     		printf("ptr[1000]: %d\n", ptr[1000]); // should be 0
     		printf("ptr[4097]: %d\n", ptr[4097]); // should be seg fault
   	}
@@ -44,11 +45,19 @@ void read_beyond_boundary(){
 void write_beyond_boundary(){
   	if(fork() == 0) {
     		int* ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
-    		printf("addr: 0x%x\n", ptr);
-    		ptr[1000] = 100;
-   		printf("ptr[1000]: %d\n", ptr[1000]); // should be 100
-    		ptr[4097] = 100;// should be seg fault
-    		printf("%d\n", ptr[4097]); // not reached
+		printf("addr: 0x%x\n", ptr);
+    		if(fork()==0){
+			ptr[1000]++;
+   			printf("ptr[1000]: %d\n", ptr[1000]); // should be 100
+    			ptr[4097] = 100;// should be seg fault
+    			printf("%d\n", ptr[4097]); // not reached
+		}
+		else{
+			ptr[1000] = 100;
+   			printf("ptr[1000]: %d\n", ptr[1000]); // should be 100
+    			ptr[4097] = 100;// should be seg fault
+    			printf("%d\n", ptr[4097]); // not reached
+		}
   	}
 }
 
@@ -104,7 +113,7 @@ int check_string(char * str){
 void main()
 {
 	printf("Hello for user %d\r\n",get_taskid());
-
+	
 	char buffer[128];
 	while(1){	
 		printf(">>");

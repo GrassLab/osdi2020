@@ -78,13 +78,17 @@ unsigned long map_table(unsigned long *table, unsigned long shift, \
    	
 	unsigned long index = vir_addr >> shift;
     	index = index & (PTRS_PER_TABLE - 1);
-    	
-        unsigned long next_level_table = get_free_page();
-        unsigned long entry = next_level_table | PD_TABLE;
-        table[index] = entry;
-        task->mm.kernel_pages[task->mm.kernel_pages_count++] = next_level_table;
+    	if(!table[index]){	
+        	unsigned long next_level_table = get_free_page();
+        	unsigned long entry = next_level_table | PD_TABLE;
+        	table[index] = entry;
+        	task->mm.kernel_pages[task->mm.kernel_pages_count++] = next_level_table;
 	
-	return next_level_table;
+		return next_level_table;
+	}
+	else{  // case that child table was already allocated 
+		return (table[index]>>12)<<12;
+	}
 }
 
 void map_entry(unsigned long *pte, unsigned long vir_addr,\
@@ -152,6 +156,7 @@ void dump_mem(void *src,unsigned long len){
 }
 
 int copy_virt_memory(struct task_struct *dst){
+	// copy virtual memory
 	for(int i=0;i<current->mm.user_pages_count;i++){
 		struct user_page src = current->mm.user_pages[i];
 		unsigned long page = allocate_user_page(dst, src.vir_addr);
@@ -160,16 +165,31 @@ int copy_virt_memory(struct task_struct *dst){
 
 		memcpy(page,(src.vir_addr>>12)<<12,PAGE_SIZE); //page aligned
 	}
+
+	// copy vm area struct
+	dst->mm.vm_area_count = current->mm.vm_area_count;
+	for(int i=0;i<dst->mm.vm_area_count;i++)
+		dst->mm.mmap[i] = current->mm.mmap[i];
 	return 0;
 }
 
-int page_fault_handler(unsigned long addr){
-	// check if user access a map region
+int page_fault_handler(unsigned long addr,unsigned long esr){
+	if(((esr>>2)&0x3) != 1){ //If not a translation fault, kill  
+  		 switch((esr>>2)&0x3) {
+ 			  case 0: uart_send_string("Address size fault at"); break;
+                          case 2: uart_send_string("Access flag fault at"); break;
+                          case 3: uart_send_string("Permission fault at"); break;
+                  }
+ 
+                 printf("### Data abort at 0x%x, killed\r\n",addr);
+                 exit_process();
+                 return -1;
+         }
+
+	// Else check if user access a map region
 	struct mm_struct mm = current->mm;
-	int flag = 0;
 	for(int i=0;i< mm.vm_area_count;i++){
-		if(addr > mm.mmap[i].vm_start && addr < mm.mmap[i].vm_end){
-			flag = 1;
+		if(addr >= mm.mmap[i].vm_start && addr < mm.mmap[i].vm_end){
 			unsigned long page = get_free_page();
 			if (page == 0) 
             			return -1;
@@ -190,19 +210,16 @@ int page_fault_handler(unsigned long addr){
 			}
 
 				
-			map_page(current, addr, page, page_attr);
-			break;
+			map_page(current, addr, page, page_attr);		
+			return 0;
 		}
 	}
 
-	if(flag == 0){
-		printf("### Page fault address at 0x%x, killed\r\n",addr);
-		exit_process(); 	
-		return -1;
-	}
-	else{
-		return 0;
-	}
+	// If not a map region, kill
+	printf("### Page fault address at 0x%x, killed\r\n",addr);
+	exit_process(); 	
+	return -1;
+		
 }
 
  void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset){

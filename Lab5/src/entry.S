@@ -181,6 +181,7 @@ after_push_el0_irq:
 not_syscall:	
         cmp x24, #0x24
         b.eq     el0_da
+       	
 	mov     x0, #4
     	mrs     x1, esr_el1
     	mrs     x2, elr_el1

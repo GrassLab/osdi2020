@@ -20,5 +20,6 @@ SECTIONS
      . = ALIGN(0x00001000);
      pg_dir = .;
      .data.pgd : { . += ( 524* (1 << 12)); } /*(1+1+2+512+8)*/
+     . = ALIGN(0x00001000);
      _kernel_end = .; 
 }
