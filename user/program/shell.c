@@ -39,7 +39,7 @@ cmd_fork ()
       while (cnt < 10)
 	{
 	  // address should be the same across tasks, but the cnt should be increased indepndently
-	  printf ("task id: %d, sp: 0x%p cnt: %d\n", (int) get_task_id (), &cnt, cnt++);
+	  printf ("task id: %d, sp: 0x%p cnt: %d\r\n", (int) get_task_id (), &cnt, cnt++);
 	  delay (0.1);
 	}
       exit (0);			// all childs exit
