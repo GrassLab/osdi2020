@@ -9,5 +9,6 @@
 #define EXIT 7
 #define KILL 8
 #define PAGE_STATUS 9
+#define MMAP 10
 #endif /* ifndef ASM_SYSCALL
 #define UART_READ */

@@ -22,4 +22,6 @@ syscall_tables:
   .quad sys_kill
   .align 4
   .quad sys_page_status
+  .align 4
+  .quad sys_mmap		  /* 10 */
 end_syscall_tables:

@@ -45,3 +45,8 @@ page_status:
   mov x8, PAGE_STATUS
   svc #0
   ret
+.global mmap
+mmap:
+  mov x8, MMAP
+  svc #0
+  ret
