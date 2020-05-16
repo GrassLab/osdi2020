@@ -4,7 +4,7 @@
 #include "tlb.h"
 
 void *
-page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num)
+page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num, size_t attr)
 {
   void *new;
   int retval;
@@ -21,7 +21,7 @@ page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num)
       virt_addr = (size_t) new | KPGD;
     }
   retval = map_virt_to_phys (PGD, virt_addr, (size_t) new,
-			     page_num * PAGE_SIZE, pd_encode_ram (0) | PD_RW);
+			     page_num * PAGE_SIZE, attr);
   if (retval)
     {
       page_free (new, page_num);
@@ -120,7 +120,8 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	    {
 	      // alloc new page for page table
 	      table[page_ind] =
-		pd_encode_table (page_alloc_virt (KPGD, 0, 1));
+		pd_encode_table (page_alloc_virt
+				 (KPGD, 0, 1, pd_encode_ram (0)));
 	      if (table[page_ind] == pd_encode_table (0))
 		return -1;
 	    }

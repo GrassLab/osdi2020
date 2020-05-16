@@ -2,6 +2,7 @@
 #include <string.h>
 #include <irq.h>
 #include <tlb.h>
+#include <mmap.h>
 #include "sched.h"
 
 struct task_struct *
@@ -17,14 +18,16 @@ privilege_task_create (void (*func) ())
   // init context
   bzero (&task_pool[i].ctx, sizeof (task_pool[i].ctx));
   // kernel space
-  task_pool[i].kstack = page_alloc_virt (KPGD, 0, STACK_SIZE >> 12);
+  task_pool[i].kstack = page_alloc_virt (KPGD, 0, STACK_SIZE / PAGE_SIZE,
+					 pd_encode_ram (0));
   task_pool[i].ctx.lr = (size_t) func;
   task_pool[i].ctx.sp = (size_t) task_pool[i].kstack + STACK_SIZE;
   // user space
   task_pool[i].task_id = i + 1;
   task_pool[i].signal_map = 0;
   // init user PGD
-  task_pool[i].ctx.PGD = (size_t) page_alloc_virt (KPGD, 0, 1) & ~KPGD;
+  task_pool[i].ctx.PGD =
+    (size_t) page_alloc_virt (KPGD, 0, 1, pd_encode_ram (0)) & ~KPGD;
   bzero (task_pool[i].va_maps, sizeof (task_pool[i].va_maps));
   // add to runqueue
   list_add_tail (&task_pool[i].list, runqueue);
@@ -48,12 +51,12 @@ load_binary (size_t bin_addr)
   page_num =
     (page_num % PAGE_SIZE) ? 1 + page_num / PAGE_SIZE : page_num / PAGE_SIZE;
   virt_addr =
-    page_alloc_virt (current->ctx.PGD | KPGD, DEFAULT_VIRT_ADDR, page_num);
-  if (virt_addr == NULL)
+    do_mmap ((void *) DEFAULT_VIRT_ADDR, page_num * PAGE_SIZE,
+	     PROT_READ | PROT_WRITE | PROT_EXEC, 0, 0, 0);
+  if (virt_addr == (void *) -1)
     return -1;
   memcpy (virt_addr + NULL_PADDING_SIZE, _binary_bin_shell_start,
 	  (size_t) _binary_bin_shell_size);
-  va_map_add ((size_t) virt_addr, page_num * PAGE_SIZE);
   return (size_t) virt_addr + ENTRY_POINT_OFFSET;
 }
 
@@ -62,6 +65,7 @@ va_map_add (size_t start, size_t size)
 {
   struct task_struct *cur = current;
   int i;
+  // TODO: lock
   for (i = 0; i < VA_MAP_SIZE; ++i)
     {
       if (cur->va_maps[i].size == 0)
@@ -105,7 +109,7 @@ do_exec (void (*func) ())
     {
       current->stack =
 	page_alloc_virt (current->ctx.PGD | KPGD, USER_STACK_ADDR,
-			 STACK_SIZE >> 12);
+			 STACK_SIZE / PAGE_SIZE, pd_encode_ram (0) | PD_RW);
       if (!current->stack)
 	return -1;
       va_map_add ((size_t) current->stack, STACK_SIZE);
@@ -170,7 +174,9 @@ va_map_cpy (struct task_struct *new)
 	{
 	  // allocate for temporary use
 	  critical_entry ();
-	  addr = page_alloc_virt (KPGD, 0, src->size / PAGE_SIZE);
+	  addr =
+	    page_alloc_virt (KPGD, 0, src->size / PAGE_SIZE,
+			     pd_encode_ram (0));
 	  critical_exit ();
 	  // TODO: handle alloc fail
 	  if (!addr)

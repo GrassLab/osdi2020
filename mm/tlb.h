@@ -17,7 +17,7 @@
 #define PD_DECODE(pd) ((size_t *)(((size_t) pd & 0xfffffffff000) | 0xffff000000000000))
 #define PD_RW (0x1 << 6)
 #define PD_RO (0x3 << 6)
-#define PD_XN (0x1 << 54)
+#define PD_XN (0x1ul << 54)
 
 struct page_struct
 {
@@ -28,7 +28,8 @@ struct page_struct
 
 void page_init (struct page_struct *page, size_t PGD, size_t virt_addr);
 void *page_alloc (size_t page_num);
-void *page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num);
+void *page_alloc_virt (size_t PGD, size_t virt_addr, size_t page_num,
+		       size_t attr);
 void page_free (void *paddr, size_t page_num);
 void page_free_virt (size_t PGD, size_t virt_addr, size_t page_num);
 void tlb_init ();
