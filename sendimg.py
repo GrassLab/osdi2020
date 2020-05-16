@@ -3,7 +3,6 @@ import serial
 import os
 import sys
 import numpy as np
-import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument("image")
@@ -30,13 +29,6 @@ def main():
         bytecodes = f.read()
 
     file_checksum = checksum(bytecodes)
-
-    cmd = "loadimg\n"
-    for c in cmd:
-        ser.write(c.encode())
-        time.sleep(0.01)
-    ser.write(b'\n')
-    time.sleep(0.1)
 
     ser.write(file_size.to_bytes(4, byteorder="big"))
     ser.write(file_checksum.to_bytes(4, byteorder="big"))

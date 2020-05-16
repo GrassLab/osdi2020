@@ -3,7 +3,11 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
-#define TASK_POOL_SIZE 64
+#define MAX_TASKS 64
+
+extern struct task_struct *current;
+extern struct task_struct *task_pool[MAX_TASKS];
+extern int running_tasks;
 
 struct cpu_context {
     // ARM calling convention
@@ -25,51 +29,12 @@ struct cpu_context {
 
 enum task_state {
     RUNNING,
-    ZOMBIE,
-    EXIT,
 };
 
 struct task_struct {
     uint64_t id;
     enum task_state state;
     struct cpu_context cpu_context;
-    uint64_t priority;
-    uint64_t counter;
-    int exit_status;
-    // stack pointer
-    char *kstack;  // decide after privilege_task_create
-    char *ustack;  // decide after exec / fork
-    /*
-     * bit 0: reschedule
-     * bit 1: preemptable
-     * bit 2: kill
-     */
-    uint64_t flag;
 };
 
-#define INIT_PRIORITY       5
-
-#define INIT_FLAG           0b010
-#define RESCHEDULE_BIT      0
-#define PREEMPTABLE_BIT     1
-#define KILL_BIT            2
-
-#define HAS(flag, bit) (flag & (1 << bit))
-#define SET(flag, bit) flag |= (1 << bit)
-#define CLR(flag, bit)        \
-    uint64_t mask = 1 << bit; \
-    flag &= ~mask
-
 #endif
-
-extern struct task_struct *current_task;
-extern struct task_struct task_pool[];
-
-void schedule_init();
-int privilege_task_create(void (*func)());
-void context_switch(struct task_struct *next);
-void schedule();
-void do_exec(void (*func)());
-int do_fork();
-void do_exit(int status);
-extern void switch_to(struct cpu_context *prev, struct cpu_context *next);

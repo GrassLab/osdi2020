@@ -1,14 +1,14 @@
 #ifndef __UART0_H__
 #define __UART0_H__
 
+#include "queue.h"
 #define UART0_BUF_MAX_SIZE 1024
+extern struct queue read_buf, write_buf;
 
 #endif
 
-extern struct queue read_buf, write_buf;
-
 void uart_init();
-void uart0_write(char c);
-char uart0_read();
+void uart_write(char c);
+char uart_read();
 void uart_printf(char* fmt, ...);
 void uart_flush();

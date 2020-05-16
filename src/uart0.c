@@ -2,11 +2,11 @@
 
 #include "mbox.h"
 #include "my_string.h"
+#include "queue.h"
 #include "peripherals/gpio.h"
 #include "peripherals/irq.h"
 #include "peripherals/mbox.h"
 #include "peripherals/uart0.h"
-#include "queue.h"
 
 struct queue read_buf, write_buf;
 
@@ -65,31 +65,31 @@ void uart_init() {
     /* Enable UART */
     *UART0_CR = 0x301;
 
-    QUEUE_INIT(read_buf, UART0_BUF_MAX_SIZE);
-    QUEUE_INIT(write_buf, UART0_BUF_MAX_SIZE);
+    queue_init(&read_buf, UART0_BUF_MAX_SIZE);
+    queue_init(&write_buf, UART0_BUF_MAX_SIZE);
 }
 
-char uart0_read() {
-    while (QUEUE_EMPTY(read_buf)) {
-        asm volatile("nop");
+char uart_read() {
+    while (queue_empty(&read_buf)) {
+        asm volatile ("nop");
     }
-    char r = QUEUE_POP(read_buf);
+    char r = queue_pop(&read_buf);
     return r == '\r' ? '\n' : r;
 }
 
-void uart0_write(char c) {
-    if (*UART0_FR & 0x80) {  // TX FIFO Empty
+void uart_write(char c) {
+    if (*UART0_FR & 0x80) { // TX FIFO Empty
         // trigger interrupt by sending one character
-        if (QUEUE_EMPTY(write_buf)) {
+        if (queue_empty(&write_buf)) {
             *UART0_DR = c;
         }
         else {
-            QUEUE_PUSH(write_buf, c);
-            *UART0_DR = QUEUE_POP(write_buf);
+            queue_push(&write_buf, c);
+            *UART0_DR = queue_pop(&write_buf);
         }
     }
     else {
-        QUEUE_PUSH(write_buf, c);  // push to write queue, drop if buffer full
+        queue_push(&write_buf, c); // push to write queue, drop if buffer full
     }
 }
 
@@ -97,13 +97,13 @@ void uart_printf(char* fmt, ...) {
     __builtin_va_list args;
     __builtin_va_start(args, fmt);
 
-    char str[256];
-    vsprintf(str, fmt, args);
+    extern volatile unsigned char _end;  // defined in linker
+    char* s = (char*)&_end;              // put temporary string after code
+    vsprintf(s, fmt, args);
 
-    char* s = &str[0];
     while (*s) {
-        if (*s == '\n') uart0_write('\r');
-        uart0_write(*s++);
+        if (*s == '\n') uart_write('\r');
+        uart_write(*s++);
     }
 }
 

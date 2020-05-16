@@ -11,7 +11,7 @@ enum ANSI_ESC {
 };
 
 enum ANSI_ESC decode_csi_key() {
-    char c = uart0_read();
+    char c = uart_read();
     if (c == 'C') {
         return CursorForward;
     }
@@ -19,7 +19,7 @@ enum ANSI_ESC decode_csi_key() {
         return CursorBackward;
     }
     else if (c == '3') {
-        c = uart0_read();
+        c = uart_read();
         if (c == '~') {
             return Delete;
         }
@@ -28,7 +28,7 @@ enum ANSI_ESC decode_csi_key() {
 }
 
 enum ANSI_ESC decode_ansi_escape() {
-    char c = uart0_read();
+    char c = uart_read();
     if (c == '[') {
         return decode_csi_key();
     }
@@ -41,7 +41,7 @@ void shell_input(char* cmd) {
     int idx = 0, end = 0, i;
     cmd[0] = '\0';
     char c;
-    while ((c = uart0_read()) != '\n') {
+    while ((c = uart_read()) != '\n') {
         // Decode CSI key sequences
         if (c == 27) {
             enum ANSI_ESC key = decode_ansi_escape();
@@ -116,7 +116,7 @@ void shell_controller(char* cmd) {
     }
     else if (!strcmp(cmd, "irq")) {
         asm volatile("svc #2");
-        uart0_read();
+        uart_read();
         asm volatile("svc #3");
     }
     else if (!strcmp(cmd, "hello")) {
