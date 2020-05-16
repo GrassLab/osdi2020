@@ -283,7 +283,7 @@ sys_page_status (int *free, int *alloc)
 void *
 virt_to_phys (void *virt)
 {
-  size_t offset, page_ind;
+  size_t page_ind;
   size_t *table;
   int tlb_ind;
 
