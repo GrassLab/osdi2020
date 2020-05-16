@@ -2,9 +2,10 @@
 #define __META_MACRO_H__
 
 #define UNUSED(x) (void)(x)
+#define VA_BASE 0xffff000000000000
 #define PERIPHERAL_BUS_BASE 0x7E000000
 #define PERIPHERAL_PHYSICAL_BASE 0x3F000000
-#define PERIPHERAL_TO_PHYSICAL(x) ((x & 0x00FFFFFF) | (PERIPHERAL_PHYSICAL_BASE & 0xFF000000))
+#define PERIPHERAL_TO_PHYSICAL(x) ((x & 0x00FFFFFF) | (PERIPHERAL_PHYSICAL_BASE & 0xFF000000) | VA_BASE)
 #define CHECK_BIT(var,pos) ((var) & ((unsigned)1<<(pos)))
 #define CLEAR_BIT(var, pos) ((var) &= ~((unsigned)1 << (pos)))
 #define SET_BIT(var, pos) ((var) |= ((unsigned)1 << (pos)))

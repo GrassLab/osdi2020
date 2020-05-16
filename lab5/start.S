@@ -21,7 +21,7 @@ other_core:
 core_0:
 
   // setup exception vector for EL1
-  ldr x0, =EL1_vector
+  ldr x0, = EL1_vector //point to el1_vector's virtual address
   msr VBAR_EL1, x0
 
   // set rw bit in hcr_el2 because we're using 64-bit kernel
@@ -30,25 +30,32 @@ core_0:
   orr x0, x0, x1
   msr hcr_el2, x0
 
-  // set stack pointer to __bss_end__ + 0x4000
-  ldr x0, =__bss_end__
-  add x0, x0, #0x4000
+  // setup spsr_el2
+  // Ref: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0488c/CHDDGJID.html
+  // Use el1h -> sp_el1 -> 0x5
+  mov x0, 0x5
+  msr spsr_el2, x0
+
+  // Use eret to el1
+  adr x0, el1_entry
+  msr elr_el2, x0
+  eret
+
+el1_entry:
+// EL1 now
+  // set stack pointer to 0xffff000000004000
+  mov x0, #0xffff000000000000
+  add x0, x0, #4000
   mov sp, x0
 
-  // setup sp_el for el0 and el1, el2 need to be set in el3
-  add x0, x0, #0x2000
-  msr sp_el0, x0
-  add x0, x0, #0x2000
-  msr sp_el1, x0
-
-  // initialize .bss section
-  ldr x0, =__bss_start__
+  // initialize .bss section in physical
+  adr x0, __bss_start__
   eor x1, x1, x1 // x1 = 0
-  ldr x2, =__bss_end__
+  adr x2, __bss_end__
 
   // jump to el2_to_el1 if .bss length is 0
   sub x3, x2, x0
-  cbz x3, el2_to_el1
+  cbz x3, prepare_mmu
 
 bss_reset_loop:
   str x1, [x0], #0x8
@@ -57,25 +64,18 @@ bss_reset_loop:
 
   cbnz x3, bss_reset_loop
 
-el2_to_el1:
-  // setup spsr_el2
-  // Ref: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0488c/CHDDGJID.html
-  // Use el1h -> sp_el1 -> 0x5
-  mov x0, 0x5
-  msr spsr_el2, x0
-
-  // Use eret to el1
-  adr x0, el1_schedule
-  msr elr_el2, x0
-  eret
-
-el1_schedule:
-// EL1 now
+prepare_mmu:
   bl mmu_tcr_el1_init
   bl mmu_mair_el1_init
-  bl mmu_ttbr0_el1_init
+  bl mmu_ttbr0_ttbr1_el1_init
+
+  ldr x0, =boot_rest // indirect branch to the virtual address before enable mmu
+
   bl mmu_enable_mmu
 
+  br x0 // boot_rest
+
+boot_rest:
   bl uart_init
   bl scheduler_init
 

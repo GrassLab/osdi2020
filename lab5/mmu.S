@@ -87,10 +87,11 @@ mmu_mair_el1_init:
     (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8)) \
   )
   msr mair_el1, x0
+  ret
 
-.global mmu_ttbr0_el1_init
-.type mmu_ttbr0_el1_init,%function
-mmu_ttbr0_el1_init:
+.global mmu_ttbr0_ttbr1_el1_init
+.type mmu_ttbr0_ttbr1_el1_init,%function
+mmu_ttbr0_ttbr1_el1_init:
   /* ttbr0_el1: Holds the base address of the translation table for the initial lookup for stage 1 of the translation of an address from the lower VA range in the EL1&0 translation regime, and other information for this translation regime. */
 
   mov x0, 0 // PGD's page frame at 0x0
@@ -109,6 +110,7 @@ mmu_ttbr0_el1_init:
   str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 
   msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
+  msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
   ret
 
 .global mmu_enable_mmu
