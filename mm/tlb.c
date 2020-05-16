@@ -60,6 +60,42 @@ page_free_virt (size_t PGD, size_t virt_addr, size_t page_num)
     }
 }
 
+int
+unmap_virt (size_t PGD, size_t virt_addr, size_t size)
+{
+  size_t offset, page_ind;
+  size_t virt;
+  size_t *table;
+  int tlb_ind;
+
+  for (offset = 0; offset < size; offset += PAGE_SIZE)
+    {
+      virt = virt_addr + offset;
+      table = (size_t *) PGD;
+      for (tlb_ind = 39; tlb_ind >= 21; tlb_ind -= 9)
+	{
+	  page_ind = (virt >> tlb_ind) & 0x1ff;
+	  if (!table[page_ind])
+	    {
+	      // TODO: handle misused
+	      printf ("%s\r\n", "TODO: handle misused");
+	      return 0;
+	    }
+	  table = PD_DECODE (table[page_ind]);
+	}
+      page_ind = (virt >> 12) & 0x1ff;
+      if (!table[page_ind])
+	{
+	  // TODO: handle misused
+	  printf ("%s\r\n", "TODO: handle misused");
+	  return 0;
+	}
+
+      table[page_ind] = 0;
+    }
+  return 0;
+}
+
 /* Return -1 for memory not enough
  * -2 for conflicted virtual address
  */

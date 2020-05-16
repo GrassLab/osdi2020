@@ -14,12 +14,19 @@ privilege_task_create (void (*func) ())
       break;
   if (i == POOL_SIZE)
     return NULL;
+  // init context
   bzero (&task_pool[i].ctx, sizeof (task_pool[i].ctx));
-  task_pool[i].task_id = i + 1;
-  task_pool[i].ctx.lr = (size_t) func;
+  // kernel space
   task_pool[i].kstack = page_alloc_virt (KPGD, 0, STACK_SIZE >> 12);
+  task_pool[i].ctx.lr = (size_t) func;
   task_pool[i].ctx.sp = (size_t) task_pool[i].kstack + STACK_SIZE;
+  // user space
+  task_pool[i].task_id = i + 1;
   task_pool[i].signal_map = 0;
+  // init user PGD
+  task_pool[i].ctx.PGD = (size_t) page_alloc_virt (KPGD, 0, 1) & ~KPGD;
+  bzero (task_pool[i].va_maps, sizeof (task_pool[i].va_maps));
+  // add to runqueue
   list_add_tail (&task_pool[i].list, runqueue);
   return &task_pool[i];
 }
@@ -29,24 +36,62 @@ load_binary (size_t bin_addr)
 {
 #define DEFAULT_VIRT_ADDR 0x55f75c12d000
 #define NULL_PADDING_SIZE 0x200
-#define ENTRY_POINT_OFFSET 0xc0c
+#define ENTRY_POINT_OFFSET 0xd88
   // we only have shell program, hard code it
   extern char _binary_bin_shell_size[];
   extern char _binary_bin_shell_start[];
-  extern char _binary_bin_shell_end[];
-  size_t size;
+  size_t page_num;
   void *virt_addr;
   if (bin_addr != (size_t) _binary_bin_shell_start)
     return -1;
-  size = (size_t) _binary_bin_shell_size + NULL_PADDING_SIZE;
-  size = (size % PAGE_SIZE) ? 1 + size / PAGE_SIZE : size / PAGE_SIZE;
+  page_num = (size_t) _binary_bin_shell_size + NULL_PADDING_SIZE;
+  page_num =
+    (page_num % PAGE_SIZE) ? 1 + page_num / PAGE_SIZE : page_num / PAGE_SIZE;
   virt_addr =
-    page_alloc_virt (current->ctx.PGD | KPGD, DEFAULT_VIRT_ADDR, size);
+    page_alloc_virt (current->ctx.PGD | KPGD, DEFAULT_VIRT_ADDR, page_num);
   if (virt_addr == NULL)
     return -1;
   memcpy (virt_addr + NULL_PADDING_SIZE, _binary_bin_shell_start,
 	  (size_t) _binary_bin_shell_size);
+  va_map_add ((size_t) virt_addr, page_num * PAGE_SIZE);
   return (size_t) virt_addr + ENTRY_POINT_OFFSET;
+}
+
+void
+va_map_add (size_t start, size_t size)
+{
+  struct task_struct *cur = current;
+  int i;
+  for (i = 0; i < VA_MAP_SIZE; ++i)
+    {
+      if (cur->va_maps[i].size == 0)
+	{
+	  cur->va_maps[i].start = start;
+	  cur->va_maps[i].size = size;
+	  return;
+	}
+    }
+  // TODO: panic
+}
+
+void
+va_map_clear ()
+{
+  struct task_struct *cur = current;
+  struct va_map_struct *vmap;
+  int i;
+  for (i = 0; i < VA_MAP_SIZE; ++i)
+    {
+      vmap = &cur->va_maps[i];
+      if (vmap->size != 0)
+	{
+	  page_free_virt (cur->ctx.PGD | ~KPGD, vmap->start,
+			  vmap->size / PAGE_SIZE);
+	  vmap->size = 0;
+	  vmap->start = 0;
+	}
+    }
+  cur->stack = 0;
 }
 
 int
@@ -54,11 +99,7 @@ do_exec (void (*func) ())
 {
   size_t entry_point;
 
-  if (!current->ctx.PGD)
-    {
-      current->ctx.PGD = (size_t) page_alloc_virt (KPGD, 0, 1) & ~KPGD;
-      asm volatile ("msr ttbr0_el1, %0"::"r" (current->ctx.PGD));
-    }
+  va_map_clear ();
   entry_point = load_binary ((size_t) func);
   if (!current->stack)
     {
@@ -67,6 +108,7 @@ do_exec (void (*func) ())
 			 STACK_SIZE >> 12);
       if (!current->stack)
 	return -1;
+      va_map_add ((size_t) current->stack, STACK_SIZE);
     }
   asm volatile ("mov x0, %0\n" "mov sp, %1\n"
 		"msr sp_el0, x0\n" "msr spsr_el1, xzr\n" "msr elr_el1, %2\n"
@@ -109,68 +151,76 @@ struct trapframe *
 get_syscall_trapframe (struct task_struct *task)
 {
   struct trapframe *tf;
-  tf = (struct trapframe *) (&task->kstack + STACK_SIZE - sizeof (*tf));
+  tf = (struct trapframe *) (task->kstack + STACK_SIZE - sizeof (*tf));
   return tf;
 }
 
 void
-rebase_stack_pointer (size_t fp, size_t old_base, size_t new_base)
+va_map_cpy (struct task_struct *new)
 {
-  size_t *target;
-  target = (size_t *) fp;
-  while ((size_t) target - old_base < STACK_SIZE)
+  struct task_struct *cur = current;
+  struct va_map_struct *src, *dst;
+  int i;
+  void *addr;
+  for (i = 0; i < VA_MAP_SIZE; ++i)
     {
-      *target = new_base + *target - old_base;
-      target = (size_t *) *target;
+      src = &cur->va_maps[i];
+      dst = &new->va_maps[i];
+      if (src->size != 0)
+	{
+	  // allocate for temporary use
+	  critical_entry ();
+	  addr = page_alloc_virt (KPGD, 0, src->size / PAGE_SIZE);
+	  critical_exit ();
+	  // TODO: handle alloc fail
+	  if (!addr)
+	    printf ("%s\r\n", "TODO: handle alloc fail");
+	  // copy it
+	  memcpy (addr, (void *) src->start, src->size);
+	  // remap to dst's memory
+	  unmap_virt (KPGD, (size_t) addr, src->size);
+	  if (map_virt_to_phys (new->ctx.PGD | KPGD, src->start,
+				(size_t) addr & ~KPGD, src->size,
+				pd_encode_ram (0) | PD_RW))
+	    {
+	      // TODO: handle alloc fail
+	      printf ("%s\r\n", "TODO: handle map fail");
+	    }
+	  *dst = *src;
+	}
     }
 }
 
 int
 do_fork ()
 {
+  extern void do_fork_child ();
   struct task_struct *new;
   struct trapframe *tf;
-  int pid;
 
   // create a task not in runqueue
-  disable_irq ();
-  new = privilege_task_create (&&child);
+  critical_entry ();
+  new = privilege_task_create (do_fork_child);
   list_del (&new->list);
-  enable_irq ();
+  critical_exit ();
   // check allocated task
   if (!new)
     return -1;
-  // save current context and copy to new task
-  switch_to (current, current);
-  // setup kernel
-  memcpy (new->kstack, current->kstack, STACK_SIZE);
-  new->ctx = current->ctx;
-  new->ctx.fp =
-    (size_t) new->kstack + current->ctx.fp - (size_t) current->kstack;
-  new->ctx.sp =
-    (size_t) new->kstack + current->ctx.sp - (size_t) current->kstack;
-  new->ctx.lr = (size_t) &&child;
-  // setup user
-  memcpy (new->stack, current->stack, STACK_SIZE);
+  // set kernel stack
   tf = get_syscall_trapframe (new);
-  tf->fp = (size_t) new->stack + tf->fp - (size_t) current->stack;
-  tf->sp_el0 = (size_t) new->stack + tf->sp_el0 - (size_t) current->stack;
-  rebase_stack_pointer (tf->fp, (size_t) current->stack, (size_t) new->stack);
+  new->ctx.sp = (size_t) tf;
+  // copy trapframe and set child return value
+  memcpy (tf, get_syscall_trapframe (current), sizeof (struct trapframe));
+  tf->x0 = 0;
+  // copy user memory
+  va_map_cpy (new);
 
   // add new task to runqeue tail
-  disable_irq ();
+  critical_entry ();
   list_add_tail (&new->list, runqueue);
-  enable_irq ();
+  critical_exit ();
 
-  pid = new->task_id;
-  if (pid != 0)
-    return pid;
-  else
-    {
-    child:
-      asm volatile ("mov x0, xzr");
-      return 0;
-    }
+  return new->task_id;
 }
 
 int
