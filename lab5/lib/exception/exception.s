@@ -101,7 +101,10 @@ add sp, sp, #256
 bl getCurrentTask
 mov x9, sp
 str x9, [x0, 16 * 6]
-mov sp, 0x400000
+mov x9, 0x3E000000
+mov x10, 0xffff000000000000
+orr x9, x10, x9
+mov sp, x9
 .endm
 
 .macro _interrupt_exit
