@@ -32,6 +32,7 @@ enum task_state {
 struct task_t {
     uint64_t id;
     enum task_state state;
+    int priority;
     struct cpu_context cpu_context;
 };
 
