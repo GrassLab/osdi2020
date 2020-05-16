@@ -49,7 +49,7 @@ void free_user_page(struct task_struct *task) {
 }
 
 void free_kernel_page(struct task_struct *task) {
-	for (int i = 1 ; i < task->mm.kernel_pages_count ; i++) {
+	for (int i = 1 ; i <= task->mm.kernel_pages_count ; i++) {
 		free_page(task->mm.kernel_pages[i]);
 		num_free_pages += 1;
 	}
@@ -146,6 +146,8 @@ void free_zombie_task() {
 			free_kernel_page((unsigned long)task[i]);
 			task[i]->state = TASK_FREE;
 			free_page(((unsigned long)task[i]) - VA_START);
+			num_free_pages += 1;
+			
 		}
 	}
 } 

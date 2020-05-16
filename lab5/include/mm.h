@@ -43,6 +43,7 @@ void memcpy(unsigned long src, unsigned long dst, unsigned long n);
 int copy_virt_memory(struct task_struct *dst); 
 unsigned long allocate_kernel_page(); 
 unsigned long allocate_user_page(struct task_struct *task, unsigned long va); 
+int get_remain_num();
 
 extern unsigned long pg_dir;
 

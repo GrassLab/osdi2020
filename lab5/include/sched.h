@@ -14,7 +14,7 @@
 
 #define TASK_RUNNING				0
 #define TASK_ZOMBIE				1
-
+#define TASK_FREE				2
 #define PF_KTHREAD				0x00000002	
 
 
@@ -61,6 +61,7 @@ struct task_struct {
 	long preempt_count;
 	unsigned long flags;
 	struct mm_struct mm;
+	int  task_id;
 };
 
 extern void sched_init(void);
@@ -75,7 +76,7 @@ extern void exit_process(void);
 #define INIT_TASK \
 /*cpu_context*/ { { 0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 /* state etc */	 0,0,1, 0, PF_KTHREAD, \
-/* mm */ { 0, 0, {{0}}, 0, {0}} \
+/* mm */ { 0, 0, {{0}}, 0, {0}}, 0 \
 }
 #endif
 #endif

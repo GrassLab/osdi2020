@@ -3,6 +3,7 @@
 #define SYS_EXIT_NUMBER 2
 #define SYS_REMA_NUMBER 3
 #define SYS_TASK_ID     4
+#define SYS_READ_NUMBER 5
 
 .section ".text.boot"
 
@@ -20,8 +21,8 @@ delay:
     bne  delay
     ret
 
-.globl call_sys_write
-call_sys_write:
+.globl write
+write:
     mov w8, #SYS_WRITE_NUMBER
     svc #0
     ret
@@ -38,8 +39,8 @@ fork:
     svc #0
     ret
 
-.globl sys_remain_page_num
-sys_remain_page_num:
+.globl remain_page_num
+remain_page_num:
     mov w8, #SYS_REMA_NUMBER
     svc #0
     ret
@@ -50,3 +51,8 @@ get_taskid:
     svc #0
     ret
  
+.globl read
+read:
+    mov w8, #SYS_READ_NUMBER
+    svc #0
+    ret

@@ -34,7 +34,7 @@ void kernel_main()
 	init_printf(NULL, putc);
 	irq_vector_init();
 	enable_core_timer();
-	printf("timer~~\r\n");
+
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
 	enable_irq();
 	if (res < 0) {
@@ -43,8 +43,7 @@ void kernel_main()
 	}
 
 	while (1){
-		printf("free zombie task\r\n");
 		free_zombie_task();
-		delay(1000000000);
+		schedule();
 	}	
 }
