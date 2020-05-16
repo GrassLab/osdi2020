@@ -76,7 +76,8 @@ _start:
     ldr     x2, =exception_table_el2
     msr     vbar_el2, x2
     // jump to el1_start when call eret
-    adr	    x0, el1_to_el0		
+    // adr	    x0, el1_to_el0		
+    adr	    x0, main_start		
 	msr	    elr_el2, x0
     eret
 
