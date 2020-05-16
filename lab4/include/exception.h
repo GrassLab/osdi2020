@@ -2,8 +2,8 @@
 #define	_EXCEPTION_H
 #include "base.h"
 
-unsigned int get_syscall_number(unsigned int trapframe);
-unsigned int get_syscall_parameter(unsigned int trapframe);
+unsigned long get_syscall_number(unsigned long trapframe);
+unsigned long get_syscall_parameter(unsigned long trapframe);
 void exception_handler(unsigned int);
 
 #endif

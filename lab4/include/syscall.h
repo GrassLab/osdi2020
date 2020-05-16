@@ -10,6 +10,9 @@
 #define SYS_EXIT 21
 
 int get_taskid();
-void get_input();
+unsigned long get_input();
 void printf_(char *c);
+int fork();
+int exit();
+void exec(void(*func)());
 #endif

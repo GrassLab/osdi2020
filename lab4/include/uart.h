@@ -52,5 +52,5 @@ void uart_hex(unsigned int d);
 void uart_send_int(int n);
 char uart_recv();
 void putc (char *p ,char c);
-unsigned int getRegister(unsigned int address);
-void setRegister(unsigned int address, unsigned int value);
+unsigned long getRegister(unsigned long address);
+void setRegister(unsigned long address, unsigned long value);

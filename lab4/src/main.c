@@ -7,6 +7,7 @@
 #include "config.h"
 #include "thread.h"
 #include "syscall.h"
+#include "sched.h"
 
 task_manager_t TaskManager;
 task_t* current;
@@ -145,6 +146,8 @@ void main()
     init_uart();
     // init_lfb();
     init_printf(0, putc);
+    printf("finish\n");
+
     init_task_manager();
 
 
@@ -155,16 +158,16 @@ void main()
     // task_t* new_task5 = privilege_task_create((unsigned long)&user_task2);
     task_t* new_task6 = privilege_task_create((unsigned long)&exec_fork);
 
-    printf("finish\n");
     // shell();
+
     enable_interrupt_controller();
 	enable_irq();
     core_timer_enable();
     schedule();
 
     // echo everything back
-    while(1) {
-        uart_send(uart_getc());
-    }
+    // while(1) {
+    //     uart_send(uart_getc());
+    // }
 
 }

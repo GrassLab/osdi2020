@@ -7,13 +7,13 @@
 extern task_t* current;
 extern int check_reschedule();
 
-unsigned int get_syscall_number(unsigned int trapframe){
-	unsigned int x8 = *(unsigned int*)(trapframe+8*8);
+unsigned long get_syscall_number(unsigned long trapframe){
+	unsigned int x8 = *(unsigned long*)(trapframe+8*8);
 	return x8;
 }
 
-unsigned int get_syscall_parameter(unsigned int trapframe){
-	unsigned int x0 = *(unsigned int*)(trapframe+0*8);
+unsigned long get_syscall_parameter(unsigned long trapframe){
+	unsigned long x0 = *(unsigned long*)(trapframe+0*8);
 	return x0;
 }
 
@@ -65,7 +65,7 @@ void exception_handler(unsigned int trapframe)
 
     unsigned int el_level;
     unsigned int esr, elr, spsr, far;
-    unsigned int ec, iss, retaddr;
+    // unsigned int ec, iss, retaddr;
     unsigned int sp_el0, elr_el1, spsr_el1;
     asm volatile ("mrs %0, CurrentEL" : "=r" (el_level));
 
@@ -82,9 +82,9 @@ void exception_handler(unsigned int trapframe)
         asm volatile ("mrs %0, far_el2" : "=r" (far));
     }
 
-    ec = esr >> (32-6);
-    iss = esr & (0xffffff);
-    retaddr = elr;
+    // ec = esr >> (32-6);
+    // iss = esr & (0xffffff);
+    // retaddr = elr;
 
     //load register value
     asm volatile ("mrs %0, sp_el0" : "=r" (sp_el0));
@@ -92,7 +92,6 @@ void exception_handler(unsigned int trapframe)
     asm volatile ("mrs %0, spsr_el1" : "=r" (spsr_el1));
 
 
-	int num = (esr & 0xffffff);
 
     // Set trapframe
     task_t *task = get_current();
@@ -111,7 +110,7 @@ void exception_handler(unsigned int trapframe)
 
 
 
-
+	// int num = (esr & 0xffffff);
 	// check_reschedule();
 
 

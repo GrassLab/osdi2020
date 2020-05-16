@@ -12,7 +12,7 @@ void *_memset(void *dst, int val, int count){
 
 
 void *_memcpy(const void *from, void *dst, int count){
-	char *f = from;
+	const char *f = from;
 	char *d = dst;
 
 	while (count--)
@@ -23,7 +23,7 @@ void *_memcpy(const void *from, void *dst, int count){
 
 
 void *_copy_stack(const void *from, void *dst, int count){
-	char *f = from;
+	const char *f = from;
 	char *d = dst;
 
 	while (count--)

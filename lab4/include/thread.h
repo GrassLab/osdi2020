@@ -3,7 +3,6 @@
 
 #define STACK_SIZE 4096
 #define MAX_TASK_SIZE 64
-#define schedule _schedule
 
 struct cpu_context {
     unsigned long x19;
@@ -83,4 +82,7 @@ void fork_child_exit();
 void schedule_tail(void);
 void preempt_enable(void);
 void do_exit();
+void do_exec(void(*func)());
+int do_fork();
+
 #endif

@@ -132,12 +132,12 @@ void uart_send_int(int n) {
     uart_puts("\n");
 }
 
-unsigned int getRegister(unsigned int address) {
-    return *(volatile unsigned int*)(address);
+unsigned long getRegister(unsigned long address) {
+    return *(volatile unsigned long*)(address);
 }
 
-void setRegister(unsigned int address, unsigned int value) {
-    *(volatile unsigned int*)(address) = value;
+void setRegister(unsigned long address, unsigned long value) {
+    *(volatile unsigned long*)(address) = value;
 }
 
 char uart_recv() {

@@ -1,9 +1,11 @@
 #include "thread.h"
+#include "sched.h"
 #include "config.h"
 
 task_manager_t TaskManager;
 task_t* current;
-extern schedule();
+extern struct task* get_current();
+
 
 void idle_task(){
     while(1){
@@ -142,7 +144,6 @@ int do_fork(){
 
 }
 
-extern struct task* get_current();
 
 // void context_switch(struct task* next){
 //     struct task* prev = current;

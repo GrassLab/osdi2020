@@ -5,6 +5,8 @@
 extern task_t* current;
 extern task_manager_t TaskManager;
 task_t* task_run_queue[10];
+extern task_t* get_current();
+extern void set_current(task_t*);
 
 void _schedule2(void)
 {
@@ -69,7 +71,7 @@ void switch_to(task_t * next)
     printf("current number address is %x\n", get_current());
     printf("---\n");
 
-	struct task_struct * prev = current;
+	task_t* prev = current;
 	current = next;
     printf("switch start\n");
 	cpu_switch_to(prev, next);
