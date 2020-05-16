@@ -22,19 +22,36 @@ continue:
     // becuase virtual memory
     // so we cannot bl memzero here
     // we need set the virtual memory first
+    //ldr	x0, =SCTLR_VALUE_MMU_DISABLED
+    //msr	sctlr_el1, x0
 
-#ifdef RUN_ON_EL2
-    // init bss
-    adr x0, __bss_beg
-    adr x1, __bss_end
-    bl  memzero
-    // note this
-    bl init_irq
-    ldr x0, =exception_table
-    msr vbar_el2, x0
-    b kernel_entry
-#else
+
 #if defined(RUN_ON_EL0) || defined(RUN_ON_EL1)
+
+    ldr	x0, =SCTLR_VALUE_MMU_DISABLED
+    msr	sctlr_el1, x0
+
+    ldr	x0, =HCR_VALUE
+    msr	hcr_el2, x0
+
+    ldr	x0, =SPSR_VALUE
+    msr	spsr_el2, x0
+
+    adr	x0, el1_entry
+    msr	elr_el2, x0
+
+    eret
+#else
+    b kernel_entry
+#endif
+
+el1_entry:
+
+    ldr x0, =__stack_top
+    mov sp, x0
+
+    ldr x0, =exception_table
+    msr vbar_el1, x0
 
     // beg mmu
     ldr x0, = TCR_CONFIG_DEFAULT
@@ -63,43 +80,17 @@ continue:
 
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
 
-    msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
-    mrs x2, sctlr_el1
-    orr x2 , x2, 1
-    msr sctlr_el1, x2 // enable MMU, cache remains disabled
+    ldr x2, =boot_rest // indirect branch to the virtual address
 
-    //ldr x2, boot_rest // indirect branch to the virtual address
-    //br x2
-    //b boot_rest
+    msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
+    mrs x1, sctlr_el1
+    orr x1 , x1, 1
+    msr sctlr_el1, x1 // enable MMU, cache remains disabled
+
+    br x2
 
 boot_rest:
     // end mmu
-
-    //ldr	x0, =SCTLR_VALUE_MMU_DISABLED
-    //msr	sctlr_el1, x0
-
-    ldr	x0, =HCR_VALUE
-    msr	hcr_el2, x0
-
-    ldr	x0, =SPSR_VALUE
-    msr	spsr_el2, x0
-
-    adr	x0, el1_entry
-    msr	elr_el2, x0
-
-    eret
-#else
-    b kernel_entry
-#endif
-#endif
-
-el1_entry:
-
-    ldr x0, =__stack_top
-    mov sp, x0
-
-    ldr x0, =exception_table
-    msr vbar_el1, x0
 
     // init bss
     adr x0, __bss_beg
@@ -107,6 +98,8 @@ el1_entry:
     bl  memzero
 
     //b hang
+    bl uart_init
+    bl test
     bl init_irq
 
 #ifdef RUN_ON_EL1

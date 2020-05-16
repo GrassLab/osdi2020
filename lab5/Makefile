@@ -95,7 +95,6 @@ runmini: $(IMG)
 
 run: $(IMG)
 	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
-	#@$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none
 
 runt: stamp.img
 	@$(QEMU) -serial stdio -M raspi3 -kernel stamp.img
@@ -113,13 +112,13 @@ ttyt: stamp.img
 	@$(QEMU) -serial pty -M raspi3 -kernel stamp.img
 
 gdb: $(IMG)
-	$(QEMU) -serial stdio -M raspi3 -kernel $(IMG) -display none -S -s
+	$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -S -s
 
 update:
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt
 
 clean :
-	rm -rf *$(BUILD_DIR) kernel8.img stamp.img *.elf
+	rm -rf *$(BUILD_DIR) kernel8.img stamp.img kernel8.elf
 
 format:
 	clang-format -i src/*.c
