@@ -18,15 +18,6 @@
 #define EL 1
 #endif
 
-
-#ifdef BUGGY
-char *welcome = "              _                          " NEWLINE
-"__      _____| | ___ ___  _ __ ___   ___ " NEWLINE
-"\\ \\ /\\ / / _ \\ |/ __/ _ \\| '_ ` _ \\ / _ \\" NEWLINE
-" \\ V  V /  __/ | (_| (_) | | | | | |  __/" NEWLINE
-"  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|" NEWLINE;
-#endif
-
 #if !defined(WITHOUT_LOADER) && !defined(NO_RELOC_SELF)
 char *_kend, *_kbeg;
 #endif
@@ -58,6 +49,7 @@ int main(void) {
     println("  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|" NEWLINE);
 #endif
 
+    while(1);
 #ifdef BUILD_STAMP
 #define xstr(a) str(a)
 #define str(a) #a
@@ -94,4 +86,8 @@ int main(void) {
 #endif
   }
   return 0;
+}
+
+void test(){
+  puts("test hello world");
 }

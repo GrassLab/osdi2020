@@ -1,6 +1,8 @@
 SECTIONS
 {
-    . = _kbeg;
+    . = 0xffff000000000000;
+    . += 0x80000;
+    _kbeg = .;
     .text : {
         /* . = ALIGN(16); */
         KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*)
