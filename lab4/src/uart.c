@@ -37,7 +37,7 @@ void uart_init()
     register unsigned int r;
 
     /* initialize UART */
-    setRegister(UART0_CR,0);         // turn off UART0
+    *UART0_CR = 0;         // turn off UART0
 
     /* set up clock for consistent divisor values */
     mbox[0] = 9*4;
@@ -62,11 +62,11 @@ void uart_init()
     r=150; while(r--) { asm volatile("nop"); }
     *GPPUDCLK0 = 0;        // flush GPIO setup
 
-    setRegister(UART0_ICR, 0x7FF);// clear interrupts
-    setRegister(UART0_IBRD, 2);// 115200 baud
-    setRegister(UART0_FBRD, 0xB);
-    setRegister(UART0_LCRH, 0b11<<5);// 8n1
-    setRegister(UART0_CR, 0x301);// enable Tx, Rx, FIFO
+    *UART0_ICR = 0x7FF;    // clear interrupts
+    *UART0_IBRD = 2;       // 115200 baud
+    *UART0_FBRD = 0xB;
+    *UART0_LCRH = 0b11<<5; // 8n1
+    *UART0_CR = 0x301;     // enable Tx, Rx, FIFO
 }
 
 /**
@@ -74,9 +74,9 @@ void uart_init()
  */
 void uart_send(unsigned int c) {
     /* wait until we can send */
-    do{asm volatile("nop");}while(getRegister(UART0_FR)&0x20);
+    do{asm volatile("nop");}while(*UART0_FR&0x20);
     /* write the character to the buffer */
-    setRegister(UART0_DR, c);
+    *UART0_DR=c;
 }
 
 /**
@@ -85,9 +85,9 @@ void uart_send(unsigned int c) {
 char uart_getc() {
     char r;
     /* wait until something is in the buffer */
-    do{asm volatile("nop");}while(getRegister(UART0_FR)&0x10);
+    do{asm volatile("nop");}while(*UART0_FR&0x10);
     /* read it and return */
-    r=(char)(UART0_DR);
+    r=(char)(*UART0_DR);
     /* convert carrige return to newline */
     return r=='\r'?'\n':r;
 }
@@ -141,8 +141,13 @@ void setRegister(unsigned long address, unsigned long value) {
 }
 
 char uart_recv() {
-    while (getRegister(UART0_FR) & (1 << 4));
-    return getRegister(UART0_DR)&0xFF;
+    char r;
+    /* wait until something is in the buffer */
+    do{asm volatile("nop");}while(*UART0_FR&0x10);
+    /* read it and return */
+    r=(char)(*UART0_DR);
+    /* convert carrige return to newline */
+    return r=='\r'?'\n':r;
 }
 
 // This function is required by printf function
