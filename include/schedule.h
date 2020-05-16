@@ -3,12 +3,8 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
-#define TASK_POOL_SIZE  64
-#define KSTACK_SIZE     4096
-
-extern struct task_t *current;
-extern struct task_t *task_pool[];
-extern char *kstack_pool[];
+#define TASK_POOL_SIZE 64
+#define KSTACK_SIZE 4096
 
 struct cpu_context {
     // ARM calling convention
@@ -39,7 +35,18 @@ struct task_t {
     struct cpu_context cpu_context;
 };
 
+/* Variables init in schedule.c */
+extern struct task_t task_pool[TASK_POOL_SIZE];
+extern char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
+
+/* Function in schedule.S */
+extern struct task_t* get_current_task();
+extern void update_current_task(struct task_t *task);
+extern void switch_to(struct cpu_context* prev, struct cpu_context* next);
+
+/* Function in schedule.c */
 void schedule_init();
 void privilege_task_create(void (*func)());
+void context_switch(struct task_t* next);
 
 #endif
