@@ -5,6 +5,7 @@
 task_manager_t TaskManager;
 task_t* current;
 extern struct task* get_current();
+extern struct task* set_current();
 
 
 void idle_task(){
@@ -17,7 +18,10 @@ void idle_task(){
 }
 
 void create_idle_task(){
-    privilege_task_create((unsigned long)&idle_task);
+    task_t* init_task = privilege_task_create((unsigned long)&idle_task);
+    current = init_task;
+    set_current(init_task);
+    printf("idle task current id is: %d\n", init_task->task_id);
 }
 
 void init_task_manager(){
@@ -29,7 +33,7 @@ void init_task_manager(){
     create_idle_task();
 }
 
-void privilege_task_create(unsigned long fn){
+task_t* privilege_task_create(unsigned long fn){
     int task_id = TaskManager.task_num;
     printf("task id %d create\n", task_id);
 
@@ -53,6 +57,8 @@ void privilege_task_create(unsigned long fn){
     new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id] + STACK_SIZE;
     
     TaskManager.task_num++;
+
+    return new_task;
 }
 
 void do_exec(void(*func)()){

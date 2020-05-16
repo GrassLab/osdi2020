@@ -144,7 +144,6 @@ void exec_fork(){
 void main()
 {
     init_uart();
-    uart_puts("fsafsa\n");
         // init_lfb();
     init_printf(0, putc);
     printf("finish\n");
@@ -164,7 +163,7 @@ void main()
     enable_interrupt_controller();
 	enable_irq();
     core_timer_enable();
-    schedule();
+    idle_task();
 
     // echo everything back
     // while(1) {
