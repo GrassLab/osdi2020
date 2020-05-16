@@ -20,6 +20,9 @@ void kernel_main(void) {
     sendStringUART("Press enter to continue...");
     sendUART(recvUART());
 
+    while (1)
+        ;
+
     initIdleTaskState();
 
     _enable_core_timer();

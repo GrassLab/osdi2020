@@ -16,6 +16,8 @@ hang:
     b hang
 
 master:
+    bl init_mmu
+
     adr x0, bss_begin
     adr x1, bss_end
     sub x1, x1, x0
@@ -47,7 +49,7 @@ master:
 _from_el2_to_el1:
     mov x0, 0x3c5 // EL1h (SPSel = 1) with interrupt disabled
     msr SPSR_EL2, x0
-    adr x0, kernel_main // load exception return address
+    ldr x0, =kernel_main // load exception return address
     msr ELR_EL2, x0
     eret // return in EL1
 

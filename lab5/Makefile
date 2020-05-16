@@ -15,11 +15,15 @@ SCHEDULEDIR = lib/schedule/
 SCHEDULE_C := $(shell find $(SCHEDULEDIR) -name '*.c')
 SCHEDULE_ASM := $(shell find $(SCHEDULEDIR) -name '*.s')
 
+MMUDIR = lib/mmu/
+MMU_ASM := $(shell find $(MMUDIR) -name '*.S')
+
 OBJS := $(LIB_C:%.c=%_c.o) \
         $(LIB_ASM:%.s=%_s.o) \
         $(EXCEPTION_ASM:%.s=%_s.o) \
 		$(SCHEDULE_C:%.c=%_c.o) \
 		$(SCHEDULE_ASM:%.s=%_s.o) \
+		$(MMU_ASM:%.S=%_s.o) \
         $(KERNEL:%.c=%_c.o)
 
 all: $(EXEC).img
@@ -33,7 +37,7 @@ start.o: start.s
 %_c.o: %.c
 	aarch64-linux-gnu-gcc -o $@ $(INCLUDE) $(CFLAGS) -c $<
 
-$(EXEC).img: start.o $(OBJS)
+$(EXEC).img: start.o $(OBJS) linker.ld
 	aarch64-linux-gnu-ld -o $(EXEC).elf -T linker.ld $^
 	aarch64-linux-gnu-objcopy -O binary $(EXEC).elf $@
 

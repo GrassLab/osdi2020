@@ -1,8 +1,10 @@
 SECTIONS
 {
-    . = 0x80000;
+    . = 0xffff000000000000;
+    . += 0x80000;
 
     .text.boot : { *(.text.boot) }
+    .text.mmu : { *(.text.mmu) }
     .text.section : { *(.text.exception) }
     .text.context : { *(.text.context) }
     .text :  { *(.text) }
