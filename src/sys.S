@@ -30,3 +30,8 @@ fork:
     mov x8, SYS_FORK
     svc #0
     ret
+
+.global exit
+exit:
+    mov x8, SYS_EXIT
+    svc #0

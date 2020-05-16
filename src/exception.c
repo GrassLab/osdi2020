@@ -92,6 +92,10 @@ void sys_fork(struct trapframe* trapframe) {
     trapframe->x[0] = child_task->id;
 }
 
+void sys_exit(struct trapframe* trapframe) {
+    do_exit(trapframe->x[0]);
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_TASK_ID:
@@ -112,6 +116,10 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_FORK:
             sys_fork(trapframe);
+            break;
+
+        case SYS_EXIT:
+            sys_exit(trapframe);
             break;
     }
 }

@@ -70,6 +70,7 @@ void demo_syscall_fork() {
         while (1) {
             uart_write(buf, 256);
             delay(100000000);
+            exit(1);
         }
     }
 }

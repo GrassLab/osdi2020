@@ -71,7 +71,9 @@ int privilege_task_create(void (*func)(), int priority) {
 
 void context_switch(struct task_t* next) {
     struct task_t* prev = get_current_task();
-    task_queue_push(&runqueue, get_runqueue_elmt(prev));
+    if (prev->state == RUNNING) {
+        task_queue_push(&runqueue, get_runqueue_elmt(prev));
+    }
     update_current_task(next);
     switch_to(&prev->cpu_context, &next->cpu_context);
 }
@@ -96,4 +98,13 @@ void do_exec(void (*func)()) {
     asm volatile("msr elr_el1, %0": : "r"(func));
     asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
     asm volatile("eret");
+}
+
+void do_exit(int status) {
+    struct task_t* current = get_current_task();
+    current->state = ZOMBIE;
+    current->exit_status = status;
+
+    // WARNING: release user stack if dynamic allocation
+    schedule();
 }

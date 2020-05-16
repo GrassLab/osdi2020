@@ -28,6 +28,7 @@ struct cpu_context {
 
 enum task_state {
     RUNNING,
+    ZOMBIE,
     EXIT,
 };
 
@@ -37,6 +38,7 @@ struct task_t {
     int priority;
     int counter;
     int need_resched;
+    int exit_status;
     struct cpu_context cpu_context;
 };
 
@@ -58,5 +60,6 @@ void context_switch(struct task_t* next);
 void schedule();
 void reschedule();
 void do_exec(void (*func)());
+void do_exit(int status);
 
 #endif
