@@ -47,7 +47,8 @@ extern void switch_to(struct cpu_context* prev, struct cpu_context* next);
 
 /* Function in schedule.c */
 void schedule_init();
-void privilege_task_create(void (*func)());
+void privilege_task_create(void (*func)(), int priority);
 void context_switch(struct task_t* next);
+void schedule();
 
 #endif

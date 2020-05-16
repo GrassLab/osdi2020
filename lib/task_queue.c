@@ -61,9 +61,9 @@ struct task_t* task_queue_pop(struct task_queue_t* q) {
     else {
         struct task_queue_elmt_t* pop_elmt = q->front;
         struct task_t* pop_task = pop_elmt->task;
+        q->front = pop_elmt->prev;
         pop_elmt->next = 0;
         pop_elmt->prev = 0;
-        q->front = q->front->prev;
         return pop_task;
     }
 }

@@ -28,6 +28,10 @@ void boot_init() {
     uart_printf("\n");
 
     schedule_init();
+
+    while (1) {
+        schedule();
+    }
 }
 
 int main() {
