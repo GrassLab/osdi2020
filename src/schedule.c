@@ -75,8 +75,8 @@ int privilege_task_create(void (*func)(), int priority) {
     new_task->counter = TASK_EPOCH;
     new_task->need_resched = 0;
     new_task->cpu_context.lr = (uint64_t)func;
-    new_task->cpu_context.fp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_SIZE - 1]);
-    new_task->cpu_context.sp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_SIZE - 1]);
+    new_task->cpu_context.fp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_TOP_IDX]);
+    new_task->cpu_context.sp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_TOP_IDX]);
 
     task_queue_push(&runqueue, get_runqueue_elmt(new_task));
 
@@ -108,7 +108,7 @@ void reschedule() {
 
 void do_exec(void (*func)()) {
     struct task_t *current = get_current_task();
-    asm volatile("msr sp_el0, %0" : : "r"(&ustack_pool[current->id][USTACK_SIZE - 1]));
+    asm volatile("msr sp_el0, %0" : : "r"(&ustack_pool[current->id][USTACK_TOP_IDX]));
     asm volatile("msr elr_el1, %0": : "r"(func));
     asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
     asm volatile("eret");

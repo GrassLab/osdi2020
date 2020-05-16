@@ -66,10 +66,10 @@ void sys_fork(struct trapframe* trapframe) {
     int child_id = privilege_task_create(return_from_fork, parent_task->priority);
     struct task_t* child_task = &task_pool[child_id];
 
-    char* child_kstack = &kstack_pool[child_task->id][KSTACK_SIZE - 1];
-    char* parent_kstack = &kstack_pool[parent_task->id][KSTACK_SIZE - 1];
-    char* child_ustack = &ustack_pool[child_task->id][USTACK_SIZE - 1];
-    char* parent_ustack = &ustack_pool[parent_task->id][USTACK_SIZE - 1];
+    char* child_kstack = &kstack_pool[child_task->id][KSTACK_TOP_IDX];
+    char* parent_kstack = &kstack_pool[parent_task->id][KSTACK_TOP_IDX];
+    char* child_ustack = &ustack_pool[child_task->id][USTACK_TOP_IDX];
+    char* parent_ustack = &ustack_pool[parent_task->id][USTACK_TOP_IDX];
 
     uint64_t kstack_offset = parent_kstack - (char*)trapframe;
     uint64_t ustack_offset = parent_ustack - (char*)trapframe->sp_el0;
@@ -221,7 +221,7 @@ void irq_stk_switcher() {
     register char* entry_sp;
     asm volatile("mov %0, sp": "=r"(entry_sp));
     if (!(entry_sp <= &intr_stack[4095] && entry_sp >= &intr_stack[0])) {
-        asm volatile("mov sp, %0" : : "r"(&intr_stack[4095]));
+        asm volatile("mov sp, %0" : : "r"(&intr_stack[INTR_STK_TOP_IDX]));
     }
 
     irq_exc_router();

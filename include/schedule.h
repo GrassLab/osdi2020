@@ -7,6 +7,8 @@
 #define TASK_POOL_SIZE 64
 #define KSTACK_SIZE 4096
 #define USTACK_SIZE 4096
+#define KSTACK_TOP_IDX (KSTACK_SIZE - 16) // sp need 16bytes alignment
+#define USTACK_TOP_IDX (USTACK_SIZE - 16) // sp need 16bytes alignment
 
 struct cpu_context {
     // ARM calling convention

@@ -4,6 +4,7 @@
 #define __EXC_H__
 
 #define INTR_STK_SIZE 4096
+#define INTR_STK_TOP_IDX (INTR_STK_SIZE - 16) // sp need 16bytes alignment
 
 struct trapframe {
     uint64_t x[31]; // general register from x0 ~ x30
