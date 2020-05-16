@@ -6,13 +6,13 @@
 struct queue {  // circular queue
     int front;
     int rear;
-    int size;
+    int max;
     char buf[QUEUE_MAX_SIZE];
 };
 
 #endif
 
-void queue_init(struct queue* q, int size);
+void queue_init(struct queue* q, int max);
 int queue_empty(struct queue* q);
 int queue_full(struct queue* q);
 void queue_push(struct queue* q, char val);
