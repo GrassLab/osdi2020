@@ -3,6 +3,7 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
+#define TASK_EPOCH 5
 #define TASK_POOL_SIZE 64
 #define KSTACK_SIZE 4096
 
@@ -33,6 +34,8 @@ struct task_t {
     uint64_t id;
     enum task_state state;
     int priority;
+    int counter;
+    int need_resched;
     struct cpu_context cpu_context;
 };
 
@@ -46,9 +49,11 @@ extern void update_current_task(struct task_t *task);
 extern void switch_to(struct cpu_context* prev, struct cpu_context* next);
 
 /* Function in schedule.c */
+void task_init();
 void schedule_init();
 void privilege_task_create(void (*func)(), int priority);
 void context_switch(struct task_t* next);
 void schedule();
+void reschedule();
 
 #endif

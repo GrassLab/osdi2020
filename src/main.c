@@ -8,6 +8,8 @@
 #define CMD_LEN 128
 
 void boot_init() {
+    task_init();
+
     // Initialize UART
     uart_init();
     uart_flush();

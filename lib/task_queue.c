@@ -1,5 +1,6 @@
 #include "task_queue.h"
 #include "schedule.h"
+#include "uart0.h"
 
 void task_queue_init(struct task_queue_t* q) {
     q->front = 0;
@@ -66,4 +67,13 @@ struct task_t* task_queue_pop(struct task_queue_t* q) {
         pop_elmt->prev = 0;
         return pop_task;
     }
+}
+
+void task_queue_print(struct task_queue_t* q) {
+    struct task_queue_elmt_t* ptr = q->front;
+    while (ptr != q->rear->prev) {
+        uart_printf("%d ", ptr->task->id);
+        ptr = ptr->prev;
+    }
+    uart_printf("\n");
 }

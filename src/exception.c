@@ -5,6 +5,7 @@
 #include "queue.h"
 #include "uart0.h"
 #include "exception.h"
+#include "schedule.h"
 
 char intr_stack[INTR_STK_SIZE];
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
@@ -79,12 +80,14 @@ void uart_intr_handler() {
 void arm_core_timer_intr_handler() {
     register unsigned int expire_period = CORE_TIMER_EXPRIED_PERIOD;
     asm volatile("msr cntp_tval_el0, %0" : : "r"(expire_period));
-    uart_printf("Core timer interrupt, jiffies %d\n", ++arm_core_timer_jiffies);
-    // bottom half simulation
-    // irq_enable();
-    // unsigned long long x = 100000000000;
-    // while (x--) {
-    // }
+
+    // check current task running time
+    struct task_t *current = get_current_task();
+    if (--current->counter <= 0) {
+        current->counter = 0;
+        current->need_resched = 1;
+    }
+    irq_enable();
 }
 
 void arm_local_timer_intr_handler() {

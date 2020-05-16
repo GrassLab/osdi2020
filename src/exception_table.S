@@ -147,4 +147,5 @@ sync_exc_handler:
 irq_exc_handler:
     kernel_entry
     bl  irq_stk_switcher
+    bl  reschedule
     kernel_exit
