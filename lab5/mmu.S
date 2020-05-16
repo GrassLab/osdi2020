@@ -1,9 +1,3 @@
-#define PD_TABLE 0b11
-#define PD_BLOCK 0b01
-#define PD_ACCESS (1 << 10)
-#define BOOT_PGD_ATTR PD_TABLE
-#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
-
 .global mmu_tcr_el1_init
 .type mmu_tcr_el1_init,%function
 mmu_tcr_el1_init:
@@ -92,7 +86,17 @@ mmu_mair_el1_init:
 .global mmu_ttbr0_ttbr1_el1_init
 .type mmu_ttbr0_ttbr1_el1_init,%function
 mmu_ttbr0_ttbr1_el1_init:
+
   /* ttbr0_el1: Holds the base address of the translation table for the initial lookup for stage 1 of the translation of an address from the lower VA range in the EL1&0 translation regime, and other information for this translation regime. */
+
+  /* PD (ttbrx) -> PGD -> PUD -> PMD -> | Page + offset */
+
+#define PD_TABLE 0b11 // indicate this to another descriptor
+#define PD_BLOCK 0b01 // indicate to physical ram
+#define PD_ACCESS (1 << 10) // access flag, generate page fault if not set
+#define BOOT_PGD_ATTR PD_TABLE
+// Set access bit and mair[4:2] and indicate to physical ram
+#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
 
   mov x0, 0 // PGD's page frame at 0x0
   mov x1, 0x1000 // PUD's page frame at 0x1000
@@ -109,6 +113,7 @@ mmu_ttbr0_ttbr1_el1_init:
   orr x3, x2, x3
   str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 
+  // ttbr0 and ttbr1 share the same PUD frame
   msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
   msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
   ret
