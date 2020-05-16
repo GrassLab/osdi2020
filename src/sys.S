@@ -18,3 +18,9 @@ uart_write:
     mov x8, SYS_UART_WRITE
     svc #0
     ret
+
+.global exec
+exec:
+    mov x8, SYS_EXEC
+    svc #0
+    ret

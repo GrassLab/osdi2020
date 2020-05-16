@@ -48,12 +48,14 @@ void demo_syscall_uart() {
     while(1) {
         char buf[256];
         uart_read(buf, 1);
-        uart_printf("%d: ", get_taskid());
         uart_write(buf, 1);
-        uart_printf("\n");
     }
 }
 
+void demo_syscall_exec() {
+    exec(demo_syscall_uart);
+}
+
 void demo_syscall() {
-    do_exec(demo_syscall_uart);
+    do_exec(demo_syscall_exec);
 }
