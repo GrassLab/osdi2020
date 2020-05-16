@@ -35,8 +35,22 @@ void task_init() {
     update_current_task(&task_pool[0]);
 }
 
+void zombie_reaper() {
+    while (1) {
+        for (int i = 0; i < TASK_POOL_SIZE; i++) {
+            if (task_pool[i].state == ZOMBIE) {
+                uart_printf("reaper %d!\n", i);
+                task_pool[i].state = EXIT;
+                // WARNING: release kernel stack if dynamic allocation
+            }
+        }
+        schedule();
+    }
+}
+
 void schedule_init() {
     runqueue_init();
+    privilege_task_create(zombie_reaper, 10);
 
     // privilege_task_create(demo_task_1, 10);
     // privilege_task_create(demo_task_2, 10);
