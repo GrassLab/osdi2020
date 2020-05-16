@@ -14,9 +14,7 @@ extern unsigned long user_begin;
 extern unsigned long user_end;
 extern void user_process();
 void kernel_process(){
-	// set the identity mapping
-	// adrp	x0, idmap_dir
-	// msr	ttbr0_el1, x0
+
 	asm volatile ("adrp x0, idmap_dir");
 	asm volatile ("msr ttbr0_el1, x0");
 	printf("Kernel process started. EL %d\r\n", get_el());
@@ -45,8 +43,8 @@ void kernel_main()
 	}
 
 	while (1){
-		printf("hello\r\n");
-		schedule();
-		delay(1000000);
+		printf("free zombie task\r\n");
+		free_zombie_task();
+		delay(1000000000);
 	}	
 }

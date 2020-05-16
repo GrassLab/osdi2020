@@ -19,7 +19,6 @@ void preempt_enable(void)
 	current->preempt_count--;
 }
 
-
 void _schedule(void)
 {
 	preempt_disable();
@@ -87,6 +86,7 @@ void exit_process(){
 	preempt_disable();
 	for (int i = 0; i < NR_TASKS; i++){
 		if (task[i] == current) {
+			free_user_page(task[i]);
 			task[i]->state = TASK_ZOMBIE;
 			break;
 		}

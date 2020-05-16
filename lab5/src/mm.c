@@ -1,7 +1,8 @@
 #include "mm.h"
 #include "arm/mmu.h"
-
+#include "printf.h"
 static unsigned short mem_map [ PAGING_PAGES ] = {0,};
+static unsigned num_free_pages = PAGING_PAGES ;
 
 unsigned long allocate_kernel_page() {
 	unsigned long page = get_free_page();
@@ -27,30 +28,48 @@ unsigned long get_free_page()
 			mem_map[i] = 1;
 			unsigned long page = LOW_MEMORY + i*PAGE_SIZE;
 			memzero(page + VA_START, PAGE_SIZE);
+			num_free_pages -= 1;
 			return page;
 		}
 	}
 	return 0;
 }
 
-void free_page(unsigned long p){
+void free_page(unsigned long p){  // free page input is physical memory
 	mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
+	return;
+}
+
+void free_user_page(struct task_struct *task) {
+	for (int i = 0 ; i < task->mm.user_pages_count ; i++) {
+		free_page(task->mm.user_pages[i].phys_addr);
+		num_free_pages += 1;
+	}
+	return;
+}
+
+void free_kernel_page(struct task_struct *task) {
+	for (int i = 1 ; i < task->mm.kernel_pages_count ; i++) {
+		free_page(task->mm.kernel_pages[i]);
+		num_free_pages += 1;
+	}
+	return;
 }
 
 void map_table_entry(unsigned long *pte, unsigned long va, unsigned long pa) {
 	unsigned long index = va >> PAGE_SHIFT;
 	index = index & (PTRS_PER_TABLE - 1);
-	unsigned long entry = pa | MMU_PTE_FLAGS; 
+	unsigned long entry = pa | MMU_PTE_FLAGS; // put MMU_PTE_FLAGS
 	pte[index] = entry;
 }
 
 unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long va, int* new_table) {
-	unsigned long index = va >> shift;
-	index = index & (PTRS_PER_TABLE - 1);
-	if (!table[index]){
+	unsigned long index = va >> shift; // find the index of page table
+	index = index & (PTRS_PER_TABLE - 1); // mask the attributes
+	if (!table[index]){ 
 		*new_table = 1;
 		unsigned long next_level_table = get_free_page();
-		unsigned long entry = next_level_table | MM_TYPE_PAGE_TABLE;
+		unsigned long entry = next_level_table | MM_TYPE_PAGE_TABLE; //entry is physical address | MM_TYPE 
 		table[index] = entry;
 		return next_level_table;
 	} else {
@@ -62,14 +81,14 @@ unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long
 void map_page(struct task_struct *task, unsigned long va, unsigned long page){
 	unsigned long pgd;
 	if (!task->mm.pgd) {
-		task->mm.pgd = get_free_page();
+		task->mm.pgd = get_free_page(); // allocate a page and return physical address
 		task->mm.kernel_pages[++task->mm.kernel_pages_count] = task->mm.pgd;
 	}
 	pgd = task->mm.pgd;
 	int new_table;
 	unsigned long pud = map_table((unsigned long *)(pgd + VA_START), PGD_SHIFT, va, &new_table);
 	if (new_table) {
-		task->mm.kernel_pages[++task->mm.kernel_pages_count] = pud;
+		task->mm.kernel_pages[++task->mm.kernel_pages_count] = pud; // store pud table physical address
 	}
 	unsigned long pmd = map_table((unsigned long *)(pud + VA_START) , PUD_SHIFT, va, &new_table);
 	if (new_table) {
@@ -114,3 +133,19 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 	}
 	return -1;
 }
+
+int get_remain_num() {
+	return num_free_pages;
+}
+
+void free_zombie_task() {
+	for (int i = 0 ; i < nr_tasks ; i++) {
+		if (task[i]->state == TASK_ZOMBIE) {
+			//printf("%d\r\n", task[i]->task_id);
+			//printf("kernel_pages_count %d\r\n", task[i]->mm.kernel_pages_count);
+			free_kernel_page((unsigned long)task[i]);
+			task[i]->state = TASK_FREE;
+			free_page(((unsigned long)task[i]) - VA_START);
+		}
+	}
+} 

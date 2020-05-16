@@ -1,0 +1,52 @@
+#define SYS_WRITE_NUMBER 0
+#define SYS_FORK_NUMBER 1
+#define SYS_EXIT_NUMBER 2
+#define SYS_REMA_NUMBER 3
+#define SYS_TASK_ID     4
+
+.section ".text.boot"
+
+.globl _start
+_start:
+    bl init_print
+    bl user_main
+    bl exit
+hang:
+    b hang
+
+.globl delay
+delay:
+    subs x0, x0, #1
+    bne  delay
+    ret
+
+.globl call_sys_write
+call_sys_write:
+    mov w8, #SYS_WRITE_NUMBER
+    svc #0
+    ret
+
+.globl exit
+exit:
+    mov w8, #SYS_EXIT_NUMBER
+    svc #0
+    ret
+
+.globl fork
+fork:
+    mov w8, #SYS_FORK_NUMBER
+    svc #0
+    ret
+
+.globl sys_remain_page_num
+sys_remain_page_num:
+    mov w8, #SYS_REMA_NUMBER
+    svc #0
+    ret
+
+.globl get_taskid
+get_taskid:
+    mov w8, #SYS_TASK_ID
+    svc #0
+    ret
+ 
