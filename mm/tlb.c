@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <irq.h>
+#include <sched.h>
 #include "tlb.h"
 
 void *
@@ -128,7 +129,8 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	  table = PD_DECODE (table[page_ind]);
 	}
       page_ind = (virt >> 12) & 0x1ff;
-      if (table[page_ind])
+      // allow reset attribute
+      if (table[page_ind] && (table[page_ind] & ~0xfff) !=  phys)
 	return -2;
       table[page_ind] = phys | attr;
       if (phys < USED_MEMSIZE)
@@ -276,4 +278,41 @@ void
 sys_page_status (int *free, int *alloc)
 {
   do_page_status (free, alloc);
+}
+
+void *
+virt_to_phys (void *virt)
+{
+  size_t offset, page_ind;
+  size_t *table;
+  int tlb_ind;
+
+  // select PGD
+  if ((size_t) virt & KPGD)
+    table = (size_t *) KPGD;
+  else
+    table = (size_t *) (current->ctx.PGD | KPGD);
+  // search physical address
+  for (tlb_ind = 39; tlb_ind >= 12; tlb_ind -= 9)
+    {
+      page_ind = ((size_t) virt >> tlb_ind) & 0x1ff;
+      if (!table[page_ind])
+	{
+	  // TODO: handle no entry
+	  printf ("%s\r\n", "TODO: handle no entry (virt_to_phys)");
+	  return 0;
+	}
+      table = PD_DECODE (table[page_ind]);
+    }
+  table = (void *) ((size_t) table & ~KPGD);
+  return (void *) ((size_t) table | ((size_t) virt & 0xfff));
+}
+
+void *
+phys_to_virt (void *phys)
+{
+  if ((size_t) phys >= USED_MEMSIZE)
+    return 0;
+  return (void *) (page_pool[(size_t) phys / PAGE_SIZE].virt_addr |
+		   ((size_t) phys & 0xfff));
 }

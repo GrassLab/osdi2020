@@ -14,10 +14,6 @@ do_mmap (void *addr, size_t len, int prot,
       if (addr == NULL || (size_t) addr % PAGE_SIZE > 0)
 	return (void *) -1;
     }
-  page_num = (len % PAGE_SIZE) ? 1 + len / PAGE_SIZE : len / PAGE_SIZE;
-  // align address
-  addr = (void *) ((size_t) addr & ~0xfff);
-  // set attribute
   attr = pd_encode_ram (0);
   if (prot & PROT_READ)
     {
@@ -28,16 +24,25 @@ do_mmap (void *addr, size_t len, int prot,
     }
   if (!(prot & PROT_EXEC))
     attr |= PD_XN;
+  page_num = (len % PAGE_SIZE) ? 1 + len / PAGE_SIZE : len / PAGE_SIZE;
+  // align address
+  addr = (void *) ((size_t) addr & ~0xfff);
+  if (addr == NULL)
+    addr = (size_t *) (current->task_id << 21);
   // allocate pages
   addr =
-    page_alloc_virt (current->ctx.PGD | KPGD, (size_t) addr, page_num, attr);
+    page_alloc_virt (current->ctx.PGD | KPGD, (size_t) addr, page_num,
+		     pd_encode_ram (0));
   if (!addr)
     return (void *) -1;
-  // record map info
-  va_map_add ((size_t) addr, page_num * PAGE_SIZE);
   // copy file content
   if (flags & MAP_POPULATE)
     memcpy (addr, file_start + file_offset, len);
+  // set attribute
+  map_virt_to_phys (current->ctx.PGD | KPGD, (size_t) addr,
+		    (size_t) virt_to_phys (addr), page_num * PAGE_SIZE, attr);
+  // record map info
+  va_map_add ((size_t) addr, page_num * PAGE_SIZE);
   return addr;
 }
 

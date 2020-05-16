@@ -36,6 +36,8 @@ void tlb_init ();
 int map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 		      size_t size, size_t attr);
 int unmap_virt (size_t PGD, size_t virt_addr, size_t size);
+void *phys_to_virt (void *phys);
+void *virt_to_phys (void *virt);
 extern size_t pd_encode_table (size_t *page_table);
 extern size_t pd_encode_ram (size_t *addr);
 extern size_t pd_encode_peripheral (size_t *addr);
