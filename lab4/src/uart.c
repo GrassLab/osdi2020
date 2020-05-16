@@ -107,8 +107,8 @@ void uart_puts(char *s) {
 /**
  * Display a binary value in hexadecimal
  */
-void uart_hex(unsigned int d) {
-    unsigned int n;
+void uart_hex(unsigned long d) {
+    unsigned long n;
     int c;
     for(c=28;c>=0;c-=4) {
         // get highest tetrad
@@ -146,8 +146,9 @@ char uart_recv() {
 }
 
 // This function is required by printf function
-void putc (char *p , char c) {
-    if(c == '\n')
+void putc (void *p , char c) {
+    if(c == '\n'){
         uart_send('\r');
+    }
 	uart_send(c);
 }

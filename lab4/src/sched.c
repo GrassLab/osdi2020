@@ -39,7 +39,7 @@ void _schedule(){
     printf("current id is: %d\n", current->task_id);
     int next_task_id = (current->task_id + 1) % 64;
     while(next_task_id != current->task_id) {
-        printf("next task id is %d, state is %d\n", next_task_id, TaskManager.task_pool[next_task_id].state);
+        // printf("next task id is %d, state is %d\n", next_task_id, TaskManager.task_pool[next_task_id].state);
         if (TaskManager.task_pool[next_task_id].state != ZOMBIE) {
             if(next_task_id < 0){
                 printf("task id is negative, it is weird!!!!!\n");

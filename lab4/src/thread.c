@@ -17,8 +17,7 @@ void idle_task(){
 }
 
 void create_idle_task(){
-    task_t* init_task = privilege_task_create((unsigned long)&idle_task);
-    printf("idle task current id is: %d\n", init_task->task_id);
+    privilege_task_create((unsigned long)&idle_task);
 }
 
 void init_task_manager(){
@@ -30,7 +29,7 @@ void init_task_manager(){
     create_idle_task();
 }
 
-task_t* privilege_task_create(unsigned long fn){
+void privilege_task_create(unsigned long fn){
     int task_id = TaskManager.task_num;
     printf("task id %d create\n", task_id);
 
@@ -54,8 +53,6 @@ task_t* privilege_task_create(unsigned long fn){
     new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id] + STACK_SIZE;
     
     TaskManager.task_num++;
-
-    return new_task;
 }
 
 void do_exec(void(*func)()){
@@ -102,7 +99,7 @@ int do_fork(){
     child->cpu_context.x27 = parent->cpu_context.x27;
     child->cpu_context.x28 = parent->cpu_context.x28;
 
-    Trapframe *trapframe = parent->trapframe;
+    Trapframe *trapframe = (Trapframe *)parent->trapframe;
     unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id]) + STACK_SIZE - (parent->user_context.sp_el0);
 
 

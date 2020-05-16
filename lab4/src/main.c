@@ -144,7 +144,8 @@ void exec_fork(){
 void main()
 {
     init_uart();
-    // init_lfb();
+    uart_puts("fsafsa\n");
+        // init_lfb();
     init_printf(0, putc);
     printf("finish\n");
 
@@ -156,7 +157,7 @@ void main()
     // task_t* new_task3 = privilege_task_create((unsigned long)&print3);
     // task_t* new_task4 = privilege_task_create((unsigned long)&user_task);
     // task_t* new_task5 = privilege_task_create((unsigned long)&user_task2);
-    task_t* new_task6 = privilege_task_create((unsigned long)&exec_fork);
+    privilege_task_create((unsigned long)&exec_fork);
 
     // shell();
 

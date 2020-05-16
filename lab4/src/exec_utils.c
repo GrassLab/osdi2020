@@ -25,11 +25,11 @@ int recv_img_size(){
 }
 
 void copy_and_jump_to_kernel() {
-    unsigned int new_address = 0x80000;
-    char *kernel = new_address;
+    unsigned long new_address = 0x80000;
+    unsigned long *kernel = (unsigned long *)new_address;
     int kernel_size = recv_img_size();
     uart_send_int(kernel_size);
-    char *end = new_address;
+    unsigned long end = new_address;
 
     int checksum = 0;
     for (int i = 0; i < kernel_size; i++) {
@@ -43,15 +43,15 @@ void copy_and_jump_to_kernel() {
     uart_hex(end);
     uart_puts("\n");
     // #define LOADIMG_TEMP_LOCATION 0x10000;
-    void (*jump_new_kernel)(void) = new_address;
+    void (*jump_new_kernel)(void) = (void (*)(void))new_address;
     jump_new_kernel();
     // branch_to_address((unsigned long int *)new_address);
 }
 
 void copy_self_kernel() {
-    char *kernel = start_begin;
-    char *end = __bss_end;
-    char *copy = (char *)(TMP_KERNEL_ADDR);
+    unsigned long *kernel = (unsigned long *)start_begin;
+    unsigned long *end = (unsigned long *)__bss_end;
+    unsigned long *copy = (unsigned long *)(TMP_KERNEL_ADDR);
     while (kernel <= end) {
         *copy = *kernel;
         kernel++;
@@ -59,7 +59,7 @@ void copy_self_kernel() {
     }
     uart_puts("copy self kernel finish\n");
     void (*func_ptr)() = copy_and_jump_to_kernel;
-    unsigned long int original_function_address = (unsigned long int)func_ptr;
-    void (*call_function)() = (void (*)())(original_function_address - (unsigned long int)start_begin + TMP_KERNEL_ADDR);
+    unsigned long original_function_address = (unsigned long)func_ptr;
+    void (*call_function)() = (void (*)())(original_function_address - (unsigned long)start_begin + TMP_KERNEL_ADDR);
     call_function();
 }

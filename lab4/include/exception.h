@@ -4,6 +4,6 @@
 
 unsigned long get_syscall_number(unsigned long trapframe);
 unsigned long get_syscall_parameter(unsigned long trapframe);
-void exception_handler(unsigned int);
+void exception_handler(unsigned long);
 
 #endif

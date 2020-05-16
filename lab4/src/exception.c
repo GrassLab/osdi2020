@@ -21,9 +21,9 @@ int __get_taskid(){
 	return current->task_id;
 }
 
-void syscall_router(unsigned int trapframe){
-    unsigned int x0 = get_syscall_parameter(trapframe);
-    unsigned int x8 = get_syscall_number(trapframe);
+void syscall_router(unsigned long trapframe){
+    unsigned long x0 = get_syscall_parameter(trapframe);
+    unsigned long x8 = get_syscall_number(trapframe);
  	unsigned long syscall_return_value = 0;
     char c;
 
@@ -37,11 +37,12 @@ void syscall_router(unsigned int trapframe){
             printf("get input value is %d\n",c);
             break;
         case SYS_UART_WRITE:
-            uart_puts(x0);
+            uart_puts((char *)x0);
             break;
         case SYS_EXEC:
             printf("[info] svc exec sys_call command \r\n");
-            do_exec(x0);
+            void (*func_ptr)(void) = (void (*)(void))x0;
+            do_exec(func_ptr);
             break;
         case SYS_FORK:
             printf("[info] svc fork sys_call command \r\n");
@@ -55,18 +56,18 @@ void syscall_router(unsigned int trapframe){
             printf("syscall not found\n");
             break;
     }
-	*(unsigned int*)(trapframe+8*0) = syscall_return_value;
+	*(unsigned long*)(trapframe+8*0) = syscall_return_value;
 }
 
-void exception_handler(unsigned int trapframe)
+void exception_handler(unsigned long trapframe)
 {
 	// printf("Exception class (EC) 0x%x \r\n",esr >> 26);
 	// printf("EInstruction  specific syndrome (ISS) 0x%x \r\n",esr & 0xffffff);
 
-    unsigned int el_level;
-    unsigned int esr, elr, spsr, far;
+    unsigned long el_level;
+    unsigned long esr, elr, spsr, far;
     // unsigned int ec, iss, retaddr;
-    unsigned int sp_el0, elr_el1, spsr_el1;
+    unsigned long sp_el0, elr_el1, spsr_el1;
     asm volatile ("mrs %0, CurrentEL" : "=r" (el_level));
 
     //check el level
