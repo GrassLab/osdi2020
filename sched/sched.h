@@ -8,7 +8,7 @@
 #define POOL_SIZE 64
 #define STACK_SIZE 0x2000
 #define USER_STACK_ADDR 0x0000ffffffffe000
-#define VA_MAP_SIZE 0x10
+#define VA_MAP_SIZE 0x30
 
 struct trapframe
 {
