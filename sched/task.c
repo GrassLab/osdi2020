@@ -36,7 +36,7 @@ load_binary (size_t bin_addr)
 {
 #define DEFAULT_VIRT_ADDR 0x55f75c12d000
 #define NULL_PADDING_SIZE 0x200
-#define ENTRY_POINT_OFFSET 0xd88
+#define ENTRY_POINT_OFFSET 0xdb4
   // we only have shell program, hard code it
   extern char _binary_bin_shell_size[];
   extern char _binary_bin_shell_start[];

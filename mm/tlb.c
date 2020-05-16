@@ -255,3 +255,24 @@ page_init (struct page_struct *page, size_t PGD, size_t virt_addr)
   page->virt_addr = virt_addr;
   page->in_used = 1;
 }
+
+void
+do_page_status (int *free, int *alloc)
+{
+  int i;
+  *free = 0;
+  *alloc = 0;
+  for (i = 0; i < PAGE_POOL_SIZE; ++i)
+    {
+      if (page_pool[i].in_used)
+	(*alloc)++;
+      else
+	(*free)++;
+    }
+}
+
+void
+sys_page_status (int *free, int *alloc)
+{
+  do_page_status (free, alloc);
+}
