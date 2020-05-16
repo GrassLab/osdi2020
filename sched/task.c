@@ -85,7 +85,7 @@ va_map_clear ()
       vmap = &cur->va_maps[i];
       if (vmap->size != 0)
 	{
-	  page_free_virt (cur->ctx.PGD | ~KPGD, vmap->start,
+	  page_free_virt (cur->ctx.PGD | KPGD, vmap->start,
 			  vmap->size / PAGE_SIZE);
 	  vmap->size = 0;
 	  vmap->start = 0;
@@ -233,11 +233,12 @@ void
 do_exit (int status)
 {
   struct task_struct *cur = current;
-  disable_irq ();
+  critical_entry ();
+  va_map_clear ();
   cur->exit_status = status;
   list_del (&cur->list);
   list_add_tail (&cur->list, zombiequeue);
-  enable_irq ();
+  critical_exit ();
   switch_to (current, get_next_task ());
 }
 
