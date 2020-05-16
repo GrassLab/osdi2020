@@ -6,11 +6,16 @@
 #include "uart0.h"
 #include "exception.h"
 
+char intr_stack[INTR_STK_SIZE];
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
 uint64_t cntfrq_el0, cntpct_el0;
 
 void irq_enable() {
     asm volatile("msr daifclr, #2");
+}
+
+void irq_disable() {
+    asm volatile("msr daifset, #2");
 }
 
 /*
@@ -102,5 +107,21 @@ void irq_exc_router() {
     // ARM Local Timer Interrupt
     else if (core0_intr_src & (1 << 11)) {
         arm_local_timer_intr_handler();
+    }
+}
+
+void irq_stk_switcher() {
+    // Switch to interrupt stack if entry_sp in kernel stack
+    register char* entry_sp;
+    asm volatile("mov %0, sp": "=r"(entry_sp));
+    if (!(entry_sp <= &intr_stack[4095] && entry_sp >= &intr_stack[0])) {
+        asm volatile("mov sp, %0" : : "r"(&intr_stack[4095]));
+    }
+
+    irq_exc_router();
+
+    // Restore to kernel stack if entry_sp in kernel stack
+    if (!(entry_sp <= &intr_stack[4095] && entry_sp >= &intr_stack[0])) {
+        asm volatile("mov sp, %0" : : "r"(entry_sp));
     }
 }
