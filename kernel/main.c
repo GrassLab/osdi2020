@@ -33,6 +33,7 @@ idle ()
 {
   while (1)
     {
+      zombie_reaper ();
       delay (1);
     }
 }
