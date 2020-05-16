@@ -1,5 +1,10 @@
 #include "syscall.h"
 .section ".text"
+.global get_time
+get_time:
+  mov x8, GET_TIME
+  svc #0
+  ret
 .global uart_read
 uart_read:
   mov x8, UART_READ

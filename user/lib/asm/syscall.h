@@ -1,5 +1,6 @@
 #ifndef ASM_SYSCALL
 #define ASM_SYSCALL
+#define GET_TIME 1
 #define UART_READ 2
 #define UART_WRITE 3
 #define EXEC 4
