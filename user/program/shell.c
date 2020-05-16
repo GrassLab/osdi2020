@@ -39,7 +39,8 @@ cmd_fork ()
       while (cnt < 10)
 	{
 	  // address should be the same across tasks, but the cnt should be increased indepndently
-	  printf ("task id: %d, sp: 0x%p cnt: %d\r\n", (int) get_task_id (), &cnt, cnt++);
+	  printf ("task id: %d, sp: 0x%p cnt: %d\r\n", (int) get_task_id (),
+		  &cnt, cnt++);
 	  delay (0.1);
 	}
       exit (0);			// all childs exit
@@ -49,10 +50,10 @@ cmd_fork ()
 static void
 segfault ()
 {
-  if(fork() == 0)
+  if (fork () == 0)
     {
-      int* a = 0xdeadbeef; // a non-mapped address.
-      printf("%d\n", *a); // trigger simple page fault, child will die here.
+      int *a = 0xdeadbeef;	// a non-mapped address.
+      printf ("%d\n", *a);	// trigger simple page fault, child will die here.
     }
 }
 
@@ -71,7 +72,8 @@ main ()
   struct cmd_struct cmd_array[] = {
     {.name = "fork",.description = "test fork",.func = cmd_fork},
     {.name = "page",.description = "page status",.func = show_page},
-    {.name = "segfault",.description = "trigger segmentation fault",.func = segfault}
+    {.name = "segfault",.description = "trigger segmentation fault",.func =
+     segfault}
   };
   int i;
   int cmd_num = sizeof (cmd_array) / sizeof (struct cmd_struct);
