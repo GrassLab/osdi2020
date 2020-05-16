@@ -75,6 +75,31 @@ void demo_syscall_fork() {
     }
 }
 
+void demo_foo(){
+    int tmp = 5;
+    uart_printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+    exit(0);
+}
+
+void demo_official() {
+    int cnt = 1;
+    if (fork() == 0) {
+        fork();
+        delay(100000);
+        fork();
+        while(cnt < 10) {
+            uart_printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+            delay(100000);
+            ++cnt;
+        }
+        exit(0);
+        uart_printf("Should not be printed\n");
+    } else {
+        uart_printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
+        exec(demo_foo);
+    }
+}
+
 void demo_syscall() {
-    do_exec(demo_syscall_fork);
+    do_exec(demo_official);
 }
