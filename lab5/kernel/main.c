@@ -136,19 +136,20 @@ void el1_main() {
   uart_init();
 
   uart_println("Hello world");
-  /* uart_print("%x\n", &s); */
-  /* { */
-  /*   #include "gpio.h" */
-  /*   #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040)) */
-  /*   while (1) */
-  /*     *AUX_MU_IO = 's'; */
-  /* } */
+
 
   {
-#include "mm.h"
-    uart_println("Low memory: %x", LOW_MEMORY);
-    uart_println("High memory: %x", HIGH_MEMORY);
+    #include "gpio.h"
+    #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
+    while (1)
+      *AUX_MU_IO = 's';
   }
+
+  /* { */
+/* #include "mm.h" */
+/*     uart_println("Low memory: %x", LOW_MEMORY); */
+/*     uart_println("High memory: %x", HIGH_MEMORY); */
+/*   } */
 
   /* int res = copy_process(PF_KTHREAD, (unsigned long)&pm_daemon, 0, 0); */
   /* if (res < 0) { */

@@ -28,7 +28,7 @@
 SECTIONS
 {
     . = 0xffff000000000000;  /* kernel space */
-    . = 0x80000; /* kernel load address */
+    . += 0x80000; /* kernel load address */
     _kernel_start = . ;
     /* . = 0x80000; */
     /* __relocate = .; */
@@ -40,7 +40,7 @@ SECTIONS
     PROVIDE(_data = .);
     .data : { *(.data .data.* .gnu.linkonce.d*) }
     .bss (NOLOAD) : {
-        __bss_start = .;
+        __bss_beg = .;
         *(.bss .bss.*)
         *(COMMON)
         __bss_end = .;
@@ -54,5 +54,5 @@ SECTIONS
 
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
-__bss_size = (__bss_end - __bss_start)>>3;
-__stack_top = 0xffff000000000000 + 0x80000;
+__bss_size = (__bss_end - __bss_beg)>>3;
+__stack_top = _start;
