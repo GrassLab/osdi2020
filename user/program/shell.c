@@ -47,6 +47,16 @@ cmd_fork ()
 }
 
 static void
+segfault ()
+{
+  if(fork() == 0)
+    {
+      int* a = 0xdeadbeef; // a non-mapped address.
+      printf("%d\n", *a); // trigger simple page fault, child will die here.
+    }
+}
+
+static void
 show_page ()
 {
   int free, alloc;
@@ -60,7 +70,8 @@ main ()
   char buf[BUF_SIZE];
   struct cmd_struct cmd_array[] = {
     {.name = "fork",.description = "test fork",.func = cmd_fork},
-    {.name = "page",.description = "page status",.func = show_page}
+    {.name = "page",.description = "page status",.func = show_page},
+    {.name = "segfault",.description = "trigger segmentation fault",.func = segfault}
   };
   int i;
   int cmd_num = sizeof (cmd_array) / sizeof (struct cmd_struct);
