@@ -3,9 +3,11 @@
 #include "demo.h"
 #include "task_queue.h"
 #include "exception.h"
+#include "sysregs.h"
 
 struct task_t task_pool[TASK_POOL_SIZE];
 char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
+char ustack_pool[TASK_POOL_SIZE][USTACK_SIZE];
 struct task_queue_elmt_t runqueue_elmt_pool[TASK_POOL_SIZE];
 struct task_queue_t runqueue;
 
@@ -38,6 +40,7 @@ void schedule_init() {
 
     privilege_task_create(demo_task_1, 10);
     privilege_task_create(demo_task_2, 10);
+    privilege_task_create(demo_do_exec, 15);
 
     arm_core_timer_enable();
     schedule();
@@ -57,8 +60,8 @@ void privilege_task_create(void (*func)(), int priority) {
     new_task->counter = TASK_EPOCH;
     new_task->need_resched = 0;
     new_task->cpu_context.lr = (uint64_t)func;
-    new_task->cpu_context.fp = (uint64_t)(&kstack_pool[new_task->id][TASK_POOL_SIZE - 1]);
-    new_task->cpu_context.sp = (uint64_t)(&kstack_pool[new_task->id][TASK_POOL_SIZE - 1]);
+    new_task->cpu_context.fp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_SIZE - 1]);
+    new_task->cpu_context.sp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_SIZE - 1]);
 
     task_queue_push(&runqueue, get_runqueue_elmt(new_task));
 }
@@ -82,4 +85,12 @@ void reschedule() {
         current->need_resched = 0;
         schedule();
     }
+}
+
+void do_exec(void (*func)()) {
+    struct task_t *current = get_current_task();
+    asm volatile("msr sp_el0, %0" : : "r"(&ustack_pool[current->id][USTACK_SIZE - 1]));
+    asm volatile("msr elr_el1, %0": : "r"(func));
+    asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
+    asm volatile("eret");
 }

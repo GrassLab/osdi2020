@@ -18,3 +18,14 @@ void demo_task_2() {
         delay(100000000);
     }
 }
+
+void demo_do_exec_el0() {
+    while(1) {
+        uart_printf("hello from demo_do_exec_el0\n");
+        delay(100000000);
+    }
+}
+
+void demo_do_exec() {
+    do_exec(demo_do_exec_el0);
+}

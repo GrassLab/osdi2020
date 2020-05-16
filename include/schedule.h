@@ -6,6 +6,7 @@
 #define TASK_EPOCH 5
 #define TASK_POOL_SIZE 64
 #define KSTACK_SIZE 4096
+#define USTACK_SIZE 4096
 
 struct cpu_context {
     // ARM calling convention
@@ -42,6 +43,7 @@ struct task_t {
 /* Variables init in schedule.c */
 extern struct task_t task_pool[TASK_POOL_SIZE];
 extern char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
+extern char ustack_pool[TASK_POOL_SIZE][USTACK_SIZE];
 
 /* Function in schedule.S */
 extern struct task_t* get_current_task();
@@ -55,5 +57,6 @@ void privilege_task_create(void (*func)(), int priority);
 void context_switch(struct task_t* next);
 void schedule();
 void reschedule();
+void do_exec(void (*func)());
 
 #endif
