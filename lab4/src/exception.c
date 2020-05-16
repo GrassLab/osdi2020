@@ -97,18 +97,12 @@ void exception_handler(unsigned int trapframe)
     // Set trapframe
     task_t *task = get_current();
     printf("In the exception_handler , current task id is %d\n", current->task_id);
-    // printf("In the exception_handler , current task id2 is %d\n", task->task_id);
 
     //set user mode conetxt
     task->user_context.sp_el0 = sp_el0;
     task->user_context.elr_el1 = elr_el1;
     task->user_context.spsr_el1 = spsr_el1;
     task->trapframe = trapframe;
-
-    // printf("[exp] Exception Level: 0x %x\n", el_level);
-    // printf("[exp] Exception Class: 0x %x\n", ec);
-    // printf("[exp] Instruction Specific syndrome: 0x %x\n", iss);
-    // printf("[exp] Instruction return address: 0x %x\n", retaddr);
 
     // SVC
     if ((esr>>26) == 0b010101) {

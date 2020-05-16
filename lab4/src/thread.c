@@ -42,14 +42,14 @@ task_t* privilege_task_create(unsigned long fn){
     new_task->cpu_context.x19 = (unsigned long) fn;
     new_task->cpu_context.x20 = 0;
 
-    new_task->user_context.sp_el0 = &TaskManager.ustack_pool[task_id];
+    new_task->user_context.sp_el0 = (unsigned long)(&TaskManager.ustack_pool[task_id]) + STACK_SIZE;
     new_task->user_context.spsr_el1 = 0;
     new_task->user_context.elr_el1 = 0;
     new_task->trapframe = 0;
     new_task->mode = KERNEL_MODE;
     
     new_task->cpu_context.pc = (unsigned long)ret_from_fork;
-    new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id];
+    new_task->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[task_id] + STACK_SIZE;
     
     TaskManager.task_num++;
 
@@ -75,17 +75,19 @@ int do_fork(){
     printf("fork -----------------------------------\n");
     int child_taskId = -1;
     for(int i = 0; i < 64; i++) {
-        if (TaskManager.task_pool[child_taskId].state == ZOMBIE) {
+        if (TaskManager.task_pool[child_taskId].state == ZOMBIE)
             break;
-        }
         child_taskId = (child_taskId + i) % 64;
     }
+
     task_t *parent = get_current();
     task_t *child = &TaskManager.task_pool[child_taskId];
+    printf("parent id is %d\n", parent->task_id);
+    printf("child id is %d\n", child_taskId);
     child->task_id = child_taskId;
     child->parent_id = parent->task_id;
-    _copy_stack(TaskManager.kstack_pool[parent->task_id], TaskManager.kstack_pool[child_taskId], 4096);
-    _copy_stack(TaskManager.ustack_pool[parent->task_id], TaskManager.ustack_pool[child_taskId], 4096);
+    _copy_stack(TaskManager.kstack_pool[parent->task_id] + STACK_SIZE, TaskManager.kstack_pool[child_taskId] + STACK_SIZE, 4096);
+    _copy_stack(TaskManager.ustack_pool[parent->task_id] + STACK_SIZE, TaskManager.ustack_pool[child_taskId] + STACK_SIZE, 4096);
 
     child->cpu_context.x19 = parent->cpu_context.x19;
     child->cpu_context.x20 = parent->cpu_context.x20;
@@ -99,21 +101,29 @@ int do_fork(){
     child->cpu_context.x28 = parent->cpu_context.x28;
 
     Trapframe *trapframe = parent->trapframe;
-    unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id]) - (parent->user_context.sp_el0);
-    unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id]) - trapframe->regs[29];
-    unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[parent->task_id])  - parent->trapframe;
+    unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id]) + STACK_SIZE - (parent->user_context.sp_el0);
 
-    // unsigned long ustack_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->sp_el0;
-    // unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[current->task_id]) - current->trapframe;
-    // unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[current->task_id]) - kstack_regs->regs[29];
 
-    child->trapframe = (unsigned long) &TaskManager.kstack_pool[child->task_id] - trapframe_offset;
-    child->user_context.sp_el0 = (unsigned long) &TaskManager.ustack_pool[child->task_id] - ustack_offset;
+    printf("parent->user_stack init value is: %x\n", TaskManager.ustack_pool[parent->task_id] + STACK_SIZE);
+    printf("parent->user_context.sp_el0 value is: %x\n", parent->user_context.sp_el0);
+    printf("child->user_context.sp_el0 value is: %x\n", ((unsigned long) &TaskManager.ustack_pool[parent->task_id]) + STACK_SIZE);
+    printf("diff value is: %d\n", ustack_offset);
+
+    unsigned long fp_offset = ((unsigned long) &TaskManager.ustack_pool[parent->task_id]) + STACK_SIZE - trapframe->regs[29];
+    unsigned long trapframe_offset = ((unsigned long) &TaskManager.kstack_pool[parent->task_id]) + STACK_SIZE  - parent->trapframe;
+
+    printf("parent->kernel_stack init value is: %x\n", TaskManager.kstack_pool[parent->task_id] + STACK_SIZE);
+    printf("parent->kernel_context.sp_el0 value is: %x\n", parent->trapframe);
+    printf("child->kernel_context.sp_el0 value is: %x\n", ((unsigned long) &TaskManager.kstack_pool[parent->task_id]) + STACK_SIZE);
+    printf("diff value is: %d\n", trapframe_offset);
+
+    child->trapframe = (unsigned long) &TaskManager.kstack_pool[child->task_id] + STACK_SIZE - trapframe_offset;
+    child->user_context.sp_el0 = (unsigned long) &TaskManager.ustack_pool[child->task_id] + STACK_SIZE - ustack_offset;
     child->user_context.spsr_el1 = parent->user_context.spsr_el1;
     child->user_context.elr_el1 = parent->user_context.elr_el1;
     
-    child->cpu_context.fp = (unsigned long) &TaskManager.ustack_pool[child->task_id] - fp_offset;
-    child->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[child->task_id] - trapframe_offset;
+    child->cpu_context.fp = (unsigned long) &TaskManager.ustack_pool[child->task_id] + STACK_SIZE - fp_offset;
+    child->cpu_context.sp = (unsigned long) &TaskManager.kstack_pool[child->task_id] + STACK_SIZE - trapframe_offset;
     child->cpu_context.pc = (unsigned long) fork_child_exit;
 
     printf("pc location is: %x\n", fork_child_exit);

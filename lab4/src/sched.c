@@ -38,13 +38,15 @@ void _schedule(){
     while(next_task_id != current->task_id) {
         printf("next task id is %d, state is %d\n", next_task_id, TaskManager.task_pool[next_task_id].state);
         if (TaskManager.task_pool[next_task_id].state != ZOMBIE) {
+            printf("next task id 61's , state is %d\n", TaskManager.task_pool[61].state);
+
             // TaskManager.runningTaskId = next_task_id;
             task_t* new_task = &TaskManager.task_pool[next_task_id]; 
             printf("next is %d!\n", next_task_id);
             switch_to(new_task);
             return;
         }
-        next_task_id = (next_task_id + 1) % 50;
+        next_task_id = (next_task_id + 1) % 64;
     }
     printf("no change\n");
 }
@@ -56,9 +58,11 @@ void switch_to(task_t * next)
 		return;
     }
     printf("---\n");
+    printf("print now current id is: %d\n", current->task_id);
     printf("current number address is %x\n", current);
     printf("current number address is %x\n", get_current());
     set_current(next);
+    printf("print now current id is:  %d\n", next->task_id);
     printf("current number address is %x\n", next);
     printf("current number address is %x\n", get_current());
     printf("---\n");
