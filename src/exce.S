@@ -1,9 +1,11 @@
+#define S_FRAME_SIZE 16*17
+#define EL0 0
+#define ELx 1
+
 .macro	ventry	label
     .align	7
     b	\label
 .endm
-
-#define S_FRAME_SIZE 16*17
 
 //save trapframe
 .macro  kernel_entry el
@@ -24,7 +26,7 @@
     stp	x26, x27, [sp, #16 * 13]
     stp	x28, x29, [sp, #16 * 14]
 
-    .if \el == 0
+    .if \el == EL0
         mrs x21, sp_el0
     .else
         add x21, sp, #S_FRAME_SIZE //flush stack, not used?
@@ -43,7 +45,7 @@
     ldp	x22, x23, [sp, #16 * 16]
     ldp	x30, x21, [sp, #16 * 15] 
 
-    .if \el == 0
+    .if \el == EL0
         msr sp_el0, x21
     .endif /* \el == 0 */
 
@@ -72,13 +74,13 @@
 
 //defaut handler
 exception_handler:
-    kernel_entry 1
+    kernel_entry ELx
     bl  show_invalid_entry_message
 invalid_hang:
 	b invalid_hang
 
 el0_sync_handler:
-    kernel_entry 0
+    kernel_entry EL0
     // read_irq_source
     mrs	x0, esr_el1
     mrs	x1, elr_el1
@@ -87,18 +89,32 @@ el0_sync_handler:
     mov x4, sp
     bl sync_router
     bl task_preemption
-    kernel_exit 0
+    kernel_exit EL0
 
 el0_irq_handler:
-    kernel_entry 0
+    kernel_entry EL0
     bl irq_router
     bl task_preemption
-    kernel_exit 0
+.global ret_fork_child
+ret_fork_child: // child do not need to restore parent's sp
+    kernel_exit EL0
+
+el1_sync_handler:
+    kernel_entry EL1
+    // read_irq_source
+    mrs	x0, esr_el1
+    mrs	x1, elr_el1
+    mrs	x2, spsr_el1
+    mrs	x3, far_el1
+    mov x4, sp
+    bl sync_router
+    bl task_preemption
+    kernel_exit EL1
 
 el1_irq_handler:
-    kernel_entry 1
+    kernel_entry ELx
     bl irq_router
-    kernel_exit 1
+    kernel_exit ELx
 
 /*
  * Exception vectors.
@@ -112,8 +128,8 @@ exception_table:
     ventry exception_handler     // FIQ
     ventry exception_handler     // SError
 // Current EL with SPx
-    ventry exception_handler     // Synchronous
-    ventry el1_irq_handler           // IRQ
+    ventry el1_sync_handler      // Synchronous
+    ventry el1_irq_handler       // IRQ
     ventry exception_handler     // FIQ
     ventry exception_handler     // SError
 // Lower EL using AArch64

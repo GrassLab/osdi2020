@@ -3,7 +3,9 @@
 
 #define THREAD_SIZE                    4096
 #define NR_TASKS                       64 
+
 #define TASK_RUNNING                   0
+#define TASK_ZOMBIE                    1
 
 extern struct task_struct *current;
 extern struct task_struct *task_pool[NR_TASKS];
@@ -21,21 +23,13 @@ struct cpu_context {
     unsigned long x27;
     unsigned long x28;
     unsigned long fp;
+    unsigned long lr;
     unsigned long sp;
-    unsigned long pc;//ra
-};
-
-struct user_context
-{
-    unsigned long SP_EL0;
-    unsigned long ELR_EL1;
-    unsigned long SPSR_EL1;
 };
 
 
 struct task_struct {
     struct cpu_context cpu_context;
-    struct user_context user_context;
     long schedule_flag;
     long task_id;
     long state;
@@ -50,6 +44,11 @@ void timer_tick(void);
 void context_switch(struct task_struct* next);
 void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 void task_preemption();
+void wait(long);
+
+void do_exec(void(*func)());
+void do_fork();
+void do_exit();
 
 
 #endif//_SCHEDULE_H

@@ -1,11 +1,20 @@
 #include "string.h"
 
-int strcmp(const char* s1, const char* s2){
-	for (; *s1 == *s2 ; s1++, s2++){
-		if (*s1 == '\0')
-			return 0;
-	}
-	return *s1 - *s2;
+int strcmp(const char *s1, const char *s2){
+    for(;*s1 && *s1 == *s2; s1++, s2++);
+    return *s1 - *s2;
+}
+
+char *strcpy(char *dest, const char *src){
+    char *odest = dest;
+    while( (*dest++ = *src++) );
+    return odest;
+}
+
+char *strncpy(char *dest, const char *src, unsigned int n){
+    char *odest = dest;
+    while( n-- && (*dest++ = *src++) );
+    return odest;
 }
 
 void unitoa(unsigned num, char *buff, unsigned num_dig){

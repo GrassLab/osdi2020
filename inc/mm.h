@@ -16,7 +16,7 @@
 #ifndef __ASSEMBLER__
 unsigned long get_kstack_base(unsigned long task_id);
 void free_kstack(unsigned long p);
-extern void memncpy(char *source, char *dest, int n);
+extern void memcpy(void *dest, const void *src, unsigned int n);
 extern void memzero(char *dest, int n);
 #endif //__ASSEMBLER__
 
