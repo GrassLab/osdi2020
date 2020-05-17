@@ -27,6 +27,10 @@ _start:
     sub     w2, w2, #1
     cbnz    w2, 3b
 4:
+    // setup tcr
+    ldr     x0, =TCR_EL1_VALUE
+    msr     tcr_el1, x0
+
     // disable MMU
     ldr     x1, =SCTLR_VALUE_MMU_DISABLED
     msr     sctlr_el1, x1
