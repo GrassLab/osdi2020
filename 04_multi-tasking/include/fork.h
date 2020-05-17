@@ -10,6 +10,7 @@ enum privilege_t {KERNEL_MODE, USER_MODE};
 int _task_create(enum privilege_t, unsigned long);
 int do_exec(unsigned long);
 int _fork();
+int __clone(unsigned long, unsigned long, unsigned long);
 
 struct pt_regs* get_pt_regs(struct task_struct *p);
 

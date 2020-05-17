@@ -1,4 +1,7 @@
+#include "peripherals/uart.h"
+#include "peripherals/irq.h"
 #include "sched.h"
+#include "mm.h"
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);

@@ -5,7 +5,7 @@
 #define EXPIRE_PERIOD 0xfffff8
 
 #ifndef __ASSEMBLER__
-
+void enable_core_timer();
 #endif
 
 #endif

@@ -1,15 +1,8 @@
 #include "peripherals/uart.h"
 #include "peripherals/irq.h"
+#include "utils.h"
 #include "timer.h"
 #include "sched.h"
-
-void handle_irq() {
-    // TODO: doc of CORE0_INTERRUPT_SOURCE
-    unsigned int core0_irq_src = get32(CORE0_INTERRUPT_SOURCE);
-    if (core0_irq_src == 2) {
-        one_tick();
-    }
-}
 
 void one_tick() {
 
@@ -23,3 +16,12 @@ void one_tick() {
         disable_irq();
     }
 }
+
+void handle_irq() {
+    // TODO: doc of CORE0_INTERRUPT_SOURCE
+    unsigned int core0_irq_src = get32(CORE0_INTERRUPT_SOURCE);
+    if (core0_irq_src == 2) {
+        one_tick();
+    }
+}
+

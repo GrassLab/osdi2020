@@ -22,6 +22,7 @@
 
 #ifndef __ASSEMBLER__
 void memzero(unsigned long src, unsigned long n);
+void memcpy(unsigned long dst, unsigned long src, unsigned long n);
 unsigned long allocate_task_struct();
 void free_task_struct(unsigned long ptr);
 #endif

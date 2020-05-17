@@ -1,5 +1,7 @@
 #include "peripherals/uart.h"
 #include "sys.h"
+#include "fork.h"
+#include "sched.h"
 
 /*
 void handle_sync(unsigned long esr, unsigned long address) {
@@ -10,7 +12,6 @@ void handle_sync(unsigned long esr, unsigned long address) {
 */
 
 int handle_el0_sync(unsigned long arg0, unsigned long arg1) {
-    
     int syscall;
     asm("mov %0, x8" : "=r"(syscall));
     if (syscall == SYS_UART_WRITE) {
@@ -30,10 +31,12 @@ int handle_el0_sync(unsigned long arg0, unsigned long arg1) {
     } else if (syscall == SYS_EXIT) {
         exit_process();
         return 0;
-    } else {
-        uart_puts("unknown syscall\n");
     }
+    uart_puts("unknown syscall\n");
+    return -1;
 }
 
 int handle_el1_sync(unsigned long arg0, unsigned long arg1) {
+    uart_puts("el1 sync\n");
+    return -1;
 }

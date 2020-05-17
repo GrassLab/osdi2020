@@ -1,6 +1,11 @@
 #include "peripherals/uart.h"
+#include "peripherals/irq.h"
+#include "entry.h"
+#include "utils.h"
+#include "timer.h"
 #include "fork.h"
 #include "sys.h"
+#include "mm.h"
 
 const unsigned int delay_interval = 100000000;
 
@@ -9,11 +14,9 @@ void foo() {
         uart_puts("Task ID: ");
         uart_send_ulong(current -> task_id);
         uart_puts("; task_struct ptr: ");
-        uart_send_hex(current);
+        uart_send_hex((unsigned long)current);
         uart_puts("; sp: ");
         uart_send_hex(current -> cpu_context.sp);
-        uart_puts("; el: ");
-        uart_send_ulong(_get_el());
         uart_send('\n');
         delay(delay_interval);
         schedule();
@@ -44,7 +47,7 @@ void test() {
 }
 
 void create_user_process() {
-    int ret = do_exec(&test);
+    int ret = do_exec((unsigned long)&test);
     if (ret) {
         uart_send_ulong(ret);
         uart_puts("Create user process failed.\n");

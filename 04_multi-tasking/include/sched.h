@@ -50,6 +50,9 @@ struct task_struct {
 tid_t acquire_unused_task_id();
 void preempt_enable();
 void preempt_disable();
+void schedule();
+void cpu_switch(struct task_struct*, struct task_struct*);
+void exit_process();
 
 #endif
 #endif
