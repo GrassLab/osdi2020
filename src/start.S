@@ -1,4 +1,5 @@
 #include "sysregs.h"
+#include "mmu.h"
 
 .section ".text.boot"
 
@@ -30,6 +31,10 @@ _start:
     // setup tcr
     ldr     x0, =TCR_EL1_VALUE
     msr     tcr_el1, x0
+
+    // setup mair
+    ldr     x0, =MAIR_VALUE
+    msr     mair_el1, x0
 
     // disable MMU
     ldr     x1, =SCTLR_VALUE_MMU_DISABLED
