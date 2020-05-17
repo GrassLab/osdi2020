@@ -1,8 +1,9 @@
+#include "meta_macro.h"
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
-#define LOCAL_TIMER_CONTROL_REG ((uint32_t *)0x40000034)
-#define LOCAL_TIMER_IRQ_CLR ((uint32_t *)0x40000038)
+#define LOCAL_TIMER_CONTROL_REG ((uint32_t *)(0x40000034 + VA_BASE))
+#define LOCAL_TIMER_IRQ_CLR ((uint32_t *)(0x40000038 + VA_BASE))
 
 #define LOCAL_TIMER_SECS 1
 #define CORE_TIMER_SECS 1

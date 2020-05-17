@@ -7,7 +7,7 @@
 #define PI_DEFER_CYCLE 50000
 #define QEMU_DEFER_CYCLE 7500000
 
-#define CORE0_IRQ_SRC ((uint32_t *) 0x40000060)
+#define CORE0_IRQ_SRC ((uint32_t *)(0x40000060 + VA_BASE))
 
 void irq_int_enable(void);
 void irq_int_disable(void);
