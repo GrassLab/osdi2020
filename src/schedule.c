@@ -9,13 +9,13 @@
 #include "sysregs.h"
 #include "string.h"
 
+struct task_struct *current;                   //currently executing task
+struct task_struct *task_pool[NR_TASKS]={0};   //task array
+
 void delay(int cnt)
 {
     while(cnt--);
 }
-
-struct task_struct *current;                   //currently executing task
-struct task_struct *task_pool[NR_TASKS]={0};   //task array
 
 void foo(){// user code
     int tmp = 5;
@@ -23,7 +23,6 @@ void foo(){// user code
     sys_exit(0);
 }
 
-/***Unknown reason refer to same cnt***/
 void test() {//user code
     int cnt = 1;
     int pid;
@@ -54,7 +53,9 @@ void startup_task()
     // for(int i = 0; i < 5; ++i) { // N should > 2
     //     privilege_task_create(foo);
     // }
-    privilege_task_create(user_test);
+    long pid = privilege_task_create(user_test);
+    if (pid < 0)
+        uart_puts("error while starting user_test\n");
     core_timer_enable();
 
     while (1) // idle here
@@ -76,10 +77,9 @@ void _load_contex(){
 
 void sched_init(void)
 {
-    int res = privilege_task_create(&startup_task);
-    if (res != 0) {
+    long pid = privilege_task_create(&startup_task);
+    if (pid < 0)
         uart_puts("error while starting idle_task\n");
-    }
     current = task_pool[0];
     _load_contex(current);
     uart_puts("[sched_init] should not got here!\n");
@@ -116,7 +116,7 @@ void _context_switch()
     asm ("ldr x9, [x8]");
     asm ("mov sp, x9");
 	// msr tpidr_el1, x1         // store thread identifying information, for OS management purposes.
-	return;						 // retruen to $lr($x30)
+    return;                      // retruen to $lr($x30)
 }
 
 void context_switch(struct task_struct *next) 
@@ -128,28 +128,30 @@ void context_switch(struct task_struct *next)
     _context_switch(prev, next);
 }
 
-static long assign_task_id()
+long assign_task_id()
 {
-    for(long id=0; id<64; id++){
+    for(long id=0; id<NR_TASKS; id++){
         if(task_pool[id]) // non Null ptr, if assigned.
             continue;
         return id;
     }
-    uart_puts("Task pool had fulled!");
+    uart_puts("Task pool had fulled!\n");
     return -1;
 }
 
 //Our sp offset is base on pTask. It only works on fix stack location.
-int privilege_task_create(void(*func)())
+long privilege_task_create(void(*func)())
 {
     struct task_struct *pTask;
-    long task_id = assign_task_id();
+    long task_id;
+    if( (task_id = assign_task_id()) < 0 ){
+        return task_id;
+        uart_puts("Fail to assign task id\n");
+    }
     pTask = (struct task_struct *)get_kstack_base(task_id);
     pTask->state = TASK_RUNNING;
-    // pTask->cpu_context.x19 = (long)func;
     unsigned long sp_offset = THREAD_SIZE;
     pTask->cpu_context.sp = (unsigned long)pTask + sp_offset;
-    // pTask->cpu_context.fp = 
     pTask->cpu_context.lr = (unsigned long)func;
     pTask->counter = 4;
     pTask->schedule_flag = 0;
@@ -170,7 +172,6 @@ void wait(long task_id){
     
 }
 
-// memcpy need overwrite old_text?
 void do_exec(void(*func)())
 {
     unsigned long usp = (unsigned long)current + THREAD_SIZE + STACK_OFFSET;
@@ -184,10 +185,10 @@ void do_fork(struct trapframe *tf)
 {
     struct task_struct *pTask;
     long task_id = assign_task_id();
-    pTask = (struct task_struct *) get_kstack_base(task_id);
+    pTask = (struct task_struct *)get_kstack_base(task_id);
     task_pool[task_id] = pTask;
 
-    memcpy(pTask, current, THREAD_SIZE);//parent stack
+    memcpy(pTask, current, THREAD_SIZE);//kernel stack
     memcpy(pTask + STACK_OFFSET, current + STACK_OFFSET, THREAD_SIZE);//user stack
 
     pTask->task_id = task_id;
@@ -199,7 +200,7 @@ void do_fork(struct trapframe *tf)
     unsigned long usp_offset = tf->sp_el0 - (unsigned long)current;
     utf->sp_el0 = (unsigned long)pTask + usp_offset;
     // set fp
-    // Note: complier will use fp to access function local variable. not sp
+    // Note: complier may use fp to access function local variable. not sp
     unsigned long fp_offset = (unsigned long)tf->fp - (unsigned long)current;
     utf->fp = (unsigned long)pTask + fp_offset;
     // set return

@@ -13,7 +13,7 @@
 #define SYS_SCHED_YIELD             7
 
 #ifndef __ASSEMBLER__
-unsigned long sys_get_taskid();
+long sys_get_taskid();
 int sys_exec(void(*func)());
 int sys_fork();
 void sys_exit();

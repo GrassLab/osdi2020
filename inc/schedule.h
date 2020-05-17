@@ -27,7 +27,6 @@ struct cpu_context {
     unsigned long sp;
 };
 
-
 struct task_struct {
     struct cpu_context cpu_context;
     long schedule_flag;
@@ -36,7 +35,7 @@ struct task_struct {
     long counter;
 };
 
-int privilege_task_create(void(*func)());
+long privilege_task_create(void(*func)());
 void do_exec(void(*func)());
 void sched_init(void);
 void schedule(void);
