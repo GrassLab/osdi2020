@@ -47,9 +47,9 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
 {
 	struct pt_regs *regs = task_pt_regs(current);
 	regs->pstate = PSR_MODE_EL0t;
-	regs->pc = pc; // for return to user mode virtual address
-	regs->sp = 2 *  PAGE_SIZE;  // first page is for code , second page is for stack
-	unsigned long code_page = allocate_user_page(current, 0); // allocate a user page and update tables
+	regs->pc = pc + USER_TEXT_OFFSET; // for return to user mode virtual address
+	regs->sp = 2 * PAGE_SIZE + USER_TEXT_OFFSET;  // first page is for code , second page is for stack
+	unsigned long code_page = allocate_user_page(current, USER_TEXT_OFFSET); // allocate a user page and update tables
 	if (code_page == 0)	{
 		return -1;
 	}

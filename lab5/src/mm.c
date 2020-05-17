@@ -127,6 +127,8 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 		map_page(current, addr & PAGE_MASK, page);
 		ind++;
 		if (ind > 2){
+			printf("page fault\r\n");
+			exit_process();
 			return -1;
 		}
 		return 0;

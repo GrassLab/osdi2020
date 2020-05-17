@@ -7,10 +7,31 @@
 #define AUX_MU_IO_REG   (PBASE+0x00215040)
 #define AUX_MU_LSR_REG  (PBASE+0x00215054)
 
+int strcmp(char *str1, char *str2) {
+    while (1) {
+        if (*str1 != *str2) {
+            return *str1 - *str2;
+        }
+
+        if (*str1 == '\0' && *str2 != '\0') {
+            return 1;
+        }
+		else if (*str1 != '\0' && *str2 == '\0') {
+			return 1;
+		}
+		else if (*str1 == '\0' && *str2 == '\0') {
+			return 0;
+		}
+        str1++;
+        str2++;
+    }
+    return 1;
+}
+
 // This function is required by printf function
 void putc ( void* p, char c)
 {
-	call_sys_write((unsigned int)&c);
+	write((unsigned long)&c);
 }
 
 void init_print() {
