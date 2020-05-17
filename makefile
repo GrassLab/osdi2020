@@ -11,14 +11,15 @@ CFLAGS = -fPIC -fno-stack-protector -nostdlib -nostartfiles -ffreestanding
 
 .PHONY: all clean qemu debug indent
 
-all: kernel8.img user_program
+all: kernel8.img 
 
 $(wildcard */*.o): $(SRC) $(HEADER)
 
-kernel8.elf: $(ASM) $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $(ASM) $(OBJECTS)
+kernel8.elf: $(ASM) $(OBJECTS) user_program
+#	$(CC) $(LDFLAGS) -o $@ $(ASM) $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ $(ASM) $(OBJECTS) user_program
 
-kernel8.img: kernel8.elf
+kernel8.img: kernel8.elf 
 	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
 
 send_kernel:
@@ -51,13 +52,13 @@ check-elf:
 	aarch64-linux-gnu-readelf -s kernel8.elf
 
 code_test/test.o: code_test/test.c code_test/lib.o
-	 $(ARMGNU)gcc $(COPS) -fno-zero-initialized-in-bss -nostdlib -g -c code_test/test.c -o code_test/test.o code_test/lib.o
+	 $(ARMGNU)gcc $(COPS) -fno-zero-initialized-in-bss -nostdlib -g -c code_test/test.c -o code_test/test.o -fPIC
 
 code_test/lib.o: code_test/lib.S
-	$(ARMGNU)gcc $(COPS) -g -c  code_test/lib.S -o code_test/lib.o
+	$(ARMGNU)gcc $(COPS) -g -c  code_test/lib.S -o code_test/lib.o -fPIC
 
 code_test/lib_c.o: code_test/lib.c
-	$(ARMGNU)gcc $(COPS) -g -c  code_test/lib.c -o code_test/lib_c.o -fno-stack-protector -nostdlib
+	$(ARMGNU)gcc $(COPS) -g -c  code_test/lib.c -o code_test/lib_c.o -fno-stack-protector -nostdlib -fPIC
 
 
 user_program: code_test/test.o code_test/lib.o code_test/lib_c.o

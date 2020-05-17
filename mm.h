@@ -49,26 +49,31 @@ unsigned long pa_to_pfn(unsigned long pa);
 
 unsigned long va_to_pa(unsigned long va);
 
+#define MB256 (1 << 28)
+#define MB512 (1 << 29)
+
 // one page have 4K = 0x1000 = 4096
 typedef struct mem_page_t
 {
     unsigned char c[PAGE_SIZE];
 } mem_page_t;
 
-static mem_page_t mem_map[1000] = {
-    0,
-};
-
-static mem_page_t u_mem_map[1000] = {
-    0,
-};
-
-static const unsigned long mem_map_pa = (unsigned long)&mem_map[0];
 /*
-static unsigned short mem_map[PAGING_PAGES] = {
+static mem_page_t mem_map[1024] = {
     0,
 };
 */
+
+/*
+static mem_page_t u_mem_map[1024] = {
+    0,
+};
+*/
+
+//static const unsigned long mem_map_pa = (unsigned long)&mem_map[1];
+static const unsigned long mem_map_pa = (unsigned long)MB256;
+
+static const unsigned long u_mem_map_pa = (unsigned long)MB512;
 
 unsigned long get_free_page();
 

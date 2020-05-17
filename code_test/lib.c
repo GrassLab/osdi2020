@@ -68,12 +68,14 @@ int exec(unsigned int func)
                  "svc #0x80\n" ::"r"(func));
 }
 
-void exit()
+/*
+void exit(int value)
 {
-    asm volatile("mov x1, #0x0\n"
+    asm volatile("mov x1, %0\n"
                  "mov x0, #0x32\n"
-                 "svc #0x80\n");
+                 "svc #0x80\n" ::"r"(value));
 }
+*/
 
 void kill(int task_id, int signal)
 {

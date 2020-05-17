@@ -19,22 +19,26 @@ page_t page_table[1000];
 
 unsigned long pa_to_pfn(unsigned long pa)
 {
+    /*
     _uart_send('$');
     uart_send_hex((unsigned long)(mem_map_pa));
     _uart_send('$');
     uart_send_hex((unsigned long)(pa - mem_map_pa));
     _uart_send('$');
+    */
     return (pa - mem_map_pa) / PAGE_SIZE;
     // return ((pa - 0xffff000000000000) - (unsigned long)&mem_map[0]) / PAGE_SIZE;
 }
 
 unsigned long va_to_pa(unsigned long va)
 {
+    /*
     _uart_send('!');
     uart_send_int((va - 0xffff000000000000) / PAGE_SIZE);
     _uart_send('!');
     uart_send_hex(page_table[(va - 0xffff000000000000) / PAGE_SIZE].pa);
     _uart_send('!');
+    */
 
     return page_table[(va - 0xffff000000000000) / PAGE_SIZE].pa;
 }
@@ -91,42 +95,51 @@ void mmu_init()
 #define BOOT_PTE_ATTR (PT_AF | PT_TABLE)
 
     // TTBR0, PGD
-    paging[0] = (unsigned long)(&paging[0 + 512]) | // physical address
+    paging[0] = (unsigned long)(&paging[0 + 512]) | // to PUD table
                 PT_TABLE | PT_AF;
 
     // PUD: 1GB
-    paging[0 + 512] = (unsigned long)(paging[512 * 2]) | // physical address
-                      PT_BLOCK | PT_AF;
+    paging[512] = (unsigned long)(&paging[512 * 2]) | // to PMD table
+                  PT_TABLE | PT_AF;
     /*
     paging[0 + 512] = (unsigned long)((unsigned char *)0x0) | // physical address
                       BOOT_PUD_ATTR;
                       */
     /*
-    paging[0 + 512] = (unsigned long)((unsigned char *)&paging[0 + 512 * 2]) | // physical address
+    paging[0 + 512] = (unsigned long)((unsigned char *)&paging[0 + 512 * 2]) | 
                       BOOT_PUD_ATTR;
                       */
 
     // PUD: 1GB
-    paging[0 + 512 + 1] = (unsigned long)(0x40000000) | // physical address
-                          BOOT_PUD_ATTR;
+    paging[512 + 1] = (unsigned long)(0x40000000) | // physical address
+                      BOOT_PUD_ATTR;
 
     // PMD: 2MB
-    paging[512 * 2] = (unsigned long)(paging[512 * 3]) | // physical address;
-                      PT_TABLE | PT_AF;
-
-    paging[512 * 3] = (unsigned long)(paging[512 * 4]) | // physical address;
-                      PT_TABLE | PT_AF;
-
-    for (int i = 1; i < 512; i++)
-    {
-        paging[512 * 3 + i] = (unsigned long)((1 << 21) * i) | // physical address
-                              PT_BLOCK | PT_AF;
-    }
-    // PTE: 4KB
+    // table -> PTE
     for (int i = 0; i < 512; i++)
     {
-        paging[512 * 4 + i] = (unsigned long)(r * PAGE_SIZE) | // physical address;
-                              PT_PAGE | PT_AF;
+        paging[512 * 2 + i] = (unsigned long)(&paging[512 * (3 + i)]) |
+                              PT_TABLE | PT_AF;
+    }
+
+    /*
+    // PMD: 2MB
+    // block -> physical address
+    for (int i = 1; i < 512; i++)
+    {
+        paging[512 * 2 + i] = (unsigned long)((1 << 21) * i) | // physical address
+                              PT_BLOCK | PT_AF;
+    }
+    */
+
+    // PTE: 4KB
+    for (int n = 0; n < 512; n++)
+    {
+        for (int i = 0; i < 512; i++)
+        {
+            paging[512 * (3 + n) + i] = (unsigned long)((1 << 21) * n + i * PAGE_SIZE) | // physical address;
+                                        PT_PAGE | PT_AF;
+        }
     }
 
     /*
@@ -151,29 +164,34 @@ void mmu_init()
 
     // Memory Page
     // TTBR1, PGD
-    paging[512 * 5] = (unsigned long)((unsigned char *)&paging[512 * 6]) | // physical address
+    /*
+    paging[512 * 5] = (unsigned long)((unsigned char *)&paging[512 * 6]) | // to PUD
                       PT_TABLE | PT_AF;
     // PUD: 1GB
-    paging[512 * 6] = (unsigned long)((unsigned char *)&paging[512 * 7]) | // physical address
+    paging[512 * 6] = (unsigned long)((unsigned char *)&paging[512 * 7]) | // to PMD
                       PT_TABLE | PT_AF;
 
     // PMD: 2MB
-    paging[512 * 7] = (unsigned long)((unsigned char *)&paging[512 * 8]) | // physical address
+    paging[512 * 7] = (unsigned long)((unsigned char *)&paging[512 * 9]) | // to PTE
+                      PT_TABLE | PT_AF;
+    paging[512 * 8] = (unsigned long)((unsigned char *)&paging[512 * 10]) | // to PTE
                       PT_TABLE | PT_AF;
 
     // PTE: 4KB
     for (int i = 0; i < 512; i++)
     {
-        paging[512 * 8 + i] = (unsigned long)((unsigned char *)&mem_map[0 + i]) | // physical address
+        paging[512 * 9 + i] = (unsigned long)((unsigned char *)mem_map_pa + i * PAGE_SIZE) | // physical address
                               PT_PAGE | PT_AF;
     }
+    // PTE: 4KB
+    for (int i = 0; i < 512; i++)
+    {
+        paging[512 * 10 + i] = (unsigned long)((unsigned char *)mem_map_pa + (512 + i) * PAGE_SIZE) | // physical address
+                               PT_PAGE | PT_AF;
+    }
+    */
 
-    /*
-    paging[0 + 512] = (unsigned long)((unsigned char *)&paging[0 + 512 * 2]) | // physical address
-                      BOOT_PUD_ATTR;
-                      */
-
-    set_mem_map();
+    mem_map_init();
 
     uart_send_hex(paging[0 + 512 + 0]);
     _uart_send('\n');
@@ -189,9 +207,11 @@ void mmu_init()
                  : "r"((unsigned long)(&paging[0] + TTBR_CNP)));
 
     // upper half, user space
+    /*
     asm volatile("msr ttbr1_el1, %0"
                  :
                  : "r"((unsigned long)(&paging[512 * 5] + TTBR_CNP)));
+                 */
 
     // finally, toggle some bits in system control register to enable page translation
     asm volatile("dsb ish; isb; mrs %0, sctlr_el1"
@@ -203,14 +223,15 @@ void mmu_init()
                  : "r"(r));
 }
 
-void set_mem_map()
+void mem_map_init()
 {
     for (int i = 0; i < 1000; i++)
     {
-        page_table[i].pa = (unsigned long)&mem_map[i];
+        //page_table[i].pa = (unsigned long)&mem_map[i];
+        page_table[i].pa = (unsigned long)((unsigned char *)mem_map_pa + i * PAGE_SIZE);
         page_table[i].pfn = i;
         page_table[i].used = 0;
-        mem_map[i].c[0] = 99; // for test memory map
+        *(unsigned long *)(page_table[i].pa) = 10000 + i; // for test memory map
     }
 }
 
@@ -223,12 +244,12 @@ unsigned long get_free_page()
             page_table[i].used = 1;
             //page_table[i].pa = (unsigned long)&mem_map[i] + i * PAGE_SIZE;
 
-            // return LOW_MEMORY + i * PAGE_SIZE;
+            return LOW_MEMORY + i * PAGE_SIZE;
             // return 0xffff000000000000 + (unsigned long)&mem_map[i] + i * PAGE_SIZE;
 
-            return 0xffff000000000000 + i * PAGE_SIZE;
+            // return 0xffff000000000000 + i * PAGE_SIZE;
             // return 0xffff000000000000 + i * PAGE_SIZE + PAGE_SIZE;
-            //return 0xffff000000000000 + page_table[i].pa;
+            // return 0xffff000000000000 + page_table[i].pa;
         }
     }
     return 0;

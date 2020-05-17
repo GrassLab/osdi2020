@@ -23,7 +23,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 5.2.3\n");
+    uart_print("Version : 5.3.4\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -69,6 +69,7 @@ void user_task_4()
 
 void user_syscall_test()
 {
+    printf("\ntask_id: %d\n", get_taskid());
     int pid = fork();
     //int pid = 0;
     if (pid == 0)
@@ -105,17 +106,34 @@ void task_111()
 
 void task_2()
 {
+    printf("\ntask_id: %d\n", get_taskid());
     do_exec((unsigned long)user_syscall_test);
+    uart_send('^');
     while (check_reschedule())
         schedule();
 }
 
 void task_3()
 {
+    printf("\ntask_id: %d\n", get_taskid());
+    uart_send_hex((unsigned long)user_task_3);
+
+    //((void (*)(void))user_task_3)();
     do_exec((unsigned long)user_task_3);
-    //do_exec((unsigned long)&pcsh);
-    while (check_reschedule())
-        schedule();
+
+    uart_send('\n');
+    // check user space set in 0xffff000000000000
+    uart_send_hex(((unsigned long *)(0xffff000000000000))[0]);
+    uart_send('\n');
+
+    uart_send('=');
+
+    while (1)
+    {
+        if (check_reschedule())
+            schedule();
+    }
+    uart_send('?');
 }
 
 void task_4()
@@ -167,28 +185,34 @@ void user_test()
     do_exec((unsigned long)test);
 }
 
-#define GB 0x40000000
-#define MB2 (1 << 21)
-//#define OFF (0 << 21) // 2MB
-//#define OFF -4096 // 4KB
-//#define OFF (-GB + 48)
-//#define OFF -MB2 // 2MB
-#define OFF 0x0
+void run_program()
+{
+    extern unsigned long _binary_test_img_start;
+    unsigned long program_start = (unsigned long)&_binary_test_img_start;
 
-/*
-#define KERNEL_UART0_DR ((volatile unsigned int *)0xFFFFFFFFFFE00000)
-#define KERNEL_UART0_FR ((volatile unsigned int *)0xFFFFFFFFFFE00018)
-*/
+    ((void (*)(void))program_start)();
+}
 
-#define KERNEL_UART0_DR ((volatile unsigned int *)(0xFFFF000000000000 - OFF))
-#define KERNEL_UART0_FR ((volatile unsigned int *)(0xFFFF000000000018 - OFF))
+void task_program()
+{
+    extern unsigned long _binary_test_img_start;
+    extern unsigned long _binary_test_img_size;
+    unsigned long program_start = (unsigned long)&_binary_test_img_start;
+    unsigned long program_size = (unsigned long)&_binary_test_img_size;
 
-/*
-#define KERNEL_UART0_DR ((volatile unsigned int *)0xffffff8000000000)
-#define KERNEL_UART0_FR ((volatile unsigned int *)0xffffff8000000018)
-*/
+    printf("\ntask_id: %d\n", get_taskid());
 
-int main()
+    _do_exec(program_start, program_size);
+    while (1)
+    {
+        if (check_reschedule())
+        {
+            schedule();
+        }
+    }
+}
+
+int kernel_main()
 {
 
     char *s = "Writing through MMIO mapped in higher half!\r\n";
@@ -203,33 +227,14 @@ int main()
 
     mmu_init();
 
+    //run_program();
+
     uart_send_hex((unsigned int)(unsigned long)&x);
     uart_send('\n');
-
-    /*
-    unsigned long *t = (unsigned long *)0xFFFF000000000000;
-    *(t) = 0xffffffffffffffff;
-    uart_send_int(t);
-    uart_send('\n');
-
-    uart_puts("Writing through identity mapped MMIO.\n");
-
-    // test mapping
-    while (*s)
-    {
-        do
-        {
-            asm volatile("nop");
-        } while (*KERNEL_UART0_FR & 0x20);
-        *KERNEL_UART0_DR = *s++;
-    }
-    */
 
     signal_init();
 
     system_start();
-
-    // enable_irq();
 
     /* You can't know Current EL, if you in EL0 */
     /*
@@ -251,9 +256,12 @@ int main()
     privilege_task_create((unsigned long)task_1, 0);
     privilege_task_create((unsigned long)task_11, 0);
     // privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
-    //privilege_task_create((unsigned long)task_3, 0);
-    privilege_task_create((unsigned long)task_4, 0);
+    privilege_task_create((unsigned long)task_3, 0);
+    privilege_task_create((unsigned long)task_program, 0);
+    //privilege_task_create((unsigned long)task_4, 0);
     // privilege_task_create((unsigned long)user_test, 0);
+
+    // enable_irq();
 
     // core timer enable, every 1ms
     core_timer(1);

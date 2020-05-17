@@ -224,6 +224,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         break;
     case 0b100100:
         uart_puts("Data abort, lower EL");
+        uart_send_hex(elr);
         break;
     case 0b100101:
         uart_puts("Data abort, same EL");

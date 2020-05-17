@@ -69,24 +69,32 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     //p = (task_t *)&kstack_pool[task_id][0];
     p = (task_t *)get_free_page();
 
-    // test visual memory
-    //uart_send_hex((unsigned long)p >> 32);
+    // test visual memory map to physical memory correctly
+    /*
+    // check visual address
     uart_send_hex(sizeof(mem_page_t));
     uart_send('\n');
     uart_send_hex((unsigned long)p >> 32);
     uart_send_hex((unsigned long)p);
+    // reset memory page default value
     ((unsigned long *)p)[0] = task_id;
     uart_send('\n');
+    // check value in virtual address
     uart_send_int(*(unsigned long *)p);
     uart_send(' ');
-    uart_send_int(*(unsigned long *)((unsigned long)p - 0xffff000000000000 + (unsigned long)&mem_map[0]));
+    // check value in physical address
+    uart_send_int(*(unsigned long *)((unsigned long)p - 0xffff000000000000 + mem_map_pa));
     uart_send(' ');
+    // check value in virtual address
     uart_send_int(*(unsigned long *)(va_to_pa((unsigned long)p)));
     uart_send(' ');
+    // check va to pa correctly
     uart_send_hex(va_to_pa((unsigned long)p));
     uart_send(' ');
+    // check pa to pfn
     uart_send_int((pa_to_pfn(va_to_pa((unsigned long)p))));
     uart_send('\n');
+    */
 
     memset((unsigned short *)p, 0, PAGE_SIZE);
 
@@ -197,20 +205,103 @@ int privilege_task_create(unsigned long func, unsigned long arg)
     return copy_process(PF_KTHREAD, func, arg, 0);
 }
 
+int _do_exec(unsigned long start, unsigned long size)
+{
+    uart_send('!');
+    task_t *current = task_pool[get_current()];
+    user_context_t *regs = task_user_context(current);
+    uart_send('!');
+    memset(regs, 0, sizeof(user_context_t));
+    regs->pc = 0xffff000000000000;
+    regs->pstate = PSR_MODE_EL0t;
+    current->cpu_context.pc = regs->pc;
+
+    unsigned long stack = get_free_page();
+    memset((unsigned char *)stack, 0, PAGE_SIZE);
+
+    //uart_send_int(size);
+    memcpy((unsigned char *)stack, (unsigned char *)start, size);
+
+    // use visual address replace stack(physical address)
+    regs->sp = 0xffff000000000000 + PAGE_SIZE;
+    uart_send('%');
+    current->stack = 0xffff000000000000;
+    uart_send('%');
+
+    // create new pgd for user space memory map
+    unsigned long pgd = get_free_page();
+    unsigned long pud = get_free_page();
+    unsigned long pmd = get_free_page();
+    unsigned long ptd = get_free_page();
+    ((unsigned long *)pgd)[0] = pud | // to PUD
+                                PT_TABLE | PT_AF;
+    ((unsigned long *)pud)[0] = pmd | // to PUD
+                                PT_TABLE | PT_AF;
+    ((unsigned long *)pmd)[0] = ptd | // to PUD
+                                PT_TABLE | PT_AF;
+    ((unsigned long *)ptd)[0] = stack | // to PUD
+                                PT_PAGE | PT_AF;
+
+    set_pgd(pgd);
+
+    // check user space set in 0xffff000000000000
+    // it will break loaded program
+    /*
+    uart_send_hex((unsigned long)((unsigned char *)stack)[0]);
+    ((unsigned long *)(0xffff000000000000))[0] = 0xff;
+    */
+
+    // test page fault
+    // ((unsigned char *)(0xffff000000000000))[PAGE_SIZE] = 0xffff;
+
+    current->pgd = pgd;
+
+    // asm volatile("mov x30, %0" ::"r"(0xffff000000000000));
+
+    //((void (*)(void))(0xffff000000000000))();
+    return 0;
+}
+
 int do_exec(unsigned long pc)
 {
-
-    user_context_t *regs = task_user_context(task_pool[get_current()]);
+    uart_send('!');
+    task_t *current = task_pool[get_current()];
+    user_context_t *regs = task_user_context(current);
+    uart_send('!');
     memset(regs, 0, sizeof(user_context_t));
     regs->pc = pc;
     regs->pstate = PSR_MODE_EL0t;
-    //unsigned long stack = (unsigned long)&ustack_pool[get_current()][0]; //allocate new user stack
-    //memset((unsigned long *)stack, 0, THREAD_SIZE);
     unsigned long stack = get_free_page();
-    memset((unsigned long *)stack, 0, PAGE_SIZE);
+    memset((unsigned char *)stack, 0, PAGE_SIZE);
 
-    regs->sp = stack + PAGE_SIZE;
-    task_pool[get_current()]->stack = stack;
+    // use visual address replace stack(physical address)
+    regs->sp = 0xffff000000000000 + PAGE_SIZE;
+    uart_send('%');
+    current->stack = 0xffff000000000000;
+    uart_send('%');
+
+    // create new pgd for user space memory map
+    unsigned long pgd = get_free_page();
+    unsigned long pud = get_free_page();
+    unsigned long pmd = get_free_page();
+    unsigned long ptd = get_free_page();
+    ((unsigned long *)pgd)[0] = pud | // to PUD
+                                PT_TABLE | PT_AF;
+    ((unsigned long *)pud)[0] = pmd | // to PUD
+                                PT_TABLE | PT_AF;
+    ((unsigned long *)pmd)[0] = ptd | // to PUD
+                                PT_TABLE | PT_AF;
+    ((unsigned long *)ptd)[0] = stack | // to PUD
+                                PT_PAGE | PT_AF;
+
+    set_pgd(pgd);
+    // check user space set in 0xffff000000000000
+    ((unsigned long *)(0xffff000000000000))[0] = 0xffff;
+    uart_send_hex((unsigned long)((unsigned long *)stack)[0]);
+    // test page fault
+    // ((unsigned char *)(0xffff000000000000))[PAGE_SIZE] = 0xffff;
+
+    current->pgd = pgd;
     return 0;
 }
 
@@ -221,8 +312,19 @@ void task_init()
     task_pool[task_id]->state = TASK_IDLE;
 }
 
+void set_pgd(unsigned long pgd)
+{
+    // upper half, user space
+    asm volatile("dsb ish; msr ttbr1_el1, %0"
+                 :
+                 : "r"((unsigned long)(pgd)));
+
+    asm volatile("tlbi vmalle1is; dsb ish; isb;");
+}
+
 void context_switch(int task_id)
 {
+    extern volatile unsigned char _end;
     int current_el = get_current();
     DEBUG_LOG_TASK((":%d>%d\n\r", current_el, task_id));
 
@@ -231,6 +333,13 @@ void context_switch(int task_id)
     set_current(task_id);
 
     task_t *next = task_pool[task_id];
+
+    // uart_puts("set pgd\n");
+    set_pgd(next->pgd);
+    uart_send('=');
+    uart_send_int(task_id);
+    uart_send('=');
+    //uart_puts("before context_switch\n");
 
     switch_to(prev, next, next->signal_source);
 }
@@ -259,7 +368,7 @@ void schedule()
 
 int check_reschedule()
 {
-    // every 10ms, reschdule
+    // every 5ms, reschdule
     if (schedule_cnt > 5)
     {
         schedule_cnt = 0;

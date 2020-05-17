@@ -5,7 +5,7 @@ double gettime();
 void core_timer();
 int fork();
 int exec();
-void exit();
+void exit(int value);
 int get_taskid();
 void kill(int task_id, int signal);
 

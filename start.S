@@ -65,7 +65,7 @@ ret2EL0:
 */
 
 
-b main
+b kernel_main
 
 loop:
   wfe

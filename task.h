@@ -14,7 +14,7 @@
 #define PF_KTHREAD 0x00000002
 #define PF_FORK 0x00000004
 
-#define TASK_NUM 16
+#define TASK_NUM 64
 enum
 {
     TASK_IDLE,
@@ -64,6 +64,12 @@ typedef struct task_t
     unsigned long stack;
     unsigned long flags;
     unsigned long signal_source;
+
+    // page table
+    unsigned long pgd;
+    unsigned long pud;
+    unsigned long pmd;
+    unsigned long ptd;
     //unsigned long user_context_num;
 } task_t;
 
@@ -78,6 +84,8 @@ int privilege_task_create(unsigned long func, unsigned long arg);
 user_context_t *task_user_context(task_t *task);
 
 int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack);
+
+int _do_exec(unsigned long start, unsigned long size);
 
 int do_exec(unsigned long pc);
 
