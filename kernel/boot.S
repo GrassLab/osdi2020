@@ -10,7 +10,6 @@ _start:
     # cpu id > 0, stop
     cbnz     x1,    loop
 
-
 clear_bss:
     # clear bss
     ldr     x1,     =__bss_start
@@ -73,10 +72,16 @@ return_to_el1:
     mov     x1,     0x3C0
     msr     SPSR_EL1, x1
 
+    ## required 5.1.3: test mmu setting
+    ldr     x9, =kernel_testing_main
+    bl      mmu_init
+    br      x9
+    b       loop
+
     # go to set up init task, and run it
     bl      run_init_task
 
-    # shall not return
+    # this shall not touched
     bl      loop
 
 loop:  

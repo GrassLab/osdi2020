@@ -16,3 +16,11 @@ int main ( )
 
     return 0;
 }
+
+#include "kernel/peripherals/uart.h"
+int kernel_testing_main ( )
+{
+    sys_printk ( "Hello Wordl from EL1\n" );
+
+    return 0;
+}
