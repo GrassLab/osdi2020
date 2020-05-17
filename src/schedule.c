@@ -28,6 +28,7 @@ void task_init() {
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         task_pool[i].id = i;
         task_pool[i].state = EXIT;
+        task_pool[i].need_resched = 0;
     }
     // idle task
     task_pool[0].state = RUNNING;
