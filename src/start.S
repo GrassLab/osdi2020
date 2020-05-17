@@ -16,18 +16,40 @@ _start:
     b       1b
     // if cpu_id == 0
 2:
+    // disable MMU
+    ldr     x1, =SCTLR_VALUE_MMU_DISABLED
+    msr     sctlr_el1, x1
+
+    // make el0, el1 can use Floating point and Advanced SIMD
+    ldr     x1, =CPACR_EL1_VALUE
+    msr     CPACR_EL1, x1
+
+    // set AArch64 for el2
+    ldr     x1, =HCR_EL2_VALUE
+    msr     hcr_el2, x1
+
+    // mask all interrupt, and set interrupt level to el1h
+    ldr     x1, =SPSR_EL2_VALUE
+    msr     spsr_el2, x1
+
+    adr     x1, el1_start
+    msr     elr_el2, x1
+
+    eret
+
+el1_start:
+    // load exception_table to VBAR_EL1
+    adr     x1, exception_table
+    msr     vbar_el1, x1
+
+    // mask all interrupt, and set exception level to el0
+    ldr     x1, =SPSR_EL1_VALUE
+    msr     spsr_el1, x1
+
     // set stack pointer
-    ldr     x1, =_start
+    ldr     x1, =0x60000
     mov     sp, x1
 
-    // clear bss
-    ldr     x1, =__bss_start
-    ldr     w2, =__bss_size
-3:  cbz     w2, 4f
-    str     xzr, [x1], #8
-    sub     w2, w2, #1
-    cbnz    w2, 3b
-4:
     // setup tcr
     ldr     x0, =TCR_EL1_VALUE
     msr     tcr_el1, x0
@@ -50,6 +72,7 @@ _start:
     str     x2, [x1, #8]
 
     msr     ttbr0_el1, x0 // load PGD to the buttom translation based register.
+    msr     ttbr1_el1, x0 // load PGD to the upper translation based register.
 
     // enable MMU
     ldr     x1, =SCTLR_VALUE_MMU_ENABLE
@@ -57,37 +80,21 @@ _start:
     orr     x2, x2, x1
     msr     sctlr_el1, x2
 
-    // make el0, el1 can use Floating point and Advanced SIMD
-    ldr     x1, =CPACR_EL1_VALUE
-    msr     CPACR_EL1, x1
+    // clear bss
+    ldr     x1, =__bss_start
+    ldr     w2, =__bss_size
+3:  cbz     w2, 4f
+    str     xzr, [x1], #8
+    sub     w2, w2, #1
+    cbnz    w2, 3b
+4:
+    // mov sp to virtual address
+    ldr     x1, =KERNEL_VIRT_BASE
+    add     sp, sp, x1
 
-    // set AArch64 for el2
-    ldr     x1, =HCR_EL2_VALUE
-    msr     hcr_el2, x1
-
-    // mask all interrupt, and set interrupt level to el1h
-    ldr     x1, =SPSR_EL2_VALUE
-    msr     spsr_el2, x1
-
-    adr     x1, el1_start
-    msr     elr_el2, x1
-
-    eret
-
-el1_start:
-    // set stack pointer
-    ldr     x1, =0x80000
-    mov     sp, x1
-
-    // load exception_table to VBAR_EL1
-    adr     x1, exception_table
-    msr     vbar_el1, x1
-
-    // mask all interrupt, and set exception level to el0
-    ldr     x1, =SPSR_EL1_VALUE
-    msr     spsr_el1, x1
-
-    bl      boot_init
+    // indirect branch
+    ldr     x0, =boot_init
+    br      x0
 
 1:
     b       1b

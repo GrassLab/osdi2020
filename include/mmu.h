@@ -1,6 +1,8 @@
 #ifndef __MMU_H__
 #define __MMU_H__
 
+#define KERNEL_VIRT_BASE        0xFFFF000000000000
+
 // SCTLR_EL1, System Control Register (EL1)
 
 #define SCTLR_VALUE_MMU_DISABLED 0

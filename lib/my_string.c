@@ -1,9 +1,10 @@
 #include "my_math.h"
+#include "typedef.h"
 
-char *itox(int value, char *s) {
+char *itox64(uint64_t value, char *s) {
     int idx = 0;
 
-    char tmp[8 + 1];
+    char tmp[64 + 1];
     int tidx = 0;
     while (value) {
         int r = value % 16;
@@ -114,9 +115,9 @@ unsigned int my_vsprintf(char *dst, char *fmt, __builtin_va_list args) {
             }
             // hex
             if (*fmt == 'x') {
-                int arg = __builtin_va_arg(args, int);
-                char buf[8 + 1];
-                char *p = itox(arg, buf);
+                int arg = __builtin_va_arg(args, uint64_t);
+                char buf[64 + 1];
+                char *p = itox64(arg, buf);
                 while (*p) {
                     *dst++ = *p++;
                 }
