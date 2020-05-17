@@ -14,6 +14,16 @@
 
 #ifndef __ASSEMBLER__
 void memzero(unsigned long src, unsigned long n);
+
+#define PAGE_NUM 1024 /* 2mb per page */
+#define NOT_USED 0
+#define USED_NOW 1
+#define PRESERVE 2
+
+typedef struct page_tag {
+  int status;
+} Page;
+
 #endif
 
 #endif

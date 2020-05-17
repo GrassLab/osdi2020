@@ -75,49 +75,52 @@ el1_entry:
 #elif MLV == 1
     mov x0, 0x0000 // PGD's page frame at 0x0
     mov x1, 0x1000 // PUD's page frame at 0x1000
-    mov x2, 0x2000 // PMD's page frame at 0x2000
+    mov x2, 0x2000 // 1st PMD's page frame at 0x2000
+    mov x3, 0x3000 // 2nd PMD's page frame at 0x4000
 
-    ldr x3, =LV3_PGD_ATTR
-    orr x3, x1, x3 // combine the physical address of next level page with attribute.
-    str x3, [x0]
+    ldr x4, =LV3_PGD_ATTR
+    orr x4, x1, x4 // combine the physical address of next level page with attribute.
+    str x4, [x0]
 
-    ldr x3, =LV3_PUD_ATTR
-    orr x3, x2, x3 // combine the physical address of next level page with attribute.
-    str x3, [x1]
+    ldr x4, =LV3_PUD_ATTR
+    orr x5, x2, x4 // combine the physical address of next level page with attribute.
+    str x5, [x1]
+    orr x5, x3, x4 // combine the physical address of next level page with attribute.
+    str x5, [x1, #8]
 
 #if 0 /* all device */
-    ldr x3, =LV3_PMD_ATTR
-    mov x4, #512        // physical addr boundary
-    mov x5, xzr         // physical addr counter 0 to 1023
-    mov x6, x2          // entry address offset
+    ldr x4, =LV3_PMD_ATTR
+    mov x5, #512        // physical addr boundary
+    mov x6, xzr         // physical addr counter 0 to 1023
+    mov x7, x2          // entry address offset
 1:
-    mov x7, x5, lsl #21 // (0 to 1023) << 20 convert to MB
-    orr x7, x7, x3
-    str x7, [x6], #8
-    add x5, x5, #1
-    cmp x5, x4
+    mov x8, x6, lsl #21 // (0 to 1023) << 20 convert to MB
+    orr x8, x8, x4
+    str x8, [x7], #8
+    add x6, x6, #1
+    cmp x6, x5
     b.ls 1b
 #else /* dev + normal */
-    ldr x3, =LV3_PMD_NOR_ATTR
-    mov x4, #504        // physical addr boundary
-    mov x5, xzr         // physical addr counter 0 to 1023
-    mov x6, x2          // entry address offset
+    ldr x4, =LV3_PMD_NOR_ATTR
+    mov x5, #504        // physical addr boundary
+    mov x6, xzr         // physical addr counter 0 to 1023
+    mov x7, x2          // entry address offset
 1:
-    mov x7, x5, lsl #21 // (0 to 1023) << 20 convert to MB
-    orr x7, x7, x3
-    str x7, [x6], #8
-    add x5, x5, #1
-    cmp x5, x4
+    mov x8, x6, lsl #21 // (0 to 1023) << 20 convert to MB
+    orr x8, x8, x4
+    str x8, [x7], #8
+    add x6, x6, #1
+    cmp x6, x5
     b.ls 1b
 
-    ldr x3, =LV3_PMD_DEV_ATTR
-    mov x4, #512        // physical addr boundary
+    ldr x4, =LV3_PMD_DEV_ATTR
+    mov x5, #512        // physical addr boundary
 1:
-    mov x7, x5, lsl #21 // (0 to 1023) << 20 convert to MB
-    orr x7, x7, x3
-    str x7, [x6], #8
-    add x5, x5, #1
-    cmp x5, x4
+    mov x8, x6, lsl #21 // (0 to 1023) << 20 convert to MB
+    orr x8, x8, x4
+    str x8, [x7], #8
+    add x6, x6, #1
+    cmp x6, x5
     b.ls 1b
 #endif
 
