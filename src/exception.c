@@ -190,7 +190,7 @@ void arm_core_timer_intr_handler() {
         current->counter = 0;
         current->need_resched = 1;
     }
-    irq_enable();
+    // irq_enable();
 }
 
 void arm_local_timer_intr_handler() {
