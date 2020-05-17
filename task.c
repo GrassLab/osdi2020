@@ -74,12 +74,18 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     uart_send_hex(sizeof(mem_page_t));
     uart_send('\n');
     uart_send_hex((unsigned long)p >> 32);
-    uart_send_hex(p);
-    *(unsigned long *)p = task_id;
+    uart_send_hex((unsigned long)p);
+    ((unsigned long *)p)[0] = task_id;
     uart_send('\n');
     uart_send_int(*(unsigned long *)p);
     uart_send(' ');
-    uart_send_int(*(unsigned long *)((unsigned long)p - 0xffff000000000000));
+    uart_send_int(*(unsigned long *)((unsigned long)p - 0xffff000000000000 + (unsigned long)&mem_map[0]));
+    uart_send(' ');
+    uart_send_int(*(unsigned long *)(va_to_pa((unsigned long)p)));
+    uart_send(' ');
+    uart_send_hex(va_to_pa((unsigned long)p));
+    uart_send(' ');
+    uart_send_int((pa_to_pfn(va_to_pa((unsigned long)p))));
     uart_send('\n');
 
     memset((unsigned short *)p, 0, PAGE_SIZE);

@@ -23,7 +23,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 5.1.3\n");
+    uart_print("Version : 5.2.3\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -198,12 +198,12 @@ int main()
     init_printf(0, putc);
 
     int x = 0;
-    uart_send_hex(&x);
+    uart_send_hex((unsigned int)(unsigned long)&x);
     uart_send('\n');
 
     mmu_init();
 
-    uart_send_hex(&x);
+    uart_send_hex((unsigned int)(unsigned long)&x);
     uart_send('\n');
 
     /*

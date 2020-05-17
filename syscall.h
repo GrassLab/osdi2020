@@ -16,5 +16,5 @@ int get_taskid();
 void kill(int task_id, int signal);
 
 void uart_send(unsigned int c);
-char uart_recv() __attribute__((section(".bootloader")));
+char uart_recv();
 #endif

@@ -21,13 +21,10 @@
 #define PAGE (PAGESIZE / 8)
 
 // granularity
-#define PT_PAGE 0b11  // 4k granule
-#define PT_BLOCK 0b01 // 2M granule
+#define PT_TABLE 0b11
+#define PT_PAGE 0b11
+#define PT_BLOCK 0b01
 
-#define PT_PGD 0b11 // 2M granule
-#define PT_PUD 0b01 // 2M granule
-#define PT_PMD 0b01 // 2M granule
-#define PT_PTE 0b11 // 2M granule
 // accessibility
 #define PT_KERNEL (0 << 6) // privileged, supervisor EL1 access only
 #define PT_USER (1 << 6)   // unprivileged, EL0 access allowed
@@ -50,17 +47,23 @@ void mmu_init();
 
 unsigned long pa_to_pfn(unsigned long pa);
 
-unsigned long virtual_to_physical(unsigned long vir);
+unsigned long va_to_pa(unsigned long va);
 
 // one page have 4K = 0x1000 = 4096
 typedef struct mem_page_t
 {
-    unsigned long p[256];
+    unsigned char c[PAGE_SIZE];
 } mem_page_t;
 
 static mem_page_t mem_map[1000] = {
     0,
 };
+
+static mem_page_t u_mem_map[1000] = {
+    0,
+};
+
+static const unsigned long mem_map_pa = (unsigned long)&mem_map[0];
 /*
 static unsigned short mem_map[PAGING_PAGES] = {
     0,
