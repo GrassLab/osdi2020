@@ -97,15 +97,6 @@ void schedule() {
     context_switch(next);
 }
 
-void reschedule() {
-    struct task_t *current = get_current_task();
-    if (current->need_resched) {
-        current->counter = TASK_EPOCH;
-        current->need_resched = 0;
-        schedule();
-    }
-}
-
 void do_exec(void (*func)()) {
     struct task_t *current = get_current_task();
     asm volatile("msr sp_el0, %0" : : "r"(&ustack_pool[current->id][USTACK_TOP_IDX]));

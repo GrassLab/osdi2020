@@ -60,7 +60,6 @@ void schedule_init();
 int privilege_task_create(void (*func)(), int priority);
 void context_switch(struct task_t* next);
 void schedule();
-void reschedule();
 void do_exec(void (*func)());
 void do_exit(int status);
 

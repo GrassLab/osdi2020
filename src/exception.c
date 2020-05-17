@@ -231,3 +231,13 @@ void irq_stk_switcher() {
         asm volatile("mov sp, %0" : : "r"(entry_sp));
     }
 }
+
+void irq_return() {
+    // check reschedule flag
+    struct task_t *current = get_current_task();
+    if (current->need_resched) {
+        current->counter = TASK_EPOCH;
+        current->need_resched = 0;
+        schedule();
+    }
+}

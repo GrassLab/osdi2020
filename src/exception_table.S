@@ -148,7 +148,7 @@ sync_exc_handler:
 irq_exc_handler:
     kernel_entry
     bl  irq_stk_switcher
-    bl  reschedule
+    bl  irq_return
     kernel_exit
 
 .global return_from_fork
