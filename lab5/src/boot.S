@@ -55,85 +55,8 @@ el1_entry:
     bl init_irq
 
 #define MLV 1
+
 #if MLV == 0
-    /* beg */
-    // use physical address of page table
-    mov x0, 0
-
-    add  x1, x0,   #PAGE_SIZE // PUD's page frame
-    add  x2, x1,   #PAGE_SIZE // 1st PMD's page frame
-    add  x14, x2,  #PAGE_SIZE // 2nd PMD's page frame
-    add  x15, x14, #PAGE_SIZE // 1st PTE's page frame
-                              // totally 1024 page (2G)
-
-    // step 1. setting PGD
-    ldr x3, =PD_TABLE // means it is a table descriptor
-    orr x3, x1, x3 // combine the physical address of next level page with attribute.
-    str x3, [x0]
-
-    // step 2. setting PUD
-    ldr x3, =PD_TABLE
-    orr x3, x2, x3
-    str x3, [x1] // 1st 1GB mapped by the 1st entry of PUD
-
-    ldr x3, =PD_TABLE
-    orr x3, x14, x3
-    str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
-
-    // step 3. setting PMD
-    mov x4, x15 //x4 for PTE's page table
-    mov x5, xzr
-    mov x6, #1024
-3:
-    ldr x3, =PD_TABLE
-    orr x3, x4, x3
-    str x3, [x2, x5, lsl #3]
-    add x5, x5, #1
-    add x4, x4, #PAGE_SIZE //next PTE page
-    cmp x5, x6
-    b.ls 3b
-
-    // step4. setting PTE
-    mov x4, xzr //x4 for physical memory
-    mov x5, xzr
-    mov x6, #0x41000000
-1:
-    ldr x3, =MMU_DEVICE_FLAGS
-    orr x3, x4, x3
-    str x3, [x15, x5, lsl #3]
-    add x5, x5, #1
-    add x4, x4, #PAGE_SIZE
-    cmp x4, x6
-    b.ls 1b
-
-    /* end */
-#elif MLV == 1
-
-    mov x0, 0 // PGD's page frame at 0x0
-    mov x1, 0x1000 // PUD's page frame at 0x1000
-    mov x2, 0x2000 // PMD's page frame at 0x2000
-
-    ldr x3, =PGD_ATTR
-    orr x3, x1, x3 // combine the physical address of next level page with attribute.
-    str x3, [x0]
-
-    ldr x3, =PUD_ATTR
-    orr x3, x2, x3 // combine the physical address of next level page with attribute.
-    str x3, [x1]
-
-    ldr x3, =PMD_ATTR
-    mov x4, #512        // physical addr boundary
-    mov x5, xzr         // physical addr counter 0 to 1023
-    mov x6, xzr         // entry address offset
-1:
-    mov x7, x5, lsl #21 // (0 to 1023) << 20 convert to MB
-    orr x7, x7, x3
-    str x7, [x6], #8
-    add x5, x5, #1
-    cmp x5, x4
-    b.ls 1b
-
-#elif MLV == 2
     mov x0, 0 // PGD's page frame at 0x0
     mov x1, 0x1000 // PUD's page frame at 0x1000
 
@@ -148,6 +71,104 @@ el1_entry:
     mov x3, 0x40000000
     orr x3, x2, x3
     str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
+
+#elif MLV == 1
+    mov x0, 0x0000 // PGD's page frame at 0x0
+    mov x1, 0x1000 // PUD's page frame at 0x1000
+    mov x2, 0x2000 // PMD's page frame at 0x2000
+
+    ldr x3, =LV3_PGD_ATTR
+    orr x3, x1, x3 // combine the physical address of next level page with attribute.
+    str x3, [x0]
+
+    ldr x3, =LV3_PUD_ATTR
+    orr x3, x2, x3 // combine the physical address of next level page with attribute.
+    str x3, [x1]
+
+#if 0 /* all device */
+    ldr x3, =LV3_PMD_ATTR
+    mov x4, #512        // physical addr boundary
+    mov x5, xzr         // physical addr counter 0 to 1023
+    mov x6, x2          // entry address offset
+1:
+    mov x7, x5, lsl #21 // (0 to 1023) << 20 convert to MB
+    orr x7, x7, x3
+    str x7, [x6], #8
+    add x5, x5, #1
+    cmp x5, x4
+    b.ls 1b
+#else /* dev + normal */
+    ldr x3, =LV3_PMD_NOR_ATTR
+    mov x4, #504        // physical addr boundary
+    mov x5, xzr         // physical addr counter 0 to 1023
+    mov x6, x2          // entry address offset
+1:
+    mov x7, x5, lsl #21 // (0 to 1023) << 20 convert to MB
+    orr x7, x7, x3
+    str x7, [x6], #8
+    add x5, x5, #1
+    cmp x5, x4
+    b.ls 1b
+
+    ldr x3, =LV3_PMD_DEV_ATTR
+    mov x4, #512        // physical addr boundary
+1:
+    mov x7, x5, lsl #21 // (0 to 1023) << 20 convert to MB
+    orr x7, x7, x3
+    str x7, [x6], #8
+    add x5, x5, #1
+    cmp x5, x4
+    b.ls 1b
+#endif
+
+#elif MLV == 2
+
+    //ldr x0, =pg_dir
+    //add x1, x0, 0x1000
+    //add x2, x1, 0x1000
+    //add x3, x2, 0x1000
+    //add x4, x3, 0x1000
+
+    mov x0, 0x0000 // PGD's page frame at 0x0
+    mov x1, 0x1000 // PUD's page frame at 0x1000
+    mov x2, 0x2000 // 1st PMD's page frame at 0x2000
+    mov x3, 0x3000 // 2nd PMD's page frame at 0x3000
+    mov x4, 0x4000 // PTD's page frame at 0x4000
+
+    ldr x5, =LV4_PGD_ATTR
+    orr x5, x1, x5 // combine the physical address of next level page with attribute.
+    str x5, [x0]
+
+    ldr x5, =LV4_PUD_ATTR
+    orr x5, x2, x5 // combine the physical address of next level page with attribute.
+    str x5, [x1]
+    orr x5, x3, x5 // combine the physical address of next level page with attribute.
+    str x5, [x1, #8]
+
+    ldr x5, =LV4_PMD_ATTR
+    mov x6, #512
+    mov x7, xzr
+    mov x8, x2
+    mov x9, x4
+1:
+    orr x10, x9, x5
+    str x10, [x8], #8
+    add x7, x7, #1
+    add x9, x9, #4096
+    cmp x7, x6
+    b.ls 1b
+
+    ldr x5, =LV4_PTD_ATTR
+    mov x6, #262144
+    mov x7, xzr
+    mov x8, x4
+2:
+    mov x9, x7, lsl #12
+    orr x9, x9, x5
+    str x9, [x8], #8
+    add x7, x7, #1
+    cmp x7, x6
+    b.ls 2b
 #endif
 
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
