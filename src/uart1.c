@@ -68,7 +68,7 @@ void uart1_printf(char* fmt, ...) {
 
     extern volatile unsigned char _end;  // defined in linker
     char* s = (char*)&_end;              // put temporary string after code
-    vsprintf(s, fmt, args);
+    my_vsprintf(s, fmt, args);
 
     while (*s) {
         if (*s == '\n') uart1_write('\r');

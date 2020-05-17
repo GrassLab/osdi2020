@@ -4,39 +4,151 @@
 #include "timer.h"
 #include "queue.h"
 #include "uart0.h"
-#include "shared_variables.h"
+#include "exception.h"
+#include "schedule.h"
+#include "sys.h"
+
+char intr_stack[INTR_STK_SIZE];
+uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
+uint64_t cntfrq_el0, cntpct_el0;
 
 void irq_enable() {
     asm volatile("msr daifclr, #2");
+}
+
+void irq_disable() {
+    asm volatile("msr daifset, #2");
 }
 
 /*
  * Synchronous Exception
  */
 
-void sync_exc_router(unsigned long esr, unsigned long elr) {
+void sys_get_task_id(struct trapframe* trapframe) {
+    uint64_t task_id = get_current_task()->id;
+    trapframe->x[0] = task_id;
+}
+
+void sys_uart_read(struct trapframe* trapframe) {
+    char* buf = (char*) trapframe->x[0];
+    uint32_t size = trapframe->x[1];
+
+    irq_enable();
+    for (uint32_t i = 0; i < size; i++) {
+        buf[i] = uart0_read();
+    }
+    buf[size] = '\0';
+    irq_disable();
+    trapframe->x[0] = size;
+}
+
+void sys_uart_write(struct trapframe* trapframe) {
+    const char* buf = (char*) trapframe->x[0];
+    uint32_t size = trapframe->x[1];
+
+    irq_enable();
+    for (uint32_t i = 0; i < size; i++) {
+        uart0_write(buf[i]);
+    }
+    irq_disable();
+    trapframe->x[0] = size;
+}
+
+void sys_exec(struct trapframe* trapframe) {
+    void (*func)() = (void(*)()) trapframe->x[0];
+    do_exec(func);
+    trapframe->x[0] = 0;
+}
+
+void sys_fork(struct trapframe* trapframe) {
+    struct task_t* parent_task = get_current_task();
+
+    int child_id = privilege_task_create(return_from_fork, parent_task->priority);
+    struct task_t* child_task = &task_pool[child_id];
+
+    char* child_kstack = &kstack_pool[child_task->id][KSTACK_TOP_IDX];
+    char* parent_kstack = &kstack_pool[parent_task->id][KSTACK_TOP_IDX];
+    char* child_ustack = &ustack_pool[child_task->id][USTACK_TOP_IDX];
+    char* parent_ustack = &ustack_pool[parent_task->id][USTACK_TOP_IDX];
+
+    uint64_t kstack_offset = parent_kstack - (char*)trapframe;
+    uint64_t ustack_offset = parent_ustack - (char*)trapframe->sp_el0;
+
+    for (uint64_t i = 0; i < kstack_offset; i++) {
+        *(child_kstack - i) = *(parent_kstack - i);
+    }
+    for (uint64_t i = 0; i < ustack_offset; i++) {
+        *(child_ustack - i) = *(parent_ustack - i);
+    }
+
+    // place child's kernel stack to right place
+    child_task->cpu_context.sp = (uint64_t)child_kstack - kstack_offset;
+
+    // place child's user stack to right place
+    struct trapframe* child_trapframe = (struct trapframe*) child_task->cpu_context.sp;
+    child_trapframe->sp_el0 = (uint64_t)child_ustack - ustack_offset;
+
+    child_trapframe->x[0] = 0;
+    trapframe->x[0] = child_task->id;
+}
+
+void sys_exit(struct trapframe* trapframe) {
+    do_exit(trapframe->x[0]);
+}
+
+void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
+    switch (sys_call_num) {
+        case SYS_GET_TASK_ID:
+            sys_get_task_id(trapframe);
+            break;
+
+        case SYS_UART_READ:
+            sys_uart_read(trapframe);
+            break;
+
+        case SYS_UART_WRITE:
+            sys_uart_write(trapframe);
+            break;
+
+        case SYS_EXEC:
+            sys_exec(trapframe);
+            break;
+
+        case SYS_FORK:
+            sys_fork(trapframe);
+            break;
+
+        case SYS_EXIT:
+            sys_exit(trapframe);
+            break;
+    }
+}
+
+void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* trapframe) {
     int ec = (esr >> 26) & 0b111111;
     int iss = esr & 0x1FFFFFF;
     if (ec == 0b010101) {  // system call
-        switch (iss) {
-            case 1:
-                uart_printf("Exception return address 0x%x\n", elr);
-                uart_printf("Exception class (EC) 0x%x\n", ec);
-                uart_printf("Instruction specific syndrome (ISS) 0x%x\n", iss);
-                break;
-            case 2:
-                arm_core_timer_enable();
-                arm_local_timer_enable();
-                break;
-            case 3:
-                arm_core_timer_disable();
-                arm_local_timer_disable();
-                break;
-            case 4:
-                asm volatile ("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0)); // get current counter frequency
-                asm volatile ("mrs %0, cntpct_el0" : "=r" (cntpct_el0)); // read current counter
-                break;
-        }
+        uint64_t syscall_num = trapframe->x[8];
+        sys_call_router(syscall_num, trapframe);
+        // switch (iss) {
+        //     case 1:
+        //         uart_printf("Exception return address 0x%x\n", elr);
+        //         uart_printf("Exception class (EC) 0x%x\n", ec);
+        //         uart_printf("Instruction specific syndrome (ISS) 0x%x\n", iss);
+        //         break;
+        //     case 2:
+        //         arm_core_timer_enable();
+        //         arm_local_timer_enable();
+        //         break;
+        //     case 3:
+        //         arm_core_timer_disable();
+        //         arm_local_timer_disable();
+        //         break;
+        //     case 4:
+        //         asm volatile ("mrs %0, cntfrq_el0" : "=r" (cntfrq_el0)); // get current counter frequency
+        //         asm volatile ("mrs %0, cntpct_el0" : "=r" (cntpct_el0)); // read current counter
+        //         break;
+        // }
     }
     else {
         uart_printf("Exception return address 0x%x\n", elr);
@@ -53,16 +165,16 @@ void uart_intr_handler() {
     if (*UART0_MIS & 0x10) {           // UARTTXINTR
         while (!(*UART0_FR & 0x10)) {  // RX FIFO not empty
             char r = (char)(*UART0_DR);
-            queue_push(&read_buf, r);
+            uart_queue_push(&read_buf, r);
         }
         *UART0_ICR = 1 << 4;
     }
     else if (*UART0_MIS & 0x20) {           // UARTRTINTR
-        while (!queue_empty(&write_buf)) {  // flush buffer to TX
+        while (!uart_queue_empty(&write_buf)) {  // flush buffer to TX
             while (*UART0_FR & 0x20) {      // TX FIFO is full
                 asm volatile("nop");
             }
-            *UART0_DR = queue_pop(&write_buf);
+            *UART0_DR = uart_queue_pop(&write_buf);
         }
         *UART0_ICR = 2 << 4;
     }
@@ -71,12 +183,14 @@ void uart_intr_handler() {
 void arm_core_timer_intr_handler() {
     register unsigned int expire_period = CORE_TIMER_EXPRIED_PERIOD;
     asm volatile("msr cntp_tval_el0, %0" : : "r"(expire_period));
-    uart_printf("Core timer interrupt, jiffies %d\n", ++arm_core_timer_jiffies);
-    // bottom half simulation
-    // irq_enable();
-    // unsigned long long x = 100000000000;
-    // while (x--) {
-    // }
+
+    // check current task running time
+    struct task_t *current = get_current_task();
+    if (--current->counter <= 0) {
+        current->counter = 0;
+        current->need_resched = 1;
+    }
+    irq_enable();
 }
 
 void arm_local_timer_intr_handler() {
@@ -99,5 +213,31 @@ void irq_exc_router() {
     // ARM Local Timer Interrupt
     else if (core0_intr_src & (1 << 11)) {
         arm_local_timer_intr_handler();
+    }
+}
+
+void irq_stk_switcher() {
+    // Switch to interrupt stack if entry_sp in kernel stack
+    register char* entry_sp;
+    asm volatile("mov %0, sp": "=r"(entry_sp));
+    if (!(entry_sp <= &intr_stack[4095] && entry_sp >= &intr_stack[0])) {
+        asm volatile("mov sp, %0" : : "r"(&intr_stack[INTR_STK_TOP_IDX]));
+    }
+
+    irq_exc_router();
+
+    // Restore to kernel stack if entry_sp in kernel stack
+    if (!(entry_sp <= &intr_stack[4095] && entry_sp >= &intr_stack[0])) {
+        asm volatile("mov sp, %0" : : "r"(entry_sp));
+    }
+}
+
+void irq_return() {
+    // check reschedule flag
+    struct task_t *current = get_current_task();
+    if (current->need_resched) {
+        current->counter = TASK_EPOCH;
+        current->need_resched = 0;
+        schedule();
     }
 }

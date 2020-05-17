@@ -21,11 +21,11 @@ _start:
 
     // clear bss
     ldr     x1, =__bss_start
-    ldr     x2, =__bss_size
-3:  cbz     x2, 4f
+    ldr     w2, =__bss_size
+3:  cbz     w2, 4f
     str     xzr, [x1], #8
-    sub     x2, x2, #1
-    cbnz    x2, 3b
+    sub     w2, w2, #1
+    cbnz    w2, 3b
 4:
     // disable MMU
     ldr     x1, =SCTLR_VALUE_MMU_DISABLED
@@ -50,7 +50,7 @@ _start:
 
 el1_start:
     // set stack pointer
-    ldr     x1, =0x60000
+    ldr     x1, =0x80000
     mov     sp, x1
 
     // load exception_table to VBAR_EL1
@@ -60,6 +60,11 @@ el1_start:
     // mask all interrupt, and set exception level to el0
     ldr     x1, =SPSR_EL1_VALUE
     msr     spsr_el1, x1
+
+    bl      boot_init
+
+1:
+    b       1b
 
     adr     x1, el0_start
     msr     elr_el1, x1

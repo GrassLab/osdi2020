@@ -1,10 +1,7 @@
-#include "mbox.h"
 #include "my_string.h"
 #include "uart0.h"
-#include "utli.h"
-#include "frame_buffer.h"
+#include "util.h"
 #include "exception.h"
-#include "shared_variables.h"
 
 enum ANSI_ESC {
     Unknown,
@@ -14,7 +11,7 @@ enum ANSI_ESC {
 };
 
 enum ANSI_ESC decode_csi_key() {
-    char c = uart_read();
+    char c = uart0_read();
     if (c == 'C') {
         return CursorForward;
     }
@@ -22,7 +19,7 @@ enum ANSI_ESC decode_csi_key() {
         return CursorBackward;
     }
     else if (c == '3') {
-        c = uart_read();
+        c = uart0_read();
         if (c == '~') {
             return Delete;
         }
@@ -31,34 +28,11 @@ enum ANSI_ESC decode_csi_key() {
 }
 
 enum ANSI_ESC decode_ansi_escape() {
-    char c = uart_read();
+    char c = uart0_read();
     if (c == '[') {
         return decode_csi_key();
     }
     return Unknown;
-}
-
-void shell_init() {
-    shared_variables_init();
-
-    // Initialize UART
-    uart_init();
-    uart_flush();
-    uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
-
-    // Initialize Frame Buffer
-    fb_init();
-    uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
-
-    // Welcome Messages
-    // fb_splash();
-    uart_printf("\n\n _  _  ___ _____ _   _  ___  ___ ___ ___ \n");
-    uart_printf("| \\| |/ __|_   _| | | |/ _ \\/ __|   \\_ _|\n");
-    uart_printf("| .` | (__  | | | |_| | (_) \\__ \\ |) | | \n");
-    uart_printf("|_|\\_|\\___| |_|  \\___/ \\___/|___/___/___|\n\n");
-    mbox_board_revision();
-    mbox_vc_memory();
-    uart_printf("\n");
 }
 
 void shell_input(char* cmd) {
@@ -67,7 +41,7 @@ void shell_input(char* cmd) {
     int idx = 0, end = 0, i;
     cmd[0] = '\0';
     char c;
-    while ((c = uart_read()) != '\n') {
+    while ((c = uart0_read()) != '\n') {
         // Decode CSI key sequences
         if (c == 27) {
             enum ANSI_ESC key = decode_ansi_escape();
@@ -142,7 +116,7 @@ void shell_controller(char* cmd) {
     }
     else if (!strcmp(cmd, "irq")) {
         asm volatile("svc #2");
-        uart_read();
+        uart0_read();
         asm volatile("svc #3");
     }
     else if (!strcmp(cmd, "hello")) {

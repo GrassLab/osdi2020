@@ -3,12 +3,12 @@
 #include "mbox.h"
 #include "my_string.h"
 #include "queue.h"
-#include "shared_variables.h"
 #include "peripherals/gpio.h"
 #include "peripherals/irq.h"
 #include "peripherals/mbox.h"
 #include "peripherals/uart0.h"
 
+struct uart_queue read_buf, write_buf;
 
 void uart_init() {
     *UART0_CR = 0;  // turn off UART0
@@ -64,29 +64,32 @@ void uart_init() {
 
     /* Enable UART */
     *UART0_CR = 0x301;
+
+    uart_queue_init(&read_buf, UART0_BUF_MAX_SIZE);
+    uart_queue_init(&write_buf, UART0_BUF_MAX_SIZE);
 }
 
-char uart_read() {
-    while (queue_empty(&read_buf)) {
+char uart0_read() {
+    while (uart_queue_empty(&read_buf)) {
         asm volatile ("nop");
     }
-    char r = queue_pop(&read_buf);
+    char r = uart_queue_pop(&read_buf);
     return r == '\r' ? '\n' : r;
 }
 
-void uart_write(char c) {
+void uart0_write(char c) {
     if (*UART0_FR & 0x80) { // TX FIFO Empty
         // trigger interrupt by sending one character
-        if (queue_empty(&write_buf)) {
+        if (uart_queue_empty(&write_buf)) {
             *UART0_DR = c;
         }
         else {
-            queue_push(&write_buf, c);
-            *UART0_DR = queue_pop(&write_buf);
+            uart_queue_push(&write_buf, c);
+            *UART0_DR = uart_queue_pop(&write_buf);
         }
     }
     else {
-        queue_push(&write_buf, c); // push to write queue, drop if buffer full
+        uart_queue_push(&write_buf, c); // push to write queue, drop if buffer full
     }
 }
 
@@ -96,11 +99,11 @@ void uart_printf(char* fmt, ...) {
 
     extern volatile unsigned char _end;  // defined in linker
     char* s = (char*)&_end;              // put temporary string after code
-    vsprintf(s, fmt, args);
+    my_vsprintf(s, fmt, args);
 
     while (*s) {
-        if (*s == '\n') uart_write('\r');
-        uart_write(*s++);
+        if (*s == '\n') uart0_write('\r');
+        uart0_write(*s++);
     }
 }
 
