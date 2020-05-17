@@ -35,4 +35,6 @@
 //#define MT_DEVICE_nGnRnE 0x00
 //#define MMU_DEVICE_FLAGS (MM_TYPE_BLOCK | (MT_DEVICE_nGnRnE << 2) | MM_ACCESS)
 
+#define DEVICE_BASE 0x3F000000
+
 #endif
