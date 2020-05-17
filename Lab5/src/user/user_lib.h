@@ -10,8 +10,6 @@
 //flag
 #define MAP_FIXED 0
 #define MAP_ANONYMOUS 1
-#define MAP_POPULATE 2 
-
 
 int call_core_timer();
 void call_daif();

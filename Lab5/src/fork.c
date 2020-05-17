@@ -5,6 +5,7 @@
 #include "include/queue.h"
 #include "include/mm.h"
 #include "include/utils.h"
+#include "include/kernel.h"
 
 static unsigned short pid_map[64] = {0,};
 
@@ -108,12 +109,15 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0 
 	regs->sp =  0x0000ffffffffe000; 
 	
-	unsigned long code_page = allocate_user_page(current,pc); 
-	unsigned long stack_page = allocate_user_page(current,regs->sp-8); //since stack grow down
-	if (!code_page||!stack_page) {
+	unsigned long code_page = allocate_user_page(current,pc);
+	if (!code_page) 
 		return -1;
-	}
+	// For stack, only map it and allocate when page fault
+	// Since stack grow down, map from 0x0000ffffffffd000
+	mmap((void *)0x0000ffffffffd000, PAGE_SIZE, PROT_READ|PROT_WRITE, \
+			MAP_ANONYMOUS, NULL, 0);	
 
+	
 	memcpy(code_page,start,size);
 	//dump_mem((void *)code_page,size);
 	unsigned long user_pgd = current->mm.pgd; 

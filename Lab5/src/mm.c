@@ -174,6 +174,7 @@ int copy_virt_memory(struct task_struct *dst){
 }
 
 int page_fault_handler(unsigned long addr,unsigned long esr){
+        //printf("+++ Page faalt at 0x%x\r\n",addr);
 	if(((esr>>2)&0x3) != 1){ //If not a translation fault, kill  
   		 switch((esr>>2)&0x3) {
  			  case 0: uart_send_string("Address size fault at"); break;
@@ -226,29 +227,48 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 	 if(file_start == NULL){
 		struct vm_area_struct *vm_area = &current->mm.mmap[current->mm.vm_area_count];
 	 	// For address:
-		if(addr==NULL){ //kernel decides the new region’s start address	
-			unsigned long vir_addr = 0x1000;
-			int flag = 0;
-		        while(1){ //not so smart...... but anyway	
-				flag = 0;
-				for(int i=0;i<current->mm.user_pages_count;i++){
-					if(vir_addr == current->mm.user_pages[i].vir_addr){
-						flag = 1;
-						vir_addr+=PAGE_SIZE;
-						break;
-					}
-				}
-				if(flag==0)
+		// addr should be page aligned 	
+		unsigned long vir_addr = 0x1000;
+		if(addr!=NULL){
+			vir_addr = ((unsigned long)(addr)>>12)<<12;
+		}
+		
+		// kernel decides the new region’s start address if addr is invalid		
+		// First, make sure new region not overlap exist region
+		struct mm_struct mm = current->mm;
+		int flag = 0;
+		while(1){			
+			for(int i=0;i< mm.vm_area_count;i++){
+				if(vir_addr == mm.mmap[i].vm_start){
+					flag = 1;
+					vir_addr+=PAGE_SIZE;
 					break;
+				}
 			}
-			
-		        printf("Map to vir addr at 0x%x\r\n",vir_addr);	
-			vm_area->vm_start = vir_addr;
+			if(flag==0)
+				break;
 		}
-		else{
-			vm_area->vm_start = (unsigned long)addr;
+		// Next, make sure new region not overlap exist page
+		flag = 0;
+		while(1){ //not so smart...... but anyway	
+			flag = 0;
+			for(int i=0;i<current->mm.user_pages_count;i++){
+				if(vir_addr == current->mm.user_pages[i].vir_addr){
+					flag = 1;
+					vir_addr+=PAGE_SIZE;
+					break;
+				}
+			}
+			if(flag==0)
+				break;
 		}
-
+		
+		if(addr!=NULL && vir_addr != (unsigned long)addr){
+			printf("!!! You can't use address 0x%x\r\n", addr);	
+			printf("!!! Map to vir addr at 0x%x\r\n",vir_addr);
+		}	
+		vm_area->vm_start = vir_addr;
+		
 		// For len:
 		// Memory region created by mmap should be page aligned
 		if( len % PAGE_SIZE != 0)

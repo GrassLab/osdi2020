@@ -34,7 +34,7 @@ void test_command3() { // test page reclaim.
 
 void read_beyond_boundary(){
  	if(fork() == 0) {	
-    		int* ptr = mmap(NULL, 4096, PROT_READ, MAP_ANONYMOUS, NULL, 0);
+    		int* ptr = mmap((void *)0x1000, 4096, PROT_READ, MAP_ANONYMOUS, NULL, 0);
 		printf("addr: 0x%x\n", ptr);
 		fork();
     		printf("ptr[1000]: %d\n", ptr[1000]); // should be 0
