@@ -34,7 +34,7 @@ clean:
 
 run:
 	make all
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -d int
 
 pipe:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial  pipe:/tmp/guest -S -s
