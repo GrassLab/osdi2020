@@ -3,12 +3,13 @@
 #include "frame_buffer.h"
 #include "mbox.h"
 #include "util.h"
-#include "mm.h"
 #include "schedule.h"
 
 #define CMD_LEN 128
 
-void kernel_main() {
+void boot_init() {
+    task_init();
+
     // Initialize UART
     uart_init();
     uart_flush();
@@ -28,12 +29,9 @@ void kernel_main() {
     mbox_vc_memory();
     uart_printf("\n");
 
-    mm_init();
     schedule_init();
 
     while (1) {
-        // uart_printf("idle task!\n");
-        for (int i = 0; i < 1000000; i++);
         schedule();
     }
 }

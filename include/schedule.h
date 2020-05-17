@@ -1,9 +1,14 @@
-#include "stdint.h"
+#include "typedef.h"
 
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
+#define TASK_EPOCH 5
 #define TASK_POOL_SIZE 64
+#define KSTACK_SIZE 4096
+#define USTACK_SIZE 4096
+#define KSTACK_TOP_IDX (KSTACK_SIZE - 16) // sp need 16bytes alignment
+#define USTACK_TOP_IDX (USTACK_SIZE - 16) // sp need 16bytes alignment
 
 struct cpu_context {
     // ARM calling convention
@@ -29,47 +34,33 @@ enum task_state {
     EXIT,
 };
 
-struct task_struct {
+struct task_t {
     uint64_t id;
     enum task_state state;
-    struct cpu_context cpu_context;
-    uint64_t priority;
-    uint64_t counter;
+    int priority;
+    int counter;
+    int need_resched;
     int exit_status;
-    // stack pointer
-    char *kstack;  // decide after privilege_task_create
-    char *ustack;  // decide after exec / fork
-    /*
-     * bit 0: reschedule
-     * bit 1: preemptable
-     * bit 2: kill
-     */
-    uint64_t flag;
+    struct cpu_context cpu_context;
 };
 
-#define INIT_PRIORITY       5
+/* Variables init in schedule.c */
+extern struct task_t task_pool[TASK_POOL_SIZE];
+extern char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
+extern char ustack_pool[TASK_POOL_SIZE][USTACK_SIZE];
 
-#define INIT_FLAG           0b010
-#define RESCHEDULE_BIT      0
-#define PREEMPTABLE_BIT     1
-#define KILL_BIT            2
+/* Function in schedule.S */
+extern struct task_t* get_current_task();
+extern void update_current_task(struct task_t *task);
+extern void switch_to(struct cpu_context* prev, struct cpu_context* next);
 
-#define HAS(flag, bit) (flag & (1 << bit))
-#define SET(flag, bit) flag |= (1 << bit)
-#define CLR(flag, bit)        \
-    uint64_t mask = 1 << bit; \
-    flag &= ~mask
-
-#endif
-
-extern struct task_struct *current_task;
-extern struct task_struct task_pool[];
-
+/* Function in schedule.c */
+void task_init();
 void schedule_init();
-int privilege_task_create(void (*func)());
-void context_switch(struct task_struct *next);
+int privilege_task_create(void (*func)(), int priority);
+void context_switch(struct task_t* next);
 void schedule();
 void do_exec(void (*func)());
-int do_fork();
 void do_exit(int status);
-extern void switch_to(struct cpu_context *prev, struct cpu_context *next);
+
+#endif

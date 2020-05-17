@@ -141,13 +141,14 @@ sync_exc_handler:
     kernel_entry
     mrs x0, esr_el1
     mrs x1, elr_el1
-    mov x2, sp  // trapframe pointer
+    mov x2, sp
     bl  sync_exc_router
     kernel_exit
 
 irq_exc_handler:
     kernel_entry
-    bl  irq_exc_router
+    bl  irq_stk_switcher
+    bl  irq_return
     kernel_exit
 
 .global return_from_fork

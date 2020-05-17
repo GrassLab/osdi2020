@@ -1,1 +1,0 @@
-#define SIG_KILL        0

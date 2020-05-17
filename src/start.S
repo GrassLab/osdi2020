@@ -1,7 +1,4 @@
-#define IN_ASM
-
 #include "sysregs.h"
-#include "mm.h"
 
 .section ".text.boot"
 
@@ -24,11 +21,11 @@ _start:
 
     // clear bss
     ldr     x1, =__bss_start
-    ldr     x2, =__bss_size
-3:  cbz     x2, 4f
+    ldr     w2, =__bss_size
+3:  cbz     w2, 4f
     str     xzr, [x1], #8
-    sub     x2, x2, #1
-    cbnz    x2, 3b
+    sub     w2, w2, #1
+    cbnz    w2, 3b
 4:
     // disable MMU
     ldr     x1, =SCTLR_VALUE_MMU_DISABLED
@@ -53,7 +50,7 @@ _start:
 
 el1_start:
     // set stack pointer
-    ldr     x1, =KERNEL_BASE
+    ldr     x1, =0x80000
     mov     sp, x1
 
     // load exception_table to VBAR_EL1
@@ -64,7 +61,7 @@ el1_start:
     ldr     x1, =SPSR_EL1_VALUE
     msr     spsr_el1, x1
 
-    bl      kernel_main
+    bl      boot_init
 
 1:
     b       1b

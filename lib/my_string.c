@@ -81,7 +81,7 @@ char *ftoa(float value, char *s) {
     return s;
 }
 
-unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
+unsigned int my_vsprintf(char *dst, char *fmt, __builtin_va_list args) {
     char *dst_orig = dst;
 
     while (*fmt) {
@@ -91,17 +91,17 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
             if (*fmt == '%') {
                 goto put;
             }
-            // char
-            if (*fmt == 'c') {
-                char c = __builtin_va_arg(args, int);
-                *dst++ = c;
-            }
             // string
             if (*fmt == 's') {
                 char *p = __builtin_va_arg(args, char *);
                 while (*p) {
                     *dst++ = *p++;
                 }
+            }
+            // char
+            if (*fmt == 'c') {
+                char c = __builtin_va_arg(args, int);
+                *dst++ = c;
             }
             // number
             if (*fmt == 'd') {
@@ -140,6 +140,12 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
     *dst = '\0';
 
     return dst - dst_orig;  // return written bytes
+}
+
+unsigned int my_sprintf(char *dst, char *fmt, ...) {
+    __builtin_va_list args;
+    __builtin_va_start(args, fmt);
+    return my_vsprintf(dst, fmt, args);
 }
 
 int strcmp(const char *X, const char *Y) {

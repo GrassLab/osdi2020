@@ -1,51 +1,43 @@
-#include "schedule.h"
-#include "stdint.h"
+#ifndef __UART_Q__
+#define __UART_Q__
 
-#ifndef QUEUE
-#define QUEUE
+#define UART_QUEUE_MAX_SIZE 2048
 
-#define QUEUE_MAX_SIZE 2048
-
-struct queue {  // circular queue
+struct uart_queue {  // circular queue
     int front;
     int rear;
-    int size;
     int max;
-    char buf[QUEUE_MAX_SIZE];
-};
-
-struct runqueue {  // circular queue
-    int front;
-    int rear;
-    int size;
-    int max;
-    struct task_struct* buf[QUEUE_MAX_SIZE];
+    char buf[UART_QUEUE_MAX_SIZE];
 };
 
 #endif
 
-#define QUEUE_INIT(q, qsize) \
-    q.front = 0;             \
-    q.rear = 0;              \
-    q.size = 0;              \
-    q.max = qsize + 1
+void uart_queue_init(struct uart_queue* q, int max);
+int uart_queue_empty(struct uart_queue* q);
+int uart_queue_full(struct uart_queue* q);
+void uart_queue_push(struct uart_queue* q, char val);
+char uart_queue_pop(struct uart_queue* q);
 
-#define QUEUE_EMPTY(q) (q.front == q.rear)
+// ------------------- //
 
-#define QUEUE_FULL(q) (q.front == (q.rear + 1) % q.max)
+#ifndef __TASK_Q__
+#define __TASK_Q__
 
-#define QUEUE_SIZE(q) (q.size)
+struct task_queue_elmt_t {  /* priority queue */
+    struct task_t* task;
+    struct task_queue_elmt_t* prev;
+    struct task_queue_elmt_t* next;
+};
 
-#define QUEUE_PUSH(q, val)             \
-    if (!QUEUE_FULL(q)) {              \
-        q.buf[q.rear] = val;           \
-        q.rear = (q.rear + 1) % q.max; \
-        q.size++;                      \
-    }
+struct task_queue_t {
+    struct task_queue_elmt_t* front;
+    struct task_queue_elmt_t* rear;
+};
 
-#define QUEUE_POP_ELMT(q)            \
-    q.buf[q.front];                  \
-    q.front = (q.front + 1) % q.max; \
-    q.size--
+#endif
 
-#define QUEUE_POP(q) QUEUE_EMPTY(q) ? '\0' : QUEUE_POP_ELMT(q)
+void task_queue_init(struct task_queue_t* q);
+void task_queue_elmt_init(struct task_queue_elmt_t* elmt, struct task_t *task);
+void task_queue_push(struct task_queue_t* q, struct task_queue_elmt_t* elmt);
+struct task_t* task_queue_pop(struct task_queue_t* q);
+void task_queue_print(struct task_queue_t* q);
