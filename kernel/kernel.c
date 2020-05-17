@@ -89,6 +89,7 @@ void print2(void) {
 }
 
 int main(void) {
+  page_init();
   gpio_init();
   mini_uart_init();
   exception_init();

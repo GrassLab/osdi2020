@@ -13,7 +13,7 @@ all: kernel8.img
 	aarch64-linux-gnu-gcc $(INCS) $(CFLAGS) -c -o $@ $<
 
 %_s.o: %.S
-	aarch64-linux-gnu-gcc -c -o $@ $<
+	aarch64-linux-gnu-gcc $(INCS) -c -o $@ $<
 
 kernel8.img: $(OBJS)
 	aarch64-linux-gnu-ld -T linker.ld -o kernel8.elf $^

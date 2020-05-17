@@ -1,3 +1,5 @@
+#include "base.h"
+
 .section ".text.boot"
 
 .global _start
@@ -58,6 +60,11 @@ el1_entry:
   b 1b
 2:
   bl vm_init
+
+  /* Make stack pointer use virtual address */
+  mov x0, sp
+  mov x1, KERNEL_VA_BASE
+  add sp, x0, x1
 
   /* Enable MMU for EL1 and EL0 stage 1 address translation. */
   mrs x2, sctlr_el1
