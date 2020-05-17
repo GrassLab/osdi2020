@@ -53,7 +53,7 @@ segfault ()
   if (fork () == 0)
     {
       int *a = (int *) 0xdeadbeef;	// a non-mapped address.
-      printf ("%d\n", *a);	// trigger simple page fault, child will die here.
+      printf ("%d\r\n", *a);	// trigger simple page fault, child will die here.
     }
 }
 
@@ -71,9 +71,9 @@ mmap_read ()
   if (fork () == 0)
     {
       int *ptr = mmap (NULL, 4096, PROT_READ, MAP_ANONYMOUS, (void *) -1, 0);
-      printf ("addr: %p\n", ptr);
-      printf ("%d\n", ptr[1000]);	// should be 0
-      printf ("%d\n", ptr[4097]);	// should be seg fault
+      printf ("addr: %p\r\n", ptr);
+      printf ("%d\r\n", ptr[1000]);	// should be 0
+      printf ("%d\r\n", ptr[4097]);	// should be seg fault
     }
 }
 
@@ -85,11 +85,11 @@ mmap_write ()
       int *ptr =
 	mmap (NULL, 4096, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, (void *) -1,
 	      0);
-      printf ("addr: %p\n", ptr);
+      printf ("addr: %p\r\n", ptr);
       ptr[1000] = 100;
-      printf ("%d\n", ptr[1000]);	// should be 100
+      printf ("%d\r\n", ptr[1000]);	// should be 100
       ptr[4097] = 100;		// should be seg fault
-      printf ("%d\n", ptr[4097]);	// not reached
+      printf ("%d\r\n", ptr[4097]);	// not reached
     }
 }
 
@@ -99,15 +99,15 @@ wrong_permission ()
   if (fork () == 0)
     {
       int *ptr = mmap (NULL, 4096, PROT_READ, MAP_ANONYMOUS, (void *) -1, 0);
-      printf ("addr: %p\n", ptr);
-      printf ("%d\n", ptr[1000]);	// should be 0
+      printf ("addr: %p\r\n", ptr);
+      printf ("%d\r\n", ptr[1000]);	// should be 0
       for (int i = 0; i < 4096; ++i)
 	{
 	  ptr[i] = i + 1;	// should be seg fault
 	}
       for (int i = 0; i < 4096; ++i)
 	{			// not reached
-	  printf ("%d\n", ptr[i]);
+	  printf ("%d\r\n", ptr[i]);
 	}
     }
 }
@@ -153,7 +153,7 @@ static int
 stack_overflow (int i)
 {
   int a[1024] = { 0 };
-  printf ("Recursive %d\n", i);
+  printf ("Recursive %d\r\n", i);
   stack_overflow (i + 1);
   return a[1023] + i;
 }
