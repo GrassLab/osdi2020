@@ -73,8 +73,7 @@ uart_getc ()
   while (*UART0_FR & 0x10);
   /* read it and return */
   r = (char) (*UART0_DR);
-  /* convert carrige return to newline */
-  return r == '\r' ? '\n' : r;
+  return r;
 }
 
 int
@@ -84,13 +83,14 @@ uart_readline (int size, char *buf)
   for (cnt = 0; cnt < size; ++cnt)
     {
       buf[cnt] = uart_getc ();
-      uart_send (buf[cnt]);
-      if (buf[cnt] == '\n')
+      if (buf[cnt] == '\r' || buf[cnt] == '\n')
 	{
 	  uart_send ('\r');
+	  uart_send ('\n');
 	  ++cnt;
 	  break;
 	}
+      uart_send (buf[cnt]);
     }
   buf[cnt - 1] = 0;
   return cnt;
@@ -120,7 +120,7 @@ _putchar (char character)
 size_t
 do_uart_read (char *buf, size_t count)
 {
-  int i;
+  size_t i;
   for (i = 0; i < count; ++i)
     *buf++ = uart_getc ();
   return i;
@@ -135,7 +135,7 @@ sys_uart_read (char *buf, size_t count)
 size_t
 do_uart_write (char *buf, size_t size)
 {
-  int i;
+  size_t i;
   for (i = 0; i < size; ++i)
     uart_send (*buf++);
   return i;

@@ -1,13 +1,15 @@
 #ifndef IRQ
 #define IRQ
 
-#define CORE0_INTR_SRC (unsigned int* )0x40000060
+#define CORE0_INTR_SRC (unsigned int* )(MMIO_BASE+0x1000060)
 #define IRQ_BASIC_PENDING (unsigned int *)(MMIO_BASE + 0xb200)
 #define ENABLE_IRQ2 (unsigned int *)(MMIO_BASE + 0xb214)
 
 extern void init_irq ();
 extern void enable_irq ();
 extern void disable_irq ();
+extern void critical_entry ();
+extern void critical_exit ();
 void irq_router ();
 int is_core_timer ();
 int is_local_timer ();

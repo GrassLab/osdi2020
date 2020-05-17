@@ -1,6 +1,7 @@
 #include <sched.h>
 #include <list.h>
 #include <irq.h>
+#include <tlb.h>
 
 static LIST_HEAD (_runqueue);
 struct list_head *runqueue = &_runqueue;
@@ -12,13 +13,7 @@ struct task_struct *
 get_next_task ()
 {
   struct task_struct *next;
-  // move idle task (task_pool[0]) to tail
   next = list_entry (runqueue->next, struct task_struct, list);
-  if (next == &task_pool[0])
-    {
-      list_move_tail (&next->list, runqueue);
-      next = list_entry (runqueue->next, struct task_struct, list);
-    }
   return next;
 }
 
@@ -50,5 +45,7 @@ zombie_reaper ()
     return;
   victim = list_entry (zombiequeue->next, struct task_struct, list);
   list_del (&victim->list);
+  page_free_virt (KPGD, (size_t) victim->kstack, STACK_SIZE / PAGE_SIZE);
+  victim->kstack = 0;
   victim->task_id = 0;
 }

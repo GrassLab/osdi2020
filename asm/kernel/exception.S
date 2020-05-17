@@ -71,6 +71,7 @@ setup_exception_vector_table:
   msr vbar_EL1, x0
   ret
 
+.global do_fork_child
 exception_handler:
   kernel_entry
   mrs x9, ESR_EL1
@@ -83,9 +84,10 @@ exception_handler:
   b.ne not_syscall
   bl enable_irq
   bl system_call
-  bl disable_irq
   // set return value
   str x0, [sp, #16 * 0]
+do_fork_child:
+  bl disable_irq
 exc_end:
   kernel_exit
 not_syscall:

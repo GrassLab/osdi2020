@@ -6,7 +6,9 @@
 #include <signal.h>
 
 #define POOL_SIZE 64
-#define STACK_SIZE 0x1000
+#define STACK_SIZE 0x2000
+#define USER_STACK_ADDR 0x0000ffffffffe000
+#define VA_MAP_SIZE 0x30
 
 struct trapframe
 {
@@ -31,17 +33,26 @@ struct context
   size_t fp;
   size_t lr;
   size_t sp;
+  size_t PGD;
+};
+
+struct va_map_struct
+{
+  size_t start;
+  size_t size;
 };
 
 struct task_struct
 {
   struct context ctx;
   size_t task_id;
-  char stack[STACK_SIZE] __attribute__ ((aligned (16)));
-  char kstack[STACK_SIZE] __attribute__ ((aligned (16)));
+  void *stack;
+  void *kstack;
   struct list_head list;
   char resched;
   size_t signal_map;
+  int exit_status;
+  struct va_map_struct va_maps[VA_MAP_SIZE];
 } task_pool[POOL_SIZE];
 
 struct task_struct *privilege_task_create (void (*func) ());
@@ -65,5 +76,8 @@ struct trapframe *get_syscall_trapframe (struct task_struct *task);
 struct task_struct *get_next_task ();
 int do_kill (size_t pid, int signal);
 int sys_kill (size_t pid, int signal);
+size_t load_binary (size_t bin_addr);
+void va_map_clear ();
+void va_map_add (size_t start, size_t size);
 
 #endif /* ifndef SCHED */

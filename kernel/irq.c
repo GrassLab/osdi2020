@@ -8,9 +8,7 @@
 void
 irq_router ()
 {
-  unsigned int arm, arm_local;
-  char r;
-  arm = *IRQ_BASIC_PENDING;
+  unsigned int arm_local;
   arm_local = *CORE0_INTR_SRC;
   if (arm_local & 0x800)
     {

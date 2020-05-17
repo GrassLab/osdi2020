@@ -44,6 +44,15 @@ check_EL2:
   msr elr_el2, x0
   eret
 ret2EL1:
+  # setup tlb for EL1 & EL0
+  bl tlb_init
+  # jump to virtual address
+  ldr x2, =boot_rest
+  br x2
+boot_rest:
+  # reset sp
+  ldr x0, =_start
+  mov sp, x0
   # disable exception of access SIMD register in EL1
   mrs x0, CPACR_EL1
   orr x0, x0, #(3 << 20)
