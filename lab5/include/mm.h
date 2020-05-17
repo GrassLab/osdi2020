@@ -14,7 +14,6 @@
 
 #ifndef __ASSEMBLER__
 void memzero(unsigned long src, unsigned long n);
-void msetzero(unsigned long src, unsigned long n);
 #endif
 
 #endif

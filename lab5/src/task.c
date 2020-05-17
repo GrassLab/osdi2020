@@ -350,7 +350,7 @@ void do_exec(unsigned long pc){
      kstack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE,
      task_pt_regs(current_task));
 #endif
-  memzero((unsigned long)regs, (unsigned long)regs + sizeof(struct pt_regs));
+  memzero((unsigned long)regs, sizeof(struct pt_regs));
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
   regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;

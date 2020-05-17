@@ -27,8 +27,8 @@ char *_kend, *_kbeg;
 int main(void) {
 
   uart_init();
-  lfb_init();
-  lfb_showpicture();
+  //lfb_init();
+  //lfb_showpicture();
 
 #ifdef TEST
   puts("");
@@ -39,16 +39,14 @@ int main(void) {
   puts("HELLO WORLD SUCCESSFULLY");
 
   while (1) {
-#ifdef BUGGY
-    println(NEWLINE, welcome);
-#else
+
     println("              _                          ");
     println("__      _____| | ___ ___  _ __ ___   ___ ");
     println("\\ \\ /\\ / / _ \\ |/ __/ _ \\| '_ ` _ \\ / _ \\");
     println(" \\ V  V /  __/ | (_| (_) | | | | | |  __/");
     println("  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|" NEWLINE);
-#endif
 
+    puts("done...");
     while(1);
 #ifdef BUILD_STAMP
 #define xstr(a) str(a)

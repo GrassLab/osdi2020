@@ -3,7 +3,7 @@ ARMGNU ?= aarch64-linux-gnu
 ASMOPS = -fPIC -Iinclude -g
 COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g -fPIC
 
-# -DRUN_ON_EL[0-2]
+# -DRUN_ON_EL[0-1]
 EL=-DRUN_ON_EL1
 COPS += $(EL)
 ASMOPS += $(EL)
