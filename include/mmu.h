@@ -27,4 +27,19 @@
 #define MAIR_IDX_NORMAL_NOCACHE 1
 #define MAIR_VALUE              ((MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) | (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8)))
 
+// Page Descriptor
+
+#define PD_TABLE                0b11
+#define PD_BLOCK                0b01
+#define PD_ACCESS               (1 << 10)
+#define PGD_ATTR                PD_TABLE // Lower attributes is ignored
+#define PUD_ATTR                (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+
+#define PGD_ADDR                0x0
+#define PUD_ADDR                0x1000
+
+#define PGD_VALUE               (PUD_ADDR | PGD_ATTR)
+#define PUD1_VALUE              (0x00000000 | PUD_ATTR)
+#define PUD2_VALUE              (0x40000000 | PUD_ATTR)
+
 #endif

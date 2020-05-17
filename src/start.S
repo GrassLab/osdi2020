@@ -36,9 +36,26 @@ _start:
     ldr     x0, =MAIR_VALUE
     msr     mair_el1, x0
 
-    // disable MMU
-    ldr     x1, =SCTLR_VALUE_MMU_DISABLED
-    msr     sctlr_el1, x1
+    // identity paging
+    ldr     x0, =PGD_ADDR
+    ldr     x1, =PUD_ADDR
+
+    ldr     x2, =PGD_VALUE
+    str     x2, [x0]
+
+    ldr     x2, =PUD1_VALUE // 1st 1GB mapped by the 1st entry of PUD
+    str     x2, [x1]
+
+    ldr     x2, =PUD2_VALUE // 2nd 1GB mapped by the 2nd entry of PUD
+    str     x2, [x1, #8]
+
+    msr     ttbr0_el1, x0 // load PGD to the buttom translation based register.
+
+    // enable MMU
+    ldr     x1, =SCTLR_VALUE_MMU_ENABLE
+    mrs     x2, sctlr_el1
+    orr     x2, x2, x1
+    msr     sctlr_el1, x2
 
     // make el0, el1 can use Floating point and Advanced SIMD
     ldr     x1, =CPACR_EL1_VALUE
