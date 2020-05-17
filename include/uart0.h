@@ -3,7 +3,7 @@
 
 #include "queue.h"
 #define UART0_BUF_MAX_SIZE 1024
-extern struct queue read_buf, write_buf;
+extern struct uart_queue read_buf, write_buf;
 
 #endif
 

@@ -1,19 +1,43 @@
-#ifndef QUEUE
-#define QUEUE
+#ifndef __UART_Q__
+#define __UART_Q__
 
-#define QUEUE_MAX_SIZE 2048
+#define UART_QUEUE_MAX_SIZE 2048
 
-struct queue {  // circular queue
+struct uart_queue {  // circular queue
     int front;
     int rear;
     int max;
-    char buf[QUEUE_MAX_SIZE];
+    char buf[UART_QUEUE_MAX_SIZE];
 };
 
 #endif
 
-void queue_init(struct queue* q, int max);
-int queue_empty(struct queue* q);
-int queue_full(struct queue* q);
-void queue_push(struct queue* q, char val);
-char queue_pop(struct queue* q);
+void uart_queue_init(struct uart_queue* q, int max);
+int uart_queue_empty(struct uart_queue* q);
+int uart_queue_full(struct uart_queue* q);
+void uart_queue_push(struct uart_queue* q, char val);
+char uart_queue_pop(struct uart_queue* q);
+
+// ------------------- //
+
+#ifndef __TASK_Q__
+#define __TASK_Q__
+
+struct task_queue_elmt_t {  /* priority queue */
+    struct task_t* task;
+    struct task_queue_elmt_t* prev;
+    struct task_queue_elmt_t* next;
+};
+
+struct task_queue_t {
+    struct task_queue_elmt_t* front;
+    struct task_queue_elmt_t* rear;
+};
+
+#endif
+
+void task_queue_init(struct task_queue_t* q);
+void task_queue_elmt_init(struct task_queue_elmt_t* elmt, struct task_t *task);
+void task_queue_push(struct task_queue_t* q, struct task_queue_elmt_t* elmt);
+struct task_t* task_queue_pop(struct task_queue_t* q);
+void task_queue_print(struct task_queue_t* q);

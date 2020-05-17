@@ -1,7 +1,7 @@
 #include "schedule.h"
 #include "uart0.h"
 #include "demo.h"
-#include "task_queue.h"
+#include "queue.h"
 #include "exception.h"
 #include "sysregs.h"
 
