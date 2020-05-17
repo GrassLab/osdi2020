@@ -19,13 +19,13 @@ char ustack_pool[TASK_SIZE][STACK_SIZE];
 Task task_pool[TASK_SIZE] = {
   [0 ... TASK_SIZE - 1] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, none
+    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none
   }
 };
 
 Task init_task = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, none
+  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none,
 };
 
 Task *current_task = &init_task, *next_task;
@@ -106,10 +106,10 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
        p->cpu_ctx.x20 = current_task->cpu_ctx.x20;
        */
 
-    memcpy(kstack_pool[p->pid % TASK_SIZE],
+    strcpy(kstack_pool[p->pid % TASK_SIZE],
         kstack_pool[current_task->pid % TASK_SIZE],
         STACK_SIZE);
-    memcpy(ustack_pool[p->pid % TASK_SIZE],
+    strcpy(ustack_pool[p->pid % TASK_SIZE],
         ustack_pool[current_task->pid % TASK_SIZE],
         STACK_SIZE);
 

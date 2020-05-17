@@ -32,6 +32,4 @@
 #define LV4_PMD_ATTR PD_TABLE
 #define LV4_PTD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
 
-#define DEVICE_BASE 0x3F000000
-
 #endif

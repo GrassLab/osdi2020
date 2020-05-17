@@ -172,7 +172,6 @@ boot_rest:
     adr x1, __bss_end
     sub	x1, x1, x0
     bl  memzero
-    bl init_irq
 
 
 #ifdef RUN_ON_EL1

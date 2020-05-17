@@ -45,6 +45,22 @@ typedef struct mutex_tag {
 #define TASK_BUFFER_SIZE 1024
 #define RESCHED 0x1
 #define SIGKILL 0x1
+
+#define MAX_PROCESS_PAGES			16
+
+struct user_page {
+	unsigned long phys_addr;
+	unsigned long virt_addr;
+};
+
+struct mm_struct {
+	unsigned long pgd;
+	int user_pages_count;
+	struct user_page user_pages[MAX_PROCESS_PAGES];
+	int kernel_pages_count;
+	unsigned long kernel_pages[MAX_PROCESS_PAGES];
+};
+
 typedef struct task_tag {
   struct cpu_ctx cpu_ctx;
   char buffer[TASK_BUFFER_SIZE];
@@ -63,6 +79,7 @@ typedef struct task_tag {
     sleep,
     running,
   } status;
+	//struct mm_struct mm;
 } Task;
 
 void task_1();
