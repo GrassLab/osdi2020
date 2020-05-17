@@ -34,18 +34,18 @@ char uart_queue_pop(struct uart_queue* q) {
 /* Task Queue */
 
 void task_queue_init(struct task_queue_t* q) {
-    q->front = 0;
-    q->rear = 0;
+    q->front = NULL;
+    q->rear = NULL;
 }
 
 void task_queue_elmt_init(struct task_queue_elmt_t* elmt, struct task_t *task) {
     elmt->task = task;
-    elmt->next = 0;
-    elmt->prev = 0;
+    elmt->next = NULL;
+    elmt->prev = NULL;
 }
 
 void task_queue_push(struct task_queue_t* q, struct task_queue_elmt_t* elmt) {
-    if (q->front == 0) {
+    if (q->front == NULL) {
         q->front = elmt;
         q->rear = elmt;
     }
@@ -65,7 +65,7 @@ void task_queue_push(struct task_queue_t* q, struct task_queue_elmt_t* elmt) {
     else {
         // find appropriate place to insert
         struct task_queue_elmt_t *ptr = q->rear;
-        while (ptr->next != 0 && elmt->task->priority > ptr->task->priority) {
+        while (ptr->next != NULL && elmt->task->priority > ptr->task->priority) {
             ptr = ptr->next;
         }
         // push elmt to back of ptr
@@ -78,24 +78,25 @@ void task_queue_push(struct task_queue_t* q, struct task_queue_elmt_t* elmt) {
 }
 
 struct task_t* task_queue_pop(struct task_queue_t* q) {
-    if (q->front == 0) {
+    if (q->front == NULL) {
         return &task_pool[0];
     }
     else if (q->front == q->rear) {
         struct task_queue_elmt_t* pop_elmt = q->front;
         struct task_t* pop_task = pop_elmt->task;
-        pop_elmt->next = 0;
-        pop_elmt->prev = 0;
-        q->front = 0;
-        q->rear = 0;
+        pop_elmt->next = NULL;
+        pop_elmt->prev = NULL;
+        q->front = NULL;
+        q->rear = NULL;
         return pop_task;
     }
     else {
         struct task_queue_elmt_t* pop_elmt = q->front;
         struct task_t* pop_task = pop_elmt->task;
         q->front = pop_elmt->prev;
-        pop_elmt->next = 0;
-        pop_elmt->prev = 0;
+        q->front->next = NULL;
+        pop_elmt->next = NULL;
+        pop_elmt->prev = NULL;
         return pop_task;
     }
 }
