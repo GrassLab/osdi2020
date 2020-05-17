@@ -2,7 +2,6 @@
 #include "mailbox.h"
 #include "printf.h"
 #include "schedule.h"
-#include "shell.h"
 #include "uart.h"
 
 
@@ -12,7 +11,5 @@ int kernel_main()
     init_printf(0, uart_putc);  
     get_board_info();
     sched_init(); // create init
-
-    // run_shell();
     return -1;
 }
