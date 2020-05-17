@@ -27,9 +27,9 @@ core_timer_handler:
   ret
 
 delay:
-  // delay 125ms (1000ms >> 3)
+  // delay 15ms (1000ms >> 6)
   mrs x0, CNTFRQ_EL0
-  lsr x0, x0, #3
+  lsr x0, x0, #6
   msr CNTP_TVAL_EL0, x0
   ret
 
