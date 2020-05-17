@@ -34,7 +34,7 @@ void sys_uart_read(struct trapframe* trapframe) {
     uint32_t size = trapframe->x[1];
 
     irq_enable();
-    for (int i = 0; i < size; i++) {
+    for (uint32_t i = 0; i < size; i++) {
         buf[i] = uart0_read();
     }
     buf[size] = '\0';
@@ -47,7 +47,7 @@ void sys_uart_write(struct trapframe* trapframe) {
     uint32_t size = trapframe->x[1];
 
     irq_enable();
-    for (int i = 0; i < size; i++) {
+    for (uint32_t i = 0; i < size; i++) {
         uart0_write(buf[i]);
     }
     irq_disable();
@@ -74,10 +74,10 @@ void sys_fork(struct trapframe* trapframe) {
     uint64_t kstack_offset = parent_kstack - (char*)trapframe;
     uint64_t ustack_offset = parent_ustack - (char*)trapframe->sp_el0;
 
-    for (int i = 0; i < kstack_offset; i++) {
+    for (uint64_t i = 0; i < kstack_offset; i++) {
         *(child_kstack - i) = *(parent_kstack - i);
     }
-    for (int i = 0; i < ustack_offset; i++) {
+    for (uint64_t i = 0; i < ustack_offset; i++) {
         *(child_ustack - i) = *(parent_ustack - i);
     }
 

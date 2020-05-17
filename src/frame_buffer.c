@@ -75,7 +75,7 @@ void fb_init() {
 }
 
 void fb_splash() {
-    int x, y;
+    unsigned int x, y;
     unsigned char *ptr = fb;
     unsigned int white = 255 << 16 | 255 << 8 | 255;  // A B G R
     unsigned int black = 0;

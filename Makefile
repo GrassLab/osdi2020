@@ -15,7 +15,7 @@ OBJS_ASM = $(SRCS_ASM:$(SRC_DIR)/%.S=$(BUILD_DIR)/asm/%.o)
 SRCS_LIB = $(wildcard $(LIB_DIR)/*.c)
 OBJS_LIB = $(SRCS_LIB:$(LIB_DIR)/%.c=$(BUILD_DIR)/lib/%.o)
 
-CFLAGS = -Wall -nostdlib -nostdinc -Iinclude -Ilib -c
+CFLAGS = -Wall -Wextra -Werror -nostdlib -nostdinc -Iinclude -Ilib -c
 
 .PHONY: all clean
 
