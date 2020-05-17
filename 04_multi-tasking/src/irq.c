@@ -12,20 +12,8 @@ void handle_irq() {
 }
 
 void one_tick() {
+
     asm volatile ("msr cntp_tval_el0, %0" :: "r" (EXPIRE_PERIOD));
-    // uart_puts("One tick\n");
-    /*
-    uart_puts("==========\n");
-    uart_send_hex((unsigned long)tasks[0]);
-    uart_send('\n');
-    uart_send_hex((unsigned long)tasks[1]);
-    uart_send('\n');
-    uart_send_hex((unsigned long)tasks[2]);
-    uart_send('\n');
-    uart_send_hex((unsigned long)current);
-    uart_send('\n');
-    uart_puts("==========\n");
-    */
     current->counter --;
     
     if (current->counter <= 0 && current->preempt_count == 0) {

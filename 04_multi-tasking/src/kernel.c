@@ -20,28 +20,34 @@ void foo() {
     }
 }
 
-void foo_user2() {
-    while (1) {
-        uart_write(" new task!\n", 11);
+void test() {
+    int cnt = 1;
+    if (fork() == 0) {
+        fork();
         delay(delay_interval);
+        fork();
+        while (cnt < 10) {
+            uart_puts("Task id: ");
+            uart_send_ulong(current->task_id);
+            uart_puts(", cnt: ");
+            uart_send_ulong(cnt);
+            uart_send('\n');
+            delay(delay_interval);
+            ++ cnt;
+        }
+        exit(0);
+    } else {
+        while (1) {
+            delay(delay_interval);
+        }
     }
 }
 
-void foo_user() {
-    for (int i = 0; i < 3; ++ i) {
-        uart_puts("User task ID: ");
-        uart_send_ulong(current -> task_id);
-        uart_puts("; task_struct ptr: ");
-        uart_send_hex(current);
-        uart_puts("; sp: ");
-        uart_send_hex(current -> cpu_context.sp);
-        uart_write(" gg", 3);
-        uart_send('\n');
-        delay(delay_interval);
-    }
-    int qq = exec((unsigned long)&foo_user2);
-    while (1) {
-        delay(delay_interval);
+void create_user_process() {
+    int ret = do_exec(&test);
+    if (ret) {
+        uart_send_ulong(ret);
+        uart_puts("Create user process failed.\n");
     }
 }
 
@@ -52,32 +58,21 @@ void idle() {
     }
 }
 
-void test() {
-    int cnt = 1;
-    if (fork() == 0) {
-        fork();
-        delay(delay_interval);
-        // fork();
-        while (cnt < 10) {
-            uart_send_ulong(current->task_id);
-            uart_send(' ');
-            uart_send_ulong(cnt);
-            uart_send('\n');
-            delay(delay_interval);
-            ++ cnt;
-        }
-        while (1) {
-            delay(delay_interval);
-        }
-    } else {
-        uart_puts("I'm parent");
-        while (1) {
-            delay(delay_interval);
+void zombie_reaper(){
+    while(1){
+        delay(10000);
+        struct task_struct *t;
+        for (int i = 0; i < NR_TASKS; ++i) {
+            t = tasks[i];
+            if(t && t->state == TASK_ZOMBIE){
+                free_task_struct((unsigned long)t);
+                tasks[i] = 0;
+            }
         }
     }
 }
 
-void kernel_main() {
+void start_kernel() {
     uart_init();
     el1_vector_init();
     enable_core_timer();
@@ -86,16 +81,17 @@ void kernel_main() {
     uart_puts("Welcome to MiniKernel 0.0.4\n");
     int ret;
 
-    for (int i = 0; i < 5; ++ i) {
-        ret = _task_create(KERNEL_MODE, (unsigned long)&foo);
-        if (ret != 0) {
+    for (int i = 0; i < 2; ++ i) {
+        ret = __clone((unsigned long)&foo, PF_KTHREAD, 0);
+        if (ret == -1) {
             uart_puts("Error when creating privilege task ");
             uart_send_ulong(i);
             uart_send('\n');
         }
     }
 
-    ret = _task_create(USER_MODE, (unsigned long)&test);
+    ret = __clone((unsigned long)&zombie_reaper, PF_KTHREAD, 0);
+    ret = __clone((unsigned long)&create_user_process, PF_KTHREAD, 0);
     
     idle();
 }

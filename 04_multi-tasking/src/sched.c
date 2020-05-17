@@ -2,15 +2,8 @@
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
-struct task_struct * tasks[MAX_CONCURRENT_TASKS] = {&(init_task),};
-unsigned int num_tasks = 1;
-
-/* 0 is for init_task */
-static tid_t used_task_id = 0;
-
-tid_t acquire_unused_task_id() {
-    return ++ used_task_id;
-}
+struct task_struct * tasks[NR_TASKS] = {&(init_task),};
+unsigned int nr_tasks = 1;
 
 void switch_to(struct task_struct *next) {
     if (current == next)
@@ -30,40 +23,28 @@ void schedule() {
         next = 0;
 
         /* Find the task with maximum token */
-        for (int i = 0; i < MAX_CONCURRENT_TASKS; ++ i) {
+        for (int i = 0; i < NR_TASKS; ++ i) {
             t = tasks[i];
             if (t && (t->state == TASK_RUNNING)) {
-                /*
-                uart_send_ulong(i);
-                uart_send(':');
-                uart_send_ulong(t->counter);
-                uart_send(';');
-                */
                 if (t->counter > max_c) {
                     max_c = t->counter;
                     next = i;
                 }
             }
         }
-        // uart_send('\n');
 
         if (max_c > 0) {
             break;
         }
 
-        for (int i = 0; i < MAX_CONCURRENT_TASKS; ++ i) {
+        for (int i = 0; i < NR_TASKS; ++ i) {
             t = tasks[i];
-            if (t) {
+            if (t && (t->state == TASK_RUNNING)) {
                 /* TODO: why >> 1 */
                 t->counter = t->counter + t->priority;;
             }
         }
     }
-    /*
-    uart_puts("Preparing switch to task[");
-    uart_send_ulong(next);
-    uart_puts("]\n");
-    */
     switch_to(tasks[next]);
     preempt_enable();
 }
@@ -78,4 +59,24 @@ inline void preempt_disable() {
 
 inline void preempt_enable() {
     current->preempt_count --;
+}
+
+void exit_process() {
+    // TODO: why
+    preempt_disable();
+    enable_irq();
+    for (int i = 0; i < NR_TASKS; ++ i) {
+        if (tasks[i] == current) {
+            uart_puts("Task ");
+            uart_send_ulong(current->task_id);
+            uart_puts(" exit.\n");
+            current->state = TASK_ZOMBIE;
+            break;
+        }
+    }
+    if (current->stack) {
+        free_task_struct(current->stack);
+    }    
+    preempt_enable();
+    schedule();
 }

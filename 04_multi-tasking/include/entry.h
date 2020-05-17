@@ -23,14 +23,13 @@
 #define FIQ_INVALID_EL0_32      14 
 #define ERROR_INVALID_EL0_32    15 
 
-#define SYNC_ERROR          16 
+#define SYNC_ERROR              16 
 #define SYSCALL_ERROR           17 
 
 #ifndef __ASSEMBLER__
 
 void show_invalid_entry_message(int, unsigned long, unsigned long);
 void ret_from_fork();
-void ret_from_fork_user();
 
 #endif
 

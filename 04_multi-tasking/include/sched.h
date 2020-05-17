@@ -4,14 +4,17 @@
 #define CPU_CONTEXT_OFFSET 0
 #ifndef __ASSEMBLER__
 
-#define MAX_CONCURRENT_TASKS 64
+#define NR_TASKS 64
+
+// identified it is kernel thread
+#define PF_KTHREAD 0x00000002
 
 typedef long tid_t;
-enum state_t {TASK_RUNNING};
+enum state_t {TASK_RUNNING, TASK_ZOMBIE};
 
 extern struct task_struct *current;
-extern struct task_struct *tasks[MAX_CONCURRENT_TASKS];
-extern unsigned int num_tasks;
+extern struct task_struct *tasks[NR_TASKS];
+extern unsigned int nr_tasks;
 
 struct cpu_context {
     unsigned long x19;
@@ -36,16 +39,13 @@ struct task_struct {
     long counter;
     long priority;
     int preempt_count;
-    unsigned long fork_flag;
-    // unsigned long stack;
-    // unsigned long flags;
-    // unsigned long kill_flag;
+    unsigned long stack;
+    unsigned long flags;
 };
-// static struct task_struct task_pool[MAX_NUM_TASKS];
 
 #define INIT_TASK \
 { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \
-   0, TASK_RUNNING, 5, 5, 0}
+   0, TASK_RUNNING, 5, 5, 0, PF_KTHREAD, 0}
 
 tid_t acquire_unused_task_id();
 void preempt_enable();

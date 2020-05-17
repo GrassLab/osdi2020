@@ -2,9 +2,6 @@
 #include "entry.h"
 #include "timer.h"
 
-_loop:
-    b _loop
-
 .macro handle_invalid_entry el, type
     kernel_entry \el 
     mov x0, #\type
@@ -37,11 +34,11 @@ _loop:
     stp x26, x27, [sp, #16 * 13] 
     stp x28, x29, [sp, #16 * 14] 
 
-    // TODO: Understand here
+    // TODO: understand here
     .if \el == 0
-    mrs x21, sp_el0
+        mrs x21, sp_el0
     .else
-    add x21, sp, #S_FRAME_SIZE
+        add x21, sp, #S_FRAME_SIZE
     .endif /* \el == 0 */
 
     mrs x22, elr_el1
@@ -177,7 +174,6 @@ el0_sync:
 el0_svc:
     bl handle_el0_sync
     bl ret_from_syscall
-    bl uart_send_ulong
     kernel_exit 0
 
 ret_from_syscall:
@@ -205,15 +201,11 @@ el1_irq:
 .global ret_from_fork
 ret_from_fork:
     bl  schedule_tail
-    blr x19            //should never return
-
-.global ret_from_fork_user
-ret_from_fork_user:
-    bl  schedule_tail
-    mov x0, x19
-    bl  move_to_user_mode
-    bl  ret_to_user
-    blr x19
-ret_to_user:
-    bl disable_irq
+    cbz x19, ret_to_user
+    blr x19                 // return when kernel threads end
+ret_to_user:                // then go to user mode
+    bl disable_irq          // TODO: why disable_irq
     kernel_exit 0
+
+_loop:
+    b _loop
