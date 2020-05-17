@@ -1,7 +1,7 @@
-#ifndef SYSCALL_H_
-#define SYSCALL_H_
+#ifndef KERNEL_SYSCALL_H_
+#define KERNEL_SYSCALL_H_
 
-#include "types.h"
+#include "kernel/lib/types.h"
 
 uint32_t do_get_taskid(void);
 size_t do_uart_read(void *buf, size_t count);
@@ -15,4 +15,4 @@ void el1_to_el0(void(*func)(void), uint8_t *ustack);
 void post_fork_child_hook(void);
 int do_fork_helper(uint64_t trapframe, uint64_t lr);
 
-#endif // SYSCALL_H_
+#endif // KERNEL_SYSCALL_H_

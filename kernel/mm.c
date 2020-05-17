@@ -1,4 +1,4 @@
-#include "mm.h"
+#include "kernel/mm.h"
 
 extern char __kernel_start[];
 extern char __kernel_end[];

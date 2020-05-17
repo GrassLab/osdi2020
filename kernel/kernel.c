@@ -1,11 +1,10 @@
-#include "exception.h"
-#include "ioutil.h"
-#include "libsyscall.h"
-#include "mini_uart.h"
-#include "mm.h"
-#include "sched.h"
-#include "shell.h"
-#include "syscall.h"
+#include "kernel/exception.h"
+#include "kernel/lib/ioutil.h"
+#include "kernel/mini_uart.h"
+#include "kernel/mm.h"
+#include "kernel/sched.h"
+#include "kernel/shell.h"
+#include "kernel/syscall.h"
 
 void delay(int t) {
   for (int i = 0; i < t; ++i) {}

@@ -1,8 +1,8 @@
-#ifndef MAILBOX_H_
-#define MAILBOX_H_
+#ifndef KERNEL_MAILBOX_H_
+#define KERNEL_MAILBOX_H_
 
-#include "base.h"
-#include "types.h"
+#include "kernel/base.h"
+#include "kernel/lib/types.h"
 
 #define MAILBOX_BASE (GPU_PERIPHERAL_BASE + 0xb880)
 #define MAILBOX_READ   ((volatile uint32_t *)(MAILBOX_BASE))
@@ -15,4 +15,4 @@ uint32_t get_board_revision(void);
 uint64_t get_vc_memory(void);
 void mailbox_call(uint32_t *mailbox);
 
-#endif // MAILBOX_H_
+#endif // KERNEL_MAILBOX_H_

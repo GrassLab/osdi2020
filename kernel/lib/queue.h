@@ -1,5 +1,5 @@
-#ifndef QUEUE_H_
-#define QUEUE_H_
+#ifndef KERNEL_LIB_QUEUE_H_
+#define KERNEL_LIB_QUEUE_H_
 
 #define MAX_QUEUE_SIZE 64
 
@@ -13,4 +13,4 @@ struct queue {
 void enqueue(struct queue *q, void *ptr);
 void *dequeue(struct queue *q);
 
-#endif // QUEUE_H_
+#endif // KERNEL_LIB_QUEUE_H_

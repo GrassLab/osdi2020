@@ -1,5 +1,5 @@
-#ifndef TYPES_H_
-#define TYPES_H_
+#ifndef USER_LIB_TYPES_H_
+#define USER_LIB_TYPES_H_
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -7,4 +7,4 @@
 
 #define EOL "\n"
 
-#endif // TYPES_H_
+#endif // USER_LIB_TYPES_H_

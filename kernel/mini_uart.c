@@ -1,5 +1,5 @@
-#include "lock.h"
-#include "mini_uart.h"
+#include "kernel/lock.h"
+#include "kernel/mini_uart.h"
 
 void gpio_init(void) {
   // Set alternative function for GPIO pins.

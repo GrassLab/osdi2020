@@ -1,10 +1,10 @@
-#include "exception.h"
-#include "ioutil.h"
-#include "mini_uart.h"
-#include "sched.h"
-#include "shell.h"
-#include "string.h"
-#include "syscall.h"
+#include "kernel/exception.h"
+#include "kernel/lib/ioutil.h"
+#include "kernel/mini_uart.h"
+#include "kernel/sched.h"
+#include "kernel/shell.h"
+#include "kernel/lib/string.h"
+#include "kernel/syscall.h"
 
 /*
  * Create the permanently exist idle task.

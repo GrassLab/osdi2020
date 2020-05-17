@@ -1,8 +1,8 @@
-#include "exception.h"
-#include "ioutil.h"
-#include "mini_uart.h"
-#include "types.h"
-#include "sched.h"
+#include "kernel/exception.h"
+#include "kernel/lib/ioutil.h"
+#include "kernel/mini_uart.h"
+#include "kernel/lib/types.h"
+#include "kernel/sched.h"
 
 void exception_init(void) {
   asm("msr vbar_el1, %0" : : "r"(vector_table));

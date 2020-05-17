@@ -1,18 +1,18 @@
 CFLAGS = -ffreestanding -nostartfiles -nostdlib -g
-INCS = -I kernel/include -I lib/include
+INCS = -I .
 
-ASM_FILES = $(shell find kernel lib -name "*.S")
-C_FILES = $(shell find kernel lib -name "*.c")
+ASM_FILES = $(shell find kernel -name "*.S")
+C_FILES = $(shell find kernel -name "*.c")
 OBJS = $(ASM_FILES:%.S=%_s.o) $(C_FILES:%.c=%_c.o)
 
 .PHONY: all clean
 
 all: kernel8.img
 
-%_c.o: %.c
+kernel/%_c.o: kernel/%.c
 	aarch64-linux-gnu-gcc $(INCS) $(CFLAGS) -c -o $@ $<
 
-%_s.o: %.S
+kernel/%_s.o: kernel/%.S
 	aarch64-linux-gnu-gcc $(INCS) -c -o $@ $<
 
 kernel8.img: $(OBJS)

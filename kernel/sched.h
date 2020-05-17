@@ -1,8 +1,8 @@
-#ifndef SCHED_H_
-#define SCHED_H_
+#ifndef KERNEL_SCHED_H_
+#define KERNEL_SCHED_H_
 
-#include "queue.h"
-#include "types.h"
+#include "kernel/lib/queue.h"
+#include "kernel/lib/types.h"
 
 #define MAX_TASK_NUM 64
 #define MAX_STACK_SIZE 4096
@@ -64,4 +64,4 @@ void task_debut_hook(void);
 void preempt_enable(void);
 void preempt_disable(void);
 
-#endif // SCHED_H_
+#endif // KERNEL_SCHED_H_

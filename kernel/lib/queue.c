@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "queue.h"
+#include "kernel/lib/queue.h"
 
 void enqueue(struct queue *q, void *ptr) {
   if (q->size >= MAX_QUEUE_SIZE) {

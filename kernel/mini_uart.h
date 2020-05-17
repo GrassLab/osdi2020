@@ -1,9 +1,9 @@
-#ifndef MINI_UART_H_
-#define MINI_UART_H_
+#ifndef KERNEL_MINI_UART_H_
+#define KERNEL_MINI_UART_H_
 
-#include "base.h"
-#include "types.h"
-#include "lock.h"
+#include "kernel/base.h"
+#include "kernel/lib/types.h"
+#include "kernel/lock.h"
 
 #define GPFSEL1   ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x200004))
 #define GPPUD     ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x200094))
@@ -30,4 +30,4 @@ void mini_uart_putc(uint8_t c);
 void mini_uart_putn(const uint8_t *buf, uint32_t n);
 void mini_uart_puts(const uint8_t *buf);
 
-#endif // MINI_UART_H_
+#endif // KERNEL_MINI_UART_H_

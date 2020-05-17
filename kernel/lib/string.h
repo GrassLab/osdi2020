@@ -1,5 +1,5 @@
-#ifndef STRING_H_
-#define STRING_H_
+#ifndef KERNEL_LIB_STRING_H_
+#define KERNEL_LIB_STRING_H_
 
 #include <stddef.h>
 
@@ -11,4 +11,4 @@ char *strcpy(char *dest, const char *src);
 size_t strlen(const char *s);
 char *strtrim(char *s);
 
-#endif // STRING_H_
+#endif // KERNEL_LIB_STRING_H_

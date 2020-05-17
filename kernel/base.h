@@ -1,8 +1,8 @@
-#ifndef BASE_H_
-#define BASE_H_
+#ifndef KERNEL_BASE_H_
+#define KERNEL_BASE_H_
 
 #define KERNEL_VA_BASE        0xffff000000000000
 #define GPU_PERIPHERAL_BASE   (KERNEL_VA_BASE + 0x3f000000)
 #define LOCAL_PERIPHERAL_BASE (KERNEL_VA_BASE + 0x40000000)
 
-#endif // BASE_H_
+#endif // KERNEL_BASE_H_

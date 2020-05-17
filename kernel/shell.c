@@ -1,9 +1,9 @@
-#include "ioutil.h"
-#include "mailbox.h"
-#include "mini_uart.h"
-#include "shell.h"
-#include "string.h"
-#include "utils.h"
+#include "kernel/lib/ioutil.h"
+#include "kernel/mailbox.h"
+#include "kernel/mini_uart.h"
+#include "kernel/shell.h"
+#include "kernel/lib/string.h"
+#include "kernel/lib/utils.h"
 
 void help(void) {
   mini_uart_puts("hello: print Hello World!" EOL);
@@ -18,54 +18,54 @@ void hello(void) {
 }
 
 void loadimg(void) {
-  const uint64_t default_base = 0x90000;
-  mini_uart_puts("Start Loading kernel image..." EOL);
-  printf("Please input kernel load address (default: %#x): ", default_base);
-
-  char buf[32];
-  mini_uart_gets(buf);
-  uint64_t base = strlen(buf) == 0 ? default_base : stoui(buf, 16);
-
-  uint32_t size;
-  uint16_t checksum;
-  mini_uart_puts("Please send kernel image from UART now..." EOL);
-load:
-  mini_uart_getn(false, (uint8_t *)&size, sizeof(size));
-  mini_uart_getn(false, (uint8_t *)&checksum, sizeof(checksum));
-
-  uint8_t *begin = base, end = begin + size;
-  if ((end >= __text_start && end < __text_end) ||
-      (begin >= __text_start && begin < __text_end) ||
-      (begin <= __text_start && end > __text_end)) {
-    mini_uart_puts("The image will overlap with loader code." EOL);
-    mini_uart_puts("Default load address will be used." EOL);
-    base = default_base;
-  }
-
-  printf("Kernel Image Size: %u, Load Addr: %#x" EOL, size, base);
-
-  uint32_t chk = 0;
-  for (uint32_t i = 0; i < size; ++i) {
-    uint8_t byte = mini_uart_getc(false);
-    chk = (chk + byte) % 65536;
-    *((uint8_t *)base + i) = byte;
-  }
-
-  if (chk == checksum) {
-    ((void (*)(void))base)();
-  } else {
-    mini_uart_puts("The image is corrupted, please retry..." EOL);
-    goto load;
-  }
+//  const uint64_t default_base = 0x90000;
+//  mini_uart_puts("Start Loading kernel image..." EOL);
+//  printk("Please input kernel load address (default: %#x): ", default_base);
+//
+//  char buf[32];
+//  mini_uart_gets(buf);
+//  uint64_t base = strlen(buf) == 0 ? default_base : stoui(buf, 16);
+//
+//  uint32_t size;
+//  uint16_t checksum;
+//  mini_uart_puts("Please send kernel image from UART now..." EOL);
+//load:
+//  mini_uart_getn(false, (uint8_t *)&size, sizeof(size));
+//  mini_uart_getn(false, (uint8_t *)&checksum, sizeof(checksum));
+//
+//  uint8_t *begin = base, end = begin + size;
+//  if ((end >= __text_start && end < __text_end) ||
+//      (begin >= __text_start && begin < __text_end) ||
+//      (begin <= __text_start && end > __text_end)) {
+//    mini_uart_puts("The image will overlap with loader code." EOL);
+//    mini_uart_puts("Default load address will be used." EOL);
+//    base = default_base;
+//  }
+//
+//  printk("Kernel Image Size: %u, Load Addr: %#x" EOL, size, base);
+//
+//  uint32_t chk = 0;
+//  for (uint32_t i = 0; i < size; ++i) {
+//    uint8_t byte = mini_uart_getc(false);
+//    chk = (chk + byte) % 65536;
+//    *((uint8_t *)base + i) = byte;
+//  }
+//
+//  if (chk == checksum) {
+//    ((void (*)(void))base)();
+//  } else {
+//    mini_uart_puts("The image is corrupted, please retry..." EOL);
+//    goto load;
+//  }
 }
 
 void lshw(void) {
-  printf("Board revision: %#x" EOL, get_board_revision());
+  printk("Board revision: %#x" EOL, get_board_revision());
 
   uint64_t data = get_vc_memory();
   uint32_t base = data & 0xffffffff;
   uint32_t size = data >> 32;
-  printf("VC core address: %#x-%#x (%#x bytes)" EOL, base, base + size - 1, size);
+  printk("VC core address: %#x-%#x (%#x bytes)" EOL, base, base + size - 1, size);
 }
 
 void timestamp(void) {
@@ -75,7 +75,7 @@ void timestamp(void) {
   uint64_t time_int = count / frequency;
   uint64_t time_fra = (count * 1000000 / frequency) % 1000000;
 
-  printf("[%u.%u]" EOL, time_int, time_fra);
+  printk("[%u.%u]" EOL, time_int, time_fra);
 }
 
 void reboot(void) {
@@ -117,7 +117,7 @@ void shell(void) {
       } else if (!strcmp(cmd, "timestamp")) {
         timestamp();
       } else {
-        printf("Error: command %s not found, try <help>" EOL, cmd);
+        printk("Error: command %s not found, try <help>" EOL, cmd);
       }
     }
   }

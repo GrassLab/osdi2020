@@ -1,7 +1,7 @@
-#ifndef MM_H_
-#define MM_H_
+#ifndef KERNEL_MM_H_
+#define KERNEL_MM_H_
 
-#include "types.h"
+#include "kernel/lib/types.h"
 
 #define PHYSICAL_MEM_SIZE (1 << 30)
 #define PAGE_SIZE (1 << 12)
@@ -17,4 +17,4 @@ void page_init(void);
 uint64_t page_alloc(void);
 void page_free(uint64_t page_addr);
 
-#endif // MM_H_
+#endif // KERNEL_MM_H_

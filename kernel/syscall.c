@@ -1,7 +1,7 @@
-#include "mini_uart.h"
-#include "sched.h"
-#include "string.h"
-#include "syscall.h"
+#include "kernel/mini_uart.h"
+#include "kernel/sched.h"
+#include "kernel/lib/string.h"
+#include "kernel/syscall.h"
 
 uint32_t do_get_taskid(void) {
   return get_current_task()->id;

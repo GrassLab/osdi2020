@@ -1,7 +1,7 @@
-#ifndef EXCEPTION_H_
-#define EXCEPTION_H_
+#ifndef KERNEL_EXCEPTION_H_
+#define KERNEL_EXCEPTION_H_
 
-#include "base.h"
+#include "kernel/base.h"
 
 #define SYSTEM_TIMER_CS  ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x3000))
 #define SYSTEM_TIMER_CL0 ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x3004))
@@ -32,4 +32,4 @@ void not_implemented_handler(void);
 void enable_interrupt(void);
 void disable_interrupt(void);
 
-#endif // EXCEPTION_H_
+#endif // KERNEL_EXCEPTION_H_
