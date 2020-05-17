@@ -24,19 +24,42 @@ meminit:
 
     mov x0, 0 // PGD's page frame at 0x0
     mov x1, 0x1000 // PUD's page frame at 0x1000
+    mov x5, 0x2000 // 1st PMD's page frame
+    mov x6, 0x3000 // 2nd PMD's page frame
 
     ldr x2, = BOOT_PGD_ATTR
     orr x2, x1, x2 // combine the physical address of next level page with attribute.
     str x2, [x0]
 
     ldr x2, = BOOT_PUD_ATTR
-    mov x3, 0x00000000
-    orr x3, x2, x3
+    orr x3, x2, x5
     str x3, [x1] // 1st 1GB mapped by the 1st entry of PUD
-    mov x3, 0x40000000
-    orr x3, x2, x3
+    orr x3, x2, x6
     str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 
+    // Map most ram as normal memory
+    mov x7, 0x00000000 // physical address
+    mov x8, 0x200000 // 2MB
+    ldr x9, = GPIO_BASE
+pmdinit1:
+    ldr x2, = BOOT_PMD_NORMAL_ATTR
+    orr x2, x7, x2
+    str x2, [x5], #8 
+    add x7, x7, x8
+    cmp x7, x9
+    b.lt pmdinit1
+
+    // Map peripherals as device memory
+    mov x9, 0x80000000
+pmdinit2:
+    ldr x2, = BOOT_PMD_DEVICE_ATTR
+    orr x2, x7, x2
+    str x2, [x5], #8 
+    add x7, x7, x8
+    cmp x7, x9
+    b.lt pmdinit2
+
+enablemmu:
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
 
