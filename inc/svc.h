@@ -1,7 +1,7 @@
 #ifndef _SVC_H
 #define _SVC_H
 
-#define __NR_syscalls	            7
+#define __NR_syscalls	            8
 
 #define SYS_UART_READ               0
 #define SYS_UART_WRITE              1
@@ -14,12 +14,12 @@
 
 #ifndef __ASSEMBLER__
 unsigned long sys_get_taskid();
-unsigned long sys_exec(void(*func)());
+int sys_exec(void(*func)());
 int sys_fork();
-unsigned long sys_exit();
-char sys_uart_read();
-void sys_uart_write(char *s);
+void sys_exit();
 void sys_sched_yield();
+unsigned int sys_uart_read(char buf[], unsigned long size);
+unsigned int sys_uart_write(const char buf[], unsigned long size);
 #endif//__ASSEMBLER__
 
 

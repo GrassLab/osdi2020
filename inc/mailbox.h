@@ -1,6 +1,7 @@
 #ifndef _MAILBOX_H
 #define _MAILBOX_H
 
+#include "base.h"
 
 typedef struct{
     volatile unsigned int READ;      // +0x00

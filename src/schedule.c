@@ -7,7 +7,12 @@
 #include "uart.h"
 #include "svc.h"
 #include "sysregs.h"
-#include "utils.h"
+#include "string.h"
+
+void delay(int cnt)
+{
+    while(cnt--);
+}
 
 struct task_struct *current;                   //currently executing task
 struct task_struct *task_pool[NR_TASKS]={0};   //task array

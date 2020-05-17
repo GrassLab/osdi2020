@@ -31,10 +31,11 @@ master:
     eret                          // from el2 to el1
 
 el1_entry:
-    ldr     w1, =__bss_size       // clear_bss
-    cbz     w1, main_entry
+    ldr     w2, =__bss_size       // clear_bss
+    cbz     w2, main_entry
     ldr     x0, =__bss_start
-    bl      memzero
+    mov     x1, #0
+    bl      memset
 
     ldr     x0, =exception_table  // set up el1 exception table
     msr     vbar_el1, x0

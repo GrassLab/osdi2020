@@ -84,9 +84,7 @@ el0_sync_handler:
     // read_irq_source
     mrs	x0, esr_el1
     mrs	x1, elr_el1
-    mrs	x2, spsr_el1
-    mrs	x3, far_el1
-    mov x4, sp
+    mov x2, sp
     bl sync_router
     bl task_preemption
     kernel_exit EL0
@@ -104,9 +102,7 @@ el1_sync_handler:
     // read_irq_source
     mrs	x0, esr_el1
     mrs	x1, elr_el1
-    mrs	x2, spsr_el1
-    mrs	x3, far_el1
-    mov x4, sp
+    mov x2, sp
     bl sync_router
     bl task_preemption
     kernel_exit EL1
