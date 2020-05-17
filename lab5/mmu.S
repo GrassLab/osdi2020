@@ -11,9 +11,14 @@ mmu_tcr_el1_init:
 
   /* Setup TG0[15:14] and TG1[31:30] */
   /* Granule size for TTBRx_EL1 */
+  /* TG0: */
   /* 0b00 -> 4KB */
   /* 0b01 -> 64KB */
   /* 0b10 -> 16KB */
+  /* TG1: */
+  /* 0b01 -> 16KB */
+  /* 0b10 -> 4KB */
+  /* 0b11 -> 64KB */
 #define TCR_CONFIG_4KB ((0b00 << 14) |  (0b10 << 30))
 
 #define TCR_CONFIG_DEFAULT (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
@@ -83,44 +88,11 @@ mmu_mair_el1_init:
   msr mair_el1, x0
   ret
 
-.global mmu_ttbr0_ttbr1_el1_init
-.type mmu_ttbr0_ttbr1_el1_init,%function
-mmu_ttbr0_ttbr1_el1_init:
-
-  /* ttbr0_el1: Holds the base address of the translation table for the initial lookup for stage 1 of the translation of an address from the lower VA range in the EL1&0 translation regime, and other information for this translation regime. */
-
-  /* PD (ttbrx) -> PGD -> PUD -> PMD -> | Page + offset */
-
-#define PD_TABLE 0b11 // indicate this to another descriptor
-#define PD_BLOCK 0b01 // indicate to physical ram
-#define PD_ACCESS (1 << 10) // access flag, generate page fault if not set
-#define BOOT_PGD_ATTR PD_TABLE
-// Set access bit and mair[4:2] and indicate to physical ram
-#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
-
-  mov x0, 0 // PGD's page frame at 0x0
-  mov x1, 0x1000 // PUD's page frame at 0x1000
-
-  ldr x2, = BOOT_PGD_ATTR
-  orr x2, x1, x2 // combine the physical address of next level page with attribute.
-  str x2, [x0]
-
-  ldr x2, = BOOT_PUD_ATTR
-  mov x3, 0x00000000
-  orr x3, x2, x3
-  str x3, [x1] // 1st 1GB mapped by the 1st entry of PUD
-  mov x3, 0x40000000
-  orr x3, x2, x3
-  str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
-
-  // ttbr0 and ttbr1 share the same PUD frame
-  msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
-  msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
-  ret
-
 .global mmu_enable_mmu
 .type mmu_enable_mmu,%function
 mmu_enable_mmu:
+  /* DO NOT CHANGE VALUE OF x0 */
+
   /* Provides top level control of the system, including its memory system, at EL1 and EL0 */
   /* M[0]: MMU enable for EL1 and EL0 stage 1 address translation */
 

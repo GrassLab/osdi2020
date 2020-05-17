@@ -43,10 +43,9 @@ core_0:
 
 el1_entry:
 // EL1 now
-  // set stack pointer to 0xffff000000004000
-  mov x0, #0xffff000000000000
-  add x0, x0, #4000
-  mov sp, x0
+  // set stack pointer to 0x6000
+   mov x0, #0x6000
+   mov sp, x0
 
   // initialize .bss section in physical
   adr x0, __bss_start__
@@ -72,6 +71,12 @@ prepare_mmu:
   ldr x0, =boot_rest // indirect branch to the virtual address before enable mmu
 
   bl mmu_enable_mmu
+
+  // set stack pointer to 0xffff000000006000
+  mov x1, #0xffff000000000000
+  add x1, x1, #4000
+  add x1, x1, #2000
+  mov sp, x1
 
   br x0 // boot_rest
 
