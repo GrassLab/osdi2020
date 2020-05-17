@@ -14,15 +14,12 @@ void show_invalid_entry_message(unsigned long esr, unsigned long address)
 	printf("[Invalid Exception]\tESR: %x, address: %x\n", esr, address);
 }
 
-static void sync_svc_handler(unsigned long esr, unsigned long elr, struct trapframe *tf)
+static void sync_svc64_handler(unsigned long esr, unsigned long elr, struct trapframe *tf)
 {
     switch(tf->Xn[8]) {
         case SYS_UART_READ: tf->Xn[0] = uart_getc(); break;
         case SYS_UART_WRITE: uart_puts((char *)tf->Xn[0]); break;
-        case SYS_GET_TASKID:
-            tf->Xn[0] = current->task_id; 
-            //printf("[get Task_id] Task_id: %d\n", tf->Xn[0]);
-            break;
+        case SYS_GET_TASKID: tf->Xn[0] = do_get_taskid(); break;
         case SYS_EXEC: do_exec((void*)tf->Xn[0]); break;
         case SYS_FORK: do_fork(tf); break;
         case SYS_EXIT: do_exit(tf->Xn[0]); break;
@@ -39,11 +36,9 @@ static void sync_svc_handler(unsigned long esr, unsigned long elr, struct trapfr
 void sync_router(unsigned long esr, unsigned long elr, struct trapframe *tf){
     // read exception source
     switch(esr>>26) {
-        case 0b010101: 
-            sync_svc_handler(esr, elr, tf); 
-            break;
-        default: 
-            uart_puts("Unknown sync. ");
+        case 0b010101: sync_svc64_handler(esr, elr, tf); break;
+        default:
+            printf("Unknown sync. EC: 0x%X", esr>>26);
             while(1);
             break;
     }

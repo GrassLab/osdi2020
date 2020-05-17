@@ -9,6 +9,13 @@
 #include "sysregs.h"
 #include "string.h"
 
+/*
+    get ksp base vs get ksp top
+    task manage seperate task_struct from ksp
+    current -> tpidr_el1
+    init _bss error??
+*/
+
 struct task_struct *current;                   //currently executing task
 struct task_struct *task_pool[NR_TASKS]={0};   //task array
 
@@ -26,12 +33,16 @@ void foo(){// user code
 void test() {//user code
     int cnt = 1;
     int pid;
-    // printf("[test] Task_id: %d, cnt: %d\n", current->task_id, cnt);
+    #ifdef __DEBUG
+    printf("[test] Task_id: %d, cnt: %d\n", current->task_id, cnt);
+    #endif//__DEBUG
     if ((pid = sys_fork()) == 0) {
         sys_fork();
         delay(100000);
         sys_fork();
-        // printf("[tast] Task_id: %d, cnt: %d\n", current->task_id, cnt);
+        #ifdef __DEBUG
+        printf("[tast] Task_id: %d, cnt: %d\n", current->task_id, cnt);
+        #endif//__DEBUG
         while(cnt < 10){
             printf("Task id: %d, cnt: %d\n", sys_get_taskid(), cnt);
             delay(100000);
@@ -60,8 +71,12 @@ void startup_task()
         uart_puts("error while starting user_test\n");
     core_timer_enable();
 
-    while (1) // idle here
+    while (1){ // idle here
+        #ifdef __DEBUG
+        delay(100000000);
+        #endif//DEBUG
         schedule();
+    }
 }
 
 void _load_contex(){
@@ -92,7 +107,9 @@ void sched_init(void)
 
 void schedule(void)
 {
-    // printf("[schedule] Task_id: %d\n", current->task_id);
+    #ifdef __DEBUG
+    printf("[schedule] Task_id: %d\n", current->task_id);
+    #endif//__DEBUG
     long idx = current->task_id;
     struct task_struct *next = task_pool[(++idx)%NR_TASKS];
     while(!(next && next->state==TASK_RUNNING))
@@ -127,7 +144,9 @@ void _context_switch()
 
 void context_switch(struct task_struct *next) 
 {
-    // printf("[context_switch] Task_id: %d\n", current->task_id);
+    #ifdef __DEBUG
+    printf("[context_switch] Task_id: %d\n", current->task_id);
+    #endif//__DEBUG
     if (current == next) 
         return;
     struct task_struct *prev = current;
@@ -163,12 +182,16 @@ long privilege_task_create(void(*func)())
     pTask->schedule_flag = 0;
     pTask->task_id = task_id;
     task_pool[task_id] = pTask;
-    // printf("[pcreate] Task_id: %d\tpTask: 0x%X\tksp: 0x%X\n", task_id, pTask, pTask->cpu_context.sp);
+    #ifdef __DEBUG
+    printf("[pcreate] Task_id: %d\tpTask: 0x%X\tksp: 0x%X\n", task_id, pTask, pTask->cpu_context.sp);
+    #endif//__DEBUG
     return task_id;
 }
 
 void wait(long task_id){
-    // printf("[wait] Task_id: %d\n", current->task_id);
+    #ifdef __DEBUG
+    printf("[wait] Task_id: %d\n", current->task_id);
+    #endif//__DEBUG
     while (1)
     {
         if(task_pool[task_id]->state == TASK_ZOMBIE){
@@ -180,10 +203,20 @@ void wait(long task_id){
     
 }
 
+long do_get_taskid(){
+    long task_id = current->task_id;
+    #ifdef __DEBUG
+        printf("[get Task_id] Task_id: %d\n", task_id);
+    #endif
+    return task_id; 
+}
+
 void do_exec(void(*func)())
 {
     unsigned long usp = get_ustack_base(current->task_id) + THREAD_SIZE;
-    // printf("[exec] Task_id: %d\tusp: 0x%X\n", current->task_id, usp);
+    #ifdef __DEBUG
+    printf("[exec] Task_id: %d\tusp: 0x%X\n", current->task_id, usp);
+    #endif//__DEBUG
     asm volatile("msr sp_el0, %0"::"r"(usp):);
     asm volatile("msr spsr_el1, %0"::"r"(SPSR_EL1_VALUE):);
     asm volatile("msr elr_el1, %0"::"r"(func):);
@@ -192,6 +225,9 @@ void do_exec(void(*func)())
 
 void do_fork(struct trapframe *tf)
 {
+    #ifdef __DEBUG
+    printf("[fork start] <P>Task_id: %d\n", current->task_id);
+    #endif//__DEBUG
     struct task_struct *pTask;
     long task_id = assign_task_id();
     pTask = (struct task_struct *)get_kstack_base(task_id);
@@ -217,12 +253,16 @@ void do_fork(struct trapframe *tf)
     utf->Xn[0] = 0;
     // need not set cpu context, kernel exit will overwrite it.
     pTask->cpu_context.lr = (unsigned long)ret_fork_child;
-    // printf("[fork] <P>Task_id: %d\t<c>Task_id: %d\tpTask: 0x%X\tksp: 0x%X\tusp: 0x%X\n", current->task_id, task_id, pTask, pTask->cpu_context.sp, utf->sp_el0);
+    #ifdef __DEBUG
+    printf("[fork end] <c>Task_id: %d\tpTask: 0x%X\tksp: 0x%X\tusp: 0x%X\n", task_id, pTask, pTask->cpu_context.sp, utf->sp_el0);
+    #endif//__DEBUG
 }
 
 void do_exit(int status)
 {
-    // printf("[exit] Task_id: %d\n", current->task_id);
+    #ifdef __DEBUG
+    printf("[exit] Task_id: %d\n", current->task_id);
+    #endif//__DEBUG
     current->state = TASK_ZOMBIE;
     current->schedule_flag = 1;
     // should call schedule later by task preemption
@@ -242,7 +282,9 @@ void timer_tick()
 
 void task_preemption()
 {
-    // printf("[task_preemption] Task_id: %d\n",current->task_id);
+    #ifdef __DEBUG
+    printf("[task_preemption] Task_id: %d\n",current->task_id);
+    #endif//__DEBUG
     if(current->schedule_flag)
         schedule();
 }

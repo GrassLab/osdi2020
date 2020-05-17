@@ -28,7 +28,9 @@ void *memset(void *s, int c, unsigned long n)
 
 void *memcpy(void *dest, const void *src, unsigned long n)
 {
-    // printf("[memcpy] dest: 0x%X\tsrc: 0x%X\tsize: %d\n",dest, src, n);
+    #ifdef __DEBUG
+    printf("[memcpy] dest: 0x%X\tsrc: 0x%X\tsize: %d\n",dest, src, n);
+    #endif//__DEBUG
     char *tmp = dest;
     const char *s = src;
     while (n--)

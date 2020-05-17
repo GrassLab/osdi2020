@@ -44,7 +44,7 @@ void context_switch(struct task_struct* next);
 void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 void task_preemption();
 void wait(long);
-
+long do_get_taskid();
 void do_exec(void(*func)());
 void do_fork();
 void do_exit();
