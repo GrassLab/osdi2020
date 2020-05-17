@@ -19,7 +19,10 @@ static void sync_svc_handler(unsigned long esr, unsigned long elr, struct trapfr
     switch(tf->Xn[8]) {
         case SYS_UART_READ: tf->Xn[0] = uart_getc(); break;
         case SYS_UART_WRITE: uart_puts((char *)tf->Xn[0]); break;
-        case SYS_GET_TASKID: tf->Xn[0] = current->task_id; break;
+        case SYS_GET_TASKID:
+            tf->Xn[0] = current->task_id; 
+            //printf("[get Task_id] Task_id: %d\n", tf->Xn[0]);
+            break;
         case SYS_EXEC: do_exec((void*)tf->Xn[0]); break;
         case SYS_FORK: do_fork(tf); break;
         case SYS_EXIT: do_exit(tf->Xn[0]); break;

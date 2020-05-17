@@ -26,11 +26,13 @@ void foo(){// user code
 void test() {//user code
     int cnt = 1;
     int pid;
+    // printf("[test] Task_id: %d, cnt: %d\n", current->task_id, cnt);
     if ((pid = sys_fork()) == 0) {
         sys_fork();
         delay(100000);
         sys_fork();
-        while(cnt < 10) {
+        // printf("[tast] Task_id: %d, cnt: %d\n", current->task_id, cnt);
+        while(cnt < 10){
             printf("Task id: %d, cnt: %d\n", sys_get_taskid(), cnt);
             delay(100000);
             ++cnt;
@@ -77,6 +79,9 @@ void _load_contex(){
 
 void sched_init(void)
 {
+    for(int i=0; i<64;i++){
+        task_pool[i]=0;
+    }
     long pid = privilege_task_create(&startup_task);
     if (pid < 0)
         uart_puts("error while starting idle_task\n");
@@ -87,6 +92,7 @@ void sched_init(void)
 
 void schedule(void)
 {
+    // printf("[schedule] Task_id: %d\n", current->task_id);
     long idx = current->task_id;
     struct task_struct *next = task_pool[(++idx)%NR_TASKS];
     while(!(next && next->state==TASK_RUNNING))
@@ -121,6 +127,7 @@ void _context_switch()
 
 void context_switch(struct task_struct *next) 
 {
+    // printf("[context_switch] Task_id: %d\n", current->task_id);
     if (current == next) 
         return;
     struct task_struct *prev = current;
@@ -129,7 +136,7 @@ void context_switch(struct task_struct *next)
 }
 
 long assign_task_id()
-{
+{   
     for(long id=0; id<NR_TASKS; id++){
         if(task_pool[id]) // non Null ptr, if assigned.
             continue;
@@ -150,17 +157,18 @@ long privilege_task_create(void(*func)())
     }
     pTask = (struct task_struct *)get_kstack_base(task_id);
     pTask->state = TASK_RUNNING;
-    unsigned long sp_offset = THREAD_SIZE;
-    pTask->cpu_context.sp = (unsigned long)pTask + sp_offset;
+    pTask->cpu_context.sp = get_kstack_base(task_id) + THREAD_SIZE;
     pTask->cpu_context.lr = (unsigned long)func;
     pTask->counter = 4;
     pTask->schedule_flag = 0;
     pTask->task_id = task_id;
     task_pool[task_id] = pTask;
+    // printf("[pcreate] Task_id: %d\tpTask: 0x%X\tksp: 0x%X\n", task_id, pTask, pTask->cpu_context.sp);
     return task_id;
 }
 
 void wait(long task_id){
+    // printf("[wait] Task_id: %d\n", current->task_id);
     while (1)
     {
         if(task_pool[task_id]->state == TASK_ZOMBIE){
@@ -174,7 +182,8 @@ void wait(long task_id){
 
 void do_exec(void(*func)())
 {
-    unsigned long usp = (unsigned long)current + THREAD_SIZE + STACK_OFFSET;
+    unsigned long usp = get_ustack_base(current->task_id) + THREAD_SIZE;
+    // printf("[exec] Task_id: %d\tusp: 0x%X\n", current->task_id, usp);
     asm volatile("msr sp_el0, %0"::"r"(usp):);
     asm volatile("msr spsr_el1, %0"::"r"(SPSR_EL1_VALUE):);
     asm volatile("msr elr_el1, %0"::"r"(func):);
@@ -188,8 +197,8 @@ void do_fork(struct trapframe *tf)
     pTask = (struct task_struct *)get_kstack_base(task_id);
     task_pool[task_id] = pTask;
 
-    memcpy(pTask, current, THREAD_SIZE);//kernel stack
-    memcpy(pTask + STACK_OFFSET, current + STACK_OFFSET, THREAD_SIZE);//user stack
+    memcpy((void*)get_kstack_base(task_id), (void*)get_kstack_base(current->task_id), THREAD_SIZE);//kernel stack
+    memcpy((void*)get_ustack_base(task_id), (void*)get_ustack_base(current->task_id), THREAD_SIZE);//user stack
 
     pTask->task_id = task_id;
     // set ksp
@@ -208,10 +217,12 @@ void do_fork(struct trapframe *tf)
     utf->Xn[0] = 0;
     // need not set cpu context, kernel exit will overwrite it.
     pTask->cpu_context.lr = (unsigned long)ret_fork_child;
+    // printf("[fork] <P>Task_id: %d\t<c>Task_id: %d\tpTask: 0x%X\tksp: 0x%X\tusp: 0x%X\n", current->task_id, task_id, pTask, pTask->cpu_context.sp, utf->sp_el0);
 }
 
 void do_exit(int status)
 {
+    // printf("[exit] Task_id: %d\n", current->task_id);
     current->state = TASK_ZOMBIE;
     current->schedule_flag = 1;
     // should call schedule later by task preemption
@@ -222,7 +233,7 @@ void timer_tick()
     enable_irq();
     if(current->counter > 0){
         current->counter--;
-        printf("  Task_id:%d  Counter value: %d\n",
+        printf(">>>>Task_id:%d  Counter value: %d\n",
                  current->task_id, current->counter);
     }else
         current->schedule_flag=1;
@@ -231,6 +242,7 @@ void timer_tick()
 
 void task_preemption()
 {
+    // printf("[task_preemption] Task_id: %d\n",current->task_id);
     if(current->schedule_flag)
         schedule();
 }

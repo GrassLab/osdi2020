@@ -15,7 +15,7 @@
 
 #ifndef __ASSEMBLER__
 unsigned long get_kstack_base(unsigned long task_id);
-void free_kstack(unsigned long p);
+unsigned long get_ustack_base(unsigned long task_id);
 #endif //__ASSEMBLER__
 
 #endif//_MM_H */

@@ -29,12 +29,12 @@ master:
     msr     sp_el1, x0
 
     eret                          // from el2 to el1
-
+// void *memset(void *s, int c, size_t n)
 el1_entry:
-    ldr     w2, =__bss_size       // clear_bss
-    cbz     w2, main_entry
+    ldr     x2, =__bss_size       // clear_bss
+    cbz     x2, main_entry
     ldr     x0, =__bss_start
-    mov     x1, #0
+    mov     w1, #0
     bl      memset
 
     ldr     x0, =exception_table  // set up el1 exception table

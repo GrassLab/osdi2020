@@ -1,4 +1,5 @@
 #include "string.h"
+#include "printf.h"
 
 int strcmp(const char *s1, const char *s2){
     for(;*s1 && *s1 == *s2; s1++, s2++);
@@ -11,13 +12,13 @@ char *strcpy(char *dest, const char *src){
     return odest;
 }
 
-char *strncpy(char *dest, const char *src, size_t n){
+char *strncpy(char *dest, const char *src, unsigned long n){
     char *odest = dest;
     while( n-- && (*dest++ = *src++) );
     return odest;
 }
 
-void *memset(void *s, int c, size_t n)
+void *memset(void *s, int c, unsigned long n)
 {
     char *xs = s;
     while (n--)
@@ -25,8 +26,9 @@ void *memset(void *s, int c, size_t n)
     return s;
 }
 
-void *memcpy(void *dest, const void *src, size_t n)
+void *memcpy(void *dest, const void *src, unsigned long n)
 {
+    // printf("[memcpy] dest: 0x%X\tsrc: 0x%X\tsize: %d\n",dest, src, n);
     char *tmp = dest;
     const char *s = src;
     while (n--)
