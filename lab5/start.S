@@ -43,8 +43,8 @@ core_0:
 
 el1_entry:
 // EL1 now
-  // set stack pointer to 0x6000
-   mov x0, #0x6000
+  // set stack pointer to 0x8000
+   mov x0, #0x8000
    mov sp, x0
 
   // initialize .bss section in physical
@@ -72,10 +72,10 @@ prepare_mmu:
 
   bl mmu_enable_mmu
 
-  // set stack pointer to 0xffff000000006000
+  // set stack pointer to 0xffff000000008000
   mov x1, #0xffff000000000000
-  add x1, x1, #4000
-  add x1, x1, #2000
+  add x1, x1, #0x4000
+  add x1, x1, #0x4000
   mov sp, x1
 
   br x0 // boot_rest
