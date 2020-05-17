@@ -129,9 +129,19 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	  table = PD_DECODE (table[page_ind]);
 	}
       page_ind = (virt >> 12) & 0x1ff;
-      // allow reset attribute
-      if (table[page_ind] && (table[page_ind] & ~0xfff) != phys)
-	return -2;
+      if (table[page_ind])
+	{
+	  if ((table[page_ind] & ~0xfff) != phys)
+	    return -2;
+	  else
+	    {
+	      // allow reset attribute
+	      // break-before-make because we modify the tlb entry
+	      table[page_ind] = 0;
+	      asm volatile ("dsb ish\n"
+			    "tlbi vmalle1is\n" "dsb ish\n" "isb\n");
+	    }
+	}
       table[page_ind] = phys | attr;
       if (phys < USED_MEMSIZE)
 	{
