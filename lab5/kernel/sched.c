@@ -127,15 +127,10 @@ void pm_daemon() {
   struct task_struct *p;
   while (1) {
     preempt_disable();
+    /* uart_println("pm daemon"); */
     int n = 0;
     for (int i = 0; i < NR_TASKS; ++i) {
       p = task[i];
-      /* printer maintainer */
-      if (p && *(char *)(p->print_buffer) != 0 && p != current) {
-        uart_puts((char*)p->print_buffer);
-        *(char*)(p->print_buffer) = 0;
-      }
-
       /* zombie reaper */
       if (p && p->state == TASK_ZOMBIE && p != current) {
         uart_println("[Zombie] reap the zombie task %d", p->pid);

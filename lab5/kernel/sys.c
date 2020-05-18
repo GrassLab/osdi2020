@@ -37,12 +37,14 @@ void sys_write(char *buf) {
 int sys_clone(unsigned long stack) { return copy_process(0, 0, 0); }
 
 unsigned long sys_malloc() {
-  unsigned long addr = get_user_free_page();
-  if (!addr) {
-    return -1;
-  }
-  return addr;
+  /* unsigned long addr = allocate_user_page(current, ); */
+  /* if (!addr) { */
+  /*   return -1; */
+  /* } */
+  /* return addr; */
+  return 0;
 }
+
 
 void sys_exit() {
 #ifdef DEBUG

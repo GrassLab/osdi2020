@@ -1,10 +1,8 @@
 #pragma once
 
-
-
 #define VA_START            0xffff000000000000
 #define DEVICE_BASE         0x3F000000
-#define PBASE               DEVICE_BASE//(VA_START + DEVICE_BASE)
+/* #define PBASE               DEVICE_BASE//(VA_START + DEVICE_BASE) */
 
 #define PAGE_MASK			0xfffffffffffff000
 #define PAGE_SHIFT          12
@@ -15,7 +13,7 @@
 #define SECTION_SIZE        (1 << SECTION_SHIFT)
 
 #define LOW_MEMORY          (2 * SECTION_SIZE)
-#define HIGH_MEMORY         PBASE
+#define HIGH_MEMORY         DEVICE_BASE
 
 #define PAGING_MEMORY       (HIGH_MEMORY - LOW_MEMORY)
 #define PAGING_PAGES        (PAGING_MEMORY/PAGE_SIZE)
@@ -98,7 +96,6 @@
 #include "sched.h"
 
 unsigned long get_free_page();
-unsigned long get_user_free_page();
 void free_page(unsigned long p);
 void memzero(unsigned long src, unsigned long n);
 unsigned long allocate_user_page(struct task_struct *task, unsigned long va);

@@ -4,10 +4,10 @@
 #include "irq.h"
 #include "libc.h"
 #include "miniuart.h"
+#include "mm.h"
 #include "sched.h"
 #include "shell.h"
 #include "sys.h"
-#include "mm.h"
 #include "timer.h"
 
 int get_el() {
@@ -76,7 +76,6 @@ void init_process() {
   /* tty */
   /* stat_memory_usage(); */
 
-
   /* int pid = call_sys_fork(); */
   /* if (pid == 0) { */
   /*   call_sys_exec(shell); */
@@ -104,45 +103,22 @@ void init_process() {
   call_sys_exit();
 }
 
-
 void kernel_process() {
   uart_println("Kernel process started. EL %d", get_el());
   uart_println("kernel proess run at %x%x",
                (unsigned long)&kernel_process >> 32,
                (unsigned long)&kernel_process);
-
-
-  char c;
-  while ((c = call_sys_read())) {
-    uart_println("%c", c);
-  }
-
-  /* uart_println("Memory usage:"); */
-  /* /\* stat_memory_usage(); *\/ */
-
-  /* /\* do_exec(init_process); *\/ */
-  /* /\* do_exec(init_process); *\/ */
-  /* extern unsigned long user_begin; */
-  /* extern unsigned long user_end; */
-  /* extern unsigned long user_process; */
-  /* unsigned long begin = (unsigned long)&user_begin; */
-  /* unsigned long end = (unsigned long)&user_end; */
-  /* unsigned long process = (unsigned long)&user_process; */
-  /* uart_println("%x%x %x%x %x%x", begin >> 32, begin, end >> 32, end, process >> 32, process); */
-
-
-  /* /\* int err = move_to_user_mode(begin, end - begin, process - begin); *\/ */
-  /* int err = move_to_user_mode(0, 0, (unsigned long)init_process); */
-  /* if (err < 0) { */
-  /*   uart_println("Error while moving process to user mode\n\r"); */
-  /* } */
-
-
-
-
-  while (1) {
-
-  }
+  uart_println("Memory usage:");
+  /* stat_memory_usage(); */
+  extern unsigned long user_begin;
+  extern unsigned long user_end;
+  extern unsigned long user_process;
+  unsigned long begin = (unsigned long)&user_begin;
+  unsigned long end = (unsigned long)&user_end;
+  unsigned long process = (unsigned long)&user_process;
+  uart_println("%x%x %x%x %x%x", begin >> 32, begin, end >> 32, end, process
+  >> 32, process);
+  while (1) {}
 }
 
 void foo() {
@@ -173,14 +149,8 @@ void idle() {
 
 void el1_main() {
   uart_init();
+  uart_println("el1_main started");
 
-  uart_println("Hello world");
-
-
-
-  /* while ((c = uart_getc())) { */
-  /*   uart_send(c); */
-  /* } */
   /* { */
   /*   #include "gpio.h" */
   /*   #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
@@ -189,7 +159,7 @@ void el1_main() {
   /*     *AUX_MU_IO = 's'; */
   /* } */
 
-  /* int res = copy_process(PF_KTHREAD, (unsigned long)&pm_daemon, 0); */
+  int res = copy_process(PF_KTHREAD, (unsigned long)&pm_daemon, 0);
   /* if (res < 0) { */
   /*   uart_println("error while starting zombie reaper"); */
   /*   return; */
@@ -200,26 +170,17 @@ void el1_main() {
   // unsigned long page = allocate_kernel_page();
   /* page = allocate_kernel_page(); */
 
+  res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
+  /* res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0); */
+  /* res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0); */
+  if (res < 0) {
+    uart_println("error while starting kernel process");
+    return;
+  }
 
-  copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
-  /* copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0); */
-  /* copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0); */
-  /* unsigned long code_page = allocate_user_page(current, 10); */
-  /* code_page = allocate_user_page(current, 20); */
-  /* code_page = allocate_user_page(current, 0); */
-  /* code_page = allocate_user_page(current, 0); */
-  /* copy_process(PF_KTHREAD, (unsigned long)&shell, 0); */
-
-  /* if (res < 0) { */
-  /*   uart_println("error while starting kernel process"); */
-  /*   return; */
-  /* } */
-
+  /* core timer init */
   sys_core_timer_enable();
-  /* /\* const int N = 10; *\/ */
-  /* /\* for (int i = 0; i < N; ++i) { // N should > 2 *\/ */
 
-  /* /\* } *\/ */
   idle();
 }
 

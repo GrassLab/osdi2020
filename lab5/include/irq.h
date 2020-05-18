@@ -19,7 +19,7 @@
 #define SYSTEM_TIMER_IRQ_2  (1 << 2)
 #define SYSTEM_TIMER_IRQ_3  (1 << 3)
 
-#define CORE0_IRQ_SRC       ((volatile unsigned int*)0x40000060)
+#define CORE0_IRQ_SRC       ((volatile unsigned int*)(0x40000060 + 0xffff000000000000))
 
 #define AUX_IRQ             (1 << 29)
 
