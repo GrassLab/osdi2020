@@ -1,27 +1,10 @@
+#include "mmu.h"
+
 .global mmu_tcr_el1_init
 .type mmu_tcr_el1_init,%function
 mmu_tcr_el1_init:
 
   // tcr_el1: The control register for stage 1 of the EL1&0 translation regime
-
-  /* Setup T0SZ[5:0] and T1SZ[21:16] */
-  /* The size offset of the memory region addressed by TTBRx_EL1 */
-  /* The region size is 2 ** (64-TxSZ) bytes. */
-#define TCR_CONFIG_REGION_48bit (((64 - 48) << 0) | ((64 - 48) << 16))
-
-  /* Setup TG0[15:14] and TG1[31:30] */
-  /* Granule size for TTBRx_EL1 */
-  /* TG0: */
-  /* 0b00 -> 4KB */
-  /* 0b01 -> 64KB */
-  /* 0b10 -> 16KB */
-  /* TG1: */
-  /* 0b01 -> 16KB */
-  /* 0b10 -> 4KB */
-  /* 0b11 -> 64KB */
-#define TCR_CONFIG_4KB ((0b00 << 14) |  (0b10 << 30))
-
-#define TCR_CONFIG_DEFAULT (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
 
   ldr x0, = TCR_CONFIG_DEFAULT
   msr tcr_el1, x0
@@ -32,54 +15,6 @@ mmu_tcr_el1_init:
 mmu_mair_el1_init:
 
   /* mair_el1: Provides the memory attribute encodings corresponding to the possible AttrIndx values in a Long-descriptor format translation table entry for stage 1 translations at EL1. */
-
-	/*
-  Gathering (G/nG)
-  - Determines whether multiple accesses can be merged into a single bus transaction
-  - nG: Number/size of accesses on the bus = number/size of accesses in code
-  Reordering (R/nR)
-  - Determines whether accesses to the same device can be reordered
-  - nR: Accesses to the same IMPLEMENTATION DEFINED block size will appear on the bus in program order
-  Early Write Acknowledgement (E/nE)
-  - Indicates to the memory system whether a buffer can send acknowledgements
-  - nE: The response should come from the end slave, not buffering in the interconnect
-  */
-  /*
-  Device memory: 0b0000dd00
-  0b00 | Device-nGnRnE memory
-  0b01 | Device-nGnRE memory
-  0b10 | Device-nGRE memory
-  0b11 | Device-GRE memory
-  */
-#define MAIR_DEVICE_nGnRnE 0b00000000
-
-  /*
-  Normal memory: 0booooiiii, (oooo != 0000 and iiii != 0000)
-
-	o:
-	0b0000	See encoding of Attr
-	0b00RW, RW not 0b00	Normal memory, Outer Write-Through Transient
-	0b0100	Normal memory, Outer Non-cacheable
-	0b01RW, RW not 0b00	Normal memory, Outer Write-Back Transient
-	0b10RW	Normal memory, Outer Write-Through Non-transient
-	0b11RW	Normal memory, Outer Write-Back Non-transient
-
-	i:
-	0b0000	See encoding of Attr
-	0b00RW, RW not 0b00	Normal memory, Inner Write-Through Transient
-	0b0100	Normal memory, Inner Non-cacheable
-	0b01RW, RW not 0b00	Normal memory, Inner Write-Back Transient
-	0b10RW	Normal memory, Inner Write-Through Non-transient
-	0b11RW	Normal memory, Inner Write-Back Non-transient
-
-	RW:
-	0b0	No Allocate
-	0b1	Allocate
-  */
-#define MAIR_NORMAL_NOCACHE 0b01000100
-
-#define MAIR_IDX_DEVICE_nGnRnE 0
-#define MAIR_IDX_NORMAL_NOCACHE 1
 
   ldr x0, =( \
     (MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) | \

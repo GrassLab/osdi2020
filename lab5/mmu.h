@@ -1,8 +1,96 @@
-#include <stdint.h>
 #ifndef __MMU_H__
 #define __MMU_H__
 
-void mmu_ttbr0_ttbr1_el1_init(void);
+/* Setup T0SZ[5:0] and T1SZ[21:16] */
+/* The size offset of the memory region addressed by TTBRx_EL1 */
+/* The region size is 2 ** (64-TxSZ) bytes. */
+#define TCR_CONFIG_REGION_48bit (((64 - 48) << 0) | ((64 - 48) << 16))
 
-#endif
+/* Setup TG0[15:14] and TG1[31:30] */
+/* Granule size for TTBRx_EL1 */
+/* TG0: */
+/* 0b00 -> 4KB */
+/* 0b01 -> 64KB */
+/* 0b10 -> 16KB */
+/* TG1: */
+/* 0b01 -> 16KB */
+/* 0b10 -> 4KB */
+/* 0b11 -> 64KB */
+#define TCR_CONFIG_4KB ((0b00 << 14) |  (0b10 << 30))
+
+#define TCR_CONFIG_DEFAULT (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
+
+
+/*
+Gathering (G/nG)
+- Determines whether multiple accesses can be merged into a single bus transaction
+- nG: Number/size of accesses on the bus = number/size of accesses in code
+Reordering (R/nR)
+- Determines whether accesses to the same device can be reordered
+- nR: Accesses to the same IMPLEMENTATION DEFINED block size will appear on the bus in program order
+Early Write Acknowledgement (E/nE)
+- Indicates to the memory system whether a buffer can send acknowledgements
+- nE: The response should come from the end slave, not buffering in the interconnect
+*/
+/*
+Device memory: 0b0000dd00
+0b00 | Device-nGnRnE memory
+0b01 | Device-nGnRE memory
+0b10 | Device-nGRE memory
+0b11 | Device-GRE memory
+*/
+#define MAIR_DEVICE_nGnRnE 0b00000000
+
+/*
+Normal memory: 0booooiiii, (oooo != 0000 and iiii != 0000)
+
+o:
+0b0000	See encoding of Attr
+0b00RW, RW not 0b00	Normal memory, Outer Write-Through Transient
+0b0100	Normal memory, Outer Non-cacheable
+0b01RW, RW not 0b00	Normal memory, Outer Write-Back Transient
+0b10RW	Normal memory, Outer Write-Through Non-transient
+0b11RW	Normal memory, Outer Write-Back Non-transient
+
+i:
+0b0000	See encoding of Attr
+0b00RW, RW not 0b00	Normal memory, Inner Write-Through Transient
+0b0100	Normal memory, Inner Non-cacheable
+0b01RW, RW not 0b00	Normal memory, Inner Write-Back Transient
+0b10RW	Normal memory, Inner Write-Through Non-transient
+0b11RW	Normal memory, Inner Write-Back Non-transient
+
+RW:
+0b0	No Allocate
+0b1	Allocate
+*/
+#define MAIR_NORMAL_NOCACHE 0b01000100
+
+#define MAIR_IDX_DEVICE_nGnRnE 0
+#define MAIR_IDX_NORMAL_NOCACHE 1
+
+#ifndef __ASSEMBLER__
+
+#include <stdint.h>
+
+#define MAIR_IDX_DEVICE_nGnRnE 0
+#define MAIR_IDX_NORMAL_NOCACHE 1
+
+#define PAGE_SIZE (1 << 21) /* 2mb */
+
+#define PD_TABLE 0x3 // indicate this to another descriptor
+#define PD_BLOCK 0x1 // indicate to physical ram
+#define PD_ACCESS (1 << 10) // access flag, generate page fault if not set
+/* Set access bit and mair[4:2] and indicate to physical ram */
+#define PD_DEVICE (MAIR_IDX_DEVICE_nGnRnE << 2)
+#define PD_NORMAL (MAIR_IDX_NORMAL_NOCACHE << 2)
+
+#define PGD_FRAME_BASE ((uint64_t *)0x0000u)
+#define PUD_FRAME_BASE ((uint64_t *)0x1000u)
+#define PMD_FRAME_BASE ((uint64_t *)0x2000u)
+
+void mmu_ttbr0_ttbr1_el1_init(void);
+#endif /* __ASSEMBLER__ */
+
+#endif /* __MMU_H__ */
 

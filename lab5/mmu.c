@@ -9,23 +9,6 @@ void mmu_ttbr0_ttbr1_el1_init(void)
   /*              47-38  38-29  29-20  20-11 */
   /*              512GB   1GB    2MB    4KB */
 
-
-#define MAIR_IDX_DEVICE_nGnRnE 0
-#define MAIR_IDX_NORMAL_NOCACHE 1
-
-#define PAGE_SIZE (1 << 21) /* 2mb */
-
-#define PD_TABLE 0x3 // indicate this to another descriptor
-#define PD_BLOCK 0x1 // indicate to physical ram
-#define PD_ACCESS (1 << 10) // access flag, generate page fault if not set
-/* Set access bit and mair[4:2] and indicate to physical ram */
-#define PD_DEVICE (MAIR_IDX_DEVICE_nGnRnE << 2)
-#define PD_NORMAL (MAIR_IDX_NORMAL_NOCACHE << 2)
-
-#define PGD_FRAME_BASE ((uint64_t *)0x0000u)
-#define PUD_FRAME_BASE ((uint64_t *)0x1000u)
-#define PMD_FRAME_BASE ((uint64_t *)0x2000u)
-
   /* setup pgd */
   uint64_t * pgd_frame_ptr = PGD_FRAME_BASE;
   /* combine the physical address of next level page with attribute. */
