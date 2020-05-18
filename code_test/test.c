@@ -31,7 +31,7 @@ void test_command1() { // test fork functionality
 
 void test_command2() { // test page fault
   if(fork() == 0) {
-    int* a = 0x0; // a non-mapped address.
+    int* a = 0xffff0000f0000000; // a non-mapped address.
     uart_send_hex(*a);
   }
 }

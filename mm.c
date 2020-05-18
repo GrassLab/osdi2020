@@ -96,11 +96,11 @@ void mmu_init()
 
     // TTBR0, PGD
     paging[0] = (unsigned long)(&paging[0 + 512]) | // to PUD table
-                PT_TABLE | PT_AF;
+                PT_TABLE | PT_AF | PT_KERNEL;
 
     // PUD: 1GB
     paging[512] = (unsigned long)(&paging[512 * 2]) | // to PMD table
-                  PT_TABLE | PT_AF;
+                  PT_TABLE | PT_AF | PT_KERNEL;
     /*
     paging[0 + 512] = (unsigned long)((unsigned char *)0x0) | // physical address
                       BOOT_PUD_ATTR;
@@ -112,7 +112,7 @@ void mmu_init()
 
     // PUD: 1GB
     paging[512 + 1] = (unsigned long)(0x40000000) | // physical address
-                      BOOT_PUD_ATTR;
+                      BOOT_PUD_ATTR | PT_KERNEL;
 
     // PMD: 2MB
     // table -> PTE
@@ -138,7 +138,7 @@ void mmu_init()
         for (int i = 0; i < 512; i++)
         {
             paging[512 * (3 + n) + i] = (unsigned long)((1 << 21) * n + i * PAGE_SIZE) | // physical address;
-                                        PT_PAGE | PT_AF;
+                                        PT_PAGE | PT_AF | PT_KERNEL;
         }
     }
 

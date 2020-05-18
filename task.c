@@ -118,7 +118,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     }
     else if (clone_flags & PF_FORK)
     {
-        memcpy((unsigned short *)p, (unsigned short *)current, PAGE_SIZE);
+        // memcpy((unsigned short *)p, (unsigned short *)current, PAGE_SIZE);
         memcpy((unsigned short *)stack, (unsigned short *)current->stack, PAGE_SIZE);
         memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
 
@@ -142,6 +142,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
         */
 
         p->cpu_context.sp = 0xffff000000000000 + PAGE_SIZE;
+        p->cpu_context.sp = 0xffff000000000000;
 
        // p->cpu_context.x19 = current->cpu_context.x19;
 
@@ -433,7 +434,7 @@ int do_fork()
     DEBUG_LOG_TASK(("fork current taskid[%d]\n\r", get_current()));
     // unsigned long stack = (unsigned long)&kstack_pool[get_current()][0];
     unsigned long stack = get_free_page();
-    memset((unsigned long *)stack, 0, PAGE_SIZE);
+    memset((unsigned char *)stack, 0, PAGE_SIZE);
 
     //return copy_process(0, 0, 0, stack);
     return copy_process(PF_FORK, 0, 0, stack);
