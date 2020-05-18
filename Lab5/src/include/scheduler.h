@@ -55,6 +55,8 @@ struct vm_area_struct{
 	unsigned long vm_start;
 	int vm_prot;
 	int vm_flags;
+	unsigned long file_start;
+	unsigned long file_offset;
 };
 
 struct mm_struct {

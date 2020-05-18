@@ -1,7 +1,7 @@
 #include "include/uart.h"
 #include "include/mm.h"
 #include "include/elf.h"
-
+#include "include/kernel.h"
 
 unsigned long get_u64(char* start){
 	unsigned long num=0;
@@ -11,7 +11,7 @@ unsigned long get_u64(char* start){
 	return num;
 }
 
-void elf_parser(unsigned long elf_start, unsigned long size){
+void* elf_parser(unsigned long elf_start, unsigned long size){
 	
 	printf("start at %x\r\n",elf_start);
 	char *elf = (char *)elf_start;
@@ -35,7 +35,7 @@ void elf_parser(unsigned long elf_start, unsigned long size){
 
 	if(count>=elf_header.e_phnum){
 		printf("Can't find load segment\r\n");
-		return;
+		return NULL;
 	}
 
 	printf("Program Headers:\r\n");
@@ -48,5 +48,6 @@ void elf_parser(unsigned long elf_start, unsigned long size){
 	//dump_mem(elf,size);
 	printf("\r\n");
 
-	//mmap(prog_header.p_vaddr, prog_header.p_filesz, p_flags, bin_start, p_offset);
+	//void *ptr = mmap((void *)prog_header.p_vaddr, prog_header.p_filesz, prog_header.p_flags, MAP_FIXED , (void *)elf_start, prog_header.p_offset);
+	return NULL;
 }

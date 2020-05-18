@@ -224,72 +224,72 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 }
 
  void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset){
-	 if(file_start == NULL){
-		struct vm_area_struct *vm_area = &current->mm.mmap[current->mm.vm_area_count];
-	 	// For address:
-		// addr should be page aligned 	
-		unsigned long vir_addr = 0x1000;
-		if(addr!=NULL){
-			vir_addr = ((unsigned long)(addr)>>12)<<12;
+	unsigned long vir_addr;
+	if(addr!=NULL && (unsigned long)addr % PAGE_SIZE!=0){
+		if(flags==MAP_FIXED){
+			printf("!!! mmap failed\r\n");
+			return NULL;
 		}
-		
-		// kernel decides the new region’s start address if addr is invalid		
-		// First, make sure new region not overlap exist region
-		struct mm_struct mm = current->mm;
-		int flag = 0;
-		while(1){			
-			for(int i=0;i< mm.vm_area_count;i++){
-				if(vir_addr == mm.mmap[i].vm_start){
-					flag = 1;
-					vir_addr+=PAGE_SIZE;
-					break;
-				}
-			}
-			if(flag==0)
-				break;
-		}
-		// Next, make sure new region not overlap exist page
-		flag = 0;
-		while(1){ //not so smart...... but anyway	
-			flag = 0;
-			for(int i=0;i<current->mm.user_pages_count;i++){
-				if(vir_addr == current->mm.user_pages[i].vir_addr){
-					flag = 1;
-					vir_addr+=PAGE_SIZE;
-					break;
-				}
-			}
-			if(flag==0)
-				break;
-		}
-		
-		if(addr!=NULL && vir_addr != (unsigned long)addr){
-			printf("!!! You can't use address 0x%x\r\n", addr);	
-			printf("!!! Map to vir addr at 0x%x\r\n",vir_addr);
-		}	
-		vm_area->vm_start = vir_addr;
-		
-		// For len:
-		// Memory region created by mmap should be page aligned
-		if( len % PAGE_SIZE != 0)
-			len += PAGE_SIZE - (len % PAGE_SIZE);
-	
-	 	vm_area->vm_end = vm_area->vm_start + len;
-		vm_area->vm_prot = prot;
-	 	current->mm.vm_area_count++;
-	 	
-		return (void *)vm_area->vm_start;
-	 }
-	 else{ // for file, not implement yet
-		
-		struct vm_area_struct *vm_area = &current->mm.mmap[current->mm.vm_area_count];
-	 	vm_area->vm_start = (unsigned long)file_start;
-	 	vm_area->vm_end = vm_area->vm_start + file_offset;
-		vm_area->vm_prot = prot;
-		vm_area->vm_flags = flags;
-	 	current->mm.vm_area_count++;
+	}
+			
+	// For address:
+	// addr should be page aligned 	
+	if(addr!=NULL)
+		vir_addr = ((unsigned long)(addr)>>12)<<12;
+	else{
+		vir_addr = 0x2000;
+	}
 
-		return 0;
-	 }
+	// kernel decides the new region’s start address if addr is invalid				 // First, make sure new region not overlap exist region
+	struct mm_struct mm = current->mm;
+	int flag;
+	while(1){		
+		flag = 0;	
+		for(int i=0;i< mm.vm_area_count;i++){
+			if(vir_addr == mm.mmap[i].vm_start){
+				flag = 1;
+				vir_addr+=PAGE_SIZE;
+				break;
+			}
+		}
+		if(flag==0)
+			break;
+	}
+
+	// Next, make sure new region not overlap exist page
+	while(1){ //not so smart...... but anyway	
+		flag = 0;
+		for(int i=0;i<current->mm.user_pages_count;i++){
+			if(vir_addr == current->mm.user_pages[i].vir_addr){
+				flag = 1;
+				vir_addr+=PAGE_SIZE;
+				break;
+			}
+		}
+		if(flag==0)
+			break;
+	}
+		
+				
+	struct vm_area_struct *vm_area = &current->mm.mmap[current->mm.vm_area_count];
+		
+	if(addr!=NULL && vir_addr != (unsigned long)addr){
+		printf("!!! You can't use address 0x%x\r\n", addr);	
+		printf("!!! Map to vir addr at 0x%x\r\n",vir_addr);
+	}	
+		
+	// For len:
+	// Memory region created by mmap should be page aligned
+	if( len % PAGE_SIZE != 0)
+		len += PAGE_SIZE - (len % PAGE_SIZE);
+	
+	vm_area->vm_start = vir_addr;
+	vm_area->vm_end = vm_area->vm_start + len;
+	vm_area->vm_prot = prot;
+	vm_area->file_start = (unsigned long)file_start;
+	vm_area->file_offset = file_offset;
+	current->mm.vm_area_count++;
+		
+	return (void *)vm_area->vm_start;
  }
 
