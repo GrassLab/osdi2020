@@ -62,6 +62,7 @@ typedef struct task_t
     long priority;
     long preempt_count;
     unsigned long stack;
+    unsigned long stack_pfn;
     unsigned long flags;
     unsigned long signal_source;
 
@@ -108,5 +109,7 @@ void exit_process(int task_id);
 task_t *task(int task_id);
 
 unsigned long task_signal_source();
+
+void set_pgd(unsigned long pgd);
 
 #endif

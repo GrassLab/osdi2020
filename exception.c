@@ -223,11 +223,14 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         uart_puts("Instruction alignment fault");
         break;
     case 0b100100:
-        uart_puts("Data abort, lower EL");
+        uart_puts("Data abort, lower EL\n");
+        uart_send_hex(elr << 32);
         uart_send_hex(elr);
         break;
     case 0b100101:
-        uart_puts("Data abort, same EL");
+        uart_puts("Data abort, same EL\n");
+        uart_send_hex(elr << 32);
+        uart_send_hex(elr);
         break;
     case 0b100110:
         uart_puts("Stack alignment fault");

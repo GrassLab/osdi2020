@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "signal.h"
 #include "system.h"
+#include "mm.h"
 
 void syscall_core_timer(int enable)
 {
@@ -104,10 +105,24 @@ void syscall_kill(int task_id, int signal)
     signal_raise(task_id, signal);
 }
 
+void syscall_remain_page_num(int *num){
+    *num = mm_remain_page_num();
+}
+
 /* Can't work */
 void syscall_load_images()
 {
     loadimg();
+}
+
+void syscall_reboot()
+{ // reboot after watchdog timer expire
+  unsigned int r;
+  r = *PM_RSTS;
+  r &= ~0xfffffaaa;
+  *PM_RSTC = PM_PASSWORD | 0x00000020; // full reset
+  *PM_RSTS = PM_PASSWORD | r;
+  *PM_WDOG = PM_PASSWORD | 10; // number of watchdog tick
 }
 
 void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsigned long x3)
@@ -153,9 +168,15 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
     case 0x32:
         syscall_exit((int)x1);
         break;
+    case 0x33:
+        syscall_reboot();
+        break;
     case 0x40:
         enable_irq();
         syscall_kill((int)x1, (int)x2);
+        break;
+    case 0x50:
+        syscall_remain_page_num((int *)x1);
         break;
     // not this syscall
     default:
@@ -243,6 +264,12 @@ void exit(int value)
                  "svc #0x80\n" ::"r"(value));
 }
 
+void reboot()
+{
+    asm volatile("mov x0, #0x33\n"
+                 "svc #0x80\n");
+}
+
 void kill(int task_id, int signal)
 {
     asm volatile("mov x1, %0\n"
@@ -250,4 +277,13 @@ void kill(int task_id, int signal)
                  "mov x0, #0x40\n"
                  "svc #0x80\n" ::"r"(task_id),
                  "r"(signal));
+}
+
+
+int remain_page_num(){
+    int num;
+    asm volatile("mov x1, %0\n"
+                 "mov x0, #0x50\n"
+                 "svc #0x80\n" ::"r"(&num));
+    return num;
 }

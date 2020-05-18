@@ -12,8 +12,10 @@ void core_timer();
 int fork();
 int exec();
 void exit(int);
+void reboot();
 int get_taskid();
 void kill(int task_id, int signal);
+int remain_page_num();
 
 void uart_send(unsigned int c);
 char uart_recv();

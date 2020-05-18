@@ -106,7 +106,7 @@ void mmu_init()
                       BOOT_PUD_ATTR;
                       */
     /*
-    paging[0 + 512] = (unsigned long)((unsigned char *)&paging[0 + 512 * 2]) | 
+    paging[0 + 512] = (unsigned long)((unsigned char *)&paging[0 + 512 * 2]) |
                       BOOT_PUD_ATTR;
                       */
 
@@ -193,11 +193,6 @@ void mmu_init()
 
     mem_map_init();
 
-    uart_send_hex(paging[0 + 512 + 0]);
-    _uart_send('\n');
-
-    uart_send_hex(paging[0 + 512 + 1]);
-    _uart_send('\n');
 
     // Require 1-3: Set up identity mapping. Enable MMU
     // tell the MMU where our translation tables are. TTBR_CNP bit not documented, but required
@@ -244,8 +239,16 @@ unsigned long get_free_page()
             page_table[i].used = 1;
             //page_table[i].pa = (unsigned long)&mem_map[i] + i * PAGE_SIZE;
 
-            return LOW_MEMORY + i * PAGE_SIZE;
-            // return 0xffff000000000000 + (unsigned long)&mem_map[i] + i * PAGE_SIZE;
+            // return LOW_MEMORY + i * PAGE_SIZE;
+
+            /*
+            uart_send('(');
+            uart_send_hex((unsigned long)((unsigned char *)mem_map_pa + i * PAGE_SIZE) >> 32);
+            uart_send_hex(((unsigned char *)mem_map_pa + i * PAGE_SIZE) );
+            uart_send(')');
+            */
+
+            return (unsigned long)((unsigned char *)mem_map_pa + i * PAGE_SIZE);
 
             // return 0xffff000000000000 + i * PAGE_SIZE;
             // return 0xffff000000000000 + i * PAGE_SIZE + PAGE_SIZE;
@@ -255,8 +258,15 @@ unsigned long get_free_page()
     return 0;
 }
 
-void free_page(unsigned long p)
+void free_page(unsigned long pfn)
 {
+    page_table[pfn].used = 0;
+
+    uart_puts("free page: ");
+    uart_send_int(pfn);
+    _uart_send('\n');
+
+    /*
     for (int i = 0; i < PAGING_PAGES; i++)
     {
         if (page_table[i].pa == (p - 0xffff000000000000))
@@ -264,4 +274,15 @@ void free_page(unsigned long p)
             page_table[i].used = 0;
         }
     }
+    */
+}
+
+int mm_remain_page_num(){
+    int num = 0;
+    for(int i = 0; i < 1000; i++){
+        if(page_table[i].used == 0){
+            num++;
+        }
+    }
+    return num;
 }

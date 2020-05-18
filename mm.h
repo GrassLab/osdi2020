@@ -79,6 +79,8 @@ unsigned long get_free_page();
 
 void free_page(unsigned long p);
 
-void set_mem_map();
+void mem_map_init();
+
+int mm_remain_page_num();
 
 #endif

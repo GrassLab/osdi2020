@@ -121,19 +121,17 @@ void task_3()
     //((void (*)(void))user_task_3)();
     do_exec((unsigned long)user_task_3);
 
+    /*
     uart_send('\n');
     // check user space set in 0xffff000000000000
     uart_send_hex(((unsigned long *)(0xffff000000000000))[0]);
     uart_send('\n');
 
     uart_send('=');
+    */
 
-    while (1)
-    {
-        if (check_reschedule())
-            schedule();
-    }
-    uart_send('?');
+    if (check_reschedule())
+        schedule();
 }
 
 void task_4()
@@ -202,13 +200,25 @@ void task_program()
 
     printf("\ntask_id: %d\n", get_taskid());
 
-    _do_exec(program_start, program_size);
-    while (1)
-    {
-        if (check_reschedule())
-        {
-            schedule();
-        }
+     _do_exec(program_start, program_size);
+    //do_exec((unsigned long)test);
+    if (check_reschedule()){
+        schedule();
+    }
+}
+void task_program_2()
+{
+    extern unsigned long _binary_test2_img_start;
+    extern unsigned long _binary_test2_img_size;
+    unsigned long program_start = (unsigned long)&_binary_test2_img_start;
+    unsigned long program_size = (unsigned long)&_binary_test2_img_size;
+
+    printf("\ntask_id: %d\n", get_taskid());
+
+     _do_exec(program_start, program_size);
+    //do_exec((unsigned long)test);
+    if (check_reschedule()){
+        schedule();
     }
 }
 
@@ -221,16 +231,7 @@ int kernel_main()
     uart_init();
     init_printf(0, putc);
 
-    int x = 0;
-    uart_send_hex((unsigned int)(unsigned long)&x);
-    uart_send('\n');
-
     mmu_init();
-
-    //run_program();
-
-    uart_send_hex((unsigned int)(unsigned long)&x);
-    uart_send('\n');
 
     signal_init();
 
@@ -254,11 +255,14 @@ int kernel_main()
     privilege_task_create((unsigned long)task_111, 0);
     */
     privilege_task_create((unsigned long)task_1, 0);
-    privilege_task_create((unsigned long)task_11, 0);
     // privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
-    privilege_task_create((unsigned long)task_3, 0);
+    // privilege_task_create((unsigned long)task_3, 0);
+
+    //privilege_task_create((unsigned long)task_11, 0);
     privilege_task_create((unsigned long)task_program, 0);
-    //privilege_task_create((unsigned long)task_4, 0);
+    privilege_task_create((unsigned long)task_program_2, 0);
+
+    // privilege_task_create((unsigned long)task_4, 0);
     // privilege_task_create((unsigned long)user_test, 0);
 
     // enable_irq();
