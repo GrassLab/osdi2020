@@ -19,6 +19,8 @@ SECTIONS
         *(.userspace);
         *(COMMON)
     }
+    . = ALIGN(0x1000);
+    _pgt_start = .;
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
 __bss_size = (__bss_end - __bss_start)>>3;

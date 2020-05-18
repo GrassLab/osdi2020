@@ -51,8 +51,8 @@ rest_initialization:
     )
     msr mair_el1, x0
 
-    mov x0, 0 // PGD's page frame at 0x0
-    mov x1, 0x1000 // PUD's page frame at 0x1000
+    adr x0, _pgt_start // PGD's page frame at 0x0
+    add x1, x0, PAGE_SIZE // PUD's page frame at 0x1000
     add x3, x1, PAGE_SIZE
 
 
