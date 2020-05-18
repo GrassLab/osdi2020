@@ -49,8 +49,8 @@ el1_entry:
 
 #if MLV == 0
 
-    adrp	x0, pg_dir				
-	adrp	x1, pg_dir				
+    adrp	x0, pg_dir
+	adrp	x1, pg_dir
     add x0, x0, 0x0000 // PGD's page frame at 0x0
     add x1, x1, 0x1000 // PUD's page frame at 0x1000
 
@@ -68,10 +68,10 @@ el1_entry:
 
 #elif MLV == 1
 
-	adrp	x0, pg_dir				
-	adrp	x1, pg_dir				
-	adrp	x2, pg_dir				
-	adrp	x3, pg_dir				
+	  adrp	x0, pg_dir
+	  adrp	x1, pg_dir
+	  adrp	x2, pg_dir
+	  adrp	x3, pg_dir
     add x0, x0, 0x0000 // PGD's page frame at 0x0
     add x1, x1, 0x1000 // PUD's page frame at 0x1000
     add x2, x2, 0x2000 // 1st PMD's page frame at 0x2000
@@ -131,10 +131,10 @@ el1_entry:
 
 	bl 	__create_page_tables
 
-	mov	x0, #VA_START			
+	mov	x0, #VA_START
 	add	sp, x0, #LOW_MEMORY
 
-	adrp	x0, pg_dir				
+	adrp	x0, pg_dir
 	msr	ttbr0_el1, x0
 	msr	ttbr1_el1, x0
 
@@ -249,7 +249,7 @@ __create_page_tables:
 	bl 	memzero
 
 	adrp	x0, pg_dir
-	mov	x1, #VA_START 
+	mov	x1, #VA_START
 	create_pgd_entry x0, x1, x2, x3
 
 	/* Mapping kernel and init stack*/
@@ -259,7 +259,7 @@ __create_page_tables:
 	create_block_map x0, x1, x2, x3, MMU_FLAGS, x4
 
 	/* Mapping device memory*/
-	mov 	x1, #DEVICE_BASE					// start mapping from device base address 
+	mov 	x1, #DEVICE_BASE					// start mapping from device base address
 	ldr 	x2, =(VA_START + DEVICE_BASE)				// first virtual address
 	ldr	x3, =(VA_START + PHYS_MEMORY_SIZE - SECTION_SIZE)	// last virtual address
 	create_block_map x0, x1, x2, x3, MMU_DEVICE_FLAGS, x4

@@ -1,4 +1,5 @@
 #include "irq.h"
+#include "mm.h"
 #include "info.h"
 #include "io.h"
 #include "shell.h"
@@ -97,8 +98,13 @@ void handle_uart_irq(void) {
   }
 }
 
+#if MLV < 2
+#define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int *)(VA_START + 0x40000034))
+#define CORE0_INT_SRC ((volatile unsigned int *)(VA_START + 0x40000060))
+#else
 #define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int *)(0x40000034))
 #define CORE0_INT_SRC ((volatile unsigned int *)(0x40000060))
+#endif
 
 #define miniUART_IRQ (1 << 0)
 void irq_handler() {
@@ -110,8 +116,9 @@ void irq_handler() {
 
   if (nb8p(*LOCAL_TIMER_CONTROL_REG, 1, 31))
     local_timer_handler();
-  if ((*CORE0_INT_SRC) & 0x2)
+  if((*CORE0_INT_SRC) & 0x2){
     core_timer_handler();
+  }
 
   while (irq) {
     if (irq & SYSTEM_TIMER_IRQ_1) {

@@ -42,7 +42,7 @@ void sys_timer_handler() {
   printf("System timer interrupt, %d" NEWLINE, jiffies++);
 }
 
-#if MLV == 2
+#if MLV <= 2
 #define CORE0_TIMER_IRQ_CTRL "0xffff000040000040"
 //#define CORE0_TIMER_IRQ_CTRL "0x40000040"
 #else

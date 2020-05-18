@@ -321,7 +321,7 @@ void kernel_process(){
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_write, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_hang, current_task->priority);
+  privilege_task_create(task_do_exec, (UL)user_hang, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_2, 0);
   //privilege_task_create(task_3, 0);
@@ -329,14 +329,14 @@ void kernel_process(){
   //irq_shell_loop();
   //puts("kernel stack:");
   //show_sp();
-  do_exec((unsigned long)user_exit);
+  /* do_exec((unsigned long)user_exit); */
   //exit();
   //do_exec((unsigned long)user_write);
-  //exit();
-  //while(1){
-  // puts("kernel process scheduling");
-  // schedule();
-  //}
+  exit();
+  while(1){
+   puts("kernel process scheduling");
+   schedule();
+  }
 }
 
 void do_exec(unsigned long pc){
