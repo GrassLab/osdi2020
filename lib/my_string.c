@@ -115,7 +115,7 @@ unsigned int my_vsprintf(char *dst, char *fmt, __builtin_va_list args) {
             }
             // hex
             if (*fmt == 'x') {
-                int arg = __builtin_va_arg(args, uint64_t);
+                uint64_t arg = __builtin_va_arg(args, uint64_t);
                 char buf[64 + 1];
                 char *p = itox64(arg, buf);
                 while (*p) {

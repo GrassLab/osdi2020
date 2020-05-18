@@ -121,17 +121,17 @@ page_table_create:
     add     x3, x2, #PAGE_SIZE
 
     // setup PGD
-    ldr     x4, =PGD_ATTR
+    ldr     x4, =PGD0_ATTR
     orr     x4, x1, x4 // PUD physical address
     str     x4, [x0]
 
     // setup PUD1
-    ldr     x4, =PUD1_ATTR
+    ldr     x4, =PUD0_ATTR
     orr     x4, x2, x4 // PMD physical address
     str     x4, [x1]
 
     // setup PUD2 (1GB section start from 0x40000000)
-    ldr     x4, =PUD2_ATTR
+    ldr     x4, =PUD1_ATTR
     mov     x5, 0x40000000
     orr     x4, x5, x4
     str     x4, [x1, #8]
@@ -141,7 +141,7 @@ page_table_create:
     mov     x5, xzr // i = 0
     mov     x6, #512
 1:
-    ldr     x7, =PMD_ATTR
+    ldr     x7, =PMD0_ATTR
     orr     x7, x4, x7 // PTE physical address
     str     x7, [x2, x5, lsl #3] // (i * 8)
     add     x5, x5, #1

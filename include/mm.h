@@ -7,6 +7,8 @@
 
 #ifndef __ASSEMBLY__
 
+#include "typedef.h"
+
 enum page_status {
     AVAL,
     USED,
@@ -21,6 +23,8 @@ extern struct page_t page[PAGE_FRAMES_NUM];
 
 /* Function in mm.c */
 void mm_init();
+uint64_t virtual_to_physical(uint64_t virt_addr);
+uint64_t phy_to_pfn(uint64_t phy_addr);
 
 #endif /* __ASSEMBLY__ */
 
