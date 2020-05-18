@@ -24,6 +24,7 @@
 unsigned long get_free_page();
 void free_page(unsigned long p);
 void memzero(unsigned long src, unsigned long n);
+
 unsigned long get_user_page(int pid);
 unsigned long get_free_page_id();
 

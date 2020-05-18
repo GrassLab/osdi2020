@@ -12,7 +12,6 @@ extern void fork_child_exit();
 int n_tasks = 1;
 int n_task_id = 1;
 
-
 void enable_preempt() {
     current->preempt_count = 1;
 }
@@ -271,4 +270,3 @@ int _do_fork() {
     enable_preempt();
     return task[n_tasks-1]->task_id;
 }
-
