@@ -39,10 +39,6 @@ mmu_init:
     str     x3,     [x1, 8]             // 2nd 1GB mapped by the 2nd entry of PUD
     
     msr     TTBR0_EL1, x0               // load PGD to the buttom translation based register.
-    
-    // enable mmu
-    mrs     x2,     SCTLR_EL1
-    orr     x2 ,    x2,     1
-    msr     SCTLR_EL1, x2               // enable MMU, cache remains disabled
+    msr     TTBR1_EL1, x0               // load PGD to the buttom translation based register.
     
     ret

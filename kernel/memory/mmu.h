@@ -34,6 +34,17 @@
 #define PUD_ATTR               ( PAGE_DESCRIPTOR_BLOCK | PAGE_DESCRIPTOR_VALID | PAGE_DESCRIPTOR_ACCESS | ( MAIR_DEVICE_nGnRnE_INDEX << 2 ) )
 
 // define sizes
-#define PAGE_SIZE ( 0b1 << 12 )
+#define VA_START    0xffff000000000000
+#define DEVICE_BASE 0x3F000000
+
+#define TABLE_SHIFT    9
+#define PAGE_OFFSET    12
+#define SECTION_OFFSET ( PAGE_OFFSET + TABLE_SHIFT )
+
+#define PAGE_SIZE    ( 0b1 << PAGE_OFFSET )
+#define SECTION_SIZE ( 0b1 << SECTION_OFFSET )
+
+#define HIGH_MEMORY DEVICE_BASE
+#define LOW_MEMORY  ( 2 * SECTION_SIZE )
 
 #endif

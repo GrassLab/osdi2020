@@ -45,10 +45,14 @@ $(BUILD_DIR)/%.o: %.c
 run: kernel8.img
 	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio
 
+link: $(ALL_OBJS)
+	$(LD) -T $(LINK_SCRIPT) -o $(ELF_ELE) $^
+	$(OBJ_CPY) $(ELF_ELE) -O binary kernel8.img
+
 debug: CFLAGS += -ggdb3 -Og
 
 debug: clean kernel8.img
 	@mkdir $(DEBUG_DIR)
-	$(OBJ_DUMP) -d $(ELF_ELE) > $(DEBUG_DIR)/asm
-	$(OBJ_DUMP) -t $(ELF_ELE)  > $(DEBUG_DIR)/symbol
+	readelf --all $(ELF_ELE) > $(DEBUG_DIR)/symbol
+	$(OBJ_DUMP) -d $(ELF_ELE)  > $(DEBUG_DIR)/asm
 	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio -s -S
