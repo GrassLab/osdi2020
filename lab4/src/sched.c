@@ -44,7 +44,6 @@ void _schedule(){
             if(next_task_id < 0){
                 printf("task id is negative, it is weird!!!!!\n");
             }
-            // TaskManager.runningTaskId = next_task_id;
             task_t* new_task = &TaskManager.task_pool[next_task_id]; 
             printf("next is %d!\n", next_task_id);
             switch_to(new_task);

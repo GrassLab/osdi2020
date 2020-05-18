@@ -32,14 +32,6 @@ void print(){
         printf("---\n");
         printf("111\n");
         delay(100000000);
-
-        // printf("print content\n");
-        // printf("%d\n",current->task_id);
-        // printf("%x\n",current->cpu_context.x19);
-        // printf("%x\n",current->cpu_context.x20);
-        // printf("%x\n",current->cpu_context.pc);
-        // printf("%x\n",current->cpu_context.sp);
-
         if(current->counter <= 0){
             schedule();
         }
@@ -146,7 +138,6 @@ void main()
     init_uart();
         // init_lfb();
     init_printf(0, putc);
-    printf("finish\n");
 
     init_task_manager();
 

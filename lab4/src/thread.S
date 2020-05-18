@@ -69,5 +69,5 @@ fork_child_exit:
     ldr x28, [sp, #16 * 14]
     ldr x30, [sp, #16 * 15] 
     add	sp, sp, #280
-    mov x0, 0 // fork child
+    mov x0, 0                // return fork child = 0
     eret
