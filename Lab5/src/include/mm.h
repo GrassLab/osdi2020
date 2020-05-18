@@ -54,9 +54,8 @@ void map_entry(unsigned long *pte, unsigned long vir_addr,unsigned long phy_addr
 
 
 void memzero(unsigned long src, unsigned long n);
-void memcpy(unsigned long dst, unsigned long src, unsigned long n);
 
-void fork_memcpy(void *dest, const void *src, unsigned long len);
+void memcpy(void *dest, const void *src, unsigned long len);
 void free_page(unsigned long p);
 void dump_mem(void *src,unsigned long len);
 int page_fault_handler(unsigned long addr,unsigned long esr);

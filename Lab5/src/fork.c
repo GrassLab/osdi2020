@@ -116,12 +116,10 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	// Since stack grow down, map from 0x0000ffffffffd000
 	mmap((void *)0x0000ffffffffd000, PAGE_SIZE, PROT_READ|PROT_WRITE, \
 			MAP_ANONYMOUS, NULL, 0);	
-
 	
-	memcpy(code_page,start,size);
+	memcpy((void *)code_page,(void *)start,size);
 	//dump_mem((void *)code_page,size);
 	unsigned long user_pgd = current->mm.pgd; 
 	set_pgd(user_pgd);
-		
 	return 0;
 }

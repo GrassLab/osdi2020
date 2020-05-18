@@ -108,7 +108,7 @@ void free_page(unsigned long p){ //input should be physical address
 	remain_page++;
 }
 
-void fork_memcpy (void *dest, const void *src, unsigned long len)
+void memcpy (void *dest, const void *src, unsigned long len)
 {
   	char *d = dest;
   	const char *s = src;
@@ -116,10 +116,16 @@ void fork_memcpy (void *dest, const void *src, unsigned long len)
     		*d++ = *s++;
 }
 
-void init_page_struct(){	
-	for(int i=0;i<FIRST_AVAILIBLE_PAGE;i++){
+void init_page_struct(){
+	// reset page struct
+	int i = 0;	
+	for(;i<FIRST_AVAILIBLE_PAGE;i++){
 		page[i].used = PRESERVE;
 		remain_page--;
+	}
+		
+	for(;i<PAGE_ENTRY;i++){
+		page[i].used = NOT_USED;
 	}
 }
 
@@ -163,7 +169,7 @@ int copy_virt_memory(struct task_struct *dst){
 		if(!page)
 			return -1;
 
-		memcpy(page,(src.vir_addr>>12)<<12,PAGE_SIZE); //page aligned
+		memcpy((void *)page,(void *)((src.vir_addr>>12)<<12),PAGE_SIZE); //page aligned
 	}
 
 	// copy vm area struct

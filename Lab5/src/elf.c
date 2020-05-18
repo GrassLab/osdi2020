@@ -16,14 +16,14 @@ void* elf_parser(unsigned long elf_start, unsigned long size){
 	printf("start at %x\r\n",elf_start);
 	char *elf = (char *)elf_start;
 	Elf64_Ehdr elf_header;
-	memcpy((unsigned long)&elf_header,(unsigned long)elf,sizeof(Elf64_Ehdr));
+	memcpy((void *)&elf_header,(void *)elf,sizeof(Elf64_Ehdr));
 		
 	printf("Entry point 0x%x\r\n",elf_header.e_entry);
  	printf("There are %d program headers, starting at offset %d\r\n\r\n",elf_header.e_phnum, elf_header.e_phoff);
  	
 	Elf64_Phdr prog_header;
 	char *prog = (char *)(elf + elf_header.e_phoff);
-	memcpy((unsigned long)&prog_header,(unsigned long)prog,sizeof(Elf64_Phdr));
+	memcpy((void *)&prog_header,(void *)prog,sizeof(Elf64_Phdr));
 	
 	int count = 0;
 	while(prog_header.p_type!=PT_LOAD){
