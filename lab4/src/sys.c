@@ -1,5 +1,6 @@
 #include "shed.h"
 #include "mm.h"
+#include "uart.h"
 
 void do_uart_write(char *arg) {
 	uart_puts(arg);
@@ -13,8 +14,12 @@ void do_exec(void(*func)()) {
     _do_exec(func);
 }
 
-void do_fork() {
-	_do_fork();
+int do_fork() {
+	int f = _do_fork();
+	uart_puts("[In do_fork()] ret: ");
+	uart_print_int(f);
+	uart_puts("\r\n");
+	return f;
 }
 
 void do_exit() {

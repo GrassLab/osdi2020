@@ -18,8 +18,11 @@ void exec(void (*func)()) {
 }
 
 int fork(void) {
+    unsigned long x0;
     asm volatile("mov x0, %0" : : "r"(SYS_FORK_NUMBER));
     asm volatile("svc 0");
+    asm volatile("mov %0, x0" : "=r"(x0) :);
+    return x0;  
 }
 
 void exit(int status) {

@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "sys.h"
+#include "shed.h"
 
 void
 _el2_exception_handler(unsigned long type, unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far)
@@ -37,23 +38,30 @@ _el1_exception_handler(unsigned long type, unsigned long esr, unsigned long elr,
         else if(iss == 0x0) {
             // svc #0 for time interrupts
             // uart_puts("#0\r\n");
+            uart_puts("[sys #call: ");
             uart_print_int(sys_call);
-            uart_puts("\r\n");
+            uart_puts("]\r\n");
+
+            struct task_struct *current = get_current_task();
+            struct pt_regs *current_regs = task_pt_regs(current);
+
+            unsigned long ret = 0;
             if(sys_call == SYS_WRITE_NUMBER) {
                 do_uart_write(arg);
             } else if(sys_call == SYS_READ_NUMBER) {
                 do_uart_read(arg);
             } else if(sys_call == SYS_EXEC_NUMBER) {
-                uart_puts("exec\r\n");
+                uart_puts("sys exec\r\n");
                 do_exec(arg);
             } else if(sys_call == SYS_FORK_NUMBER) {
-                
+                ret = do_fork();
             } else if(sys_call == SYS_EXIT_NUMBER) {
-                
+                do_exit();
             } else {
                 local_timer_init();
 			    core_timer_init();
             }
+            current_regs->regs[0] = ret;
             // uart_print_int(sys_call);
             // local_timer_init();
 			// core_timer_init();

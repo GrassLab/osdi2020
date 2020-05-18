@@ -99,10 +99,21 @@ int intToStr(int x, char str[], int d)
 		x /= 10;
 	}
 
-	while(i<d) {
+	if(i == 0) {
 		str[i++] = '0';
 	}
+
+	// while(i<d) {
+	// 	str[i++] = '0';
+	// }
 	reverse(str, i);
+
+	// for(int j=0; j<i; j++) {
+	// 	if(str[j] == '0') {
+	// 		for(int)
+	// 	}
+	// }
+
 	str[i] = '\0';
 	return i;
 }
