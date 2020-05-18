@@ -1,37 +1,38 @@
 SECTIONS
 {
-    . = 0xffff000000000000;
-    . += 0x80000;
-    _kbeg = .;
-    .text : {
-        /* . = ALIGN(16); */
-        KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*)
-    }
-    .rodata : {
-        /* . = ALIGN(16); */
-        *(.rodata .rodata.* .gnu.linkonce.r*)
-    }
-    PROVIDE(_data = .);
-    .data : {
-        /* . = ALIGN(16); */
-        *(.data .data.* .gnu.linkonce.d*)
-    }
-    .bss (NOLOAD) : {
-        /* . = ALIGN(16); */
-        __bss_beg = .;
-        *(.bss .bss.*)
-        *(COMMON)
-        __bss_end = .;
-    }
-    .bootloader : {
-        /* . = ALIGN(16); */
-        _bootloader_beg = .;
-        *(.bootloader*)
-        _bootloader_end = .;
-    }
-	. = ALIGN(0x00001000);
-	pg_dir = .;
-	.data.pgd : { . += (5 * (1 << 12)); }
+  . = 0xffff000000000000;
+  . += 0x80000;
+  _kbeg = .;
+  .text : {
+      /* . = ALIGN(16); */
+      KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*)
+  }
+  .rodata : {
+      /* . = ALIGN(16); */
+      *(.rodata .rodata.* .gnu.linkonce.r*)
+  }
+  PROVIDE(_data = .);
+  .data : {
+      /* . = ALIGN(16); */
+      *(.data .data.* .gnu.linkonce.d*)
+  }
+  .bss (NOLOAD) : {
+      /* . = ALIGN(16); */
+      __bss_beg = .;
+      *(.bss .bss.*)
+      *(COMMON)
+      __bss_end = .;
+  }
+  .bootloader : {
+      /* . = ALIGN(16); */
+      _bootloader_beg = .;
+      *(.bootloader*)
+      _bootloader_end = .;
+  }
+
+  . = ALIGN(0x00001000);
+  pg_dir = .;
+  .data.pgd : { . += (5 * (1 << 12)); }
     _kend = .;
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }

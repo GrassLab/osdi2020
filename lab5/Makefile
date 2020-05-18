@@ -1,5 +1,4 @@
 ARMGNU ?= aarch64-linux-gnu
-
 ASMOPS = -fPIC -Iinclude -g
 COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=c11 -g -fPIC
 
@@ -15,7 +14,7 @@ BUILD_DIR = build
 C_FILES = $(wildcard $(SRC_DIR)/*.c)
 ASM_FILES = $(wildcard $(SRC_DIR)/*.S)
 OBJ_FILES = $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
-OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
+OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o) $(BUILD_DIR)/user.o
 
 DEFAULT_TARGET = kernel8
 DEFAULT_KERNEL_LOC = 0x80000
@@ -87,6 +86,18 @@ $(IMG): $(BUILD_DIR) $(OBJ_FILES)
 	$(ARMGNU)-ld -T $(LINKER_SCRIPT) -o $(TARGET).elf  $(OBJ_FILES)
 	$(ARMGNU)-objcopy $(TARGET).elf -O binary $(TARGET).img
 
+USER_SRC_DIR = user_src
+USER_BUILD_DIR = user_build
+
+$(USER_BUILD_DIR):
+	mkdir $(USER_BUILD_DIR)
+
+$(USER_BUILD_DIR)/user.o:
+	make -C $(USER_SRC_DIR)
+
+$(BUILD_DIR)/user.o: $(USER_BUILD_DIR)/user.o
+	cp $(USER_BUILD_DIR)/user.o $(BUILD_DIR)
+
 runpl: $(IMG)
 	@$(QEMU) -serial stdio -M raspi3 -kernel $(IMG)
 
@@ -118,7 +129,7 @@ update:
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt
 
 clean :
-	rm -rf *$(BUILD_DIR) kernel8.img stamp.img kernel8.elf $(USER_BUILD_DIR)
+	rm -rf *$(BUILD_DIR) kernel8.img stamp.img kernel8.elf
 
 format:
 	clang-format -i src/*.c
