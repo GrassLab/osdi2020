@@ -11,8 +11,8 @@ void boot_init() {
     task_init();
 
     // Initialize UART
-    uart_init();
-    uart_flush();
+    uart0_init();
+    uart0_flush();
     uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
 
     // Initialize Frame Buffer

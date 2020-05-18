@@ -29,7 +29,7 @@ SECTIONS
   }
   . = ALIGN(0x1000);
 
-  _end = .;
+  __kernel_end = .;
 }
 
 __bss_size = (__bss_end - __bss_start) >> 3;

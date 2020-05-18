@@ -10,7 +10,7 @@
 
 struct uart_queue read_buf, write_buf;
 
-void uart_init() {
+void uart0_init() {
     *UART0_CR = 0;  // turn off UART0
 
     /* Configure UART0 Clock Frequency */
@@ -97,17 +97,17 @@ void uart_printf(char* fmt, ...) {
     __builtin_va_list args;
     __builtin_va_start(args, fmt);
 
-    extern volatile unsigned char _end;  // defined in linker
-    char* s = (char*)&_end;              // put temporary string after code
-    my_vsprintf(s, fmt, args);
+    char str[256];
+    my_vsprintf(str, fmt, args);
 
+    char* s = &str[0];
     while (*s) {
         if (*s == '\n') uart0_write('\r');
         uart0_write(*s++);
     }
 }
 
-void uart_flush() {
+void uart0_flush() {
     while (!(*UART0_FR & 0x10)) {
         (void)*UART0_DR;  // unused variable
     }
