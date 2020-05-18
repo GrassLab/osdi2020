@@ -9,8 +9,8 @@
 #define PD_BLOCK 0b01
 #define PD_ACCESS (1 << 10)
 #define BOOT_PGD_ATTR PD_TABLE
-
-#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PUD_ATTR PD_TABLE
+#define BOOT_PMD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
 #define PAGE_SIZE (0x1000) //4096
 
 .section ".text.boot"
@@ -53,18 +53,35 @@ rest_initialization:
 
     mov x0, 0 // PGD's page frame at 0x0
     mov x1, 0x1000 // PUD's page frame at 0x1000
+    add x3, x1, PAGE_SIZE
+
 
     ldr x2, = BOOT_PGD_ATTR
     orr x2, x1, x2 // combine the physical address of next level page with attribute.
     str x2, [x0]
 
+
+    mov x4, x3
     ldr x2, = BOOT_PUD_ATTR
-    mov x3, 0x00000000
     orr x3, x2, x3
     str x3, [x1] // 1st 1GB mapped by the 1st entry of PUD
-    mov x3, 0x40000000
+
+    add x3, x3, PAGE_SIZE
     orr x3, x2, x3
     str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
+
+    // free to use x1, x2, x3, x5, x6, x7
+    mov x1, 0
+    mov x2, 1023
+    ldr x3, = BOOT_PMD_ATTR
+3:
+    mov x5, x1, lsl #21 // x5 = x1*0x200000
+    orr x6, x3, x5
+    str x6, [x4, x1, lsl #3]
+    add x1, x1, 1
+    sub x6, x2, x1
+    cbnz x6, 3b
+
 
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.

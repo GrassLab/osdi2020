@@ -86,11 +86,11 @@ void task6()
 
 void kernel_init()
 {
-	//unsigned long long int sp;
+	unsigned long long int sp;
 	uart_init();
-	//asm volatile("mov %0, sp":"=r"(sp)::);
-//aaaaa:
-	//uart_hex((unsigned long long)&&aaaaa);
+	asm volatile("mov %0, sp":"=r"(sp)::);
+aaaaa:
+	uart_hex((unsigned long long)&&aaaaa);
 	//my_printf("hahaha\r\n");
 	uart_puts("hahaha\r\n");
 	while(1);
