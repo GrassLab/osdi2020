@@ -19,13 +19,13 @@ char ustack_pool[TASK_SIZE][STACK_SIZE];
 Task task_pool[TASK_SIZE] = {
   [0 ... TASK_SIZE - 1] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none
+    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none, {0,}
   }
 };
 
 Task init_task = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none,
+  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none, {0,}
 };
 
 Task *current_task = &init_task, *next_task;
@@ -310,17 +310,16 @@ void kernel_process(){
   puts("kernel process begin...");
   //printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
   //privilege_task_create(task_do_exec, (UL)user_login, 3);
-  privilege_task_create(task_do_exec, (UL)user_shell, 2);
+  //privilege_task_create(task_do_exec, (UL)user_shell, 2);
   privilege_task_create(task_1, 0, current_task->priority);
   privilege_task_create(task_2, 0, current_task->priority);
   privilege_task_create(task_3, 0, current_task->priority);
   privilege_task_create(task_4, 0, current_task->priority);
-  privilege_task_create(task_do_exec, (UL)user_fork, current_task->priority);
-  privilege_task_create(task_do_exec, (UL)user_exec, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_fork, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_exec, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
-  //privilege_task_create(user_process_write, 0, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_write, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_hang, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);

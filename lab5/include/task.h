@@ -79,7 +79,7 @@ typedef struct task_tag {
     sleep,
     running,
   } status;
-	//struct mm_struct mm;
+	struct mm_struct mm;
 } Task;
 
 void task_1();

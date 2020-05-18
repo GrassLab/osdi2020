@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "sched.h"
 #include "uart.h"
+#include "mm.h"
 
 #ifdef TEST
 #include "test.h"
@@ -27,8 +28,8 @@ char *_kend, *_kbeg;
 int main(void) {
 
   uart_init();
-  //lfb_init();
-  //lfb_showpicture();
+  lfb_init();
+  //lfb_showpicture(); /* exception on vms */
 
 #ifdef TEST
   puts("");
@@ -46,8 +47,7 @@ int main(void) {
     println(" \\ V  V /  __/ | (_| (_) | | | | | |  __/");
     println("  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|" NEWLINE);
 
-    puts("done...");
-    while(1);
+    //printf("%d %d ...", PAGING_PAGES, sizeof(Page));
 #ifdef BUILD_STAMP
 #define xstr(a) str(a)
 #define str(a) #a
@@ -57,20 +57,23 @@ int main(void) {
 #if !defined(WITHOUT_LOADER) && !defined(NO_RELOC_SELF)
     printf("   kernel segment: 0x%x - 0x%x" NEWLINE NEWLINE, &_kbeg, &_kend);
 #endif
+    mark_reserved_pages((unsigned long)&_kend);
 
     println("UART TYPE: ", UART_TYPE);
-    if (get_board_revision())
-      printf("Board revision: %x" NEWLINE, mbox[5]);
-    if (get_arm_memaddr())
-      printf("ARM base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
-    if (get_vc_memaddr())
-      printf("VC Core base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
-    puts("");
+
+    //if (get_board_revision())
+    //  printf("Board revision: %x" NEWLINE, mbox[5]);
+    //if (get_arm_memaddr())
+    //  printf("ARM base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
+    //if (get_vc_memaddr())
+    //  printf("VC Core base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
+    //puts("");
     flush();
 
     core_timer_init();
 
     privilege_task_create(kernel_process, 0, 1);
+    while(1);
 
     while(1){
       puts("kernel main scheduling...");

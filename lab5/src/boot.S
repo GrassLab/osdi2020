@@ -45,9 +45,9 @@ continue:
 
 el1_entry:
 
-    ldr x0, =__stack_top
-    mov sp, x0
-
+    mov sp, #LOW_MEMORY
+    //ldr x0, =__stack_top
+    //mov sp, x0
 
 #if MLV == 0
     mov x0, 0 // PGD's page frame at 0x0
@@ -137,6 +137,8 @@ el1_entry:
     msr	mair_el1, x0
 #endif
 
+
+
 #if MLV < 2
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
@@ -154,6 +156,7 @@ el1_entry:
 
     ldr x0, =exception_table
     msr vbar_el1, x0
+
 
     ldr x2, =boot_rest // indirect branch to the virtual address
     mrs x1, sctlr_el1
@@ -270,3 +273,4 @@ __create_page_tables:
 
     mov	x30, x29						// restore return address
     ret
+

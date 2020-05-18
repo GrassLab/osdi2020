@@ -25,7 +25,11 @@
 /* refer */
 
 #define PG_DIR_SIZE			(3 * PAGE_SIZE)
+
 #define PHYS_MEMORY_SIZE 		0x40000000
+//#define PHYS_MEMORY_SIZE    0x41000000
+//#define PHYS_MEMORY_SIZE 		0x80000000
+
 #define VA_START  0xffff000000000000
 #define PAGE_MASK 0xfffffffffffff000
 #define PTRS_PER_TABLE			(1 << TABLE_SHIFT)
@@ -57,6 +61,7 @@ void memcpy(unsigned long src, unsigned long dst, unsigned long n);
 int copy_virt_memory(Task *dst);
 unsigned long allocate_kernel_page();
 unsigned long allocate_user_page(Task *task, unsigned long va);
+void mark_reserved_pages(unsigned long end);
 
 #endif
 

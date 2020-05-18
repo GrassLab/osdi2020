@@ -1,5 +1,6 @@
 
 #include "io.h"
+#include "mm.h"
 #include "irq.h"
 #include "task.h"
 #include "sched.h"
@@ -41,7 +42,12 @@ void sys_timer_handler() {
   printf("System timer interrupt, %d" NEWLINE, jiffies++);
 }
 
+#if MLV == 2
+#define CORE0_TIMER_IRQ_CTRL "0xffff000040000040"
+//#define CORE0_TIMER_IRQ_CTRL "0x40000040"
+#else
 #define CORE0_TIMER_IRQ_CTRL "0x40000040"
+#endif
 
 void core_timer_init() {
 #if defined(RUN_ON_EL1) || defined(RUN_ON_EL2)
