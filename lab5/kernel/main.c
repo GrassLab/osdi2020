@@ -7,6 +7,7 @@
 #include "sched.h"
 #include "shell.h"
 #include "sys.h"
+#include "mm.h"
 #include "timer.h"
 
 int get_el() {
@@ -71,18 +72,20 @@ void test_case() {
 }
 
 void init_process() {
-
+  sys_println("shoud not be printed");
   /* tty */
-  int pid = call_sys_fork();
-  if (pid == 0) {
-    call_sys_exec(shell);
-  }
+  /* stat_memory_usage(); */
 
-  /* test case */
-  if (call_sys_fork() == 0) {
-    call_sys_exec(test_case);
-  }
 
+  /* int pid = call_sys_fork(); */
+  /* if (pid == 0) { */
+  /*   call_sys_exec(shell); */
+  /* } */
+
+  /* /\* test case *\/ */
+  /* if (call_sys_fork() == 0) { */
+  /*   call_sys_exec(test_case); */
+  /* } */
 
   /* /\* exec the shell process *\/ */
   /* unsigned long stack = call_sys_malloc(); */
@@ -101,9 +104,45 @@ void init_process() {
   call_sys_exit();
 }
 
+
 void kernel_process() {
   uart_println("Kernel process started. EL %d", get_el());
-  do_exec(init_process);
+  uart_println("kernel proess run at %x%x",
+               (unsigned long)&kernel_process >> 32,
+               (unsigned long)&kernel_process);
+
+
+  char c;
+  while ((c = call_sys_read())) {
+    uart_println("%c", c);
+  }
+
+  /* uart_println("Memory usage:"); */
+  /* /\* stat_memory_usage(); *\/ */
+
+  /* /\* do_exec(init_process); *\/ */
+  /* /\* do_exec(init_process); *\/ */
+  /* extern unsigned long user_begin; */
+  /* extern unsigned long user_end; */
+  /* extern unsigned long user_process; */
+  /* unsigned long begin = (unsigned long)&user_begin; */
+  /* unsigned long end = (unsigned long)&user_end; */
+  /* unsigned long process = (unsigned long)&user_process; */
+  /* uart_println("%x%x %x%x %x%x", begin >> 32, begin, end >> 32, end, process >> 32, process); */
+
+
+  /* /\* int err = move_to_user_mode(begin, end - begin, process - begin); *\/ */
+  /* int err = move_to_user_mode(0, 0, (unsigned long)init_process); */
+  /* if (err < 0) { */
+  /*   uart_println("Error while moving process to user mode\n\r"); */
+  /* } */
+
+
+
+
+  while (1) {
+
+  }
 }
 
 void foo() {
@@ -126,8 +165,8 @@ void idle() {
   while (1) {
     /* maintain the ipc */
 
-    if (nr_tasks == 1)
-      break; /* TODO */
+    /* if (nr_tasks == 0) */
+    /*   break; /\* TODO *\/ */
     schedule();
   }
 }
@@ -138,39 +177,50 @@ void el1_main() {
   uart_println("Hello world");
 
 
-  {
-    #include "gpio.h"
-    #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
-    while (1)
-      *AUX_MU_IO = 's';
-  }
 
+  /* while ((c = uart_getc())) { */
+  /*   uart_send(c); */
+  /* } */
   /* { */
-/* #include "mm.h" */
-/*     uart_println("Low memory: %x", LOW_MEMORY); */
-/*     uart_println("High memory: %x", HIGH_MEMORY); */
-/*   } */
+  /*   #include "gpio.h" */
+  /*   #define AUX_MU_IO       ((volatile unsigned int*)(MMIO_BASE+0x00215040))
+   */
+  /*   while (1) */
+  /*     *AUX_MU_IO = 's'; */
+  /* } */
 
-  /* int res = copy_process(PF_KTHREAD, (unsigned long)&pm_daemon, 0, 0); */
+  /* int res = copy_process(PF_KTHREAD, (unsigned long)&pm_daemon, 0); */
   /* if (res < 0) { */
   /*   uart_println("error while starting zombie reaper"); */
   /*   return; */
   /* } */
+  /* shell(); */
+  /* shell(); */
+  /* privilege_task_create(kernel_process, 0); */
+  // unsigned long page = allocate_kernel_page();
+  /* page = allocate_kernel_page(); */
 
-  /* res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0, 0); */
+
+  copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
+  /* copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0); */
+  /* copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0); */
+  /* unsigned long code_page = allocate_user_page(current, 10); */
+  /* code_page = allocate_user_page(current, 20); */
+  /* code_page = allocate_user_page(current, 0); */
+  /* code_page = allocate_user_page(current, 0); */
+  /* copy_process(PF_KTHREAD, (unsigned long)&shell, 0); */
+
   /* if (res < 0) { */
   /*   uart_println("error while starting kernel process"); */
   /*   return; */
   /* } */
 
-  /* /\* local_timer_init(); *\/ */
-  /* sys_core_timer_enable(); */
-
+  sys_core_timer_enable();
   /* /\* const int N = 10; *\/ */
   /* /\* for (int i = 0; i < N; ++i) { // N should > 2 *\/ */
 
   /* /\* } *\/ */
-  /* idle(); */
+  idle();
 }
 
 int main(int argc, char *argv[]) {

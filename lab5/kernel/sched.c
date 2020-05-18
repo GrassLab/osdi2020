@@ -20,7 +20,7 @@ struct task_struct *privilege_task_create(void (*func)(), unsigned long num) {
   preempt_disable();
 
   /* allocate a task struct */
-  struct task_struct *p = (struct task_struct *)get_free_page();
+  struct task_struct *p = (struct task_struct *)allocate_kernel_page();
   if (!p)
     return p;
 
@@ -40,7 +40,7 @@ struct task_struct *privilege_task_create(void (*func)(), unsigned long num) {
   /* store the task_struct into task[] */
   task[p->pid] = p;
 
-  uart_println("[Task] Create a privilege task @ %x", p);
+  uart_println("[Task] Create a privilege task @ 0x%x%x", (unsigned long)p>>32, p);
   uart_println("[Task] The task with");
   uart_println("[Task]   pid:      %d", p->pid);
   uart_println("[Task]   priority: %d", p->priority);
@@ -97,7 +97,7 @@ void _schedule() {
     /*   struct task_struct *r = task[i]; */
     /*   uart_print("%d", r->state); */
     /* } */
-                                /* uart_println(" ]"); */
+    /*                             uart_println(" ]"); */
 
     if (c) {
       break;
@@ -168,6 +168,7 @@ void context_switch(struct task_struct *next) {
 #endif
 
   /* switch to the next */
+  set_pgd(next->mm.pgd);
   cpu_switch_to(prev, next);
 }
 

@@ -14,4 +14,4 @@ void uart_println(char *format, ...);
 void uart_print(char *format, ...);
 void sys_println(char *format, ...);
 void sys_print(char *format, ...);
-void  __attribute__((noreturn)) abort();
+/* void  __attribute__((noreturn)) abort(); */

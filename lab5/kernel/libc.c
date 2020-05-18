@@ -59,10 +59,10 @@ void memcpy(void *dest, const void *src, size_t num) {
   }
 }
 
-void __attribute__((noreturn)) abort() {
-  uart_puts("System aborted\r\n");
-  halt();
-}
+/* void __attribute__((noreturn)) abort() { */
+/*   uart_puts("System aborted\r\n"); */
+/*   halt(); */
+/* } */
 
 void uart_print(char *format, ...) {
   char print_buf[1024] = {

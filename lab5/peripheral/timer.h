@@ -1,6 +1,6 @@
 #pragma once
 
-#define PBASE 0x3F000000
+#define PBASE  (0xffff000000000000 + 0x3F000000)
 
 #define TIMER_CS        ((volatile unsigned int*)PBASE+0x00003000)
 #define TIMER_CLO       ((volatile unsigned int*)PBASE+0x00003004)

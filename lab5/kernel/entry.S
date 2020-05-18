@@ -156,15 +156,42 @@ el1_sync:
     // TODO otherwise exception_etnry (excpetion.c)
     handle_invalid_entry 1, SYNC_ERROR
 el0_sync:
-    // dealing with sync call with svc
     kernel_entry 0
-    msr DAIFClr, 0xf                   // what? TODO
-    mrs	 x25, esr_el1                  // read the syndrome register
-    lsr	 x24, x25, #ESR_ELx_EC_SHIFT   // exception class
-    cmp	 x24, #ESR_ELx_EC_SVC64        // SVC in 64-bit state
-    b.eq el0_svc
-    // TODO otherwise exception_etnry (excpetion.c)
+    mrs    x25, esr_el1                // read the syndrome register
+    lsr    x24, x25, #ESR_ELx_EC_SHIFT        // exception class
+    cmp    x24, #ESR_ELx_EC_SVC64            // SVC in 64-bit state
+    msr    DAIFClr, 0xf                   // what? TODO
+    b.eq   el0_svc
+    cmp    x24, #ESR_ELx_EC_DABT_LOW        // data abort in EL0
+    b.eq   el0_da
     handle_invalid_entry 0, SYNC_ERROR
+
+el0_da:
+    bl   enable_irq
+    mrs  x0, far_el1
+    mrs  x1, esr_el1
+    bl   do_mem_abort
+    cmp  x0, 0
+    b.eq 1f
+    handle_invalid_entry 0, DATA_ABORT_ERROR
+1:
+    bl disable_irq
+    kernel_exit 0
+
+
+
+
+
+//el0_sync:
+//    // dealing with sync call with svc
+//    kernel_entry 0
+//    msr DAIFClr, 0xf                   // what? TODO
+//    mrs	 x25, esr_el1                  // read the syndrome register
+//    lsr	 x24, x25, #ESR_ELx_EC_SHIFT   // exception class
+//    cmp	 x24, #ESR_ELx_EC_SVC64        // SVC in 64-bit state
+//    b.eq el0_svc
+//    // TODO otherwise exception_etnry (excpetion.c)
+//    handle_invalid_entry 0, SYNC_ERROR
 el0_irq:
     kernel_entry 0
     bl irq_handler

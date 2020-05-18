@@ -28,6 +28,23 @@ struct cpu_context {
   unsigned long pc;
 };
 
+
+#define MAX_PROCESS_PAGES       16
+
+struct user_page {
+    unsigned long phys_addr;
+    unsigned long virt_addr;
+};
+
+struct mm_struct {
+    unsigned long pgd;
+    int user_pages_count;
+    struct user_page user_pages[MAX_PROCESS_PAGES];
+    int kernel_pages_count;
+    unsigned long kernel_pages[MAX_PROCESS_PAGES];
+};
+
+
 struct task_struct {
   struct cpu_context cpu_context;
   unsigned long pid;
@@ -41,7 +58,10 @@ struct task_struct {
   unsigned long print_buffer;
   unsigned long signals;
   unsigned long sighand;
+  struct mm_struct mm;
 };
+
+
 
 /* sched.c */
 struct task_struct *privilege_task_create(void (*func)(), unsigned long num);
@@ -67,6 +87,8 @@ void delay(unsigned long);
 
 #define INIT_TASK                                                       \
   /*cpu_context*/ { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},            \
-      /* state etc */   0, 0, 0, 1, 0, 0, 0, PF_KTHREAD, 0, 0 }
+  /* state etc */ 0, 0, 0, 1, 0, 0, 0, PF_KTHREAD, 0, 0, 0,             \
+  /* mm struct */ { 0, 0, {{0}}, 0, {0}}                                \
+  }
 
 #endif

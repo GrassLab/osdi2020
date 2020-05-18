@@ -30,6 +30,8 @@ void irq_handler();
 void init_irq();
 void disable_irq();
 void enable_irq();
+void irq_vector_init( void );
+void enable_interrupt_controller();
 
 /* irq.c */
 void init_uart_irq();

@@ -1,4 +1,4 @@
-#define CORE0_TIMER_IRQ_CTRL 0x40000040
+#define CORE0_TIMER_IRQ_CTRL (0x40000040 + 0xffff000000000000)
 
 #define PERIOD 0x300000
 .global sys_core_timer_enable
