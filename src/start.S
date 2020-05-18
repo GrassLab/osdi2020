@@ -104,21 +104,72 @@ el0_start:
 /* ------- */
 
 page_table_create:
-    // omit first 16 bit (using physical address)
+    /*
+     * Each page table base address:
+     *  x0: PGD (1 page, 1 entry)
+     *  x1: PUD (1 page, 2 entry)
+     *  x2: PMD (1 page, 512 entry)
+     *  x3: PTE (512 page, each with 512 entry)
+     */
     ldr     x0, =pg_dir
-    lsl     x0, x0, #16
+    lsl     x0, x0, #16  // omit first 16 bit (using physical address)
     lsr     x0, x0, #16
     add     x1, x0, #PAGE_SIZE
+    add     x2, x1, #PAGE_SIZE
+    add     x3, x2, #PAGE_SIZE
 
-    ldr     x2, =PGD_ATTR
-    orr     x2, x1, x2 // PGD value
-    str     x2, [x0]
+    // setup PGD
+    ldr     x4, =PGD_ATTR
+    orr     x4, x1, x4 // PUD physical address
+    str     x4, [x0]
 
-    ldr     x2, =PUD1_VALUE // 1st 1GB mapped by the 1st entry of PUD
-    str     x2, [x1]
+    // setup PUD1
+    ldr     x4, =PUD1_ATTR
+    orr     x4, x2, x4 // PMD physical address
+    str     x4, [x1]
 
-    ldr     x2, =PUD2_VALUE // 2nd 1GB mapped by the 2nd entry of PUD
-    str     x2, [x1, #8]
+    // setup PUD2 (1GB section start from 0x40000000)
+    ldr     x4, =PUD2_ATTR
+    mov     x5, 0x40000000
+    orr     x4, x5, x4
+    str     x4, [x1, #8]
+
+    // setup PMD (512 entry in 1 page)
+    mov     x4, x3 // point to current PTE address
+    mov     x5, xzr // i = 0
+    mov     x6, #512
+1:
+    ldr     x7, =PMD_ATTR
+    orr     x7, x4, x7 // PTE physical address
+    str     x7, [x2, x5, lsl #3] // (i * 8)
+    add     x5, x5, #1
+    add     x4, x4, #PAGE_SIZE
+    cmp     x5, x6
+    b.ls    1b
+
+    // setup normal PTE (512 * 512 - 4096 = 258048 entry)
+    mov     x4, xzr // physical address
+    mov     x5, xzr // i = 0
+    mov     x6, #258048
+2:
+    ldr     x7, =PTE_RAM_ATTR
+    orr     x7, x4, x7
+    str     x7, [x3, x5, lsl #3] // (i * 8)
+    add     x5, x5, #1
+    add     x4, x4, #PAGE_SIZE
+    cmp     x5, x6
+    b.ls    2b
+
+    // setup device PTE (16MB = 4096 entry)
+    add     x6, x6, #4096 // 262144
+3:
+    ldr     x7, =PTE_MMIO_ATTR
+    orr     x7, x4, x7
+    str     x7, [x3, x5, lsl #3] // (i * 8)
+    add     x5, x5, #1
+    add     x4, x4, #PAGE_SIZE
+    cmp     x5, x6
+    b.ls    3b
 
     msr     ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr     ttbr1_el1, x0 // load PGD to the upper translation based register.
