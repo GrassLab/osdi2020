@@ -89,7 +89,17 @@ RW:
 #define PUD_FRAME_BASE ((uint64_t *)0x1000u)
 #define PMD_FRAME_BASE ((uint64_t *)0x2000u)
 
+#define PAGE_USED 0
+
+struct page_struct
+{
+  /* bit 0 -> 1 if used, 0 if unused */
+  uint64_t flag;
+};
+
 void mmu_ttbr0_ttbr1_el1_init(void);
+void mmu_page_init(void);
+
 #endif /* __ASSEMBLER__ */
 
 #endif /* __MMU_H__ */
