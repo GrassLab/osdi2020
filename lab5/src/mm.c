@@ -17,7 +17,7 @@ unsigned long allocate_user_page(struct task_struct *task, unsigned long va) {
 	if (page == 0) {
 		return 0;
 	}
-	map_page(task, va, page);
+	map_page(task, va, page, MMU_PTE_FLAGS);
 	return page + VA_START;
 }
 
@@ -56,10 +56,10 @@ void free_kernel_page(struct task_struct *task) {
 	return;
 }
 
-void map_table_entry(unsigned long *pte, unsigned long va, unsigned long pa) {
+void map_table_entry(unsigned long *pte, unsigned long va, unsigned long pa, unsigned long flag) {
 	unsigned long index = va >> PAGE_SHIFT;
 	index = index & (PTRS_PER_TABLE - 1);
-	unsigned long entry = pa | MMU_PTE_FLAGS; // put MMU_PTE_FLAGS
+	unsigned long entry = pa | flag; // put protection flag
 	pte[index] = entry;
 }
 
@@ -78,7 +78,7 @@ unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long
 	return table[index] & PAGE_MASK;
 }
 
-void map_page(struct task_struct *task, unsigned long va, unsigned long page){
+void map_page(struct task_struct *task, unsigned long va, unsigned long page, unsigned long prot){
 	unsigned long pgd;
 	if (!task->mm.pgd) {
 		task->mm.pgd = get_free_page(); // allocate a page and return physical address
@@ -98,7 +98,7 @@ void map_page(struct task_struct *task, unsigned long va, unsigned long page){
 	if (new_table) {
 		task->mm.kernel_pages[++task->mm.kernel_pages_count] = pte;
 	}
-	map_table_entry((unsigned long *)(pte + VA_START), va, page);
+	map_table_entry((unsigned long *)(pte + VA_START), va, page, prot);
 	struct user_page p = {page, va};
 	task->mm.user_pages[task->mm.user_pages_count++] = p;
 }
@@ -124,7 +124,7 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 		if (page == 0) {
 			return -1;
 		}
-		map_page(current, addr & PAGE_MASK, page);
+		map_page(current, addr & PAGE_MASK, page, MMU_PTE_FLAGS);
 		ind++;
 		if (ind > 2){
 			printf("page fault\r\n");
@@ -143,8 +143,6 @@ int get_remain_num() {
 void free_zombie_task() {
 	for (int i = 0 ; i < nr_tasks ; i++) {
 		if (task[i]->state == TASK_ZOMBIE) {
-			//printf("%d\r\n", task[i]->task_id);
-			//printf("kernel_pages_count %d\r\n", task[i]->mm.kernel_pages_count);
 			free_kernel_page((unsigned long)task[i]);
 			task[i]->state = TASK_FREE;
 			free_page(((unsigned long)task[i]) - VA_START);
@@ -153,3 +151,21 @@ void free_zombie_task() {
 		}
 	}
 } 
+
+unsigned long do_mmap(struct task_struct * task, unsigned long len, unsigned long prot) 
+{
+	unsigned long last_page = task->mm.user_pages[task->mm.user_pages_count - 1].virt_addr; //last virtual address
+	unsigned long begin_addr = last_page + PAGE_SIZE;
+	last_page += PAGE_SIZE;
+	int page_num = len / PAGE_SIZE;
+
+	for (int i = 0 ; i < page_num ; i++) {
+		unsigned long page = get_free_page();
+		if (page == 0) {
+			return;
+		}
+		map_page(task, last_page, page, prot); // map for user task
+		last_page += PAGE_SIZE;
+	}
+	return begin_addr;
+}

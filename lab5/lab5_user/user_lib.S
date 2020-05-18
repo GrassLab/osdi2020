@@ -4,6 +4,7 @@
 #define SYS_REMA_NUMBER 3
 #define SYS_TASK_ID     4
 #define SYS_READ_NUMBER 5
+#define SYS_MMAP_NUMBER 6
 
 .section ".text.boot"
 
@@ -54,5 +55,11 @@ get_taskid:
 .globl read
 read:
     mov w8, #SYS_READ_NUMBER
+    svc #0
+    ret
+
+.globl sys_mmap
+sys_mmap:
+    mov w8, #SYS_MMAP_NUMBER
     svc #0
     ret

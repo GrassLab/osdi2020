@@ -1,7 +1,7 @@
 #ifndef	_SYS_H
 #define	_SYS_H
 
-#define __NR_syscalls	 6
+#define __NR_syscalls	 7
 
 #ifndef __ASSEMBLER__
 

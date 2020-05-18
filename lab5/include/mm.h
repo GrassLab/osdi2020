@@ -3,9 +3,10 @@
 
 #include "peripherals/base.h"
 
-#define VA_START 			0xffff000000000000
+#define VA_START 			    0xffff000000000000
 #define LOCAL_PHY               0x80000000
 #define PHYS_MEMORY_SIZE 		0x40000000	
+#define USER_TEXT_OFFSET        0x80000
 
 #define PAGE_MASK			0xfffffffffffff000
 #define PAGE_SHIFT	 		12
@@ -36,7 +37,7 @@
 
 unsigned long get_free_page();
 void free_page(unsigned long p);
-void map_page(struct task_struct *task, unsigned long va, unsigned long page);
+void map_page(struct task_struct *task, unsigned long va, unsigned long page, unsigned long prot);
 void memzero(unsigned long src, unsigned long n);
 void memcpy(unsigned long src, unsigned long dst, unsigned long n);
 

@@ -25,6 +25,28 @@ void test_command3() { // test page reclaim.
   printf("Remaining page frames : %d\r\n", remain_page_num()); // get number of remaining page frames from kernel by system call.
 }
 
+// ---------- elective --------------------
+void read_beyond_boundary(){
+  if(fork() == 0) {
+    int* ptr = (int* )mmap(0, 4096, PROT_READ, 0, -1, 0);
+    printf("addr: 0x%x\r\n", ptr);
+    printf("%d\n", ptr[1000]); // should be 0
+    printf("%d\n", ptr[4097]); // should be seg fault
+  }
+}
+
+void write_beyond_boundary(){
+  if(fork() == 0) {
+    int* ptr = mmap(0, 4096, PROT_READ_WRITE, 0, -1, 0);
+    printf("addr: 0x%x\r\n", ptr);
+    ptr[1000] = 100;
+    printf("%d\r\n", ptr[1000]); // should be 100
+    ptr[4097] = 100;// should be seg fault
+    printf("%d\r\n", ptr[4097]); // not reached
+  }
+}
+
+
 //read char *buff , size
 void user_main() {
 	char cmd_buffer[100];
@@ -52,6 +74,12 @@ void user_main() {
 			}
 			if (strcmp(cmd_buffer, "test3") == 0) {
 				test_command3();
+			}
+			if (strcmp(cmd_buffer, "test4") == 0) {
+				read_beyond_boundary();
+			}
+			if (strcmp(cmd_buffer, "test5") == 0) {
+				write_beyond_boundary();
 			}
 			cmd_ptr = cmd_buffer;
 			parse_flag = 0;
