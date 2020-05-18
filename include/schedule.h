@@ -3,6 +3,17 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
+struct task_queue_elmt_t {  /* priority queue */
+    struct task_t* task;
+    struct task_queue_elmt_t* prev;
+    struct task_queue_elmt_t* next;
+};
+
+struct task_queue_t {
+    struct task_queue_elmt_t* front;
+    struct task_queue_elmt_t* rear;
+};
+
 #define TASK_EPOCH 5
 #define TASK_POOL_SIZE 64
 #define KSTACK_SIZE 4096
@@ -50,11 +61,17 @@ extern char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
 extern char ustack_pool[TASK_POOL_SIZE][USTACK_SIZE];
 
 /* Function in schedule.S */
-extern struct task_t* get_current_task();
-extern void update_current_task(struct task_t *task);
-extern void switch_to(struct cpu_context* prev, struct cpu_context* next);
+struct task_t* get_current_task();
+void update_current_task(struct task_t *task);
+void switch_to(struct cpu_context* prev, struct cpu_context* next);
 
 /* Function in schedule.c */
+void task_queue_init(struct task_queue_t* q);
+void task_queue_elmt_init(struct task_queue_elmt_t* elmt, struct task_t *task);
+void task_queue_push(struct task_queue_t* q, struct task_queue_elmt_t* elmt);
+struct task_t* task_queue_pop(struct task_queue_t* q);
+void task_queue_print(struct task_queue_t* q);
+
 void task_init();
 void schedule_init();
 int privilege_task_create(void (*func)(), int priority);

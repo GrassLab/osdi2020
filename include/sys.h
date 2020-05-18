@@ -15,11 +15,12 @@
 #include "typedef.h"
 
 /* Function in sys.S */
-extern uint64_t get_taskid();
-extern uint32_t uart_read(char buf[], uint32_t size);
-extern uint32_t uart_write(const char buf[], uint32_t size);
-extern int exec(void(*func)());
-extern int fork();
-extern void exit(int status);
+uint64_t get_taskid();
+uint32_t uart_read(char buf[], uint32_t size);
+uint32_t uart_write(const char buf[], uint32_t size);
+int exec(void(*func)());
+int fork();
+void exit(int status);
+void printf(char* fmt, ...);
 
 #endif

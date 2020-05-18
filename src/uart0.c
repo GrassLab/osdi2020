@@ -2,13 +2,43 @@
 
 #include "mbox.h"
 #include "my_string.h"
-#include "queue.h"
 #include "peripherals/gpio.h"
 #include "peripherals/irq.h"
 #include "peripherals/mbox.h"
 #include "peripherals/uart0.h"
 
 struct uart_queue read_buf, write_buf;
+
+/* UART Queue */
+
+void uart_queue_init(struct uart_queue* q, int max) {
+    q->front = 0;
+    q->rear = 0;
+    q->max = max;
+}
+
+int uart_queue_empty(struct uart_queue* q) {
+    return q->front == q->rear;
+}
+
+int uart_queue_full(struct uart_queue* q) {
+    return q->front == (q->rear + 1) % q->max;
+}
+
+void uart_queue_push(struct uart_queue* q, char val) {
+    if (uart_queue_full(q)) return;  // drop if full
+    q->buf[q->rear] = val;
+    q->rear = (q->rear + 1) % q->max;
+}
+
+char uart_queue_pop(struct uart_queue* q) {
+    if (uart_queue_empty(q)) return '\0';
+    char elmt = q->buf[q->front];
+    q->front = (q->front + 1) % q->max;
+    return elmt;
+}
+
+/* ---- */
 
 void uart0_init() {
     *UART0_CR = 0;  // turn off UART0

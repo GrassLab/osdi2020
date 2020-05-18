@@ -2,7 +2,6 @@
 #include "peripherals/uart0.h"
 #include "peripherals/timer.h"
 #include "timer.h"
-#include "queue.h"
 #include "uart0.h"
 #include "exception.h"
 #include "schedule.h"
