@@ -98,6 +98,9 @@ int main()
         else if(strcmp(cmd, "t3") == 0){
             test_command3();
         }
+        else if(strcmp(cmd, "bad") == 0){
+            *((unsigned long *) 0xffff0000f0000000) = 0;
+        }
         else if(strcmp(cmd, "") == 0){
 
         }

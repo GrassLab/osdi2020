@@ -23,7 +23,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 5.3.4\n");
+    uart_print("Version : 5.4.2\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -244,13 +244,10 @@ int kernel_main()
     uart_puts("\n");
     */
 
-    /*
-    unsigned long t = virtual_to_physical(0xffff000000000000);
-    t = virtual_to_physical(0xffffffff00030010);
-    uart_send_hex(t);
-    */
 
     task_init();
+
+
     /*
     privilege_task_create((unsigned long)task_111, 0);
     */

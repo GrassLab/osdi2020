@@ -102,18 +102,18 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     memset((unsigned short *)childregs, 0, sizeof(user_context_t));
     memset((unsigned short *)&p->cpu_context, 0, sizeof(cpu_context_t));
 
-/*
-    if (stack != 0)
-        free_page(pa_to_pfn(stack));
-        */
-    stack = get_free_page();
-    memset((unsigned short *)stack, 0, PAGE_SIZE);
+    if (stack == 0){
+        stack = get_free_page();
+        memset((unsigned short *)stack, 0, PAGE_SIZE);
+    }
+
+    p->stack = stack;
+    p->stack_pfn = pa_to_pfn(stack);
 
     if (clone_flags & PF_KTHREAD)
     {
         p->cpu_context.x19 = fn;
         p->cpu_context.x20 = arg;
-
         p->cpu_context.sp = (unsigned long)childregs;
     }
     else if (clone_flags & PF_FORK)
@@ -130,14 +130,12 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
         //printf("%x\n\r", childregs->sp);
         //p->cpu_context.sp = childregs->sp;
         //p->cpu_context.pc = p->cpu_context.pc + 32;
-        p->stack = stack;
 
         /*
         printf("==current kstack, sp: %x, stack %x==\n\r", (unsigned long)current->cpu_context.sp, (unsigned long)current);
         printf("%x", (unsigned long)task_user_context(current));
         printf("==current ustack, sp: %x, stack %x==\n\r", (unsigned long)task_user_context(current)->sp, (unsigned long)current->stack);
         printf("==pc: %x, pc %x==\n\r", (unsigned long)task_user_context(current)->pc, childregs->pc);
-
 
         printf("%d", PAGE_SIZE);
         printf("task off %d, u off %d\n\r", kstack_offset, ustack_offset);
@@ -175,7 +173,6 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
         *childregs = *cur_regs;
         childregs->regs[0] = 0;
         childregs->sp = stack + PAGE_SIZE;
-        p->stack = stack;
 
         p->cpu_context.sp = (unsigned long)childregs;
     }
@@ -413,6 +410,8 @@ void exit_process(int task_id)
             break;
         }
     }
+
+    printf("page frame reclaim\n");
     if (current->stack)
     {
         free_page(current->stack_pfn);

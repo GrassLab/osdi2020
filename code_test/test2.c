@@ -12,9 +12,11 @@ void delay(unsigned long num)
 int main()
 {
     char *str = "\n=====\nuser program 2 test\n=====\n";
+
+    // *((unsigned long *) 0xffff0000f0000000) = 0;
     uart_puts(str);
     while(1){
-        uart_send('a');
+        uart_send('_');
         delay(1000000);
     }
 
