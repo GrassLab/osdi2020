@@ -1,4 +1,4 @@
-#include "mm.h"
+#include "../include/mm.h"
 #include "arm/mmu.h"
 #include "printf.h"
 static unsigned short mem_map [ PAGING_PAGES ] = {0,};
@@ -12,12 +12,12 @@ unsigned long allocate_kernel_page() {
 	return page + VA_START;
 }
 
-unsigned long allocate_user_page(struct task_struct *task, unsigned long va) {
+unsigned long allocate_user_page(struct task_struct *task, unsigned long va, unsigned long prot) {
 	unsigned long page = get_free_page();
 	if (page == 0) {
 		return 0;
 	}
-	map_page(task, va, page, MMU_PTE_FLAGS);
+	map_page(task, va, page, prot);
 	return page + VA_START;
 }
 
@@ -106,7 +106,7 @@ void map_page(struct task_struct *task, unsigned long va, unsigned long page, un
 int copy_virt_memory(struct task_struct *dst) {
 	struct task_struct* src = current;
 	for (int i = 0; i < src->mm.user_pages_count; i++) {
-		unsigned long kernel_va = allocate_user_page(dst, src->mm.user_pages[i].virt_addr);
+		unsigned long kernel_va = allocate_user_page(dst, src->mm.user_pages[i].virt_addr, MMU_PTE_FLAGS);
 		if( kernel_va == 0) {
 			return -1;
 		}
@@ -133,6 +133,10 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 		}
 		return 0;
 	}
+	else {
+		printf("page fault\r\n");
+		exit_process();
+	}
 	return -1;
 }
 
@@ -152,12 +156,22 @@ void free_zombie_task() {
 	}
 } 
 
-unsigned long do_mmap(struct task_struct * task, unsigned long len, unsigned long prot) 
+
+unsigned long do_mmap(unsigned long addr, struct task_struct * task, unsigned long len, unsigned long prot) 
 {
-	unsigned long last_page = task->mm.user_pages[task->mm.user_pages_count - 1].virt_addr; //last virtual address
-	unsigned long begin_addr = last_page + PAGE_SIZE;
-	last_page += PAGE_SIZE;
-	int page_num = len / PAGE_SIZE;
+	unsigned long begin_addr;
+	unsigned long last_page;
+
+	if (addr == 0) {
+		last_page = task->mm.user_pages[task->mm.user_pages_count - 1].virt_addr; //last virtual address
+		begin_addr = last_page + PAGE_SIZE;
+		last_page += PAGE_SIZE;
+	}
+	else {
+		last_page  = addr & PAGE_MASK;
+		begin_addr = addr & PAGE_MASK;
+	}
+	int page_num = (len -1) / PAGE_SIZE + 1; //WARN len = 0
 
 	for (int i = 0 ; i < page_num ; i++) {
 		unsigned long page = get_free_page();

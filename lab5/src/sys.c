@@ -44,8 +44,8 @@ int sys_read(unsigned long buff_addr, int size) {
 	return i;
 }
 
-unsigned long sys_mmap(unsigned long len, unsigned long prot) {
-	return do_mmap(current, len, prot);
+unsigned long sys_mmap(unsigned long addr, unsigned long len, unsigned long prot) {
+	return do_mmap(addr, current, len, prot);
 }
 
 void * const sys_call_table[] = {sys_write, sys_fork, sys_exit, sys_remain_page_num, sys_task_id, sys_read, sys_mmap};

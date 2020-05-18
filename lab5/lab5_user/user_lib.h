@@ -1,5 +1,7 @@
 #ifndef __USER_LIB__
 #define __USER_LIB__
+#define NULL 0
+#define MAP_ANONYMOUS 0
 #define MM_TYPE_PAGE_TABLE		    0x3
 #define MM_TYPE_PAGE 			    0x3
 #define MM_TYPE_BLOCK			    0x1
@@ -34,5 +36,5 @@
 
 void init_print();
 int strcmp(char *str1, char *str2);
-unsigned long *mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset);
+unsigned long *mmap(unsigned long addr, unsigned long len, int prot, int flags, void* file_start, int file_offset);
 #endif

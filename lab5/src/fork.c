@@ -1,4 +1,5 @@
-#include "mm.h"
+#include "../include/mm.h"
+#include "arm/mmu.h"
 #include "sched.h"
 #include "fork.h"
 #include "utils.h"
@@ -42,18 +43,19 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg)
 	return pid;
 }
 
-
-int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
+int privilege_task_create(unsigned long start, unsigned long size, unsigned long pc)
 {
 	struct pt_regs *regs = task_pt_regs(current);
 	regs->pstate = PSR_MODE_EL0t;
 	regs->pc = pc + USER_TEXT_OFFSET; // for return to user mode virtual address
-	regs->sp = 2 * PAGE_SIZE + USER_TEXT_OFFSET;  // first page is for code , second page is for stack
-	unsigned long code_page = allocate_user_page(current, USER_TEXT_OFFSET); // allocate a user page and update tables
+	regs->sp = 3 * PAGE_SIZE + USER_TEXT_OFFSET;  // first page is for code , second page is for stack
+	unsigned long code_page = allocate_user_page(current, USER_TEXT_OFFSET, MMU_PTE_FLAGS); // allocate a user page and update tables
+	unsigned long code_page2 = allocate_user_page(current, USER_TEXT_OFFSET + PAGE_SIZE, MMU_PTE_FLAGS); // second free page for code
 	if (code_page == 0)	{
 		return -1;
 	}
-	memcpy(start, code_page, size); // load the image code to allocated page
+	memcpy(start, code_page, PAGE_SIZE); // load the image code to allocated page
+	memcpy(start + PAGE_SIZE, code_page2, size - PAGE_SIZE); // load the image code to allocated page
 	set_pgd(current->mm.pgd); //change to user page but still can access kernel pages in kernel mode
 	return 0;
 }

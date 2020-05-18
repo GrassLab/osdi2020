@@ -28,7 +28,7 @@ void test_command3() { // test page reclaim.
 // ---------- elective --------------------
 void read_beyond_boundary(){
   if(fork() == 0) {
-    int* ptr = (int* )mmap(0, 4096, PROT_READ, 0, -1, 0);
+    int* ptr = (int* )mmap(0, 4096, PROT_READ, MAP_ANONYMOUS, -1, 0);
     printf("addr: 0x%x\r\n", ptr);
     printf("%d\n", ptr[1000]); // should be 0
     printf("%d\n", ptr[4097]); // should be seg fault
@@ -37,7 +37,7 @@ void read_beyond_boundary(){
 
 void write_beyond_boundary(){
   if(fork() == 0) {
-    int* ptr = mmap(0, 4096, PROT_READ_WRITE, 0, -1, 0);
+    int* ptr = mmap(0, 4096, PROT_READ_WRITE, MAP_ANONYMOUS, -1, 0);
     printf("addr: 0x%x\r\n", ptr);
     ptr[1000] = 100;
     printf("%d\r\n", ptr[1000]); // should be 100
@@ -46,6 +46,44 @@ void write_beyond_boundary(){
   }
 }
 
+void wrong_permission(){
+  if(fork() == 0) {
+    int* ptr = mmap(0, 4096, PROT_READ, MAP_ANONYMOUS, -1, 0);
+    printf("addr: 0x%x\r\n", ptr);
+    printf("%d\r\n", ptr[1000]); // should be 0
+    for(int i = 0; i < 4096; ++i) {
+      ptr[i] = i+1; // should be seg fault
+    }
+    for(int i = 0; i < 4096; ++i) { // not reached
+      printf("%d\r\n", ptr[i]);
+    }
+  }
+}
+
+
+
+void mmaps(){ // test multiple mmaps
+  if(fork() == 0) {
+    for(int i = 0; i < 40; ++i){
+      if ( i < 20 ) {
+        mmap(NULL, 4096, PROT_READ_WRITE, MAP_ANONYMOUS, -1, 0);
+      } else if(i < 30){
+        mmap(NULL, 4096, PROT_READ_WRITE, MAP_ANONYMOUS, -1, 0);
+      } else {
+        mmap(NULL, 4096, PROT_READ_WRITE, MAP_ANONYMOUS, -1, 0);
+      }
+    }
+    while(1); // hang to let shell see the mapped regions
+  }
+}
+
+void mmap_unalign(){
+  if(fork() == 0) {
+    printf("0x%x", mmap(0x12345678, 0x1fff, PROT_READ_WRITE, MAP_ANONYMOUS, -1, 0)); // should be a page aligned address A and region should be A - A +0x2000
+    while(1); // hang to let shell see the mapped regions
+  }
+  
+}
 
 //read char *buff , size
 void user_main() {
@@ -69,17 +107,26 @@ void user_main() {
 			if (strcmp(cmd_buffer, "test1") == 0) {
 				test_command1();
 			}
-			if (strcmp(cmd_buffer, "test2") == 0) {
+			else if (strcmp(cmd_buffer, "test2") == 0) {
 				test_command2();
 			}
-			if (strcmp(cmd_buffer, "test3") == 0) {
+			else if (strcmp(cmd_buffer, "test3") == 0) {
 				test_command3();
 			}
-			if (strcmp(cmd_buffer, "test4") == 0) {
+			else if (strcmp(cmd_buffer, "test4") == 0) {
 				read_beyond_boundary();
 			}
-			if (strcmp(cmd_buffer, "test5") == 0) {
+			else if (strcmp(cmd_buffer, "test5") == 0) {
 				write_beyond_boundary();
+			}
+			else if (strcmp(cmd_buffer, "test6") == 0) {
+				wrong_permission();
+			}
+			else if (strcmp(cmd_buffer, "test7") == 0) {
+				mmaps();
+			}
+			else if (strcmp(cmd_buffer, "test8") == 0) {
+				mmap_unalign();
 			}
 			cmd_ptr = cmd_buffer;
 			parse_flag = 0;

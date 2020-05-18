@@ -69,6 +69,7 @@ void init_print() {
     init_printf(0, putc);
 }
 
-unsigned long *mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset) {
-    return sys_mmap(len, prot);
+unsigned long *mmap(unsigned long addr, unsigned long len, int prot, int flags, void* file_start, int file_offset) {
+    return sys_mmap(addr, len, prot);
 }
+

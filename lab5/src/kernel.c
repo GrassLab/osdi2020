@@ -17,11 +17,11 @@ void kernel_process(){
 
 	asm volatile ("adrp x0, idmap_dir");
 	asm volatile ("msr ttbr0_el1, x0");
-	printf("Kernel process started. EL %d\r\n", get_el());
+	// printf("Kernel process started. EL %d\r\n", get_el());
 	unsigned long begin = (unsigned long)&user_begin;
 	unsigned long end = (unsigned long)&user_end;
 	unsigned long process = (unsigned long)&user_process;
-	int err = move_to_user_mode(begin, end - begin, process - begin);
+	int err = privilege_task_create(begin, end - begin, process - begin); // virtual address of begin & size
 	if (err < 0){
 		printf("Error while moving process to user mode\n\r");
 	} 
