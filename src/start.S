@@ -1,5 +1,7 @@
+#define __ASSEMBLY__
 #include "sysregs.h"
 #include "mmu.h"
+#include "mm.h"
 
 .section ".text.boot"
 

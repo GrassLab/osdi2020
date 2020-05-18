@@ -4,10 +4,12 @@
 #include "mbox.h"
 #include "util.h"
 #include "schedule.h"
+#include "mm.h"
 
 #define CMD_LEN 128
 
 void boot_init() {
+    mm_init();
     task_init();
 
     // Initialize UART
