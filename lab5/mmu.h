@@ -89,11 +89,16 @@ RW:
 #define PUD_FRAME_BASE ((uint64_t *)0x1000u)
 #define PMD_FRAME_BASE ((uint64_t *)0x2000u)
 
+#define PAGE_TOTAL 512
+#define PAGE_PFN_LOW 1
+#define PAGE_PFN_HIGH 504 /* exclusive, for loop */
+
 #define PAGE_USED 0
 
 /* select [29:21] */
 #define MMU_VA_TO_PFN(va) ((va & 0x3fe00000uLL) >> 21)
 #define MMU_VA_TO_PA(va) (va & 0x3fffffff)
+#define MMU_PFN_TO_VA(pfn) (((uint64_t)pfn) << 21)
 
 struct page_struct
 {
@@ -103,6 +108,8 @@ struct page_struct
 
 void mmu_ttbr0_ttbr1_el1_init(void);
 void mmu_page_init(void);
+uint64_t * mmu_page_allocate(void);
+void mmu_page_free(uint64_t * va);
 
 #endif /* __ASSEMBLER__ */
 

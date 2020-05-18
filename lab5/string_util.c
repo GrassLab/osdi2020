@@ -215,3 +215,12 @@ void memcopy(char * src, char * dst, unsigned length)
   return;
 }
 
+void memzero(char * dst, unsigned length)
+{
+  for(unsigned i = 0; i < length; ++i)
+  {
+    *(dst + i) = 0;
+  }
+  return;
+}
+

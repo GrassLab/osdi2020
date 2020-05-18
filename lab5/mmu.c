@@ -1,9 +1,10 @@
 #include <stdint.h>
+#include "string_util.h"
 #include "meta_macro.h"
 #include "mmu.h"
 
 /* 1gb = 2MB * 512 */
-static struct page_struct mmu_page[512];
+static struct page_struct mmu_page[PAGE_TOTAL];
 
 void mmu_ttbr0_ttbr1_el1_init(void)
 {
@@ -28,7 +29,7 @@ void mmu_ttbr0_ttbr1_el1_init(void)
   /* setup pmd */
   /* 1GB = 512 * 2kb */
   uint64_t * pmd_frame_ptr = PMD_FRAME_BASE;
-  for(unsigned i = 0; i < 512; ++i)
+  for(unsigned i = 0; i < PAGE_TOTAL; ++i)
   {
     *(pmd_frame_ptr + i) = (uint64_t)(PD_ACCESS | (uint64_t)(PAGE_SIZE * i) | PD_NORMAL | PD_BLOCK);
   }
@@ -55,14 +56,36 @@ void mmu_page_init(void)
   /* 0x3F000000 / 0x200000 = 504 */
   /* the rest are unused */
 
-  for(unsigned page_idx = 1; page_idx < 504; ++page_idx)
+  for(unsigned page_idx = PAGE_PFN_LOW; page_idx < PAGE_PFN_HIGH; ++page_idx)
   {
     CLEAR_BIT(mmu_page[page_idx].flag, PAGE_USED);
   }
 
-  for(unsigned page_idx = 504; page_idx < 512; ++page_idx)
+  for(unsigned page_idx = PAGE_PFN_HIGH; page_idx < PAGE_TOTAL; ++page_idx)
   {
     SET_BIT(mmu_page[page_idx].flag, PAGE_USED);
   }
+}
+
+uint64_t * mmu_page_allocate(void)
+{
+  for(unsigned current_pfn = PAGE_PFN_LOW; current_pfn < PAGE_PFN_HIGH; ++current_pfn)
+  {
+    if(!CHECK_BIT(mmu_page[current_pfn].flag, PAGE_USED))
+    {
+      uint64_t * va = (uint64_t *)MMU_PFN_TO_VA(current_pfn);
+      memzero((char *)va, PAGE_SIZE);
+      SET_BIT(mmu_page[current_pfn].flag, PAGE_USED);
+      return va;
+    }
+  }
+  return 0x0;
+}
+
+void mmu_page_free(uint64_t * va)
+{
+
+  CLEAR_BIT(mmu_page[MMU_VA_TO_PFN(((uint64_t)va))].flag, PAGE_USED);
+  return;
 }
 
