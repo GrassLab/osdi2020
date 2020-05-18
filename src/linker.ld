@@ -20,6 +20,15 @@ SECTIONS
 
     __bss_end = .;
   }
+
+  . = ALIGN(0x1000);
+  pg_dir = .;
+  .data.pgd :
+  {
+    . += (2 * (1 << 12));
+  }
+  . = ALIGN(0x1000);
+
   _end = .;
 }
 

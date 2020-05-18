@@ -2,6 +2,7 @@
 #define __MMU_H__
 
 #define KERNEL_VIRT_BASE        0xFFFF000000000000
+#define PAGE_SIZE               4096
 
 // SCTLR_EL1, System Control Register (EL1)
 
@@ -37,10 +38,6 @@
 #define PGD_ATTR                PD_TABLE // Lower attributes is ignored
 #define PUD_ATTR                (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
 
-#define PGD_ADDR                0x0
-#define PUD_ADDR                0x1000
-
-#define PGD_VALUE               (PUD_ADDR | PGD_ATTR)
 #define PUD1_VALUE              (0x00000000 | PUD_ATTR)
 #define PUD2_VALUE              (0x40000000 | PUD_ATTR)
 

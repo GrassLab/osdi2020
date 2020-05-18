@@ -58,21 +58,8 @@ el1_start:
     ldr     x0, =MAIR_VALUE
     msr     mair_el1, x0
 
-    // identity paging
-    ldr     x0, =PGD_ADDR
-    ldr     x1, =PUD_ADDR
-
-    ldr     x2, =PGD_VALUE
-    str     x2, [x0]
-
-    ldr     x2, =PUD1_VALUE // 1st 1GB mapped by the 1st entry of PUD
-    str     x2, [x1]
-
-    ldr     x2, =PUD2_VALUE // 2nd 1GB mapped by the 2nd entry of PUD
-    str     x2, [x1, #8]
-
-    msr     ttbr0_el1, x0 // load PGD to the buttom translation based register.
-    msr     ttbr1_el1, x0 // load PGD to the upper translation based register.
+    // create page table
+    bl      page_table_create
 
     // enable MMU
     ldr     x1, =SCTLR_VALUE_MMU_ENABLE
@@ -113,3 +100,27 @@ el0_start:
     bl      main
     // halt this core if return
     b       1b
+
+/* ------- */
+
+page_table_create:
+    // omit first 16 bit (using physical address)
+    ldr     x0, =pg_dir
+    lsl     x0, x0, #16
+    lsr     x0, x0, #16
+    add     x1, x0, #PAGE_SIZE
+
+    ldr     x2, =PGD_ATTR
+    orr     x2, x1, x2 // PGD value
+    str     x2, [x0]
+
+    ldr     x2, =PUD1_VALUE // 1st 1GB mapped by the 1st entry of PUD
+    str     x2, [x1]
+
+    ldr     x2, =PUD2_VALUE // 2nd 1GB mapped by the 2nd entry of PUD
+    str     x2, [x1, #8]
+
+    msr     ttbr0_el1, x0 // load PGD to the buttom translation based register.
+    msr     ttbr1_el1, x0 // load PGD to the upper translation based register.
+    
+    ret
