@@ -91,6 +91,10 @@ RW:
 
 #define PAGE_USED 0
 
+/* select [29:21] */
+#define MMU_VA_TO_PFN(va) ((va & 0x3fe00000uLL) >> 21)
+#define MMU_VA_TO_PA(va) (va & 0x3fffffff)
+
 struct page_struct
 {
   /* bit 0 -> 1 if used, 0 if unused */
