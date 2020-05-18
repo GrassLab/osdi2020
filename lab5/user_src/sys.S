@@ -1,12 +1,5 @@
 #include "sys.h"
 
-.section ".text.entry"
-
-.global user_entry
-user_entry:
-	bl main
-	bl exit
-
 .globl call_sys_read
 call_sys_read:
     mov w8, #SYSNUM_READ

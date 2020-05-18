@@ -8,7 +8,7 @@
 #include "sys.h"
 #include "mm.h"
 
-//#define task_pt_regs(tsk) (void*)(kstack_pool[tsk->pid % TASK_SIZE] + STACK_SIZE)
+#define Task_pt_regs(tsk) ((struct pt_regs*)(tsk->mm.kernel_pages[0] + THREAD_SIZE - sizeof(struct pt_regs)))
 //#define current get_current();
 //extern Task *get_current();
 
@@ -61,16 +61,24 @@ void preempt_disable() {
 //}
 
 #define THREAD_SIZE 4096
-struct pt_regs *task_pt_regs(Task *tsk) {
-  unsigned long p = (unsigned long)tsk + THREAD_SIZE - sizeof(struct pt_regs);
-  return (struct pt_regs *)p;
+void *task_pt_regs(Task *tsk) {
+  return (void *)(tsk + THREAD_SIZE - sizeof(struct pt_regs));
+}
+
+void *ya_task_pt_regs(Task *tsk) {
+  unsigned long p = ((unsigned long)tsk) + THREAD_SIZE - sizeof(struct pt_regs);
+  printf("fu %x\r\n", ((unsigned long)tsk));
+  printf("fuk %x\r\n", ((unsigned long)tsk) + THREAD_SIZE);
+  printf("fukk %x\r\n", ((unsigned long)tsk) + THREAD_SIZE - sizeof(struct pt_regs));
+  return (void*)p;
 }
 
 Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long priority) {
 
   preempt_disable();
 
-  Task *p = (Task*) allocate_kernel_page();
+  unsigned long kp = allocate_kernel_page();
+  Task *p = (Task*)kp;
 
   //int free_idx = talloc();
   //if(free_idx < 0){
@@ -97,13 +105,13 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
   if(func){
 
-    unsigned long kstack = allocate_kernel_page();
-    p->mm.kernel_pages[0] = kstack;
-    p->mm.kernel_pages_count = 1;
+    //unsigned long kstack = allocate_kernel_page();
+    //p->mm.kernel_pages[0] = kstack;
+    //p->mm.kernel_pages_count = 1;
     //p->cpu_ctx.sp = (unsigned long)kstack_pool[p->pid % TASK_SIZE] + STACK_SIZE;
     //p->cpu_ctx.fp = (unsigned long)kstack_pool[p->pid % TASK_SIZE] + STACK_SIZE;
-    p->cpu_ctx.sp = kstack + STACK_SIZE;
-    p->cpu_ctx.fp = kstack + STACK_SIZE;
+    p->cpu_ctx.sp = kp + STACK_SIZE - sizeof(struct pt_regs);
+    p->cpu_ctx.fp = kp + STACK_SIZE - sizeof(struct pt_regs);
 
     p->cpu_ctx.x19 = (unsigned long)func; /* hold the funtion pointer */
     p->cpu_ctx.x20 = (unsigned long)arg;
@@ -111,9 +119,9 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
   }
   else{ // null fptr means fork
-    unsigned long kstack = allocate_kernel_page();
-    p->mm.kernel_pages[0] = kstack;
-    p->mm.kernel_pages_count = 1;
+    //unsigned long kstack = allocate_kernel_page();
+    //p->mm.kernel_pages[0] = kstack;
+    //p->mm.kernel_pages_count = 1;
 
     /* TODO copy user stack */
     //unsigned long ustack = allocate_kernel_page();
@@ -124,20 +132,20 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
       - current_task->mm.kernel_pages[0];
       //- (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
 
-    p->cpu_ctx.sp = ksp_off + kstack;
+    p->cpu_ctx.sp = ksp_off + kp;
 
     unsigned long kfp_off = current_task->cpu_ctx.fp
       - current_task->mm.kernel_pages[0];
       //- (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
-    p->cpu_ctx.fp = kfp_off  + kstack;
+    p->cpu_ctx.fp = kfp_off  + kp;
 
     /*
        p->cpu_ctx.x19 = current_task->cpu_ctx.x19;
        p->cpu_ctx.x20 = current_task->cpu_ctx.x20;
        */
-    strcpy((void*)kstack,
-        (void*)current_task->mm.kernel_pages[0],
-        STACK_SIZE);
+    strcpy((void*)(kp + sizeof(Task)),
+        (void*)(current_task + sizeof(Task)),
+        STACK_SIZE - sizeof(Task) - sizeof(struct pt_regs));
 
     /* TODO copy user stack */
     //strcpy(ustack_pool[p->pid % TASK_SIZE],
@@ -192,17 +200,13 @@ char* getline(char *buffer, char c){
 
 #endif
 
-void task_do_exec(unsigned long pc){
-  do_exec(pc);
-}
-
 void zombie_reaper(){
   printf(NEWLINE "============      [%d] zombie reaper     ============"  NEWLINE, current_task->pid);
   while(1){
     printf(NEWLINE "============     [%d] zreaper running    ============"  NEWLINE, current_task->pid);
     for(int i = 0; i < TASK_SIZE; i++){
       if(tasks[i] && tasks[i]->status == zombie){
-        printf(NEWLINE "============ zombie_reaper kill zombie %d ============" NEWLINE, tasks[i]->pid);
+        printf(NEWLINE "============ ZombieReaper kill zombie %d ============" NEWLINE, tasks[i]->pid);
         tasks[i]->status = none;
         tasks[i] = 0;
       }
@@ -235,22 +239,47 @@ void exit(){
 
 TASK_(1); TASK_(2); TASK_(3); TASK_(4);
 
+extern unsigned long _binary____user_build_user_img_start;
+extern unsigned long _binary____user_build_user_img_end;
+extern void user_entry();
+
+void user_hang() {
+  printf(NEWLINE "============      user  hang       ============"  NEWLINE);
+  while(1){
+    delay(1000000);
+    printf(NEWLINE "============     user is hanging    ============"  NEWLINE);
+  }
+}
+
+void kexec_user_main(){
+  printf(NEWLINE "============     [%d] kexec user main     ============"  NEWLINE, current_task->pid);
+	unsigned long begin = (unsigned long)&_binary____user_build_user_img_start;
+	unsigned long end = (unsigned long)&_binary____user_build_user_img_end;
+	unsigned long process = (unsigned long)begin - (unsigned long)begin;//(unsigned long)&user_entry;
+	int err = move_to_user_mode(begin, end - begin, process);
+	if (err < 0){
+		printf("Error while moving process to user mode\n\r");
+	}
+}
+
+
 void kernel_process(){
   puts("kernel process begin...");
   //printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
-  //privilege_task_create(task_do_exec, (UL)user_login, 3);
-  //privilege_task_create(task_do_exec, (UL)user_shell, 2);
+  //privilege_task_create(do_exec, (UL)user_login, 3);
+  //privilege_task_create(do_exec, (UL)user_shell, 2);
   privilege_task_create(task_1, 0, current_task->priority);
   privilege_task_create(task_2, 0, current_task->priority);
-  privilege_task_create(task_3, 0, current_task->priority);
-  privilege_task_create(task_4, 0, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_fork, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_exec, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_write, current_task->priority);
-  //privilege_task_create(task_do_exec, (UL)user_hang, current_task->priority);
+  //privilege_task_create(task_3, 0, current_task->priority);
+  //privilege_task_create(task_4, 0, current_task->priority);
+  //privilege_task_create(do_exec, (UL)user_fork, current_task->priority);
+  //privilege_task_create(do_exec, (UL)user_exec, current_task->priority);
+  //privilege_task_create(do_exec, (UL)user_mutex, current_task->priority);
+  //privilege_task_create(do_exec, (UL)user_mutex, current_task->priority);
+  //privilege_task_create(do_exec, (UL)user_mutex, current_task->priority);
+  //privilege_task_create(do_exec, (UL)user_write, current_task->priority);
+  //privilege_task_create(do_exec, (UL)user_hang, current_task->priority);
+  privilege_task_create(kexec_user_main, 0, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_2, 0);
   //privilege_task_create(task_3, 0);
@@ -268,15 +297,43 @@ void kernel_process(){
   }
 }
 
+int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc){
+  printf("[%d] do exec" NEWLINE, current_task->pid);
+  struct pt_regs *regs = ya_task_pt_regs(current_task);
+  memzero((unsigned long)regs, sizeof(struct pt_regs));
+
+  printf("pc = %x" NEWLINE, pc);
+  regs->pc = pc;
+  regs->pstate = PSR_MODE_EL0t;
+	//regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
+	//regs->sp =  0x0000ffffffffe000; // why
+	regs->sp = 2 *  PAGE_SIZE;
+
+  /* TODO adjust user stack */
+  //regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
+	unsigned long
+    //stack_page = allocate_user_page(current_task, regs->sp - 8),
+	  code_page = allocate_user_page(current_task, pc);
+
+  if(!code_page/* || !stack_page*/){
+    printf("[%d] do exec FAILED" NEWLINE, current_task->pid);
+  }
+
+  memcpy(start, code_page, size);
+  printf("code: %x" NEWLINE, ((int*)code_page)[0]);
+	set_pgd(current_task->mm.pgd);
+  return 0;
+}
+
 void do_exec(unsigned long pc){
   printf("[%d] do exec" NEWLINE, current_task->pid);
-  struct pt_regs *regs = task_pt_regs(current_task);
+  struct pt_regs *regs = ya_task_pt_regs(current_task);
   memzero((unsigned long)regs, sizeof(struct pt_regs));
 
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
 	//regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
-	regs->sp =  0x0000ffffffffe000; // why
+	//regs->sp =  0x0000ffffffffe000; // why
 
 	unsigned long
     stack_page = allocate_user_page(current_task, regs->sp - 8),
@@ -286,6 +343,7 @@ void do_exec(unsigned long pc){
     printf("[%d] do exec FAILED" NEWLINE, current_task->pid);
   }
 
+	regs->sp =  stack_page + STACK_SIZE; // why
   //memcpy(code_page, start, size);
 	set_pgd(current_task->mm.pgd);
   /* TODO adjust user stack */

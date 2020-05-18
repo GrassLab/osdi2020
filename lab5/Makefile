@@ -122,8 +122,11 @@ tty: $(IMG)
 ttyt: stamp.img
 	@$(QEMU) -serial pty -M raspi3 -kernel stamp.img
 
-gdb: $(IMG)
+rgdb: $(IMG)
 	$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -S -s
+
+gdb:
+	$(ARMGNU)-gdb -x cmd.gdb
 
 update:
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt

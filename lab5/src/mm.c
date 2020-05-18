@@ -44,9 +44,11 @@ unsigned long get_free_page()
 			mpages[i].status = used;
 			unsigned long page = LOW_MEMORY + i * PAGE_SIZE;
 			memzero(page + VA_START, PAGE_SIZE);
+      printf("free page 0x%x" NEWLINE, page);
 			return page;
 		}
 	}
+  printf("free page failed." NEWLINE);
 	return 0;
 }
 
