@@ -58,7 +58,6 @@ return_to_el1:
     # FPEN, bits[21:20]: Traps EL0 and EL1 accesses to the SVE, Advanced SIMD, and floating-point registers to EL1, or to EL2 when it is implemented and enabled for the current Security state and HCR_EL2.TGE is 1, from both Execution states.
     mrs     x1,     CPACR_EL1
     orr     x1,     x1,         (3 << 20) // # #0b1100110000000000000000
-    # orr x1, x1, (1 << 16) 
     msr     CPACR_EL1, x1
 
     # clear bss
@@ -81,10 +80,10 @@ return_to_el1:
     ## required 5.1: test mmu setting
     ldr     x2, =kernel_testing_main
 
-    # enable mmu, toggle the last bit to 1
+    # enable mmu, cache remains disabled, toggle the last bit to 1
     mrs     x1,     SCTLR_EL1
     orr     x1 ,    x1,     1
-    msr     SCTLR_EL1, x1               // enable MMU, cache remains disabled
+    msr     SCTLR_EL1, x1 
     
     br      x2
     b       loop

@@ -21,11 +21,10 @@ SECTIONS
         
         _PGD_START = .;
         
-        .data.pgd : { . += (2 * (1 << 12)); }   /* where to store page table */
+        .data.pgd : { . += (3 * (1 << 12)); }   /* where to store page table */
 
     _kernel_end = .;
 
     /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 
 }
-__bss_size = (__bss_end - __bss_start)>>3;
