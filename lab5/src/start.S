@@ -20,10 +20,7 @@ master:
     ldr x0, = TCR_CONFIG_DEFAULT
     msr tcr_el1, x0
 
-    ldr x0, =( \
-        (MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) | \
-        (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8)) \
-    )
+    ldr x0, = MAIR_CONFIG_DEFAULT
     msr mair_el1, x0
 
     mov x0, 0 // PGD's page frame at 0x0
@@ -47,6 +44,10 @@ master:
     orr x2 , x2, 1
     msr sctlr_el1, x2 // enable MMU, cache remains disabled
 
+    ldr x2, boot_rest // indirect branch to the virtual address
+    br x2
+
+boot_rest:
     // setup exception vector for EL1
     ldr x0, =exception_table
     msr VBAR_EL1, x0

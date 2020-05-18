@@ -1,7 +1,7 @@
 SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
-CFALG = -fPIC -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude -g -O0 -ggdb3
-ASMFALG = -fPIC -Iinclude -g -O0 -ggdb3
+CFALG = -fPIC -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude -g -O0 -ggdb3 -MMD
+ASMFALG = -fPIC -Iinclude -g -O0 -ggdb3 -MMD
 SRC_DIR = src
 BUILD_DIR = build
 
@@ -51,3 +51,6 @@ rungdb:
 
 gdb:
 	aarch64-linux-gnu-gdb build/kernel8.elf
+
+dump:
+	aarch64-linux-gnu-objdump build/kernel8.elf
