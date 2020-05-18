@@ -8,26 +8,26 @@ INCLUDES = -Iinclude
 SRCDIR	 = src
 SRC		 = $(wildcard $(SRCDIR)/*.c)
 ASMSRC	 = $(wildcard $(SRCDIR)/*.S)
-SRCOBJS	 = $(patsubst $(SRCDIR)/%.c,%.o,$(SRC)) \
+SRCOBJS	 = $(patsubst $(SRCDIR)/%.c,%_c.o,$(SRC)) \
 		   $(patsubst $(SRCDIR)/%.S,%.o,$(ASMSRC))
 IRQDIR	 = src/interrupt
 IRQ		 = $(wildcard $(IRQDIR)/*.c)
 ASMIRQ	 = $(wildcard $(IRQDIR)/*.S)
-IRQOBJS	 = $(patsubst $(IRQDIR)/%.c,%.o,$(IRQ)) \
+IRQOBJS	 = $(patsubst $(IRQDIR)/%.c,%_c.o,$(IRQ)) \
 		   $(patsubst $(IRQDIR)/%.S,%.o,$(ASMIRQ))
 DVDIR	 = src/device
 DV		 = $(wildcard $(DVDIR)/*.c)
-DVOBJS	 = $(patsubst $(DVDIR)/%.c,%.o,$(DV)) \
+DVOBJS	 = $(patsubst $(DVDIR)/%.c,%_c.o,$(DV)) \
 		   $(patsubst $(DVDIR)/%.S,%.o,$(ASMDV))
 TASKDIR	 = src/task
 TASK     = $(wildcard $(TASKDIR)/*.c)
 ASMTASK	 = $(wildcard $(TASKDIR)/*.S)
-TASKOBJS = $(patsubst $(TASKDIR)/%.c,%.o,$(TASK)) \
+TASKOBJS = $(patsubst $(TASKDIR)/%.c,%_c.o,$(TASK)) \
 		   $(patsubst $(TASKDIR)/%.S,%.o,$(ASMTASK))
 MMDIR	 = src/memory
 MM       = $(wildcard $(MMDIR)/*.c)
 ASMMM    = $(wildcard $(MMDIR)/*.S)
-MMOBJS   = $(patsubst $(MMDIR)/%.c,%.o,$(MM)) \
+MMOBJS   = $(patsubst $(MMDIR)/%.c,%_c.o,$(MM)) \
 		   $(patsubst $(MMDIR)/%.S,%.o,$(ASMMM))
 
 OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS) $(TASKOBJS) $(MMOBJS)
@@ -45,7 +45,7 @@ $(KERNEL).img: $(KERNEL).elf
 $(KERNEL).elf: start.o $(OBJS)
 	$(LD) -T $(LSCRIPT) -o $@ $^
 
-%.o: %.c
+%_c.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 %.o: %.S
