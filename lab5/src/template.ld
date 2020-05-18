@@ -29,6 +29,9 @@ SECTIONS
         *(.bootloader*)
         _bootloader_end = .;
     }
+	. = ALIGN(0x00001000);
+	pg_dir = .;
+	.data.pgd : { . += (5 * (1 << 12)); }
     _kend = .;
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }

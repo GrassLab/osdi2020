@@ -70,11 +70,12 @@ int main(void) {
     //puts("");
     flush();
 
+
     core_timer_init();
 
     privilege_task_create(kernel_process, 0, 1);
-    while(1);
 
+    while(1);
     while(1){
       puts("kernel main scheduling...");
       schedule();
