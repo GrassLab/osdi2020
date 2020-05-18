@@ -43,11 +43,10 @@ void sys_exit(){
   preempt_enable();
 }
 
-extern Task task_pool[TASK_SIZE];
 void sys_signal(unsigned long pid, int code){
   for(int i = 0; i < TASK_SIZE; i++){
-    if(task_pool[i].status != none && task_pool[i].pid == pid){
-      task_pool[i].signals |= code;
+    if(tasks[i] && tasks[i]->status != none && tasks[i]->pid == pid){
+      tasks[i]->signals |= code;
     }
   }
 }

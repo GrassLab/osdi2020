@@ -118,7 +118,7 @@ update:
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt
 
 clean :
-	rm -rf *$(BUILD_DIR) kernel8.img stamp.img kernel8.elf
+	rm -rf *$(BUILD_DIR) kernel8.img stamp.img kernel8.elf $(USER_BUILD_DIR)
 
 format:
 	clang-format -i src/*.c
