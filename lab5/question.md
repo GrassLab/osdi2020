@@ -6,3 +6,6 @@ A: ttbr0_el1 and ttbr1_el1 points to the same page frame. All map to 0x00000000 
 > Q: For mapping 1GB memory region, how many page frames are used by page tables(PGD, PUD, PMD, and PTE) in four level translation?
 A: GPD: 1, PUD: 1, PMD: 512(262144/512), PTE: 262144(1GB/4KB)
 
+> Q: If a page frame is allocated and to be mapped at user space. Is it necessary to initialize it into 0?
+A: Depends on the use of the user mode program. If it's for .bss segment then yes. Others may not be necessary.
+
