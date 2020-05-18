@@ -102,15 +102,16 @@ void demo_lab4_do_exec() {
     do_exec(demo_official);
 }
 
-// Lab5: Required 2-2
+// Lab5: Required 2-2, 2-3
 
-void demo_lab5_req2_2() {
+void demo_lab5_req2() {
     while (1) {
-        unsigned int* ptr = (unsigned int*)(MMIO_BASE);
+        void* ptr = page_alloc();
         uint64_t virt = (uint64_t) ptr;
         uint64_t phy = virtual_to_physical(virt);
         uint64_t pfn = phy_to_pfn(phy);
         uart_printf("%x %x %x...\n", virt, phy, pfn);
-        exit(0);
+        page_free(ptr);
+        delay(10000000);
     }
 }

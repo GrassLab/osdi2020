@@ -53,7 +53,7 @@ void schedule_init() {
     runqueue_init();
     privilege_task_create(zombie_reaper, 10);
 
-    privilege_task_create(demo_lab5_req2_2, 10);
+    privilege_task_create(demo_lab5_req2, 10);
 
     arm_core_timer_enable();
     schedule();

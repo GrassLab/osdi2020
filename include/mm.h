@@ -25,6 +25,8 @@ extern struct page_t page[PAGE_FRAMES_NUM];
 void mm_init();
 uint64_t virtual_to_physical(uint64_t virt_addr);
 uint64_t phy_to_pfn(uint64_t phy_addr);
+void* page_alloc();
+void page_free(void* addr);
 
 #endif /* __ASSEMBLY__ */
 
