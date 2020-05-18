@@ -18,9 +18,11 @@ hang:
 master:
     bl init_mmu
 
-    adr x0, bss_begin
-    adr x1, bss_end
+    ldr x0, =bss_begin
+    mov x2, 0xffff000000000000 // for eliminating virtual part
+    ldr x1, =bss_end
     sub x1, x1, x0
+    sub x0, x0, x2
     bl memzero
 
     mov sp, #0x400000

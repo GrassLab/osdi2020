@@ -13,4 +13,6 @@ SECTIONS
     bss_begin = .;
     .bss : { *(.bss*) }
     bss_end = .;
+    . = ALIGN(0x1000);
+    kernel_end = .;
 }

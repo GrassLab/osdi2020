@@ -4,6 +4,7 @@
 #include "exception/timer.h"
 #include "schedule/task.h"
 #include "schedule/schedule.h"
+#include "mmu/vma.h"
 
 void kernel_main(void) {
     initUART();
@@ -19,6 +20,8 @@ void kernel_main(void) {
 
     sendStringUART("Press enter to continue...");
     sendUART(recvUART());
+
+    initPageFrames();
 
     while (1)
         ;
