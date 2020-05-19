@@ -22,6 +22,9 @@ all: $(EXEC).img
 start.o: start.s
 	aarch64-linux-gnu-gcc -o $@ -c -O0 $<
 
+%_s.o: %.S
+	aarch64-linux-gnu-gcc -o $@ $(INCLUDE) -c $<
+
 %_s.o: %.s
 	aarch64-linux-gnu-gcc -o $@ -c $<
 
