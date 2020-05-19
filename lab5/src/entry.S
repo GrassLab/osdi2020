@@ -266,7 +266,6 @@ el0_da:
     cmp x0, 0
     b.eq 1f
     bl check_resched
-    //handle_invalid_entry DATA_ABORT_ERROR
 1:
     //bl disable_irq
     kexit_zero
@@ -305,28 +304,4 @@ ret_from_fork:
 
 ret_to_user:
     bl disable_irq
-    //kexit_zero
-    ldp	x22, x23, [sp, #16 * 16]
-    ldp	x30, x21, [sp, #16 * 15]
-
-    msr	sp_el0, x21
-    msr	elr_el1, x22
-    msr	spsr_el1, x23
-
-    ldp	x0, x1,   [sp, #16 * 0]
-    ldp	x2, x3,   [sp, #16 * 1]
-    ldp	x4, x5,   [sp, #16 * 2]
-    ldp	x6, x7,   [sp, #16 * 3]
-    ldp	x8, x9,   [sp, #16 * 4]
-    ldp	x10, x11, [sp, #16 * 5]
-    ldp	x12, x13, [sp, #16 * 6]
-    ldp	x14, x15, [sp, #16 * 7]
-    ldp	x16, x17, [sp, #16 * 8]
-    ldp	x18, x19, [sp, #16 * 9]
-    ldp	x20, x21, [sp, #16 * 10]
-    ldp	x22, x23, [sp, #16 * 11]
-    ldp	x24, x25, [sp, #16 * 12]
-    ldp	x26, x27, [sp, #16 * 13]
-    ldp	x28, x29, [sp, #16 * 14]
-    add	sp, sp, #S_FRAME_SIZE
-    eret
+    kexit_zero

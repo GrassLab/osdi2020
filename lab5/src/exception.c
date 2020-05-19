@@ -45,13 +45,7 @@ int exception_handler(long x0, long x1, long x2, long x3, long x4, long x5) {
   switch(ec){
     case 0x15:
       if (iss == 0) {
-        // puts("===================");
-        //printf("syscall code: %d" NEWLINE , code);
         int ret = syscall(code, x0, x1, x2, x3, x4, x5);
-        //__asm__ volatile("mov %0, x0" : "=r"(ret));
-        /* the return value will stored in x0 register */
-        // printf("syscall return value %d" NEWLINE, ret);
-        // puts("===================");
         if (ret < 0) printf("syscall failed with code number: %d" NEWLINE, code);
         return ret;
       }
@@ -61,19 +55,4 @@ int exception_handler(long x0, long x1, long x2, long x3, long x4, long x5) {
   }
   show_invalid_entry_message(-1, esr, elr);
   return -1;
-  //unsigned long sp_el0, elr_el1, spsr_el1;
-  //__asm__ volatile("mrs	%0, sp_el0" : "=r"(sp_el0));
-  //__asm__ volatile("mrs	%0, elr_el1" : "=r"(elr_el1));
-  //__asm__ volatile("mrs	%0, spsr_el1" : "=r"(spsr_el1));
-  //printf("rec %x %x %x", sp_el0, elr_el1, spsr_el1);
-  //enable_irq();
-  //puts("go resched");
-  //check_resched();
-  //puts("ret resched");
-  //disable_irq();
-  //puts("return");
-  //printf("cer %x %x %x", sp_el0, elr_el1, spsr_el1);
-  //__asm__ volatile("msr	sp_el0, %0" :: "r"(sp_el0));
-  //__asm__ volatile("msr	elr_el1, %0" :: "r"(elr_el1));
-  //__asm__ volatile("msr	spsr_el1, %0" :: "r"(spsr_el1));
 }

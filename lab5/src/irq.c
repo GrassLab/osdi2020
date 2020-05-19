@@ -34,12 +34,6 @@ void uart_read_enqueue(Task *task){
   read_tasks[rtend] = task;
   rtend = (rtend + 1) % TASK_SIZE;
   task->status = block;
-  /*
-  printf("block is [%d](%d), %d %d",
-      task->pid,
-      task->status,
-      task->priority, task->counter);
-  */
 }
 
 int uart_read_front(){
@@ -72,7 +66,6 @@ void handle_uart_irq(void) {
 #if 1
       int p = uart_read_front();
       read_tasks[p]->buffer[0] = uart_recv();
-      //printf("stuff [%d] 's line with %c " NEWLINE, read_tasks[p]->pid, read_tasks[p]->buffer[0]);
       read_tasks[p]->status = idle;
       read_tasks[p]->counter += 100;
       uart_read_dequeue(p);
@@ -81,7 +74,6 @@ void handle_uart_irq(void) {
       read_tasks[rtbeg]->status = idle;
       read_tasks[rtbeg]->priority = 10;
       rtbeg = (rtbeg + 1) % TASK_SIZE;
-      puts(NEWLINE ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>             stuff task");
 #endif
       current_task->flag |= RESCHED;
       unsigned long elr, sp_el0, spsr_el1;
@@ -112,8 +104,6 @@ void irq_handler() {
   // unsigned int aux_irq = *(AUX_IRQ);
   //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
 
-  // get_current_el();
-
   if (nb8p(*LOCAL_TIMER_CONTROL_REG, 1, 31))
     local_timer_handler();
   if((*CORE0_INT_SRC) & 0x2){
@@ -125,7 +115,6 @@ void irq_handler() {
       sys_timer_handler();
       irq &= ~SYSTEM_TIMER_IRQ_1;
     } else if (irq & AUX_IRQ_MSK) {
-      // else if(aux_irq & miniUART_IRQ)
       handle_uart_irq();
       irq &= ~AUX_IRQ_MSK;
     } else {
@@ -136,7 +125,6 @@ void irq_handler() {
 
   unsigned long elr, nelr;
   __asm__ volatile("mrs %0, elr_el1" : "=r"(elr));
-  // printf("pre elr = %x" NEWLINE, elr);
 
 #ifdef BOTTOM_HALF
 #ifdef DEFFERED
@@ -148,12 +136,9 @@ void irq_handler() {
 #endif
 
   __asm__ volatile("mrs %0, elr_el1" : "=r"(nelr));
-  // printf("%x vs %x" NEWLINE, elr, nelr);
   if (elr != nelr) {
     __asm__ volatile("msr elr_el1, %0" ::"r"(elr));
   }
-  // delay(5000000000);
-  // printf("b");
 }
 
 void init_irq() {
@@ -171,14 +156,9 @@ void init_irq() {
 }
 
 void enable_irq() {
-  // delay(50000000);
-  //*ENABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
   __asm__ volatile("msr daifclr, #2" ::: "memory");
 }
 
 void disable_irq() {
-  // get_current_el();
-  // delay(500000000);
-  //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
   __asm__ volatile("msr daifset, #2" ::: "memory");
 }
