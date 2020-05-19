@@ -63,13 +63,13 @@ int sys_uart_gets(char * string, char delimiter, unsigned length)
   return 0;
 }
 
-int sys_exec(void(*start_func)())
+int sys_exec_todo(void(*start_func)())
 {
-  task_do_exec(start_func);
+  //task_do_exec(start_func);
   return 0;
 }
 
-int sys_fork(struct trapframe_struct * trapframe)
+int sys_fork_todo(struct trapframe_struct * trapframe)
 {
   uint64_t current_task_id = task_get_current_task_id();
 

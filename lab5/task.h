@@ -56,7 +56,7 @@ uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority);
 uint64_t task_get_current_task_id(void);
 uint64_t task_user_get_current_task_id(void);
 void task_privilege_demo(void);
-void task_do_exec(void(*start_func)());
+void task_do_exec(uint64_t * start, uint64_t size);
 void task_user_demo(void);
 void task_user_context1_demo(void);
 void task_user_context2_demo(void);
@@ -66,6 +66,10 @@ void task_end_waiting(void);
 void task_guard_section(void);
 void task_unguard_section(void);
 int task_is_guarded(void);
+
+extern char _binary_shell_bin_start;
+extern char _binary_shell_bin_end;
+extern char _binary_shell_bin_size;
 
 #endif
 

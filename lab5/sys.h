@@ -15,8 +15,8 @@ int sys_exc(uint64_t ELR_EL1, uint8_t exception_class, uint32_t exception_iss);
 int sys_timer_int(void);
 int sys_uart_puts(char * string);
 int sys_uart_gets(char * string, char delimiter, unsigned length);
-int sys_exec(void(*start_func)());
-int sys_fork(struct trapframe_struct * trapframe);
+int sys_exec_todo(void(*start_func)());
+int sys_fork_todo(struct trapframe_struct * trapframe);
 int sys_exit(int status);
 int sys_signal(int task_id, int signalno);
 
