@@ -159,13 +159,7 @@ uint64_t task_get_current_task_signal(void)
 
 void task_start_waiting(void)
 {
-  char id_char[0x10];
   uint64_t current_task_id = task_get_current_task_id();
-
-  uart_puts(ANSI_GREEN"[scheduler]"ANSI_RESET" Task id: ");
-  string_longlong_to_char(id_char, (long)current_task_id);
-  uart_puts(id_char);
-  uart_puts(" has entered the wait queue\n");
 
   task_guard_section();
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 2);
@@ -178,8 +172,6 @@ void task_start_waiting(void)
 
 void task_end_waiting(void)
 {
-  char id_char[0x10];
-
   /* put the first task in the wait queue back to running queue */
   uint64_t task_id = schedule_dequeue_wait();
 
@@ -188,11 +180,6 @@ void task_end_waiting(void)
   {
     task_id = schedule_dequeue_wait();
   }
-
-  uart_puts(ANSI_GREEN"[scheduler]"ANSI_RESET" Task id: ");
-  string_longlong_to_char(id_char, (long)task_id);
-  uart_puts(id_char);
-  uart_puts(" has left the wait queue\n");
 
   task_guard_section();
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].flag, 2);
