@@ -133,7 +133,7 @@ int sys_exit(int status)
   uint64_t current_task_id = task_get_current_task_id();
   task_guard_section();
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 1);
-  schedule_zombie_exist = 1;
+  ++schedule_zombie_count;
   task_unguard_section();
   schedule_yield();
   return 0;

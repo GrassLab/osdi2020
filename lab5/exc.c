@@ -67,6 +67,7 @@ void exc_not_implemented(uint64_t code)
   uart_puts_blocking("FAR_EL1: ");
   string_ulonglong_to_hex_char(string_buff, FAR_EL1);
   uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
   uart_puts_blocking("TPIDR_EL1: ");
   string_ulonglong_to_hex_char(string_buff, TPIDR_EL1);
   uart_puts_blocking(string_buff);

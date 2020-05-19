@@ -10,7 +10,7 @@
 
 static uint64_t_pqueue schedule_run_queue;
 static uint64_t_queue schedule_wait_queue;
-int schedule_zombie_exist = 0;
+int schedule_zombie_count = 0;
 
 void scheduler_init(void)
 {
@@ -168,15 +168,19 @@ void schedule_zombie_reaper(void)
   uart_puts("\n");
   while(1)
   {
-    if(schedule_zombie_exist == 0)
+    if(schedule_zombie_count == 0)
     {
       /* nothing to do, yield */
       schedule_yield();
+      continue;
     }
     task_guard_section();
-    for(unsigned task_idx = 0; task_idx < TASK_POOL_SIZE; ++task_idx)
+    for(unsigned task_idx = 0; task_idx < TASK_POOL_SIZE - 1; ++task_idx)
     {
-      schedule_zombie_exist = 0;
+      if(schedule_zombie_count == 0)
+      {
+        break;
+      }
       if(CHECK_BIT(kernel_task_pool[task_idx].flag, TASK_STATE_ZOMBIE))
       {
         char id_in_string[0x10];
@@ -204,6 +208,7 @@ void schedule_zombie_reaper(void)
         uart_puts("Task id: ");
         uart_puts(id_in_string);
         uart_puts(" reaped!\n");
+        --schedule_zombie_count;
       }
     }
     task_unguard_section();
