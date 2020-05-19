@@ -40,9 +40,6 @@ void interative()
     int commandIndex = 0;
     int isbooting = 1;
     while (1) {
-        // if (uart_buffer_empty()) {
-        //     continue;
-        // }
         char c = uart_getc();
         if (isbooting) {
             isbooting = 0;

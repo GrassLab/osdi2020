@@ -39,34 +39,19 @@ void task_manager_init(void(*func)()) {
 
 void privilege_task_create(void(*func)())
 {
-    uart_puts("p1\n");
     int taskId = taskManager.taskCount;
-    uart_puts("p2\n");
     Task* task = &taskManager.taskPool[taskId];
-    uart_puts("p3\n");
-
     task->cpuContext.pc = (unsigned long) func;
-    uart_puts("p4\n");
     task->cpuContext.sp = (unsigned long) &taskManager.kstackPool[taskId];
-    uart_puts("p5\n");
     task->userContext.sp_el0 = &taskManager.ustackPool[taskId];
-    uart_puts("p6\n");
     task->userContext.spsr_el1 = 0;
-    uart_puts("p7\n");
     task->userContext.elr_el1 = 0;
-    uart_puts("p8\n");
     task->id = taskId;
-    uart_puts("p9\n");
     task->parentId = 0;
-    uart_puts("p10\n");
     task->rescheduleFlag = 0;
-    uart_puts("p11\n");
     task->state = IN_KERNEL_MODE;
-    uart_puts("p12\n");
     taskManager.taskPool[taskId].timeCount = 0;
-    uart_puts("p13\n");
     taskManager.taskCount++;
-    uart_puts("p14\n");
 }
 
 void context_switch(Task* next)
@@ -197,7 +182,7 @@ void foo12()
         uart_puts("Task id: ");
         uart_print_int(get_taskid());
         uart_puts("\n");
-        wait(1000000);
+        wait(10000000);
     }
 }
 

@@ -125,12 +125,6 @@ void uart_print_int(int num) {
     uart_puts(str);
 }
 
-void uart_print_double(double num) {
-    char str[1024] = {0};
-    doubleToStr(num, str);
-    uart_puts(str);
-}
-
 void uart_print_hex(unsigned int num) {
     char str[1024] = {0};
     hexToStr(num, str);

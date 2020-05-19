@@ -2,7 +2,7 @@ CC = aarch64-linux-gnu-gcc
 LD = aarch64-linux-gnu-ld
 OBJCOPY = aarch64-linux-gnu-objcopy
 TARGET = kernel8.img
-CFLAGS = -I include -g -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles
+CFLAGS = -I include -g -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -mgeneral-regs-only
 
 SRCS = $(wildcard src/*.c)
 ASMS = $(wildcard src/*.S)
@@ -22,7 +22,7 @@ src/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(TARGET): $(ASMS) $(OBJS)
-	$(CC) -I include -g -nostdlib -nostartfiles $(ASMS) $(OBJS) -T linker.ld -o kernel8.elf
+	$(CC) -I include -g -nostdlib -nostartfiles -mgeneral-regs-only $(ASMS) $(OBJS) -T linker.ld -o kernel8.elf
 	$(OBJCOPY) -O binary kernel8.elf $@
 
 clean:

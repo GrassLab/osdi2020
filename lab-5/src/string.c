@@ -53,31 +53,6 @@ void intToStr(int num, char *str) {
     strInvert(str);
 }
 
-void doubleToStr(double num, char *str) {
-    int intPart = (int)num;
-    char intPartStr[128] = {0};
-    intToStr(intPart, intPartStr);
-    int intPartStrSize = strlen(intPartStr);
-    for (int i = 0; i < intPartStrSize; i++) {
-        str[i] = intPartStr[i];
-    }
-    str[intPartStrSize] = '.';
-    
-    char floatPartStr[128] = {0};
-    double floatPart = num - (double) intPart;
-
-    floatPart *= 100000000;
-    while((int)floatPart % 10 == 0 ) floatPart /= 10;
-    intToStr((int)floatPart, floatPartStr);
-    int floatPartStrSize = strlen(floatPartStr);
-
-    for (int i = intPartStrSize + 1; i < intPartStrSize + floatPartStrSize + 1; i++) {
-        str[i] = floatPartStr[i - intPartStrSize - 1];
-    }
-    str[intPartStrSize + 1 + floatPartStrSize] = '\0';
-}
-
-
 void hexToStr(unsigned int num, char *str) {
     unsigned int n;
     for (int c = 28; c >= 0; c -= 4) {
