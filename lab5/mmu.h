@@ -72,15 +72,16 @@ RW:
 #ifndef __ASSEMBLER__
 
 #include <stdint.h>
-
-#define MAIR_IDX_DEVICE_nGnRnE 0
-#define MAIR_IDX_NORMAL_NOCACHE 1
+#include "task.h"
 
 #define PAGE_SIZE (1 << 21) /* 2mb */
+#define PAGE_4K (1 << 12)
 
 #define PD_TABLE 0x3 // indicate this to another descriptor
 #define PD_BLOCK 0x1 // indicate to physical ram
+#define PD_PTE_BLOCK 0x3 // every entry in pte should point to physcial ram
 #define PD_ACCESS (1 << 10) // access flag, generate page fault if not set
+#define PD_USER_ACCESS (1 << 6) // user access flag
 /* Set access bit and mair[4:2] and indicate to physical ram */
 #define PD_DEVICE (MAIR_IDX_DEVICE_nGnRnE << 2)
 #define PD_NORMAL (MAIR_IDX_NORMAL_NOCACHE << 2)
@@ -95,10 +96,14 @@ RW:
 
 #define PAGE_USED 0
 
+#define USER_STACK_VA 0x0000ffffffffe000
+
 /* select [29:21] */
 #define MMU_VA_TO_PFN(va) ((va & 0x3fe00000uLL) >> 21)
 #define MMU_VA_TO_PA(va) (va & 0x3fffffff)
 #define MMU_PFN_TO_VA(pfn) (((uint64_t)pfn) << 21)
+#define MMU_PA_TO_VA(pa) ((uint64_t *)((uint64_t)pa | 0xffff000000000000))
+#define MMU_VA_TO_USER_VA(va) ((uint64_t *)((uint64_t)va & 0x0000ffffffffffff))
 
 struct page_struct
 {
@@ -106,10 +111,28 @@ struct page_struct
   uint64_t flag;
 };
 
-void mmu_ttbr0_ttbr1_el1_init(void);
+struct user_space_page_struct
+{
+  uint64_t * page_table_base;
+  uint64_t * page_frame_base;
+
+  uint64_t * pgd_base;
+
+  uint64_t * pud_base;
+
+  uint64_t * pmd_text_base;
+  uint64_t * pmd_stack_base;
+  uint64_t * pte_text_base[TASK_POOL_SIZE];
+  uint64_t * pte_stack_base[TASK_POOL_SIZE];
+  uint64_t * user_space_text_pa_base[TASK_POOL_SIZE];
+};
+
+void mmu_ttbrx_el1_init(void);
 void mmu_page_init(void);
 uint64_t * mmu_page_allocate(void);
 void mmu_page_free(uint64_t * va);
+void mmu_create_user_page_table_32KB(void);
+uint64_t * mmu_user_task_set_pmu(uint64_t idx);
 
 #endif /* __ASSEMBLER__ */
 

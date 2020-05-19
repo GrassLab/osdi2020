@@ -66,7 +66,7 @@ bss_reset_loop:
 prepare_mmu:
   bl mmu_tcr_el1_init
   bl mmu_mair_el1_init
-  bl mmu_ttbr0_ttbr1_el1_init
+  bl mmu_ttbrx_el1_init
 
   ldr x0, =boot_rest // indirect branch to the virtual address before enable mmu
 
