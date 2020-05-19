@@ -3,6 +3,7 @@
 #include "demo.h"
 #include "exception.h"
 #include "sysregs.h"
+#include "mm.h"
 
 struct task_t task_pool[TASK_POOL_SIZE];
 char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
@@ -109,6 +110,7 @@ void task_init() {
         task_pool[i].id = i;
         task_pool[i].state = EXIT;
         task_pool[i].need_resched = 0;
+        task_pool[i].mm.pgd = 0;
     }
     // idle task
     task_pool[0].state = RUNNING;
@@ -131,11 +133,11 @@ void zombie_reaper() {
 
 void schedule_init() {
     runqueue_init();
-    privilege_task_create(zombie_reaper, 10);
+    // privilege_task_create(zombie_reaper, 10);
 
-    privilege_task_create(demo_lab5_req2, 10);
+    privilege_task_create(demo_lab5_req3, 10);
 
-    arm_core_timer_enable();
+    // arm_core_timer_enable();
     schedule();
 }
 
@@ -175,12 +177,34 @@ void schedule() {
     context_switch(next);
 }
 
-void do_exec(void (*func)()) {
+int do_exec(uint64_t start, uint64_t size, uint64_t pc) {
+    uint64_t sp = 0x0000ffffffffe000 - 8; // stack grow down
+
     struct task_t *current = get_current_task();
-    asm volatile("msr sp_el0, %0" : : "r"(&ustack_pool[current->id][USTACK_TOP_IDX]));
-    asm volatile("msr elr_el1, %0": : "r"(func));
+    void* code_page = page_alloc_user(current, pc);
+    void* stack_page = page_alloc_user(current, sp);
+    if (!code_page || !stack_page) return -1;
+
+    // copy code to pc
+    uint8_t* pc_ptr = (uint8_t*)code_page;
+    uint8_t* code_ptr = (uint8_t*)start;
+    for (uint64_t i = 0; i < size; i++) {
+        *(pc_ptr + i) = *(code_ptr + i);
+    }
+
+    asm volatile("msr sp_el0, %0" : : "r"(sp));
+    asm volatile("msr elr_el1, %0": : "r"(pc));
     asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
+
+    asm volatile("dsb ish");
+    asm volatile("msr ttbr0_el1, %0" : : "r"(get_current_task()->mm.pgd));
+    asm volatile("tlbi vmalle1is");
+    asm volatile("dsb ish");
+    asm volatile("isb");
+
     asm volatile("eret");
+
+    return 0;
 }
 
 void do_exit(int status) {

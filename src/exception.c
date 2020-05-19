@@ -1,6 +1,6 @@
 #include "peripherals/irq.h"
 #include "peripherals/uart0.h"
-#include "peripherals/timer.h"
+#include "peripherals/arm.h"
 #include "timer.h"
 #include "uart0.h"
 #include "exception.h"
@@ -53,11 +53,11 @@ void sys_uart_write(struct trapframe* trapframe) {
     trapframe->x[0] = size;
 }
 
-void sys_exec(struct trapframe* trapframe) {
-    void (*func)() = (void(*)()) trapframe->x[0];
-    do_exec(func);
-    trapframe->x[0] = 0;
-}
+// void sys_exec(struct trapframe* trapframe) {
+//     void (*func)() = (void(*)()) trapframe->x[0];
+//     do_exec(func);
+//     trapframe->x[0] = 0;
+// }
 
 void sys_fork(struct trapframe* trapframe) {
     struct task_t* parent_task = get_current_task();
@@ -109,9 +109,9 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
             sys_uart_write(trapframe);
             break;
 
-        case SYS_EXEC:
-            sys_exec(trapframe);
-            break;
+        // case SYS_EXEC:
+        //     sys_exec(trapframe);
+        //     break;
 
         case SYS_FORK:
             sys_fork(trapframe);

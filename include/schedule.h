@@ -39,6 +39,10 @@ struct cpu_context {
     uint64_t sp;
 };
 
+struct mm_struct {
+    uint64_t pgd;
+};
+
 enum task_state {
     RUNNING,
     ZOMBIE,
@@ -53,6 +57,7 @@ struct task_t {
     int need_resched;
     int exit_status;
     struct cpu_context cpu_context;
+    struct mm_struct mm;
 };
 
 /* Variables init in schedule.c */
@@ -77,7 +82,7 @@ void schedule_init();
 int privilege_task_create(void (*func)(), int priority);
 void context_switch(struct task_t* next);
 void schedule();
-void do_exec(void (*func)());
+int do_exec(uint64_t start, uint64_t size, uint64_t pc);
 void do_exit(int status);
 
 #endif

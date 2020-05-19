@@ -41,7 +41,7 @@ _start:
 
 el1_start:
     // load exception_table to VBAR_EL1
-    adr     x1, exception_table
+    ldr     x1, =exception_table
     msr     vbar_el1, x1
 
     // mask all interrupt, and set exception level to el0

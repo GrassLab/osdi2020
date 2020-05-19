@@ -32,13 +32,21 @@
 #define PD_TABLE                0b11
 #define PD_BLOCK                0b01
 #define PD_PAGE                 0b11
-#define PD_ACCESS               (1 << 10)
+#define PD_ACCESS_FLAG          (1 << 10)
+#define PD_ACCESS_PERM_RW       (0b01 << 6)
+#define PD_EXN                  (0b11UL << 53)
+#define PD_MASK                 0x1FFUL
 
 #define PGD0_ATTR               PD_TABLE // Lower attributes is ignored
 #define PUD0_ATTR               PD_TABLE // Lower attributes is ignored
-#define PUD1_ATTR               (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define PUD1_ATTR               (PD_ACCESS_FLAG | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
 #define PMD0_ATTR               PD_TABLE // Lower attributes is ignored
-#define PTE_MMIO_ATTR           (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
-#define PTE_RAM_ATTR            (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
+#define PTE_MMIO_ATTR           (PD_ACCESS_FLAG | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
+#define PTE_RAM_ATTR            (PD_ACCESS_FLAG | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
+
+#define PGD_SHIFT               39
+#define PUD_SHIFT               30
+#define PMD_SHIFT               21
+#define PTE_SHIFT               12
 
 #endif

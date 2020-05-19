@@ -8,6 +8,7 @@
 #ifndef __ASSEMBLY__
 
 #include "typedef.h"
+#include "schedule.h"
 
 enum page_status {
     AVAL,
@@ -27,6 +28,7 @@ uint64_t virtual_to_physical(uint64_t virt_addr);
 uint64_t phy_to_pfn(uint64_t phy_addr);
 void* page_alloc();
 void page_free(void* addr);
+void* page_alloc_user(struct task_t* task, uint64_t user_virt_addr);
 
 #endif /* __ASSEMBLY__ */
 

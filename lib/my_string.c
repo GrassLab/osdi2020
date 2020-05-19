@@ -2,6 +2,8 @@
 #include "typedef.h"
 
 char *itox64(uint64_t value, char *s) {
+    if (value == 0) return "0";
+
     int idx = 0;
 
     char tmp[64 + 1];
