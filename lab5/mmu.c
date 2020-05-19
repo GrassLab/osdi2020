@@ -30,7 +30,7 @@ void mmu_ttbrx_el1_init(void)
   *pud_frame_ptr = (uint64_t)(PD_ACCESS | 0x40000000u | PD_DEVICE | PD_BLOCK);
 
   /* setup pmd */
-  /* 1GB = 512 * 2kb */
+  /* 1GB = 512 * 2mb */
   uint64_t * pmd_frame_ptr = PMD_FRAME_BASE;
   for(unsigned i = 0; i < PAGE_TOTAL; ++i)
   {
