@@ -12,16 +12,12 @@
 // symbol in linker script
 extern uint64_t kernel_end;
 
-enum TranslationAction {
-    kVirtualToPhysical,
-    kPhysicalToPFN
-};
 
 static Page page_frames[NUM_OF_PAGE_FRAMES];
 
-static void setInUseBit(const size_t start, const size_t size) {
-    for (size_t i = 0; i < size; ++i) {
-        page_frames[start + i].in_use = 1;
+static void setInUseBit(const size_t start, const size_t end) {
+    for (size_t i = start; i < end; ++i) {
+        page_frames[i].in_use = 1;
     }
 }
 
@@ -32,12 +28,24 @@ uint64_t translate(uint64_t origin, enum TranslationAction action) {
         // ->
         // 0x0000000012345678
         return origin & 0x0000ffffffffffff;
+    case kPhysicalToVirtual:
+        return origin | 0xffff000000000000;
     case kPhysicalToPFN:
         // 0x0000000012345678
         // ->
         // 0x0000000012345
         // 0x3ffff == NUM_OF_PAGE_FRAMES - 1
         return ((origin & 0x3ffff000) >> 12);
+    case kPFNToPhysical:
+        return ((origin << 12));
+    case kPageDescriptorToPFN:
+        return (origin - (uint64_t)page_frames) / sizeof(Page);
+    case kPageDescriptorToPhysical:
+        return translate(translate(origin, kPageDescriptorToPFN),
+                         kPFNToPhysical);
+    case kPageDescriptorToVirtual:
+        return translate(translate(origin, kPageDescriptorToPhysical),
+                         kPhysicalToVirtual);
     }
 }
 
@@ -46,20 +54,19 @@ void initPageFrames(void) {
 
     // kernel page table (3-level translation: 4 page directory)
     // start from 0x0000
-    setInUseBit(0, 4);
+    setInUseBit(translate(0, kPhysicalToPFN), translate(0x4000, kPhysicalToPFN));
 
     // kernel image
     // start from 0x80000
-    size_t start = 0x80000 / PAGE_SIZE;
-    setInUseBit(start,
-            ((uint64_t)&kernel_end & 0x0000fffffffff000) / PAGE_SIZE - start);
+    setInUseBit(translate(0x80000, kPhysicalToPFN),
+                translate((uint64_t)&kernel_end & 0x0000fffffffff000, kPhysicalToPFN));
 
     // peripheral
-    start = (MMIO_BASE & 0x0000fffffffff000) / PAGE_SIZE;
-    setInUseBit(start, NUM_OF_PAGE_FRAMES);
+    setInUseBit(translate((MMIO_BASE & 0x0000fffffffff000), kPhysicalToPFN),
+                translate(0x40000000, kPhysicalToPFN));
 
     // interrupt stack @ MMIO_BASE - 0x1000
     // it has 4KB. since stack grows toward lower address -> -0x2000
-    start = ((MMIO_BASE & 0x0000fffffffff000) - 0x2000 ) / PAGE_SIZE;
-    setInUseBit(start, NUM_OF_PAGE_FRAMES);
+    setInUseBit(translate((MMIO_BASE & 0x0000fffffffff000) - 0x2000, kPhysicalToPFN),
+                translate((MMIO_BASE & 0x0000fffffffff000) - 0x1000, kPhysicalToPFN));
 }

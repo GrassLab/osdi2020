@@ -8,6 +8,17 @@ typedef struct __Page {
     struct __Page *next;
 } Page;
 
+enum TranslationAction {
+    kVirtualToPhysical,
+    kPhysicalToVirtual,
+    kPhysicalToPFN,
+    kPFNToPhysical,
+    kPageDescriptorToPFN,
+    kPageDescriptorToPhysical,
+    kPageDescriptorToVirtual
+};
+
 void initPageFrames(void);
+uint64_t translate(uint64_t origin, enum TranslationAction action);
 
 #endif
