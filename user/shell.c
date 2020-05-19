@@ -6,8 +6,13 @@
 
 struct command cmds[] = {
   { "help", "Print the helping message\n", help },
+  { "test1", "Test fork functionality\n", test_command1 },
   { NULL, NULL, NULL }
 };
+
+void delay(int t) {
+  for (int i = 0; i < t; ++i) {}
+}
 
 void help(void) {
   for (size_t i = 0; cmds[i].name != NULL; ++i) {
@@ -15,9 +20,24 @@ void help(void) {
   }
 }
 
+void test_command1(void) {
+  int cnt = 0;
+  if(fork() == 0) {
+    fork();
+    fork();
+    while(cnt < 10) {
+      // address should be the same across tasks, but the cnt should be increased indepndently
+      printf("task id: %u, sp: %#x cnt: %u\n", get_taskid(), &cnt, cnt++);
+      delay(1000000);
+    }
+    // all childs exit
+    exit(0);
+  }
+}
+
 int main(void) {
   while (true) {
-    uart_write("> ", 2);
+    puts("> ");
     char buf[MAX_CMD_LEN];
     gets(buf);
 

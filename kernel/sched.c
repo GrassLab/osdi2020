@@ -64,7 +64,7 @@ void schedule(void) {
       victim = dequeue(&runqueue);
     }
 
-    printk("Context switch is triggered: %u -> %u" EOL, do_get_taskid(), victim->id);
+    //printk("Context switch is triggered: %u -> %u" EOL, do_get_taskid(), victim->id);
     get_current_task()->timeslice = DEFAULT_TIMESLICE;
     context_switch(victim);
   }

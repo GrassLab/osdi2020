@@ -59,7 +59,7 @@ char *gets(char *s) {
 }
 
 int puts(const char *s) {
-  for (const char *cur = s; *s != '\0'; ++s) {
+  for (const char *cur = s; *cur != '\0'; ++cur) {
     if (uart_write(cur, 1) != 1) {
       return cur - s;
     }
