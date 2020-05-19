@@ -1,6 +1,8 @@
 
 #include "sys.h"
 #include "util.h"
+#include "shell.h"
+#include "string.h"
 #include "sprintf.h"
 
 void exit() {
@@ -20,7 +22,7 @@ void user_login(){
     if(!d) break;
     printf(NEWLINE "input password:");
   }
-  puts(NEWLINE "============     login successfully!     ============");
+  println(NEWLINE "============     login successfully!     ============");
   exit();
 }
 
@@ -29,7 +31,6 @@ void user_shell(){
   irq_shell_loop(0);
   exit();
 }
-#endif
 
 void user_idle() {
   while(1){
@@ -45,7 +46,6 @@ void user_hang() {
     printf(NEWLINE "============     user is hanging    ============"  NEWLINE);
   }
 }
-
 void user_exec() {
   while(1){
     call_sys_write("user_process_exec test" NEWLINE);
@@ -68,6 +68,8 @@ void user_fork() {
     if(!child) k++;
   }
 }
+
+#endif
 
 #if support_mutex
 Mutex gmtx = {0, 0};
@@ -113,6 +115,7 @@ void test(){
 }
 
 int main(){
-  test();
+  char buffer[128];
+  while(1) exec_cmd(read_cmd(buffer, buffer), 0);
   return 0;
 }

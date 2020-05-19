@@ -17,9 +17,6 @@
 
 #define BUFFER_SIZE 128
 
-char *exec_ptr = 0;
-extern unsigned int task_ptr;
-
 char *shell_read_line(char *ptr, char *buffer) {
   print("# ");
   char *beg = ptr--;
@@ -277,12 +274,6 @@ void irq_shell_loop(int el){
       shell_execute(exec_ptr, el);
       exec_ptr = 0;
       print("# ");
-    } /*else if (task_ptr) {
-        __asm__ volatile("stp x8, x9, [sp, #-16]!");
-        __asm__ volatile("mov x8, #4");
-        __asm__ volatile("svc #0");
-        __asm__ volatile("ldp x8, x9, [sp], #16");
-        }*/
-    // else  puts("hee");
+    }
   }
 }

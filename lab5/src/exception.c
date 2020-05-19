@@ -7,9 +7,6 @@
 #include "timer.h"
 #include "sched.h"
 
-extern char *exec_ptr;
-extern unsigned int task_ptr;
-
 const char *entry_error_messages[] = {
   "SYNC_INVALID_EL1t",   "IRQ_INVALID_EL1t",
   "FIQ_INVALID_EL1t",    "ERROR_INVALID_EL1T",

@@ -86,9 +86,9 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
   }
 
   struct pt_regs *childregs = task_pt_regs(p);
-	memzero((unsigned long)childregs, sizeof(struct pt_regs));
-	memzero((unsigned long)&p->cpu_ctx, sizeof(struct cpu_ctx));
-	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
+  memzero((unsigned long)childregs, sizeof(struct pt_regs));
+  memzero((unsigned long)&p->cpu_ctx, sizeof(struct cpu_ctx));
+  memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
 
   //if(!func){ memzero(p, p + sizeof(Task)); }
 
@@ -127,13 +127,13 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
     unsigned long ksp_off = current_task->cpu_ctx.sp
       - current_task->mm.kernel_pages[0];
-      //- (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
+    //- (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
 
     p->cpu_ctx.sp = ksp_off + kp;
 
     unsigned long kfp_off = current_task->cpu_ctx.fp
       - current_task->mm.kernel_pages[0];
-      //- (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
+    //- (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
     p->cpu_ctx.fp = kfp_off  + kp;
 
     /*
@@ -191,7 +191,7 @@ char* getline(char *buffer, char c){
 #define getline(buffer, c) { \
   char *p = buffer; \
   while(!strchr("\r\n", (*p++ = call_sys_read()))) \
-    if(c) printf("%c", c); \
+  if(c) printf("%c", c); \
   *--p = 0; \
 }
 
@@ -250,13 +250,13 @@ void user_hang() {
 
 void kexec_user_main(){
   printf(NEWLINE "============     [%d] kexec user main     ============"  NEWLINE, current_task->pid);
-	unsigned long begin = (unsigned long)&_binary____user_build_user_img_start;
-	unsigned long end = (unsigned long)&_binary____user_build_user_img_end;
-	unsigned long process = (unsigned long)begin - (unsigned long)begin;//(unsigned long)&user_entry;
-	int err = move_to_user_mode(begin, end - begin, process);
-	if (err < 0){
-		printf("Error while moving process to user mode\n\r");
-	}
+  unsigned long begin = (unsigned long)&_binary____user_build_user_img_start;
+  unsigned long end = (unsigned long)&_binary____user_build_user_img_end;
+  unsigned long process = (unsigned long)begin - (unsigned long)begin;//(unsigned long)&user_entry;
+  int err = move_to_user_mode(begin, end - begin, process);
+  if (err < 0){
+    printf("Error while moving process to user mode\n\r");
+  }
 }
 
 
@@ -289,8 +289,8 @@ void kernel_process(){
   //do_exec((unsigned long)user_write);
   exit();
   while(1){
-   puts("kernel process scheduling");
-   schedule();
+    puts("kernel process scheduling");
+    schedule();
   }
 }
 
@@ -303,26 +303,37 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
 
-	//regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
-	//regs->sp =  0x0000ffffffffe000; // why
-	regs->sp = 2 *  PAGE_SIZE;
-	//regs->sp = 1 *  PAGE_SIZE - 1;
+  //regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
+  regs->sp = 2 *  PAGE_SIZE;
 
-  /* TODO adjust user stack */
-  //regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
-	unsigned long
-	  code_page = allocate_user_page(current_task, pc);
+  printf("size is %d" NEWLINE, size);
 
-  if(!code_page){
-    printf("[%d] allocate code page failed" NEWLINE, current_task->pid);
+  unsigned long va_ptr = pc, pa_ptr = start, write_size = 0, code_page;
+  while(size){
+
+    write_size = size > 4096 ? 4096 : size;
+    code_page = allocate_user_page(current_task, va_ptr);
+
+    if(!code_page){
+      printf("[%d] allocate code page failed" NEWLINE, current_task->pid);
+      while(1) exit();
+    }
+
+    memcpy(pa_ptr, code_page, write_size);
+    pa_ptr += write_size;
+    va_ptr += write_size;
+    size -= write_size;
+    printf("code: %x copied!" NEWLINE, ((int*)code_page)[0]);
   }
 
+#if 0
   unsigned long
     stack_page = allocate_user_page(current_task, regs->sp - PAGE_SIZE);
 
   if(!stack_page){
     printf("[%d] allocate stack page failed" NEWLINE, current_task->pid);
   }
+#endif
 
   printf("k pages: %d" NEWLINE, current_task->mm.kernel_pages_count);
   for(int i = 0; i < current_task->mm.kernel_pages_count; i++)
@@ -332,37 +343,34 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
   for(int i = 0; i < current_task->mm.user_pages_count; i++)
     printf("@ %x" NEWLINE, current_task->mm.user_pages[i]);
 
-  memcpy(start, code_page, size);
-  printf("code: %x copied!" NEWLINE, ((int*)code_page)[0]);
-	set_pgd(current_task->mm.pgd);
-
+  set_pgd(current_task->mm.pgd);
   return 0;
 }
 
 void do_exec(unsigned long pc){
   puts("not support now");
-/*
-  printf("[%d] do exec" NEWLINE, current_task->pid);
-  struct pt_regs *regs = ya_task_pt_regs(current_task);
-  memzero((unsigned long)regs, sizeof(struct pt_regs));
+  /*
+     printf("[%d] do exec" NEWLINE, current_task->pid);
+     struct pt_regs *regs = ya_task_pt_regs(current_task);
+     memzero((unsigned long)regs, sizeof(struct pt_regs));
 
-  regs->pc = pc;
-  regs->pstate = PSR_MODE_EL0t;
-	//regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
-	//regs->sp =  0x0000ffffffffe000; // why
+     regs->pc = pc;
+     regs->pstate = PSR_MODE_EL0t;
+  //regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
+  //regs->sp =  0x0000ffffffffe000; // why
 
-	unsigned long
-    stack_page = allocate_user_page(current_task, regs->sp - 8),
-	  code_page = allocate_user_page(current_task, pc);
+  unsigned long
+  stack_page = allocate_user_page(current_task, regs->sp - 8),
+  code_page = allocate_user_page(current_task, pc);
 
   if(!code_page || !stack_page){
-    printf("[%d] do exec FAILED" NEWLINE, current_task->pid);
+  printf("[%d] do exec FAILED" NEWLINE, current_task->pid);
   }
 
-	regs->sp =  stack_page + STACK_SIZE; // why
+  regs->sp =  stack_page + STACK_SIZE; // why
   //memcpy(code_page, start, size);
-	set_pgd(current_task->mm.pgd);
-*/
+  set_pgd(current_task->mm.pgd);
+  */
   /* TODO adjust user stack */
   //regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
 }
