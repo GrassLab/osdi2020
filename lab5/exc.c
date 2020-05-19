@@ -1,4 +1,5 @@
 #include "exc.h"
+#include "uart.h"
 #include "irq.h"
 #include "sys.h"
 #include "timer.h"
@@ -93,7 +94,7 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
 
   if(exception_class != 0x15) /* Not via aarch64 svc */
   {
-    exc_not_implemented(18);
+    exc_not_implemented(0x18);
   }
 
   switch(exception_imm)

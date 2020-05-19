@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include "uart.h"
 #include "string_util.h"
 #ifndef __EXC_H__
 #define __EXC_H__
