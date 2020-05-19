@@ -10,7 +10,8 @@
 #define PD_ACCESS (1 << 10)
 #define BOOT_PGD_ATTR PD_TABLE
 #define BOOT_PUD_ATTR PD_TABLE
-#define BOOT_PMD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PMD_ATTR PD_TABLE
+#define BOOT_PTE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_TABLE)
 #define PAGE_SIZE (0x1000) //4096
 
 .section ".text.boot"
@@ -53,7 +54,7 @@ rest_initialization:
 
     adr x0, _pgt_start // PGD's page frame at 0x0
     add x1, x0, PAGE_SIZE // PUD's page frame at 0x1000
-    add x3, x1, PAGE_SIZE
+    add x3, x1, PAGE_SIZE // 2nd PUD
 
 
     ldr x2, = BOOT_PGD_ATTR
@@ -66,32 +67,45 @@ rest_initialization:
     orr x3, x2, x3
     str x3, [x1] // 1st 1GB mapped by the 1st entry of PUD
 
-    add x3, x3, PAGE_SIZE
+    add x3, x4, PAGE_SIZE
     orr x3, x2, x3
     str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 
     // free to use x1, x2, x3, x5, x6, x7
+    add x3, x4, PAGE_SIZE // for PTE
+    add x3, x3, PAGE_SIZE
     mov x1, 0
     mov x2, 1023
-    ldr x3, = BOOT_PMD_ATTR
+    ldr x7, = BOOT_PMD_ATTR
 3:
-    mov x5, x1, lsl #21 // x5 = x1*0x200000
-    orr x6, x3, x5
+    add x5, x3, x1, lsl #12 // x5 = x3 + (x1*4096)
+    orr x6, x7, x5
     str x6, [x4, x1, lsl #3]
     add x1, x1, 1
     sub x6, x2, x1
     cbnz x6, 3b
 
+    mov x1, 0
+    mov x2, 0x80000 //1024(PTE entry) * 512(each PTE 512 entry)
+    ldr x7, = BOOT_PTE_ATTR
+4:
+    mov x5, x1, lsl #12
+    orr x6, x7, x5
+    str x6, [x3, x1, lsl #3]
+    add x1, x1, 1
+    sub x6, x2, x1
+    cbnz x6, 4b
 
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
+
+    ldr x0, =boot_rest // indirect branch to the virtual address
 
     mrs x2, sctlr_el1
     orr x2 , x2, 1
     msr sctlr_el1, x2 // enable MMU, cache remains disabled
 
-    ldr x2, =boot_rest // indirect branch to the virtual address
-    br x2
+    br x0
 
 
 .global boot_rest
