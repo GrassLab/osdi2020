@@ -106,7 +106,7 @@ void write_test() {
   }
 }
 
-void test(){
+void user_test(){
   call_sys_write("user task checkpoint 1" NEWLINE);
   delay(1000000);
   call_sys_write("user task checkpoint 2" NEWLINE);
@@ -114,8 +114,25 @@ void test(){
   call_sys_write("user task checkpoint 3" NEWLINE);
 }
 
+void fork_test(){
+  int child = 0, k = 15;
+  println("parent user process");
+  println("user_process_fork test" NEWLINE);
+  //child = call_sys_fork();
+  while(1){
+    //printf("stack reg = %x - %x" NEWLINE, ustack_pool[current_task->pid % TASK_SIZE],
+    //    ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE);
+    //printf("[%d] fork return %d" NEWLINE, current_task->pid, child);
+    printf("===============> k = [0x%x] = %d" NEWLINE, &k, k);
+    if(child) println("===============> child user process");
+    else println("===============> parent user process");
+    delay(10000);
+    if(!child) k++;
+  }
+}
+
 int main(){
-  char buffer[128];
-  while(1) exec_cmd(read_cmd(buffer, buffer), 0);
+  //fork_test();
+  shloop();
   return 0;
 }

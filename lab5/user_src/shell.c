@@ -2,11 +2,7 @@
 #include "string.h"
 #include "sprintf.h"
 
-
 #define SIGKILL 0x1
-
-#define print(s) call_sys_write(s)
-#define println(s) call_sys_write(s NEWLINE)
 
 #define EQS(xs, ys) (!strcmp(xs, ys))
 int exec_cmd(char *cmd, int el) {
@@ -84,4 +80,7 @@ char *read_cmd(char *ptr, char *buffer) {
   return beg;
 }
 
-
+void shloop(){
+  char buffer[128];
+  while(1) exec_cmd(read_cmd(buffer, buffer), 0);
+}

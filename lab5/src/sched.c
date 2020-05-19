@@ -1,5 +1,6 @@
 #include "io.h"
 #include "task.h"
+#include "util.h"
 
 extern Task *tasks[TASK_SIZE], *current_task, *next_task;
 
@@ -12,11 +13,13 @@ int tasks_pos(Task *task){
 }
 
 void context_switch(Task *next) {
+  printf("next task is %d" NEWLINE, next->pid);
   Task *prev = current_task;
   current_task = next;
   current_task->status = running;
   //printf("next[%d] lr=0x%x sp=0x%x" NEWLINE, next->pid, next->cpu_ctx.lr, next->cpu_ctx.sp);
   //printf("0x%x lr = 0x%x" NEWLINE, kernel_process, next->cpu_ctx.lr);
+  if(next->mm.pgd) set_pgd(next->mm.pgd);
   switch_to(prev, next);
 }
 

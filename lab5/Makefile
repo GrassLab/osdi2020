@@ -132,7 +132,7 @@ kgdb:
 	$(ARMGNU)-gdb -x kernel.gdb
 
 gdb:
-	$(ARMGNU)-gdb
+	$(ARMGNU)-gdb -x cmd.gdb
 
 update:
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt

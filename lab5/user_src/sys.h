@@ -22,6 +22,9 @@ int call_sys_fork();
 void call_sys_exit();
 void call_sys_signal(unsigned long, int);
 
+#define print(s) call_sys_write(s)
+#define println(s) call_sys_write(s NEWLINE)
+
 #if support_mutex
 #include "task.h"
 void call_sys_mutex_lock(Mutex *);

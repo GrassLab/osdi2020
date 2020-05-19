@@ -116,6 +116,8 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
   }
   else{ // null fptr means fork
+    printf("parent pid is %d" NEWLINE, current_task->pid);
+    printf("child pid is %d" NEWLINE, p->pid);
     //unsigned long kstack = allocate_kernel_page();
     //p->mm.kernel_pages[0] = kstack;
     //p->mm.kernel_pages_count = 1;
@@ -148,6 +150,8 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
     //strncpy(ustack_pool[p->pid % TASK_SIZE],
     //    ustack_pool[current_task->pid % TASK_SIZE],
     //    STACK_SIZE);
+    
+    copy_virt_memory(p);
 
     struct pt_regs *cur_regs = task_pt_regs(current_task);
     *childregs = *cur_regs;     /* new pt_regs <- old pt_regs */
