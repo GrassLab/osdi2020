@@ -3,6 +3,7 @@
 #include "io.h"
 #include "lfb.h"
 #include "mbox.h"
+#include "page.h"
 #include "reset.h"
 #include "shell.h"
 #include "syscall.h"
@@ -109,6 +110,9 @@ int main() {
     /* tmp = uart_getb(); */
     /* tmp = uart_getb(); */
     asm volatile("svc #2");
+
+    struct page_t* page = page_alloc();
+    page_free(page);
 
     privilege_task_create(idle, 3);
     /* privilege_task_create(zombie_killer, 0); */

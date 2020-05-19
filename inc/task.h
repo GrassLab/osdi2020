@@ -2,6 +2,7 @@
 #define TASK_H
 
 #include <stdint.h>
+#include "page.h"
 #define QUEUE_ELE_SIZE 64
 #define STACK_SIZE 4096
 #define SIGKILL 1
@@ -67,6 +68,7 @@ struct task_t {
     int priority;
     int reschedule;
     uint64_t elr;
+    uint64_t pgd;
 };
 
 struct queue_element_t {
