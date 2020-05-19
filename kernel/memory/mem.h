@@ -32,6 +32,9 @@ typedef struct
 
 } pcb_t;
 
+// defined in mem.S
+extern void memzero ( void * addr, uint64_t size );
+
 pcb_t * allocate_pcb ( );
 void release_pcb ( pcb_t * );
 void release_kernel_space ( int index );

@@ -17,6 +17,7 @@ SECTIONS
                 *(COMMON)
                 . = ALIGN(16);
             }
+        . = ALIGN(4096);
         __bss_end = .;      
         
         _PGD_START = .;
