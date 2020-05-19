@@ -21,10 +21,9 @@ void scheduler_init(void)
                "msr tpidr_el1, x0\n");
   task_privilege_task_create(schedule_idle, TASK_PRIORITY_LOW);
   task_privilege_task_create(schedule_zombie_reaper, TASK_PRIORITY_HIGH);
-  /* Demo purpose */
-  task_privilege_task_create(task_privilege_demo, TASK_PRIORITY_HIGH);
-  task_privilege_task_create(task_user_demo, TASK_PRIORITY_HIGH);
-  /* End of demo purpose */
+  task_privilege_task_create(task_test1, TASK_PRIORITY_HIGH);
+  task_privilege_task_create(task_test2, TASK_PRIORITY_HIGH);
+  task_privilege_task_create(task_test3, TASK_PRIORITY_HIGH);
   irq_int_enable();
   timer_enable_core_timer();
   timer_set_core_timer_approx_ms(SCHEDULE_TIMEOUT_MS);
