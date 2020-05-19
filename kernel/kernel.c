@@ -5,6 +5,7 @@
 #include "kernel/sched.h"
 #include "kernel/shell.h"
 #include "kernel/syscall.h"
+#include "kernel/lib/types.h"
 
 void delay(int t) {
   for (int i = 0; i < t; ++i) {}
@@ -52,10 +53,14 @@ void idle(void) {
     // exec(foo);
   // }
 // }
-// 
-// void user_test(void) {
-  // do_exec(test);
-// }
+//
+
+extern char _binary_user_shell_img_start[];
+extern char _binary_user_shell_img_size[];
+
+void user_test(void) {
+  do_exec((uint64_t)_binary_user_shell_img_start, (size_t)_binary_user_shell_img_size);
+}
 // 
 // void signal_test_receiver(void) {
   // while (true) {
@@ -101,9 +106,9 @@ int main(void) {
   privilege_task_create(reaper);
   privilege_task_create(print1);
   privilege_task_create(print2);
-  // for (int i = 0; i < 1; ++i) {
-    // privilege_task_create(user_test);
-  // }
+  for (int i = 0; i < 1; ++i) {
+    privilege_task_create(user_test);
+  }
 // 
   // privilege_task_create(signal_test_sender);
 

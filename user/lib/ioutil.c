@@ -48,3 +48,20 @@ int printf(const char *format, ...) {
   uart_write(buf, strlen(buf));
   return strlen(buf);
 }
+
+char *gets(char *s) {
+  for (char *cur = s; ;++cur) {
+    if (uart_read(cur, 1) == 0 || *cur == '\n') {
+      *cur = '\0';
+      return s;
+    }
+  }
+}
+
+int puts(const char *s) {
+  for (const char *cur = s; *s != '\0'; ++s) {
+    if (uart_write(cur, 1) != 1) {
+      return cur - s;
+    }
+  }
+}

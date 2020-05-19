@@ -17,14 +17,19 @@ void help(void) {
 
 int main(void) {
   while (true) {
+    uart_write("> ", 2);
     char buf[MAX_CMD_LEN];
-    uart_read(buf, MAX_CMD_LEN);
+    gets(buf);
 
-    for (size_t i = 0; cmds[i].name != NULL; ++i) {
+    size_t i = 0;
+    for (; cmds[i].name != NULL; ++i) {
       if (!strcmp(buf, cmds[i].name)) {
         cmds[i].handler();
         break;
       }
+    }
+    if (cmds[i].name == NULL) {
+      printf("%s: command not found\n", buf);
     }
   }
 }
