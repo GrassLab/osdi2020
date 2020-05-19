@@ -105,10 +105,12 @@ int sys_fork_todo(struct trapframe_struct * trapframe)
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp = (uint64_t)task_kernel_stack_pool[new_task_id] - ((uint64_t)task_kernel_stack_pool[current_task_id] - (uint64_t)trapframe);
 
   /* copy user stack, same logic as kernel stack */
-  memcopy((char *)task_user_stack_pool[TASK_ID_TO_IDX(current_task_id)], (char *)task_user_stack_pool[TASK_ID_TO_IDX(new_task_id)], TASK_USER_STACK_SIZE * 2);
+  /* TODO */
+  //memcopy((char *)task_user_stack_pool[TASK_ID_TO_IDX(current_task_id)], (char *)task_user_stack_pool[TASK_ID_TO_IDX(new_task_id)], TASK_USER_STACK_SIZE * 2);
 
   /* setup user stack sp, same logic as kernel stack */
-  kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp_el0 = (uint64_t)task_user_stack_pool[new_task_id] - ((uint64_t)task_user_stack_pool[current_task_id] - trapframe -> sp_el0);
+  /* TODO */
+  //kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp_el0 = (uint64_t)task_user_stack_pool[new_task_id] - ((uint64_t)task_user_stack_pool[current_task_id] - trapframe -> sp_el0);
 
   /* child should get 0 on fork return */
   /* NOTE: EFFECTED BY trap dispatcher */

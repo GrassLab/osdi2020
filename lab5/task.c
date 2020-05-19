@@ -8,10 +8,10 @@
 #include "sys.h"
 #include "shell.h"
 #include "signal.h"
+#include "mmu.h"
 
 struct task_struct kernel_task_pool[TASK_POOL_SIZE];
 uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
-uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];
 
 uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
 {
