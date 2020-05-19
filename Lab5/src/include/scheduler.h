@@ -53,8 +53,8 @@ struct user_page {
 struct vm_area_struct{
 	unsigned long vm_end;
 	unsigned long vm_start;
-	int vm_prot;
-	int vm_flags;
+	unsigned long vm_prot;
+	unsigned long vm_flags;
 	unsigned long file_start;
 	unsigned long file_offset;
 };
@@ -80,13 +80,14 @@ struct signal_struct{
 struct task_struct{
 	struct cpu_context cpu_context;
 	struct signal_struct signal;
-	struct mm_struct mm;
 
 	int pid;
 	long state;
 	long priority;
 	long counter;
 	long preempt_lock;	
+	
+	struct mm_struct mm;
 };
 
 extern void switch_to(struct task_struct* prev, struct task_struct* next);
@@ -103,8 +104,9 @@ extern void exit_process();
 
 #define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 	{0,0}, \
-	{0,0,{{0}},0,{0},0,{{0}}}, \
-	0,0,1,0,0}
+	0,0,1,0,0, \
+	{0,0,{{0,}},0,{0},0,{{0,}}}, \
+}
 
 
 #endif

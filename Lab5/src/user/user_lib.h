@@ -25,4 +25,5 @@ void reboot();
 void delay (unsigned long t);
 int get_remain_page_num();
 void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset);
+void wait();
 #endif  

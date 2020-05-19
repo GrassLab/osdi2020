@@ -5,7 +5,7 @@
 extern unsigned long _binary_user_img_start;
 extern unsigned long _binary_user_img_end;
 
-extern unsigned long _binary_test_elf_start;
-extern unsigned long _binary_test_elf_end;
+extern unsigned long _binary_user_elf_start;
+extern unsigned long _binary_user_elf_end;
 
 #endif                    

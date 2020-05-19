@@ -19,6 +19,7 @@ _user_entry:
 .set SYS_DELAY,      11
 .set SYS_REMAIN_PAGE, 12
 .set SYS_MMAP,       13
+.set SYS_WAIT,       14
 
 .global call_core_timer
 call_core_timer:
@@ -102,5 +103,11 @@ get_remain_page_num:
 .global mmap
 mmap:
 	mov x8, SYS_MMAP
+	svc #0
+	ret
+
+.global wait
+wait:
+	mov x8, SYS_WAIT
 	svc #0
 	ret

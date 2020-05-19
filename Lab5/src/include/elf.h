@@ -39,6 +39,6 @@ typedef struct {
 	Elf64_Xword	p_align;
 } Elf64_Phdr;
 
-void* elf_parser(unsigned long elf_start,unsigned long size);
+void elf_parser(unsigned long elf_start,unsigned long size);
 
 #endif

@@ -6,6 +6,7 @@
 #include "include/mm.h"
 #include "include/utils.h"
 #include "include/kernel.h"
+#include "include/elf.h"
 
 static unsigned short pid_map[64] = {0,};
 
@@ -31,8 +32,9 @@ int privilege_task_create(void(* fn),int priority){
 	p = (struct task_struct *) allocate_kernel_page();
 	if (!p)
 		return -1;
-
+	
 	struct trapframe *childregs = get_task_trapframe(p);
+	
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
 	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
@@ -73,9 +75,8 @@ int user_task_create()
 	struct trapframe * cur_regs = get_task_trapframe(current);
 	*childregs = *cur_regs; //copy content of parent register
 	childregs->regs[0] = 0; //x0 in the new state is set to 0, because x0 will be interpreted by the caller as a return value of the syscall.
-
 	copy_virt_memory(p);
-
+	
 	p->cpu_context.x19 = 0; 
 	p->priority = current->priority;
 	p->state = TASK_RUNNING;
@@ -87,7 +88,7 @@ int user_task_create()
 	int pid = get_availible_pid();
 	task[pid] = p;
 	p->pid = pid;
-	
+
 	priorityQ_push(&runqueue,p->priority,p->pid);	
 	preempt_enable();
 	return pid;
@@ -110,6 +111,7 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	regs->sp =  0x0000ffffffffe000; 
 	
 	unsigned long code_page = allocate_user_page(current,pc);
+//	unsigned long stack = allocate_user_page(current,regs->sp-8);
 	if (!code_page) 
 		return -1;
 	// For stack, only map it and allocate when page fault

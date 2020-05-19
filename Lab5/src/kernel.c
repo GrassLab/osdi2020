@@ -92,10 +92,12 @@ void kernel_process(){
     unsigned long begin = (unsigned long)&_binary_user_img_start;
     unsigned long end = (unsigned long)&_binary_user_img_end;
 
-    unsigned long elf_start = (unsigned long)&_binary_test_elf_start;
-    unsigned long elf_end = (unsigned long)&_binary_test_elf_end;
-  
-    elf_parser(elf_start,elf_end-elf_start);
+    unsigned long elf_start = (unsigned long)&_binary_user_elf_start;
+    unsigned long elf_end = (unsigned long)&_binary_user_elf_end;
+    elf_parser(elf_start, elf_end - elf_start);
+    
+    unsigned long sp;
+    asm volatile ("mov %0, SP" : "=r" (sp));
 
     // Note: we naive assume that there's only one shell   
     int err = do_exec(begin, end - begin, 0x1000);

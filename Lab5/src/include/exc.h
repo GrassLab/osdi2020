@@ -15,5 +15,5 @@
 #define SYS_DELAY      11
 #define SYS_REMAIN_PAGE 12
 #define SYS_MMAP 13
-
+#define SYS_WAIT 14
 #endif

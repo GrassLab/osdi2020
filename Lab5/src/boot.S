@@ -59,8 +59,9 @@ el1_entry:
 
     bl          page_table_create 
 
-    mov	x0, #VA_START			
-    add	sp, x0, #LOW_MEMORY
+    mov	x0, #VA_START
+    mov x1,#LOW_MEMORY			
+    add	sp, x0, x1
 
     // setup TCR
     ldr x0, = TCR_CONFIG_DEFAULT

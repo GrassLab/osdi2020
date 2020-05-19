@@ -201,6 +201,9 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 		case SYS_MMAP: {
 			return (unsigned long)mmap((void *)arg0,arg1,arg2,arg3,(void *)arg4,arg5);	       
 		}
+		case SYS_WAIT: {
+			return current->state = TASK_WAIT;
+		}	
 	}
 	// Not here if no bug happened!
 	return -1;

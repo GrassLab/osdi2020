@@ -37,8 +37,6 @@ rd: src/user/user.o src/user/user_lib.o build/string_c.o
 	$(ARMGNU)-objcopy user.elf -O binary user.img
 	$(ARMGNU)-ld -r -b binary user.img -o rd
 
-prog: src/user/test.c
-	$(ARMGNU)-gcc $(COPS) -g -c src/user/test.c -o src/user/test.o
-	$(ARMGNU)-ld -T src/user/linker.ld -o test.elf src/user/test.o  src/user/user_lib.o
-	$(ARMGNU)-ld -r -b binary test.elf -o prog
+prog: src/user/user.o rd
+	$(ARMGNU)-ld -r -b binary user.elf -o prog
 

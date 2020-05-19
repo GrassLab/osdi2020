@@ -34,7 +34,7 @@ void test_command3() { // test page reclaim.
 
 void read_beyond_boundary(){
  	if(fork() == 0) {	
-    		int* ptr = mmap((void *)0x1000, 4096, PROT_READ, MAP_ANONYMOUS, NULL, 0);
+    		int* ptr = mmap(NULL, 4096, PROT_READ, MAP_ANONYMOUS, NULL, 0);
 		printf("addr: 0x%x\n", ptr);
 		fork();
     		printf("ptr[1000]: %d\n", ptr[1000]); // should be 0
@@ -61,6 +61,53 @@ void write_beyond_boundary(){
   	}
 }
 
+void wrong_permission(){
+  	if(fork() == 0) {
+    		int* ptr = mmap(NULL, 4096, PROT_READ, MAP_ANONYMOUS, NULL, 0);
+    		printf("addr: %llx\n", ptr);
+    		printf("ptr[1000]: %d\n", ptr[1000]); // should be 0
+    		for(int i = 0; i < 4096; ++i) {
+     	 		ptr[i] = i+1; // should be seg fault
+   		 }
+    		
+		for(int i = 0; i < 4096; ++i) { // not reached
+      			printf("%d\n", ptr[i]);
+    		}
+  	}
+}
+
+
+void mmaps(){ // test multiple mmaps
+ 	 if(fork() == 0) {
+		
+    		for(int i = 0; i < 16; ++i){
+      			if ( i < 6 ) {
+        			mmap(NULL, 4096, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, NULL, 0);
+      			} 
+			else if(i < 12){
+        			mmap(NULL, 4096, PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+     			} 
+			else {
+        			mmap(NULL, 4096, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, NULL, 0);
+      			}
+    		}
+				
+		wait(); // sleep and never wake up, just dont want scheduler schedule me
+			// note that the task will never be killed, anyway.......
+    		while(1); // hang to let shell see the mapped regions
+ 	 }
+}
+
+void mmap_unalign(){
+  	if(fork() == 0) {
+    		printf("0x%x", mmap((void*)0x12345678, 0x1fff, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, NULL, 0)); // should be a page aligned address A and region should be A - A +0x2000
+		
+		wait(); // sleep and never wake up, just dont want scheduler schedule me
+    		while(1); // hang to let shell see the mapped regions
+  	}
+}
+
+
 int check_string(char * str){
 
 	if(strcmp(str,"help")==0){
@@ -71,6 +118,12 @@ int check_string(char * str){
 		printf("t1: test1 command\r\n");
 		printf("t2: test2 command\r\n");
 		printf("t3: test3 command\r\n");
+		printf("\r\n");
+		printf("m1: read beyond boundary\r\n");
+		printf("m2: write beyond boundary\r\n");
+		printf("m3: wrong permission\r\n");
+		printf("m4: mmaps\r\n");
+		printf("m5: mmap align\r\n");
 		printf("exit : exit the user program\r\n");
 	}
 	else if(strcmp(str,"hello")==0){
@@ -100,6 +153,15 @@ int check_string(char * str){
 	}
 	else if(strcmp(str,"m2")==0){
 		 write_beyond_boundary();
+	}
+	else if(strcmp(str,"m3")==0){
+		 wrong_permission();
+	}
+	else if(strcmp(str,"m4")==0){
+		 mmaps();
+	}
+	else if(strcmp(str,"m5")==0){
+		 mmap_unalign();
 	}
 	else{
 		printf("Err:command ");

@@ -15,7 +15,7 @@ unsigned long get_free_page() // this function can only call by
 	for (int i = FIRST_AVAILIBLE_PAGE; i < PAGE_ENTRY; i++){
 		// finding availible memory space for your process
 		if (page[i].used == NOT_USED){
-			//printf("Using Page: %d\r\n",i);
+			//printf("Using Page: 0x%x\r\n",i*PAGE_SIZE);
 			page[i].used = USED_NOW;
 			remain_page--;
 			// initialize to zero
@@ -149,9 +149,7 @@ void dump_mem(void *src,unsigned long len){
 			 printf("0x%x ",s);
 		 count++;
 
-		 if(*s<10)
-			 printf("0");
-                 printf("%x ",*s);
+                 printf("%2x ",*s);
 		 if(count>=16){
 			 count=0;
 			 printf("\r\n");
@@ -163,6 +161,7 @@ void dump_mem(void *src,unsigned long len){
 
 int copy_virt_memory(struct task_struct *dst){
 	// copy virtual memory
+
 	for(int i=0;i<current->mm.user_pages_count;i++){
 		struct user_page src = current->mm.user_pages[i];
 		unsigned long page = allocate_user_page(dst, src.vir_addr);
@@ -180,15 +179,15 @@ int copy_virt_memory(struct task_struct *dst){
 }
 
 int page_fault_handler(unsigned long addr,unsigned long esr){
-        //printf("+++ Page faalt at 0x%x\r\n",addr);
+	//printf("+++ Page fault at 0x%x\r\n",addr);
 	if(((esr>>2)&0x3) != 1){ //If not a translation fault, kill  
   		 switch((esr>>2)&0x3) {
- 			  case 0: uart_send_string("Address size fault at"); break;
-                          case 2: uart_send_string("Access flag fault at"); break;
-                          case 3: uart_send_string("Permission fault at"); break;
+ 			  case 0: uart_send_string("Address size fault, "); break;
+                          case 2: uart_send_string("Access flag fault, "); break;
+                          case 3: uart_send_string("Permission fault, "); break;
                   }
  
-                 printf("### Data abort at 0x%x, killed\r\n",addr);
+                 printf("data abort at 0x%x, killed\r\n",addr);
                  exit_process();
                  return -1;
          }
@@ -196,11 +195,11 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 	// Else check if user access a map region
 	struct mm_struct mm = current->mm;
 	for(int i=0;i< mm.vm_area_count;i++){
-		if(addr >= mm.mmap[i].vm_start && addr < mm.mmap[i].vm_end){
+		if( (addr >= mm.mmap[i].vm_start) && (addr < mm.mmap[i].vm_end)){	
 			unsigned long page = get_free_page();
 			if (page == 0) 
             			return -1;
-        			
+        		
 			unsigned long long page_attr;	
 			int prot = mm.mmap[i].vm_prot;
 			if(prot == 0){ //non accessible
@@ -215,8 +214,13 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 					page_attr |= PD_NON_EXEC_EL0;
 				}
 			}
-
-				
+			//For file, copy the file content to the memory region.
+			struct vm_area_struct vm_area = current->mm.mmap[i];
+			if( (char *)vm_area.file_start != NULL){
+				memcpy((void *)page, \
+					(void*)(vm_area.file_start +  vm_area.file_offset),\
+					    vm_area.vm_end - vm_area.vm_start);
+			}	
 			map_page(current, addr, page, page_attr);		
 			return 0;
 		}
@@ -231,25 +235,21 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 
  void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset){
 	unsigned long vir_addr;
-	if(addr!=NULL && (unsigned long)addr % PAGE_SIZE!=0){
-		if(flags==MAP_FIXED){
-			printf("!!! mmap failed\r\n");
-			return NULL;
-		}
-	}
 			
 	// For address:
 	// addr should be page aligned 	
 	if(addr!=NULL)
 		vir_addr = ((unsigned long)(addr)>>12)<<12;
 	else{
-		vir_addr = 0x2000;
+		vir_addr = 0x1000;
 	}
 
-	// kernel decides the new region’s start address if addr is invalid				 // First, make sure new region not overlap exist region
 	struct mm_struct mm = current->mm;
 	int flag;
+	
+	//not so smart...... but anyway	
 	while(1){		
+		// kernel decides the new region’s start address if addr is invalid				 // First, make sure new region not overlap exist region
 		flag = 0;	
 		for(int i=0;i< mm.vm_area_count;i++){
 			if(vir_addr == mm.mmap[i].vm_start){
@@ -258,13 +258,8 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 				break;
 			}
 		}
-		if(flag==0)
-			break;
-	}
-
-	// Next, make sure new region not overlap exist page
-	while(1){ //not so smart...... but anyway	
-		flag = 0;
+		
+		// Next, make sure new region not overlap exist page
 		for(int i=0;i<current->mm.user_pages_count;i++){
 			if(vir_addr == current->mm.user_pages[i].vir_addr){
 				flag = 1;
@@ -272,16 +267,21 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 				break;
 			}
 		}
+
 		if(flag==0)
 			break;
 	}
 		
-				
-	struct vm_area_struct *vm_area = &current->mm.mmap[current->mm.vm_area_count];
 		
 	if(addr!=NULL && vir_addr != (unsigned long)addr){
-		printf("!!! You can't use address 0x%x\r\n", addr);	
-		printf("!!! Map to vir addr at 0x%x\r\n",vir_addr);
+		printf("!!! You can't use address 0x%x\r\n", addr);		
+		
+		if(flags==MAP_FIXED){
+			printf("!!! mmap failed\r\n");
+			return NULL;
+		}
+		else
+			printf("!!! Map to vir addr at 0x%x\r\n",vir_addr);
 	}	
 		
 	// For len:
@@ -289,13 +289,15 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 	if( len % PAGE_SIZE != 0)
 		len += PAGE_SIZE - (len % PAGE_SIZE);
 	
+	struct vm_area_struct *vm_area = &current->mm.mmap[current->mm.vm_area_count];
 	vm_area->vm_start = vir_addr;
-	vm_area->vm_end = vm_area->vm_start + len;
+	vm_area->vm_end = vir_addr + len;
 	vm_area->vm_prot = prot;
-	vm_area->file_start = (unsigned long)file_start;
-	vm_area->file_offset = file_offset;
+	vm_area->file_start = 0; 
+	vm_area->file_offset = 0;
+	
 	current->mm.vm_area_count++;
 		
-	return (void *)vm_area->vm_start;
+	return (void *)vir_addr;
  }
 
