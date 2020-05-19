@@ -1,11 +1,11 @@
 #include "io.h"
-#include "sys.h"
 #include "irq.h"
 #include "mm.h"
 #include "sched.h"
 #include "task.h"
 #include "util.h"
 #include "string.h"
+#include "syscall.h"
 
 
 extern Task *current_task, *tasks[TASK_SIZE];
@@ -97,6 +97,11 @@ void sys_mutex_unlock(Mutex *mtx){
   preempt_enable();
 }
 
+
+unsigned long sys_task_id(void) {
+  return current_task->pid;
+}
+
 int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     long x5) {
 
@@ -124,6 +129,9 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       break;
     case SYSNUM_MUTEX_UNLOCK:
       sys_mutex_unlock((Mutex*)x0);
+      break;
+    case SYSNUM_TASK_ID:
+      return sys_task_id();
       break;
       // case 0:
       // sys_core_timer_enable();

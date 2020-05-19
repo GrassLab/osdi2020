@@ -1,6 +1,6 @@
-#include "sys.h"
 #include "string.h"
 #include "sprintf.h"
+#include "syscall.h"
 
 #define SIGKILL 0x1
 

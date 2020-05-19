@@ -1,4 +1,4 @@
-#include "sys.h"
+#include "syscall.h"
 
 .globl call_sys_read
 call_sys_read:
@@ -45,5 +45,11 @@ call_sys_mutex_lock:
 .globl call_sys_mutex_unlock
 call_sys_mutex_unlock:
     mov w8, #SYSNUM_MUTEX_UNLOCK
+    svc #0
+    ret
+
+.globl call_sys_task_id
+call_sys_task_id:
+    mov w8, #SYSNUM_TASK_ID
     svc #0
     ret

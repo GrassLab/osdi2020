@@ -1,9 +1,9 @@
 
-#include "sys.h"
 #include "util.h"
 #include "shell.h"
 #include "string.h"
 #include "sprintf.h"
+#include "syscall.h"
 
 void exit() {
   while(1){

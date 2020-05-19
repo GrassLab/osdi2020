@@ -2,7 +2,6 @@
 #include "io.h"
 #include "irq.h"
 #include "map.h"
-#include "sys.h"
 #include "mbox.h"
 #include "power.h"
 #include "string.h"
@@ -10,6 +9,7 @@
 #include "timer.h"
 #include "util.h"
 #include "task.h"
+#include "syscall.h"
 
 #ifndef WITHOUT_LOADER
 #include "loadimg.h"

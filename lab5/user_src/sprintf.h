@@ -29,4 +29,6 @@
 unsigned int sprintf(char *dst, char *fmt, ...);
 unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args);
 void printf(char *fmt, ...);
+#define print(s) call_sys_write(s)
+#define println(s) call_sys_write(s NEWLINE)
 #endif

@@ -27,7 +27,7 @@
  * minimal sprintf implementation
  */
 
-#include "sys.h"
+#include "syscall.h"
 
 void putchar(char ch){
   char buffer[2];

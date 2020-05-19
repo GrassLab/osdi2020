@@ -13,6 +13,9 @@
 
 
 #ifndef __ASSEMBLER__
+
+#include "mutex.h"
+
 struct cpu_ctx {
   unsigned long x19;
   unsigned long x20;
@@ -36,11 +39,6 @@ struct pt_regs {
 	unsigned long pc;
 	unsigned long pstate;
 };
-
-typedef struct mutex_tag {
-  int lock;
-  unsigned long pid;
-} Mutex;
 
 #define TASK_BUFFER_SIZE 1024
 #define RESCHED 0x1

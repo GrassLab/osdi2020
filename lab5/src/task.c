@@ -5,8 +5,8 @@
 #include "io.h"
 #include "info.h"
 #include "string.h"
-#include "sys.h"
 #include "mm.h"
+#include "syscall.h"
 
 #define Task_pt_regs(tsk) ((struct pt_regs*)(tsk->mm.kernel_pages[0] + THREAD_SIZE - sizeof(struct pt_regs)))
 //#define current get_current();
