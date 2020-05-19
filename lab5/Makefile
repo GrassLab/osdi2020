@@ -6,18 +6,30 @@ GENERAL_FLAGS =
 C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles -mstrict-align
 ASM_FLAGS =
 
-KERNEL_C_SOURCE_FILES = shell.c string_util.c mailbox.c uart.c exc.c irq.c syscall.c timer.c schedule.c task.c sys.c queue.c mmu.c
+KERNEL_C_SOURCE_FILES = string_util.c mailbox.c uart.c exc.c irq.c syscall.c timer.c schedule.c task.c sys.c queue.c mmu.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
 KERNEL_ASSEMBLY_SOURCE_FILES = start.S exc_vector.S timer.S schedule.S mmu.S
 KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.S=.asmo)
+
+SHELL_C_SOURCE_FILES = shell.c string_util.c syscall.c c_routine.c
+SHELL_C_OBJECT_FILES = $(SHELL_C_SOURCE_FILES:.c=.o)
 
 all: kernel8.img
 
 kernel8.img: kernel8.elf
 	${OBJCOPY} -O binary kernel8.elf kernel8.img
 
-kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES}
-	${LD} -T kernel.ld ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} -o kernel8.elf
+kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} shell.rd
+	${LD} -T kernel.ld ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} shell.rd -o kernel8.elf
+
+shell.rd: shell.bin
+	${LD} -r -b binary shell.bin -o shell.rd
+
+shell.bin: shell.elf
+	${OBJCOPY} shell.elf -O binary shell.bin
+
+shell.elf: ${SHELL_C_OBJECT_FILES}
+	${LD} -T shell.ld $^ -o $@
 
 %.o: %.c
 	${CC} -c ${GENERAL_FLAGS} ${C_FLAGS} $^ -o $@
@@ -40,5 +52,5 @@ qemu_dbg: debug
 
 .PHONY: clean
 clean:
-	rm -rf *.o *.elf *img *.asmo
+	rm -rf *.o *.elf *img *.asmo *.bin *.rd
 
