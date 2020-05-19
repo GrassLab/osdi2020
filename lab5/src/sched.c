@@ -13,7 +13,6 @@ int tasks_pos(Task *task){
 }
 
 void context_switch(Task *next) {
-  printf("next task is %d" NEWLINE, next->pid);
   Task *prev = current_task;
   current_task = next;
   current_task->status = running;

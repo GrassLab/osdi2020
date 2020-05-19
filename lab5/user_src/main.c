@@ -118,21 +118,18 @@ void fork_test(){
   int child = 0, k = 15;
   println("parent user process");
   println("user_process_fork test" NEWLINE);
-  //child = call_sys_fork();
+  child = call_sys_fork();
   while(1){
-    //printf("stack reg = %x - %x" NEWLINE, ustack_pool[current_task->pid % TASK_SIZE],
-    //    ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE);
-    //printf("[%d] fork return %d" NEWLINE, current_task->pid, child);
     printf("===============> k = [0x%x] = %d" NEWLINE, &k, k);
-    if(child) println("===============> child user process");
+    if(!child) println("===============> child user process");
     else println("===============> parent user process");
-    delay(10000);
+    delay(1000000);
     if(!child) k++;
   }
 }
 
 int main(){
-  //fork_test();
-  shloop();
+  fork_test();
+  //shloop();
   return 0;
 }
