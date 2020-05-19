@@ -95,21 +95,21 @@ void map_page(Task *task, unsigned long va, unsigned long page){
 	unsigned long pgd;
 	if (!task->mm.pgd) {
 		task->mm.pgd = get_free_page();
-		task->mm.kernel_pages[task->mm.kernel_pages_count++] = task->mm.pgd;
+		task->mm.kernel_pages[++task->mm.kernel_pages_count] = task->mm.pgd;
 	}
 	pgd = task->mm.pgd;
 	int new_table;
 	unsigned long pud = map_table((unsigned long *)(pgd + VA_START), PGD_SHIFT, va, &new_table);
 	if (new_table) {
-		task->mm.kernel_pages[task->mm.kernel_pages_count++] = pud;
+		task->mm.kernel_pages[++task->mm.kernel_pages_count] = pud;
 	}
 	unsigned long pmd = map_table((unsigned long *)(pud + VA_START) , PUD_SHIFT, va, &new_table);
 	if (new_table) {
-		task->mm.kernel_pages[task->mm.kernel_pages_count++] = pmd;
+		task->mm.kernel_pages[++task->mm.kernel_pages_count] = pmd;
 	}
 	unsigned long pte = map_table((unsigned long *)(pmd + VA_START), PMD_SHIFT, va, &new_table);
 	if (new_table) {
-		task->mm.kernel_pages[task->mm.kernel_pages_count++] = pte;
+		task->mm.kernel_pages[++task->mm.kernel_pages_count] = pte;
 	}
 	map_table_entry((unsigned long *)(pte + VA_START), va, page);
 	struct user_page p = {page, va};

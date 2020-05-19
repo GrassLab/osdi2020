@@ -320,12 +320,17 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
   }
 
   memcpy(start, code_page, size);
-  printf("code: %x" NEWLINE, ((int*)code_page)[0]);
+  printf("code: %x copied!" NEWLINE, ((int*)code_page)[0]);
 	set_pgd(current_task->mm.pgd);
+
+  int *c = 0x0;
+  //printf("code: %x\r\n @0x0", c[0]);
   return 0;
 }
 
 void do_exec(unsigned long pc){
+  puts("not support now");
+/*
   printf("[%d] do exec" NEWLINE, current_task->pid);
   struct pt_regs *regs = ya_task_pt_regs(current_task);
   memzero((unsigned long)regs, sizeof(struct pt_regs));
@@ -346,6 +351,7 @@ void do_exec(unsigned long pc){
 	regs->sp =  stack_page + STACK_SIZE; // why
   //memcpy(code_page, start, size);
 	set_pgd(current_task->mm.pgd);
+*/
   /* TODO adjust user stack */
   //regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
 }
