@@ -17,9 +17,8 @@ struct task_queue_t {
 #define TASK_EPOCH 5
 #define TASK_POOL_SIZE 64
 #define KSTACK_SIZE 4096
-#define USTACK_SIZE 4096
 #define KSTACK_TOP_IDX (KSTACK_SIZE - 16) // sp need 16bytes alignment
-#define USTACK_TOP_IDX (USTACK_SIZE - 16) // sp need 16bytes alignment
+#define USTACK_ADDR (0x0000ffffffffe000 - 8)
 
 struct cpu_context {
     // ARM calling convention
@@ -42,10 +41,15 @@ struct cpu_context {
 #define MAX_USER_PAGES      16
 #define MAX_KERNEL_PAGES    16
 
+struct user_page {
+    uint64_t user_addr; // virtual address in user space
+    uint64_t page_addr; // virtual address in kernel space
+};
+
 struct mm_struct {
     uint64_t pgd;
     uint64_t user_pages_count;
-    uint64_t user_pages[MAX_USER_PAGES];
+    struct user_page user_pages[MAX_USER_PAGES];
     uint64_t kernel_pages_count;
     uint64_t kernel_pages[MAX_KERNEL_PAGES];
 };
@@ -72,7 +76,6 @@ struct task_t {
 /* Variables init in schedule.c */
 extern struct task_t task_pool[TASK_POOL_SIZE];
 extern char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
-extern char ustack_pool[TASK_POOL_SIZE][USTACK_SIZE];
 
 /* Function in schedule.S */
 struct task_t* get_current_task();

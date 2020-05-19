@@ -104,17 +104,17 @@ void delay(int period) {
 
 // Lab5: Required 2-2, 2-3
 
-void demo_lab5_req2() {
-    while (1) {
-        void* ptr = page_alloc();
-        uint64_t virt = (uint64_t) ptr;
-        uint64_t phy = virtual_to_physical(virt);
-        uint64_t pfn = phy_to_pfn(phy);
-        uart_printf("%x %x %x...\n", virt, phy, pfn);
-        page_free(ptr);
-        delay(10000000);
-    }
-}
+// void demo_lab5_req2() {
+//     while (1) {
+//         void* ptr = page_alloc();
+//         uint64_t virt = (uint64_t) ptr;
+//         uint64_t phy = virtual_to_physical(virt);
+//         uint64_t pfn = phy_to_pfn(phy);
+//         uart_printf("%x %x %x...\n", virt, phy, pfn);
+//         page_free(ptr);
+//         delay(10000000);
+//     }
+// }
 
 void demo_lab5_req3(){
     extern uint64_t _binary_user_img_start;
@@ -122,5 +122,5 @@ void demo_lab5_req3(){
     uint64_t begin = (uint64_t)&_binary_user_img_start;
     uint64_t end = (uint64_t)&_binary_user_img_end;
 
-    do_exec(begin, end - begin, 0x1000);
+    do_exec(begin, end - begin, 0x2000);
 }

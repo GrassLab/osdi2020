@@ -7,7 +7,6 @@
 
 struct task_t task_pool[TASK_POOL_SIZE];
 char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
-char ustack_pool[TASK_POOL_SIZE][USTACK_SIZE];
 struct task_queue_elmt_t runqueue_elmt_pool[TASK_POOL_SIZE];
 struct task_queue_t runqueue;
 
@@ -142,8 +141,8 @@ void schedule_init() {
     // privilege_task_create(zombie_reaper, 10);
 
     privilege_task_create(demo_lab5_req3, 10);
-    privilege_task_create(demo_lab5_req3, 10);
-    privilege_task_create(demo_lab5_req3, 10);
+    // privilege_task_create(demo_lab5_req3, 10);
+    // privilege_task_create(demo_lab5_req3, 10);
 
     arm_core_timer_enable();
     schedule();
@@ -188,11 +187,8 @@ void schedule() {
 }
 
 int do_exec(uint64_t start, uint64_t size, uint64_t pc) {
-    uint64_t sp = 0x0000ffffffffe000 - 8; // stack grow down
-
-    struct task_t *current = get_current_task();
-    void* code_page = map_addr_user(pc);
-    void* stack_page = map_addr_user(sp);
+    void* code_page = get_page_user(current_task, pc);
+    void* stack_page = get_page_user(current_task, USTACK_ADDR);
     if (!code_page || !stack_page) return -1;
 
     // copy code to pc
@@ -202,11 +198,11 @@ int do_exec(uint64_t start, uint64_t size, uint64_t pc) {
         *(pc_ptr + i) = *(code_ptr + i);
     }
 
-    asm volatile("msr sp_el0, %0" : : "r"(sp));
+    asm volatile("msr sp_el0, %0" : : "r"(USTACK_ADDR));
     asm volatile("msr elr_el1, %0": : "r"(pc));
     asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
 
-    update_pgd(current->mm.pgd);
+    update_pgd(current_task->mm.pgd);
 
     asm volatile("eret");
 
@@ -222,7 +218,7 @@ void do_exit(int status) {
         page_free((void*)current_task->mm.kernel_pages[i]);
     }
     for (uint64_t i = 0; i < current_task->mm.user_pages_count; i++) {
-        page_free((void*)current_task->mm.user_pages[i]);
+        page_free((void*)current_task->mm.user_pages[i].page_addr);
     }
 
     schedule();

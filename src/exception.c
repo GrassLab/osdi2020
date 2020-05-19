@@ -45,11 +45,12 @@ void sys_uart_write(struct trapframe* trapframe) {
     const char* buf = (char*) trapframe->x[0];
     uint32_t size = trapframe->x[1];
 
-    irq_enable();
     for (uint32_t i = 0; i < size; i++) {
-        uart0_write(buf[i]);
+        while (*UART0_FR & 0x20) { // TX FIFO is full
+            asm volatile("nop");
+        }
+        *UART0_DR = buf[i];
     }
-    irq_disable();
     trapframe->x[0] = size;
 }
 
@@ -65,27 +66,27 @@ void sys_fork(struct trapframe* trapframe) {
     int child_id = privilege_task_create(return_from_fork, parent_task->priority);
     struct task_t* child_task = &task_pool[child_id];
 
+    // copy kernel stack
     char* child_kstack = &kstack_pool[child_task->id][KSTACK_TOP_IDX];
     char* parent_kstack = &kstack_pool[parent_task->id][KSTACK_TOP_IDX];
-    char* child_ustack = &ustack_pool[child_task->id][USTACK_TOP_IDX];
-    char* parent_ustack = &ustack_pool[parent_task->id][USTACK_TOP_IDX];
-
     uint64_t kstack_offset = parent_kstack - (char*)trapframe;
-    uint64_t ustack_offset = parent_ustack - (char*)trapframe->sp_el0;
-
     for (uint64_t i = 0; i < kstack_offset; i++) {
         *(child_kstack - i) = *(parent_kstack - i);
     }
-    for (uint64_t i = 0; i < ustack_offset; i++) {
-        *(child_ustack - i) = *(parent_ustack - i);
-    }
-
     // place child's kernel stack to right place
     child_task->cpu_context.sp = (uint64_t)child_kstack - kstack_offset;
 
+    // copy all user pages
+    for (uint64_t i = 0; i < parent_task->mm.user_pages_count; i++) {
+        uint64_t user_addr = parent_task->mm.user_pages[i].user_addr;
+        uint64_t page_addr = parent_task->mm.user_pages[i].page_addr;
+        void* page = get_page_user(child_task, user_addr);
+        memcpy(page, (void*)page_addr, PAGE_SIZE);
+    }
+
     // place child's user stack to right place
     struct trapframe* child_trapframe = (struct trapframe*) child_task->cpu_context.sp;
-    child_trapframe->sp_el0 = (uint64_t)child_ustack - ustack_offset;
+    child_trapframe->sp_el0 = trapframe->sp_el0;
 
     child_trapframe->x[0] = 0;
     trapframe->x[0] = child_task->id;

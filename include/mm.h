@@ -25,12 +25,13 @@ extern uint64_t remain_page;
 
 /* Function in mm.c */
 void mm_init();
+void memcpy(void *dest, void *src, uint64_t size);
 uint64_t virtual_to_physical(uint64_t virt_addr);
 uint64_t phy_to_pfn(uint64_t phy_addr);
-void* page_alloc();
-void* page_alloc_user();
+void* page_alloc(struct task_t* task);
+void* page_alloc_user(struct task_t* task, uint64_t user_addr);
 void page_free(void* addr);
-void* map_addr_user(uint64_t user_addr);
+void* get_page_user(struct task_t* task, uint64_t user_addr);
 
 #endif /* __ASSEMBLY__ */
 
