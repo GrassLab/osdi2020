@@ -9,7 +9,7 @@ timer_enable_core_timer:
   mov x0, #1 // Enable timer and clear imask
   msr cntp_ctl_el0, x0 // Control register for the EL1 physical timer
   mov x0, #2 // CNTPNSIRQ interrupt
-  ldr x1, =0x40000040 // CORE0_TIMER_IRQ_CTRL
+  ldr x1, =0xffff000040000040 // CORE0_TIMER_IRQ_CTRL
   str x0, [x1] // enable timer interrupt
   ret
 
