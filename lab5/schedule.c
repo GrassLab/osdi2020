@@ -13,7 +13,6 @@ int schedule_zombie_exist = 0;
 
 void scheduler_init(void)
 {
-
   pqueue_uint64_t_init(&schedule_run_queue);
   QUEUE_INIT(schedule_wait_queue);
 
@@ -216,13 +215,13 @@ void schedule_idle(void)
   uint64_t myid = task_get_current_task_id();
 
   string_longlong_to_char(id_char, (long)myid);
-  uart_puts(ANSI_GREEN"[idle] "ANSI_RESET);
+  uart_puts(ANSI_GREEN"[Idle] "ANSI_RESET);
   uart_puts("Allow me to introduce myself. ID: ");
   uart_puts(id_char);
   uart_puts("\n");
   while(1)
   {
-    uart_puts(ANSI_GREEN"[idle]\n"ANSI_RESET);
+    uart_puts(ANSI_GREEN"[Idle] Idling\n"ANSI_RESET);
     while(!schedule_check_self_reschedule())
     {
       asm volatile("wfi");

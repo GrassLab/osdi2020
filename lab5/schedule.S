@@ -2,6 +2,7 @@
 .type schedule_switch_context,%function
 
 schedule_switch_context:
+  /* TODO: remove unwanted register */
   mov x9, sp
   mrs x10, spsr_el1
   mrs x11, elr_el1
