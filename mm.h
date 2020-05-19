@@ -49,6 +49,8 @@ unsigned long pa_to_pfn(unsigned long pa);
 
 unsigned long va_to_pa(unsigned long va);
 
+unsigned long pfn_to_pa(unsigned long pfn);
+
 #define MB256 (1 << 28)
 #define MB512 (1 << 29)
 

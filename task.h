@@ -70,13 +70,14 @@ typedef struct task_t
     unsigned long pgd;
     unsigned long pud;
     unsigned long pmd;
-    unsigned long ptd;
+    unsigned long pte;
     //unsigned long user_context_num;
 } task_t;
 
 extern int get_current();
 extern void set_current(int);
 extern unsigned long ret_from_fork();
+extern unsigned long ret_to_user();
 extern void switch_to(task_t *, task_t *, unsigned long);
 
 void schedule();

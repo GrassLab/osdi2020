@@ -16,14 +16,16 @@ void test_command1() { // test fork functionality
     fork();
     while(cnt < 10) {
       //printf("task id: %d, sp: 0x%llx cnt: %d\n", get_taskid(), &cnt, cnt++); // address should be the same across tasks, but the cnt should be increased indepndently
-      uart_puts("task_id: ");
+      uart_puts("\n\rtask_id: ");
       uart_send_hex(get_taskid());
       uart_puts("sp: ");
       uart_send_hex((unsigned int)(unsigned long)&cnt);
       uart_puts("cnt: ");
       uart_send_hex(cnt++);
+      uart_send('\n');
+      uart_send('\r');
 
-      delay(1000000);
+      delay(10000000);
     }
     exit(0); // all childs exit
   }
@@ -97,9 +99,6 @@ int main()
         }
         else if(strcmp(cmd, "t3") == 0){
             test_command3();
-        }
-        else if(strcmp(cmd, "bad") == 0){
-            *((unsigned long *) 0xffff0000f0000000) = 0;
         }
         else if(strcmp(cmd, "") == 0){
 

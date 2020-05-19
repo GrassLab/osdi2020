@@ -139,7 +139,6 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         break;
     // get time
     case 0x2:
-        enable_irq();
         syscall_gettime((double *)x1);
         break;
         /*
@@ -156,7 +155,6 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         syscall_uart_recv((char *)x1);
         break;
     case 0x20:
-        enable_irq();
         syscall_get_taskid((int *)x1);
         break;
     case 0x30:
@@ -172,7 +170,6 @@ void syscall_router(unsigned long x0, unsigned long x1, unsigned long x2, unsign
         syscall_reboot();
         break;
     case 0x40:
-        enable_irq();
         syscall_kill((int)x1, (int)x2);
         break;
     case 0x50:

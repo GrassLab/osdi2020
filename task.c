@@ -143,29 +143,28 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 
         p->cpu_context.sp = 0xffff000000000000 + PAGE_SIZE;
         p->cpu_context.sp = 0xffff000000000000;
+        childregs->sp = 0xffff000000000000 + PAGE_SIZE - sizeof(user_context_t);
 
        // p->cpu_context.x19 = current->cpu_context.x19;
-
-        childregs->sp = 0xffff000000000000 + PAGE_SIZE - sizeof(user_context_t);
 
         // create new pgd for user space memory map
         unsigned long pgd = get_free_page();
         unsigned long pud = get_free_page();
         unsigned long pmd = get_free_page();
-        unsigned long ptd = get_free_page();
+        unsigned long pte = get_free_page();
         ((unsigned long *)pgd)[0] = pud | // to PUD
                                     PT_TABLE | PT_AF | PT_USER;
-        ((unsigned long *)pud)[0] = pmd | // to PmD
+        ((unsigned long *)pud)[0] = pmd | // to PMD
                                     PT_TABLE | PT_AF | PT_USER;
-        ((unsigned long *)pmd)[0] = ptd | // to PtD
+        ((unsigned long *)pmd)[0] = pte | // to PTE
                                     PT_TABLE | PT_AF | PT_USER;
-        ((unsigned long *)ptd)[0] = stack | // memory
+        ((unsigned long *)pte)[0] = stack | // memory
                                     PT_PAGE | PT_AF | PT_USER;
 
         current->pgd = pgd;
         current->pud = pud;
         current->pmd = pmd;
-        current->ptd = ptd;
+        current->pte = pte;
     }
     else
     {
@@ -187,19 +186,103 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
     if (clone_flags & PF_FORK)
     {
         // asm volatile("mov x0, %0;" :: "r"(current->cpu_context.x19));
+        p->cpu_context.pc = (unsigned long)ret_to_user;
+        //p->cpu_context.pc = (unsigned long)ret_from_fork;
+        childregs->pc = (unsigned long)0xffff000000000000;
+        childregs->pc = (unsigned long)0xffff000f00000000;
+        p->cpu_context.pc = (unsigned long)0xffff000f00000000;
+
         p->cpu_context.pc = (unsigned long)ret_from_fork;
     }
     else
     {
         p->cpu_context.pc = (unsigned long)ret_from_fork;
     }
+        printf("?%x?", p->cpu_context.pc);
 
-    if (clone_flags & PF_FORK)
-    {
-        //p->cpu_context.pc += 64;
-    }
     //printf("sp: %x, %x\n\r", p->cpu_context.sp, current->cpu_context.sp);
     //print_cpu_context(&p->cpu_context);
+
+    task_pool_len++;
+    task_pool[task_id] = p;
+    //preempt_enable();
+    return task_id;
+}
+
+int do_fork()
+{
+    DEBUG_LOG_TASK(("fork current taskid[%d]\n\r", get_current()));
+    // unsigned long stack = (unsigned long)&kstack_pool[get_current()][0];
+    /*
+    unsigned long stack = get_free_page();
+    memset((unsigned char *)stack, 0, PAGE_SIZE);
+
+    //return copy_process(0, 0, 0, stack);
+    return copy_process(PF_FORK, 0, 0, stack);
+    */
+    task_t *current = task_pool[get_current()];
+    task_t *p;
+
+    p = (task_t *)get_free_page();
+    int task_id = task_pool_len;
+
+    memset((unsigned char *)p, 0, PAGE_SIZE);
+
+    //memcpy((unsigned char *)p, (unsigned char *)current, PAGE_SIZE);
+    user_context_t *regs = task_user_context(p);
+    user_context_t *current_regs = task_user_context(current);
+    *regs = *current_regs;
+
+    // create new pgd for user space memory map
+    unsigned long pgd = get_free_page();
+    unsigned long pud = get_free_page();
+    unsigned long pmd = get_free_page();
+    unsigned long pte = get_free_page();
+    unsigned long stack = get_free_page();
+    ((unsigned long *)pgd)[0] = pud | // to PUD
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pud)[0] = pmd | // to PMD
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pmd)[0] = pte | // to PTE
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pte)[0] = stack | // memory
+                                PT_PAGE | PT_AF | PT_USER;
+    p->pgd = pgd;
+    p->pud = pud;
+    p->pmd = pmd;
+    p->pte = pte;
+
+    // copy user space, code and data
+    memcpy((unsigned char *)stack, (unsigned char *)(current->stack), PAGE_SIZE);
+    uart_send_hex((current->stack) >> 32);
+    uart_send_hex((current->stack));
+    uart_send('\n');
+    uart_send_hex((stack) >> 32);
+    uart_send_hex((stack));
+
+
+    //    p->cpu_context.sp = 0xffff000000000000 + PAGE_SIZE;
+    regs->regs[0] = 0;
+    // regs->pc = 0xffff000000000000;
+    regs->pstate = PSR_MODE_EL0t;
+    // regs->sp = 0xffff000000000000 + PAGE_SIZE;
+    p->stack = stack;
+    p->stack_pfn = pa_to_pfn(stack);
+
+    uart_send('\n');
+    uart_send_hex((current_regs->pc) >> 32);
+    uart_send_hex((current_regs->pc));
+    uart_send('\n');
+
+        p->cpu_context.pc = (unsigned long)ret_from_fork;
+//        p->cpu_context.pc = (unsigned long)ret_to_user;
+
+        p->cpu_context.sp = (unsigned long)regs;
+
+    p->cpu_context.x19 = 0;
+    p->state = TASK_RUNNING;
+    p->signal_source = 0;
+ //       p->cpu_context.pc = (unsigned long)0xffff000000000000;
 
     task_pool_len++;
     task_pool[task_id] = p;
@@ -231,6 +314,7 @@ int _do_exec(unsigned long start, unsigned long size)
     // use visual address replace stack(physical address)
     regs->sp = 0xffff000000000000 + PAGE_SIZE;
     current->stack = 0xffff000000000000;
+    current->stack = stack;
 
 
 
@@ -238,14 +322,14 @@ int _do_exec(unsigned long start, unsigned long size)
     unsigned long pgd = get_free_page();
     unsigned long pud = get_free_page();
     unsigned long pmd = get_free_page();
-    unsigned long ptd = get_free_page();
-    ((unsigned long *)pgd)[0] = pud | // to PUD
+    unsigned long pte = get_free_page();
+    ((unsigned long *)pgd)[0] = pud |
                                 PT_TABLE | PT_AF | PT_USER;
-    ((unsigned long *)pud)[0] = pmd | // to PUD
+    ((unsigned long *)pud)[0] = pmd |
                                 PT_TABLE | PT_AF | PT_USER;
-    ((unsigned long *)pmd)[0] = ptd | // to PUD
+    ((unsigned long *)pmd)[0] = pte |
                                 PT_TABLE | PT_AF | PT_USER;
-    ((unsigned long *)ptd)[0] = stack | // to PUD
+    ((unsigned long *)pte)[0] = stack |
                                 PT_PAGE | PT_AF | PT_USER;
 
     set_pgd(pgd);
@@ -263,7 +347,7 @@ int _do_exec(unsigned long start, unsigned long size)
     current->pgd = pgd;
     current->pud = pud;
     current->pmd = pmd;
-    current->ptd = ptd;
+    current->pte = pte;
 
     // asm volatile("mov x30, %0" ::"r"(0xffff000000000000));
 
@@ -282,6 +366,7 @@ int do_exec(unsigned long pc)
     unsigned long stack = get_free_page();
     memset((unsigned char *)stack, 0, PAGE_SIZE);
 
+    // copy program to stack
     memcpy((unsigned char *)stack, (unsigned char *)pc, PAGE_SIZE);
 
     // use visual address replace stack(physical address)
@@ -292,14 +377,14 @@ int do_exec(unsigned long pc)
     unsigned long pgd = get_free_page();
     unsigned long pud = get_free_page();
     unsigned long pmd = get_free_page();
-    unsigned long ptd = get_free_page();
+    unsigned long pte = get_free_page();
     ((unsigned long *)pgd)[0] = pud | // to PUD
                                 PT_TABLE | PT_AF | PT_USER;
-    ((unsigned long *)pud)[0] = pmd | // to PmD
+    ((unsigned long *)pud)[0] = pmd | // to PMD
                                 PT_TABLE | PT_AF | PT_USER;
-    ((unsigned long *)pmd)[0] = ptd | // to PtD
+    ((unsigned long *)pmd)[0] = pte | // to PTE
                                 PT_TABLE | PT_AF | PT_USER;
-    ((unsigned long *)ptd)[0] = stack | // memory
+    ((unsigned long *)pte)[0] = stack | // memory
                                 PT_PAGE | PT_AF | PT_USER;
 
     set_pgd(pgd);
@@ -309,7 +394,7 @@ int do_exec(unsigned long pc)
     current->pgd = pgd;
     current->pud = pud;
     current->pmd = pmd;
-    current->ptd = ptd;
+    current->pte = pte;
     return 0;
 }
 
@@ -423,22 +508,12 @@ void exit_process(int task_id)
         free_page(pa_to_pfn(current->pud));
     if (current->pmd)
         free_page(pa_to_pfn(current->pmd));
-    if (current->ptd)
-        free_page(pa_to_pfn(current->ptd));
+    if (current->pte)
+        free_page(pa_to_pfn(current->pte));
     //preempt_enable();
     schedule();
 }
 
-int do_fork()
-{
-    DEBUG_LOG_TASK(("fork current taskid[%d]\n\r", get_current()));
-    // unsigned long stack = (unsigned long)&kstack_pool[get_current()][0];
-    unsigned long stack = get_free_page();
-    memset((unsigned char *)stack, 0, PAGE_SIZE);
-
-    //return copy_process(0, 0, 0, stack);
-    return copy_process(PF_FORK, 0, 0, stack);
-}
 
 task_t *task(int task_id)
 {

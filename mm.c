@@ -43,6 +43,10 @@ unsigned long va_to_pa(unsigned long va)
     return page_table[(va - 0xffff000000000000) / PAGE_SIZE].pa;
 }
 
+unsigned long pfn_to_pa(unsigned long pfn){
+    return page_table[pfn].pa;
+}
+
 /**
  * Set up page translation tables and enable virtual memory
  */
