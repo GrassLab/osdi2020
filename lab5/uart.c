@@ -118,6 +118,7 @@ void uart_init(void)
   /* wait until interrupt raised */
   while(!CHECK_BIT(*UART_FR, 7)); /* Exit when iterrupt cleared and return txfe[7] should be set and the loop should be break */
 
+  uart_puts_blocking("UART init complete\n");
   return;
 }
 
