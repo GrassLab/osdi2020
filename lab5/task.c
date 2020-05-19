@@ -115,20 +115,28 @@ void task_privilege_demo(void)
   }
 }
 
-void task_do_exec(void(*start_func)())
+void task_do_exec(uint64_t * start, uint64_t size)
 {
   /* CAUTION: kernel stack may explode if you keep doing exec */
+
   uint64_t current_task_id = task_get_current_task_id();
+
+  /* setup pmc */
+  uint64_t * user_page_frame_start = mmu_user_task_set_pmu(TASK_ID_TO_IDX(current_task_id));
+
+  /* copy memory to physical page frame */
+  memcopy((char *)start, (char *)user_page_frame_start, (unsigned)size);
+
   /* setup register and eret */
   asm volatile(
     "mov x0, %0\n"
     "msr sp_el0, x0\n"
-    : : "r"((uint64_t)(task_user_stack_pool[current_task_id]))); /* stack grows from high to low */
+    : : "r"(USER_STACK_VA)); /* stack grows from high to low */
 
   asm volatile(
     "mov x0, %0\n"
     "msr elr_el1, x0\n"
-    : : "r"(start_func));
+    : : "r"(0x0));
 
   asm volatile(
     "eor x0, x0, x0\n"
