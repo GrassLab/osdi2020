@@ -97,9 +97,12 @@ void sys_mutex_unlock(Mutex *mtx){
   preempt_enable();
 }
 
-
 unsigned long sys_task_id(void) {
   return current_task->pid;
+}
+
+unsigned long sys_page_num(void) {
+  return current_task->mm.user_pages_count;
 }
 
 int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
@@ -132,6 +135,9 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       break;
     case SYSNUM_TASK_ID:
       return sys_task_id();
+      break;
+    case SYSNUM_PAGE_NUM:
+      return sys_page_num();
       break;
       // case 0:
       // sys_core_timer_enable();

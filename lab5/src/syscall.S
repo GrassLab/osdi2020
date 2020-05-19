@@ -53,3 +53,9 @@ call_sys_task_id:
     mov w8, #SYSNUM_TASK_ID
     svc #0
     ret
+
+.globl call_sys_page_num
+call_sys_page_num:
+    mov w8, #SYSNUM_PAGE_NUM
+    svc #0
+    ret

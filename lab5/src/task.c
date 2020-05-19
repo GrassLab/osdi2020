@@ -213,13 +213,12 @@ void zombie_reaper(){
         tasks[i] = 0;
       }
     }
-    delay(5000000);
+    delay(500000);
     schedule();
   }
 }
 
 void exit(){
-  printf(NEWLINE "============     [%d] becomes zombie     ============" NEWLINE, current_task->pid);
   preempt_disable();
   current_task->status = zombie;
   preempt_enable();
@@ -228,11 +227,6 @@ void exit(){
 #define TASK_(n) void task_ ## n () { \
   printf(NEWLINE "============      [%d] TASK" #n " daemon      ============"  NEWLINE, current_task->pid); \
   while(1){ \
-    if(current_task->signals & SIGKILL){ \
-      printf(NEWLINE "============      [%d] TASK" #n " sigkill     ============"  NEWLINE, current_task->pid); \
-      exit(); \
-      if(preempt_reschedable())schedule(); \
-    } \
     printf(NEWLINE "============      [%d] TASK" #n " running     ============"  NEWLINE, current_task->pid); \
     delay(5000000); \
     check_resched(); \

@@ -16,76 +16,31 @@ void context_switch(Task *next) {
   Task *prev = current_task;
   current_task = next;
   current_task->status = running;
-  //printf("next[%d] lr=0x%x sp=0x%x" NEWLINE, next->pid, next->cpu_ctx.lr, next->cpu_ctx.sp);
-  //printf("0x%x lr = 0x%x" NEWLINE, kernel_process, next->cpu_ctx.lr);
   if(next->mm.pgd) set_pgd(next->mm.pgd);
   switch_to(prev, next);
 }
 
+#define availabe(status) ((status) == idle || (status) == running)
+
+void handle_signals(){
+  // need re-implement, handle need be done after context switch
+  for(int i = 0; i < TASK_SIZE; i++)
+    if(tasks[i] && availabe(tasks[i]->status)){
+      if(tasks[i]->signals & SIGKILL){
+        printf(NEWLINE "============     [%d] becomes zombie     ============" NEWLINE, tasks[i]->pid);
+        tasks[i]->status = zombie;
+      }
+    }
+}
+
 void _schedule(){
   preempt_disable();
-#if 0
-  //printf("current task = %x" NEWLINE, current_task);
 
-  int beg = tasks_pos(current_task);
-  int i = (beg + 1) % TASK_SIZE;
-
-  while(i != beg){
-    if(tasks[i] && (tasks[i]->status == idle)){
-      printf("task[%d], pc = 0x%x, status %d" NEWLINE, tasks[i]->pid, tasks[i]->cpu_ctx.lr, tasks[i]->status);
-      break;
-    }
-    i = (i + 1) % TASK_SIZE;
-  }
-  delay(5000000);
-
-  while(i != beg){
-    if(tasks[i] && (tasks[i]->status == idle)){
-      printf("task[%d], pc = 0x%x, status %d" NEWLINE, tasks[i]->pid, tasks[i]->cpu_ctx.lr, tasks[i]->status);
-      break;
-    }
-    i = (i + 1) % TASK_SIZE;
-  }
-
-  //printf("select %d" NEWLINE, i);
-  if(current_task){
-    if(current_task->status == running)
-      current_task->status = idle;
-    current_task->flag &= ~RESCHED;
-  }
-
-  if(current_task == tasks[i]){
-    puts("return");
-    delay(5000000);
-    delay(5000000);
-    return;
-  }
-
-
-  printf("next is %d" NEWLINE, i);
-  delay(5000000);
-  delay(5000000);
-  next_task = tasks[i];
-  context_switch(tasks[i]);
-#else
-  //int beg = tasks_pos(current_task);
-  //int i = (beg + 1) % TASK_SIZE;
-
-  //while(i != beg){
-  //  if(tasks[i] && (tasks[i]->status == idle)){
-  //    printf("task[%d], pc = 0x%x, status %d" NEWLINE, tasks[i]->pid, tasks[i]->cpu_ctx.lr, tasks[i]->status);
-  //    break;
-  //  }
-  //  i = (i + 1) % TASK_SIZE;
-  //}
+  handle_signals();
 
   int max_priority = 0, max_count = 0, next = -1;
   for(int i = 0; i < TASK_SIZE; i++){
-    if(tasks[i] && (tasks[i]->status == idle || tasks[i]->status == running)){
-#if 0
-      printf("[%d] c = %d, p = %d" NEWLINE,
-          tasks[i]->pid, tasks[i]->counter, tasks[i]->priority);
-#endif
+    if(tasks[i] && availabe(tasks[i]->status)){
       if(tasks[i]->priority >= max_priority
           && tasks[i]->counter >= max_count){
         max_priority = tasks[i]->priority;
@@ -110,17 +65,9 @@ void _schedule(){
     current_task->status = idle;
 
   next_task = tasks[next];
-#if 0
-  printf("next is [%d](%d), %d %d"
-      NEWLINE,
-      next_task->pid,
-      next_task->status,
-      next_task->priority, next_task->counter);
-#endif
   next_task->counter = 0;
   context_switch(tasks[next]);
   preempt_enable(); // tricky place
-#endif
 }
 
 void schedule_tail() {
