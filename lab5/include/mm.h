@@ -41,9 +41,6 @@
 
 #include "task.h"
 
-void memzero(unsigned long src, unsigned long n);
-void memcpy(unsigned long src, unsigned long dst, unsigned long n);
-
 typedef struct page_tag {
   enum {
     empty,
@@ -64,6 +61,8 @@ unsigned long allocate_kernel_page();
 unsigned long allocate_user_page(Task *task, unsigned long va);
 void mark_reserved_pages(unsigned long end);
 
+/* 4 mb limit for user process */
+#define USER_MEM_LIMIT (4 << 20)
 #endif
 
 #endif

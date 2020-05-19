@@ -146,21 +146,23 @@ int copy_virt_memory(Task *dst) {
 	return 0;
 }
 
-static int ind = 1;
-
 int do_mem_abort(unsigned long addr, unsigned long esr) {
 	unsigned long dfs = (esr & 0b111111);
 	if ((dfs & 0b111100) == 0b100) {
+    if(addr >= USER_MEM_LIMIT){
+      current_task->status = zombie;
+      printf("segmentation fault [0x%x]" NEWLINE, addr);
+      return -1;
+    }
 		unsigned long page = get_free_page();
 		if (page == 0) {
+      puts("cannot allocate memory for user");
 			return -1;
 		}
 		map_page(current_task, addr & PAGE_MASK, page);
-		ind++;
-		if (ind > 2){
-			return -1;
-		}
 		return 0;
 	}
+  puts("DATA_ABORT_ERROR");
+  current_task->status = zombie;
 	return -1;
 }

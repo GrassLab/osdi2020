@@ -35,8 +35,7 @@ void sys_exec(unsigned long func){
 }
 
 int sys_fork() {
-  Task *ptr = privilege_task_create(0, 0, current_task->priority);
-  return ptr ? ptr->pid : 0;
+  return privilege_task_create(0, 0, current_task->priority)->pid;
 }
 
 void sys_exit(){

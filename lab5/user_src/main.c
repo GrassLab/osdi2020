@@ -114,16 +114,17 @@ void user_test(){
 }
 
 void fork_test(){
-  int child = 0, k = 15;
+  int child = 0, k = 0;
   println("parent user process");
   println("user_process_fork test" NEWLINE);
   child = call_sys_fork();
+  if(child) k += 1;
   while(1){
     printf("===============> k = [0x%x] = %d" NEWLINE, &k, k);
     if(!child) println("===============> child user process");
     else println("===============> parent user process");
-    delay(1000000);
-    if(!child) k++;
+    delay(500000);
+    k += 2;
   }
 }
 
@@ -142,7 +143,7 @@ void test_command1() { // test fork functionality
 
 void test_command2() { // test page fault
   if(fork() == 0) {
-    int* a = 0x0; // a non-mapped address.
+    int* a = (int*)(4 << 20); // a non-mapped address.
     printf("%d\n", *a); // trigger simple page fault, child will die here.
   }
 }

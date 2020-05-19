@@ -265,7 +265,8 @@ el0_da:
     bl    do_mem_abort
     cmp x0, 0
     b.eq 1f
-    handle_invalid_entry DATA_ABORT_ERROR
+    bl check_resched
+    //handle_invalid_entry DATA_ABORT_ERROR
 1:
     //bl disable_irq
     kexit_zero

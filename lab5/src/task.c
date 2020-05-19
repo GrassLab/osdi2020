@@ -171,8 +171,7 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
   append_task(p);
   preempt_enable();
-  //return p->pid == current_task->pid ? 0 : p;
-  return p->pid;
+  return p;
 }
 
 
@@ -303,7 +302,19 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
   regs->pstate = PSR_MODE_EL0t;
 
   //regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
-  regs->sp = 2 *  PAGE_SIZE;
+  //regs->sp = 2 *  PAGE_SIZE;
+#define allocate_sp_page 1
+#if allocate_sp_page
+  regs->sp = USER_MEM_LIMIT;
+  unsigned long
+    stack_page = allocate_user_page(current_task, regs->sp - PAGE_SIZE);
+
+  if(!stack_page){
+    printf("[%d] allocate stack page failed" NEWLINE, current_task->pid);
+  }
+#else
+  regs->sp = USER_MEM_LIMIT - 1;
+#endif
 
   printf("size is %d" NEWLINE, size);
 
@@ -325,15 +336,6 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
     printf("code: %x copied!" NEWLINE, ((int*)code_page)[0]);
   }
 
-#if 0
-  unsigned long
-    stack_page = allocate_user_page(current_task, regs->sp - PAGE_SIZE);
-
-  if(!stack_page){
-    printf("[%d] allocate stack page failed" NEWLINE, current_task->pid);
-  }
-#endif
-
   printf("k pages: %d" NEWLINE, current_task->mm.kernel_pages_count);
   for(int i = 0; i < current_task->mm.kernel_pages_count; i++)
     printf("@ %x" NEWLINE, current_task->mm.kernel_pages[i]);
@@ -347,29 +349,6 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
 }
 
 void do_exec(unsigned long pc){
-  puts("not support now");
-  /*
-     printf("[%d] do exec" NEWLINE, current_task->pid);
-     struct pt_regs *regs = ya_task_pt_regs(current_task);
-     memzero((unsigned long)regs, sizeof(struct pt_regs));
-
-     regs->pc = pc;
-     regs->pstate = PSR_MODE_EL0t;
-  //regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
-  //regs->sp =  0x0000ffffffffe000; // why
-
-  unsigned long
-  stack_page = allocate_user_page(current_task, regs->sp - 8),
-  code_page = allocate_user_page(current_task, pc);
-
-  if(!code_page || !stack_page){
-  printf("[%d] do exec FAILED" NEWLINE, current_task->pid);
-  }
-
-  regs->sp =  stack_page + STACK_SIZE; // why
-  //memcpy(code_page, start, size);
-  set_pgd(current_task->mm.pgd);
-  */
-  /* TODO adjust user stack */
-  //regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
+  puts("not support now, use move_to_user_mode instead.");
+  exit();
 }
