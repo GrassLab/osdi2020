@@ -138,12 +138,11 @@ void schedule(){
 void check_resched(){
   if(current_task->flag & RESCHED || current_task->status == zombie){
     if(current_task->status == zombie){
-      printf("[%d] it's a zombie" NEWLINE, current_task->pid);
+      printf("============    [%d] sched meet zombie   ============" NEWLINE,
+          current_task->pid);
     }
-    //puts("reschedule flag set");
     schedule();
   }
-  //puts("nothing... do again");
 }
 
 void debug(){

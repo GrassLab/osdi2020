@@ -54,6 +54,7 @@ typedef struct page_tag {
 
 unsigned long get_free_page();
 void free_page(unsigned long p);
+void free_task_pages(Task *);
 void map_page(Task *task, unsigned long va, unsigned long page);
 void memzero(unsigned long src, unsigned long n);
 void memcpy(unsigned long src, unsigned long dst, unsigned long n);

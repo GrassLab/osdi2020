@@ -27,7 +27,6 @@ char sys_read(){
 }
 
 void sys_write(char *buf) {
-  puts("Hello world");
   uart_puts(buf);
 }
 
@@ -43,6 +42,8 @@ int sys_fork() {
 void sys_exit(){
   preempt_disable();
   current_task->status = zombie;
+  free_task_pages(current_task);
+  printf("============      [%d] exit->zombie      ============" NEWLINE, current_task->pid);
   preempt_enable();
 }
 

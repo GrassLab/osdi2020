@@ -312,19 +312,30 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
   //regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
 	unsigned long
 	  code_page = allocate_user_page(current_task, pc);
-  unsigned long
-    stack_page = allocate_user_page(current_task, regs->sp - (PAGE_SIZE / 2));
 
-  if(!code_page || !stack_page){
-    printf("[%d] do exec FAILED" NEWLINE, current_task->pid);
+  if(!code_page){
+    printf("[%d] allocate code page failed" NEWLINE, current_task->pid);
   }
+
+  unsigned long
+    stack_page = allocate_user_page(current_task, regs->sp - PAGE_SIZE);
+
+  if(!stack_page){
+    printf("[%d] allocate stack page failed" NEWLINE, current_task->pid);
+  }
+
+  printf("k pages: %d" NEWLINE, current_task->mm.kernel_pages_count);
+  for(int i = 0; i < current_task->mm.kernel_pages_count; i++)
+    printf("@ %x" NEWLINE, current_task->mm.kernel_pages[i]);
+
+  printf("u pages: %d" NEWLINE, current_task->mm.user_pages_count);
+  for(int i = 0; i < current_task->mm.user_pages_count; i++)
+    printf("@ %x" NEWLINE, current_task->mm.user_pages[i]);
 
   memcpy(start, code_page, size);
   printf("code: %x copied!" NEWLINE, ((int*)code_page)[0]);
 	set_pgd(current_task->mm.pgd);
 
-  int *c = 0x0;
-  //printf("code: %x\r\n @0x0", c[0]);
   return 0;
 }
 

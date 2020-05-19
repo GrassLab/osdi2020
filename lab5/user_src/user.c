@@ -4,13 +4,7 @@
 #include "sprintf.h"
 
 void exit() {
-  int i = 5, b = 3;
-  while(i--){
-    b++;
-    call_sys_write("user_process_exit before" NEWLINE);
-  }
-  i = 1000;
-  while(i--){
+  while(1){
     call_sys_write("user_process_exit test" NEWLINE);
     call_sys_exit();
   }
@@ -36,22 +30,6 @@ void user_shell(){
   exit();
 }
 #endif
-
-void user_read() {
-  call_sys_write("user_read test" NEWLINE);
-  while(1){
-    printf("input:");
-    printf("read %d" NEWLINE, call_sys_read());
-  }
-}
-
-void user_write() {
-  printf(NEWLINE "============     WRITE testbeg     ============"  NEWLINE);
-  while(1){
-    call_sys_write(NEWLINE "============         WRITE   test        ============" NEWLINE);
-    delay(1000000);
-  }
-}
 
 void user_idle() {
   while(1){
@@ -109,7 +87,32 @@ void user_mutex(){
 }
 #endif
 
+void read_test() {
+  call_sys_write("============         READ    test        ============" NEWLINE);
+  while(1){
+    printf("input:");
+    printf("read %d" NEWLINE, call_sys_read());
+  }
+}
+
+void write_test() {
+  while(1){
+    call_sys_write(NEWLINE
+        "============         WRITE   test        ============"
+        NEWLINE);
+    delay(1000000);
+  }
+}
+
+void test(){
+  call_sys_write("user task checkpoint 1" NEWLINE);
+  delay(1000000);
+  call_sys_write("user task checkpoint 2" NEWLINE);
+  delay(1000000);
+  call_sys_write("user task checkpoint 3" NEWLINE);
+}
+
 int main(){
-  //printf("Hellow, World!" NEWLINE);
+  test();
   return 0;
 }

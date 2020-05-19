@@ -247,12 +247,31 @@ sync_invalid_el0_64:
     mrs	 x25, esr_el1                  // read the syndrome register
     lsr	 x24, x25, #ESR_ELx_EC_SHIFT   // exception class
     cmp	 x24, #ESR_ELx_EC_SVC64        // SVC in 64-bit state
-    //b.eq el0_svc
-    // TODO otherwise exception_etnry (excpetion.c)
+    b.eq el0_svc
+    cmp  x24, #ESR_ELx_EC_DABT_LOW        // data abort in EL0
+    b.eq el0_da
+    handle_invalid_entry  SYNC_INVALID_EL0_64
+
+el0_svc:
     bl   exception_handler
     str	x0, [sp, #0]             // returned x0
     bl check_resched
     kexit_zero
+
+el0_da:
+    //bl    enable_irq
+    mrs    x0, far_el1
+    mrs    x1, esr_el1
+    bl    do_mem_abort
+    cmp x0, 0
+    b.eq 1f
+    handle_invalid_entry DATA_ABORT_ERROR
+1:
+    //bl disable_irq
+    kexit_zero
+
+
+
 irq_invalid_el0_64:
     kentry_zero
     bl disable_irq
@@ -275,25 +294,6 @@ error_invalid_el0_32:
 
 .globl err_hang
 err_hang: b err_hang
-
-/* el0_svc: */
-    /* // syscall convension */
-    /* adr	  stbl, sys_call_table  // load syscall table pointer */
-    /* uxtw  scno, w8              // syscall number in w8 */
-    /* mov   sc_nr, #__NR_syscalls */
-    /* bl    enable_irq */
-    /* cmp   scno, sc_nr           // check upper syscall limit */
-    /* b.hs  ni_sys */
-/*  */
-    /* ldr	x16, [stbl, scno, lsl #3]       // address in the syscall table */
-    /* blr	x16                             // call sys_* routine */
-    /* b   ret_from_syscall */
-/* ni_sys: */
-    /* handle_invalid_entry 0, SYSCALL_ERROR */
-/* ret_from_syscall: */
-    /* bl	disable_irq */
-    /* str	x0, [sp, #0]             // returned x0 */
-    /* kexit_zero */
 
 .globl ret_from_fork
 ret_from_fork:
