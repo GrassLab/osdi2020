@@ -6,6 +6,7 @@
 #include "string_util.h"
 #include "task.h"
 #include "queue.h"
+#include "mmu.h"
 
 static uint64_t_pqueue schedule_run_queue;
 static uint64_t_queue schedule_wait_queue;
@@ -32,6 +33,7 @@ void scheduler_init(void)
 
 void schedule_context_switch(uint64_t current_id, uint64_t next_id)
 {
+  mmu_user_task_set_pmu(TASK_ID_TO_IDX(next_id));
   schedule_switch_context(&(kernel_task_pool[TASK_ID_TO_IDX(current_id)].cpu_context), &(kernel_task_pool[TASK_ID_TO_IDX(next_id)].cpu_context), next_id);
   irq_int_enable();
   return;
