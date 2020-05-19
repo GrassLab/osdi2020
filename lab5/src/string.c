@@ -36,7 +36,11 @@ int strbeg(char *str, char *beg){
   return 1;
 }
 
-void strcpy(void *dest, const void *src, unsigned long num) {
+void strcpy(char *dest, char *src) {
+  while(*src) *dest = *src, dest++, src++;
+}
+
+void strncpy(void *dest, const void *src, unsigned long num) {
   unsigned long *dest8 = (unsigned long *)dest;
   const unsigned long *src8 = (const unsigned long *)src;
   while (num--) {

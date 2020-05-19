@@ -4,6 +4,8 @@
 #include "mm.h"
 #include "sched.h"
 #include "task.h"
+#include "util.h"
+#include "string.h"
 
 
 extern Task *current_task, *tasks[TASK_SIZE];
@@ -25,7 +27,8 @@ char sys_read(){
 }
 
 void sys_write(char *buf) {
-  printf("%s", buf);
+  puts("Hello world");
+  uart_puts(buf);
 }
 
 void sys_exec(unsigned long func){
@@ -95,6 +98,7 @@ void sys_mutex_unlock(Mutex *mtx){
 
 int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     long x5) {
+
   switch (code) {
     case SYSNUM_READ:
       return sys_read();

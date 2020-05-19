@@ -28,7 +28,7 @@
 
 #include "mm.h"
 
-#if MLV == 2
+#if MLV <= 2
 #define MMIO_BASE (0xffff000000000000 + 0x3F000000)
 #else
 #define MMIO_BASE (0x3F000000)

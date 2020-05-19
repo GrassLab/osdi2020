@@ -67,9 +67,6 @@ void *task_pt_regs(Task *tsk) {
 
 void *ya_task_pt_regs(Task *tsk) {
   unsigned long p = ((unsigned long)tsk) + THREAD_SIZE - sizeof(struct pt_regs);
-  printf("fu %x\r\n", ((unsigned long)tsk));
-  printf("fuk %x\r\n", ((unsigned long)tsk) + THREAD_SIZE);
-  printf("fukk %x\r\n", ((unsigned long)tsk) + THREAD_SIZE - sizeof(struct pt_regs));
   return (void*)p;
 }
 
@@ -143,12 +140,12 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
        p->cpu_ctx.x19 = current_task->cpu_ctx.x19;
        p->cpu_ctx.x20 = current_task->cpu_ctx.x20;
        */
-    strcpy((void*)(kp + sizeof(Task)),
+    strncpy((void*)(kp + sizeof(Task)),
         (void*)(current_task + sizeof(Task)),
         STACK_SIZE - sizeof(Task) - sizeof(struct pt_regs));
 
     /* TODO copy user stack */
-    //strcpy(ustack_pool[p->pid % TASK_SIZE],
+    //strncpy(ustack_pool[p->pid % TASK_SIZE],
     //    ustack_pool[current_task->pid % TASK_SIZE],
     //    STACK_SIZE);
 
@@ -305,17 +302,20 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
   printf("pc = %x" NEWLINE, pc);
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
+
 	//regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
 	//regs->sp =  0x0000ffffffffe000; // why
 	regs->sp = 2 *  PAGE_SIZE;
+	//regs->sp = 1 *  PAGE_SIZE - 1;
 
   /* TODO adjust user stack */
   //regs->sp = (unsigned long)ustack_pool[current_task->pid % TASK_SIZE] + STACK_SIZE;
 	unsigned long
-    //stack_page = allocate_user_page(current_task, regs->sp - 8),
 	  code_page = allocate_user_page(current_task, pc);
+  unsigned long
+    stack_page = allocate_user_page(current_task, regs->sp - (PAGE_SIZE / 2));
 
-  if(!code_page/* || !stack_page*/){
+  if(!code_page || !stack_page){
     printf("[%d] do exec FAILED" NEWLINE, current_task->pid);
   }
 

@@ -3,7 +3,8 @@
 int strcmp(const char *s1, const char *s2);
 char *strchr(const char *s, int c);
 unsigned int strlen(const char *s);
-void strcpy(void *dest, const void *src, unsigned long num);
+void strncpy(void *dest, const void *src, unsigned long num);
 void *memset(void *s, int c, unsigned long n);
 int strbeg(char *str, char *beg);
+void strcpy(char *dest, char *src);
 #endif

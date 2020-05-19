@@ -4,7 +4,13 @@
 #include "sprintf.h"
 
 void exit() {
-  while(1){
+  int i = 5, b = 3;
+  while(i--){
+    b++;
+    call_sys_write("user_process_exit before" NEWLINE);
+  }
+  i = 1000;
+  while(i--){
     call_sys_write("user_process_exit test" NEWLINE);
     call_sys_exit();
   }
@@ -104,6 +110,6 @@ void user_mutex(){
 #endif
 
 int main(){
-  printf("Hellow, World!" NEWLINE);
+  //printf("Hellow, World!" NEWLINE);
   return 0;
 }
