@@ -1,3 +1,33 @@
+#define TCR_CONFIG_REGION_48bit (((64 - 48) << 0) | ((64 - 48) << 16))
+#define TCR_CONFIG_4KB ((0b00 << 14) |  (0b10 << 30))
+#define TCR_CONFIG_DEFAULT (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
+
+#define MAIR_DEVICE_nGnRnE 0b00000000
+#define MAIR_NORMAL_NOCACHE 0b01000100
+#define MAIR_IDX_DEVICE_nGnRnE 0
+#define MAIR_IDX_NORMAL_NOCACHE 1
+
+#define PD_TABLE 0b11
+#define PD_BLOCK 0b01
+#define PD_ACCESS (1 << 10)
+#define BOOT_PGD_ATTR PD_TABLE
+#define BOOT_PUD_DEVICE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+
+#define PAGE_SIZE 8
+
+#define PUD_AMOUNT 2
+#define PUD_SIZE (PAGE_SIZE * PUD_AMOUNT)
+#define PUD_BLOCK_SIZE (512 * PAGE_SIZE)
+
+#define PMD_AMOUNT (1 * 512)
+#define PMD_SIZE (PAGE_SIZE * PMD_AMOUNT)
+#define PMD_BLOCK_SIZE (512 * PAGE_SIZE)
+
+#define PTE_AMOUNT (1 * 512 * 512)
+#define PTE_SIZE (PAGE_SIZE* PTE_AMOUNT)
+#define PTE_BLOCK_SIZE (512 * PAGE_SIZE)
+
+
 .section ".text.boot"
 
 .global _start
@@ -13,8 +43,8 @@ _start:
 2:  // cpu id == 0
 
 
-
 el2_entry:
+
     // set stack before our code
     ldr     x1, =_start
     mov     sp, x1
@@ -54,6 +84,87 @@ el1_entry:
     ldr     x0, 0
     msr     spsr_el1, x0
 
+setup_pages:
+    ldr x0, =pg_dir // PGD's page frame at 0x0
+    mov x1, x0 
+    mov x2, x0 
+    add x1, x1, #PAGE_SIZE
+
+    // setup PGD
+    ldr x3, =PD_TABLE
+    lsl x1, x1, #12
+    orr x3, x1, x3 // combine the physical address of next level page with attribute.
+    lsr x1, x1, #12
+    str x3, [x2]
+    add x2, x2, #PAGE_SIZE
+
+    add x1, x2, #PUD_SIZE
+
+    // setup first PUD
+    ldr x3, =PD_TABLE
+    lsl x1, x1, #12
+    orr x3, x1, x3
+    lsr x1, x1, #12
+    str x3, [x2]
+    add x2, x2, #PAGE_SIZE
+
+    add x1, x1, #PUD_BLOCK_SIZE
+
+    // setup second PUD
+    ldr x3, =BOOT_PUD_DEVICE_ATTR
+    mov x8, 0x40000000
+    orr x3, x8, x3
+    str x3, [x2]
+    add x2, x2, #PAGE_SIZE
+
+    add x1, x2, #PMD_SIZE
+
+    // setup PMD x 512
+    mov x4, xzr
+    mov x5, #PMD_AMOUNT
+3:
+    ldr x3, =PD_TABLE
+    lsl x1, x1, #12
+    orr x3, x1, x3
+    lsr x1, x1, #12
+    str x3, [x2]
+    add x2, x2, #PAGE_SIZE
+
+    add x1, x1, #PMD_BLOCK_SIZE
+
+    add x4, x4, #1
+    cmp x4, x5
+    b.lt 3b
+
+    // setup PTE x 512
+    mov x4, xzr
+    mov x5, #0x40000000
+1:
+    ldr x3, =(PD_TABLE | PD_ACCESS)
+    orr x3, x4, x3
+    str x3, [x2]
+    add x2, x2, #PAGE_SIZE
+    mov x8, #(1<<24)
+    add x4, x4, x8
+    cmp x4, x5
+    b.ls 1b
+
+    msr ttbr0_el1, x0
+    msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
+    mrs x2, sctlr_el1
+    orr x2, x2, 1
+    msr sctlr_el1, x2 // enable MMU, cache remains disabled
+
+memory:
+    ldr x0, =TCR_CONFIG_DEFAULT
+    msr tcr_el1, x0
+
+    ldr x0, =( \
+      (MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) | \
+      (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8)) \
+    )
+    msr mair_el1, x0
+
 clear_bss:
     // clear bss
     ldr     x1, =__bss_start
@@ -62,6 +173,14 @@ clear_bss:
     str     xzr, [x1], #8
     sub     w2, w2, #1
     cbnz    w2, 3b
+
+
+tran:
+    ldr x2, =boot_rest // indirect branch to the virtual address
+    br x2
+
+boot_rest:
+
 
 go_main:
     // jump to C code, should not return

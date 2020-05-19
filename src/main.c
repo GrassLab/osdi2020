@@ -117,10 +117,10 @@ int main() {
     /* privilege_task_create(task3, 0); */
 
     /* req1(); */
-    /* req3(); */
+    req3();
     /* req4(); */
     /* ele1(); */
-    ele2();
+    /* ele2(); */
     /* ele3(); */
     /* ele5(); */
     privilege_task_run();

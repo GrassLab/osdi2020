@@ -9,6 +9,14 @@ extern void switch_to(struct task_t* prev, struct task_t* next,
                       uint64_t nextfunc, uint64_t spsr);
 extern void user_context(uint64_t sp, uint64_t func);
 
+struct task_t task_pool[64];
+struct queue_element_t queue_elements[QUEUE_ELE_SIZE];
+int queue_elements_now;
+struct queue runqueue;
+struct queue waitqueue;
+char kstack_pool[64][STACK_SIZE];
+char ustack_pool[64][STACK_SIZE];
+
 struct task_t* get_current() {
     uint64_t res;
     asm volatile("mrs %0, tpidr_el1" : "=r"(res));
@@ -56,7 +64,7 @@ void queue_push(struct queue* queue, struct task_t* task) {
     }
 }
 
-struct task_t* queue_pop(struct queue* queue, int status) {
+struct task_t* queue_pop(struct queue* queue, TASK_STATUS status) {
     struct task_t* task;
     if (queue->head == 0) {
         return &task_pool[0];
@@ -162,10 +170,6 @@ void do_fork(uint64_t elr) {
         if (task_pool[i].status != ACTIVE) {
             child_task = &task_pool[i];
             task_pool[i].id = i;
-            asm volatile("gg:");
-            /* task_pool[i].sp = task->sp - (uint64_t)&kstack_pool[task->id + 1]
-             * + */
-            /* (uint64_t)&kstack_pool[i + 1]; */
             task_pool[i].elr = elr;
             task_pool[i].time = 0;
             task_pool[i].spsr = task->spsr;
@@ -181,7 +185,6 @@ void do_fork(uint64_t elr) {
                    STACK_SIZE * sizeof(char));
             memcpy(&ustack_pool[i - 1] + 1, &ustack_pool[task->id - 1] + 1,
                    STACK_SIZE * sizeof(char));
-            asm volatile("gg2:");
             task->utask.fork_id = task_pool[i].id;
             break;
         }
@@ -197,7 +200,6 @@ void kexit(uint64_t status) {
 void do_exit(uint64_t status) {
     struct task_t* task = get_current();
     task->status = ZOMBIE;
-
     print_s("Exited with status code: ");
     print_i(status);
     print_s("\n");

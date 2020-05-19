@@ -1,7 +1,18 @@
 #include "gpio.h"
-#include "io.h"
-#include "task.h"
-#include "uart.h"
+
+/* Auxilary mini UART registers */
+#define AUX_ENABLE ((volatile unsigned int*)(MMIO_BASE + 0x00215004))
+#define AUX_MU_IO ((volatile unsigned int*)(MMIO_BASE + 0x00215040))
+#define AUX_MU_IER ((volatile unsigned int*)(MMIO_BASE + 0x00215044))
+#define AUX_MU_IIR ((volatile unsigned int*)(MMIO_BASE + 0x00215048))
+#define AUX_MU_LCR ((volatile unsigned int*)(MMIO_BASE + 0x0021504C))
+#define AUX_MU_MCR ((volatile unsigned int*)(MMIO_BASE + 0x00215050))
+#define AUX_MU_LSR ((volatile unsigned int*)(MMIO_BASE + 0x00215054))
+#define AUX_MU_MSR ((volatile unsigned int*)(MMIO_BASE + 0x00215058))
+#define AUX_MU_SCRATCH ((volatile unsigned int*)(MMIO_BASE + 0x0021505C))
+#define AUX_MU_CNTL ((volatile unsigned int*)(MMIO_BASE + 0x00215060))
+#define AUX_MU_STAT ((volatile unsigned int*)(MMIO_BASE + 0x00215064))
+#define AUX_MU_BAUD ((volatile unsigned int*)(MMIO_BASE + 0x00215068))
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -12,8 +23,11 @@ void uart_init() {
     /* initialize UART */
     *AUX_ENABLE |= 1;  // enable UART1, AUX mini uart
     *AUX_MU_CNTL = 0;
+    *AUX_MU_LCR = 3;  // 8 bits
+    *AUX_MU_MCR = 0;
     *AUX_MU_IER = 0;
     *AUX_MU_IIR = 0xc6;  // disable interrupts
+    *AUX_MU_BAUD = 270;  // 115200 baud
     /* map UART1 to GPIO pins */
     r = *GPFSEL1;
     r &= ~((7 << 12) | (7 << 15));  // gpio14, gpio15
@@ -29,14 +43,8 @@ void uart_init() {
     while (r--) {
         asm volatile("nop");
     }
-    *GPPUDCLK0 = 0;  // flush GPIO setup
-
-    *AUX_MU_IER = IER_REG_VALUE;  // enable interrupt
-
-    *AUX_MU_LCR = 3;  // 8 bits
-    *AUX_MU_MCR = 0;
-    *AUX_MU_BAUD = 270;  // 115200 baud
-    *AUX_MU_CNTL = 3;    // enable Tx, Rx
+    *GPPUDCLK0 = 0;    // flush GPIO setup
+    *AUX_MU_CNTL = 3;  // enable Tx, Rx
 }
 
 /**
@@ -55,35 +63,14 @@ void uart_send(unsigned int c) {
  * Receive a character
  */
 char uart_getc() {
-    struct task_t* task = get_current();
-    uint64_t sp;
-    task->status = WAIT;
-    task->uart_elr = task->elr;
-    uint64_t old_elr;
-    asm volatile("mrs %0, elr_el1" : "=r"(old_elr));
-    asm volatile("ldr x6, =wait_return");
-    asm volatile("mov %0, x6" : "=r"(task->elr));
-    queue_push(&waitqueue, task);
-
-    asm("msr DAIFClr, 0xf");
-
-    asm volatile("mov %0, sp" : "=r"(sp));
-    task->uart_sp = sp;
-
-    asm volatile("wait_return0:");
-    schedule();
-    asm volatile("wait_return:");
-    task = get_current();
-    uint64_t new_sp = task->uart_sp;
-    asm volatile("mov x6, %0" : "=r"(new_sp));
-    asm volatile("mov sp, x6");
-    task->elr = task->uart_elr;
-    uint64_t new_elr = old_elr;
-    asm volatile("msr elr_el1, %0" : "=r"(new_elr));
-
-    char r = buffer[buffer_read++ % BUFFER_MAX];
-    asm volatile("v:");
-
+    char r;
+    /* wait until something is in the buffer */
+    do {
+        asm volatile("nop");
+    } while (!(*AUX_MU_LSR & 0x01));
+    /* read it and return */
+    r = (char)(*AUX_MU_IO);
+    /* convert carrige return to newline */
     return r == '\r' ? '\n' : r;
 }
 
@@ -96,16 +83,6 @@ void uart_puts(const char* s) {
         if (*s == '\n') uart_send('\r');
         uart_send(*s++);
     }
-}
-
-char uart_getb() {
-    /* wait until something is in the buffer */
-    do {
-        asm volatile("nop");
-    } while (!(*AUX_MU_LSR & 0x01));
-    /* read it and return */
-    char r = buffer[buffer_read++ % BUFFER_MAX];
-    return r == '\r' ? '\n' : r;
 }
 
 /**

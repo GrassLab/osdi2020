@@ -10,21 +10,25 @@
 #include "uart.h"
 
 void loop_user() {
+    sys_uart_write("echo_user \n", 11);
     print_s("loop user\n");
-    while (1)
-        ;
+    char c;
+    while (1) {
+        c = read_c();
+        print_c(c);
+    }
 }
 
 void exec_user() {
     print_s("exec user (call loop user)\n");
-    exec(loop_user);
+    sys_exec(loop_user);
     while (1)
         ;
 }
 
 void fork_exit_user() {
     print_s("fork exit user\n");
-    int a = fork();
+    int a = sys_fork();
     if (a == 0) {
         print_s("pid: ");
         print_i(a);
@@ -35,25 +39,25 @@ void fork_exit_user() {
         print_s("pid: ");
         print_i(a);
         print_s("\n");
-        fork();
-        exit(2);
+        sys_fork();
+        sys_exit(2);
         print_s("Should not be printed\n");
     }
 }
 
 void kill_user() {
     print_s("kill user\n");
-    kill(2, SIGKILL);
+    sys_kill(2, SIGKILL);
     while (1)
         ;
 }
 
 void echo_user() {
-    uart_write("echo_user \n", 11);
+    sys_uart_write("echo_user \n", 11);
     char ch[10];
-    uart_read(ch, 1);
+    sys_uart_read(ch, 1);
     print_s("your input: ");
-    uart_write(ch, 1);
+    sys_uart_write(ch, 1);
     print_s("\n");
     while (1)
         ;
