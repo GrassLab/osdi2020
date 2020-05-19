@@ -1,5 +1,5 @@
 #include "uart0.h"
-
+#include "exception.h"
 #include "mbox.h"
 #include "my_string.h"
 #include "peripherals/gpio.h"

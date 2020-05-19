@@ -45,12 +45,7 @@ void sys_uart_write(struct trapframe* trapframe) {
     const char* buf = (char*) trapframe->x[0];
     uint32_t size = trapframe->x[1];
 
-    for (uint32_t i = 0; i < size; i++) {
-        while (*UART0_FR & 0x20) { // TX FIFO is full
-            asm volatile("nop");
-        }
-        *UART0_DR = buf[i];
-    }
+    uart_printf("%s", buf);
     trapframe->x[0] = size;
 }
 
@@ -128,7 +123,16 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     }
 }
 
+void page_fault_handler() {
+    register uint64_t fault_addr;
+    asm volatile("mrs %0, FAR_EL1": "=r"(fault_addr));
+    uart_printf("Page fault address at 0x%x, killed\n", fault_addr);
+    exit(0);
+}
+
 void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* trapframe) {
+    irq_enable();
+
     int ec = (esr >> 26) & 0b111111;
     int iss = esr & 0x1FFFFFF;
     if (ec == 0b010101) {  // system call
@@ -153,6 +157,9 @@ void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* tra
         //         asm volatile ("mrs %0, cntpct_el0" : "=r" (cntpct_el0)); // read current counter
         //         break;
         // }
+    }
+    else if (ec == 0x24) {
+        page_fault_handler();
     }
     else {
         uart_printf("Exception return address 0x%x\n", elr);
