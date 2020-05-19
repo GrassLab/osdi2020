@@ -1,20 +1,14 @@
-#define TCR_CONFIG_REGION_48bit (((64 - 48) << 0) | ((64 - 48) << 16))
-#define TCR_CONFIG_4KB ((0b00 << 14) |  (0b10 << 30))
-#define TCR_CONFIG_DEFAULT (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
+#include "mmu.h"
 
-#define MAIR_DEVICE_nGnRnE 0b00000000
-#define MAIR_NORMAL_NOCACHE 0b01000100
-#define MAIR_IDX_DEVICE_nGnRnE 0
-#define MAIR_IDX_NORMAL_NOCACHE 1
-#define MAIR_DEFAULT ( (MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) | (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8)) )
+/*
+	NOTE:
 
-#define PD_TABLE 0b11
-#define PD_BLOCK 0b01
-#define PD_ACCESS (1 << 10)
-#define BOOT_PGD_ATTR PD_TABLE
-#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+	LDR r,  label : will store the "value" of label to register r
+	LDR r, =label : will stroe the "address" of the label to register r. BTW which is PC-relative address
 
-
+	_kernel_end is defined in linker script. it is not an object (it doesn't keep in memory)
+	TCP_CONFIG_DEFAULT is defined in header file. Header file in assembly is an object. (but it just plain text in C file)
+*/
 .global mmu_init
 mmu_init:
 	ldr x0, = TCR_CONFIG_DEFAULT
@@ -23,8 +17,8 @@ mmu_init:
 	ldr x0, = MAIR_DEFAULT
 	msr mair_el1, x0
 
-	mov x0, 0 // PGD's page frame at 0x0
-	mov x1, 0x1000 // PUD's page frame at 0x1000
+	ldr x0, _kernel_end 	// PGD @ _kernel_end
+	add x1, x0, 0x1000		// PUD @ _kernel_end + 1 page
 
 	ldr x2, = BOOT_PGD_ATTR
 	orr x2, x1, x2 // combine the physical address of next level page with attribute.
@@ -39,8 +33,6 @@ mmu_init:
 	str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 
 	msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
+	msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
 
-	mrs x2, sctlr_el1
-	orr x2 , x2, 1
-	msr sctlr_el1, x2 // enable MMU, cache remains disabled
-	ret
+	ret	

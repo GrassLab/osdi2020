@@ -10,4 +10,5 @@ void main()
     uart_init();
 
     uart_puts("hello mmu!\n");
+
 }

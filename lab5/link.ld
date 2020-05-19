@@ -25,7 +25,9 @@
 
 SECTIONS
 {
-    . = 0x80000;
+    . = 0xffff000000000000; 
+    . += 0x80000; 
+    _kernel_start = . ;
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
     . = ALIGN(4096);
@@ -40,7 +42,7 @@ SECTIONS
         __bss_end = .;
     }
     . = ALIGN(4096);
-    _end = .;
+    _kernel_end = .;
 
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
