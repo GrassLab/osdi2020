@@ -45,10 +45,11 @@ void exc_dispatcher(uint64_t identifier, struct trapframe_struct * trapframe)
 void exc_not_implemented(uint64_t code)
 {
   char string_buff[0x20];
-  uint64_t ELR_EL1, ESR_EL1;
+  uint64_t ELR_EL1, ESR_EL1, FAR_EL1;
   asm volatile("mrs %0, elr_el1\n"
-               "mrs %1, esr_el1\n":
-               "=r"(ELR_EL1), "=r"(ESR_EL1));
+               "mrs %1, esr_el1\n"
+               "mrs %2, far_el1\n":
+               "=r"(ELR_EL1), "=r"(ESR_EL1), "=r"(FAR_EL1));
   uart_puts_blocking("Exception handler not implemented. Code: ");
   string_ulonglong_to_hex_char(string_buff, code);
   uart_puts_blocking(string_buff);
@@ -59,6 +60,10 @@ void exc_not_implemented(uint64_t code)
   uart_puts_blocking("\n");
   uart_puts_blocking("ESR_EL1: ");
   string_ulonglong_to_hex_char(string_buff, ESR_EL1);
+  uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
+  uart_puts_blocking("FAR_EL1: ");
+  string_ulonglong_to_hex_char(string_buff, FAR_EL1);
   uart_puts_blocking(string_buff);
   uart_puts_blocking("\n");
 
@@ -88,8 +93,7 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
 
   if(exception_class != 0x15) /* Not via aarch64 svc */
   {
-    uart_puts("Unhandled exception class\nBusy while loop\n");
-    while(1);
+    exc_not_implemented(18);
   }
 
   switch(exception_imm)
