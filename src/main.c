@@ -67,37 +67,51 @@ void zombie_killer() {
     }
 }
 
-void req1() {
-    privilege_task_create(sche_task, 0);
-    privilege_task_create(sche_task, 0);
+/* void req1() { */
+/* privilege_task_create(sche_task, 0); */
+/* privilege_task_create(sche_task, 0); */
+/* } */
+
+/* void req3() { */
+/* privilege_task_create(loop_task, 0); */
+/* privilege_task_create(loop_task, 0); */
+/* } */
+
+/* void req4() { */
+/* privilege_task_create(exec_task, 0); */
+/* privilege_task_create(fork_exit_task, 0); */
+/* } */
+
+/* void ele1() { */
+/* privilege_task_create(loop_user, 0); */
+/* privilege_task_create(kill_task, 0); */
+/* } */
+
+/* void ele2() { */
+/* privilege_task_create(kexit_task, 0); */
+/* privilege_task_create(kexit_task, 0); */
+/* } */
+
+/* void ele3() { privilege_task_create(echo_task, 0); } */
+
+/* void ele5() { */
+/* privilege_task_create(loop_ktask, 0); */
+/* privilege_task_create(loop_ktask, 0); */
+/* } */
+
+void foo_user() {
+    print_s("foo user\n");
+    while (1)
+        ;
+}
+void foo_kernel() {
+    struct task_t* task = get_current();
+    page_mapping(task);
+    print_s("foo kernel\n");
+    do_exec(foo_user);
 }
 
-void req3() {
-    privilege_task_create(loop_task, 0);
-    privilege_task_create(loop_task, 0);
-}
-
-void req4() {
-    privilege_task_create(exec_task, 0);
-    privilege_task_create(fork_exit_task, 0);
-}
-
-void ele1() {
-    privilege_task_create(loop_user, 0);
-    privilege_task_create(kill_task, 0);
-}
-
-void ele2() {
-    privilege_task_create(kexit_task, 0);
-    privilege_task_create(kexit_task, 0);
-}
-
-void ele3() { privilege_task_create(echo_task, 0); }
-
-void ele5() {
-    privilege_task_create(loop_ktask, 0);
-    privilege_task_create(loop_ktask, 0);
-}
+void foo() { privilege_task_create(foo_kernel, 0); }
 
 int main() {
     // set up serial console
@@ -111,9 +125,6 @@ int main() {
     /* tmp = uart_getb(); */
     asm volatile("svc #2");
 
-    struct page_t* page = page_alloc();
-    page_free(page);
-
     privilege_task_create(idle, 3);
     /* privilege_task_create(zombie_killer, 0); */
     /* privilege_task_create(task1, 0); */
@@ -121,12 +132,13 @@ int main() {
     /* privilege_task_create(task3, 0); */
 
     /* req1(); */
-    req3();
+    /* req3(); */
     /* req4(); */
     /* ele1(); */
     /* ele2(); */
     /* ele3(); */
     /* ele5(); */
+    foo();
     privilege_task_run();
 
     /* run(); */

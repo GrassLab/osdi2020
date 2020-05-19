@@ -5,11 +5,11 @@
 #include "task.h"
 
 struct page_t pages[PAGE_MAX];
-int page_now = 0;
+int page_now = 0x160;
 
 struct page_t* page_alloc() {
     struct page_t* page = 0;
-    for (int i = 0; i < PAGE_MAX; i++) {
+    for (int i = page_now; i < PAGE_MAX; i++) {
         if (pages[i].status == FREE) {
             page = &pages[i];
             page->id = i;
@@ -31,12 +31,24 @@ void page_free(struct page_t* page) {
 }
 
 void page_mapping(struct task_t* task) {
+    struct page_t* user_page = page_alloc();
+    task->user_page = user_page->id;
     struct page_t* pgd_page = page_alloc();
     struct page_t* pud_page = page_alloc();
     struct page_t* pmd_page = page_alloc();
     struct page_t* pte_page = page_alloc();
-    task->pgd = (uint64_t)(pgd_page->id) << 12;
-    uint64_t* pud = pgd_page->content;
-    uint64_t* pmd = pgd_page->content;
-    uint64_t* pte = pgd_page->content;
+    uint64_t* pgd = pgd_page->content;
+    uint64_t* pud = pud_page->content;
+    uint64_t* pmd = pmd_page->content;
+    uint64_t* pte = pte_page->content;
+    *pgd = (uint64_t)pud | PD_TABLE;
+    *pud = (uint64_t)pmd | PD_TABLE;
+    *pmd = (uint64_t)pte | PD_TABLE;
+    *pte = (uint64_t)user_page->content | PD_TABLE | PD_ACCESS;
+    task->pgd = pgd;
+    asm volatile("gg:");
+    move_ttbr(task->pgd);
+    asm volatile("gg2:");
 }
+
+void move_ttbr(uint64_t* pgd) { asm volatile("msr ttbr0_el1, x0"); }

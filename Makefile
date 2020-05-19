@@ -24,7 +24,7 @@ $(BDIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BDIR)/%.asmo: $(SDIR)/%.S
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img
