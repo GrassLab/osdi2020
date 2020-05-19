@@ -2,6 +2,7 @@
 #define KERNEL_EXCEPTION_H_
 
 #include "kernel/base.h"
+#include "kernel/lib/types.h"
 
 #define SYSTEM_TIMER_CS  ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x3000))
 #define SYSTEM_TIMER_CL0 ((volatile uint32_t *)(GPU_PERIPHERAL_BASE + 0x3004))
@@ -19,6 +20,13 @@
 #define CORE0_INTERRUPT_SRC  ((volatile uint32_t *)(LOCAL_PERIPHERAL_BASE + 0x60))
 
 extern unsigned vector_table[];
+
+struct trapframe {
+  uint64_t gprs[31];
+  uint64_t sp_el0;
+  uint64_t elr_el1;
+  uint64_t spsr_el1;
+};
 
 void exception_init(void);
 void core_timer_enable(void);

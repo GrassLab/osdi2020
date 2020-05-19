@@ -51,7 +51,6 @@ struct queue runqueue;
 struct task __attribute__((aligned(16))) task_pool[MAX_TASK_NUM];
 bool task_inuse[MAX_TASK_NUM];
 uint8_t __attribute__((aligned(16))) kstack_pool[MAX_TASK_NUM][MAX_STACK_SIZE];
-//uint8_t __attribute__((aligned(16))) ustack_pool[MAX_TASK_NUM][MAX_STACK_SIZE];
 
 void idle_task_create(void);
 uint32_t privilege_task_init(void);

@@ -69,3 +69,24 @@ void *create_mapping(uint64_t *pgd, uint64_t va) {
 
   return (void *)GET_FRAME(pte, va);
 }
+
+void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level) {
+  for (size_t i = 0; i < 512; ++i) {
+    if ((src[i] & PD_VALID) == 0) {
+      continue;
+    }
+
+    switch (level) {
+    case 1:
+    case 2:
+    case 3:
+      dst[i] = page_alloc() | USER_PGD_PUD_PMD_ATTR;
+      copy_vmmap(PTBENT_TO_KVA(dst[i]), PTBENT_TO_KVA(src[i]), level + 1);
+      break;
+    case 4:
+      dst[i] = page_alloc() | USER_PTE_NORMAL_ATTR;
+      memcpy(PTBENT_TO_KVA(dst[i]), PTBENT_TO_KVA(src[i]), PAGE_SIZE);
+      break;
+    }
+  }
+}

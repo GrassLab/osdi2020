@@ -1,3 +1,4 @@
+#include "kernel/exception.h"
 #include "kernel/mini_uart.h"
 #include "kernel/mm.h"
 #include "kernel/sched.h"
@@ -31,37 +32,24 @@ void do_exec(uint64_t binary_start, size_t binary_size) {
   el1_to_el0(0, (uint8_t *)USER_STACK_VA_BASE);
 }
 
-//int do_fork_helper(uint64_t trapframe, uint64_t lr) {
-//  uint64_t pksp = trapframe;
-//  uint64_t pusp = *((uint64_t *)(trapframe + 8 * 31));
-//  uint64_t pfp = *((uint64_t *)(trapframe + 8 * 29));
-//
-//  uint32_t cid = privilege_task_init();
-//  uint32_t pid = do_get_taskid();
-//
-//  memcpy(kstack_pool[cid], kstack_pool[pid], MAX_STACK_SIZE);
-//  memcpy(ustack_pool[cid], ustack_pool[pid], MAX_STACK_SIZE);
-//  memcpy(&task_pool[cid].context, &task_pool[pid].context, sizeof(struct task_context));
-//
-//  uint64_t cksp = (uint64_t)kstack_pool[cid + 1] - ((uint64_t)kstack_pool[pid + 1] - pksp);
-//  uint64_t cusp = (uint64_t)ustack_pool[cid + 1] - ((uint64_t)ustack_pool[pid + 1] - pusp);
-//  uint64_t cfp = (uint64_t)ustack_pool[cid + 1] - ((uint64_t)ustack_pool[pid + 1] - pfp);
-//
-//  task_pool[cid].context.x19 = lr;
-//  task_pool[cid].context.lr = (uint64_t)post_fork_child_hook;
-//  task_pool[cid].context.sp = cksp;
-//
-//  uint64_t child_trapframe = (uint64_t)kstack_pool[cid + 1] - ((uint64_t)kstack_pool[pid + 1] - trapframe);
-//  *((uint64_t *)(child_trapframe + 8 * 31)) = cusp;
-//  /*
-//   * Update child's frame pointer explicitly in case that parent already
-//   * used it to access local variables.
-//   */
-//  *((uint64_t *)(child_trapframe + 8 * 29)) = cfp;
-//  enqueue(&runqueue, &task_pool[cid]);
-//
-//  return cid;
-//}
+int do_fork_helper(struct trapframe *tf, uint64_t lr) {
+  uint32_t cid = privilege_task_init();
+  uint32_t pid = do_get_taskid();
+
+  memcpy(kstack_pool[cid], kstack_pool[pid], MAX_STACK_SIZE);
+
+  uint64_t *ppgd, *cpgd = (uint64_t *)PA_TO_KVA(page_alloc());
+  asm volatile("mrs %0, ttbr0_el1" : "=r"(ppgd));
+  task_pool[cid].context.ttbr0 = (uint64_t)cpgd;
+  copy_vmmap(cpgd, ppgd, 1);
+
+  task_pool[cid].context.x19 = lr;
+  task_pool[cid].context.lr = (uint64_t)post_fork_child_hook;
+  task_pool[cid].context.sp = (uint64_t)kstack_pool[cid] + ((uint64_t)tf - (uint64_t)kstack_pool[pid]);
+
+  enqueue(&runqueue, &task_pool[cid]);
+  return cid;
+}
 
 void do_exit(int status) {
   get_current_task()->state = TASK_ZOMBIE;
@@ -78,8 +66,7 @@ void *syscall_table[] = {
   do_uart_read,
   do_uart_write,
   do_exec,
-//  do_fork,
-  NULL,
+  do_fork,
   do_exit,
   do_kill
 };

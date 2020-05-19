@@ -33,6 +33,7 @@
 #define USER_PGD_ATTR PD_TABLE
 #define USER_PUD_ATTR PD_TABLE
 #define USER_PMD_ATTR PD_TABLE
+#define USER_PGD_PUD_PMD_ATTR PD_TABLE
 #define USER_PTE_NORMAL_ATTR (PD_ACCESS | PD_USER | (MAIR_IDX_NORMAL_NOCACHE << 2) | 0b11)
 
 #define PHYSICAL_MEM_SIZE (1 << 30)
@@ -54,6 +55,7 @@
 
 #define KVIRT_TO_PFN(addr) (uint64_t)((addr >> 12) & ((1ULL << 36) - 1))
 #define PA_TO_KVA(pa) (pa + KERNEL_VA_BASE)
+#define PTBENT_TO_KVA(ent) ((uint64_t *)(KERNEL_VA_BASE | ((uint64_t)ent >> 12 << 12)))
 
 #define USER_STACK_VA_BASE 0x0000ffffffffe000
 #define USER_STACK_VA_TOP (USER_STACK_VA_BASE - PAGE_SIZE)
@@ -72,6 +74,7 @@ void page_free(uint64_t page_addr);
 
 uint64_t *build_user_va(uint64_t binary_start, size_t binary_size);
 void *create_mapping(uint64_t *pgd, uint64_t va);
+void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level);
 
 #endif // __ASSEMBLER__
 

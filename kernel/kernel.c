@@ -104,8 +104,8 @@ int main(void) {
 
   idle_task_create();
   privilege_task_create(reaper);
-  privilege_task_create(print1);
-  privilege_task_create(print2);
+//  privilege_task_create(print1);
+//  privilege_task_create(print2);
   for (int i = 0; i < 1; ++i) {
     privilege_task_create(user_test);
   }
