@@ -120,6 +120,10 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
         case SYS_EXIT:
             sys_exit(trapframe);
             break;
+
+        case SYS_REMAIN_PAGE:
+            trapframe->x[0] = remain_page;
+            break;
     }
 }
 

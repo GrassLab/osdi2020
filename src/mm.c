@@ -7,6 +7,7 @@
 
 struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
+uint64_t remain_page = 0;
 
 void mm_init() {
     extern uint8_t __kernel_end;  // defined in linker
@@ -19,6 +20,7 @@ void mm_init() {
         page[i].used = USED;
     }
     for (; i < mmio_base_page; i++) {
+        remain_page++;
         page[i].used = AVAL;
     }
     for (; i < PAGE_FRAMES_NUM; i++) {
@@ -64,6 +66,7 @@ void* page_alloc() {
     }
     uint64_t page_virt_addr = page_phy_addr | KERNEL_VIRT_BASE;
     current_task->mm.kernel_pages[current_task->mm.kernel_pages_count++] = page_virt_addr;
+    remain_page--;
     return (void*)page_virt_addr;
 }
 
@@ -75,12 +78,14 @@ void* page_alloc_user() {
     }
     uint64_t page_virt_addr = page_phy_addr | KERNEL_VIRT_BASE;
     current_task->mm.user_pages[current_task->mm.user_pages_count++] = page_virt_addr;
+    remain_page--;
     return (void*)page_virt_addr;
 }
 
 void page_free(void* virt_addr) {
     uint64_t pfn = phy_to_pfn(virtual_to_physical((uint64_t)virt_addr));
     page[pfn].used = AVAL;
+    remain_page++;
 }
 
 // create pgd, return pgd address

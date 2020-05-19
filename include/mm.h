@@ -21,6 +21,7 @@ struct page_t {
 
 /* Variables init in mm.c */
 extern struct page_t page[PAGE_FRAMES_NUM];
+extern uint64_t remain_page;
 
 /* Function in mm.c */
 void mm_init();

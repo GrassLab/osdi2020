@@ -57,8 +57,8 @@ $(BUILD_DIR)/user/%_asm.o: $(USER_DIR)/%.S
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -fno-zero-initialized-in-bss $< -o $@
 
-user_embed.elf: $(USER_OBJS_FILES) $(LIB_OBJS_FILES)
-	$(LD) $(USER_OBJS_FILES) $(LIB_OBJS_FILES) -T $(USER_DIR)/linker.ld -o user.elf
+user_embed.elf: $(USER_OBJS_FILES) $(LIB_OBJS_FILES) build/src/sys_asm.o
+	$(LD) $(USER_OBJS_FILES) $(LIB_OBJS_FILES) build/src/sys_asm.o -T $(USER_DIR)/linker.ld -o user.elf
 	$(OBJCPY) -O binary user.elf user.img
 	$(LD) -r -b binary user.img -o user_embed.elf
 

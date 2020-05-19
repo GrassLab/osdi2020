@@ -7,6 +7,7 @@
 #define SYS_EXEC            3
 #define SYS_FORK            4
 #define SYS_EXIT            5
+#define SYS_REMAIN_PAGE     6
 
 #endif
 
@@ -22,5 +23,6 @@ int exec(void(*func)());
 int fork();
 void exit(int status);
 void printf(char* fmt, ...);
+uint64_t remain_page_num();
 
 #endif

@@ -214,11 +214,16 @@ int do_exec(uint64_t start, uint64_t size, uint64_t pc) {
 }
 
 void do_exit(int status) {
-    struct task_t* current = get_current_task();
-    current->state = ZOMBIE;
-    current->exit_status = status;
+    current_task->state = ZOMBIE;
+    current_task->exit_status = status;
 
-    // reclaim 
+    // reclaim all allocated pages
+    for (uint64_t i = 0; i < current_task->mm.kernel_pages_count; i++) {
+        page_free((void*)current_task->mm.kernel_pages[i]);
+    }
+    for (uint64_t i = 0; i < current_task->mm.user_pages_count; i++) {
+        page_free((void*)current_task->mm.user_pages[i]);
+    }
 
     schedule();
 }
