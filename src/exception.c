@@ -146,7 +146,9 @@ unsigned long el0_svc_handler(unsigned int trapframe)
             // uart_puts("sys_get_taskid success!\n");
             break;
         case SYS_EXEC:
-            do_exec(x0);
+            printf("not implement");
+            while(1);
+            // do_exec(x0);
             break;
         case SYS_FORK:
             sys_ret_val = do_fork();

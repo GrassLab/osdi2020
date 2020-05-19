@@ -8,6 +8,16 @@
 #define ZOMBIE              6
 #define EXC_CONTEXT         7
 
+/*
+ * PSR bits
+ */
+#define PSR_MODE_EL0t	0x00000000
+#define PSR_MODE_EL1t	0x00000004
+#define PSR_MODE_EL1h	0x00000005
+#define PSR_MODE_EL2t	0x00000008
+#define PSR_MODE_EL2h	0x00000009
+#define PSR_MODE_EL3t	0x0000000c
+#define PSR_MODE_EL3h	0x0000000d
 
 
 // the cpu_context's order must be the same as switch_to
@@ -33,9 +43,25 @@ struct user_context {
     unsigned long spsr_el1; // user cpu state
 } __attribute__ ((aligned (8)));
 
+#define MAX_PROCESS_PAGES			16	
+
+struct user_page {
+	unsigned long phys_addr;
+	unsigned long virt_addr;
+};
+
+struct mm_struct {
+	unsigned long pgd;
+	int user_pages_count;
+	struct user_page user_pages[MAX_PROCESS_PAGES];
+	int kernel_pages_count;
+	unsigned long kernel_pages[MAX_PROCESS_PAGES];
+};
+
 struct task {
     struct cpu_context cpu_context;
     struct user_context user_context;
+    struct mm_struct mm;
     long counter;
     long priority;  
     long state;
@@ -47,7 +73,7 @@ struct task {
 };
 
 struct task_manager {
-    struct task task_pool[64];
+    struct task *task_pool[64];
     char kstack_pool_prevent_stack_overflow[4096];
     char kstack_pool[64][4096];
     char ustack_pool[64][4096];
@@ -71,10 +97,11 @@ void set_current(struct task* task_struct);
 
 void task_manager_init(void(*func)());
 int privilege_task_create(void(*func)(), int fork_flag);
+struct trapframe_regs* get_task_trapframe(struct task *task);
 void context_switch(struct task* next);
 void schedule();
 
-void do_exec(void(*func)());
+void do_exec(unsigned long start, unsigned long size, void(*func)());
 int do_fork();
 int do_exit(int status);
 void zombie_reaper(struct task* check_task);

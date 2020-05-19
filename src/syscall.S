@@ -35,3 +35,9 @@ call_sys_uart_write:
     mov x8, #SYS_UART_WRITE
     svc #0
     ret
+
+.global call_sys_printf
+call_sys_printf:
+	mov x8, #SYS_PRINTF
+	svc #0
+	ret

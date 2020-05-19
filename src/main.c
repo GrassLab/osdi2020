@@ -9,6 +9,7 @@
 #include "../include/shell.h"
 #include "../include/task.h"
 #include "../include/mm.h"
+#include "../include/page.h"
 
 
 #define WELCOME \
@@ -24,7 +25,23 @@
 #define SPLASH_ON 0
 #define HW_INFO_ON 0
 
+void user_process() {
+    printf("it is user_process\n");
+    while(1);
+}
 
+void kernel_process(){
+    // unsigned long begin = (unsigned long)&user_begin;
+    unsigned long begin = 0xffff000000030000;
+    // unsigned long end = (unsigned long)&user_end;
+    unsigned long end = 0xffff000000031000;
+    unsigned long process = (unsigned long)&user_process;
+    // int err = do_exec(begin, end - begin, process - begin);
+    // if (err < 0){
+    //     printf("Error while moving process to user mode\n\r");
+    // }
+    do_exec(begin, end - begin, user_process-begin);
+}
 void main()
 {
     // set up serial console and linear frame buffer
@@ -46,7 +63,12 @@ void main()
         show_vccore_addr();
     # endif
     
-    // shell();
+    init_page();
+    task_manager_init(idle);
+    privilege_task_create(kernel_process, 0);
+    // privilege_task_create(user_test, 0);
+    // privilege_task_create(user_test, 0);
+    idle();
 
     /*
      ** el1 task
@@ -79,14 +101,15 @@ void main()
     // privilege_task_create(final_user_test, 0);
     // final_idle();
     
-    /*
+    /*tp
      ** test uart_readline 
      */
-    uart_send('>'); // to interactive with raspbootcom 
-    char buf[0x100];
-    uart_readline(buf);
-    uart_puts("ddddddddd\n");
-    uart_puts(buf);
+    // uart_send('>'); // to interactive with raspbootcom 
+    // char buf[0x100];
+    // uart_readline(buf);
+    // uart_puts("ddddddddd\n");
+    // uart_puts(buf);
     
+    while(1);
 }
 

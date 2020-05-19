@@ -97,8 +97,60 @@ __create_page_tables:
 	bl 	memzero
 
 	adrp	x0, pg_dir
-	mov	x1, #VA_START 
+	mov		x1, #VA_START 
 	create_pgd_entry x0, x1, x2, x3
+
+	/* Mapping kernel and init stack*/
+	mov 	x1, xzr							// start mapping from physical offset 0
+	mov 	x2, #VA_START						// first virtual address
+	ldr		x3, =(VA_START + DEVICE_BASE - SECTION_SIZE)		// last virtual address
+	create_block_map x0, x1, x2, x3, MMU_FLAGS, x4
+
+	/* Mapping device memory*/
+	mov 	x1, #DEVICE_BASE					// start mapping from device base address 
+	ldr 	x2, =(VA_START + DEVICE_BASE)				// first virtual address
+	ldr		x3, =(VA_START + PHYS_MEMORY_SIZE - SECTION_SIZE)	// last virtual address
+	create_block_map x0, x1, x2, x3, MMU_DEVICE_FLAGS, x4
+
+	adrp	x0, pg_dir				
+	msr	ttbr1_el1, x0
+    msr ttbr0_el1, x0
+
+	mov	x30, x29						// restore return address
+	ret
+
+
+
+
+
+
+
+
+.global test__create_page_tables
+test__create_page_tables:
+	mov	x29, x30						// save return address
+
+	adrp	x0, pg_dir
+	mov	x1, #PG_DIR_SIZE
+	bl 	memzero
+
+	adrp	x0, pg_dir
+	mov	x1, #VA_START 
+	// create_table_entry x0, x1, PGD_SHIFT, x2, x3
+	lsr	x2, x1, #PGD_SHIFT
+	and	x2, x2, #PTRS_PER_TABLE - 1			// table index
+	add	x3, x0, #PAGE_SIZE
+	orr	x3, x3, #MM_TYPE_PAGE_TABLE	
+	str	x3, [x0, x2, lsl #3]
+	add	x0, x0, #PAGE_SIZE					// next level table page
+	// create_table_entry x0, x1, PUD_SHIFT, x2, x3
+	lsr	x2, x1, #PUD_SHIFT
+	and	x2, x2, #PTRS_PER_TABLE - 1			// table index
+	add	x3, x0, #PAGE_SIZE
+	orr	x3, x3, #MM_TYPE_PAGE_TABLE	
+	str	x3, [x0, x2, lsl #3]
+	add	x0, x0, #PAGE_SIZE					// next level table page
+	
 
 	/* Mapping kernel and init stack*/
 	mov 	x1, xzr							// start mapping from physical offset 0
@@ -112,8 +164,20 @@ __create_page_tables:
 	ldr	x3, =(VA_START + PHYS_MEMORY_SIZE - SECTION_SIZE)	// last virtual address
 	create_block_map x0, x1, x2, x3, MMU_DEVICE_FLAGS, x4
 
+	adrp	x0, pg_dir				
+	msr	ttbr1_el1, x0
+    msr ttbr0_el1, x0
+
+
 	mov	x30, x29						// restore return address
 	ret
+
+
+
+
+
+
+
 
 .globl memcpy
 memcpy:
@@ -128,4 +192,26 @@ memzero:
 	str xzr, [x0], #8
 	subs x1, x1, #8
 	b.gt memzero
+	ret
+
+
+
+.globl get_pgd
+get_pgd:
+	mov x1, 0
+	ldr x0, [x1]
+	mov x0, 0x1000
+	msr	ttbr0_el1, x0
+	ldr x0, [x1]
+	ret
+
+
+.globl set_pgd
+set_pgd:
+	dsb ish
+	isb
+	msr	ttbr0_el1, x0
+	tlbi vmalle1is // invalidate all TLB entries
+  	dsb ish        // ensure completion of TLB invalidatation
+	isb            // clear pipeline
 	ret

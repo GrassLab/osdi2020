@@ -1,6 +1,6 @@
 #include "../include/uart.h"
 
-void loadimg(unsigned int kernel_addr)
+void loadimg(char* kernel_addr)
 {
     unsigned int size=0;
 
@@ -26,11 +26,11 @@ void loadimg(unsigned int kernel_addr)
 
 
     uart_puts("Loading kernel at 0x");
-    uart_hex(kernel_addr);
+    uart_hex((unsigned int)kernel_addr);
     uart_puts(" with size 0x");
     uart_hex(size);
     uart_puts(" ...\n");
     
     // read the kernel
-    while(size--) *(char *)kernel_addr++ = uart_getc();
+    while(size--) *kernel_addr++ = uart_getc();
 }

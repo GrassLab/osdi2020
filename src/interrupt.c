@@ -50,7 +50,7 @@ void core_timer_counter()
     timer_tick();  // set reschedule_flag
 }
 
-#define CORE0_TIMER_IRQ_CTRL (unsigned int* )0x40000040
+#define CORE0_TIMER_IRQ_CTRL (unsigned int* )(0x40000040+0xffff000000000000)
 #define EXPIRE_PERIOD 0xfffff
 
 void core_timer_enable()

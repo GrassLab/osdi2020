@@ -99,7 +99,7 @@ void uart_readline(char* buf)
     while (1) {
         tmp = uart_getc();
         buf[len++] = tmp;
-        if(tmp == '\n' | tmp =='\0')
+        if((tmp == '\n') | (tmp =='\0'))
             break;
     }
     buf[len++] = '\0';
@@ -147,7 +147,7 @@ int uart_strncmp(const char *cs, const char *ct, int len)
 /**
  * Copy memory by address and size
  */ 
-void uart_memcpy (const void *src, void *dst, int len)
+void uart_memcpy (void *src, void *dst, int len)
 {
     char *s = src;
     char *d = dst;

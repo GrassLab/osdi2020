@@ -8,12 +8,14 @@
 #define SYS_UART_WRITE              5   
 #define SYS_KILL                    6
 #define SYS_EXEC                    7
+#define SYS_PRINTF                  8
 
 #ifndef __ASSEMBLER__
 unsigned long call_sys_get_taskid();
-unsigned long call_sys_exec(void(*func)());
-int call_sys_fork();
-unsigned long call_sys_exit();
+unsigned long exec(void(*func)());
+int fork();
+unsigned long exit();
 char call_sys_uart_read();
 void call_sys_uart_write(char *s);
+void call_sys_printf(char *s);
 #endif
