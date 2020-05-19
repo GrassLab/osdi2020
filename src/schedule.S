@@ -28,3 +28,12 @@ update_current_task:
 get_current_task:
     mrs x0, tpidr_el1
     ret
+
+.global update_pgd
+update_pgd:
+    dsb ish
+    msr ttbr0_el1, x0
+    tlbi vmalle1is
+    dsb ish
+    isb
+    ret

@@ -56,12 +56,26 @@ uint64_t get_free_page() {  // return page physical address
     return 0;
 }
 
+// get one page for kernel space
 void* page_alloc() {
     uint64_t page_phy_addr = get_free_page();
     if (page_phy_addr == 0) {
         return NULL;
     }
-    return (void*)(page_phy_addr + KERNEL_VIRT_BASE);
+    uint64_t page_virt_addr = page_phy_addr | KERNEL_VIRT_BASE;
+    current_task->mm.kernel_pages[current_task->mm.kernel_pages_count++] = page_virt_addr;
+    return (void*)page_virt_addr;
+}
+
+// get one page for user space
+void* page_alloc_user() {
+    uint64_t page_phy_addr = get_free_page();
+    if (page_phy_addr == 0) {
+        return NULL;
+    }
+    uint64_t page_virt_addr = page_phy_addr | KERNEL_VIRT_BASE;
+    current_task->mm.user_pages[current_task->mm.user_pages_count++] = page_virt_addr;
+    return (void*)page_virt_addr;
 }
 
 void page_free(void* virt_addr) {
@@ -69,59 +83,49 @@ void page_free(void* virt_addr) {
     page[pfn].used = AVAL;
 }
 
-void* page_alloc_user(struct task_t* task, uint64_t user_virt_addr) {  // map one page to user_virt_addr
-    /*
-     * Allocate new page in user's address table
-     */
-    uint64_t pgd_idx = (user_virt_addr & (PD_MASK << PGD_SHIFT)) >> PGD_SHIFT;
-    uint64_t pud_idx = (user_virt_addr & (PD_MASK << PUD_SHIFT)) >> PUD_SHIFT;
-    uint64_t pmd_idx = (user_virt_addr & (PD_MASK << PMD_SHIFT)) >> PMD_SHIFT;
-    uint64_t pte_idx = (user_virt_addr & (PD_MASK << PTE_SHIFT)) >> PTE_SHIFT;
+// create pgd, return pgd address
+void* create_pgd() {
+    struct task_t* current = get_current_task();
+    if (!current->mm.pgd) {
+        void* page = page_alloc();
+        if (page == NULL) return NULL;
+        current->mm.pgd = virtual_to_physical((uint64_t)page);
+    }
+    return (void*)(current->mm.pgd + KERNEL_VIRT_BASE);
+}
 
-    // create PGD
-    if (!task->mm.pgd) {
-        uint64_t page_phy_addr = get_free_page();
-        if (page_phy_addr == 0) {
-            return NULL;
-        }
-        task->mm.pgd = page_phy_addr;
+// create page table, return next level table
+void* create_page_table(uint64_t *table, uint64_t idx) {
+    if (table == NULL) return NULL;
+    if (!table[idx]) {
+        void* page = page_alloc();
+        if (page == NULL) return NULL;
+        table[idx] = virtual_to_physical((uint64_t)page) | PD_TABLE;
     }
-    uint64_t* pgd = (uint64_t*)(task->mm.pgd + KERNEL_VIRT_BASE);
-    // create PUD
-    if (!pgd[pgd_idx]) {
-        uint64_t page_phy_addr = get_free_page();
-        if (page_phy_addr == 0) {
-            return NULL;
-        }
-        pgd[pgd_idx] = page_phy_addr | PD_TABLE;
-    }
-    uint64_t* pud = (uint64_t*)((pgd[pgd_idx] & ~0xFFF) + KERNEL_VIRT_BASE);
-    // create PMD
-    if (!pud[pud_idx]) {
-        uint64_t page_phy_addr = get_free_page();
-        if (page_phy_addr == 0) {
-            return NULL;
-        }
-        pud[pud_idx] = page_phy_addr | PD_TABLE;
-    }
-    uint64_t* pmd = (uint64_t*)((pud[pud_idx] & ~0xFFF) + KERNEL_VIRT_BASE);
-    // create PTE
-    if (!pmd[pmd_idx]) {
-        uint64_t page_phy_addr = get_free_page();
-        if (page_phy_addr == 0) {
-            return NULL;
-        }
-        pmd[pmd_idx] = page_phy_addr | PD_TABLE;
-    }
-    uint64_t* pte = (uint64_t*)((pmd[pmd_idx] & ~0xFFF) + KERNEL_VIRT_BASE);
-    // allocate page for virtual address
-    if (!pte[pte_idx]) {
-        uint64_t page_phy_addr = get_free_page();
-        if (page_phy_addr == 0) {
-            return NULL;
-        }
-        pte[pte_idx] = (page_phy_addr | (PD_ACCESS_FLAG | PD_ACCESS_PERM_RW | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)) & ~PD_EXN;
-    }
+    return (void*)((table[idx] & ~0xFFF) + KERNEL_VIRT_BASE);
+}
 
-    return (void*)((pte[pte_idx] & ~0xFFF) + KERNEL_VIRT_BASE);
+// create page, return page address
+void* create_page(uint64_t *pte, uint64_t idx) {
+    if (pte == NULL) return NULL;
+    if (!pte[idx]) {
+        void* page = page_alloc_user();
+        if (page == NULL) return NULL;
+        pte[idx] = virtual_to_physical((uint64_t)page) | PTE_NORAL_ATTR | PD_ACCESS_PERM_RW;
+    }
+    return (void*)((pte[idx] & ~0xFFF) + KERNEL_VIRT_BASE);
+}
+
+// allocate new page in user's address table, return page's virtual address
+void* map_addr_user(uint64_t user_addr) {
+    uint64_t pgd_idx = (user_addr & (PD_MASK << PGD_SHIFT)) >> PGD_SHIFT;
+    uint64_t pud_idx = (user_addr & (PD_MASK << PUD_SHIFT)) >> PUD_SHIFT;
+    uint64_t pmd_idx = (user_addr & (PD_MASK << PMD_SHIFT)) >> PMD_SHIFT;
+    uint64_t pte_idx = (user_addr & (PD_MASK << PTE_SHIFT)) >> PTE_SHIFT;
+
+    uint64_t* pgd = create_pgd();
+    uint64_t* pud = create_page_table(pgd, pgd_idx);
+    uint64_t* pmd = create_page_table(pud, pud_idx);
+    uint64_t* pte = create_page_table(pmd, pmd_idx);
+    return create_page(pte, pte_idx);
 }

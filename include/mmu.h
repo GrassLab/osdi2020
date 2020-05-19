@@ -41,8 +41,8 @@
 #define PUD0_ATTR               PD_TABLE // Lower attributes is ignored
 #define PUD1_ATTR               (PD_ACCESS_FLAG | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
 #define PMD0_ATTR               PD_TABLE // Lower attributes is ignored
-#define PTE_MMIO_ATTR           (PD_ACCESS_FLAG | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
-#define PTE_RAM_ATTR            (PD_ACCESS_FLAG | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
+#define PTE_DEVICE_ATTR         (PD_ACCESS_FLAG | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
+#define PTE_NORAL_ATTR          (PD_ACCESS_FLAG | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
 
 #define PGD_SHIFT               39
 #define PUD_SHIFT               30

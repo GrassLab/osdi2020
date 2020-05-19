@@ -105,12 +105,18 @@ struct task_queue_elmt_t* get_runqueue_elmt(struct task_t* task) {
 
 /* scheduler */
 
+void mm_struct_init(struct mm_struct *m) {
+    m->pgd = 0;
+    m->user_pages_count = 0;
+    m->kernel_pages_count = 0;
+}
+
 void task_init() {
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         task_pool[i].id = i;
         task_pool[i].state = EXIT;
         task_pool[i].need_resched = 0;
-        task_pool[i].mm.pgd = 0;
+        mm_struct_init(&task_pool[i].mm);
     }
     // idle task
     task_pool[0].state = RUNNING;
@@ -136,8 +142,10 @@ void schedule_init() {
     // privilege_task_create(zombie_reaper, 10);
 
     privilege_task_create(demo_lab5_req3, 10);
+    privilege_task_create(demo_lab5_req3, 10);
+    privilege_task_create(demo_lab5_req3, 10);
 
-    // arm_core_timer_enable();
+    arm_core_timer_enable();
     schedule();
 }
 
@@ -154,6 +162,7 @@ int privilege_task_create(void (*func)(), int priority) {
     new_task->priority = priority;
     new_task->counter = TASK_EPOCH;
     new_task->need_resched = 0;
+    mm_struct_init(&new_task->mm);
     new_task->cpu_context.lr = (uint64_t)func;
     new_task->cpu_context.fp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_TOP_IDX]);
     new_task->cpu_context.sp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_TOP_IDX]);
@@ -169,6 +178,7 @@ void context_switch(struct task_t* next) {
         task_queue_push(&runqueue, get_runqueue_elmt(prev));
     }
     update_current_task(next);
+    update_pgd(next->mm.pgd);
     switch_to(&prev->cpu_context, &next->cpu_context);
 }
 
@@ -181,8 +191,8 @@ int do_exec(uint64_t start, uint64_t size, uint64_t pc) {
     uint64_t sp = 0x0000ffffffffe000 - 8; // stack grow down
 
     struct task_t *current = get_current_task();
-    void* code_page = page_alloc_user(current, pc);
-    void* stack_page = page_alloc_user(current, sp);
+    void* code_page = map_addr_user(pc);
+    void* stack_page = map_addr_user(sp);
     if (!code_page || !stack_page) return -1;
 
     // copy code to pc
@@ -196,11 +206,7 @@ int do_exec(uint64_t start, uint64_t size, uint64_t pc) {
     asm volatile("msr elr_el1, %0": : "r"(pc));
     asm volatile("msr spsr_el1, %0" : : "r"(SPSR_EL1_VALUE));
 
-    asm volatile("dsb ish");
-    asm volatile("msr ttbr0_el1, %0" : : "r"(get_current_task()->mm.pgd));
-    asm volatile("tlbi vmalle1is");
-    asm volatile("dsb ish");
-    asm volatile("isb");
+    update_pgd(current->mm.pgd);
 
     asm volatile("eret");
 
@@ -212,6 +218,7 @@ void do_exit(int status) {
     current->state = ZOMBIE;
     current->exit_status = status;
 
-    // WARNING: release user stack if dynamic allocation
+    // reclaim 
+
     schedule();
 }

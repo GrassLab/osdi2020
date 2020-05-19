@@ -6,7 +6,7 @@ void delay(int period) {
 
 int main() {
     while(1) {
-        printf("message from user\n");
+        printf("message from user %d\n", get_taskid());
         delay(100000000);
     }
     return 0;

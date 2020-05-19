@@ -39,9 +39,18 @@ struct cpu_context {
     uint64_t sp;
 };
 
+#define MAX_USER_PAGES      16
+#define MAX_KERNEL_PAGES    16
+
 struct mm_struct {
     uint64_t pgd;
+    uint64_t user_pages_count;
+    uint64_t user_pages[MAX_USER_PAGES];
+    uint64_t kernel_pages_count;
+    uint64_t kernel_pages[MAX_KERNEL_PAGES];
 };
+
+#define current_task        get_current_task()
 
 enum task_state {
     RUNNING,
@@ -68,6 +77,7 @@ extern char ustack_pool[TASK_POOL_SIZE][USTACK_SIZE];
 /* Function in schedule.S */
 struct task_t* get_current_task();
 void update_current_task(struct task_t *task);
+void update_pgd(uint64_t pgd);
 void switch_to(struct cpu_context* prev, struct cpu_context* next);
 
 /* Function in schedule.c */

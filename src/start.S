@@ -154,7 +154,7 @@ page_table_create:
     mov     x5, xzr // i = 0
     mov     x6, #258048
 2:
-    ldr     x7, =PTE_RAM_ATTR
+    ldr     x7, =PTE_NORAL_ATTR
     orr     x7, x4, x7
     str     x7, [x3, x5, lsl #3] // (i * 8)
     add     x5, x5, #1
@@ -165,7 +165,7 @@ page_table_create:
     // setup device PTE (16MB = 4096 entry)
     add     x6, x6, #4096 // 262144
 3:
-    ldr     x7, =PTE_MMIO_ATTR
+    ldr     x7, =PTE_DEVICE_ATTR
     orr     x7, x4, x7
     str     x7, [x3, x5, lsl #3] // (i * 8)
     add     x5, x5, #1
