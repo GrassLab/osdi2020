@@ -42,7 +42,6 @@ runpty:
 runasm:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -d in_asm -serial stdio
 
-
 rundis:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 
@@ -53,4 +52,4 @@ gdb:
 	aarch64-linux-gnu-gdb build/kernel8.elf
 
 dump:
-	aarch64-linux-gnu-objdump build/kernel8.elf
+	aarch64-linux-gnu-objdump -S build/kernel8.elf

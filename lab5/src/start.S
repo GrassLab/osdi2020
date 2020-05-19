@@ -57,7 +57,7 @@ el1_entry:
     sub	x1, x1, x0
     bl 	memzero
 
-    bl  page_table_create 
+    bl  page_table
 
     mov	x0, #VA_START			
     add	sp, x0, #LOW_MEMORY
@@ -84,7 +84,7 @@ kmain:
 
 /*******************************************************************/
 
-page_table_create:
+page_table:
     mov x29,x30
     
     // use physical address of page table
