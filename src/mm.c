@@ -91,12 +91,6 @@ void* page_alloc_user(struct task_t* task, uint64_t user_addr) {
     return (void*)page_virt_addr;
 }
 
-void page_free(void* virt_addr) {
-    uint64_t pfn = phy_to_pfn(virtual_to_physical((uint64_t)virt_addr));
-    page[pfn].used = AVAL;
-    remain_page++;
-}
-
 // create pgd, return pgd address
 void* create_pgd(struct task_t* task) {
     if (!task->mm.pgd) {
@@ -154,4 +148,56 @@ uint64_t user_addr_to_page_addr(uint64_t user_addr, uint64_t pgd_phy) {
     uint64_t* pmd = (uint64_t*)((pud[pud_idx] & ~0xFFF) | KERNEL_VIRT_BASE);
     uint64_t* pte = (uint64_t*)((pmd[pmd_idx] & ~0xFFF) | KERNEL_VIRT_BASE);
     return (pte[pte_idx] & ~0xFFF) | KERNEL_VIRT_BASE;
+}
+
+/*
+ *  Page reclaim related function 
+ *  Need to be called before exit
+ */
+
+void page_free(void* page_virt_addr) {
+    uint64_t pfn = phy_to_pfn(virtual_to_physical((uint64_t)page_virt_addr));
+    page[pfn].used = AVAL;
+    remain_page++;
+}
+
+void page_reclaim_pte(uint64_t pte_phy) {
+    uint64_t* pte = (uint64_t*)(pte_phy | KERNEL_VIRT_BASE);
+    for (int i = 0; i < 512; i++) {
+        if (pte[i]) {
+            void* page = (void*)((pte[i] & ~0xFFF) | KERNEL_VIRT_BASE);
+            page_free(page);
+        }
+    }
+    page_free(pte);
+}
+
+void page_reclaim_pmd(uint64_t pmd_phy) {
+    uint64_t* pmd = (uint64_t*)(pmd_phy | KERNEL_VIRT_BASE);
+    for (int i = 0; i < 512; i++) {
+        if (pmd[i]) {
+            page_reclaim_pte(pmd[i] & ~0xFFF);
+        }
+    }
+    page_free(pmd);
+}
+
+void page_reclaim_pud(uint64_t pud_phy) {
+    uint64_t* pud = (uint64_t*)(pud_phy | KERNEL_VIRT_BASE);
+    for (int i = 0; i < 512; i++) {
+        if (pud[i]) {
+            page_reclaim_pmd(pud[i] & ~0xFFF);
+        }
+    }
+    page_free(pud);
+}
+
+void page_reclaim(uint64_t pgd_phy) {
+    uint64_t* pgd = (uint64_t*)(pgd_phy | KERNEL_VIRT_BASE);
+    for (int i = 0; i < 512; i++) {
+        if (pgd[i]) {
+            page_reclaim_pud(pgd[i] & ~0xFFF);
+        }
+    }
+    page_free(pgd);
 }

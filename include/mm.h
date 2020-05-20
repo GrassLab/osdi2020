@@ -30,9 +30,10 @@ uint64_t virtual_to_physical(uint64_t virt_addr);
 uint64_t phy_to_pfn(uint64_t phy_addr);
 void* page_alloc(struct task_t* task);
 void* page_alloc_user(struct task_t* task, uint64_t user_addr);
-void page_free(void* addr);
+void page_free(void* page_virt_addr);
 void* get_page_user(struct task_t* task, uint64_t user_addr);
 uint64_t user_addr_to_page_addr(uint64_t user_addr, uint64_t pgd);
+void page_reclaim(uint64_t pgd_phy);
 
 #endif /* __ASSEMBLY__ */
 
