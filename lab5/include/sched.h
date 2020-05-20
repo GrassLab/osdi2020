@@ -1,72 +1,83 @@
-#pragma once
+#ifndef _SCHED_H
+#define _SCHED_H
 
-#define NR_TASKS                   128
-#define THREAD_CPU_CONTEXT         0
-#define THREAD_SIZE                4096
-
-#define TASK_RUNNING			   0
-#define TASK_ZOMBIE                1
-
-#define PF_KTHREAD                 0x00000002
-#define PF_FORK                    0x00000004
+#define THREAD_CPU_CONTEXT			0       // offset of cpu_context in task_struct
 
 #ifndef __ASSEMBLER__
 
+#define THREAD_SIZE				4096
+
+#define NR_TASKS				64
+
+#define FIRST_TASK task[0]
+#define LAST_TASK task[NR_TASKS-1]
+
+#define TASK_RUNNING				0
+#define TASK_ZOMBIE				1
+
+#define PF_KTHREAD				0x00000002
+
+
+extern struct task_struct *current;
+extern struct task_struct * task[NR_TASKS];
+extern int nr_tasks;
+
 struct cpu_context {
-  unsigned long x19;
-  unsigned long x20;
-  unsigned long x21;
-  unsigned long x22;
-  unsigned long x23;
-  unsigned long x24;
-  unsigned long x25;
-  unsigned long x26;
-  unsigned long x27;
-  unsigned long x28;
-  unsigned long fp;
-  unsigned long sp;
-  unsigned long pc;
+    unsigned long x19;
+    unsigned long x20;
+    unsigned long x21;
+    unsigned long x22;
+    unsigned long x23;
+    unsigned long x24;
+    unsigned long x25;
+    unsigned long x26;
+    unsigned long x27;
+    unsigned long x28;
+    unsigned long fp;
+    unsigned long sp;
+    unsigned long pc;
+};
+
+#define MAX_PROCESS_PAGES			16
+
+struct user_page {
+    unsigned long phys_addr;
+    unsigned long virt_addr;
+};
+
+struct mm_struct {
+    unsigned long pgd;
+    int user_pages_count;
+    struct user_page user_pages[MAX_PROCESS_PAGES];
+    int kernel_pages_count;
+    unsigned long kernel_pages[MAX_PROCESS_PAGES];
 };
 
 struct task_struct {
-  struct cpu_context cpu_context;
-  unsigned long pid;
-  unsigned long state;
-  unsigned long counter;
-  unsigned long priority;
-  unsigned long preempt_count;
-  unsigned long need_reched;
-  unsigned long stack;
-  unsigned long flags;
-  unsigned long print_buffer;
-  unsigned long signals;
-  unsigned long sighand;
+    struct cpu_context cpu_context;
+    long pid;
+    long state;
+    long counter;
+    long priority;
+    long preempt_count;
+    unsigned long flags;
+    struct mm_struct mm;
 };
 
-/* sched.c */
-struct task_struct *privilege_task_create(void (*func)(), unsigned long num);
-void context_switch(struct task_struct *next);
-void schedule();
-void pm_daemon();
-void timer_tick();
-void preempt_enable();
-void preempt_disable();
-unsigned long unique_id();
-void need_resched();
+extern int need_resched;
+extern void sched_init(void);
+extern void schedule(void);
+extern void timer_tick(void);
+extern void preempt_disable(void);
+extern void preempt_enable(void);
+extern void switch_to(struct task_struct* next);
+extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
+extern void exit_process(void);
 
-void exit_process();
-
-extern struct task_struct *current;
-extern struct task_struct *task[NR_TASKS];
-extern unsigned long nr_tasks;
-
-/* sched.S */
-void cpu_switch_to(struct task_struct *, struct task_struct *);
-/* struct task_struct *get_current(); */
-void delay(unsigned long);
-
-#define INIT_TASK                                                       \
-  /*cpu_context*/ { {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},            \
-      /* state etc */   0, 0, 0, 1, 0, 0, 0, PF_KTHREAD, 0, 0 }
-
+#define INIT_TASK \
+/*cpu_context*/ { { 0,0,0,0,0,0,0,0,0,0,0,0,0}, \
+      /* state etc */	 0, 0,0,2, 0, PF_KTHREAD,   \
+/* mm */ { 0, 0, {{0}}, 0, {0}} \
+}
+#endif
 #endif
