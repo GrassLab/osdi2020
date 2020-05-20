@@ -291,16 +291,22 @@ void kernel_process(){
 
 int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc){
 
-  //printf("[%d] do exec" NEWLINE, current_task->pid);
-
   struct pt_regs *regs = ya_task_pt_regs(current_task);
   memzero((unsigned long)regs, sizeof(struct pt_regs));
 
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
 
+
+  if(mmap(0x0, size, PROT_READ, MAP_ANONYMOUS, start, 0x0) == MAP_FAILED){
+    puts("cannot allocate text code page");
+    exit();
+    return 1;
+  }
+
   //regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0
   //regs->sp = 2 *  PAGE_SIZE;
+
 #define allocate_sp_page 1
 #define uni_page_stack 0
 #if allocate_sp_page
@@ -328,40 +334,6 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
   regs->sp = USER_MEM_LIMIT - 1;
 #endif
 
-  //printf("size is %d" NEWLINE, size);
-#if 1
-  if(mmap(0x0, size, PROT_READ, MAP_ANONYMOUS, start, 0x0) == MAP_FAILED){
-    puts("cannot allocate text code page");
-    exit();
-    return 1;
-  }
-#else
-  unsigned long va_ptr = pc, pa_ptr = start, write_size = 0, code_page;
-  while(size){
-
-    write_size = size > 4096 ? 4096 : size;
-    code_page = allocate_user_page_with_attr(
-        current_task, va_ptr, MMU_PTE_FLAGS | (0x1ul << 7));
-
-    if(!code_page){
-      printf("[%d] allocate code page failed" NEWLINE, current_task->pid);
-      while(1) exit();
-    }
-
-    memcpy(pa_ptr, code_page, write_size);
-    pa_ptr += write_size;
-    va_ptr += write_size;
-    size -= write_size;
-    //printf("code: %x copied!" NEWLINE, ((int*)code_page)[0]);
-  }
-#endif
-  //printf("k pages: %d" NEWLINE, current_task->mm.kernel_pages_count);
-  //for(int i = 0; i < current_task->mm.kernel_pages_count; i++)
-  //  printf("@ %x" NEWLINE, current_task->mm.kernel_pages[i]);
-
-  //printf("u pages: %d" NEWLINE, current_task->mm.user_pages_count);
-  //for(int i = 0; i < current_task->mm.user_pages_count; i++)
-  //  printf("@ %x" NEWLINE, current_task->mm.user_pages[i]);
 
   set_pgd(current_task->mm.pgd);
   return 0;
