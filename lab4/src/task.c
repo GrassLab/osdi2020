@@ -19,13 +19,13 @@ char ustack_pool[TASK_SIZE][STACK_SIZE];
 Task task_pool[TASK_SIZE] = {
   [0 ... TASK_SIZE - 1] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, none
+    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none
   }
 };
 
 Task init_task = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, none
+  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none
 };
 
 Task *current_task = &init_task, *next_task;
@@ -62,7 +62,6 @@ int talloc(){
 
 Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long priority) {
 
-
   preempt_disable();
   int free_idx = talloc();
   if(free_idx < 0){
@@ -93,7 +92,6 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
   }
   else{ // null fptr means fork
-
     unsigned long ksp_off = current_task->cpu_ctx.sp
       - (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
 
@@ -144,14 +142,24 @@ int *show_sp(){
   return sp;
 }
 
+#if 0
 char* getline(char *buffer, char c){
   char *p = buffer;
-  while((*p++ = call_sys_read()) != '\r')
+  while(!strchr("\r\n", (*p++ = call_sys_read())))
     if(c) print(c);
   //printf("-------------------- %c == %c<", *(p - 1), current_task->buffer[0]);
   *--p = 0;
   return buffer;
 }
+#else
+#define getline(buffer, c) { \
+  char *p = buffer; \
+  while(!strchr("\r\n", (*p++ = call_sys_read()))) \
+    if(c) printf("%c", c); \
+  *--p = 0; \
+}
+
+#endif
 
 void user_exit() {
   while(1){
@@ -161,11 +169,11 @@ void user_exit() {
 }
 
 void user_login(){
-  char buffer[128];
+  char buffer[128], pw[10] = "root";
   printf(NEWLINE "============      [%d] login daemon      ============"  NEWLINE, current_task->pid);
   while(1){
-    char *input = getline(buffer, '*'), pw[10] = "root";
-    int d = strcmp(input, pw);
+    getline(buffer, '*');
+    int d = strcmp(buffer, pw);
     if(!d) break;
     printf(NEWLINE "input password:");
   }
@@ -207,6 +215,7 @@ void task_do_exec(unsigned long pc){
 void user_idle() {
   while(1){
     call_sys_write("user_process idle..." NEWLINE);
+    delay(1000000);
   }
 }
 
@@ -306,6 +315,8 @@ void kernel_process(){
   privilege_task_create(task_2, 0, current_task->priority);
   privilege_task_create(task_3, 0, current_task->priority);
   privilege_task_create(task_4, 0, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_fork, current_task->priority);
+  //privilege_task_create(task_do_exec, (UL)user_exec, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(task_do_exec, (UL)user_mutex, current_task->priority);
