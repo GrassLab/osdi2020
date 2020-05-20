@@ -10,5 +10,6 @@ int exec(void(*func)(void));
 int fork(void);
 void exit(int status);
 int kill(uint32_t id, int sig);
+uint64_t get_remain_page_num(void);
 
 #endif // USER_LIB_SYSCALL_H_

@@ -68,6 +68,8 @@ struct page {
   bool inuse;
 };
 
+extern uint64_t free_page_nums;
+
 void page_init(void);
 uint64_t page_alloc(void);
 void page_free(uint64_t page_addr);
@@ -75,6 +77,7 @@ void page_free(uint64_t page_addr);
 uint64_t *build_user_va(uint64_t binary_start, size_t binary_size);
 void *create_mapping(uint64_t *pgd, uint64_t va);
 void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level);
+void reclaim_vmmap(uint64_t *ptb, uint8_t level);
 
 #endif // __ASSEMBLER__
 

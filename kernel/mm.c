@@ -5,10 +5,13 @@
 extern char __kernel_start[];
 extern char __kernel_end[];
 struct page pages[PAGE_NUM];
+uint64_t free_page_nums;
 
 void page_init(void) {
+  free_page_nums = PAGE_NUM;
   for (uint64_t pfn = KVIRT_TO_PFN((uint64_t)__kernel_start); pfn <= KVIRT_TO_PFN((uint64_t)__kernel_end); ++pfn) {
     pages[pfn].inuse = true;
+    --free_page_nums;
   }
 }
 
@@ -20,6 +23,7 @@ uint64_t page_alloc(void) {
   for (uint64_t i = 0; i < PAGE_NUM; ++i) {
     if (!pages[i].inuse) {
       pages[i].inuse = true;
+      --free_page_nums;
       uint64_t frame = (i << 12);
       memset((void *)(KERNEL_VA_BASE + (i << 12)), 0, PAGE_SIZE);
       return frame;
@@ -30,6 +34,7 @@ uint64_t page_alloc(void) {
 
 void page_free(uint64_t page_addr) {
   pages[KVIRT_TO_PFN(page_addr)].inuse = false;
+  ++free_page_nums;
 }
 
 /*
@@ -89,4 +94,24 @@ void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level) {
       break;
     }
   }
+}
+
+void reclaim_vmmap(uint64_t *ptb, uint8_t level) {
+  for (size_t i = 0; i < 512; ++i) {
+    if ((ptb[i] & PD_VALID) == 0) {
+      continue;
+    }
+
+    switch (level) {
+    case 1:
+    case 2:
+    case 3:
+      reclaim_vmmap(PTBENT_TO_KVA(ptb[i]), level + 1);
+      break;
+    case 4:
+      page_free((uint64_t)PTBENT_TO_KVA(ptb[i]));
+      break;
+    }
+  }
+  page_free((uint64_t)ptb);
 }

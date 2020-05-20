@@ -52,6 +52,10 @@ int do_fork_helper(struct trapframe *tf, uint64_t lr) {
 }
 
 void do_exit(int status) {
+  uint64_t *pgd;
+  asm volatile("mrs %0, ttbr0_el1" : "=r"(pgd));
+  reclaim_vmmap(pgd, 1);
+
   get_current_task()->state = TASK_ZOMBIE;
   get_current_task()->exit_status = status;
   schedule();
@@ -61,6 +65,10 @@ int do_kill(uint32_t id, int sig) {
   task_pool[id].sig_pending[sig] = true;
 }
 
+uint64_t do_get_remain_page_num(void) {
+  return free_page_nums;
+}
+
 void *syscall_table[] = {
   do_get_taskid,
   do_uart_read,
@@ -68,5 +76,6 @@ void *syscall_table[] = {
   do_exec,
   do_fork,
   do_exit,
-  do_kill
+  do_kill,
+  do_get_remain_page_num
 };
