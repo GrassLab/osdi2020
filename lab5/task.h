@@ -22,7 +22,7 @@ typedef struct task{
     char reschedule;
     char privilege;
     unsigned long long int start_coretime;
-    unsigned long long user_ttbr0;
+    unsigned long long *user_ttbr0;
 } task;
 
 extern task task_pool[64];
@@ -52,3 +52,4 @@ task *get_current_task();
 void toggle_privilege();
 void do_exec(void(*func)(), char signal);
 void runqueue_del(int id);
+void new_do_exec(unsigned long long begin, unsigned long long size, void(*func)());

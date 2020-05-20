@@ -173,8 +173,28 @@ void do_exec(void(*func)(), char signal)
 
 void new_do_exec(unsigned long long begin, unsigned long long size, void(*func)())
 {
+    unsigned long long *vir_pud,  *vir_pmd, *vir_pte;
     task *current = get_current_task();
-    current->user_ttbr0 = user_paging();
+
+    current->user_ttbr0 = page_alloc(); //pgd
+    vir_pud = page_alloc();
+    vir_pmd = page_alloc();
+    vir_pte = page_alloc();
+    *current->user_ttbr0 = ((unsigned long long)vir_pud) | 0b11;
+    *vir_pud = ((unsigned long long)vir_pmd) | 0b11;
+    *vir_pmd = ((unsigned long long)vir_pte) | 0b11;
+    for(int i=0; i < (size/PAGE_SIZE)+1 ; i++)
+    {
+        vir_pte[i] = ((unsigned long long)page_alloc()) | BOOT_PTE_ATTR;
+    }
+    memcpy((unsigned long long*)begin, (unsigned long long*)vir_pte[0], size);
+    
+
+    asm volatile("msr sp_el0, %0"::"r"(current->sp_el0):);
+    asm volatile("msr spsr_el1, %0"::"r"(0):);
+    asm volatile("msr elr_el1, %0"::"r"(func):);
+    asm volatile("msr user_ttbr0, %0"::"r"(current->user_ttbr0):);
+    asm volatile("eret");
 }
 
 

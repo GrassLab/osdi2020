@@ -99,7 +99,7 @@ void kernel_init()
 	uart_init();
 
 	page_struct_init();
-	//while(1);
+
 	_global_coretimer = 0;
 	task_struct_init();
 	

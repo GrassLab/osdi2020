@@ -1,9 +1,6 @@
 #include "page.h"
 #include "uart.h"
-#define PD_TABLE 0b11
-#define MAIR_IDX_DEVICE_nGnRnE 0
-#define PD_ACCESS (1 << 10)
-#define BOOT_PTE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_TABLE)
+
 
 __attribute__((section(".userspace"))) page all_page[262144];
 
@@ -69,6 +66,9 @@ unsigned long long user_paging()
 
 void memcpy(unsigned long long* from, unsigned long long* to, unsigned long long size)
 {
-    
+    for(unsigned long long i = 0; i < size; i++)
+    {
+       ((char*)to)[i] = ((char*)from)[i];
+    }
 }
 
