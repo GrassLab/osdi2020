@@ -16,7 +16,7 @@ struct page_manager {
 
 
 void init_page();
-unsigned long virtual_to_physical(unsigned long va);
+unsigned long va_to_pa(unsigned long va);
 unsigned long allocate_kernel_page();
 unsigned long get_free_page();
 void free_page(unsigned long p);

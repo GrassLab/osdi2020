@@ -23,7 +23,7 @@ void init_page()
 	}
 }
 
-unsigned long virtual_to_physical(unsigned long va)
+unsigned long va_to_pa(unsigned long va)
 {
 	unsigned long pfn = (va<<16)>>16;
 	unsigned long offset = (va<<52)>>52;
@@ -73,9 +73,9 @@ unsigned long allocate_user_page(struct task *task, unsigned long va)
 	if(page == 0){
 		return 0;
 	}
-	printf("task->mm.pgd: %x\n", task->mm.pgd);
+	// printf("task->mm.pgd: %x\n", task->mm.pgd);
 	map_page(task, va, page, MMU_PTE_FLAGS); // maps it to the provided virtual address
-	printf("task->mm.pgd: %x\n", task->mm.pgd);
+	// printf("task->mm.pgd: %x\n", task->mm.pgd);
 	return page + VA_START;
 }
 

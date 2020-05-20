@@ -178,26 +178,25 @@ void do_exec(unsigned long start, unsigned long size, void(*func)())
         // memzero((unsigned long)kstack_regs, sizeof(struct trapframe_regs));
 
         kstack_regs->sp_el0 = 2 *  PAGE_SIZE;//0x0000ffffffffe000;
-        kstack_regs->spsr_el1 = PSR_MODE_EL0t;
+        kstack_regs->spsr_el1 = 0;//PSR_MODE_EL0t;
         kstack_regs->elr_el1 = func;
 
-        unsigned long code_page = allocate_user_page(current, 0);
+        unsigned long code_page = allocate_user_page(current, func);
         if (code_page == 0)	{
             return -1;
         }
         memcpy(code_page, start, size);
-        uart_puts("new user context\n");
+        // uart_puts("new user context\n");
         current->state = RUN_IN_USER_MODE;
-        unsigned long ttbr1_el1;
-        unsigned long ttbr0_el1;
-        asm volatile ("mrs %0, ttbr1_el1" : "=r"(ttbr1_el1));
-        asm volatile ("mrs %0, ttbr0_el1" : "=r"(ttbr0_el1));
-        printf("ttbr0_el1: %x\n", ttbr0_el1);
-        printf("ttbr1_el1: %x\n", ttbr1_el1);
+        // unsigned long ttbr1_el1;
+        // unsigned long ttbr0_el1;
+        // asm volatile ("mrs %0, ttbr1_el1" : "=r"(ttbr1_el1));
+        // asm volatile ("mrs %0, ttbr0_el1" : "=r"(ttbr0_el1));
+        // printf("ttbr0_el1: %x\n", ttbr0_el1);
+        // printf("ttbr1_el1: %x\n", ttbr1_el1);
         unsigned long user_pgd = current->mm.pgd;
-        printf("user_pgd: %x\n", user_pgd);
+        // printf("user_pgd: %x\n", user_pgd);
         set_pgd(user_pgd);
-        // printf("aaaaaaaa\n");
         return 0;
         
         // unsigned long user_stack = 0x0000ffffffffe000;//current->user_context.sp_el0;

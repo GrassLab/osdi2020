@@ -10,7 +10,7 @@
 #include "../include/task.h"
 #include "../include/mm.h"
 #include "../include/page.h"
-
+#include "../include/user.h"
 
 #define WELCOME \
     "                                                 \n" \
@@ -26,21 +26,25 @@
 #define HW_INFO_ON 0
 
 void user_process() {
-    printf("it is user_process\n");
+    call_sys_uart_write("it is user_process\n");
     while(1);
 }
 
 void kernel_process(){
     // unsigned long begin = (unsigned long)&user_begin;
-    unsigned long begin = 0xffff000000030000;
+    unsigned long begin = (unsigned long)&_binary_user_img_start;
     // unsigned long end = (unsigned long)&user_end;
-    unsigned long end = 0xffff000000031000;
-    unsigned long process = (unsigned long)&user_process;
+    unsigned long end = (unsigned long)&_binary_user_img_end;
+    // unsigned long process = (unsigned long)&user_process;
     // int err = do_exec(begin, end - begin, process - begin);
     // if (err < 0){
     //     printf("Error while moving process to user mode\n\r");
     // }
-    do_exec(begin, end - begin, user_process-begin);
+    // printf("before do_exec\n");
+    // do_exec(begin, end - begin, user_process-begin);
+    do_exec(begin, end - begin, 0x1000);
+    printf("after do_exec\n"); // should not be here
+    while(1);
 }
 void main()
 {
@@ -62,6 +66,13 @@ void main()
         show_board_revision();
         show_vccore_addr();
     # endif
+
+    unsigned long ttbr1_el1;
+    unsigned long ttbr0_el1;
+    asm volatile ("mrs %0, ttbr1_el1" : "=r"(ttbr1_el1));
+    asm volatile ("mrs %0, ttbr0_el1" : "=r"(ttbr0_el1));
+    printf("ttbr0_el1: %x\n", ttbr0_el1);
+    printf("ttbr1_el1: %x\n", ttbr1_el1);
     
     init_page();
     task_manager_init(idle);
