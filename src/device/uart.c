@@ -111,18 +111,18 @@ char uartGetc()
 
 void _sysUartWrite()
 {
-    uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
-    uint64_t c = *(uint64_t *)(sp_begin - 32 * 8);
+    // uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+    // uint64_t c = *(uint64_t *)(sp_begin - 32 * 8);
 
-    uartSend(c);
+    // uartSend(c);
 }
 
 void _sysUartRead()
 {
-    uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+    // uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
 
-    char c = uartGetc();
-    *(uint64_t *)(sp_begin - 32 * 8) = c;
+    // char c = uartGetc();
+    // *(uint64_t *)(sp_begin - 32 * 8) = c;
 }
 
 /**

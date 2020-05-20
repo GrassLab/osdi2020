@@ -29,8 +29,9 @@
 #include "task/schedule.h"
 #include "task/switch.h"
 #include "task/runnableTask.h"
+#include "memory/memManager.h"
 
-void main()
+void kernelMain()
 {
     // set up serial console
     uartInit();
@@ -42,10 +43,10 @@ void main()
     //     createPrivilegeTask(&kernelTask, 0);
     // }
     // createPrivilegeTask(&zombieReaper, 0);
-    // createPrivilegeTask(&execTask, 0);
+    createPrivilegeTask(&execTask, 0);
 
     // Enable core timer
-    // asm volatile("svc #2");
-    // idleTask();
+    asm volatile("svc #2");
+    idleTask();
     // runShell();
 }

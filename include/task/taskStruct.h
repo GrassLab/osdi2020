@@ -30,6 +30,21 @@ typedef enum
 	zombie
 } state;
 
+#define MAX_PROCESS_PAGES			16	
+
+struct user_page {
+	unsigned long phys_addr;
+	unsigned long virt_addr;
+};
+
+struct mm_struct {
+	unsigned long pgd;
+	int user_pages_count;
+	struct user_page user_pages[MAX_PROCESS_PAGES];
+	int kernel_pages_count;
+	unsigned long kernel_pages[MAX_PROCESS_PAGES];
+};
+
 struct task
 {
 	struct cpu_context kernel_context;
@@ -37,6 +52,7 @@ struct task
 	uint32_t priority;
 	state task_state;
 	bool re_schedule;
+	struct mm_struct mm;
 };
 
 struct task_node

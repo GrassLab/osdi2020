@@ -20,6 +20,11 @@
 #define LAST(k, n) ((k) & ((1 << (n)) - 1))
 #define MID(k, m, n) LAST((k) >> (m), ((n) - (m)))
 
+void _userTest()
+{
+    uartPuts("user test\n");
+}
+
 void _systemCall()
 {
     uint64_t sys_call_no;
@@ -45,6 +50,9 @@ void _systemCall()
         break;
     case UART_READ:
         _sysUartRead();
+        break;
+    case USER_TEST:
+        _userTest();
         break;
     default:
         break;

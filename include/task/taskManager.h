@@ -14,7 +14,7 @@ void _sysGetTaskId();
 void _sysFork();
 void _sysexec();
 void _sysexit();
-void doExec(void (*func)());
+void doExec(uint64_t start, uint64_t size, uint64_t pc);
 uint32_t createPrivilegeTask(void (*func)(), uint32_t priority);
 void zombieReaper();
 

@@ -4,6 +4,9 @@
 #include "task/schedule.h"
 #include "task/sysCall.h"
 
+extern uint64_t _binary_user_img_start;
+extern uint64_t _binary_user_img_end;
+
 void delay(uint32_t count)
 {
     for (uint32_t i = 0; i < count; ++i)
@@ -82,7 +85,10 @@ void forkTask()
 
 void execTask()
 {
-    doExec(&forkTask);
+    uint64_t begin = (uint64_t)&_binary_user_img_start;
+    uint64_t end = (uint64_t)&_binary_user_img_end;
+
+    doExec(begin, end - begin, 0x80000);
 }
 
 void idleTask()
@@ -102,8 +108,8 @@ void kernelTask()
 {
     while (1)
     {
-        if (current->re_schedule == true)
-        {
+        // if (current->re_schedule == true)
+        // {
             uartPuts("Task id: ");
             uartInt(current->task_id);
             uartPuts("  issue reschedule\n");
@@ -115,6 +121,6 @@ void kernelTask()
 
             current->re_schedule = false;
             schedule();
-        }
+        // }
     }
 }

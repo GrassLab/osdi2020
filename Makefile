@@ -2,7 +2,7 @@ CC       = aarch64-linux-gnu-gcc
 LD       = aarch64-linux-gnu-ld
 OBJCOPY  = aarch64-linux-gnu-objcopy
 EMULATOR = qemu-system-aarch64
-CFLAGS   = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -g -MMD
+CFLAGS   = -Wall -O0 -ffreestanding -nostdinc -nostdlib -nostartfiles -g -MMD
 INCLUDES = -Iinclude
 
 SRCDIR	 = src
@@ -42,7 +42,7 @@ all: $(KERNEL).img
 $(KERNEL).img: $(KERNEL).elf
 	$(OBJCOPY) -O binary $< $@
 
-$(KERNEL).elf: start.o $(OBJS)
+$(KERNEL).elf: start.o $(OBJS) user_program/user.lb
 	$(LD) -T $(LSCRIPT) -o $@ $^
 
 %_c.o: %.c
@@ -52,6 +52,12 @@ $(KERNEL).elf: start.o $(OBJS)
 	$(CC) $(INCLUDES) -c $< -o $@
 
 .PHONY: clean test debug monitor
+
+up:
+	make -C user_program/
+
+up-clean:
+	make clean -C user_program/
 
 bl:
 	make -C boot_loader/

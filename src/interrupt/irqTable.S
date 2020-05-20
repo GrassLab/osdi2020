@@ -55,7 +55,7 @@ handle_exc:
 handle_irq:
     save_reg
     bl       irqHandler
-    bl       checkRSFlag
+    //bl       checkRSFlag
     load_reg
     eret
 
