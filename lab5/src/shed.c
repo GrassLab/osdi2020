@@ -119,7 +119,7 @@ void foo(){
     uart_puts("Remaining page frames : ");
     uart_send_int(remain_page_num());
     uart_send('\n');
-    delay(100000000);
+    exit(0);
   }
 }
 void test_command3() { // test page reclaim.
@@ -232,8 +232,9 @@ void exit(){
     // }
     int id = current->storeid;
     current->state = TASK_ZOMBIE;
-    free_page((unsigned long)task[id]);
-    free_page((unsigned long)u_task[id]);
+    
+    free_page(pa_to_pfn((unsigned long)task[id]));
+    free_page(pa_to_pfn((unsigned long)u_task[id]));
     enable_preempt();
     schedule();
 }

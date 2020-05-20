@@ -38,6 +38,7 @@ struct task_struct {
 	int storeid;
     int taskid;
 	int parentid;
+	int pfn;
 };
 
 #endif

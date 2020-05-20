@@ -15,9 +15,7 @@ void main(){
     
     print_hello();    
     uart_puts("# ");
-    uart_send_int(remain_page_num());  
     init_init_task(shell);
-    uart_send_int(remain_page_num());
     
     // echo everything back
     shell();

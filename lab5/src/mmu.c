@@ -48,13 +48,7 @@ unsigned long get_free_page()
 
 void free_page(unsigned long p)
 {
-    for (int i = 0; i < PAGING_PAGES; i++)
-    {
-        if (page_table[i].pa == (p - VA_START))
-        {
-            page_table[i].used = 0;
-        }
-    }
+    page_table[p].used = 0;
 }
 
 void mem_map_init(){
