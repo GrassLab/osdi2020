@@ -10,7 +10,7 @@ volatile unsigned int  __attribute__((aligned(16))) _mbox[36];
 #define MBOX_RESPONSE   0x80000000
 #define MAILBOX_EMPTY   0x40000000
 #define MAILBOX_FULL    0x80000000
-/*arm 是little*/
+/*arm little*/
 int mbox_call(unsigned char ch)
 {
     unsigned int reg = (((unsigned int)((unsigned long)_mbox)&~0xF) | (ch&0xF));

@@ -1,6 +1,6 @@
 #include "task.h"
 #include "uart.h"
-
+#include "page.h"
 
 __attribute__((section(".userspace"))) char kstack_pool[64][4096];
 __attribute__((section(".userspace"))) char user_pool[64][4096];
@@ -29,9 +29,9 @@ int privilege_task_create(void(*func)())
         }
     }
     task_pool[task_id].id = task_id;
-    task_pool[task_id].ksp = (unsigned long long)kstack_pool[task_id];//kstack_pool+(task_id*4096);
+    task_pool[task_id].ksp = (unsigned long long)page_alloc();//kstack_pool+(task_id*4096);
     task_pool[task_id].sp_el0 = (unsigned long long)user_pool[task_id];//kstack_pool+(kernel_stack_size*4096) + (task_id*4096);
-    task_pool[task_id].kbase = (unsigned long long)kstack_pool[task_id];
+    task_pool[task_id].kbase = task_pool[task_id].ksp;
     task_pool[task_id].ubase = (unsigned long long)user_pool[task_id];
     task_pool[task_id].usage = 1;
     task_pool[task_id].fp_lr[1] = (unsigned long long)func;
@@ -169,6 +169,12 @@ void do_exec(void(*func)(), char signal)
     {
         current->elr_el1 = (unsigned long long)func;
     }
+}
+
+void new_do_exec(unsigned long long begin, unsigned long long size, void(*func)())
+{
+    task *current = get_current_task();
+    current->user_ttbr0 = user_paging();
 }
 
 

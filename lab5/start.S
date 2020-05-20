@@ -12,7 +12,7 @@
 #define BOOT_PUD_ATTR PD_TABLE
 #define BOOT_PMD_ATTR PD_TABLE
 #define BOOT_PTE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_TABLE)
-#define PAGE_SIZE (0x1000) //4096
+#define PAGE_SIZE (0x1000)
 
 .section ".text.boot"
 

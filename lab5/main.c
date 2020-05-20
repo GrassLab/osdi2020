@@ -5,7 +5,7 @@
 #include "syscall.h"
 #include "task.h"
 #include "syscall_io.h"
-
+#include "page.h"
 #define Idle_size 0x007ffff;
 
 int syscall();
@@ -82,18 +82,24 @@ void task6()
 	do_exec(utask6, 0);
 }
 
+void shell_kernel()
+{
+	extern unsigned long _binary_user_img_start, _binary_user_img_end;
+	unsigned long long begin = (unsigned long)&_binary_user_img_start;
+	unsigned long long end = (unsigned long)&_binary_user_img_end;
+	new_do_exec(begin, end-begin, 0x0);
+
+}
+
 
 
 void kernel_init()
 {
-	unsigned long long int sp;
+	//unsigned long long int sp;
 	uart_init();
-	asm volatile("mov %0, sp":"=r"(sp)::);
-//aaaaa:
-	//uart_hex((unsigned long long)&&aaaaa);
-	//my_printf("hahaha\r\n");
-	uart_puts("hahaha\r\n");
-	while(1);
+
+	page_struct_init();
+	//while(1);
 	_global_coretimer = 0;
 	task_struct_init();
 	

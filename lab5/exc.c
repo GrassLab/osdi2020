@@ -1,6 +1,6 @@
 #include "uart.h"
 #include "task.h"
-
+#include "syscall_io.h"
 
 #define LOCAL_TIMER_CONTROL_REG ((volatile unsigned int*)0x40000034)
 #define LOCAL_TIMER_IRQ_CLR ((volatile unsigned int*)0x40000038)
@@ -20,6 +20,19 @@
 #define PM_RSTC ((volatile unsigned int*)0x3F10001c)
 #define PM_WDOG ((volatile unsigned int*)0x3F100024)
 
+#define SYSN_CORE_TIMEER_ENABLE 0
+#define SYSN_SHOW_TIMESTAMP 1
+#define SYSN_REBOOT 2
+#define SYSN_SCHEDULE 3
+#define SYSN_GET_TASK_ID 4 
+#define SYSN_UART_READ 5
+#define SYSN_UART_WRITE 6
+#define SYSN_EXEC 7
+#define SYSN_FORK 8
+#define SYSN_EXIT 9
+#define SYSN_UART_HEX 10
+#define SYSN_UART_SEND 11
+#define SYSM_PRINT 12
 
 
 #define set(a, b) (*a = b)
@@ -33,6 +46,7 @@ void set_trap_ret(unsigned long long ret, int id);
 int sys_get_taskid();
 int sys_do_fork();
 void fork_ret(task *child_task, unsigned long long parent_kbase, unsigned long long child_kbase);
+
 
 
 void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned long long x2, unsigned long long x3)
@@ -55,12 +69,12 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
     {
         if(ISS_bit == 0)
         {
-            if(x0 == 0) //core timer enable
+            if(x0 == SYSN_CORE_TIMEER_ENABLE) //core timer enable
             {
                 uart_puts("core timer interrupt on \r\n");
                 _core_timer_enable();
             }
-            else if(x0 == 1) //show time stamp
+            else if(x0 == SYSN_SHOW_TIMESTAMP) //show time stamp
             {
                 volatile unsigned long long int time_FRQ, time_CT;
                 asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(time_FRQ) ::);
@@ -68,33 +82,33 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
                 *(unsigned long long int*)x1 = time_FRQ;
                 *(unsigned long long int*)x2 = time_CT;
             }
-            else if(x0 == 2) //reboot
+            else if(x0 == SYSN_REBOOT) //reboot
             {
                 reset(1000);
             }
-            else if(x0 == 3) // schedule
+            else if(x0 == SYSN_SCHEDULE) // schedule
             {
                 //uart_puts("syscall...\r\n");
                 //asm volatile("msr daifclr, 0xf");
                 task_schedule();
             }
-            else if(x0 == 4) //get task id
+            else if(x0 == SYSN_GET_TASK_ID) //get task id
             {
                 set_trap_ret((unsigned long long)sys_get_taskid(), get_current_task()->id);
             }
-            else if(x0 == 5) //uart read
+            else if(x0 == SYSN_UART_READ) //uart read
             {
                 set_trap_ret((unsigned long long)uart_getc(), get_current_task()->id);
             }
-            else if(x0 == 6) // uart write
+            else if(x0 == SYSN_UART_WRITE) // uart write
             {
                 uart_puts((char*)x1);
             }
-            else if(x0 == 7)
+            else if(x0 == SYSN_EXEC)
             {
                 do_exec((void *)x1, 1);
             }
-            else if(x0 == 8)
+            else if(x0 == SYSN_FORK)
             {
                 task *currentsk = get_current_task();
                 int id = sys_do_fork();
@@ -118,23 +132,25 @@ void sync_el1_exc_handler(unsigned long long x0, unsigned long long x1, unsigned
                     set_trap_ret(0, id);
                 }
                 //uart_hex( task_pool[id].trapframe[0] );
-                
-               
             }
-            else if(x0 == 9)
+            else if(x0 == SYSN_EXIT)
             {
                 //x1 = exit value
                 runqueue_del(get_current_task()->id);
                 asm volatile("msr daifclr, 0xf");
                 task_schedule();
             }
-            else if(x0 == 10)
+            else if(x0 == SYSN_UART_HEX)
             {
                 uart_hex(x1);
             }
-            else if(x0 == 11)
+            else if(x0 == SYSN_UART_SEND)
             {
                 uart_send((char)x1);
+            }
+            else if(x0 == SYSM_PRINT)
+            {
+                my_printf((char *)x1);
             }
             else
             {

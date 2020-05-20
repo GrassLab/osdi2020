@@ -32,7 +32,7 @@ void sys_num(unsigned int num, int base)
 		num /= base; 
 	}while(num != 0); 
 
-    sys_puts(ptr);
+    uart_puts(ptr);
 }
 
 void my_printf(const char *fmt, ...)

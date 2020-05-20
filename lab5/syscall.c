@@ -41,6 +41,12 @@ void core_time_enable()
 	asm volatile("mov x0, 0\r\n" "svc #0");
 }
 
+void sysprintf(const char *fmt, ...)
+{
+	asm volatile("mov x1, %0"::"r"(fmt):);
+	asm volatile("mov x0, 12\r\n" "svc #0");
+}
+
 void reboot()
 {
 	asm volatile("mov x0, %0\r\n" "svc #0" ::"r"(2):);
@@ -64,4 +70,6 @@ void show_svc_info()
     uart_hex(par[4]);
     uart_puts("\r\n");
 }
+
+
 
