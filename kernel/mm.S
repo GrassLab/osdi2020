@@ -18,9 +18,9 @@ vm_init:
   msr mair_el1, x0
 
   /* Initialize page tables */
-  mov x29, x30
-  bl init_page_tables
-  mov x30, x29
+  mov x29, lr
+  bl init_kernel_page_tables
+  mov lr, x29
 
   adrp x0, page_table_start
   msr ttbr0_el1, x0
@@ -28,8 +28,9 @@ vm_init:
 
   ret
 
-.global init_page_tables
-init_page_tables:
+/* Create page tables to support identity paging in kernel space */
+.global init_kernel_page_tables
+init_kernel_page_tables:
   /* Setup PGD */
   adrp x0, page_table_start
   adrp x1, page_table_start

@@ -46,8 +46,6 @@ el2_to_el1:
   eret
 
 el1_entry:
-  adr x0, _start
-  mov sp, x0
   adr x0, __bss_start
   adr x1, __bss_end
   sub x1, x1, x0
@@ -60,11 +58,6 @@ el1_entry:
   b 1b
 2:
   bl vm_init
-
-  /* Make stack pointer use virtual address */
-  mov x0, sp
-  mov x1, KERNEL_VA_BASE
-  add sp, x0, x1
 
   /* Enable MMU for EL1 and EL0 stage 1 address translation. */
   mrs x2, sctlr_el1

@@ -47,14 +47,14 @@ uint64_t *build_user_va(uint64_t binary_start, size_t binary_size) {
   uint64_t *pgd = (uint64_t *)PA_TO_KVA(page_alloc());
   /* Currently assume user virtual mapping always start from 0. */
   for (uint64_t offset = 0; offset < binary_size; offset += PAGE_SIZE) {
-    void *frame = create_mapping(pgd, offset);
+    void *frame = vmmap_create(pgd, offset);
     memcpy(frame, (const void *)(binary_start + offset), PAGE_SIZE);
   }
   return pgd;
 }
 
 /* Create page tables and memory frame for a virtual page. */
-void *create_mapping(uint64_t *pgd, uint64_t va) {
+void *vmmap_create(uint64_t *pgd, uint64_t va) {
   if ((pgd[PGD_INDEX(va)] & PD_VALID) != 1) {
     pgd[PGD_INDEX(va)] = page_alloc() | USER_PGD_ATTR;
   }
@@ -77,7 +77,7 @@ void *create_mapping(uint64_t *pgd, uint64_t va) {
   return (void *)GET_FRAME(pte, va);
 }
 
-void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level) {
+void vmmap_copy(uint64_t *dst, uint64_t *src, uint8_t level) {
   for (size_t i = 0; i < 512; ++i) {
     if ((src[i] & PD_VALID) == 0) {
       continue;
@@ -88,7 +88,7 @@ void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level) {
     case 2:
     case 3:
       dst[i] = page_alloc() | USER_PGD_PUD_PMD_ATTR;
-      copy_vmmap(PTBENT_TO_KVA(dst[i]), PTBENT_TO_KVA(src[i]), level + 1);
+      vmmap_copy(PTBENT_TO_KVA(dst[i]), PTBENT_TO_KVA(src[i]), level + 1);
       break;
     case 4:
       dst[i] = page_alloc() | USER_PTE_NORMAL_ATTR;
@@ -98,7 +98,7 @@ void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level) {
   }
 }
 
-void reclaim_vmmap(uint64_t *ptb, uint8_t level) {
+void vmmap_reclaim(uint64_t *ptb, uint8_t level) {
   for (size_t i = 0; i < 512; ++i) {
     if ((ptb[i] & PD_VALID) == 0) {
       continue;
@@ -108,7 +108,7 @@ void reclaim_vmmap(uint64_t *ptb, uint8_t level) {
     case 1:
     case 2:
     case 3:
-      reclaim_vmmap(PTBENT_TO_KVA(ptb[i]), level + 1);
+      vmmap_reclaim(PTBENT_TO_KVA(ptb[i]), level + 1);
       break;
     case 4:
       page_free((uint64_t)PTBENT_TO_KVA(ptb[i]));

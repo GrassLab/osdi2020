@@ -29,7 +29,7 @@ size_t do_uart_write(const void *buf, size_t count) {
 
 void do_exec(uint64_t binary_start, size_t binary_size) {
   uint64_t *pgd = build_user_va(binary_start, binary_size);
-  create_mapping(pgd, USER_STACK_VA_TOP);
+  vmmap_create(pgd, USER_STACK_VA_TOP);
   asm volatile("msr ttbr0_el1, %0" : : "r"(pgd));
   el1_to_el0(0, (uint8_t *)USER_STACK_VA_BASE);
 }
@@ -43,7 +43,7 @@ int do_fork_helper(struct trapframe *tf, uint64_t lr) {
   uint64_t *ppgd, *cpgd = (uint64_t *)PA_TO_KVA(page_alloc());
   asm volatile("mrs %0, ttbr0_el1" : "=r"(ppgd));
   task_pool[cid].context.ttbr0 = (uint64_t)cpgd;
-  copy_vmmap(cpgd, ppgd, 1);
+  vmmap_copy(cpgd, ppgd, 1);
 
   task_pool[cid].context.x19 = lr;
   task_pool[cid].context.lr = (uint64_t)post_fork_child_hook;
@@ -56,7 +56,7 @@ int do_fork_helper(struct trapframe *tf, uint64_t lr) {
 void do_exit(int status) {
   uint64_t *pgd;
   asm volatile("mrs %0, ttbr0_el1" : "=r"(pgd));
-  reclaim_vmmap(pgd, 1);
+  vmmap_reclaim(pgd, 1);
 
   get_current_task()->state = TASK_ZOMBIE;
   get_current_task()->exit_status = status;

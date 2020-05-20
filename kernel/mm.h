@@ -75,9 +75,9 @@ uint64_t page_alloc(void);
 void page_free(uint64_t page_addr);
 
 uint64_t *build_user_va(uint64_t binary_start, size_t binary_size);
-void *create_mapping(uint64_t *pgd, uint64_t va);
-void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level);
-void reclaim_vmmap(uint64_t *ptb, uint8_t level);
+void *vmmap_create(uint64_t *pgd, uint64_t va);
+void vmmap_copy(uint64_t *dst, uint64_t *src, uint8_t level);
+void vmmap_reclaim(uint64_t *ptb, uint8_t level);
 
 void page_fault_handler(void);
 
