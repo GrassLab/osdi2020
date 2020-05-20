@@ -238,8 +238,8 @@ void exit(){
 
 TASK_(1); TASK_(2); TASK_(3); TASK_(4);
 
-extern unsigned long _binary____user_build_user_img_start;
-extern unsigned long _binary____user_build_user_img_end;
+extern unsigned long _binary____usrbuild_user_img_start;
+extern unsigned long _binary____usrbuild_user_img_end;
 extern void user_entry();
 
 void user_hang() {
@@ -252,8 +252,8 @@ void user_hang() {
 
 void kexec_user_main(){
   printf(NEWLINE "============     [%d] kexec user main     ============"  NEWLINE, current_task->pid);
-  unsigned long begin = (unsigned long)&_binary____user_build_user_img_start;
-  unsigned long end = (unsigned long)&_binary____user_build_user_img_end;
+  unsigned long begin = (unsigned long)&_binary____usrbuild_user_img_start;
+  unsigned long end = (unsigned long)&_binary____usrbuild_user_img_end;
   unsigned long process = (unsigned long)begin - (unsigned long)begin;//(unsigned long)&user_entry;
   int err = move_to_user_mode(begin, end - begin, process);
   if (err < 0){

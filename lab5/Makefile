@@ -86,8 +86,8 @@ $(IMG): $(BUILD_DIR) $(OBJ_FILES)
 	$(ARMGNU)-ld -T $(LINKER_SCRIPT) -o $(TARGET).elf  $(OBJ_FILES)
 	$(ARMGNU)-objcopy $(TARGET).elf -O binary $(TARGET).img
 
-USER_SRC_DIR = user_src
-USER_BUILD_DIR = user_build
+USER_SRC_DIR = usrc
+USER_BUILD_DIR = usrbuild
 
 $(USER_BUILD_DIR):
 	mkdir $(USER_BUILD_DIR)
@@ -126,13 +126,13 @@ rgdb: $(IMG)
 	$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -S -s
 
 ugdb:
-	$(ARMGNU)-gdb -x user.gdb
+	$(ARMGNU)-gdb -x debug/user.gdb
 
 kgdb:
-	$(ARMGNU)-gdb -x kernel.gdb
+	$(ARMGNU)-gdb -x debug/kernel.gdb
 
 gdb:
-	$(ARMGNU)-gdb -x cmd.gdb
+	$(ARMGNU)-gdb -x debug/cmd.gdb
 
 update:
 	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt
