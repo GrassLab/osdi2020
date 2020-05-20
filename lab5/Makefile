@@ -4,6 +4,7 @@ CFALG = -fPIC -Wall -ffreestanding -nostdinc -nostdlib -nostartfiles -Iinclude -
 ASMFALG = -fPIC -Iinclude -g -O0 -ggdb3 -MMD
 SRC_DIR = src
 BUILD_DIR = build
+USER_DIR = user_code
 
 all: clean kernel8.img
 
@@ -19,19 +20,31 @@ ASM_FILES = $(wildcard $(SRC_DIR)/*.S)
 OBJ_FILES = $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
 OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
 
+
+$(USER_DIR)/user_c.o: $(USER_DIR)/user.c
+	aarch64-linux-gnu-gcc -fno-zero-initialized-in-bss -nostdlib -g -fPIC -c $< -o $@
+
+$(USER_DIR)/user_lib.o: $(USER_DIR)/user_lib.S
+	aarch64-linux-gnu-gcc -fPIC -g -c $< -o $@
+
+user_program: $(USER_DIR)/user_c.o $(USER_DIR)/user_lib.o 
+	aarch64-linux-gnu-ld -T $(USER_DIR)/link.ld -o $(USER_DIR)/test.elf $(USER_DIR)/user_c.o $(USER_DIR)/user_lib.o 
+	aarch64-linux-gnu-objcopy -O binary $(USER_DIR)/test.elf $(USER_DIR)/test.img 
+	aarch64-linux-gnu-ld -r -b binary -o user_program $(USER_DIR)/test.img
+
 build_dir:
 	mkdir -p build
 
-kernel8.img: build_dir $(OBJ_FILES)
-	aarch64-linux-gnu-ld -T $(SRC_DIR)/l.ld -o $(BUILD_DIR)/kernel8.elf $(OBJ_FILES)
+kernel8.img: build_dir $(OBJ_FILES) user_program
+	aarch64-linux-gnu-ld -T $(SRC_DIR)/l.ld -o $(BUILD_DIR)/kernel8.elf $(OBJ_FILES) user_program
 	aarch64-linux-gnu-objcopy -O binary $(BUILD_DIR)/kernel8.elf kernel8.img
 
 
 
-.PHONY: clean run runasm runpty gdb
+.PHONY: clean run runasm runpty gdb 
 
 clean:
-	rm -rf $(BUILD_DIR) *.img 
+	rm -rf $(BUILD_DIR) *.img user_code/*.o user_code/*.elf user_code/*.img
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
