@@ -1,5 +1,5 @@
 ARMGNU = aarch64-linux-gnu
-COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=gnu99 -ggdb
+COPS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -std=gnu99 -ggdb -MMD
 BUILD_DIR = build
 
 

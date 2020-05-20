@@ -127,7 +127,10 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 		map_page(current, addr & PAGE_MASK, page, MMU_PTE_FLAGS);
 		ind++;
 		if (ind > 2){
-			printf("page fault\r\n");
+			unsigned long val;
+			printf("esr: 0x%x\r\n", dfs);
+			asm volatile ("mrs %0, far_el1" : "=r" (val));
+			printf("page fault address: 0x%x\r\n", val);
 			exit_process();
 			return -1;
 		}
