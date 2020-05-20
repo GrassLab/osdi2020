@@ -71,9 +71,9 @@ void zombie_killer() {
 
 void foo_kernel() {
     print_s("foo kernel\n");
-    asm volatile("siz:");
     do_exec((uint8_t*)&_binary_user_img_start,
-            ((int)(&_binary_user_img_end) - (int)(&_binary_user_img_start)));
+            ((uint64_t)(&_binary_user_img_end) -
+             (uint64_t)(&_binary_user_img_start)));
     while (1)
         ;
 }

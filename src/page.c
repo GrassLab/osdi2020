@@ -47,4 +47,24 @@ void page_mapping(struct task_t* task, struct page_t* user_page) {
     task->pgd = pgd;
 }
 
+void stack_mapping(struct task_t* task, struct page_t* stack_page) {
+    uint64_t sp = 0x0000ffffffffe000;
+    task->stack_page = stack_page->id;
+    struct page_t* pud_page = page_alloc();
+    struct page_t* pmd_page = page_alloc();
+    struct page_t* pte_page = page_alloc();
+    uint64_t* pud = pud_page->content;
+    uint64_t* pmd = pmd_page->content;
+    uint64_t* pte = pte_page->content;
+    *(uint64_t*)((uint64_t)task->pgd + (sp << (63 - 47) >> (63 - 47) >> 39)) =
+        (uint64_t)pud | PD_TABLE;
+    *(uint64_t*)((uint64_t)pud + (sp << (63 - 38) >> (63 - 38) >> 30)) =
+        (uint64_t)pmd | PD_TABLE;
+    *(uint64_t*)((uint64_t)pmd + (sp << (63 - 29) >> (63 - 29) >> 21)) =
+        (uint64_t)pte | PD_TABLE;
+    *(uint64_t*)((uint64_t)pte + (sp << (63 - 20) >> (63 - 20) >> 12)) =
+        (uint64_t)(stack_page->content) | PD_TABLE | PD_ACCESS;
+    asm("stack:");
+}
+
 void move_ttbr(uint64_t* pgd) { asm volatile("msr ttbr0_el1, x0"); }

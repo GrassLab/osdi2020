@@ -21,5 +21,6 @@ extern int page_now;
 struct page_t* page_alloc();
 void page_free(struct page_t* page);
 void page_mapping(struct task_t* task, struct page_t* page);
+void stack_mapping(struct task_t* task, struct page_t* stack_page);
 void move_ttbr(uint64_t *pgd);
 #endif

@@ -69,6 +69,7 @@ struct task_t {
     uint64_t elr;
     uint64_t* pgd;
     uint64_t user_page;
+    uint64_t stack_page;
 };
 
 struct queue_element_t {
