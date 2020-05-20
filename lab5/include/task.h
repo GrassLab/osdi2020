@@ -44,11 +44,12 @@ struct pt_regs {
 #define RESCHED 0x1
 #define SIGKILL 0x1
 
-#define MAX_PROCESS_PAGES			16
+#define MAX_PROCESS_PAGES 64
 
 struct user_page {
 	unsigned long phys_addr;
 	unsigned long virt_addr;
+  unsigned long attr;
 };
 
 struct mm_struct {

@@ -1,3 +1,5 @@
+#include "usrlib.h"
+
 .section ".text.entry"
 
 .global user_entry

@@ -30,8 +30,14 @@ void sys_write(char *buf) {
   uart_puts(buf);
 }
 
+extern unsigned long _binary____user_build_user_img_start;
+extern unsigned long _binary____user_build_user_img_end;
+
 void sys_exec(unsigned long func){
-  do_exec(func);
+  free_task_pages(current_task);
+  unsigned long begin = (unsigned long)&_binary____user_build_user_img_start;
+  unsigned long end = (unsigned long)&_binary____user_build_user_img_end;
+  move_to_user_mode(begin, end - begin, func);
 }
 
 int sys_fork() {
@@ -42,7 +48,7 @@ void sys_exit(){
   preempt_disable();
   current_task->status = zombie;
   free_task_pages(current_task);
-  printf("============      [%d] exit->zombie      ============" NEWLINE, current_task->pid);
+  printf(NEWLINE "============      [%d] exit->zombie      ============" NEWLINE, current_task->pid);
   preempt_enable();
 }
 
@@ -104,6 +110,11 @@ unsigned long sys_page_num(void) {
   return current_task->mm.user_pages_count;
 }
 
+void *sys_mmap(void* addr, unsigned long len,
+    int prot, int flags, int file_start, int file_offset){
+  return mmap(addr, len, prot, flags, file_start, file_offset);
+}
+
 int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     long x5) {
 
@@ -118,7 +129,6 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       sys_exec(x0);
       break;
     case SYSNUM_FORK:
-      puts("call fork");
       return sys_fork();
     case SYSNUM_EXIT:
       sys_exit();
@@ -137,6 +147,10 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       break;
     case SYSNUM_PAGE_NUM:
       return sys_page_num();
+      break;
+    case SYSNUM_MMAP:
+      return (int)sys_mmap((void*)x0, (unsigned long)x1,
+          (int)x2, (int)x3, (int)x4, (int)x5);
       break;
       // case 0:
       // sys_core_timer_enable();
@@ -179,6 +193,7 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       // __asm__ volatile("mov x0, #0");
       // break;
     default:
+      puts("invalid syscall number");
       return 1;
   }
   return 0;

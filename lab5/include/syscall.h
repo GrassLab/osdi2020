@@ -12,6 +12,18 @@
 #define SYSNUM_MUTEX_UNLOCK    7
 #define SYSNUM_TASK_ID 8
 #define SYSNUM_PAGE_NUM 9
+#define SYSNUM_MMAP 10
+
+#define PROT_NONE  0b0001
+#define PROT_READ  0b0010
+#define PROT_WRITE 0b0100
+#define PROT_EXEC  0b1000
+
+#define MAP_FIXED     0b001
+#define MAP_ANONYMOUS 0b010
+#define MAP_POPULATE  0b100
+
+#define MAP_FAILED ((void*)(-1))
 
 #ifndef __ASSEMBLER__
 
@@ -27,6 +39,8 @@ void call_sys_mutex_lock(Mutex *);
 void call_sys_mutex_unlock(Mutex *);
 unsigned long call_sys_task_id();
 unsigned long call_sys_page_num();
+void *call_sys_mmap(void* addr, unsigned long len,
+    int prot, int flags, int file_start, int file_offset);
 #endif
 
 #endif

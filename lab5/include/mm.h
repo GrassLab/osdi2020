@@ -7,6 +7,8 @@
 /* 0 for 2 lv translation */
 /* 1 for 3 lv translation */
 /* 2 for 4 lv translation */
+#include "armmmu.h"
+
 #define MLV 1
 
 #define PAGE_SHIFT 12
@@ -52,17 +54,27 @@ typedef struct page_tag {
 unsigned long get_free_page();
 void free_page(unsigned long p);
 void free_task_pages(Task *);
-void map_page(Task *task, unsigned long va, unsigned long page);
+int map_page(Task *task, unsigned long va, unsigned long page, unsigned long attr);
 void memzero(unsigned long src, unsigned long n);
 void memcpy(unsigned long src, unsigned long dst, unsigned long n);
 
 int copy_virt_memory(Task *dst);
 unsigned long allocate_kernel_page();
-unsigned long allocate_user_page(Task *task, unsigned long va);
+unsigned long allocate_user_page_with_attr(
+    Task *task, unsigned long va, unsigned long attr);
+
+#define allocate_user_page(task, va) \
+  allocate_user_page_with_attr(task, va, MMU_PTE_FLAGS)
+
 void mark_reserved_pages(unsigned long end);
+
+void *mmap(void* addr, unsigned long len,
+    int prot, int flags, int file_start, int file_offset);
 
 /* 4 mb limit for user process */
 #define USER_MEM_LIMIT (4 << 20)
+/* 128 kb limit for user stack */
+#define USER_STK_LIMIT (128 << 10)
 #endif
 
 #endif
