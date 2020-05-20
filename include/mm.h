@@ -32,6 +32,7 @@ void* page_alloc(struct task_t* task);
 void* page_alloc_user(struct task_t* task, uint64_t user_addr);
 void page_free(void* addr);
 void* get_page_user(struct task_t* task, uint64_t user_addr);
+uint64_t user_addr_to_page_addr(uint64_t user_addr, uint64_t pgd);
 
 #endif /* __ASSEMBLY__ */
 

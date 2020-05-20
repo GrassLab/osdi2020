@@ -41,15 +41,10 @@ struct cpu_context {
 #define MAX_USER_PAGES      16
 #define MAX_KERNEL_PAGES    16
 
-struct user_page {
-    uint64_t user_addr; // virtual address in user space
-    uint64_t page_addr; // virtual address in kernel space
-};
-
 struct mm_struct {
     uint64_t pgd;
     uint64_t user_pages_count;
-    struct user_page user_pages[MAX_USER_PAGES];
+    uint64_t user_pages[MAX_USER_PAGES];
     uint64_t kernel_pages_count;
     uint64_t kernel_pages[MAX_KERNEL_PAGES];
 };

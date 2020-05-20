@@ -214,11 +214,11 @@ void do_exit(int status) {
     current_task->exit_status = status;
 
     // reclaim all allocated pages
+    for (uint64_t i = 0; i < current_task->mm.user_pages_count; i++) {
+        page_free((void*)user_addr_to_page_addr(current_task->mm.user_pages[i], current_task->mm.pgd));
+    }
     for (uint64_t i = 0; i < current_task->mm.kernel_pages_count; i++) {
         page_free((void*)current_task->mm.kernel_pages[i]);
-    }
-    for (uint64_t i = 0; i < current_task->mm.user_pages_count; i++) {
-        page_free((void*)current_task->mm.user_pages[i].page_addr);
     }
 
     schedule();

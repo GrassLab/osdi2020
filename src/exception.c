@@ -73,8 +73,8 @@ void sys_fork(struct trapframe* trapframe) {
 
     // copy all user pages
     for (uint64_t i = 0; i < parent_task->mm.user_pages_count; i++) {
-        uint64_t user_addr = parent_task->mm.user_pages[i].user_addr;
-        uint64_t page_addr = parent_task->mm.user_pages[i].page_addr;
+        uint64_t user_addr = parent_task->mm.user_pages[i];
+        uint64_t page_addr = user_addr_to_page_addr(user_addr, parent_task->mm.pgd);
         void* page = get_page_user(child_task, user_addr);
         memcpy(page, (void*)page_addr, PAGE_SIZE);
     }

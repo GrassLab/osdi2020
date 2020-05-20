@@ -85,8 +85,7 @@ void* page_alloc_user(struct task_t* task, uint64_t user_addr) {
         return NULL;
     }
     uint64_t page_virt_addr = page_phy_addr | KERNEL_VIRT_BASE;
-    task->mm.user_pages[task->mm.user_pages_count].user_addr = user_addr;
-    task->mm.user_pages[task->mm.user_pages_count].page_addr = page_virt_addr;
+    task->mm.user_pages[task->mm.user_pages_count] = user_addr;
     task->mm.user_pages_count++;
     remain_page--;
     return (void*)page_virt_addr;
@@ -142,4 +141,17 @@ void* get_page_user(struct task_t* task, uint64_t user_addr) {
     uint64_t* pmd = create_page_table(task, pud, pud_idx);
     uint64_t* pte = create_page_table(task, pmd, pmd_idx);
     return create_page_user(task, pte, pte_idx, user_addr);
+}
+
+uint64_t user_addr_to_page_addr(uint64_t user_addr, uint64_t pgd_phy) {
+    uint64_t pgd_idx = (user_addr & (PD_MASK << PGD_SHIFT)) >> PGD_SHIFT;
+    uint64_t pud_idx = (user_addr & (PD_MASK << PUD_SHIFT)) >> PUD_SHIFT;
+    uint64_t pmd_idx = (user_addr & (PD_MASK << PMD_SHIFT)) >> PMD_SHIFT;
+    uint64_t pte_idx = (user_addr & (PD_MASK << PTE_SHIFT)) >> PTE_SHIFT;
+
+    uint64_t* pgd = (uint64_t*)(pgd_phy | KERNEL_VIRT_BASE);
+    uint64_t* pud = (uint64_t*)((pgd[pgd_idx] & ~0xFFF) | KERNEL_VIRT_BASE);
+    uint64_t* pmd = (uint64_t*)((pud[pud_idx] & ~0xFFF) | KERNEL_VIRT_BASE);
+    uint64_t* pte = (uint64_t*)((pmd[pmd_idx] & ~0xFFF) | KERNEL_VIRT_BASE);
+    return (pte[pte_idx] & ~0xFFF) | KERNEL_VIRT_BASE;
 }
