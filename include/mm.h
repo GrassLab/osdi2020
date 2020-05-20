@@ -12,6 +12,15 @@
 #define PAGING_MEMORY           (HIGH_MEMORY - LOW_MEMORY)
 #define PAGING_PAGES            (PAGING_MEMORY/PAGE_SIZE)
 
+#define PAGE_MAP_SIZE 0x10000
+struct page {
+  int is_used;
+};
+
+struct page* page_map[PAGE_MAP_SIZE];
 
 unsigned long get_free_page();
 void free_page(unsigned long p);
+
+void *page_alloc();
+void page_free(void *page_addr);

@@ -1,6 +1,6 @@
 #include "mm.h"
 
-static unsigned short mem_map [ PAGING_PAGES ] = {0,};
+unsigned short mem_map [ PAGING_PAGES ] = {0,};
 
 unsigned long get_free_page()
 {
@@ -17,3 +17,27 @@ void free_page(unsigned long p){
 	mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
 }
 
+
+void page_init() {
+  // set kernal used pages
+  for (int num = 0; num < 0x4000; num++) {
+      page_map[num]->is_used = 1;
+      //uart_int(num);
+      //uart_send('\n');
+    }
+  for (int num = 0x4001; num < PAGE_MAP_SIZE; num++)
+      page_map[num]->is_used = 0;
+}
+
+void *page_alloc() {
+  for (int num = 0; num < PAGE_MAP_SIZE; num++)
+    if(!page_map[num]->is_used) {
+      page_map[num]->is_used = 1;
+      return (void *) (num << 12);
+    }
+  return 0;
+}
+
+void page_free(void *page_addr) {
+  page_map[(unsigned long)page_addr >> 12]->is_used = 0;
+}
