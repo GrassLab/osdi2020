@@ -11,7 +11,9 @@ uint32_t do_get_taskid(void) {
 
 size_t do_uart_read(void *buf, size_t count) {
 //  mutex_lock(&uart_lock);
+  enable_interrupt();
   mini_uart_getn(/* verbose */ true, buf, count);
+  disable_interrupt();
 //  mutex_unlock(&uart_lock);
   /* For now, just assume all "count" bytes can be read. */
   return count;
