@@ -5,6 +5,7 @@ CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-o
 ASMOPS = -Iinclude
 BUILD_DIR = build
 SRC_DIR = src
+LIB_DIR = lib
 
 all: clean kernel8.img
 
@@ -14,11 +15,20 @@ $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 
 $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
 	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
+
+$(BUILD_DIR)/%_c.o: $(LIB_DIR)/%.c
+	mkdir -p $(@D)
+	$(ARMGNU)-gcc $(CFLAGS) -MMD -c $< -o $@ -g
+
+$(BUILD_DIR)/%_s.o: $(LIB_DIR)/%.S
+	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
 	
 C_FILES = $(wildcard $(SRC_DIR)/*.c) 
 ASM_FILES = $(wildcard $(SRC_DIR)/*.S) 
-OBJ_FILES = $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o)
-OBJ_FILES += $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o)
+C_LIB_FILES = $(wildcard $(LIB_DIR)/*.c) 
+ASM_LIB_FILES = $(wildcard $(LIB_DIR)/*.S) 
+S_OBJS = $(ASM_FILES:$(SRC_DIR)/%.S=build/%_s.o) $(ASM_LIB_FILES:$(LIB_DIR)/%.S=build/%_s.o)
+C_OBJS = $(C_FILES:$(SRC_DIR)/%.c=build/%_c.o) $(C_LIB_FILES:$(LIB_DIR)/%.c=build/%_c.o)
 
 DEP_FILES = $(OBJ_FILES:%.o=%.d)
 -include $(DEP_FILES)
