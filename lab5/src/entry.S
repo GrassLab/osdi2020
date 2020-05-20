@@ -159,6 +159,7 @@ el0_irq:
 
 el0_sync:
     kernel_entry 0
+    msr DAIFClr, 0xf
     mrs	x25, esr_el1				// read the syndrome register
     lsr	x24, x25, #ESR_ELx_EC_SHIFT		// exception class
     cmp	x24, #ESR_ELx_EC_SVC64			// SVC in 64-bit state
@@ -196,9 +197,9 @@ el0_da:
     mrs	x1, esr_el1
     bl	do_mem_abort
     b   1f
-    //cmp x0, 0
+    // cmp x0, 0
     // b.eq 1f
-    //handle_invalid_entry 0, DATA_ABORT_ERROR // ERROR_INVALID_EL0_32
+    // handle_invalid_entry 0, DATA_ABORT_ERROR // ERROR_INVALID_EL0_32
 1:
     bl disable_irq
     kernel_exit 0

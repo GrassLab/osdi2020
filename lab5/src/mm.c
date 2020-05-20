@@ -140,31 +140,30 @@ int copy_virt_memory(struct task_struct *dst) {
   return 0;
 }
 
-/* static int ind = 1; */
-
 int do_mem_abort(unsigned long addr, unsigned long esr) {
-  println("[mem abort] page fault @ 0x%X kill the process", addr);
+  unsigned long dfs = (esr & 0b111111); /* 0x3F */
+
+  if ((dfs & 0b0101) == 0b101) {
+     println("[mem abort] Segmentation fault @ 0x%X kill the process", addr);
+     exit_process();
+     return 0;
+  }
+
+  if ((dfs & 0b111100) == 0b100) {
+    unsigned long page = get_free_page();
+    if (page == 0) {
+      println("[mem abort] cannot find available page");
+      exit_process();
+      return 0;
+    }
+    map_page(current, addr & PAGE_MASK, page);
+    return 0;
+  }
+
+
+  println("[mem abort] Segmentation fault @ 0x%X kill the process", addr);
   exit_process();
   return 0;
-
-  /* unsigned long dfs = (esr & 0b111111); /\* 0x3F *\/ */
-  /* if ((dfs & 0b111100) == 0b100) { */
-  /*   unsigned long page = get_free_page(); */
-  /*   if (page == 0) { */
-  /*     println("[mem abort] cannot find available page"); */
-  /*     return -1; */
-  /*   } */
-  /*   map_page(current, addr & PAGE_MASK, page); */
-  /*   ind++; */
-  /*   if (ind > 2) { */
-  /*     println("[mem abort] double fault @ 0x%X", addr); */
-  /*     return -1; */
-  /*   } */
-  /*   return 0; */
-  /* } */
-
-  /* println("[mem abort] page fault @ 0x%X kill the process", addr); */
-  /* return -1; */
 }
 
 void stat_memory_usage() {

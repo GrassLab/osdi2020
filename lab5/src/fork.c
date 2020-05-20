@@ -71,15 +71,15 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc) {
   regs->sp =  0x0000ffffffffe000;
 
   unsigned long code_page  = allocate_user_page(current, pc);
-  unsigned long stack_page = allocate_user_page(current, regs->sp - 0x1000);
-  if (code_page == 0 || stack_page == 0) {
-    return -1;
-  }
+  /* unsigned long stack_page = allocate_user_page(current, regs->sp - 0x1000); */
+  /* if (code_page == 0 || stack_page == 0) { */
+  /*   return -1; */
+  /* } */
 
 #include "printf.h"
   println("[do exec] do exec for user process");
   println("|   allocate code page  @ %X from pc: %X", code_page, pc);
-  println("|_  allocate stack page @ %X from sp: %X", stack_page, regs->sp - 0x1000);
+  /* println("|_  allocate stack page @ %X from sp: %X", stack_page, regs->sp - 0x1000); */
 
   memcpy(start, code_page, size);
 
