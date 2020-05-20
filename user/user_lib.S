@@ -11,6 +11,12 @@ sys_uart_write:
     svc 1
     ret
 
+.global sys_uart_read
+sys_uart_read:
+    mov x8, #1
+    svc 1
+    ret
+
 .global sys_exit
 sys_exit:
     mov x8, #4

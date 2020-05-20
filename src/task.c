@@ -174,7 +174,6 @@ void do_exec(uint8_t* func, int size) {
 
     uint64_t utask_addr = (uint64_t)&task->utask;
     move_ttbr(task->pgd);
-    asm volatile("task:");
     asm volatile("mov     x6, %0" : "=r"(utask_addr));
     asm volatile("msr     tpidr_el0, x6");
     asm volatile("ldr x2, =switch_to_user_mode");

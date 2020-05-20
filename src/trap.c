@@ -21,6 +21,9 @@ void synchronize_handler(uint64_t esr, uint64_t elr,
         print_s("Page fault at address: ");
         print_h(far);
         print_s("\n");
+        print_s("Exception return address: 0x");
+        print_h(elr);
+        print_s("\n");
         struct task_t *task = get_current();
         do_kill(task->id, SIGKILL);
         schedule();
@@ -45,7 +48,7 @@ void synchronize_handler(uint64_t esr, uint64_t elr,
                 for (uint64_t i = 0; i < trap_frame->x1; i++) {
                     *((char *)trap_frame->x0 + i) = uart_getc();
                 }
-                /* asm volatile("mov x0, %0" : "=r"(trap_frame->x0)); */
+                asm volatile("mov x0, %0" : "=r"(trap_frame->x0));
                 break;
             case 2:
                 /* do_exec((void (*)())trap_frame->x0); */

@@ -26,7 +26,7 @@ void core_timer_enable() {
 void core_timer_handler() {
     system_time_c++;
     struct task_t* task = get_current();
-    print_s("Timer interrupt\n");
+    /* print_s("Timer interrupt\n"); */
     task->time++;
     uint64_t elr, sp_el0, spsr_el1;
 
@@ -34,7 +34,7 @@ void core_timer_handler() {
     asm volatile("mrs x1, CNTFRQ_EL0");
     asm volatile("mul x0, x0, x1");
     asm volatile("msr cntp_tval_el0, x0");
-    if (task->time >= 2) {
+    if (task->time >= 20000) {
         asm volatile("mrs %0, elr_el1" : "=r"(elr));
         task->elr = elr;
         asm volatile("mrs %0, sp_el0" : "=r"(sp_el0));
