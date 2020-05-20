@@ -27,15 +27,21 @@
 // ------------------------------------------------
 #define PD_TABLE 0b11
 #define PD_BLOCK 0b01
+#define PTE_BLOCK 0b11
 
 // Access Flag @ [10]
 #define PD_ACCESS (1 << 10)
+#define PTE_RW_ACCESS (0b01 << 6)
 #define BOOT_PGD_ATTR PD_TABLE
 #define BOOT_PUD_ATTR PD_TABLE
 #define BOOT_PMD_RAM_ATTR                                                      \
     (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_BLOCK)
 #define BOOT_PMD_PERIPHERAL_ATTR                                               \
     (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BINARY_BLOCK_ATTR                                                      \
+    (PD_ACCESS | PTE_RW_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PTE_BLOCK)
+#define STACK_BLOCK_ATTR                                                       \
+    (PD_ACCESS | PTE_RW_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PTE_BLOCK)
 
 #define PAGE_SIZE 0x1000
 

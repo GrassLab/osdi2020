@@ -10,8 +10,10 @@
 #define NUM_OF_PAGE_FRAMES (0x40000000 / PAGE_SIZE)
 
 // symbol in linker script
-extern uint64_t kernel_end;
+extern uint64_t kernel_start; // physical
+extern uint64_t kernel_end; // virtualized
 
+extern const uint64_t kDefaultStackVirtualAddr;
 
 static Page page_frames[NUM_OF_PAGE_FRAMES];
 
@@ -58,9 +60,9 @@ void initPageFrames(void) {
                 translate(0x4000, kPhysicalToPFN));
 
     // kernel image
-    // start from 0x80000
+    // start from kernel_start (physical)
     setInUseBit(
-        translate(0x80000, kPhysicalToPFN),
+        translate((uint64_t)&kernel_start, kPhysicalToPFN),
         translate((uint64_t)&kernel_end & 0x0000fffffffff000, kPhysicalToPFN));
 
     // peripheral
@@ -107,4 +109,108 @@ void freePages(Page *page_frame) {
         next = page_frame->next;
     }
     freePage(page_frame);
+}
+
+static uint64_t getPGDIndex(const uint64_t virt_addr) {
+    return (virt_addr & (0b111111111l << 39)) >> 39;
+}
+
+static uint64_t getPUDIndex(const uint64_t virt_addr) {
+    return (virt_addr & (0b111111111l << 30)) >> 30;
+}
+
+static uint64_t getPMDIndex(const uint64_t virt_addr) {
+    return (virt_addr & (0b111111111l << 21)) >> 21;
+}
+
+static uint64_t getPTEIndex(const uint64_t virt_addr) {
+    return (virt_addr & (0b111111111l << 12)) >> 12;
+}
+
+static void updateNextLevelTableIfNecessary(uint64_t *cur_table,
+                                            const size_t index,
+                                            Page **indirect_tail_page,
+                                            uint64_t **indirect_next_table) {
+    if (cur_table[index] == 0lu) {
+        Page *new_page = allocPage();
+        (*indirect_tail_page)->next = new_page;
+        *indirect_tail_page = new_page;
+        *indirect_next_table =
+            (uint64_t *)translate((uint64_t)new_page, kPageDescriptorToVirtual);
+
+        cur_table[index] =
+            translate((uint64_t)*indirect_next_table, kVirtualToPhysical) |
+            PD_TABLE;
+    } else {
+        *indirect_next_table = (uint64_t *)translate(
+            (cur_table[index] & 0x0000fffffffff000), kPhysicalToVirtual);
+    }
+}
+
+// populate default user stack address related tables
+Page *updatePageFramesForMappingStack(Page *pgd, Page *tail_page) {
+    uint64_t *pgd_page_frame =
+        (uint64_t *)translate((uint64_t)pgd, kPageDescriptorToVirtual);
+    uint64_t *pud_page_frame;
+    uint64_t *pmd_page_frame;
+    uint64_t *pte_page_frame;
+    const size_t pgd_index = getPGDIndex(kDefaultStackVirtualAddr);
+    const size_t pud_index = getPUDIndex(kDefaultStackVirtualAddr);
+    const size_t pmd_index = getPMDIndex(kDefaultStackVirtualAddr);
+    const size_t pte_index = getPTEIndex(kDefaultStackVirtualAddr);
+
+    updateNextLevelTableIfNecessary(pgd_page_frame, pgd_index, &tail_page,
+                                    &pud_page_frame);
+
+    updateNextLevelTableIfNecessary(pud_page_frame, pud_index, &tail_page,
+                                    &pmd_page_frame);
+
+    updateNextLevelTableIfNecessary(pmd_page_frame, pmd_index, &tail_page,
+                                    &pte_page_frame);
+
+    // set block in PTE
+    // default give stack 8KB (kDefaultStackVirtualAddr +- 0x1000)
+    Page *stack1 = allocPage();
+    Page *stack2 = allocPage();
+
+    tail_page->next = stack1;
+    stack1->next = stack2;
+    tail_page = stack2;
+
+    pte_page_frame[pte_index - 1] =
+        translate((uint64_t)stack1, kPageDescriptorToPhysical) |
+        STACK_BLOCK_ATTR;
+    pte_page_frame[pte_index] =
+        translate((uint64_t)stack2, kPageDescriptorToPhysical) |
+        STACK_BLOCK_ATTR;
+
+    return tail_page;
+}
+
+// TODO: this should allocate pages for placing user program (r3-3, r3-4)
+// one page once a time
+Page *updatePageFramesForMappingProgram(Page *pgd, Page *tail_page,
+                                        uint64_t start) {
+    uint64_t *pgd_page_frame =
+        (uint64_t *)translate((uint64_t)pgd, kPageDescriptorToVirtual);
+    uint64_t *pud_page_frame;
+    uint64_t *pmd_page_frame;
+    uint64_t *pte_page_frame;
+
+    updateNextLevelTableIfNecessary(pgd_page_frame, getPGDIndex(start),
+                                    &tail_page, &pud_page_frame);
+
+    updateNextLevelTableIfNecessary(pud_page_frame, getPUDIndex(start),
+                                    &tail_page, &pmd_page_frame);
+
+    updateNextLevelTableIfNecessary(pmd_page_frame, getPMDIndex(start),
+                                    &tail_page, &pte_page_frame);
+
+    tail_page->next = allocPage();
+    tail_page = tail_page->next;
+    pte_page_frame[getPTEIndex(start)] =
+        translate((uint64_t)tail_page, kPageDescriptorToPhysical) |
+        BINARY_BLOCK_ATTR;
+
+    return tail_page;
 }

@@ -1,7 +1,8 @@
 SECTIONS
 {
     . = 0xffff000000000000;
-    . += 0x80000;
+    kernel_start = 0x80000;
+    . += kernel_start;
 
     .text.boot : { *(.text.boot) }
     .text.mmu : { *(.text.mmu) }

@@ -30,10 +30,17 @@ switchCpuContext:
     mov x9, sp
     str x9, [x0, 16 * 6]
 
+    // load sp, physical_pgd
+    ldp x9, x10, [x1, 16 * 6]
+    dsb ish // ensure write has completed
+    msr TTBR0_EL1, x10
+    tlbi vmalle1is // invalidate all TLB entries
+    dsb ish // ensure completion of TLB invalidatation
+    isb // clear pipeline
+
     // restore callee-saved registers only
     _restore_callee_saved_registers
 
-    ldr x9, [x1, 16 * 6]
     mov sp,  x9
 
     msr tpidr_el1, x1

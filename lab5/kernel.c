@@ -23,9 +23,6 @@ void kernel_main(void) {
 
     initPageFrames();
 
-    while (1)
-        ;
-
     initIdleTaskState();
 
     _enable_core_timer();

@@ -1,10 +1,16 @@
 #include "schedule/task.h"
 #include "MiniUart.h"
 #include "exception/exception.h"
+#include "mmu/mmu.h"
+#include "mmu/vma.h"
 #include "schedule/context.h"
 #include "schedule/schedule.h"
 #include "sys/unistd.h"
 #include "utils.h"
+
+// symbol from linker script
+extern uint64_t kernel_start; // physical
+extern uint64_t kernel_end; // virtualized
 
 // since circular queue will waste a space for circulation
 TaskStruct *queue_buffer[MAX_TASK_NUM + 1];
@@ -17,13 +23,24 @@ TaskStruct ktask_pool[MAX_TASK_NUM] __attribute__((aligned(16u)));
 uint8_t kstack_pool[MAX_TASK_NUM][4096] __attribute__((aligned(16u)));
 
 UserTaskStruct utask_pool[MAX_TASK_NUM] __attribute__((aligned(16u)));
-uint8_t ustack_pool[MAX_TASK_NUM][4096] __attribute__((aligned(16u)));
+
+const uint64_t kUnUse = 0;
+const uint64_t kInUse = 1;
+const uint64_t kZombie = 2;
+const uint64_t kDefaultStackVirtualAddr = 0xffffffffe000;
 
 void idle(void) {
     while (1) {
         sendStringUART("Enter idle state ...\n");
-        // TODO: zombie reaper
-        //   There is no need for now since each task has their own fixed resources.
+
+        // Zombie reaper
+        for (uint32_t i = 1; i < MAX_TASK_NUM; ++i) {
+            if (ktask_pool[i].status == kZombie) {
+                ktask_pool[i].status == kUnUse;
+                freePages(ktask_pool[i].pgd);
+                ktask_pool[i].pgd = NULL;
+            }
+        }
 
         if (isQueueEmpty(&running_queue)) {
             break;
@@ -40,6 +57,7 @@ void initIdleTaskState() {
     ktask_pool[0].counter = 0u;
     ktask_pool[0].reschedule_flag = true;
     ktask_pool[0].status = kInUse;
+    ktask_pool[0].kernel_context.physical_pgd = 0; // master PGD's page frame
     asm volatile("msr tpidr_el1, %0"
                  : /* output operands */
                  : "r"(&ktask_pool[0]) /* input operands */
@@ -48,7 +66,7 @@ void initIdleTaskState() {
 
 int64_t createPrivilegeTask(void (*func)()) {
     for (uint32_t i = 1; i < MAX_TASK_NUM; ++i) {
-        if (ktask_pool[i].status != kInUse) {
+        if (ktask_pool[i].status == kUnUse) {
             ktask_pool[i].status = kInUse;
             ktask_pool[i].id = i;
             ktask_pool[i].counter = 10u;
@@ -64,8 +82,17 @@ int64_t createPrivilegeTask(void (*func)()) {
             ktask_pool[i].user_task->id = i;
             ktask_pool[i].user_task->regain_resource_flag = false;
 
+            ktask_pool[i].pgd = allocPage();
+            ktask_pool[i].tail_page = ktask_pool[i].pgd;
+            ktask_pool[i].kernel_context.physical_pgd = translate(
+                (uint64_t)ktask_pool[i].pgd, kPageDescriptorToPhysical);
+
             pushQueue(&running_queue, ktask_pool + i);
             return i;
+        } else if (ktask_pool[i].status == kZombie) {
+            ktask_pool[i].status = kUnUse;
+            freePages(ktask_pool[i].pgd);
+            ktask_pool[i].pgd = NULL;
         }
     }
 
@@ -84,15 +111,34 @@ void checkRescheduleFlag(void) {
     }
 }
 
+static void copyProgram(TaskStruct *cur_task) {
+    uint64_t end = ((uint64_t)&kernel_end) & 0x0000fffffffff000;
+    for (uint64_t i = (uint64_t)&kernel_start; i < end; i += PAGE_SIZE) {
+        // allocate page frame
+        cur_task->tail_page = updatePageFramesForMappingProgram(
+            cur_task->pgd, cur_task->tail_page, i);
+        // copy raw binary
+        uint8_t *frame = (uint8_t *)translate((uint64_t)cur_task->tail_page,
+                                              kPageDescriptorToVirtual);
+        memcpy(frame, (uint8_t *)translate(i, kPhysicalToVirtual), PAGE_SIZE);
+    }
+}
+
 void doExec(void (*func)()) {
     TaskStruct *cur_task = getCurrentTask();
     UserTaskStruct *user_task = cur_task->user_task;
 
-    user_task->user_context.lr = (uint64_t)func;
+    // FIXME: remove 0x0000ffffffffffff when change to use embeded user program
+    user_task->user_context.lr = (uint64_t)func & 0x0000ffffffffffff;
 
-    // +1 since stack grows toward lower address
-    user_task->user_context.fp = (uint64_t)ustack_pool[user_task->id + 1];
-    user_task->user_context.sp = (uint64_t)ustack_pool[user_task->id + 1];
+    user_task->user_context.fp = kDefaultStackVirtualAddr;
+    user_task->user_context.sp = kDefaultStackVirtualAddr;
+    cur_task->tail_page =
+        updatePageFramesForMappingStack(cur_task->pgd, cur_task->tail_page);
+
+    // FIXME: binary_xxx_end won't be aligned to PAGE_SIZE, need to do manually
+    //        when change to use embeded user program
+    copyProgram(cur_task);
 
     initUserTaskandSwitch(&cur_task->kernel_context,
                           &cur_task->user_task->user_context);
@@ -193,7 +239,7 @@ void fooTask(void) {
     sendStringUART(" in kernel mode...\n");
     sendStringUART("Doing kernel routine for awhile...\n");
 
-    doExec(forkTask);
+    doExec(barTask);
 }
 
 // ------ For User Mode ----------------
@@ -265,19 +311,14 @@ static void bazTask(void) {
 
 // main user task
 static void barTask(void) {
-    UserTaskStruct *cur_task = getUserCurrentTask();
-
     writeStringUART("\nHi, I'm ");
-    writeHexUART(cur_task->id);
+    writeHexUART(getTaskId());
     writeStringUART(" in user mode...\n");
 
     writeStringUART("Doing barTask() for awhile...\n");
 
-    while (cur_task->regain_resource_flag == false)
-        ;
+    exit(0);
 
-    // reset
-    cur_task->regain_resource_flag = false;
 
     exec(bazTask);
 }
