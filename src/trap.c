@@ -14,7 +14,18 @@ void synchronize_handler(uint64_t esr, uint64_t elr,
     uint64_t *pgd;
     asm volatile("mrs %0, ttbr1_el1" : "=r"(pgd));
     move_ttbr(pgd);
-    /* int ec = esr >> 26; */
+    int ec = esr >> 26;
+    if (ec == 0b100101) {
+        uint64_t far;
+        asm volatile("mrs %0, FAR_EL1" : "=r"(far));
+        print_s("Page fault at address: ");
+        print_h(far);
+        print_s("\n");
+        struct task_t *task = get_current();
+        do_kill(task->id, SIGKILL);
+        schedule();
+        return;
+    }
     if (iss == 0) {
         print_s("Exception return address: 0x");
         print_h(elr);

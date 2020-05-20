@@ -33,7 +33,7 @@ void context_switch(struct task_t* next) {
         next->status = ZOMBIE;
         print_s("pid ");
         print_i(next->id);
-        print_s("has been killed\n");
+        print_s(" has been killed\n");
         schedule();
     } else {
         switch_to(prev, next, nextfunc, next->spsr, next->pgd);
@@ -222,10 +222,9 @@ void kexit(uint64_t status) {
 void do_exit(uint64_t status) {
     struct task_t* task = get_current();
     task->status = ZOMBIE;
-    for (uint64_t i = 0; i < task->pages_now; i++) {
+    for (uint64_t i = 0; i < task->pages_now - 1; i++) {
         page_free(&pages[task->pages[i]]);
     }
-    struct page_t* tmp_page = page_alloc();
     print_s("Exited with status code: ");
     print_i(status);
     print_s("\n");

@@ -70,7 +70,6 @@ void stack_mapping(struct task_t* task, struct page_t* stack_page) {
     *(pmd + (sp << (63 - 29) >> (63 - 29) >> 21)) = (uint64_t)pte | PD_TABLE;
     *(pte + (sp << (63 - 20) >> (63 - 20) >> 12)) =
         (uint64_t)(stack_page->content) | PD_TABLE | PD_ACCESS;
-    asm("stack:");
 }
 
 void move_ttbr(uint64_t* pgd) { asm volatile("msr ttbr0_el1, x0"); }

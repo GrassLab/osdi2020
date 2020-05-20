@@ -20,10 +20,10 @@ kernel8.img: kernel8.elf
 kernel8.elf: $(S_OBJS) linker.ld $(C_OBJS) rd prog
 	$(LD) -T linker.ld -o kernel8.elf $(S_OBJS) $(C_OBJS) rd prog
 
-src/user/user.o: user/user.c
+user/user.o: user/user.c
 	$(CC) $(CFLAGS) -fno-zero-initialized-in-bss -c user/user.c -o user/user.o
 
-src/user/user_lib.o: user/user_lib.S
+user/user_lib.o: user/user_lib.S
 	$(CC) $(CFLAGS) -c user/user_lib.S -o user/user_lib.o
 
 rd: user/user.o user/user_lib.o
@@ -41,7 +41,7 @@ $(BDIR)/%.asmo: $(SDIR)/%.S
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img
+	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img rd prog user/user.o user/user_lib.o
 
 run: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio
