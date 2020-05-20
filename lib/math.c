@@ -38,7 +38,7 @@ uint64_t mask_0_in_bit ( uint64_t n, uint64_t d )
 
     for ( i = 15; i >= 0; i-- )
     {
-        if ( i == d / 4 )
+        if ( (uint64_t) i == d / 4 )
         {
             zero = d % 4;
 

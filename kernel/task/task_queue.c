@@ -1,10 +1,10 @@
 #include "task_queue.h"
 
+#include "kernel/memory/mem.h"
 #include "kernel/peripherals/uart.h"
 
 #include "lib/type.h"
 
-#include "mem.h"
 #include "task.h"
 
 thread_info_t * QUEUE[NUM_THREADS - 1]; /* there is one are used for idle task */

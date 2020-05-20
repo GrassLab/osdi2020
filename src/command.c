@@ -5,7 +5,7 @@
 
 void input_buffer_overflow_message ( char cmd[] )
 {
-    printf ( "Follow Command: \"%s\"... is too long to process.\n" );
+    printf ( "Follow Command: \"%s\"... is too long to process.\n", cmd );
     printf ( "The maximum length of input is 64." );
 }
 
@@ -42,7 +42,7 @@ void command_timestamp ( )
 
 void command_not_found ( char * s )
 {
-    printf ( "Err: command %s not found, try <help>\n" );
+    printf ( "Err: command %s not found, try <help>\n", s );
 }
 /*
 void command_reboot ( )

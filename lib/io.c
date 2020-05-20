@@ -170,8 +170,8 @@ char * gets ( char * str )
 
 void buffer_enqueue ( const char * str )
 {
-    static char buffer[4096];
-    static int buffer_count = 0;
+    static char buffer[4096] = { 0 };
+    static int buffer_count  = 0;
 
     int current_str_output = 0;
 

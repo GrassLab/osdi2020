@@ -5,7 +5,6 @@
 
 #include "command.h"
 
-
 void shell_start ( )
 {
     // int buffer_counter = 0;
@@ -58,9 +57,9 @@ void shell_start ( )
     }
 }
 
-enum SPECIAL_CHARACTER parse ( char c )
+enum SPECIAL_CHARACTER parse ( signed char c )
 {
-    if ( !( c < 128 && c >= 0 ) )
+    if ( c < 0 )
         return UNKNOWN;
 
     if ( c == BACK_SPACE )

@@ -2,10 +2,9 @@
 #define __SUS_MEM_H
 
 #include "kernel/peripherals/gpio.h"
+#include "kernel/task/task.h"
 
 #include "lib/type.h"
-
-#include "task.h"
 
 #define KERNEL_STACK_SIZE ( 1 << 13 ) /* 8K bytes */
 #define USER_STACK_SIZE   ( 1 << 22 ) /* 4M bytes */
@@ -32,6 +31,9 @@ typedef struct
     int user_space_index;
 
 } pcb_t;
+
+// defined in mem.S
+extern void memzero ( void * addr, uint64_t size );
 
 pcb_t * allocate_pcb ( );
 void release_pcb ( pcb_t * );
