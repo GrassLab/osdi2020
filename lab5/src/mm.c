@@ -8,6 +8,20 @@ static unsigned short mem_map[PAGING_PAGES] = {
     0,
 };
 
+
+unsigned long va2phys(unsigned long v) {
+  /* Kernel virtual address : 0xffff000012345678 */
+  /* Physical address       : 0x0000000012345678 */
+  /*                            |___________| */
+  /*                                 PFN */
+  /* PFN                    : 0x0000000000012345 */
+  /* page descriptor        : struct page[0x12345] */
+
+  unsigned long pfn = (v & ~VA_START) >> PAGE_SHIFT;
+  unsigned long off = v & 0xFFF;
+  return pfn * PAGE_SIZE | off;
+}
+
 unsigned long physical2pfn(unsigned long p) { return p >> 12; }
 
 /* reserve 1 memory page & return */

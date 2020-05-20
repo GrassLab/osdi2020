@@ -48,6 +48,7 @@
 
 extern int remain_page;
 
+unsigned long va2phys(unsigned long v);
 unsigned long get_free_page();
 void free_page(unsigned long p);
 void map_page(struct task_struct *task, unsigned long va, unsigned long page);

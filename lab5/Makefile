@@ -46,3 +46,6 @@ rd: user/user.o user/user_lib_s.o user/user_lib_c.o
 
 stdio: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel $< -serial null -serial stdio -display none
+
+gdb: kernel8.img
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s

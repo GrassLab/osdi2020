@@ -50,6 +50,9 @@ void zombie_reaper() {
           free_page(p->mm.kernel_pages[i]);
         }
 
+        /* free the task */
+        free_page(va2phys((unsigned long)p));
+
         task[p->pid] = 0;
         nr_tasks--;
       }
