@@ -62,6 +62,7 @@ uint64_t task_user_get_current_task_id(void);
 void task_test1(void);
 void task_test2(void);
 void task_test3(void);
+void task_shell(void);
 void task_do_exec(uint64_t * start, uint64_t size);
 uint64_t task_get_current_task_signal(void);
 void task_start_waiting(void);
@@ -70,12 +71,16 @@ void task_guard_section(void);
 void task_unguard_section(void);
 int task_is_guarded(void);
 
+extern unsigned mmu_page_used;
+
 extern char _binary_test1_bin_start;
 extern char _binary_test1_bin_end;
 extern char _binary_test2_bin_start;
 extern char _binary_test2_bin_end;
 extern char _binary_test3_bin_start;
 extern char _binary_test3_bin_end;
+extern char _binary_shell_bin_start;
+extern char _binary_shell_bin_end;
 
 #endif
 

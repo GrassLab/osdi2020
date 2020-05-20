@@ -1,3 +1,4 @@
+#include <stdint.h>
 #ifndef __STRING_UTIL_H__
 #define __STRING_UTIL_H__
 
