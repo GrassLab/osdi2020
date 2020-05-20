@@ -7,6 +7,7 @@
 struct command cmds[] = {
   { "help", "Print the helping message\n", help },
   { "test1", "Test fork functionality\n", test_command1 },
+  { "test2", "Test page fault\n", test_command2 },
   { "test3", "Test page reclaim\n", test_command3 },
   { NULL, NULL, NULL }
 };
@@ -33,6 +34,15 @@ void test_command1(void) {
     }
     // all childs exit
     exit(0);
+  }
+}
+
+void test_command2() {
+  if(fork() == 0) {
+    // a non-mapped address.
+    int *a = (int *)0xffff000000000000;
+    // trigger simple page fault, child will die here.
+    printf("%x\n", *a);
   }
 }
 
