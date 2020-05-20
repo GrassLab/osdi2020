@@ -7,6 +7,7 @@
 /* 1gb = 2MB * 512 = 4KB * 262144 */
 /* Use 8MB (2048 * 4KB) for now */
 static struct page_struct mmu_page[PAGE_TOTAL];
+unsigned mmu_page_used = 0;
 
 static struct user_space_page_struct user_space_mm;
 
@@ -84,6 +85,15 @@ uint64_t * mmu_page_allocate(int zero)
         memzero_8byte(va, PAGE_SIZE / 8);
       }
       SET_BIT(mmu_page[current_pfn].flag, PAGE_USED);
+      ++mmu_page_used;
+#ifdef DEBUG
+      char string_buff[0x20];
+
+      uart_puts(ANSI_MAGENTA"[Page] "ANSI_RESET"Create: ");
+      string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
+      uart_puts(string_buff);
+      uart_puts("\n");
+#endif
       return pa;
     }
   }
@@ -92,8 +102,16 @@ uint64_t * mmu_page_allocate(int zero)
 
 void mmu_page_free(uint64_t * va)
 {
-
   CLEAR_BIT(mmu_page[MMU_VA_TO_PFN(((uint64_t)va))].flag, PAGE_USED);
+  --mmu_page_used;
+#ifdef DEBUG
+  char string_buff[0x20];
+
+  uart_puts(ANSI_MAGENTA"[Page] "ANSI_RESET"Free: ");
+  string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
+  uart_puts(string_buff);
+  uart_puts("\n");
+#endif
   return;
 }
 
@@ -218,6 +236,21 @@ void mmu_copy_user_text_stack(struct user_space_mm_struct * src_mm_struct, struc
   memcopy((char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((src_mm_struct -> pte_stack_base) + 510))) & MMU_ADDR_MASK)),
           (char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((dst_mm_struct -> pte_stack_base) + 510))) & MMU_ADDR_MASK)),
           PAGE_4K);
+  return;
+}
+
+void mmu_reclaim_user_pages(struct user_space_mm_struct * mm_struct)
+{
+  for(int pd_idx = 0; pd_idx < 6; ++pd_idx)
+  {
+    mmu_page_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) & MMU_ADDR_MASK)));
+  }
+  mmu_page_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509))) & MMU_ADDR_MASK)));
+  mmu_page_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510))) & MMU_ADDR_MASK)));
+
+  mmu_page_free(MMU_PA_TO_VA(mm_struct -> pte_text_base));
+  mmu_page_free(MMU_PA_TO_VA(mm_struct -> pte_stack_base));
+
   return;
 }
 

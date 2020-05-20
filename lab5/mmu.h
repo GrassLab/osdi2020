@@ -135,6 +135,7 @@ void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct);
 void mmu_user_task_set_pmd(struct user_space_mm_struct * mm_struct);
 void mmu_copy_user_to_text(char * src, struct user_space_mm_struct * dst_mm_struct, unsigned size);
 void mmu_copy_user_text_stack(struct user_space_mm_struct * src_mm_struct, struct user_space_mm_struct * dst_mm_struct);
+void mmu_reclaim_user_pages(struct user_space_mm_struct * mm_struct);
 
 #endif /* __ASSEMBLER__ */
 

@@ -137,8 +137,14 @@ int sys_exit(int status)
   UNUSED(status);
   uint64_t current_task_id = task_get_current_task_id();
   task_guard_section();
-  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 1);
+
+  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_ZOMBIE);
   ++schedule_zombie_count;
+
+  /* reclaim pages */
+  mmu_reclaim_user_pages(&(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].user_space_mm));
+  CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_USER_SPACE);
+
   task_unguard_section();
   schedule_yield();
   return 0;
