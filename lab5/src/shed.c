@@ -386,12 +386,12 @@ void update_task_counter(){
 void set_pgd(unsigned long pgd)
 {
     // upper half, user space
-    asm volatile("dsb ish");
+    asm volatile("dsb ish"); // ensure write has completed
     asm volatile("isb");
-    asm volatile("msr ttbr1_el1, %0"
+    asm volatile("msr ttbr1_el1, %0"  // switch translation based address.
                  :: "r"((unsigned long)(pgd)));
 
-    asm volatile("tlbi vmalle1is");
-    asm volatile("dsb ish");
-    asm volatile("isb");
+    asm volatile("tlbi vmalle1is"); // invalidate all TLB entries
+    asm volatile("dsb ish");        // ensure completion of TLB invalidatation
+    asm volatile("isb");            // clear pipeline
 }

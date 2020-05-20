@@ -3,8 +3,8 @@
 int main()
 {	
     call_sys_write("User Program:\n");
-    
-    while(5){
+    int a =5;
+    while(a--){
         char in = call_sys_read();
         call_sys_write_char(in);
     }

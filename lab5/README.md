@@ -35,6 +35,9 @@ page size 2^12 =  4096
 
 ## Requirement 3
  - [x] `required 3-1` Implement user space paging.
+ - [x] `required 3-2` Implement shell as an user program and use objcopy to turn the ELF file into a raw binary..
+ - [x] `required 3-2` Set TTBR0_EL1 to switch between different address space when context switch.
+
 
 ## Requirement 4
 
