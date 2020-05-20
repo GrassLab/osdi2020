@@ -1,3 +1,4 @@
+#include "mmu.h"
 #ifndef __TASK_H__
 #define __TASK_H__
 
@@ -9,6 +10,7 @@
 #define TASK_STATE_ZOMBIE 1
 #define TASK_STATE_WAIT 2
 #define TASK_STATE_GUARD 3
+#define TASK_STATE_USER_SPACE 4
 
 #define TASK_PRIORITY_LOW 0u
 #define TASK_PRIORITY_HIGH 1u
@@ -45,9 +47,11 @@ struct task_struct
   /* bit 1 -> zombie */
   /* bit 2 -> wait state */
   /* bit 3 -> critical section */
+  /* bit 4 -> has user space */
   uint64_t flag;
   uint64_t signal;
   uint64_t priority;
+  struct user_space_mm_struct user_space_mm;
   struct cpu_context_struct cpu_context;
 };
 

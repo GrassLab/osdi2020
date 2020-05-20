@@ -66,6 +66,7 @@ int sys_uart_gets(char * string, char delimiter, unsigned length)
 
 int sys_exec_todo(void(*start_func)())
 {
+  UNUSED(start_func);
   //task_do_exec(start_func);
   return 0;
 }
@@ -77,6 +78,12 @@ int sys_fork(struct trapframe_struct * trapframe)
   task_guard_section();
   /* new task should return to exception handler context restoration */
   uint64_t new_task_id = task_privilege_task_create(__sys_fork_child_entry, (unsigned)kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].priority);
+
+  /* create user space va */
+  mmu_create_user_pmd_pte(&(kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].user_space_mm));
+
+  /* Ask scheduler to switch pmd because it use user space */
+  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].flag, TASK_STATE_USER_SPACE);
 
   /* new task will use context switch to restore */
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.x19 = trapframe -> x19;
@@ -108,8 +115,7 @@ int sys_fork(struct trapframe_struct * trapframe)
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp_el0 = trapframe -> sp_el0;
 
   /* copy user task text and stack */
-  /* TODO */
-  mmu_copy_user_text_stack(TASK_ID_TO_IDX(current_task_id), TASK_ID_TO_IDX(new_task_id));
+  mmu_copy_user_text_stack(&(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].user_space_mm), &(kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].user_space_mm));
 
   /* child should get 0 on fork return */
   /* NOTE: EFFECTED BY trap dispatcher */

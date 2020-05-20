@@ -127,12 +127,19 @@ void task_do_exec(uint64_t * start, uint64_t size)
   /* CAUTION: kernel stack may explode if you keep doing exec */
 
   uint64_t current_task_id = task_get_current_task_id();
+  struct user_space_mm_struct * current_user_mm_struct = &(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].user_space_mm);
+
+  /* Ask scheduler to switch pmd because it use user space */
+  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_USER_SPACE);
+
+  /* create user space va */
+  mmu_create_user_pmd_pte(current_user_mm_struct);
 
   /* setup pmc */
-  uint64_t * user_page_frame_start = mmu_user_task_set_pmu(TASK_ID_TO_IDX(current_task_id));
+  mmu_user_task_set_pmd(current_user_mm_struct);
 
   /* copy memory to physical page frame */
-  memcopy((char *)start, (char *)user_page_frame_start, (unsigned)size);
+  mmu_copy_user_to_text((char *) start, current_user_mm_struct, (unsigned)size);
 
   /* setup register and eret */
   asm volatile(

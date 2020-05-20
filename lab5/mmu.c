@@ -4,7 +4,8 @@
 #include "mmu.h"
 #include "uart.h"
 
-/* 1gb = 2MB * 512 */
+/* 1gb = 2MB * 512 = 4KB * 262144 */
+/* Use 8MB (2048 * 4KB) for now */
 static struct page_struct mmu_page[PAGE_TOTAL];
 
 static struct user_space_page_struct user_space_mm;
@@ -50,43 +51,37 @@ void mmu_ttbrx_el1_init(void)
 
 void mmu_page_init(void)
 {
-  /* each page is 2MB 0x200000 */
-  /* PGD, PUD, PMD is occupy 0x0 - 0x2FFF */
+  /* each page is 4KB 0x1000 */
+  /* PGD, PUD, PMD occupy 0x0 - 0x2FFF */
   /* initial kernel stack 0x8000 */
   /* kernel8.img loads at 0x80000, kernel size is approx. 30KB+ */
-  SET_BIT(mmu_page[0].flag, PAGE_USED);
 
   /* peripheral(0x3F000000 - 0x3FFFFFFF) */
   /* 0x3F000000 / 0x200000 = 504 */
   /* the rest are unused */
 
-  for(unsigned page_idx = PAGE_PFN_LOW; page_idx < PAGE_PFN_HIGH; ++page_idx)
+  for(unsigned page_idx = 0; page_idx < PAGE_TOTAL; ++page_idx)
   {
     CLEAR_BIT(mmu_page[page_idx].flag, PAGE_USED);
   }
 
-  for(unsigned page_idx = PAGE_PFN_HIGH; page_idx < PAGE_TOTAL; ++page_idx)
-  {
-    SET_BIT(mmu_page[page_idx].flag, PAGE_USED);
-  }
+  mmu_user_page_table_init();
 
-  /* allocate page for user space page tables frame */
-  user_space_mm.page_table_base = mmu_page_allocate();
-  user_space_mm.page_frame_base = mmu_page_allocate();
-  mmu_create_user_page_table_32KB();
   return;
 }
 
 uint64_t * mmu_page_allocate(void)
 {
-  for(unsigned current_pfn = PAGE_PFN_LOW; current_pfn < PAGE_PFN_HIGH; ++current_pfn)
+  for(unsigned current_pfn = 0; current_pfn < PAGE_TOTAL; ++current_pfn)
   {
     if(!CHECK_BIT(mmu_page[current_pfn].flag, PAGE_USED))
     {
-      uint64_t * va = (uint64_t *)MMU_PFN_TO_VA(current_pfn);
+      /* uint64_t is 8 byte */
+      uint64_t * pa = (uint64_t *)((uint64_t)(MMU_PAGE_BASE + current_pfn * PAGE_4K));
+      uint64_t * va = MMU_PA_TO_VA(pa);
       memzero((char *)va, PAGE_SIZE);
       SET_BIT(mmu_page[current_pfn].flag, PAGE_USED);
-      return va;
+      return pa;
     }
   }
   return 0x0;
@@ -99,7 +94,7 @@ void mmu_page_free(uint64_t * va)
   return;
 }
 
-void mmu_create_user_page_table_32KB(void)
+void mmu_user_page_table_init(void)
 {
   /* 2MB = 64 * 32kb */
 
@@ -133,75 +128,94 @@ void mmu_create_user_page_table_32KB(void)
   /* total frame: 1PGD, 1PUD, 1PMD, 64 * 2 PTE */
 
   /* setup 1 PGD */
-  user_space_mm.pgd_base = user_space_mm.page_table_base;
-  user_space_mm.pud_base = user_space_mm.pgd_base + 512;
+  user_space_mm.pgd_base = mmu_page_allocate();
+  user_space_mm.pud_base = mmu_page_allocate();
 
   *user_space_mm.pgd_base = PD_ACCESS | ((uint64_t)(user_space_mm.pud_base)) | PD_TABLE;
 
   *(user_space_mm.pgd_base + 511) = PD_ACCESS | ((uint64_t)(user_space_mm.pud_base + 511)) | PD_TABLE;
 
   /* setup 1 PUD */
-  user_space_mm.pmd_text_base = user_space_mm.pud_base + 512;
+  user_space_mm.pmd_text_base = mmu_page_allocate();
   user_space_mm.pmd_stack_base = user_space_mm.pmd_text_base + 511;
 
   *(user_space_mm.pud_base) = PD_ACCESS | ((uint64_t)(user_space_mm.pmd_text_base)) | PD_TABLE;
   *(user_space_mm.pud_base + 511) = PD_ACCESS | ((uint64_t)(user_space_mm.pmd_stack_base)) | PD_TABLE;
 
-  /* PMD will be decide based on task id */
+  /* PMD and PTE will be decide based on task id */
 
-  /* setup PTE for all task */
-  for(unsigned task_idx = 0; task_idx < TASK_POOL_SIZE; ++task_idx)
-  {
-    if(task_idx == 0)
-    {
-      user_space_mm.pte_text_base[0] = user_space_mm.pmd_text_base + 512;
-      user_space_mm.pte_stack_base[0] = user_space_mm.pmd_text_base + 512 * 2;
-    }
-    else
-    {
-      user_space_mm.pte_text_base[task_idx] = user_space_mm.pte_text_base[task_idx - 1] + 512 * 2;
-      user_space_mm.pte_stack_base[task_idx] = user_space_mm.pte_stack_base[task_idx - 1] + 512 * 2;
-    }
-
-    /* 32KB = 6(uint64_t) * 4KB + 2(uint64_t) * 4KB*/
-    /* text & stack */
-    user_space_mm.user_space_text_pa_base[task_idx] = user_space_mm.page_frame_base + task_idx * 512 * 8;
-
-    /* setup pte_text_base, 7 descriptor */
-    for(unsigned page_descriptor_idx = 0; page_descriptor_idx < 6; ++page_descriptor_idx)
-    {
-      *(user_space_mm.pte_text_base[task_idx] + page_descriptor_idx) = PD_ACCESS | ((uint64_t)(user_space_mm.user_space_text_pa_base[task_idx] + 512 * page_descriptor_idx)) | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
-    }
-
-    /* setup pte_stack_base, 2 descriptor */
-    *(user_space_mm.pte_stack_base[task_idx] + 509) = PD_ACCESS | ((uint64_t)(user_space_mm.user_space_text_pa_base[task_idx] + 512 * 6)) | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
-    *(user_space_mm.pte_stack_base[task_idx] + 510) = PD_ACCESS | ((uint64_t)(user_space_mm.user_space_text_pa_base[task_idx] + 512 * 7)) | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
-  }
-
-  /* after this kernel cannot to access physical memory directly without add VA_BASE to address */
   asm volatile(
       "mov x0, %0\n"
       "msr ttbr0_el1, x0\n"
-      : : "r"(user_space_mm.page_table_base));
+      : : "r"(user_space_mm.pgd_base));
   return;
 }
 
-uint64_t * mmu_user_task_set_pmu(uint64_t idx)
+void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct)
 {
-  *MMU_PA_TO_VA(user_space_mm.pmd_text_base) = PD_ACCESS | (uint64_t)user_space_mm.pte_text_base[idx] | PD_TABLE;
-  *MMU_PA_TO_VA(user_space_mm.pmd_stack_base) = PD_ACCESS | (uint64_t)user_space_mm.pte_stack_base[idx] | PD_TABLE;
+  /* 24kb for .text, 8kb for stack */
+
+  /* setup PTE for .text */
+  mm_struct -> pte_text_base = mmu_page_allocate();
+  mm_struct -> pte_stack_base = mmu_page_allocate();
+
+  for(unsigned pd_idx = 0; pd_idx < 6; ++pd_idx)
+  {
+   *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) = (uint64_t)mmu_page_allocate() | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+  }
+
+ *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))) = (uint64_t)mmu_page_allocate() | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+ *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))) = (uint64_t)mmu_page_allocate() | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+
+}
+
+void mmu_user_task_set_pmd(struct user_space_mm_struct * mm_struct)
+{
+  *MMU_PA_TO_VA(user_space_mm.pmd_text_base) = PD_ACCESS | (uint64_t)(mm_struct -> pte_text_base) | PD_TABLE;
+  *MMU_PA_TO_VA(user_space_mm.pmd_stack_base) = PD_ACCESS | (uint64_t)(mm_struct -> pte_stack_base) | PD_TABLE;
   asm volatile(
       "dsb ish\n"
       "tlbi vmalle1is\n"
       "dsb ish\n"
       "isb\n"
       );
-  return MMU_PA_TO_VA(user_space_mm.user_space_text_pa_base[idx]);
+
+  return;
 }
 
-void mmu_copy_user_text_stack(uint64_t src_idx, uint64_t new_idx)
+void mmu_copy_user_to_text(char * src, struct user_space_mm_struct * dst_mm_struct, unsigned size)
 {
-  /* 32KB = 0x8000 bytes, include text and stack */
-  memcopy((char*)MMU_PA_TO_VA(user_space_mm.user_space_text_pa_base[src_idx]), (char *)MMU_PA_TO_VA(user_space_mm.user_space_text_pa_base[new_idx]), 0x8000);
+  unsigned current_size = size;
+  for(unsigned pd_idx = 0; pd_idx < 6; ++pd_idx)
+  {
+    char * dst = (char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((dst_mm_struct -> pte_text_base) + pd_idx))) & MMU_ADDR_MASK));
+
+    memcopy(src + (PAGE_4K * pd_idx), dst, (current_size % PAGE_4K) != 0 ? current_size % PAGE_4K : PAGE_4K);
+    if(current_size < PAGE_4K)
+    {
+      break;
+    }
+    current_size -= PAGE_4K;
+  }
+  return;
+}
+
+void mmu_copy_user_text_stack(struct user_space_mm_struct * src_mm_struct, struct user_space_mm_struct * dst_mm_struct)
+{
+  /* copy .text */
+  for(unsigned pd_idx = 0; pd_idx < 6; ++pd_idx)
+  {
+    memcopy((char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((src_mm_struct -> pte_text_base) + pd_idx))) & MMU_ADDR_MASK)),
+            (char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((dst_mm_struct -> pte_text_base) + pd_idx))) & MMU_ADDR_MASK)),
+            PAGE_4K);
+  }
+  /* copy stack */
+  memcopy((char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((src_mm_struct -> pte_stack_base) + 509))) & MMU_ADDR_MASK)),
+          (char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((dst_mm_struct -> pte_stack_base) + 509))) & MMU_ADDR_MASK)),
+          PAGE_4K);
+  memcopy((char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((src_mm_struct -> pte_stack_base) + 510))) & MMU_ADDR_MASK)),
+          (char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((dst_mm_struct -> pte_stack_base) + 510))) & MMU_ADDR_MASK)),
+          PAGE_4K);
+  return;
 }
 

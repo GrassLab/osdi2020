@@ -72,7 +72,6 @@ RW:
 #ifndef __ASSEMBLER__
 
 #include <stdint.h>
-#include "task.h"
 
 #define PAGE_SIZE (1 << 21) /* 2mb */
 #define PAGE_4K (1 << 12)
@@ -90,7 +89,8 @@ RW:
 #define PUD_FRAME_BASE ((uint64_t *)0x1000u)
 #define PMD_FRAME_BASE ((uint64_t *)0x2000u)
 
-#define PAGE_TOTAL 512
+#define PAGE_TOTAL 0x800
+#define MMU_PAGE_BASE 0x200000
 #define PAGE_PFN_LOW 1
 #define PAGE_PFN_HIGH 504 /* exclusive, for loop */
 
@@ -98,12 +98,11 @@ RW:
 
 #define USER_STACK_VA 0x0000ffffffffe000
 
-/* select [29:21] */
-#define MMU_VA_TO_PFN(va) ((va & 0x3fe00000uLL) >> 21)
-#define MMU_VA_TO_PA(va) (va & 0x3fffffff)
-#define MMU_PFN_TO_VA(pfn) (((uint64_t)pfn) << 21)
+#define MMU_ADDR_MASK 0xfffffffffffff000uLL
+#define MMU_VA_TO_PA(va) (va & 0x0000fffffffff000uLL)
+#define MMU_VA_TO_PFN(va) (MMU_VA_TO_PA(va) >> 12)
 #define MMU_PA_TO_VA(pa) ((uint64_t *)((uint64_t)pa | 0xffff000000000000))
-#define MMU_VA_TO_USER_VA(va) ((uint64_t *)((uint64_t)va & 0x0000ffffffffffff))
+#define MMU_PFN_TO_PA(pfn) (((uint64_t)pfn) << 12)
 
 struct page_struct
 {
@@ -113,27 +112,29 @@ struct page_struct
 
 struct user_space_page_struct
 {
-  uint64_t * page_table_base;
-  uint64_t * page_frame_base;
-
   uint64_t * pgd_base;
 
   uint64_t * pud_base;
 
   uint64_t * pmd_text_base;
   uint64_t * pmd_stack_base;
-  uint64_t * pte_text_base[TASK_POOL_SIZE];
-  uint64_t * pte_stack_base[TASK_POOL_SIZE];
-  uint64_t * user_space_text_pa_base[TASK_POOL_SIZE];
+};
+
+struct user_space_mm_struct
+{
+  uint64_t * pte_text_base;
+  uint64_t * pte_stack_base;
 };
 
 void mmu_ttbrx_el1_init(void);
 void mmu_page_init(void);
 uint64_t * mmu_page_allocate(void);
 void mmu_page_free(uint64_t * va);
-void mmu_create_user_page_table_32KB(void);
-uint64_t * mmu_user_task_set_pmu(uint64_t idx);
-void mmu_copy_user_text_stack(uint64_t src_idx, uint64_t new_idx);
+void mmu_user_page_table_init(void);
+void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct);
+void mmu_user_task_set_pmd(struct user_space_mm_struct * mm_struct);
+void mmu_copy_user_to_text(char * src, struct user_space_mm_struct * dst_mm_struct, unsigned size);
+void mmu_copy_user_text_stack(struct user_space_mm_struct * src_mm_struct, struct user_space_mm_struct * dst_mm_struct);
 
 #endif /* __ASSEMBLER__ */
 
