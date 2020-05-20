@@ -19,8 +19,8 @@ run_init_task:
     bl      set_thread_const_couner
 
     # create main
-    ldr      x0,     =main      // where the acutally main is
-    bl      task_create         // create "main" task
+    ldr      x0,     =kernel_testing_main   // where the acutally main is
+    bl      task_create                     // create "main" task
 
     # start from init, which will start to scheduling
     bl      launch_init  

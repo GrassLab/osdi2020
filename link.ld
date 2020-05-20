@@ -22,7 +22,7 @@ SECTIONS
         
         _PGD_START = .;
         
-        .data.pgd : { . += (3 * (1 << 12)); }   /* where to store page table */
+        .data.pgd : { . += (3 * (1 << 12)); }   /* where to store kernel page table */
 
     _kernel_end = .;
 

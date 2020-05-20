@@ -7,19 +7,31 @@ EMULATOR	= qemu-system-aarch64
 CFLAGS 		= -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -Werror -Wextra
 INCLUDE_FLG = -Iinclude -I. -Ilib
 
-BUILD_DIR   = build
-DEBUG_DIR   = debug
-LINK_SCRIPT = link.ld
-ELF_ELE  	= $(BUILD_DIR)/kernel8.elf
+BUILD_DIR			= build
+KERNEL_BUILD_DIR   	= $(BUILD_DIR)/kernel
+USER_BUILD_DIR		= $(BUILD_DIR)/user
+DEBUG_DIR   		= debug
 
-SRCS 		= $(wildcard kernel/*/*.c) $(wildcard lib/*.c) $(wildcard src/*.c)
-ASMS		= $(wildcard kernel/*/*.S) $(wildcard kernel/*.S) $(wildcard lib/*.S)
-SRC_OBJS 	= $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRCS))
-ASM_OBJS	= $(patsubst %.S, $(BUILD_DIR)/%.S.o, $(ASMS))
+KERNEL_LINKER 	= link.ld
+USER_LINKER   	= user_linker.ld
+KERNEL_ELF		= $(BUILD_DIR)/kernel8.elf
+USER_ELF		= $(BUILD_DIR)/user.elf 
+USER_IMAGE		= $(BUILD_DIR)/user.img
+USER_BINARY		= $(BUILD_DIR)/user.bin 
 
-ALL_OBJS	= $(SRC_OBJS) $(ASM_OBJS)
+USER_SRCS	= $(wildcard src/*.c) $(wildcard lib/*.c)
+USER_ASMS   = $(wildcard lib/*.S)
+USER_SRC_OBJS = $(patsubst %.c, $(USER_BUILD_DIR)/%.o, $(USER_SRCS))
+USER_ASM_OBJS = $(patsubst %.S, $(USER_BUILD_DIR)/%.S.o, $(USER_ASMS))
+USER_OBJS   = $(USER_SRC_OBJS) $(USER_ASM_OBJS)
 
-.PHONY: all clean run force
+KERNEL_SRCS = $(wildcard kernel/*.c) $(wildcard kernel/*/*.c) $(wildcard lib/*.c)
+KERNEL_ASMS	= $(wildcard kernel/*.S) $(wildcard kernel/*/*.S) $(wildcard lib/*.S)
+KERNEL_SRC_OBJS = $(patsubst %.c, $(KERNEL_BUILD_DIR)/%.o, $(KERNEL_SRCS))
+KERNEL_ASM_OBJS = $(patsubst %.S, $(KERNEL_BUILD_DIR)/%.S.o, $(KERNEL_ASMS))
+KERNEL_OBJS = $(KERNEL_SRC_OBJS) $(KERNEL_ASM_OBJS)
+
+.PHONY: all clean run force generate_symbol_asm
 
 all: kernel8.img
 force: clean kernel8.img
@@ -28,31 +40,45 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@rm -rf $(DEBUG_DIR)
 
-kernel8.img: $(ELF_ELE) 
-	$(OBJ_CPY) -O binary $^ $@
+kernel8.img: $(KERNEL_ELF) generate_symbol_asm
+	$(OBJ_CPY) -O binary $< $@
 
-$(ELF_ELE) : $(ALL_OBJS)
-	$(LD) -nostdlib -nostartfiles $^ -T $(LINK_SCRIPT) -o $@
+$(KERNEL_ELF) : $(KERNEL_OBJS) $(USER_BINARY)
+	$(LD) -nostdlib -nostartfiles  -T $(KERNEL_LINKER) $^ -o $@
 
-$(BUILD_DIR)/%.S.o: %.S
+$(KERNEL_BUILD_DIR)/%.S.o: %.S
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE_FLG) -c $< -o $@
 
-$(BUILD_DIR)/%.o: %.c
+$(KERNEL_BUILD_DIR)/%.o: %.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE_FLG) -c $< -o $@
+
+$(USER_BUILD_DIR)/%.S.o: %.S
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -fno-zero-initialized-in-bss $(INCLUDE_FLG) -c $< -o $@
+
+$(USER_BUILD_DIR)/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -fno-zero-initialized-in-bss $(INCLUDE_FLG) -c $< -o $@
+
+$(USER_BINARY): $(USER_OBJS)
+	$(LD) -T $(USER_LINKER) -o $(USER_ELF) $^
+	$(OBJ_CPY) $(USER_ELF) -O binary $(USER_IMAGE)
+	$(LD) -r -b binary $(USER_IMAGE) -o $@
 
 run: kernel8.img
 	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio
 
-link: $(ALL_OBJS)
-	$(LD) -T $(LINK_SCRIPT) -o $(ELF_ELE) $^
-	$(OBJ_CPY) $(ELF_ELE) -O binary kernel8.img
+generate_symbol_asm:
+	@rm -rf $(DEBUG_DIR)
+	@mkdir $(DEBUG_DIR)
+	readelf --all $(KERNEL_ELF) > $(DEBUG_DIR)/kernel_symbol
+	readelf --all $(USER_ELF) > $(DEBUG_DIR)/user_symbol
+	$(OBJ_DUMP) -d $(KERNEL_ELF)  > $(DEBUG_DIR)/kernel_asm
+	$(OBJ_DUMP) -d $(USER_ELF)  > $(DEBUG_DIR)/user_asm
 
 debug: CFLAGS += -ggdb3 -Og
 
-debug: clean kernel8.img
-	@mkdir $(DEBUG_DIR)
-	readelf --all $(ELF_ELE) > $(DEBUG_DIR)/symbol
-	$(OBJ_DUMP) -d $(ELF_ELE)  > $(DEBUG_DIR)/asm
+debug: clean kernel8.img generate_symbol_asm
 	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio -s -S
