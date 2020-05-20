@@ -3,13 +3,16 @@
 
 int main(void)
 {
-  char ann[] = ANSI_CYAN"[User test command 3] "ANSI_RESET;
-  while(1)
+  char ann[0x40] = ANSI_CYAN"[User test command 3] Page used: "ANSI_RESET;
+  for(int print_iter = 0; print_iter < 15; ++print_iter)
   {
     /* qemu */
-    for(int i = 0; i < 800000; ++i);
+    //for(int i = 0; i < 100000000; ++i);
+    /* pi */
+    for(int i = 0; i < 1000000; ++i);
     syscall_uart_puts(ann);
-    syscall_uart_puts("Hi\n");
+    syscall_print_mmu_page_used();
+    syscall_uart_puts("\n");
   }
   return 0;
 }

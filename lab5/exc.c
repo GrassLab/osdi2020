@@ -128,6 +128,9 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
   case SYS_SIGNAL:
     sys_signal((int)trapframe -> x1, (int)trapframe -> x2);
     break;
+  case SYS_PRINT_MMU_PAGE:
+    sys_print_mmu_page_used();
+    break;
   default:
     uart_puts("Unhandled svc immediate value\n");
     break;
