@@ -95,5 +95,6 @@ void kernel_process();
 Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long p);
 void do_exec(unsigned long);
 int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc);
+Task *find_task(unsigned long pid);
 #endif
 #endif

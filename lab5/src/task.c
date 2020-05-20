@@ -59,6 +59,13 @@ void preempt_disable() {
 //  return -1;
 //}
 
+Task *find_task(unsigned long pid){
+  for(int i = 0; i < TASK_SIZE; i++)
+      if(tasks[i] && tasks[i]->pid == pid)
+        return tasks[i];
+  return 0;
+}
+
 #define THREAD_SIZE 4096
 void *task_pt_regs(Task *tsk) {
   return (void *)(tsk + THREAD_SIZE - sizeof(struct pt_regs));

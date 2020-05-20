@@ -87,14 +87,17 @@ void mmaps(){ // test multiple mmaps
         mmap(NULL, 4096, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, -1, 0);
       }
     }
+    printf("[done] task id is [%d]" NEWLINE, call_sys_task_id());
     while(1); // hang to let shell see the mapped regions
   }
 }
 
 void mmap_unalign(){
   if(fork() == 0) {
-    printf("0x%x", mmap((void*)0x12345678, 0x1fff, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, -1, 0)); // should be a page aligned address A and region should be A - A +0x2000
+    // 0x12345678 0x1fff exceed limit
+    printf("0x%x", mmap((void*)0x4999, 0x1fff, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, -1, 0)); // should be a page aligned address A and region should be A - A +0x2000
     while(1); // hang to let shell see the mapped regions
+    printf("[done] task id is [%d]" NEWLINE, call_sys_task_id());
   }
 }
 

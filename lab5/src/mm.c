@@ -5,6 +5,7 @@
 #include "syscall.h"
 
 extern Task *current_task;
+#define DemandPaging 0
 #undef PAGING_PAGES
 #define PAGING_PAGES (1024 * 64)
 Page mpages[PAGING_PAGES] = {[0 ... PAGING_PAGES - 1] = {empty} };
@@ -41,7 +42,6 @@ unsigned long get_free_page()
       mpages[i].status = used;
       unsigned long page = LOW_MEMORY + i * PAGE_SIZE;
       memzero(page + VA_START, PAGE_SIZE);
-      //printf("free page 0x%x" NEWLINE, page);
       return page;
     }
   }
@@ -68,6 +68,7 @@ unsigned long allocate_user_page_with_attr(
   if (page == 0) {
     return 0;
   }
+  //puts("get free page succ");
   map_page(task, va, page, attr);
   return page + VA_START;
 }
@@ -153,7 +154,6 @@ int copy_virt_memory(Task *dst) {
   return 0;
 }
 
-#define DemandPaging 0
 int do_mem_abort(unsigned long addr, unsigned long esr) {
   unsigned long dfs = (esr & 0b111111);
   if ((dfs & 0b111100) == 0b100) {
@@ -187,9 +187,8 @@ int is_overlap_user_va(unsigned long addr, unsigned long len){
   for(int i = 0; i < mmp->user_pages_count; i++)
     if((addr <= mmp->user_pages[i].virt_addr &&
           addr + len > mmp->user_pages[i].virt_addr) ||
-       (mmp->user_pages[i].virt_addr <= addr &&
-          mmp->user_pages[i].virt_addr + PAGE_SIZE > addr)){
-      printf("overlap %d" NEWLINE, i);
+        (mmp->user_pages[i].virt_addr <= addr &&
+         mmp->user_pages[i].virt_addr + PAGE_SIZE > addr)){
       return 1;
     }
   return 0;
@@ -198,7 +197,6 @@ int is_overlap_user_va(unsigned long addr, unsigned long len){
 unsigned long find_empty_addr(unsigned long addr, unsigned long len){
   addr &= PAGE_MASK;
   while(is_overlap_user_va(addr, PAGE_SIZE)){
-    printf("try %x" NEWLINE, addr);
     addr += PAGE_SIZE;
   }
   if(addr >= USER_MEM_LIMIT) return (unsigned long)MAP_FAILED;
@@ -258,16 +256,15 @@ void *mmap(void* addr, unsigned long len,
       printf("mmap allocate code page failed" NEWLINE);
       return MAP_FAILED;
     }
+    // not handle offset yet
+    pw_size = pg_ptr + PAGE_SIZE - va_ptr;
+    pw_size = pw_size > size ? size : pw_size;
     if(pa_ptr >= 0){
-      // not handle offset yet
-      pw_size = pg_ptr + PAGE_SIZE - va_ptr;
-      pw_size = pw_size > size ? size : pw_size;
       memcpy(pa_ptr, page + va_ptr - pg_ptr, pw_size);
       pa_ptr += pw_size;
-      va_ptr += pw_size;
-      size -= pw_size;
     }
-    else size -= PAGE_SIZE;
+    va_ptr += pw_size;
+    size -= pw_size;
     pg_ptr += PAGE_SIZE;
   }
   return (void*)mmap_val;

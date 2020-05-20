@@ -46,7 +46,6 @@ int exception_handler(long x0, long x1, long x2, long x3, long x4, long x5) {
     case 0x15:
       if (iss == 0) {
         int ret = syscall(code, x0, x1, x2, x3, x4, x5);
-        if (ret < 0) printf("syscall failed with code number: %d" NEWLINE, code);
         return ret;
       }
       break;

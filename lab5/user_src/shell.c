@@ -16,16 +16,28 @@ int exec_cmd(char *cmd, int el) {
     println("reboot : reboot the device");
     println("help : print all available commands");
   }
-  else if (EQS("pages", cmd)) {
-    call_sys_pages();
-  }
   else if (EQS("clear", cmd)) {
     print("\e[1;1H\e[2J");
   }
+  else if (EQS("pid", cmd)) {
+    printf("shell pid is [%d]" NEWLINE, call_sys_task_id());
+  }
   else if (strbeg(cmd, "kill")) {
-    int pid = cmd[4] - '0';
-    printf("kill pid %c" NEWLINE, cmd[4]);
+    int pid = 0;
+    char *p = cmd + 4;
+    while(*p == ' ') p++;
+    while(*p) pid = pid * 10 + (*p - '0'), p++;
+    printf("kill pid %d" NEWLINE, pid);
     call_sys_signal(pid, SIGKILL);
+  }
+  else if (strbeg(cmd, "pages")) {
+    int pid = 0;
+    char *p = cmd + 5;
+    while(*p == ' ') p++;
+    while(*p) pid = pid * 10 + (*p - '0'), p++;
+    if(!pid) pid = call_sys_task_id();
+    printf("pages of [%d]" NEWLINE, pid);
+    call_sys_pages(pid);
   }
   else if (strlen(cmd)) {
     printf("command not found: %s" NEWLINE, cmd);

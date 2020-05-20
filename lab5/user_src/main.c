@@ -54,8 +54,8 @@ void test_demand_paging(){
 }
 
 int main(){
-  //fork_test();
-  shloop();
+  //test_command1();
+  //test_command2();
   //test_command3();
   //test_demand_paging();
   //read_beyond_boundary();
@@ -65,5 +65,6 @@ int main(){
   //mmaps();
   //mmap_unalign();
   //write_text();
+  shloop();
   return 0;
 }

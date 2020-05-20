@@ -50,7 +50,7 @@ el1_entry:
 #if MLV == 0
 
     adrp	x0, pg_dir
-	adrp	x1, pg_dir
+	  adrp	x1, pg_dir
     add x0, x0, 0x0000 // PGD's page frame at 0x0
     add x1, x1, 0x1000 // PUD's page frame at 0x1000
 
@@ -114,13 +114,13 @@ el1_entry:
 
     ldr x4, =LV3_PMD_DEV_ATTR
     mov x5, #512        // physical addr boundary
-1:
+2:
     mov x8, x6, lsl #21 // (0 to 1023) << 20 convert to MB
     orr x8, x8, x4
     str x8, [x7], #8
     add x6, x6, #1
     cmp x6, x5
-    b.ls 1b
+    b.ls 2b
 #endif
 #endif
 

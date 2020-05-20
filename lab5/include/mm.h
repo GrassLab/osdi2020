@@ -73,8 +73,8 @@ void *mmap(void* addr, unsigned long len,
 
 /* 4 mb limit for user process */
 #define USER_MEM_LIMIT (4 << 20)
-/* 128 kb limit for user stack */
-#define USER_STK_LIMIT (128 << 10)
+/* 16 kb limit for user stack  */
+#define USER_STK_LIMIT (16 << 10)
 #endif
 
 #endif

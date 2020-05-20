@@ -42,7 +42,7 @@ unsigned long call_sys_task_id();
 unsigned long call_sys_page_num();
 void *call_sys_mmap(void* addr, unsigned long len,
     int prot, int flags, int file_start, int file_offset);
-unsigned long call_sys_pages();
+unsigned long call_sys_pages(unsigned long pid);
 #endif
 
 #endif
