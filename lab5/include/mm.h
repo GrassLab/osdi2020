@@ -29,36 +29,24 @@
 
 #define PG_DIR_SIZE			(3 * PAGE_SIZE)
 
-#define PD_TABLE 0b11
-#define PD_BLOCK 0b01
-#define PD_ACCESS (1 << 10)
-#define BOOT_PGD_ATTR PD_TABLE
-#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
-
-
 #define MAIR_DEVICE_nGnRnE 0b00000000
 #define MAIR_NORMAL_NOCACHE 0b01000100
 #define MAIR_IDX_DEVICE_nGnRnE 0
 #define MAIR_IDX_NORMAL_NOCACHE 1
 
-
-#define LV3_PGD_ATTR PD_TABLE
-#define LV3_PUD_ATTR PD_TABLE
-#define LV3_PMD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
-#define LV3_PMD_DEV_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
-#define LV3_PMD_NOR_ATTR (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_BLOCK)
-
-#define LV4_PGD_ATTR PD_TABLE
-#define LV4_PUD_ATTR PD_TABLE
-#define LV4_PMD_ATTR PD_TABLE
-#define LV4_PTD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
+#define PD_TABLE 0b11
+#define PD_BLOCK 0b01
+#define PD_ACCESS (1 << 10)
+#define BOOT_PGD_ATTR PD_TABLE
+#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PMD_ATTR (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_BLOCK)
+#define BOOT_PMD_DEV_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
 
 #ifndef __ASSEMBLER__
 
 #include "sched.h"
 
 extern int remain_page;
-
 
 unsigned long get_free_page();
 void free_page(unsigned long p);
