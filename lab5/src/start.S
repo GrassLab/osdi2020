@@ -63,23 +63,30 @@ from_el2_to_el1:
 5: 
 //	ldr x1, =_start
 //  mov sp, x1
-//    mov     sp, #(2 * SECTION_SIZE) 
+    mov     sp, #(2 * SECTION_SIZE) 
 
     // clear bss
-	ldr x1, =__bss_start
+    adr x0, __bss_start
+    adr x1, __bss_end
+    sub x1, x1, x0
+    bl  memzero
+/*	
+    ldr x1, =__bss_start
 	ldr w2, =__bss_size
 3:	cbz w2, 6f
 	str xzr, [x1], 8 //fill zero 
 	sub w2, w2, 1
     cbnz w2, 3b
-    
+*/    
    //running at el1 ?
 6: 
     mrs x0, CurrentEL
     and x0, x0, #12 // clear reserved bits
     cmp     x0, #4
     bne     1b
-    bl      irq_vector1_init
+    
+    mov x0, #VA_START
+    add sp, x0, #LOW_MEMORY 
     
     //setting TCR
     ldr x0, = TCR_CONFIG_DEFAULT
@@ -109,33 +116,14 @@ from_el2_to_el1:
 
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register
+    
 
     mrs x2, sctlr_el1
     orr x2 , x2, 1
     msr sctlr_el1, x2 // enable MMU, cache remains disabled
 
-    ldr x2, boot_rest // indirect branch to the virtual address
-    br x2
+    ldr x0 ,=main
+    br x0
 
-boot_rest:
-
-//    bl      from_el1_to_el0
-    b   4f
-
-from_el1_to_el0:  	
-    mov x0, USER_STACK
-	msr sp_el0, x0
-	mov x0, 0 // EL0 with interrupt enabled
-  	msr spsr_el1, x0
-  	adr x0, 4f // return to shell run in EL0
-  	msr elr_el1, x0
-  	eret // return to EL0
-
-// jump to main function
-4:     
-//    mov sp, USER_STACK	
-    mov sp, #(2 * SECTION_SIZE) 
-	bl main
-	b 1b
 
 

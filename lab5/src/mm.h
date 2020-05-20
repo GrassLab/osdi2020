@@ -31,6 +31,8 @@
 #define BOOT_PGD_ATTR PD_TABLE
 #define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
 
+#define VA_START                     0xffff000000000000
+
 #ifndef __ASSEMBLER__
 
 unsigned long get_free_page();

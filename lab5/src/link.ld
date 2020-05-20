@@ -25,8 +25,8 @@
 
 SECTIONS
 {
-    /* . = 0xffff000000000000; */ /*kernel space*/
-    . = 0x80000; /*kernel load address*/
+    . = 0xffff000000000000; /*kernel space*/
+    . += 0x80000; /*kernel load address*/
     _start_begin = .;
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) } 
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }

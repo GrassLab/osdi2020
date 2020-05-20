@@ -3,7 +3,7 @@
 #include "fork.h"
 
 //required 1 & required 2
-
+/*
 void foo(){
   while(1) {
     uart_puts("Task id: ");
@@ -40,9 +40,10 @@ void main() {
   }
 
   idle();
+  
 }
+*/
 
-/*
 void uart_test(){
     char buffer[16]="writewrite\n";
     buffer[12]='\0';  
@@ -153,6 +154,7 @@ void idle(){
 
 void main(void){
 
+    irq_vector1_init();
 	uart_init();
     uart_getc();
     uart_puts("MACHINE IS OPEN!!\n");
@@ -182,4 +184,4 @@ void main(void){
     
 //    shell();
 }
-*/
+
