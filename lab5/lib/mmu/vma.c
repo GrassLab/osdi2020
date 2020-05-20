@@ -82,7 +82,7 @@ Page *allocPage(void) {
             page_frames[i].in_use = 1;
             memzero((uint64_t *)translate((uint64_t)&page_frames[i],
                                           kPageDescriptorToVirtual),
-                    PAGE_SIZE / 8);
+                    PAGE_SIZE);
 
             return &page_frames[i];
         }
