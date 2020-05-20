@@ -7,6 +7,7 @@
 struct command cmds[] = {
   { "help", "Print the helping message\n", help },
   { "test1", "Test fork functionality\n", test_command1 },
+  { "test3", "Test page reclaim\n", test_command3 },
   { NULL, NULL, NULL }
 };
 
@@ -33,6 +34,11 @@ void test_command1(void) {
     // all childs exit
     exit(0);
   }
+}
+
+void test_command3(void) {
+  // get number of remaining page frames from kernel by system call.
+  printf("Remaining page frames : %u\n", get_remain_page_num());
 }
 
 int main(void) {
