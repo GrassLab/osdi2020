@@ -352,6 +352,10 @@ void test_command2(void) {
     }
 }
 
+void test_command3(void) {
+    writeStringUART("Test page reclaiming\n");
+}
+
 static void startMain(void (*main)(void)) {
     main();
     exit(0);

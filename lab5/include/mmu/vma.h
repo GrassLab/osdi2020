@@ -20,6 +20,8 @@ enum TranslationAction {
     kPageDescriptorToVirtual
 };
 
+extern uint64_t page_counter_flag;
+
 void initPageFrames(void);
 uint64_t translate(uint64_t origin, enum TranslationAction action);
 Page *allocPage(void);

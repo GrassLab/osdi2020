@@ -25,10 +25,18 @@ void kernel_main(void) {
 
     initIdleTaskState();
 
-    _enable_core_timer();
+    sendStringUART("Want to see process of page reclaim? [y/n]\n");
+    if (recvUART() == 'y') {
+        page_counter_flag = 1lu;
+        createPrivilegeTask(fooTask, test_command1);
+        createPrivilegeTask(fooTask, test_command2);
+        createPrivilegeTask(fooTask, test_command3);
+    } else {
+        createPrivilegeTask(fooTask, test_command1);
+        createPrivilegeTask(fooTask, test_command2);
+    }
 
-    createPrivilegeTask(fooTask, test_command1);
-    createPrivilegeTask(fooTask, test_command2);
+    _enable_core_timer();
 
     idle();
 }

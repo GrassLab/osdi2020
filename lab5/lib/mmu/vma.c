@@ -1,4 +1,5 @@
 #include "mmu/vma.h"
+#include "MiniUart.h"
 #include "memzero.h"
 #include "mmu/mmu.h"
 #include "peripheral/base.h"
@@ -22,6 +23,9 @@ static void setInUseBit(const size_t start, const size_t end) {
         page_frames[i].in_use = 1;
     }
 }
+
+uint64_t page_counter_flag = 0;
+static size_t page_counter = 0;
 
 uint64_t translate(uint64_t origin, enum TranslationAction action) {
     switch (action) {
@@ -84,6 +88,12 @@ Page *allocPage(void) {
                                           kPageDescriptorToVirtual),
                     PAGE_SIZE);
 
+            if (page_counter_flag) {
+                sendStringUART("Page counter: ");
+                sendHexUART(++page_counter);
+                sendUART('\n');
+            }
+
             return &page_frames[i];
         }
     }
@@ -95,6 +105,12 @@ Page *allocPage(void) {
 static void freePage(Page *page_frame) {
     page_frame->in_use = 0;
     page_frame->next = NULL;
+
+    if (page_counter_flag) {
+        sendStringUART("Page counter: ");
+        sendHexUART(--page_counter);
+        sendUART('\n');
+    }
 }
 
 void freePages(Page *page_frame) {

@@ -19,6 +19,10 @@ if __name__ == '__main__':
         try:
             print(ser.read_until(b"...").decode()[size:], end="")
             size = ser.write((input() + '\n').encode())
+
+            print(ser.read_until(b"\n").decode(), end="")
+            size = ser.write((input() + '\n').encode())
+
             while 1:
                 print(ser.read_until(b"\n").decode(), end="")
         except:
