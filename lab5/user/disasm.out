@@ -1,0 +1,109 @@
+
+user8.elf:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+0000000000000000 <main>:
+   0:	a9bf7bfd 	stp	x29, x30, [sp, #-16]!
+   4:	910003fd 	mov	x29, sp
+   8:	90000000 	adrp	x0, 0 <main>
+   c:	91046000 	add	x0, x0, #0x118
+  10:	94000028 	bl	b0 <uart_write>
+  14:	52800000 	mov	w0, #0x0                   	// #0
+  18:	a8c17bfd 	ldp	x29, x30, [sp], #16
+  1c:	d65f03c0 	ret
+
+0000000000000020 <enable_interrupt>:
+  20:	d5034fff 	msr	daifclr, #0xf
+  24:	d65f03c0 	ret
+
+0000000000000028 <disable_interrupt>:
+  28:	d5034fdf 	msr	daifset, #0xf
+  2c:	d65f03c0 	ret
+
+0000000000000030 <enable_EL0_interrupt>:
+  30:	d5384000 	mrs	x0, spsr_el1
+  34:	58000661 	ldr	x1, 100 <exit+0x10>
+  38:	8a010000 	and	x0, x0, x1
+  3c:	d5184000 	msr	spsr_el1, x0
+  40:	d65f03c0 	ret
+
+0000000000000044 <disable_EL0_interrupt>:
+  44:	d5384000 	mrs	x0, spsr_el1
+  48:	58000601 	ldr	x1, 108 <exit+0x18>
+  4c:	aa010000 	orr	x0, x0, x1
+  50:	d5184000 	msr	spsr_el1, x0
+  54:	d65f03c0 	ret
+
+0000000000000058 <brk_instr>:
+  58:	d4200020 	brk	#0x1
+  5c:	d65f03c0 	ret
+
+0000000000000060 <get_sync_exc_param_el1>:
+  60:	d5385209 	mrs	x9, esr_el1
+  64:	d538402a 	mrs	x10, elr_el1
+  68:	f9000009 	str	x9, [x0]
+  6c:	f900002a 	str	x10, [x1]
+  70:	d65f03c0 	ret
+
+0000000000000074 <get_sync_exc_param_el2>:
+  74:	d53c5209 	mrs	x9, esr_el2
+  78:	d53c402a 	mrs	x10, elr_el2
+  7c:	f9000009 	str	x9, [x0]
+  80:	f900002a 	str	x10, [x1]
+  84:	d65f03c0 	ret
+
+0000000000000088 <sleep>:
+  88:	58000440 	ldr	x0, 110 <exit+0x20>
+
+000000000000008c <loop>:
+  8c:	d1000400 	sub	x0, x0, #0x1
+  90:	b5ffffe0 	cbnz	x0, 8c <loop>
+  94:	d65f03c0 	ret
+
+0000000000000098 <get_taskId>:
+  98:	d2800008 	mov	x8, #0x0                   	// #0
+  9c:	d4000001 	svc	#0x0
+  a0:	d65f03c0 	ret
+
+00000000000000a4 <sched_yield>:
+  a4:	d2800028 	mov	x8, #0x1                   	// #1
+  a8:	d4000001 	svc	#0x0
+  ac:	d65f03c0 	ret
+
+00000000000000b0 <uart_write>:
+  b0:	d2800048 	mov	x8, #0x2                   	// #2
+  b4:	aa0003e9 	mov	x9, x0
+  b8:	d4000001 	svc	#0x0
+  bc:	d65f03c0 	ret
+
+00000000000000c0 <uart_read>:
+  c0:	d2800068 	mov	x8, #0x3                   	// #3
+  c4:	aa0003e9 	mov	x9, x0
+  c8:	aa0103ea 	mov	x10, x1
+  cc:	d4000001 	svc	#0x0
+  d0:	d65f03c0 	ret
+
+00000000000000d4 <exec>:
+  d4:	d2800088 	mov	x8, #0x4                   	// #4
+  d8:	aa0003e9 	mov	x9, x0
+  dc:	d4000001 	svc	#0x0
+  e0:	d65f03c0 	ret
+
+00000000000000e4 <fork>:
+  e4:	d28000a8 	mov	x8, #0x5                   	// #5
+  e8:	d4000001 	svc	#0x0
+  ec:	d65f03c0 	ret
+
+00000000000000f0 <exit>:
+  f0:	d28000c8 	mov	x8, #0x6                   	// #6
+  f4:	aa0003e9 	mov	x9, x0
+  f8:	d4000001 	svc	#0x0
+  fc:	d65f03c0 	ret
+ 100:	0000fc3f 	.word	0x0000fc3f
+ 104:	00000000 	.word	0x00000000
+ 108:	000003c0 	.word	0x000003c0
+ 10c:	00000000 	.word	0x00000000
+ 110:	01ffffff 	.word	0x01ffffff
+ 114:	00000000 	.word	0x00000000

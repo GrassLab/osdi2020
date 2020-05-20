@@ -1,6 +1,7 @@
 #include "task.h"
 #include "uart.h"
 #include "irq.h"
+#include "mmu.h"
 
 task_t task_pcb_pool[64];
 char kstack_pool[64][4096];
@@ -229,25 +230,6 @@ void do_fork(){
 	offset = curTask->context.kstack - 32 * 8 - (unsigned long long)&kstack_pool[parent][0];
 	task_pcb_pool[child].context.kstack  = (unsigned long long)&kstack_pool[child][offset];
 
-	// uart_puts("fork: parent id: ");
-	// uart_hex(parent);
-	// uart_puts("   ->  user stack addr ");
-	// uart_hex(&ustack_pool[parent_ustack_id][0]);
-	// uart_puts(" ~ ");
-	// uart_hex(&ustack_pool[parent_ustack_id][4095]);
-	// uart_puts("   ->  sp  ");
-	// uart_hex((unsigned long long)curTask->ustack);
-	// uart_puts("\n");
-
-	// uart_puts("fork: child id: ");
-	// uart_hex(child);
-	// uart_puts("   ->  user stack ");
-	// uart_hex(&ustack_pool[child_ustack_id][0]);
-	// uart_puts(" ~  ");
-	// uart_hex(&ustack_pool[child_ustack_id][4095]);
-	// uart_puts("   ->  sp  ");
-	// uart_hex((unsigned long long)task_pcb_pool[child].ustack);
-	// uart_puts("\n\n");
 }
 
 void do_exit(int status){
@@ -277,4 +259,10 @@ void zombieReaper(){
 		ReSchedule = 1;
 		schedule();
 	}
+}
+
+void create_user_virt_test(void){
+	user_page_info_t *pginfo = &task_pcb_pool[1].page_info;
+	user_paging_init(pginfo);
+	set_user_rd(pginfo);
 }

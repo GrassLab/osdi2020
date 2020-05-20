@@ -27,9 +27,8 @@ C_SRCS = $(wildcard *.c)
 C_OBJS = $(C_SRCS:.c=.o)
 S_SRCS = $(wildcard *.S)
 S_OBJS = $(S_SRCS:.S=.s.o)
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles 
+CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -ggdb3 -Og
 
-debug: CFLAGS += -ggdb3 -Og
 
 all: clean kernel8.img
 
@@ -39,7 +38,7 @@ all: clean kernel8.img
 %.o: %.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
-kernel8.img: $(S_OBJS) $(C_OBJS)
+kernel8.img: $(S_OBJS) $(C_OBJS) 
 	aarch64-linux-gnu-ld -nostdlib -nostartfiles $(S_OBJS) $(C_OBJS) -T link.ld -o kernel8.elf
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
 	aarch64-linux-gnu-objdump kernel8.elf -d > disasm.out
@@ -51,5 +50,10 @@ clean:
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
 
-debug: clean kernel8.img
+debug: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio -s -S
+
+withuser: 
+	aarch64-linux-gnu-ld -nostdlib -nostartfiles $(S_OBJS) $(C_OBJS) ./user/user8.rd -T link.ld -o kernel8.elf 
+	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+	aarch64-linux-gnu-objdump kernel8.elf -d > disasm.out

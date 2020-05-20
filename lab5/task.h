@@ -1,6 +1,8 @@
 #ifndef __TASK_H__
 #define __TASK_H__
 
+#include "mmu.h"
+
 /* ===================== define ===================== */
 typedef struct context_def{
 	unsigned long long must_preserve_reg[10];
@@ -27,6 +29,7 @@ typedef struct task_def{
 	int exitStatus;
 	processStatus pstatus;
 
+	user_page_info_t page_info;
 }task_t;
 
 #define MAX_QUEUE 16
@@ -54,6 +57,7 @@ void kernel_routine_exit( void );
 void do_fork( void );
 void do_exit(int status);
 void zombieReaper( void );
+void create_user_virt_test( void );
 
 /* ===================== task.S ===================== */
 void store_umode_lr_sp(unsigned long long *elr_el1, unsigned long long *ustack);
@@ -63,6 +67,7 @@ task_t* get_cur_task( void );
 void set_cur_task(task_t *task);
 void go_to(task_t *task);
 void restore_all_reg( void );
+
 
 
 
