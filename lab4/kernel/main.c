@@ -148,11 +148,17 @@ void el1_main() {
     return;
   }
 
-  res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0, 0);
-  if (res < 0) {
-    uart_println("error while starting kernel process");
-    return;
-  }
+  /* res = copy_process(PF_KTHREAD, (unsigned long)&kernel_pr/\* ocess, 0, 0); *\/ */
+  /* if (res < 0) { */
+  /*   uart_println("error while starting kernel process"); */
+  /*   return; */
+  /* } */
+
+  /* res = copy_process(PF_KTHREAD, shell, 0, 0); */
+  /* if (res < 0) { */
+  /*   uart_println("error while starting kernel process"); */
+  /*   return; */
+  /* } */
 
   /* local_timer_init(); */
   sys_core_timer_enable();
