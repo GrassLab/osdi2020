@@ -23,7 +23,11 @@ unsigned long pa_to_pfn(unsigned long pa)
 
 unsigned long va_to_pa(unsigned long va)
 {
-    return page_table[(va - 0xffff000000000000) / PAGE_SIZE].pa;
+    return page_table[(va - mem_map_pa) / PAGE_SIZE].pa;
+}
+
+unsigned long pfn_to_pa(unsigned long pfn){
+    return page_table[pfn].pa;
 }
 
 unsigned long get_free_page()
@@ -32,19 +36,14 @@ unsigned long get_free_page()
     {
         if (page_table[i].used == 0)
         {
-            page_table[i].used = 1;
-            //page_table[i].pa = (unsigned long)&mem_map[i] + i * PAGE_SIZE;
-
-            // return LOW_MEMORY + i * PAGE_SIZE;
-            // return 0xffff000000000000 + (unsigned long)&mem_map[i] + i * PAGE_SIZE;
-
-            return (unsigned long)((unsigned char *)mem_map_pa + i * PAGE_SIZE);
-            // return 0xffff000000000000 + i * PAGE_SIZE + PAGE_SIZE;
-            //return 0xffff000000000000 + page_table[i].pa;
+            page_table[i].used = 1;            
+            return (unsigned long)((unsigned char *)mem_map_pa + i * PAGE_SIZE);            
         }
     }
     return 0;
 }
+
+
 
 void free_page(unsigned long p)
 {

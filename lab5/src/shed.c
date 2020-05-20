@@ -24,6 +24,22 @@ int privilege_task_create(void (*func)()){
     disable_preempt();
     struct task_struct *new_task = (struct task_struct *) get_free_page();
     memset((unsigned short *)new_task, 0, PAGE_SIZE);
+    
+    uart_send('\n');
+    uart_hex((unsigned long)new_task);
+    
+    uart_send('\n');
+    uart_hex(va_to_pa((unsigned long)new_task));
+    uart_send('\n');
+
+    unsigned long pfn = pa_to_pfn((unsigned long)new_task);
+    uart_hex(pfn);
+    uart_send('\n');
+
+    uart_hex(pfn_to_pa(pfn));
+    uart_send('\n');
+
+
 
     new_task->taskid = n_task_id;
     new_task->counter = 1;
@@ -109,7 +125,7 @@ void exec(void (*func)()){
 
 void foo(){
     int a=5;
-  while(1) {
+  
     uart_puts("Task id: ");
     uart_send_int(current -> taskid);
     uart_send('\n');
@@ -120,22 +136,21 @@ void foo(){
     uart_send_int(remain_page_num());
     uart_send('\n');
     exit(0);
-  }
+  
 }
 void test_command3() { // test page reclaim.
   uart_puts("Remaining page frames : ");
   uart_send_int(remain_page_num());
   uart_send('\n');
+  call_sys_exit();
 }
-void foo2(){
-  int* a=0x0;
-  while(1) {
-    uart_puts("a: ");
-    uart_send_int(a);
+void test_command2() { // test page fault
+  if(fork() == 0) {
+    int* a = 0x0; // a non-mapped address.
+    uart_send_int(*a);
     uart_send('\n');
-
-    delay(100000000);
   }
+  exit(0);
 }
 void foofoo(){
   int cnt = 0;
@@ -202,7 +217,7 @@ void test() {
     }
 }
 void foo_exec(){
-    call_exec(foo2);
+    call_exec(foo);
 }
 void foo_sys(){
     fork();
@@ -298,7 +313,7 @@ void schedule(){
 int N = 5;
 void create_foo(){
     for(int i = 1; i <= N; ++i) { // N should > 2
-        privilege_task_create(foo);
+        privilege_task_create(test_command3);
     }
     // schedule();
 }

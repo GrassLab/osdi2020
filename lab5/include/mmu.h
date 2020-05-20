@@ -92,6 +92,9 @@ static mem_page_t u_mem_map[1000] = {
 
 static const unsigned long mem_map_pa = (unsigned long)&mem_map[0];
 
+static const unsigned long u_mem_map_pa = (unsigned long)&u_mem_map[0];
+
+
 void mmu_init();
 void free_page(unsigned long p);
 unsigned long get_free_page();
@@ -100,5 +103,6 @@ int remain_page_num();
 
 unsigned long pa_to_pfn(unsigned long pa);
 unsigned long va_to_pa(unsigned long va);
+unsigned long pfn_to_pa(unsigned long pfn);
 
 #endif
