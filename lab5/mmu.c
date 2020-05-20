@@ -70,7 +70,7 @@ void mmu_page_init(void)
   return;
 }
 
-uint64_t * mmu_page_allocate(void)
+uint64_t * mmu_page_allocate(int zero)
 {
   for(unsigned current_pfn = 0; current_pfn < PAGE_TOTAL; ++current_pfn)
   {
@@ -79,7 +79,10 @@ uint64_t * mmu_page_allocate(void)
       /* uint64_t is 8 byte */
       uint64_t * pa = (uint64_t *)((uint64_t)(MMU_PAGE_BASE + current_pfn * PAGE_4K));
       uint64_t * va = MMU_PA_TO_VA(pa);
-      memzero((char *)va, PAGE_SIZE);
+      if(zero)
+      {
+        memzero_8byte(va, PAGE_SIZE / 8);
+      }
       SET_BIT(mmu_page[current_pfn].flag, PAGE_USED);
       return pa;
     }
@@ -128,15 +131,15 @@ void mmu_user_page_table_init(void)
   /* total frame: 1PGD, 1PUD, 1PMD, 64 * 2 PTE */
 
   /* setup 1 PGD */
-  user_space_mm.pgd_base = mmu_page_allocate();
-  user_space_mm.pud_base = mmu_page_allocate();
+  user_space_mm.pgd_base = mmu_page_allocate(1);
+  user_space_mm.pud_base = mmu_page_allocate(1);
 
   *user_space_mm.pgd_base = PD_ACCESS | ((uint64_t)(user_space_mm.pud_base)) | PD_TABLE;
 
   *(user_space_mm.pgd_base + 511) = PD_ACCESS | ((uint64_t)(user_space_mm.pud_base + 511)) | PD_TABLE;
 
   /* setup 1 PUD */
-  user_space_mm.pmd_text_base = mmu_page_allocate();
+  user_space_mm.pmd_text_base = mmu_page_allocate(1);
   user_space_mm.pmd_stack_base = user_space_mm.pmd_text_base + 511;
 
   *(user_space_mm.pud_base) = PD_ACCESS | ((uint64_t)(user_space_mm.pmd_text_base)) | PD_TABLE;
@@ -156,17 +159,16 @@ void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct)
   /* 24kb for .text, 8kb for stack */
 
   /* setup PTE for .text */
-  mm_struct -> pte_text_base = mmu_page_allocate();
-  mm_struct -> pte_stack_base = mmu_page_allocate();
+  mm_struct -> pte_text_base = mmu_page_allocate(1);
+  mm_struct -> pte_stack_base = mmu_page_allocate(1);
 
   for(unsigned pd_idx = 0; pd_idx < 6; ++pd_idx)
   {
-   *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) = (uint64_t)mmu_page_allocate() | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+   *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) = (uint64_t)mmu_page_allocate(0) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
   }
 
- *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))) = (uint64_t)mmu_page_allocate() | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
- *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))) = (uint64_t)mmu_page_allocate() | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
-
+ *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))) = (uint64_t)mmu_page_allocate(0) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+ *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))) = (uint64_t)mmu_page_allocate(0) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
 }
 
 void mmu_user_task_set_pmd(struct user_space_mm_struct * mm_struct)

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "string_util.h"
 
 int string_cmp(const char * string_a, const char * string_b, const int length)
@@ -215,8 +216,9 @@ void memcopy(char * src, char * dst, unsigned length)
   return;
 }
 
-void memzero(char * dst, unsigned length)
+void memzero_8byte(uint64_t * dst, unsigned length)
 {
+  /* maske sure length is divided by 8 and the dst is 8 bytes aligned */
   for(unsigned i = 0; i < length; ++i)
   {
     *(dst + i) = 0;
