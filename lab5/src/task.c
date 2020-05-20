@@ -318,7 +318,7 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
       stack_page = allocate_user_page(current_task, stkbtm);
     if(!stack_page){
       printf("[%d] allocate stack page failed" NEWLINE, current_task->pid);
-      exit(0);
+      exit();
       return 1;
     }
     stkbtm += PAGE_SIZE;

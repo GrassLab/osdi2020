@@ -16,6 +16,9 @@ int exec_cmd(char *cmd, int el) {
     println("reboot : reboot the device");
     println("help : print all available commands");
   }
+  else if (EQS("pages", cmd)) {
+    call_sys_pages();
+  }
   else if (EQS("clear", cmd)) {
     print("\e[1;1H\e[2J");
   }

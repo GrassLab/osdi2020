@@ -115,6 +115,27 @@ void *sys_mmap(void* addr, unsigned long len,
   return mmap(addr, len, prot, flags, file_start, file_offset);
 }
 
+void sys_pages(void) {
+  printf("├── pgd: 0x%x" NEWLINE, current_task->mm.pgd);
+  printf("├── kernel pages:" NEWLINE);
+  for(int i = 0; i < current_task->mm.kernel_pages_count; i++){
+    printf("│   %s── [%d] 0x%x" NEWLINE,
+        i == current_task->mm.kernel_pages_count - 1 ? "└" : "├",
+        i,
+        current_task->mm.kernel_pages[i]);
+  }
+  printf("└── user pages ( vir -> phy {attr} ):" NEWLINE);
+  for(int i = 0; i < current_task->mm.user_pages_count; i++){
+    printf("    %s── [%d] 0x%x -> 0x%x {%x}" NEWLINE,
+        i == current_task->mm.user_pages_count - 1 ? "└" : "├",
+        i,
+        current_task->mm.user_pages[i].virt_addr,
+        current_task->mm.user_pages[i].phys_addr,
+        current_task->mm.user_pages[i].attr
+        );
+  }
+}
+
 int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     long x5) {
 
@@ -152,49 +173,12 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       return (int)sys_mmap((void*)x0, (unsigned long)x1,
           (int)x2, (int)x3, (int)x4, (int)x5);
       break;
-      // case 0:
-      // sys_core_timer_enable();
-      // __asm__ volatile("mov x0, #0");
-      // break;
-      // case 1:
-      // sys_timestamp();
-      // __asm__ volatile("mov x0, #0");
-      // break;
-      // case 2:
-      // get_current_el();
-      // puts("interrupt disabled");
-      // *DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
-      // __asm__ volatile("msr daifclr, #0x2");
-      // __asm__ volatile("mov x0, #0");
-      // break;
-      // case 4:
-      // while (task_ptr && !exec_ptr) {
-      // #define record_elr
-      // #ifdef record_elr
-      // unsigned long elr, nelr;
-      // __asm__ volatile("mrs %0, elr_el1" : "=r"(elr));
-      // #endif
-      //
-      // enable_irq();
-      // void (*task)(void) = pop_deffered();
-      // printf("task addr %x" NEWLINE, task);
-      // task();
-      // disable_irq();
-      //
-      // #ifdef record_elr
-      // __asm__ volatile("mrs %0, elr_el1" : "=r"(nelr));
-      // printf("%x vs %x" NEWLINE, elr, nelr);
-      // if (elr != nelr) {
-      // puts(NEWLINE NEWLINE "BOTTOM DIFFERENCE!!" NEWLINE NEWLINE);
-      // __asm__ volatile("msr elr_el1, %0" ::"r"(elr));
-      // }
-      // #endif
-      // }
-      // __asm__ volatile("mov x0, #0");
-      // break;
+    case SYSNUM_PAGES:
+      sys_pages();
+      break;
     default:
       puts("invalid syscall number");
-      return 1;
+      return -1;
   }
   return 0;
 }

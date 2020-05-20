@@ -65,3 +65,9 @@ call_sys_mmap:
     mov w8, #SYSNUM_MMAP
     svc #0
     ret
+
+.globl call_sys_pages
+call_sys_pages:
+    mov w8, #SYSNUM_PAGES
+    svc #0
+    ret

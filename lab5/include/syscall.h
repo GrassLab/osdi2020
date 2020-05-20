@@ -13,6 +13,7 @@
 #define SYSNUM_TASK_ID 8
 #define SYSNUM_PAGE_NUM 9
 #define SYSNUM_MMAP 10
+#define SYSNUM_PAGES 11
 
 #define PROT_NONE  0b0001
 #define PROT_READ  0b0010
@@ -41,6 +42,7 @@ unsigned long call_sys_task_id();
 unsigned long call_sys_page_num();
 void *call_sys_mmap(void* addr, unsigned long len,
     int prot, int flags, int file_start, int file_offset);
+unsigned long call_sys_pages();
 #endif
 
 #endif
