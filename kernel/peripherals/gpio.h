@@ -28,7 +28,7 @@
 
 #include "kernel/memory/mmu.h"
 
-#define MMIO_BASE ( VA_START + DEVICE_BASE )
+#define MMIO_BASE ( SYS_VA_START + DEVICE_BASE )
 
 #define GPFSEL0   ( (volatile unsigned int *) ( MMIO_BASE + 0x00200000 ) )
 #define GPFSEL1   ( (volatile unsigned int *) ( MMIO_BASE + 0x00200004 ) )

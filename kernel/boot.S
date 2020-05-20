@@ -74,7 +74,7 @@ return_to_el1:
     bl      mmu_init
 
     # set up stack for el1
-    mov     x0,     VA_START
+    mov     x0,     SYS_VA_START
     add     sp,     x0,     LOW_MEMORY
 
     ## required 5.1: test mmu setting
