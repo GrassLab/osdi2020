@@ -165,22 +165,39 @@ page_table_create:
     orr x5, x3, x4 // combine the physical address of next level page with attribute.
     str x5, [x1, #8]
 
+
+
+    // Algo:
+    // input: attr, boundary, store_addr
+    // ==============================
+    // int i = 0;
+    // do {
+    //     unsigned long phy_addr = i << 20;
+    //     phy_addr |= attr;
+    //     i++;
+    // } while (i < boundary)
+
+    // setup
     ldr x4, =BOOT_PMD_ATTR
     mov x5, #504        // physical addr boundary (0x3F000000 / (2^21))
     mov x6, xzr         // physical addr counter 0 to 1023
-    mov x7, x2          // entry address offset
+    mov x7, x2          // 1st PMD, entry address offset
+// populations
 1:
-    mov x8, x6, lsl #21 // (0 to 1023) << 20 convert to MB
-    orr x8, x8, x4
-    str x8, [x7], #8
+    mov x8, x6, lsl #21 // (0 to 1023) << 21 convert to MB
+    orr x8, x8, x4      // combine attribute
+    str x8, [x7], #8    // store to next address of x7
     add x6, x6, #1
     cmp x6, x5
     b.ls 1b
 
+
+    // setup
     ldr x4, =BOOT_PMD_DEV_ATTR
     mov x5, #512        // physical addr boundary
+// populations
 1:
-    mov x8, x6, lsl #21 // (0 to 1023) << 20 convert to MB
+    mov x8, x6, lsl #21
     orr x8, x8, x4
     str x8, [x7], #8
     add x6, x6, #1
@@ -191,27 +208,6 @@ page_table_create:
     msr ttbr0_el1, x0 // load PGD to the bottom translation based register.
 
     mov x30, x29
-    ret
-
-__create_idmap:
-    mov	x29, x30
-
-    adrp	x0, idmap_dir
-    mov	x1, #PG_DIR_SIZE
-    bl	memzero
-
-    adrp	x0, idmap_dir
-    mov	x1, xzr
-    create_pgd_entry	x0, x1, x2, x3
-
-    mov	x1, xzr
-    mov	x2, xzr
-    ldr	x3, =(PHYS_MEMORY_SIZE)
-    create_block_map x0, x1, x2, x3, MMU_FLAGS, x4
-
-    msr	ttbr0_el1, x0
-
-    mov	x30, x29
     ret
 
 __create_page_tables:
@@ -238,6 +234,7 @@ __create_page_tables:
     create_block_map x0, x1, x2, x3, MMU_DEVICE_FLAGS, x4
 
     msr	ttbr1_el1, x0
+    msr	ttbr0_el1, x0
 
 
     mov	x30, x29						// restore return address
