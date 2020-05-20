@@ -1,11 +1,19 @@
 ARMGNU ?= aarch64-linux-gnu
-SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
-CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -Iinc
 ASMOPS = -Iinclude
 BUILD_DIR = build
 SRC_DIR = src
 LIB_DIR = lib
+
+C_FILES = $(wildcard $(SRC_DIR)/*.c) 
+ASM_FILES = $(wildcard $(SRC_DIR)/*.S) 
+C_LIB_FILES = $(wildcard $(LIB_DIR)/*.c) 
+ASM_LIB_FILES = $(wildcard $(LIB_DIR)/*.S) 
+C_OBJS = $(C_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%_c.o) $(C_LIB_FILES:$(LIB_DIR)/%.c=$(BUILD_DIR)/%_c.o)
+S_OBJS = $(ASM_FILES:$(SRC_DIR)/%.S=$(BUILD_DIR)/%_s.o) $(ASM_LIB_FILES:$(LIB_DIR)/%.S=$(BUILD_DIR)/%_s.o)
+DEP_FILES = $(C_OBJS:%.o=%.d)
+DEP_FILES += $(S_OBJS:%.o=%.d)
+-include $(DEP_FILES)
 
 all: clean kernel8.img
 
@@ -22,21 +30,12 @@ $(BUILD_DIR)/%_c.o: $(LIB_DIR)/%.c
 
 $(BUILD_DIR)/%_s.o: $(LIB_DIR)/%.S
 	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
-	
-C_FILES = $(wildcard $(SRC_DIR)/*.c) 
-ASM_FILES = $(wildcard $(SRC_DIR)/*.S) 
-C_LIB_FILES = $(wildcard $(LIB_DIR)/*.c) 
-ASM_LIB_FILES = $(wildcard $(LIB_DIR)/*.S) 
-S_OBJS = $(ASM_FILES:$(SRC_DIR)/%.S=build/%_s.o) $(ASM_LIB_FILES:$(LIB_DIR)/%.S=build/%_s.o)
-C_OBJS = $(C_FILES:$(SRC_DIR)/%.c=build/%_c.o) $(C_LIB_FILES:$(LIB_DIR)/%.c=build/%_c.o)
-
-DEP_FILES = $(OBJ_FILES:%.o=%.d)
--include $(DEP_FILES)
 
 
-kernel8.img: $(SRC_DIR)/linker.ld $(OBJ_FILES)
-	$(ARMGNU)-ld -nostdlib -nostartfiles $(OBJ_FILES) -T $(SRC_DIR)/linker.ld  -o $(BUILD_DIR)/kernel8.elf 
-	$(ARMGNU)-objcopy -O binary $(BUILD_DIR)/kernel8.elf kernel8.img
+
+kernel8.img: $(SRC_DIR)/linker.ld $(C_OBJS) $(S_OBJS)
+	$(ARMGNU)-ld -nostdlib -nostartfiles $(S_OBJS) $(C_OBJS) -T $(SRC_DIR)/linker.ld  -o kernel8.elf 
+	$(ARMGNU)-objcopy -O binary kernel8.elf kernel8.img
 
 clean:
 	rm -rf $(BUILD_DIR)
