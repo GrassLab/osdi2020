@@ -27,9 +27,8 @@ void kernel_main(void) {
 
     _enable_core_timer();
 
-    for (uint32_t i = 0; i < 3; ++i) {
-        createPrivilegeTask(fooTask);
-    }
+    createPrivilegeTask(fooTask, test_command1);
+    createPrivilegeTask(fooTask, test_command2);
 
     idle();
 }

@@ -64,7 +64,7 @@ void initIdleTaskState() {
                  : /* clobbered register */);
 }
 
-int64_t createPrivilegeTask(void (*func)()) {
+int64_t createPrivilegeTask(void (*kernel_task)(), void (*user_task)()) {
     for (uint32_t i = 1; i < MAX_TASK_NUM; ++i) {
         if (ktask_pool[i].status == kUnUse) {
             ktask_pool[i].status = kInUse;
@@ -72,7 +72,8 @@ int64_t createPrivilegeTask(void (*func)()) {
             ktask_pool[i].counter = 10u;
             ktask_pool[i].reschedule_flag = false;
 
-            ktask_pool[i].kernel_context.lr = (uint64_t)func;
+            ktask_pool[i].kernel_context.lr = (uint64_t)kernel_task;
+            ktask_pool[i].kernel_context.main = (uint64_t)user_task;
 
             // +1 since stack grows toward lower address
             ktask_pool[i].kernel_context.fp = (uint64_t)kstack_pool[i + 1];
@@ -124,15 +125,19 @@ static void copyProgram(TaskStruct *cur_task) {
     }
 }
 
-void doExec(void (*func)()) {
+static void startMain(void (*main)(void));
+
+void doExec(void (*program)()) {
     TaskStruct *cur_task = getCurrentTask();
     UserTaskStruct *user_task = cur_task->user_task;
 
     // FIXME: remove 0x0000ffffffffffff when change to use embeded user program
-    user_task->user_context.lr = (uint64_t)func & 0x0000ffffffffffff;
+    user_task->user_context.lr = (uint64_t)startMain & 0x0000ffffffffffff;
 
     user_task->user_context.fp = kDefaultStackVirtualAddr;
     user_task->user_context.sp = kDefaultStackVirtualAddr;
+    user_task->user_context.main = (uint64_t)program & 0x0000ffffffffffff;
+
     cur_task->tail_page =
         updatePageFramesForMappingStack(cur_task->pgd, cur_task->tail_page);
 
@@ -151,7 +156,7 @@ static void copyUserContext(int64_t id) {
     UserContext *dst_ctx = &utask_pool[id].user_context;
 
     // fp, lr should be populated by _kernel_exit
-    // sp should be populated by copyStacks()
+    dst_ctx->sp = src_ctx->sp;
     dst_ctx->elr_el1 = src_ctx->elr_el1;
     dst_ctx->spsr_el1 = src_ctx->spsr_el1;
 }
@@ -171,14 +176,12 @@ void copyStacks(int64_t id) {
     ktask_pool[id].kernel_context.sp = (uint64_t)kstack_pool[id + 1] - src_size;
 
     // user
-    src_sp = ustack_pool[cur_task->id];
-    dst_sp = ustack_pool[id];
+    src_sp = (uint8_t *)getPhysicalofVirtualAddressFromPGD(
+        cur_task->pgd, kDefaultStackVirtualAddr - 0x1000);
+    dst_sp = (uint8_t *)getPhysicalofVirtualAddressFromPGD(
+        ktask_pool[id].pgd, kDefaultStackVirtualAddr - 0x1000);
 
     memcpy(dst_sp, src_sp, 4096);
-
-    src_size = (uint64_t)ustack_pool[cur_task->id + 1] -
-               cur_task->user_task->user_context.sp;
-    utask_pool[id].user_context.sp = (uint64_t)ustack_pool[id + 1] - src_size;
 }
 
 static void updateTrapFrame(int64_t id) {
@@ -188,22 +191,24 @@ static void updateTrapFrame(int64_t id) {
 
     // retval
     trapframe[0] = 0;
-
-    // fp
-    trapframe[29] = (uint64_t)ustack_pool[id + 1] -
-                    // gap b/t parent's current fp and it's stack orignal base
-                    ((uint64_t)ustack_pool[getCurrentTask()->id + 1] - trapframe[29]);
 }
 
 void doFork(uint64_t *trapframe) {
     TaskStruct *cur_task = getCurrentTask();
 
-    int64_t new_task_id = createPrivilegeTask(_child_return_from_fork);
+    int64_t new_task_id = createPrivilegeTask(_child_return_from_fork, NULL);
     if (new_task_id == -1) {
         // TODO:
         sendStringUART("[ERROR] fail to create privilege task\n");
         return;
     }
+
+    TaskStruct *new_task = &ktask_pool[new_task_id];
+
+    new_task->tail_page =
+        updatePageFramesForMappingStack(new_task->pgd, new_task->tail_page);
+
+    copyProgram(new_task);
 
     trapframe[0] = new_task_id;
 
@@ -229,7 +234,7 @@ static void barTask(void);
 static void forkTask(void);
 
 // kernel task
-void fooTask(void) {
+void fooTask(void (*user_task)()) {
 
     // kernel routine
     TaskStruct *cur_task = getCurrentTask();
@@ -239,7 +244,7 @@ void fooTask(void) {
     sendStringUART(" in kernel mode...\n");
     sendStringUART("Doing kernel routine for awhile...\n");
 
-    doExec(barTask);
+    doExec(user_task);
 }
 
 // ------ For User Mode ----------------
@@ -318,7 +323,36 @@ static void barTask(void) {
     writeStringUART("Doing barTask() for awhile...\n");
 
     exit(0);
+}
 
+void test_command1(void) {
+    int cnt = 0;
+    if (fork() == 0) {
+        fork();
+        fork();
+        while (cnt < 10) {
+            writeStringUART("Task id: ");
+            writeHexUART(getTaskId());
+            writeStringUART(", sp: ");
+            writeHexUART((uint64_t)&cnt);
+            writeStringUART(", cnt: ");
+            writeHexUART(cnt);
+            writeUART('\n');
+            delay(100000);
+            ++cnt;
+        }
+        exit(0);
+    }
+}
 
-    exec(bazTask);
+void test_command2(void) {
+    if (fork() == 0) {
+        int *a = 0x0;
+        writeHexUART(*a); // trigger page fault
+    }
+}
+
+static void startMain(void (*main)(void)) {
+    main();
+    exit(0);
 }

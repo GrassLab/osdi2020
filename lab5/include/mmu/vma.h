@@ -27,5 +27,6 @@ void freePages(Page *page_frame);
 Page *updatePageFramesForMappingStack(Page *pgd, Page *tail_page);
 Page *updatePageFramesForMappingProgram(Page *pgd, Page *tail_page,
                                         uint64_t start);
+uint64_t *getPhysicalofVirtualAddressFromPGD(Page *pgd, uint64_t addr);
 
 #endif

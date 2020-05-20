@@ -44,6 +44,10 @@ switchCpuContext:
     mov sp,  x9
 
     msr tpidr_el1, x1
+
+    // load 1st argument
+    ldr x0, [x1, 16 * 7]
+
     ret
 
 .global getUserCurrentTask
@@ -63,6 +67,9 @@ initUserTaskandSwitch:
     msr SPSR_EL1, x0
 
     msr TPIDR_EL0, x1
+
+    // load 1st argument to x0
+    ldp x1, x0, [x1, 16 * 2]
 
     eret
 

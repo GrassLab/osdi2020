@@ -214,3 +214,38 @@ Page *updatePageFramesForMappingProgram(Page *pgd, Page *tail_page,
 
     return tail_page;
 }
+
+static uint64_t *getNextLevelTable(uint64_t *cur_table, const size_t index) {
+    if (cur_table[index] == 0lu) {
+        return NULL;
+    } else {
+        return (uint64_t *)translate((cur_table[index] & 0x0000fffffffff000),
+                                     kPhysicalToVirtual);
+    }
+}
+
+uint64_t *getPhysicalofVirtualAddressFromPGD(Page *pgd, uint64_t addr) {
+    uint64_t *pgd_page_frame =
+        (uint64_t *)translate((uint64_t)pgd, kPageDescriptorToVirtual);
+    uint64_t *pud_page_frame;
+    uint64_t *pmd_page_frame;
+    uint64_t *pte_page_frame;
+
+    if ((pud_page_frame =
+             getNextLevelTable(pgd_page_frame, getPGDIndex(addr))) == NULL) {
+        return NULL;
+    }
+
+    if ((pmd_page_frame =
+             getNextLevelTable(pud_page_frame, getPUDIndex(addr))) == NULL) {
+        return NULL;
+    }
+
+    if ((pte_page_frame =
+             getNextLevelTable(pmd_page_frame, getPMDIndex(addr))) == NULL) {
+        return NULL;
+    }
+
+    return (uint64_t *)translate(pte_page_frame[getPTEIndex(addr)],
+                                 kPhysicalToVirtual);
+}

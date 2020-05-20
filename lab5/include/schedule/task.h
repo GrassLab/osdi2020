@@ -27,6 +27,7 @@ typedef struct __KernelContext {
 
     // PGD's frame for user space
     uint64_t physical_pgd;
+    uint64_t main;
 } KernelContext;
 
 typedef struct __UserContext {
@@ -36,6 +37,7 @@ typedef struct __UserContext {
     uint64_t sp;
     uint64_t elr_el1;
     uint64_t spsr_el1;
+    uint64_t main;
 } UserContext;
 
 typedef struct __UserTaskStruct {
@@ -74,7 +76,7 @@ extern Queue running_queue;
 
 void idle(void);
 void initIdleTaskState(void);
-int64_t createPrivilegeTask(void (*func)());
+int64_t createPrivilegeTask(void (*kernel_task)(), void (*user_task)());
 void doExec(void (*func)());
 void checkRescheduleFlag(void);
 
@@ -82,6 +84,10 @@ void doFork(uint64_t *trapframe);
 void doExit(int status);
 
 // for testing scheduler
-void fooTask(void);
+void fooTask(void (*user_task)());
+
+// user program
+void test_command1(void);
+void test_command2(void);
 
 #endif
