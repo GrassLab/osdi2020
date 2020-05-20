@@ -33,7 +33,10 @@ void scheduler_init(void)
 
 void schedule_context_switch(uint64_t current_id, uint64_t next_id)
 {
-  mmu_user_task_set_pmu(TASK_ID_TO_IDX(next_id));
+  if(CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(next_id)].flag, TASK_STATE_USER_SPACE))
+  {
+    mmu_user_task_set_pmd(&(kernel_task_pool[TASK_ID_TO_IDX(next_id)].user_space_mm));
+  }
   schedule_switch_context(&(kernel_task_pool[TASK_ID_TO_IDX(current_id)].cpu_context), &(kernel_task_pool[TASK_ID_TO_IDX(next_id)].cpu_context), next_id);
   irq_int_enable();
   return;
