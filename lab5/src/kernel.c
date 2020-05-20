@@ -25,31 +25,7 @@ int kernel_init(){
     //privilege_task_create(init);
 
     //context_switch(&task[0]);
-    //init();
-
-    uart_puts("-----------------------------------------\n");
-    uart_puts("|               welcome!!!              |\n");
-    uart_puts("-----------------------------------------\n");
-    uart_puts("\n");
-    uart_puts("⣿⣿⣟⣽⣿⣿⣿⣿⣟⣵⣿⣿⣿⡿⣳⣫⣾⣿⣿⠟⠻⣿⣿⣿⢻⣿⣿⣿⣿⣷⡽⣿\n");
-    uart_puts("⣿⣟⣾⡿⣿⣿⢟⣽⣿⣿⣿⣿⣫⡾⣵⣿⣿⣿⠃⠄⠄⠘⢿⣿⣾⣿⣿⣿⢿⣿⣿⡜\n");
-    uart_puts("⡿⣼⡟⣾⣿⢫⣿⣿⣿⣿⡿⣳⣿⣱⣿⣿⣿⡋⠄⠄⠄⠄⠄⠛⠛⠋⠁⠄⠄⣿⢸⣿\n");
-    uart_puts("⢳⣟⣼⡿⣳⣿⣿⣿⣿⡿⣹⡿⣃⣿⣿⣿⢳⠁⠄⠄⠄⢀⣀⠄⠄⠄⠄⠄⢀⣿⢿⣿\n");
-    uart_puts("⡟⣼⣿⣱⣿⡿⣿⣿⣿⢡⣫⣾⢸⢿⣿⡟⣿⣶⡶⢰⣿⣿⣿⢷⠄⠄⠄⠄⢼⣿⣸⣿\n");
-    uart_puts("⣽⣿⢣⣿⡟⣽⣿⣿⠃⣲⣿⣿⣸⣷⡻⡇⣿⣿⢇⣿⣿⣿⣏⣎⣸⣦⣠⡞⣾⢧⣿⣿\n");
-    uart_puts("⣿⡏⣿⡿⢰⣿⣿⡏⣼⣿⣿⡏⠙⣿⣿⣤⡿⣿⢸⣿⣿⢟⡞⣰⣿⣿⡟⣹⢯⣿⣿⣿\n");
-    uart_puts("⡿⢹⣿⠇⣿⣿⣿⣸⣿⣿⣿⣿⣦⡈⠻⣿⣿⣮⣿⣿⣯⣏⣼⣿⠿⠏⣰⡅⢸⣿⣿⣿\n");
-    uart_puts("⡀⣼⣿⢰⣿⣿⣇⣿⣿⡿⠛⠛⠛⠛⠄⣘⣿⣿⣿⣿⣿⣿⣶⣿⠿⠛⢾⡇⢸⣿⣿⣿\n");
-    uart_puts("⠄⣿⡟⢸⣿⣿⢻⣿⣿⣷⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⡋⠉⣠⣴⣾⣿⡇⣸⣿⣿⡏\n");
-    uart_puts("⠄⣿⡇⢸⣿⣿⢸⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣄⠘⢿⣿⠏⠄⣿⣿⣿⣹\n");
-    uart_puts("⠄⢻⡇⢸⣿⣿⠸⣿⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣦⣼⠃⠄⢰⣿⣿⢯⣿\n");
-    uart_puts("⠄⢸⣿⢸⣿⣿⡄⠙⢿⣿⣿⡿⠁⠄⠄⠄⠄⠉⣿⣿⣿⣿⣿⣿⡏⠄⢀⣾⣿⢯⣿⣿\n");
-    uart_puts("⣾⣸⣿⠄⣿⣿⡇⠄⠄⠙⢿⣀⠄⠄⠄⠄⠄⣰⣿⣿⣿⣿⣿⠟⠄⠄⣼⡿⢫⣻⣿⣿\n");
-    uart_puts("⣿⣿⣿⠄⢸⣿⣿⠄⠄⠄⠄⠙⠿⣷⣶⣤⣴⣿⠿⠿⠛⠉⠄⠄ ⢸⣿⣿⣿⣿⠃⠄\n");
-    uart_puts("\n");
-    uart_puts("# ");
-
-    while (1);
+    init();
 
     return 0;
 }
@@ -208,15 +184,72 @@ void test(){
 }
 
 void test_user(){
-    do_exec(user);
+    //do_exec(user);
+    asm ("msr DAIFClr, 0xf");
+    while(1){
+        uart_puts("⣿⣿⣟⣽⣿⣿⣿⣿⣟⣵⣿⣿⣿⡿⣳⣫⣾⣿⣿⠟⠻⣿⣿⣿⢻⣿⣿⣿⣿⣷⡽⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⣿⣟⣾⡿⣿⣿⢟⣽⣿⣿⣿⣿⣫⡾⣵⣿⣿⣿⠃⠄⠄⠘⢿⣿⣾⣿⣿⣿⢿⣿⣿⡜\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⡿⣼⡟⣾⣿⢫⣿⣿⣿⣿⡿⣳⣿⣱⣿⣿⣿⡋⠄⠄⠄⠄⠄⠛⠛⠋⠁⠄⠄⣿⢸⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⢳⣟⣼⡿⣳⣿⣿⣿⣿⡿⣹⡿⣃⣿⣿⣿⢳⠁⠄⠄⠄⢀⣀⠄⠄⠄⠄⠄⢀⣿⢿⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⡟⣼⣿⣱⣿⡿⣿⣿⣿⢡⣫⣾⢸⢿⣿⡟⣿⣶⡶⢰⣿⣿⣿⢷⠄⠄⠄⠄⢼⣿⣸⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⣽⣿⢣⣿⡟⣽⣿⣿⠃⣲⣿⣿⣸⣷⡻⡇⣿⣿⢇⣿⣿⣿⣏⣎⣸⣦⣠⡞⣾⢧⣿⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⣿⡏⣿⡿⢰⣿⣿⡏⣼⣿⣿⡏⠙⣿⣿⣤⡿⣿⢸⣿⣿⢟⡞⣰⣿⣿⡟⣹⢯⣿⣿⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⡿⢹⣿⠇⣿⣿⣿⣸⣿⣿⣿⣿⣦⡈⠻⣿⣿⣮⣿⣿⣯⣏⣼⣿⠿⠏⣰⡅⢸⣿⣿⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⡀⣼⣿⢰⣿⣿⣇⣿⣿⡿⠛⠛⠛⠛⠄⣘⣿⣿⣿⣿⣿⣿⣶⣿⠿⠛⢾⡇⢸⣿⣿⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⠄⣿⡟⢸⣿⣿⢻⣿⣿⣷⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⡋⠉⣠⣴⣾⣿⡇⣸⣿⣿⡏\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⠄⣿⡇⢸⣿⣿⢸⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣄⠘⢿⣿⠏⠄⣿⣿⣿⣹\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⠄⢻⡇⢸⣿⣿⠸⣿⣿⣿⣿⣿⣿⠿⠿⢿⣿⣿⣿⣿⣿⣿⣿⣦⣼⠃⠄⢰⣿⣿⢯⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⠄⢸⣿⢸⣿⣿⡄⠙⢿⣿⣿⡿⠁⠄⠄⠄⠄⠉⣿⣿⣿⣿⣿⣿⡏⠄⢀⣾⣿⢯⣿⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⣾⣸⣿⠄⣿⣿⡇⠄⠄⠙⢿⣀⠄⠄⠄⠄⠄⣰⣿⣿⣿⣿⣿⠟⠄⠄⣼⡿⢫⣻⣿⣿\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("⣿⣿⣿⠄⢸⣿⣿⠄⠄⠄⠄⠙⠿⣷⣶⣤⣴⣿⠿⠿⠛⠉⠄⠄ ⢸⣿⣿⣿⣿⠃⠄\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+        uart_puts("\n");
+        for (int i=0; i<600000; i++) asm volatile("nop");
+    }
 }
 
 void test_user2(){
-    do_exec(user2);
+    //do_exec(user2);
+    asm ("msr DAIFClr, 0xf");
+    while(1){
+        char res[3];
+        int i;
+        uart_write("user task ");
+        i = get_taskid();
+        itoa(i, res);
+        uart_puts(res);
+        uart_puts("!!!\n");
+        for (int i=0; i<1000000; i++) asm volatile("nop");
+    }
 }
 
 void test_user3(){
-    do_exec(user3);
+    //do_exec(user3);
+    asm ("msr DAIFClr, 0xf");
+    while(1){
+        char res[3];
+        int i;
+        uart_write("user task ");
+        i = get_taskid();
+        itoa(i, res);
+        uart_puts(res);
+        uart_puts("!!!\n");
+        for (int i=0; i<1000000; i++) asm volatile("nop");
+    }
 }
 
 void user4(){
@@ -332,7 +365,7 @@ void enable_sys_timer(){
         "mrs x0, cntfrq_el0;"
         "msr cntp_tval_el0, x0;"
         "mov x0, 2;"
-        "ldr x1, =0x40000040;"
+        "ldr x1, =0xffff000040000040;"
         "str x0, [x1];"
     );
     *CORE0_TIMER_IRQ_CTRL = 2;

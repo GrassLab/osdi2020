@@ -2,7 +2,7 @@
 #define KERNEL
 #define QUEUE_SIZE 64
 
-#define CORE0_TIMER_IRQ_CTRL (volatile unsigned int*)0x40000040
+#define CORE0_TIMER_IRQ_CTRL (volatile unsigned int*)0xffff000040000040
 
 struct task_struct {
     unsigned long long x19;
