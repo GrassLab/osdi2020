@@ -71,15 +71,16 @@ el1_entry:
     ldr	x0, = MAIR_CONFIG_DEFAULT
     msr	mair_el1, x0
 
-    // indirect branch
-    // load before turn on MMU
-    ldr x0 ,=kernel_main  
-    
     mrs x2, sctlr_el1
     orr x2 , x2, 1 
     msr sctlr_el1, x2 // enable MMU, cache remains disabled
-main:
+
+    // indirect branch
+    // load before turn on MMU    
+    //bl kernel_main
+    ldr x0 ,=kernel_main  
     br      x0
+    
     // for failsafe, halt this core too
     b       proc_hang
 
@@ -130,15 +131,25 @@ page_table_create:
     // step4. setting PTE
     mov x4, xzr //x4 for physical memory
     mov x5, xzr
-    mov x6, #0x41000000 
+    mov x6, #0x3F000000 
 1:     
-    ldr x3, = MMU_DEVICE_FLAGS
+    ldr x3, = MMU_FLAGS
     orr x3, x4, x3
     str x3, [x15, x5, lsl #3]
     add x5, x5, #1
     add x4, x4, #PAGE_SIZE 
     cmp x4, x6 
     b.ls 1b
+
+    mov x6, #0x41000000 
+2: 
+    ldr x3, = MMU_DEVICE_FLAGS
+    orr x3, x4, x3
+    str x3, [x15, x5, lsl #3]
+    add x5, x5, #1
+    add x4, x4, #PAGE_SIZE 
+    cmp x4, x6 
+    b.ls 2b
  
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
