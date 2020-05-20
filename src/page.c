@@ -30,8 +30,7 @@ void page_free(struct page_t* page) {
     }
 }
 
-void page_mapping(struct task_t* task) {
-    struct page_t* user_page = page_alloc();
+void page_mapping(struct task_t* task, struct page_t* user_page) {
     task->user_page = user_page->id;
     struct page_t* pgd_page = page_alloc();
     struct page_t* pud_page = page_alloc();
@@ -46,9 +45,6 @@ void page_mapping(struct task_t* task) {
     *pmd = (uint64_t)pte | PD_TABLE;
     *pte = (uint64_t)user_page->content | PD_TABLE | PD_ACCESS;
     task->pgd = pgd;
-    asm volatile("gg:");
-    move_ttbr(task->pgd);
-    asm volatile("gg2:");
 }
 
 void move_ttbr(uint64_t* pgd) { asm volatile("msr ttbr0_el1, x0"); }

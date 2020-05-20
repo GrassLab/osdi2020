@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <task.h>
 
+#include "page.h"
 #include "utils.h"
 #define current get_current();
 
@@ -142,17 +143,24 @@ struct utask_t* get_current_utask() {
 }
 
 void switch_to_user_mode() {
-    struct utask_t* utask = get_current_utask();
-    uint64_t sp = utask->sp;
-    uint64_t func = utask->elr;
+    struct task_t* task = get_current();
+    uint64_t sp = task->utask.sp;
+    uint64_t func = task->utask.elr;
     user_context(sp, func);
 }
 
-void do_exec(void (*func)()) {
+void do_exec(uint8_t* func, int size) {
     struct task_t* task = get_current();
-    task->utask.elr = (uint64_t)func;
+    struct page_t* user_page = page_alloc();
+    for (int i = 0; i < size; i++) {
+        *((uint8_t*)user_page->content + i) = *(func + i);
+    }
+    asm volatile("cpy:");
+    page_mapping(task, user_page);
+    task->utask.elr = 0;
     task->utask.sp = (uint64_t)ustack_pool[task->id + 1];
     uint64_t utask_addr = (uint64_t)&task->utask;
+    move_ttbr(task->pgd);
     asm volatile("mov     x6, %0" : "=r"(utask_addr));
     asm volatile("msr     tpidr_el0, x6");
     asm volatile("ldr x2, =switch_to_user_mode");

@@ -24,6 +24,8 @@
 extern volatile unsigned int _boot_start;
 extern volatile unsigned int _end;
 extern volatile void set_aux();
+extern uint64_t _binary_user_img_start;
+extern uint64_t _binary_user_img_end;
 
 void run() {
     print_s("\033[2J\033[1;1H");
@@ -67,48 +69,13 @@ void zombie_killer() {
     }
 }
 
-/* void req1() { */
-/* privilege_task_create(sche_task, 0); */
-/* privilege_task_create(sche_task, 0); */
-/* } */
-
-/* void req3() { */
-/* privilege_task_create(loop_task, 0); */
-/* privilege_task_create(loop_task, 0); */
-/* } */
-
-/* void req4() { */
-/* privilege_task_create(exec_task, 0); */
-/* privilege_task_create(fork_exit_task, 0); */
-/* } */
-
-/* void ele1() { */
-/* privilege_task_create(loop_user, 0); */
-/* privilege_task_create(kill_task, 0); */
-/* } */
-
-/* void ele2() { */
-/* privilege_task_create(kexit_task, 0); */
-/* privilege_task_create(kexit_task, 0); */
-/* } */
-
-/* void ele3() { privilege_task_create(echo_task, 0); } */
-
-/* void ele5() { */
-/* privilege_task_create(loop_ktask, 0); */
-/* privilege_task_create(loop_ktask, 0); */
-/* } */
-
-void foo_user() {
-    print_s("foo user\n");
+void foo_kernel() {
+    print_s("foo kernel\n");
+    asm volatile("siz:");
+    do_exec((uint8_t*)&_binary_user_img_start,
+            ((int)(&_binary_user_img_end) - (int)(&_binary_user_img_start)));
     while (1)
         ;
-}
-void foo_kernel() {
-    struct task_t* task = get_current();
-    page_mapping(task);
-    print_s("foo kernel\n");
-    do_exec(foo_user);
 }
 
 void foo() { privilege_task_create(foo_kernel, 0); }
@@ -120,24 +87,9 @@ int main() {
     lfb_showpicture();
     task_init();
     set_aux();
-    /* char tmp = uart_getb(); */
-    /* tmp = uart_getb(); */
-    /* tmp = uart_getb(); */
     asm volatile("svc #2");
 
     privilege_task_create(idle, 3);
-    /* privilege_task_create(zombie_killer, 0); */
-    /* privilege_task_create(task1, 0); */
-    /* privilege_task_create(task2, 0); */
-    /* privilege_task_create(task3, 0); */
-
-    /* req1(); */
-    /* req3(); */
-    /* req4(); */
-    /* ele1(); */
-    /* ele2(); */
-    /* ele3(); */
-    /* ele5(); */
     foo();
     privilege_task_run();
 

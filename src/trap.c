@@ -33,7 +33,7 @@ void synchronize_handler(uint64_t esr, uint64_t elr,
                 /* asm volatile("mov x0, %0" : "=r"(trap_frame->x0)); */
                 break;
             case 2:
-                do_exec((void (*)())trap_frame->x0);
+                /* do_exec((void (*)())trap_frame->x0); */
                 break;
             case 3:
                 do_fork(elr);

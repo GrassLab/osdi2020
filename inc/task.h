@@ -98,7 +98,7 @@ void schedule();
 void task_init();
 void queue_push(struct queue* queue, struct task_t* task);
 struct task_t* queue_pop(struct queue* queue, TASK_STATUS status);
-void do_exec(void (*func)());
+void do_exec(uint8_t* func, int size);
 void do_fork(uint64_t elr);
 void do_exit(uint64_t status);
 void kexit(uint64_t status);
