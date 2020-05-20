@@ -2,6 +2,7 @@
 #include "kernel/lib/ioutil.h"
 #include "kernel/mini_uart.h"
 #include "kernel/lib/types.h"
+#include "kernel/mm.h"
 #include "kernel/sched.h"
 
 void exception_init(void) {
@@ -39,7 +40,7 @@ void curr_el_spx_sync_handler(void) {
   uint64_t ec = (syndrome & 0xfc000000) >> 26;
   uint64_t iss = syndrome & 0x01ffffff;
 
-  if (ec == 0x15) {
+  if (ec == 21) {
     switch (iss) {
       case 1:
         printk("Exception return address %#x" EOL, address);
@@ -54,6 +55,8 @@ void curr_el_spx_sync_handler(void) {
         printk("[ERROR] Unknown SVC number %u" EOL, iss);
         break;
     }
+  } else if (ec == 36) {
+    page_fault_handler();
   } else {
     printk("[ERROR] Handler for EC %u and ISS %u isn't implemented yet" EOL, ec, iss);
     printk("ELR_EL1 = %#x\n", address);

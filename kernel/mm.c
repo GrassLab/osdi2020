@@ -1,6 +1,8 @@
 #include "kernel/base.h"
-#include "kernel/mm.h"
+#include "kernel/lib/ioutil.h"
 #include "kernel/lib/string.h"
+#include "kernel/mm.h"
+#include "kernel/syscall.h"
 
 extern char __kernel_start[];
 extern char __kernel_end[];
@@ -114,4 +116,11 @@ void reclaim_vmmap(uint64_t *ptb, uint8_t level) {
     }
   }
   page_free((uint64_t)ptb);
+}
+
+void page_fault_handler(void) {
+  uint64_t *faulting_va;
+  asm volatile("mrs %0, far_el1" : "=r"(faulting_va));
+  printk("task id: %u, page fault occured at %#x\n", do_get_taskid(), faulting_va);
+  do_exit(-1);
 }

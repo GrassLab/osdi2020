@@ -79,6 +79,8 @@ void *create_mapping(uint64_t *pgd, uint64_t va);
 void copy_vmmap(uint64_t *dst, uint64_t *src, uint8_t level);
 void reclaim_vmmap(uint64_t *ptb, uint8_t level);
 
+void page_fault_handler(void);
+
 #endif // __ASSEMBLER__
 
 #endif // KERNEL_MM_H_
