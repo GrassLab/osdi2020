@@ -54,12 +54,14 @@ void initPageFrames(void) {
 
     // kernel page table (3-level translation: 4 page directory)
     // start from 0x0000
-    setInUseBit(translate(0, kPhysicalToPFN), translate(0x4000, kPhysicalToPFN));
+    setInUseBit(translate(0, kPhysicalToPFN),
+                translate(0x4000, kPhysicalToPFN));
 
     // kernel image
     // start from 0x80000
-    setInUseBit(translate(0x80000, kPhysicalToPFN),
-                translate((uint64_t)&kernel_end & 0x0000fffffffff000, kPhysicalToPFN));
+    setInUseBit(
+        translate(0x80000, kPhysicalToPFN),
+        translate((uint64_t)&kernel_end & 0x0000fffffffff000, kPhysicalToPFN));
 
     // peripheral
     setInUseBit(translate((MMIO_BASE & 0x0000fffffffff000), kPhysicalToPFN),
@@ -67,6 +69,42 @@ void initPageFrames(void) {
 
     // interrupt stack @ MMIO_BASE - 0x1000
     // it has 4KB. since stack grows toward lower address -> -0x2000
-    setInUseBit(translate((MMIO_BASE & 0x0000fffffffff000) - 0x2000, kPhysicalToPFN),
-                translate((MMIO_BASE & 0x0000fffffffff000) - 0x1000, kPhysicalToPFN));
+    setInUseBit(
+        translate((MMIO_BASE & 0x0000fffffffff000) - 0x2000, kPhysicalToPFN),
+        translate((MMIO_BASE & 0x0000fffffffff000) - 0x1000, kPhysicalToPFN));
+}
+
+Page *allocPage(void) {
+    for (size_t i = 0; i < NUM_OF_PAGE_FRAMES; ++i) {
+        if (page_frames[i].in_use == 0) {
+            page_frames[i].in_use = 1;
+            memzero((uint64_t *)translate((uint64_t)&page_frames[i],
+                                          kPageDescriptorToVirtual),
+                    PAGE_SIZE / 8);
+
+            return &page_frames[i];
+        }
+    }
+
+    sendStringUART("Out of memory page\n");
+    return NULL;
+}
+
+static void freePage(Page *page_frame) {
+    page_frame->in_use = 0;
+    page_frame->next = NULL;
+}
+
+void freePages(Page *page_frame) {
+    if (page_frame == NULL) {
+        return;
+    }
+
+    Page *next = page_frame->next;
+    while (next) {
+        freePage(page_frame);
+        page_frame = next;
+        next = page_frame->next;
+    }
+    freePage(page_frame);
 }

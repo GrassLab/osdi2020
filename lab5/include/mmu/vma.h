@@ -20,5 +20,7 @@ enum TranslationAction {
 
 void initPageFrames(void);
 uint64_t translate(uint64_t origin, enum TranslationAction action);
+Page *allocPage(void);
+void freePages(Page *page_frame);
 
 #endif
