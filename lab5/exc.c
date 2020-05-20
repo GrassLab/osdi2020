@@ -120,7 +120,7 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
     sys_exec_todo((void(*)())trapframe -> x1);
     break;
   case SYS_FORK:
-    sys_fork_todo(trapframe);
+    sys_fork(trapframe);
     break;
   case SYS_EXIT:
     sys_exit((int)trapframe -> x1);

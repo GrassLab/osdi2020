@@ -199,3 +199,9 @@ uint64_t * mmu_user_task_set_pmu(uint64_t idx)
   return MMU_PA_TO_VA(user_space_mm.user_space_text_pa_base[idx]);
 }
 
+void mmu_copy_user_text_stack(uint64_t src_idx, uint64_t new_idx)
+{
+  /* 32KB = 0x8000 bytes, include text and stack */
+  memcopy((char*)MMU_PA_TO_VA(user_space_mm.user_space_text_pa_base[src_idx]), (char *)MMU_PA_TO_VA(user_space_mm.user_space_text_pa_base[new_idx]), 0x8000);
+}
+

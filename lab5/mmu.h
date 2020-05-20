@@ -133,6 +133,7 @@ uint64_t * mmu_page_allocate(void);
 void mmu_page_free(uint64_t * va);
 void mmu_create_user_page_table_32KB(void);
 uint64_t * mmu_user_task_set_pmu(uint64_t idx);
+void mmu_copy_user_text_stack(uint64_t src_idx, uint64_t new_idx);
 
 #endif /* __ASSEMBLER__ */
 

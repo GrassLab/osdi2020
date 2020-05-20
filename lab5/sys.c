@@ -6,6 +6,7 @@
 #include "irq.h"
 #include "task.h"
 #include "schedule.h"
+#include "mmu.h"
 
 int sys_exc(uint64_t ELR_EL1, uint8_t exception_class, uint32_t exception_iss)
 {
@@ -69,7 +70,7 @@ int sys_exec_todo(void(*start_func)())
   return 0;
 }
 
-int sys_fork_todo(struct trapframe_struct * trapframe)
+int sys_fork(struct trapframe_struct * trapframe)
 {
   uint64_t current_task_id = task_get_current_task_id();
 
@@ -92,8 +93,6 @@ int sys_fork_todo(struct trapframe_struct * trapframe)
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.spsr_el1 = trapframe -> spsr_el1;
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.elr_el1 = trapframe -> elr_el1;
 
-  /* DIVIERGE: current task context sp = trapframe */
-
   /* copy kernel stack */
   /* task_kernel_stack_size is uint16_t (2 bytes) */
   memcopy((char *)task_kernel_stack_pool[TASK_ID_TO_IDX(current_task_id)], (char *)task_kernel_stack_pool[TASK_ID_TO_IDX(new_task_id)], TASK_KERNEL_STACK_SIZE * 2);
@@ -104,13 +103,13 @@ int sys_fork_todo(struct trapframe_struct * trapframe)
   /* kernel sp will be used when context switch to new task */
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp = (uint64_t)task_kernel_stack_pool[new_task_id] - ((uint64_t)task_kernel_stack_pool[current_task_id] - (uint64_t)trapframe);
 
-  /* copy user stack, same logic as kernel stack */
-  /* TODO */
-  //memcopy((char *)task_user_stack_pool[TASK_ID_TO_IDX(current_task_id)], (char *)task_user_stack_pool[TASK_ID_TO_IDX(new_task_id)], TASK_USER_STACK_SIZE * 2);
+  /* setup user stack sp */
+  /* should be the same as the curret one */
+  kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp_el0 = trapframe -> sp_el0;
 
-  /* setup user stack sp, same logic as kernel stack */
+  /* copy user task text and stack */
   /* TODO */
-  //kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp_el0 = (uint64_t)task_user_stack_pool[new_task_id] - ((uint64_t)task_user_stack_pool[current_task_id] - trapframe -> sp_el0);
+  mmu_copy_user_text_stack(TASK_ID_TO_IDX(current_task_id), TASK_ID_TO_IDX(new_task_id));
 
   /* child should get 0 on fork return */
   /* NOTE: EFFECTED BY trap dispatcher */
@@ -120,8 +119,8 @@ int sys_fork_todo(struct trapframe_struct * trapframe)
   /* return value of parent should be new task id */
   *(uint64_t *)(((uint64_t)trapframe) + 288) = new_task_id;
 
-  /* child's sp_el0 (sp + 256) and fp (ignored) in trapframe needs update */
-  *(uint64_t *)(((uint64_t)kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp) + 256) = kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp_el0;
+  /* child's sp_el0 (sp + 256) and fp (ignored) in trapframe remains the same */
+
   task_unguard_section();
 
   return 0;
