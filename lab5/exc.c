@@ -105,7 +105,7 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
     asm volatile("mrs %0, far_el1\n"
                  "mrs %1, tpidr_el1\n":
                  "=r"(FAR_EL1), "=r"(TPIDR_EL1));
-    uart_puts("Task ID: ");
+    uart_puts(ANSI_BG_RED ANSI_BLACK"[Exception]"ANSI_RESET" Task ID: ");
     string_longlong_to_char(string_buff, (long)TPIDR_EL1);
     uart_puts(string_buff);
     uart_puts(" triggered page fault at(FAR_EL1) ");
