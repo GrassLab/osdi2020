@@ -34,9 +34,13 @@ void mmu_ttbrx_el1_init(void)
   /* setup pmd */
   /* 1GB = 512 * 2mb */
   uint64_t * pmd_frame_ptr = PMD_FRAME_BASE;
-  for(unsigned i = 0; i < PAGE_TOTAL; ++i)
+  for(unsigned i = 0; i < 504; ++i)
   {
-    /* [TODO] Setup as normal, solve exception occurred when set page as normal */
+    *(pmd_frame_ptr + i) = (uint64_t)(PD_ACCESS | (uint64_t)(PAGE_SIZE * i) | PD_NORMAL | PD_BLOCK);
+  }
+  /* 3f000000 gpu peripheral should be set to device, 16MB, 2MB * 8 */
+  for(unsigned i = 504; i < 512; ++i)
+  {
     *(pmd_frame_ptr + i) = (uint64_t)(PD_ACCESS | (uint64_t)(PAGE_SIZE * i) | PD_DEVICE | PD_BLOCK);
   }
 
@@ -61,7 +65,7 @@ void mmu_page_init(void)
   /* 0x3F000000 / 0x200000 = 504 */
   /* the rest are unused */
 
-  for(unsigned page_idx = 0; page_idx < PAGE_TOTAL; ++page_idx)
+  for(unsigned page_idx = 0; page_idx < PAGE_4K_TOTAL; ++page_idx)
   {
     CLEAR_BIT(mmu_page[page_idx].flag, PAGE_USED);
   }
@@ -73,7 +77,7 @@ void mmu_page_init(void)
 
 uint64_t * mmu_page_allocate(int zero)
 {
-  for(unsigned current_pfn = 0; current_pfn < PAGE_TOTAL; ++current_pfn)
+  for(unsigned current_pfn = 0; current_pfn < PAGE_4K_TOTAL; ++current_pfn)
   {
     if(!CHECK_BIT(mmu_page[current_pfn].flag, PAGE_USED))
     {

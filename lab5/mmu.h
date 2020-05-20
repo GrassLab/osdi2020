@@ -89,7 +89,8 @@ RW:
 #define PUD_FRAME_BASE ((uint64_t *)0x1000u)
 #define PMD_FRAME_BASE ((uint64_t *)0x2000u)
 
-#define PAGE_TOTAL 0x800
+#define PAGE_TOTAL 0x512
+#define PAGE_4K_TOTAL 0x800
 #define MMU_PAGE_BASE 0x200000
 #define PAGE_PFN_LOW 1
 #define PAGE_PFN_HIGH 504 /* exclusive, for loop */
