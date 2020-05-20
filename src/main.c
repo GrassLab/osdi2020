@@ -1,4 +1,3 @@
-#include "uart.h"
 #include "shell.h"
 
 void main() {
@@ -6,13 +5,19 @@ void main() {
   uart_init();
   uart_flush();
 
-  lfb_init();
+  //lfb_init();
   // display a pixmap
-  lfb_showpicture();
+  //lfb_showpicture();
   char *osdi = "OSDI Welcome\n";
   uart_puts(osdi);
 
+  //asm("svc 2");
+  //create_tasks();
+
+
+  /*
   for(;;) {
     put_shell();
   }
+  */
 }

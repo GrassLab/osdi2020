@@ -16,3 +16,4 @@ unsigned long get_free_page()
 void free_page(unsigned long p){
 	mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
 }
+

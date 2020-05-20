@@ -1,7 +1,8 @@
 SECTIONS
 {
-    . = 0x80000;
-    PROVIDE(_start = .);
+    . = 0xffff000000000000;
+    . += 0x80000;
+    _start = .;
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) }
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
     PROVIDE(_data = .);
@@ -12,6 +13,12 @@ SECTIONS
         *(.bss .bss.*)
         *(COMMON)
         __bss_end = .;
+    }
+    .bootloader : {
+      /* . = ALIGN(16); */
+      _bootloader_beg = .;
+      *(.bootloader*)
+      _bootloader_end = .;
     }
     _end = .;
 
