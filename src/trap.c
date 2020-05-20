@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "io.h"
+#include "page.h"
 #include "task.h"
 #include "timer.h"
 #include "trap.h"
@@ -10,6 +11,9 @@ extern void core_timer_enable();
 void synchronize_handler(uint64_t esr, uint64_t elr,
                          struct trap_frame_t *trap_frame) {
     int iss = esr & ((1 << 24) - 1);
+    uint64_t *pgd;
+    asm volatile("mrs %0, ttbr1_el1" : "=r"(pgd));
+    move_ttbr(pgd);
     /* int ec = esr >> 26; */
     if (iss == 0) {
         print_s("Exception return address: 0x");

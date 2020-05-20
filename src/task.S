@@ -19,6 +19,13 @@ switch_to:
   mov sp,  x9
   msr tpidr_el1, x1
   msr spsr_el1, x3
+
+  dsb ish // ensure write has completed
+  msr ttbr0_el1, x4 // switch translation based address.
+  tlbi vmalle1is // invalidate all TLB entries
+  dsb ish // ensure completion of TLB invalidatation
+  isb // clear pipeline
+
   br x2
 
 .global user_context

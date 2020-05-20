@@ -65,8 +65,8 @@ setup_pages:
     )
     msr mair_el1, x0
 
-    ldr x0, =pgd_base // PGD's page frame at 0x0
-    ldr x1, =pud_base
+    ldr x0, =_pgd_base // PGD's page frame at 0x0
+    ldr x1, =_pud_base
     mov x2, x0 
 
     // setup PGD
@@ -74,8 +74,8 @@ setup_pages:
     orr x3, x1, x3 // combine the physical address of next level page with attribute.
     str x3, [x2]
 
-    ldr x1, =pmd_base
-    ldr x2, =pud_base
+    ldr x1, =_pmd_base
+    ldr x2, =_pud_base
 
     // setup first PUD
     ldr x3, =PD_TABLE
@@ -90,8 +90,8 @@ setup_pages:
     orr x3, x8, x3
     str x3, [x2, 8]
 
-    ldr x1, =pte_base
-    ldr x2, =pmd_base
+    ldr x1, =_pte_base
+    ldr x2, =_pmd_base
 
     // setup PMD x 512
     mov x4, xzr
@@ -108,7 +108,7 @@ setup_pages:
     cmp x4, x5
     b.lt 3b
 
-    ldr x2, =pte_base
+    ldr x2, =_pte_base
 
     // setup PTE x 512
     mov x4, xzr

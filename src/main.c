@@ -78,7 +78,10 @@ void foo_kernel() {
         ;
 }
 
-void foo() { privilege_task_create(foo_kernel, 0); }
+void foo() {
+    privilege_task_create(foo_kernel, 0);
+    privilege_task_create(foo_kernel, 0);
+}
 
 int main() {
     // set up serial console

@@ -70,6 +70,8 @@ struct task_t {
     uint64_t* pgd;
     uint64_t user_page;
     uint64_t stack_page;
+    uint64_t pages[100];
+    uint64_t pages_now;
 };
 
 struct queue_element_t {

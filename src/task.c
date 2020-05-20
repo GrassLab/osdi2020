@@ -7,7 +7,7 @@
 #define current get_current();
 
 extern void switch_to(struct task_t* prev, struct task_t* next,
-                      uint64_t nextfunc, uint64_t spsr);
+                      uint64_t nextfunc, uint64_t spsr, uint64_t* pgd);
 extern void user_context(uint64_t sp, uint64_t func);
 
 struct task_t task_pool[64];
@@ -36,7 +36,7 @@ void context_switch(struct task_t* next) {
         print_s("has been killed\n");
         schedule();
     } else {
-        switch_to(prev, next, nextfunc, next->spsr);
+        switch_to(prev, next, nextfunc, next->spsr, next->pgd);
     }
 }
 
@@ -92,6 +92,8 @@ struct task_t* queue_pop(struct queue* queue, TASK_STATUS status) {
 struct task_t* privilege_task_create(void (*func)(), int priority) {
     struct task_t* task = 0;
     uint64_t spsr_el1;
+    uint64_t* pgd;
+    asm volatile("mrs %0, ttbr1_el1" : "=r"(pgd));
     for (int i = 0; i < 64; i++) {
         if (task_pool[i].status == INACTIVE) {
             task = &task_pool[i];
@@ -103,6 +105,8 @@ struct task_t* privilege_task_create(void (*func)(), int priority) {
             task_pool[i].spsr = spsr_el1;
             task_pool[i].priority = priority;
             task_pool[i].status = ACTIVE;
+            task_pool[i].pgd = pgd;
+            task_pool[i].pages_now = 0;
             break;
         }
     }
@@ -122,7 +126,9 @@ void privilege_task_run() {
     print_i(task->id);
     print_s("\n");
     queue_push(&runqueue, task);
-    switch_to(&tmp, task, task->elr, task->spsr);
+    uint64_t* pgd;
+    asm volatile("mrs %0, ttbr1_el1" : "=r"(pgd));
+    switch_to(&tmp, task, task->elr, task->spsr, pgd);
 }
 
 void schedule() {
@@ -153,6 +159,8 @@ void do_exec(uint8_t* func, int size) {
     struct task_t* task = get_current();
 
     struct page_t* user_page = page_alloc();
+    task->pages[task->pages_now++] = user_page->id;
+    asm volatile("b:");
     for (int i = 0; i < size; i++) {
         *((uint8_t*)user_page->content + i) = *(func + i);
     }
@@ -160,6 +168,7 @@ void do_exec(uint8_t* func, int size) {
     task->utask.elr = 0;
 
     struct page_t* stack_page = page_alloc();
+    task->pages[task->pages_now++] = stack_page->id;
     stack_mapping(task, stack_page);
     task->utask.sp = 0x0000ffffffffe000;
 
@@ -213,6 +222,10 @@ void kexit(uint64_t status) {
 void do_exit(uint64_t status) {
     struct task_t* task = get_current();
     task->status = ZOMBIE;
+    for (uint64_t i = 0; i < task->pages_now; i++) {
+        page_free(&pages[task->pages[i]]);
+    }
+    struct page_t* tmp_page = page_alloc();
     print_s("Exited with status code: ");
     print_i(status);
     print_s("\n");

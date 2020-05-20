@@ -17,14 +17,13 @@ SECTIONS
 
     . -= 0xffff000000000000;
     . = ALIGN(0x00001000);
-    pg_dir = .;
-    pgd_base = .;
+    _pgd_base = .;
     . += 0x1000;
-    pud_base = .;
+    _pud_base = .;
     . += 0x1000;
-    pmd_base = .;
+    _pmd_base = .;
     . += 0x2000;
-    pte_base = .;
+    _pte_base = .;
     .data.pgd : { . += ( 524* (1 << 12)); } /*(1+1+2+512+8)*/
     . = ALIGN(0x00001000);
     . += 0xffff000000000000;
