@@ -39,7 +39,25 @@ int privilege_task_create(void (*func)()){
     uart_hex(pfn_to_pa(pfn));
     uart_send('\n');
 
+    unsigned long pgd = get_free_page();
+    unsigned long pud = get_free_page();
+    unsigned long pmd = get_free_page();
+    unsigned long pte = get_free_page();
+    ((unsigned long *)pgd)[0] = pud |
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pud)[0] = pmd |
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pmd)[0] = pte |
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pte)[0] = (unsigned long)new_task |
+                                PT_PAGE | PT_AF | PT_USER;
 
+    set_pgd(pgd);
+
+    new_task->pgd = pgd;
+    new_task->pud = pud;
+    new_task->pmd = pmd;
+    new_task->pte = pte;
 
     new_task->taskid = n_task_id;
     new_task->counter = 1;
@@ -248,8 +266,18 @@ void exit(){
     int id = current->storeid;
     current->state = TASK_ZOMBIE;
     
+    if (current->pgd)
+        free_page(pa_to_pfn(current->pgd));
+    if (current->pud)
+        free_page(pa_to_pfn(current->pud));
+    if (current->pmd)
+        free_page(pa_to_pfn(current->pmd));
+    if (current->pte)
+        free_page(pa_to_pfn(current->pte));
+    
     free_page(pa_to_pfn((unsigned long)task[id]));
     free_page(pa_to_pfn((unsigned long)u_task[id]));
+    
     enable_preempt();
     schedule();
 }
@@ -258,6 +286,26 @@ void init_init_task(void (*func)()){
     p = (struct task_struct *) get_free_page();
 
     memset((unsigned short *)p, 0, PAGE_SIZE);
+
+    unsigned long pgd = get_free_page();
+    unsigned long pud = get_free_page();
+    unsigned long pmd = get_free_page();
+    unsigned long pte = get_free_page();
+    ((unsigned long *)pgd)[0] = pud |
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pud)[0] = pmd |
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pmd)[0] = pte |
+                                PT_TABLE | PT_AF | PT_USER;
+    ((unsigned long *)pte)[0] = (unsigned long)p |
+                                PT_PAGE | PT_AF | PT_USER;
+
+    set_pgd(pgd);
+
+    p->pgd = pgd;
+    p->pud = pud;
+    p->pmd = pmd;
+    p->pte = pte;
 
     p->taskid = 0;
     p->state = TASK_RUNNING;
@@ -284,6 +332,8 @@ void switch_to(struct task_struct *next)
 		return;
 	struct task_struct * prev = current;
 	current = next; 
+    set_pgd(next->pgd);
+    
 	cpu_switch_to(prev, next);
     
 }
@@ -331,4 +381,17 @@ void update_task_counter(){
     enable_irq();
     schedule();
     // disable_irq();
+}
+
+void set_pgd(unsigned long pgd)
+{
+    // upper half, user space
+    asm volatile("dsb ish");
+    asm volatile("isb");
+    asm volatile("msr ttbr1_el1, %0"
+                 :: "r"((unsigned long)(pgd)));
+
+    asm volatile("tlbi vmalle1is");
+    asm volatile("dsb ish");
+    asm volatile("isb");
 }

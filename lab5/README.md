@@ -26,11 +26,16 @@ page size 2^12 =  4096
  - [x] `required 2-1` Implement page bookkeeping.
  - [x] `required 2-2` Implement the translation function between kernel virtual address, physical address, PFN and the reference to `struct page`.
  - [x] `required 2-3` Implement page_alloc and page_free.
- - [ ] `question 3`   If a page frame is allocated and to be mapped at user space. Is it necessary to initialize it into 0?
+ - [x] `question 3`   If a page frame is allocated and to be mapped at user space. Is it necessary to initialize it into 0?
 ```
 需要
 因為可能會被user指到 如果留下資料會有安全問題
 ```
+
+
+## Requirement 3
+ - [x] `required 3-1` Implement user space paging.
+
 ## Requirement 4
 
  - [x] `required 4-1` Implement page frame reclaim.

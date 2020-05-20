@@ -39,6 +39,12 @@ struct task_struct {
     int taskid;
 	int parentid;
 	int pfn;
+
+	// page table
+    unsigned long pgd;
+    unsigned long pud;
+    unsigned long pmd;
+    unsigned long pte;
 };
 
 #endif
@@ -55,6 +61,8 @@ int get_taskid();
 void enable_preempt();
 int fork();
 void exec(void (*func)());
+
+void set_pgd(unsigned long pgd);
 
 extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 
