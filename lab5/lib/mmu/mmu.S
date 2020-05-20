@@ -64,13 +64,14 @@ create_page_tables:
     orr x3, x2, x3
     str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 
-    ldr x0, =BOOT_PMD_ATTR
+    ldr x0, =BOOT_PMD_RAM_ATTR
     mov x1, 0x2000 // PMD's page frame
     mov x2, 0x00000000
-    mov x3, 0x40000000
+    mov x3, 0x3F000000
     bl create_block_map
 
-    mov x2, 0x40000000
+    ldr x0, =BOOT_PMD_PERIPHERAL_ATTR
+    mov x2, 0x3F000000
     mov x3, 0x80000000
     bl create_block_map
 
