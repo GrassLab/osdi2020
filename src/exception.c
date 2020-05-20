@@ -131,7 +131,7 @@ void page_fault_handler() {
 }
 
 void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* trapframe) {
-    irq_enable();
+    // irq_enable();
 
     int ec = (esr >> 26) & 0b111111;
     int iss = esr & 0x1FFFFFF;

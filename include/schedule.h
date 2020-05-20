@@ -14,7 +14,7 @@ struct task_queue_t {
     struct task_queue_elmt_t* rear;
 };
 
-#define TASK_EPOCH 5
+#define TASK_EPOCH 1
 #define TASK_POOL_SIZE 64
 #define KSTACK_SIZE 4096
 #define KSTACK_TOP_IDX (KSTACK_SIZE - 16) // sp need 16bytes alignment

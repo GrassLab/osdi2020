@@ -122,5 +122,5 @@ void demo_lab5_req3(){
     uint64_t begin = (uint64_t)&_binary_user_img_start;
     uint64_t end = (uint64_t)&_binary_user_img_end;
 
-    do_exec(begin, end - begin, 0x2000);
+    do_exec(begin, end - begin, 0x1000);
 }

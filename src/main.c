@@ -1,12 +1,9 @@
-#include "shell.h"
 #include "uart0.h"
 #include "frame_buffer.h"
 #include "mbox.h"
 #include "util.h"
 #include "schedule.h"
 #include "mm.h"
-
-#define CMD_LEN 128
 
 void boot_init() {
     mm_init();
@@ -35,13 +32,5 @@ void boot_init() {
 
     while (1) {
         schedule();
-    }
-}
-
-int main() {
-    while (1) {
-        char cmd[CMD_LEN];
-        shell_input(cmd);
-        shell_controller(cmd);
     }
 }
