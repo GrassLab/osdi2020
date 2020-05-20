@@ -1,4 +1,5 @@
 #include "tools.h"
+#include "mmu.h"
 #include "mm.h"
 #include "exception.h"
 #include "sys.h"
@@ -22,8 +23,10 @@ void disable_preempt(){
 int privilege_task_create(void (*func)()){
     disable_preempt();
     struct task_struct *new_task = (struct task_struct *) get_free_page();
+    memset((unsigned short *)new_task, 0, PAGE_SIZE);
+
     new_task->taskid = n_task_id;
-    new_task->counter = 3;
+    new_task->counter = 1;
     new_task->state = TASK_RUNNING;
     new_task->cpu_context.x19 = (unsigned long)func;
     new_task->cpu_context.pc = (unsigned long)ret_from_fork;
@@ -64,7 +67,7 @@ int fork(){
     int id = privilege_task_create(0);
     
     struct task_struct *fork_task = task[id];
-    fork_task->counter = 3;
+    fork_task->counter = 1;
     fork_task->cpu_context.x19 = current->cpu_context.x19;
 	fork_task->cpu_context.x20 = current->cpu_context.x20;
 	fork_task->cpu_context.x21 = current->cpu_context.x21;
@@ -105,11 +108,52 @@ void exec(void (*func)()){
 }
 
 void foo(){
+    int a=5;
   while(1) {
     uart_puts("Task id: ");
     uart_send_int(current -> taskid);
     uart_send('\n');
+    uart_puts("address: a: ");
+    uart_hex(&a);
+    uart_send('\n');
+    uart_puts("Remaining page frames : ");
+    uart_send_int(remain_page_num());
+    uart_send('\n');
     delay(100000000);
+  }
+}
+void test_command3() { // test page reclaim.
+  uart_puts("Remaining page frames : ");
+  uart_send_int(remain_page_num());
+  uart_send('\n');
+}
+void foo2(){
+  int* a=0x0;
+  while(1) {
+    uart_puts("a: ");
+    uart_send_int(a);
+    uart_send('\n');
+
+    delay(100000000);
+  }
+}
+void foofoo(){
+  int cnt = 0;
+  if(fork() == 0) {
+    while(cnt < 10) {
+      //printf("task id: %d, sp: 0x%llx cnt: %d\n", get_taskid(), &cnt, cnt++); // address should be the same across tasks, but the cnt should be increased indepndently
+      uart_puts("task id: ");
+      uart_send_int(call_sys_get_taskid());
+      uart_puts("\n");
+      uart_puts("address: ");
+      uart_hex(&cnt);
+      uart_puts("\n");
+      uart_puts("cnt: ");
+      uart_send_int(cnt++);
+      uart_puts("\n");
+      delay(1000000);
+    }
+    exit(0); // all childs exit
   }
 }
 void foo_lab4(){
@@ -158,7 +202,7 @@ void test() {
     }
 }
 void foo_exec(){
-    call_exec(foo);
+    call_exec(foo2);
 }
 void foo_sys(){
     fork();
@@ -194,16 +238,22 @@ void exit(){
     schedule();
 }
 void init_init_task(void (*func)()){
-    current = (struct task_struct *) get_free_page();
-    current->taskid = 0;
-    current->state = TASK_RUNNING;
-    current->counter = 0;
-    current->cpu_context.x19 = (unsigned long)func;
-    current->cpu_context.pc = (unsigned long)ret_from_fork;
-    current->cpu_context.sp = (unsigned long)current + THREAD_SIZE;
-    current->parentid = -1;
-    current->storeid = 0;
-    task[0] = current;
+    struct task_struct *p;
+    p = (struct task_struct *) get_free_page();
+
+    memset((unsigned short *)p, 0, PAGE_SIZE);
+
+    p->taskid = 0;
+    p->state = TASK_RUNNING;
+    p->counter = 0;
+    p->cpu_context.x19 = (unsigned long)func;
+    p->cpu_context.pc = (unsigned long)ret_from_fork;
+    p->cpu_context.sp = (unsigned long)current + THREAD_SIZE;
+    p->parentid = -1;
+    p->storeid = 0;
+    task[0] = p;
+
+    current = p;
 
     struct task_struct *new_utask = (struct task_struct *) get_free_page();
     new_utask->cpu_context.x19 = (unsigned long)func;
@@ -247,7 +297,7 @@ void schedule(){
 int N = 5;
 void create_foo(){
     for(int i = 1; i <= N; ++i) { // N should > 2
-        privilege_task_create(foo_exec);
+        privilege_task_create(foo);
     }
     // schedule();
 }

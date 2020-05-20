@@ -1,5 +1,5 @@
-#ifndef _MMU_H
-#define _MMU_H
+#ifndef _MU_H
+#define _MU_H
 
 #define VA_START 			0xffff000000000000
 #define PHYS_MEMORY_SIZE 		0x40000000	
@@ -74,31 +74,21 @@
 #define BOOT_PMD_ATTR (PT_AF | (MAIR_IDX_DEVICE_nGnRnE << 2) | PT_BLOCK)
 #define BOOT_PTE_ATTR (PT_AF | PT_TABLE)
 
+
+
+#define PD_TABLE 0b11
+#define PD_PAGE  0b11
+#define PD_BLOCK 0b01
+#define PD_ACCESS (1 << 10)
+#define PD_ACCESS_PERMISSION	(1 << 6) 
+
+#define MMU_FLAGS (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
+#define MMU_DEVICE_FLAGS   (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
+#define MMU_PTE_FLAGS   (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE | PD_ACCESS_PERMISSION)
+
+
+
 #define TTBR_CNP 1
 
-// one page have 4K = 0x1000 = 4096
-typedef struct mem_page_t
-{
-    unsigned char c[PAGE_SIZE];
-} mem_page_t;
-
-static mem_page_t mem_map[1000] = {
-    0,
-};
-
-static mem_page_t u_mem_map[1000] = {
-    0,
-};
-
-static const unsigned long mem_map_pa = (unsigned long)&mem_map[0];
-
-void mmu_init();
-void free_page(unsigned long p);
-unsigned long get_free_page();
-void mem_map_init();
-int remain_page_num();
-
-unsigned long pa_to_pfn(unsigned long pa);
-unsigned long va_to_pa(unsigned long va);
 
 #endif
