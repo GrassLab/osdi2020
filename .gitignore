@@ -3,4 +3,6 @@
 *.img
 *.asmo
 *.out
+*.bin
+*.rd
 
