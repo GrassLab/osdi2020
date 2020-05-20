@@ -7,5 +7,6 @@ void sys_exec(void (*func)());
 int sys_fork();
 void sys_exit(int status);
 void sys_kill(int pid, int signal);
+char sys_uart_getc();
 #endif
 

@@ -17,7 +17,20 @@ sys_uart_read:
     svc 1
     ret
 
+.global sys_fork
+sys_fork:
+    mov x8, #3
+    svc 1
+    ret
+
 .global sys_exit
 sys_exit:
     mov x8, #4
     svc 1
+    ret
+
+.global sys_uart_getc
+sys_uart_getc:
+    mov x8, #7
+    svc 1
+    ret

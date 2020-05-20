@@ -36,6 +36,7 @@ void context_switch(struct task_t* next) {
         print_s(" has been killed\n");
         schedule();
     } else {
+        asm volatile("e:");
         switch_to(prev, next, nextfunc, next->spsr, next->pgd);
     }
 }
@@ -105,6 +106,7 @@ struct task_t* privilege_task_create(void (*func)(), int priority) {
             task_pool[i].spsr = spsr_el1;
             task_pool[i].priority = priority;
             task_pool[i].status = ACTIVE;
+            task_pool[i].signal = 0;
             task_pool[i].pgd = pgd;
             task_pool[i].pages_now = 0;
             break;
@@ -172,8 +174,10 @@ void do_exec(uint8_t* func, int size) {
     stack_mapping(task, stack_page);
     task->utask.sp = 0x0000ffffffffe000;
 
+    asm volatile("pgd:");
     uint64_t utask_addr = (uint64_t)&task->utask;
     move_ttbr(task->pgd);
+
     asm volatile("mov     x6, %0" : "=r"(utask_addr));
     asm volatile("msr     tpidr_el0, x6");
     asm volatile("ldr x2, =switch_to_user_mode");
@@ -190,23 +194,39 @@ void do_fork(uint64_t elr) {
     for (int i = 0; i < 64; i++) {
         if (task_pool[i].status != ACTIVE) {
             child_task = &task_pool[i];
+            struct page_t* user_page = page_alloc();
+            task_pool[i].pages[task_pool[i].pages_now++] = user_page->id;
+
+            memcpy(user_page->content, pages[task->user_page].content,
+                   4 * 1024);
+
+            page_mapping(&task_pool[i], user_page);
+            task_pool[i].utask.elr = 0;
+
+            struct page_t* stack_page = page_alloc();
+            task_pool[i].pages[task_pool[i].pages_now++] = stack_page->id;
+            stack_mapping(&task_pool[i], stack_page);
+
+            memcpy(stack_page->content, pages[task->stack_page].content,
+                   4 * 1024);
+
             task_pool[i].id = i;
             task_pool[i].elr = elr;
             task_pool[i].time = 0;
+            task_pool[i].pages_now = 0;
             task_pool[i].spsr = task->spsr;
             task_pool[i].priority = task->priority;
             task_pool[i].status = ACTIVE;
             task_pool[i].utask.elr = task->utask.elr;
-            task_pool[i].utask.sp =
-                (uint64_t)&ustack_pool[i + 1] -
-                ((uint64_t)&ustack_pool[task->id + 1] - sp_el0);
+            task_pool[i].utask.sp = task->utask.sp;
             task_pool[i].sp = task_pool[i].utask.sp;
+            task_pool[i].signal = 0;
             task_pool[i].utask.fork_id = 0;
+            /* task_pool[i].trap_frame->x0 = 0; */
             memcpy(&kstack_pool[i - 1] + 1, &kstack_pool[task->id - 1] + 1,
                    STACK_SIZE * sizeof(char));
-            memcpy(&ustack_pool[i - 1] + 1, &ustack_pool[task->id - 1] + 1,
-                   STACK_SIZE * sizeof(char));
             task->utask.fork_id = task_pool[i].id;
+            task->trap_frame->x0 = task_pool[i].id;
             break;
         }
     }

@@ -67,6 +67,7 @@ struct task_t {
     int priority;
     int reschedule;
     uint64_t elr;
+    struct trap_frame_t *trap_frame;
     uint64_t* pgd;
     uint64_t user_page;
     uint64_t stack_page;

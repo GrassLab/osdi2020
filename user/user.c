@@ -30,11 +30,22 @@ void print_s(char *string) {
     sys_uart_write(string, len);
 }
 
+void print_i(int x) {
+    char tmp[2];
+    if (x < 0) {
+        print_s("-");
+        x = -x;
+    }
+    if (x >= 10) print_i(x / 10);
+    tmp[0] = x % 10 + '0';
+    sys_uart_write(tmp, 1);
+}
+
 void read_cmd() {
     char now;
     int now_cur = 0;
     while (1) {
-        sys_uart_read(&now, 1);
+        now = sys_uart_getc();
         if (now == '\n') break;
         if (now == 127) {  // delete
             now_cur -= 1;
@@ -58,21 +69,25 @@ void shell() {
     if (!strcmp(cmd, "help")) {
         print_s(
             "help      : print this help menu\n"
+            "page      : raise a page fault\n"
             "hello     : print Hello World!\n");
     } else if (!strcmp(cmd, "hello")) {
         print_s("Hello World!\r\n");
+    } else if (!strcmp(cmd, "page")) {
+        asm volatile("mov x0, 0xffffffff");
+        asm volatile("ldr x1, [x0]");
+    } else if (!strcmp(cmd, "fork")) {
+        int pid = sys_fork();
+        print_s("Child pid: ");
+        print_i(pid);
+        print_s("\n");
     } else if (!strcmp(cmd, "clear")) {
         print_s("\033[2J\033[1;1H");
     } else {
-        /* print_s("command not found: "); */
-        /* print_s(cmd); */
-        /* print_s("\r\n"); */
     }
 }
 
 int main() {
-    sys_uart_write("user1\n", 6);
-    sys_uart_write("user2\n", 6);
     while (1) {
         shell();
     }
