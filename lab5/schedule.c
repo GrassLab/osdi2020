@@ -138,6 +138,11 @@ void schedule_enqueue_wait(uint64_t id)
 uint64_t schedule_dequeue_wait(void)
 {
   task_guard_section();
+  if(QUEUE_EMPTY(schedule_wait_queue))
+  {
+    task_unguard_section();
+    return 0;
+  }
   uint64_t id = QUEUE_POP(schedule_wait_queue);
   task_unguard_section();
   return id;
@@ -207,6 +212,20 @@ void schedule_zombie_reaper(void)
             pqueue_uint64_t_push(&schedule_run_queue, zombie_priority, task_id);
           }
         }
+
+        /* remove all the zombie in the wait_queue */
+        queue_length = queue_uint64_t_size(&schedule_wait_queue);
+        for(int queue_idx = 0; queue_idx < queue_length; ++queue_idx)
+        {
+          uint64_t task_id = QUEUE_POP(schedule_wait_queue);
+
+          /* queue back if the task is not zombie */
+          if(task_id != task_idx + 1)
+          {
+            QUEUE_PUSH(schedule_wait_queue, task_id);
+          }
+        }
+
         string_longlong_to_char(id_in_string, task_idx + 1);
         uart_puts(ann);
         uart_puts("Task id: ");

@@ -199,6 +199,10 @@ void task_end_waiting(void)
 {
   /* put the first task in the wait queue back to running queue */
   uint64_t task_id = schedule_dequeue_wait();
+  if(task_id == 0)
+  {
+    return;
+  }
 
   /* Some task in wait queue might be zombie */
   while(CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].flag, TASK_STATE_ZOMBIE))

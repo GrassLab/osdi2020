@@ -1,5 +1,21 @@
 #include "queue.h"
 
+int queue_uint64_t_size(uint64_t_queue * q)
+{
+  if((q -> tail) > (q -> head))
+  {
+    return (q -> tail) - (q -> head);
+  }
+  else if((q -> tail) == (q -> head))
+  {
+    return 0;
+  }
+  else
+  {
+    return (QUEUE_MAX_SIZE - q -> head) + (q -> tail);
+  }
+}
+
 void pqueue_uint64_t_init(uint64_t_pqueue * pq)
 {
   for(unsigned i = 0; i < QUEUE_TOTAL_PRIORITIES; ++i)

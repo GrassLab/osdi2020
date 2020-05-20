@@ -33,6 +33,8 @@ typedef struct _uint64_t_priority_queue
 #define QUEUE_EMPTY(q) (q.head == q.tail)
 #define QUEUE_FULL(q) ((q.tail + 1) % QUEUE_MAX_SIZE == q.head)
 
+int queue_uint64_t_size(uint64_t_queue * q);
+
 void pqueue_uint64_t_init(uint64_t_pqueue * pq);
 void pqueue_uint64_t_push(uint64_t_pqueue * pq, unsigned priority, uint64_t val);
 uint64_t pqueue_uint64_t_pop(uint64_t_pqueue * pq, unsigned priority);
