@@ -97,6 +97,24 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
   exception_iss = ESR_EL1 & 0x1ffffff;
   exception_imm = ESR_EL1 & 0xffff;
 
+  if(exception_class == 0x24)
+  {
+    char string_buff[0x20];
+
+    uint64_t FAR_EL1, TPIDR_EL1;
+    asm volatile("mrs %0, far_el1\n"
+                 "mrs %1, tpidr_el1\n":
+                 "=r"(FAR_EL1), "=r"(TPIDR_EL1));
+    uart_puts("Task ID: ");
+    string_longlong_to_char(string_buff, (long)TPIDR_EL1);
+    uart_puts(string_buff);
+    uart_puts(" triggered page fault at(FAR_EL1) ");
+    string_ulonglong_to_hex_char(string_buff, FAR_EL1);
+    uart_puts(string_buff);
+    uart_puts(". Initiate self destruct.\n");
+    sys_exit(1);
+  }
+
   if(exception_class != 0x15) /* Not via aarch64 svc */
   {
     exc_not_implemented(0x18);
