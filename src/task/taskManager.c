@@ -133,17 +133,23 @@ void zombieReaper()
 
 void _sysexit()
 {
-	// int64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
-	// int64_t exit_code = *(int64_t *)(sp_begin - 32 * 8);
+	int64_t sp_begin = current->kernel_context.sp;
+	int64_t exit_code = *(int64_t *)(sp_begin - 32 * 8);
 
-	// uartPuts("Exit with code ");
-	// uartInt(exit_code);
-	// uartPuts("\n");
+	uartPuts("Exit with code ");
+	uartInt(exit_code);
+	uartPuts("\n");
 
-	// current->task_state = zombie;
-	// task_count--;
+	current->task_state = zombie;
+	task_count--;
 
-	// schedule();
+	for (int i = 0, end = current->mm.kernel_pages_count; i < end; ++i)
+		freePage(current->mm.kernel_pages[i] - VA_START);
+	for (int i = 0, end = current->mm.user_pages_count; i < end; ++i)
+		freePage(current->mm.user_pages[i].phys_addr);
+
+	busyloop();
+	schedule();
 }
 
 uint32_t createPrivilegeTask(void (*func)(), uint32_t priority)
@@ -154,11 +160,15 @@ uint32_t createPrivilegeTask(void (*func)(), uint32_t priority)
 		return -1;
 
 	struct task *new_task;
-	uint64_t page = allocateKernelPage();
+	uint64_t page = allocateKernelPage();	
+
 	new_task = (struct task*) page;
+	new_task->mm.kernel_pages[++new_task->mm.kernel_pages_count] = page;
+
 	task_pool[free_pool_num] = new_task;
 
 	page = allocateKernelPage();
+	new_task->mm.kernel_pages[++new_task->mm.kernel_pages_count] = page;
 
 	new_task->kernel_context.pc = (uint64_t)func;
 	new_task->kernel_context.sp = page;

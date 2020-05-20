@@ -33,16 +33,16 @@ typedef enum
 #define MAX_PROCESS_PAGES			16	
 
 struct user_page {
-	unsigned long phys_addr;
-	unsigned long virt_addr;
+	uint64_t phys_addr;
+	uint64_t virt_addr;
 };
 
 struct mm_struct {
-	unsigned long pgd;
+	uint64_t pgd;
 	int user_pages_count;
 	struct user_page user_pages[MAX_PROCESS_PAGES];
 	int kernel_pages_count;
-	unsigned long kernel_pages[MAX_PROCESS_PAGES];
+	uint64_t kernel_pages[MAX_PROCESS_PAGES];
 };
 
 struct task

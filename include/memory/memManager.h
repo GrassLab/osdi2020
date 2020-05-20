@@ -37,5 +37,6 @@ void setPgd();
 
 uint64_t allocateKernelPage();
 uint64_t allocateUserPage(struct task *task, uint64_t va);
+void freePage(uint64_t p);
 
 #endif

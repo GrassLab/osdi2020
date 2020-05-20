@@ -3,6 +3,7 @@
 #include "memory/mmConfig.h"
 
 .global _start
+.global busyloop
 
 _start:
     // let core with cpuid != 0 enter busy loop
