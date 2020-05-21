@@ -9,8 +9,8 @@
 #define ONE_SEC 1000000
 #define MAN_SEC 10000000
 //#define REQ_1_2
-#define REQ_3_4
-//#define READ
+//#define REQ_3_4
+#define READ
 //#define ELE_1
 
 #ifdef REQ_1_2
@@ -136,6 +136,7 @@ void kernel_main(void)
   for(int i = 0; i < 3; ++i) { // N should > 2
     privilege_task_create(PF_KTHREAD, foo, 0, 0);
   }
+  enable_core_timer(); //enable timer
   enable_irq();
   #endif
 
