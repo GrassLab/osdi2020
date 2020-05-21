@@ -1,32 +1,40 @@
 #ifndef __MM_H__
 #define __MM_H__
 
-#define KERNEL_BASE     0x80000
+#define KERNEL_VIRT_BASE        0xFFFF000000000000
+#define PAGE_SIZE               4096
+#define PAGE_FRAMES_NUM         (0x40000000 / PAGE_SIZE)
 
-#define PAGE_SIZE       4096
+#ifndef __ASSEMBLY__
 
-#define KSTK_SIZE       PAGE_SIZE
-#define USTK_SIZE       PAGE_SIZE
+#include "typedef.h"
+#include "schedule.h"
 
-#endif
-
-#ifndef IN_ASM // asm may also include this header file
-
-#include "stdint.h"
-
-struct stack_struct {
-    char* top;
-    uint64_t task_id;
-    uint8_t avaliable;
+enum page_status {
+    AVAL,
+    USED,
 };
 
-extern struct stack_struct kstack_pool[];
-extern struct stack_struct ustack_pool[];
+struct page_t {
+    enum page_status used;
+};
 
+/* Variables init in mm.c */
+extern struct page_t page[PAGE_FRAMES_NUM];
+extern uint64_t remain_page;
+
+/* Function in mm.c */
 void mm_init();
-char* get_avaliable_ustack();
-char* get_avaliable_kstack();
-void release_ustack(int task_id);
-void release_kstack(int task_id);
+void memcpy(void *dest, void *src, uint64_t size);
+uint64_t virtual_to_physical(uint64_t virt_addr);
+uint64_t phy_to_pfn(uint64_t phy_addr);
+void* page_alloc(struct task_t* task);
+void* page_alloc_user(struct task_t* task, uint64_t user_addr);
+void page_free(void* page_virt_addr);
+void* get_page_user(struct task_t* task, uint64_t user_addr);
+uint64_t user_addr_to_page_addr(uint64_t user_addr, uint64_t pgd);
+void page_reclaim(uint64_t pgd_phy);
 
-#endif
+#endif /* __ASSEMBLY__ */
+
+#endif /* __MM_H__ */

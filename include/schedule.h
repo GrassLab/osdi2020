@@ -1,9 +1,24 @@
-#include "stdint.h"
+#include "typedef.h"
 
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
+struct task_queue_elmt_t {  /* priority queue */
+    struct task_t* task;
+    struct task_queue_elmt_t* prev;
+    struct task_queue_elmt_t* next;
+};
+
+struct task_queue_t {
+    struct task_queue_elmt_t* front;
+    struct task_queue_elmt_t* rear;
+};
+
+#define TASK_EPOCH 5
 #define TASK_POOL_SIZE 64
+#define KSTACK_SIZE 4096
+#define KSTACK_TOP_IDX (KSTACK_SIZE - 16) // sp need 16bytes alignment
+#define USTACK_ADDR (0x0000ffffffffe000 - 8)
 
 struct cpu_context {
     // ARM calling convention
@@ -23,53 +38,59 @@ struct cpu_context {
     uint64_t sp;
 };
 
+#define MAX_USER_PAGES      16
+#define MAX_KERNEL_PAGES    16
+
+struct mm_struct {
+    uint64_t pgd;
+    uint64_t user_pages_count;
+    uint64_t user_pages[MAX_USER_PAGES];
+    uint64_t kernel_pages_count;
+    uint64_t kernel_pages[MAX_KERNEL_PAGES];
+};
+
+#define current_task        get_current_task()
+
 enum task_state {
     RUNNING,
     ZOMBIE,
     EXIT,
 };
 
-struct task_struct {
+struct task_t {
     uint64_t id;
     enum task_state state;
-    struct cpu_context cpu_context;
-    uint64_t priority;
-    uint64_t counter;
+    int priority;
+    int counter;
+    int need_resched;
     int exit_status;
-    // stack pointer
-    char *kstack;  // decide after privilege_task_create
-    char *ustack;  // decide after exec / fork
-    /*
-     * bit 0: reschedule
-     * bit 1: preemptable
-     * bit 2: kill
-     */
-    uint64_t flag;
+    struct cpu_context cpu_context;
+    struct mm_struct mm;
 };
 
-#define INIT_PRIORITY       5
+/* Variables init in schedule.c */
+extern struct task_t task_pool[TASK_POOL_SIZE];
+extern char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
 
-#define INIT_FLAG           0b010
-#define RESCHEDULE_BIT      0
-#define PREEMPTABLE_BIT     1
-#define KILL_BIT            2
+/* Function in schedule.S */
+struct task_t* get_current_task();
+void update_current_task(struct task_t *task);
+void update_pgd(uint64_t pgd);
+void switch_to(struct cpu_context* prev, struct cpu_context* next);
 
-#define HAS(flag, bit) (flag & (1 << bit))
-#define SET(flag, bit) flag |= (1 << bit)
-#define CLR(flag, bit)        \
-    uint64_t mask = 1 << bit; \
-    flag &= ~mask
+/* Function in schedule.c */
+void task_queue_init(struct task_queue_t* q);
+void task_queue_elmt_init(struct task_queue_elmt_t* elmt, struct task_t *task);
+void task_queue_push(struct task_queue_t* q, struct task_queue_elmt_t* elmt);
+struct task_t* task_queue_pop(struct task_queue_t* q);
+void task_queue_print(struct task_queue_t* q);
+
+void task_init();
+void schedule_init();
+int privilege_task_create(void (*func)(), int priority);
+void context_switch(struct task_t* next);
+void schedule();
+int do_exec(uint64_t start, uint64_t size, uint64_t pc);
+void do_exit(int status);
 
 #endif
-
-extern struct task_struct *current_task;
-extern struct task_struct task_pool[];
-
-void schedule_init();
-int privilege_task_create(void (*func)());
-void context_switch(struct task_struct *next);
-void schedule();
-void do_exec(void (*func)());
-int do_fork();
-void do_exit(int status);
-extern void switch_to(struct cpu_context *prev, struct cpu_context *next);

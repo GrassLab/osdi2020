@@ -63,7 +63,7 @@ void shell_input(char* cmd) {
                     break;
 
                 case Unknown:
-                    uart_flush();
+                    uart0_flush();
                     break;
             }
         }

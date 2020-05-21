@@ -1,10 +1,6 @@
 #ifndef __SYSREGS_H__
 #define __SYSREGS_H__
 
-// SCTLR_EL1, System Control Register (EL1)
-
-#define SCTLR_VALUE_MMU_DISABLED 0
-
 // HCR_EL2, Hypervisor Configuration Register
 
 #define HCR_EL2_RW_AARCH64  (1 << 31)

@@ -1,9 +1,12 @@
 #include "my_math.h"
+#include "typedef.h"
 
-char *itox(int value, char *s) {
+char *itox64(uint64_t value, char *s) {
+    if (value == 0) return "0";
+
     int idx = 0;
 
-    char tmp[8 + 1];
+    char tmp[64 + 1];
     int tidx = 0;
     while (value) {
         int r = value % 16;
@@ -81,7 +84,7 @@ char *ftoa(float value, char *s) {
     return s;
 }
 
-unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
+unsigned int my_vsprintf(char *dst, char *fmt, __builtin_va_list args) {
     char *dst_orig = dst;
 
     while (*fmt) {
@@ -91,17 +94,17 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
             if (*fmt == '%') {
                 goto put;
             }
-            // char
-            if (*fmt == 'c') {
-                char c = __builtin_va_arg(args, int);
-                *dst++ = c;
-            }
             // string
             if (*fmt == 's') {
                 char *p = __builtin_va_arg(args, char *);
                 while (*p) {
                     *dst++ = *p++;
                 }
+            }
+            // char
+            if (*fmt == 'c') {
+                char c = __builtin_va_arg(args, int);
+                *dst++ = c;
             }
             // number
             if (*fmt == 'd') {
@@ -114,9 +117,9 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
             }
             // hex
             if (*fmt == 'x') {
-                int arg = __builtin_va_arg(args, int);
-                char buf[8 + 1];
-                char *p = itox(arg, buf);
+                uint64_t arg = __builtin_va_arg(args, uint64_t);
+                char buf[64 + 1];
+                char *p = itox64(arg, buf);
                 while (*p) {
                     *dst++ = *p++;
                 }
@@ -140,6 +143,12 @@ unsigned int vsprintf(char *dst, char *fmt, __builtin_va_list args) {
     *dst = '\0';
 
     return dst - dst_orig;  // return written bytes
+}
+
+unsigned int my_sprintf(char *dst, char *fmt, ...) {
+    __builtin_va_list args;
+    __builtin_va_start(args, fmt);
+    return my_vsprintf(dst, fmt, args);
 }
 
 int strcmp(const char *X, const char *Y) {

@@ -1,16 +1,46 @@
 #include "uart0.h"
-
+#include "exception.h"
 #include "mbox.h"
 #include "my_string.h"
 #include "peripherals/gpio.h"
 #include "peripherals/irq.h"
 #include "peripherals/mbox.h"
 #include "peripherals/uart0.h"
-#include "queue.h"
 
-struct queue read_buf, write_buf;
+struct uart_queue read_buf, write_buf;
 
-void uart_init() {
+/* UART Queue */
+
+void uart_queue_init(struct uart_queue* q, int max) {
+    q->front = 0;
+    q->rear = 0;
+    q->max = max;
+}
+
+int uart_queue_empty(struct uart_queue* q) {
+    return q->front == q->rear;
+}
+
+int uart_queue_full(struct uart_queue* q) {
+    return q->front == (q->rear + 1) % q->max;
+}
+
+void uart_queue_push(struct uart_queue* q, char val) {
+    if (uart_queue_full(q)) return;  // drop if full
+    q->buf[q->rear] = val;
+    q->rear = (q->rear + 1) % q->max;
+}
+
+char uart_queue_pop(struct uart_queue* q) {
+    if (uart_queue_empty(q)) return '\0';
+    char elmt = q->buf[q->front];
+    q->front = (q->front + 1) % q->max;
+    return elmt;
+}
+
+/* ---- */
+
+void uart0_init() {
     *UART0_CR = 0;  // turn off UART0
 
     /* Configure UART0 Clock Frequency */
@@ -65,31 +95,31 @@ void uart_init() {
     /* Enable UART */
     *UART0_CR = 0x301;
 
-    QUEUE_INIT(read_buf, UART0_BUF_MAX_SIZE);
-    QUEUE_INIT(write_buf, UART0_BUF_MAX_SIZE);
+    uart_queue_init(&read_buf, UART0_BUF_MAX_SIZE);
+    uart_queue_init(&write_buf, UART0_BUF_MAX_SIZE);
 }
 
 char uart0_read() {
-    while (QUEUE_EMPTY(read_buf)) {
-        asm volatile("nop");
+    while (uart_queue_empty(&read_buf)) {
+        asm volatile ("nop");
     }
-    char r = QUEUE_POP(read_buf);
+    char r = uart_queue_pop(&read_buf);
     return r == '\r' ? '\n' : r;
 }
 
 void uart0_write(char c) {
-    if (*UART0_FR & 0x80) {  // TX FIFO Empty
+    if (*UART0_FR & 0x80) { // TX FIFO Empty
         // trigger interrupt by sending one character
-        if (QUEUE_EMPTY(write_buf)) {
+        if (uart_queue_empty(&write_buf)) {
             *UART0_DR = c;
         }
         else {
-            QUEUE_PUSH(write_buf, c);
-            *UART0_DR = QUEUE_POP(write_buf);
+            uart_queue_push(&write_buf, c);
+            *UART0_DR = uart_queue_pop(&write_buf);
         }
     }
     else {
-        QUEUE_PUSH(write_buf, c);  // push to write queue, drop if buffer full
+        uart_queue_push(&write_buf, c); // push to write queue, drop if buffer full
     }
 }
 
@@ -97,8 +127,8 @@ void uart_printf(char* fmt, ...) {
     __builtin_va_list args;
     __builtin_va_start(args, fmt);
 
-    char str[256];
-    vsprintf(str, fmt, args);
+    char str[1024];
+    my_vsprintf(str, fmt, args);
 
     char* s = &str[0];
     while (*s) {
@@ -107,7 +137,7 @@ void uart_printf(char* fmt, ...) {
     }
 }
 
-void uart_flush() {
+void uart0_flush() {
     while (!(*UART0_FR & 0x10)) {
         (void)*UART0_DR;  // unused variable
     }

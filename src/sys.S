@@ -1,15 +1,9 @@
-#define IN_ASM
+#define __ASSEMBLY__
 #include "sys.h"
 
-.global get_cntfrq
-get_cntfrq:
-    mov x8, SYS_GET_CNTFRQ
-    svc #0
-    ret
-
-.global get_cntpct
-get_cntpct:
-    mov x8, SYS_GET_CNTPCT
+.global get_taskid
+get_taskid:
+    mov x8, SYS_GET_TASK_ID
     svc #0
     ret
 
@@ -43,8 +37,8 @@ exit:
     svc #0
     ret
 
-.global kill
-kill:
-    mov x8, SYS_KILL
+.global remain_page_num
+remain_page_num:
+    mov x8, SYS_REMAIN_PAGE
     svc #0
     ret
