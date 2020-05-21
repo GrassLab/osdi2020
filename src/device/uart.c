@@ -23,25 +23,29 @@
  *
  */
 
+#include "type.h"
 #include "device/gpio.h"
 #include "device/mbox.h"
+#include "task/sysCallTable.h"
+#include "task/sysCall.h"
+#include "task/taskManager.h"
 
 /* PL011 UART registers */
-#define UART0_DR ((volatile unsigned int *)(MMIO_BASE + 0x00201000))
-#define UART0_FR ((volatile unsigned int *)(MMIO_BASE + 0x00201018))
-#define UART0_IBRD ((volatile unsigned int *)(MMIO_BASE + 0x00201024))
-#define UART0_FBRD ((volatile unsigned int *)(MMIO_BASE + 0x00201028))
-#define UART0_LCRH ((volatile unsigned int *)(MMIO_BASE + 0x0020102C))
-#define UART0_CR ((volatile unsigned int *)(MMIO_BASE + 0x00201030))
-#define UART0_IMSC ((volatile unsigned int *)(MMIO_BASE + 0x00201038))
-#define UART0_ICR ((volatile unsigned int *)(MMIO_BASE + 0x00201044))
+#define UART0_DR ((volatile uint32_t *)(MMIO_BASE + 0x00201000))
+#define UART0_FR ((volatile uint32_t *)(MMIO_BASE + 0x00201018))
+#define UART0_IBRD ((volatile uint32_t *)(MMIO_BASE + 0x00201024))
+#define UART0_FBRD ((volatile uint32_t *)(MMIO_BASE + 0x00201028))
+#define UART0_LCRH ((volatile uint32_t *)(MMIO_BASE + 0x0020102C))
+#define UART0_CR ((volatile uint32_t *)(MMIO_BASE + 0x00201030))
+#define UART0_IMSC ((volatile uint32_t *)(MMIO_BASE + 0x00201038))
+#define UART0_ICR ((volatile uint32_t *)(MMIO_BASE + 0x00201044))
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
  */
 void uartInit()
 {
-    register unsigned int r;
+    register uint32_t r;
 
     /* initialize UART */
     *UART0_CR = 0; // turn off UART0
@@ -77,7 +81,7 @@ void uartInit()
 /**
  * Send a character
  */
-void uartSend(unsigned int c)
+void uartSend(uint32_t c)
 {
     /* wait until we can send */
     do
@@ -103,6 +107,22 @@ char uartGetc()
     r = (char)(*UART0_DR);
     /* convert carrige return to newline */
     return r == '\r' ? '\n' : r;
+}
+
+void _sysUartWrite()
+{
+    // uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+    // uint64_t c = *(uint64_t *)(sp_begin - 32 * 8);
+
+    // uartSend(c);
+}
+
+void _sysUartRead()
+{
+    // uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
+
+    // char c = uartGetc();
+    // *(uint64_t *)(sp_begin - 32 * 8) = c;
 }
 
 /**
@@ -131,7 +151,9 @@ void uartPuts(char *s)
     {
         /* convert newline to carrige return + newline */
         if (*s == '\n')
+            // uartWrite('\r');
             uartSend('\r');
+        // uartWrite(*s++);
         uartSend(*s++);
     }
 }
@@ -139,31 +161,43 @@ void uartPuts(char *s)
 /**
  * Display a binary value in hexadecimal
  */
-void uartHex(unsigned int d)
+void uartHex(uint64_t d)
 {
-    unsigned int n;
-    int c;
-    for (c = 28; c >= 0; c -= 4)
+    uartPuts("0x");
+
+    uint32_t n;
+    int32_t c;
+    for (c = 60; c >= 0; c -= 4)
     {
         // get highest tetrad
         n = (d >> c) & 0xF;
         // 0-9 => '0'-'9', 10-15 => 'A'-'F'
         n += n > 9 ? 0x37 : 0x30;
         uartSend(n);
+        // uartWrite(n);
     }
+
+    return;
 }
 
-void uartInt(unsigned int i)
+void uartInt(uint32_t i)
 {
+    if (i == 0)
+    {
+        // uartWrite('0');
+        uartSend('0');
+        return;
+    }
+
     char buf[256];
-    int buf_ptr = 0;
+    uint32_t buf_ptr = 0;
     while (i > 0)
     {
         buf[buf_ptr++] = (i % 10) + '0';
         i = i / 10;
     }
     buf[buf_ptr] = '\0';
-    for (int e = buf_ptr - 1, s = 0, half = (buf_ptr - 1) / 2; e > half; --e, ++s)
+    for (uint32_t e = buf_ptr - 1, s = 0, half = (buf_ptr - 1) / 2; e > half; --e, ++s)
     {
         char tmp = buf[s];
         buf[s] = buf[e];
@@ -175,8 +209,8 @@ void uartInt(unsigned int i)
 
 void uartFloat(double f)
 {
-    int i = (int)f;
-    int frac = (int)((f - (double)i) * 100000);
+    uint32_t i = (uint32_t)f;
+    uint32_t frac = (uint32_t)((f - (double)i) * 100000);
     uartInt(i);
     uartPuts(".");
     uartInt(frac);

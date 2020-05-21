@@ -25,11 +25,28 @@
 
 #include "shell.h"
 #include "device/uart.h"
+#include "task/taskManager.h"
+#include "task/schedule.h"
+#include "task/switch.h"
+#include "task/runnableTask.h"
+#include "memory/memManager.h"
 
-void main()
+void kernelMain()
 {
     // set up serial console
     uartInit();
 
-    runShell();
+    uartPuts("test message\n");
+
+    // for (int i = 0; i < 3; ++i)
+    // { // N should > 2
+    //     createPrivilegeTask(&kernelTask, 0);
+    // }
+    // createPrivilegeTask(&zombieReaper, 0);
+    createPrivilegeTask(&execTask, 0);
+
+    // Enable core timer
+    asm volatile("svc #2");
+    idleTask();
+    // runShell();
 }

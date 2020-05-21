@@ -1,7 +1,9 @@
 #ifndef _POWER_H
 #define _POWER_H
 
-void reset(int tick);
+#include "type.h"
+
+void reset(uint32_t tick);
 void cancelReset();
 
 #endif

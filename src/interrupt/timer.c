@@ -1,12 +1,14 @@
+#include "type.h"
 #include "device/uart.h"
+#include "task/taskManager.h"
 
 #define CORE0_TIMER_IRQ_CTRL 0x40000040
 #define EXPIRE_PERIOD 0xfffffff
-#define LOCAL_TIMER_CONTROL ((volatile unsigned int *)0x40000034)
-#define LOCAL_TIMER_IRQ_CLR ((volatile unsigned int *)0x40000038)
+#define LOCAL_TIMER_CONTROL ((volatile uint32_t *)0x40000034)
+#define LOCAL_TIMER_IRQ_CLR ((volatile uint32_t *)0x40000038)
 
-unsigned int core_timer_count = 0;
-unsigned int local_timer_count = 0;
+uint32_t core_timer_count = 0;
+uint32_t local_timer_count = 0;
 
 void enableCoreTimer()
 {
@@ -23,24 +25,28 @@ void enableCoreTimer()
 
 void coreTimerHandler()
 {
-    core_timer_count++;
-    uartPuts("Core timer interrupt, jiffies ");
-    uartInt(core_timer_count);
-    uartPuts("\n");
-  
-    asm volatile("mov x0, 0xffffff");
+    // core_timer_count++;
+    // uartPuts("Core timer interrupt, jiffies ");
+    // uartInt(core_timer_count);
+    // uartPuts("\n");
+
+    current->re_schedule = true;
+
+    asm volatile("mov x0, 0x1ffffff");
     asm volatile("msr cntp_tval_el0, x0");
 
     return;
 }
 
-void localTimerInit(){
-    unsigned int flag = 0x30000000; // enable timer and interrupt.
-    unsigned int reload = 25000000;
+void localTimerInit()
+{
+    uint32_t flag = 0x30000000; // enable timer and interrupt.
+    uint32_t reload = 25000000;
     *LOCAL_TIMER_CONTROL = flag | reload;
 }
 
-void localTimerHandler(){
+void localTimerHandler()
+{
     local_timer_count++;
     uartPuts("Local timer interrupt, jiffies ");
     uartInt(local_timer_count);

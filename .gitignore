@@ -1,4 +1,5 @@
 *.elf
 *.img
 *.o
+*.d
 .vscode/

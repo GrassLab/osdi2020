@@ -23,20 +23,21 @@
  *
  */
 
+#include "type.h"
 #include "device/gpio.h"
 #include "device/uart.h"
 #include "device/mbox.h"
 
 /* mailbox message buffer */
-volatile unsigned int __attribute__((aligned(16))) mbox[36];
+volatile uint32_t __attribute__((aligned(16))) mbox[36];
 
 #define VIDEOCORE_MBOX (MMIO_BASE + 0x0000B880)
-#define MBOX_READ ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x0))
-#define MBOX_POLL ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x10))
-#define MBOX_SENDER ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x14))
-#define MBOX_STATUS ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x18))
-#define MBOX_CONFIG ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x1C))
-#define MBOX_WRITE ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x20))
+#define MBOX_READ ((volatile uint32_t *)(VIDEOCORE_MBOX + 0x0))
+#define MBOX_POLL ((volatile uint32_t *)(VIDEOCORE_MBOX + 0x10))
+#define MBOX_SENDER ((volatile uint32_t *)(VIDEOCORE_MBOX + 0x14))
+#define MBOX_STATUS ((volatile uint32_t *)(VIDEOCORE_MBOX + 0x18))
+#define MBOX_CONFIG ((volatile uint32_t *)(VIDEOCORE_MBOX + 0x1C))
+#define MBOX_WRITE ((volatile uint32_t *)(VIDEOCORE_MBOX + 0x20))
 #define MBOX_RESPONSE 0x80000000
 #define MBOX_FULL 0x80000000
 #define MBOX_EMPTY 0x40000000
@@ -56,9 +57,9 @@ volatile unsigned int __attribute__((aligned(16))) mbox[36];
 /**
  * Make a mailbox call. Returns 0 on failure, non-zero on success
  */
-int mboxCall(unsigned char ch, volatile unsigned int* mbox)
+int32_t mboxCall(unsigned char ch, volatile uint32_t *mbox)
 {
-    unsigned int r = (((unsigned int)((unsigned long)mbox) & ~0xF) | (ch & 0xF));
+    uint32_t r = (((uint32_t)((unsigned long)mbox) & ~0xF) | (ch & 0xF));
     /* wait until we can write to the mailbox */
     do
     {
@@ -84,7 +85,7 @@ int mboxCall(unsigned char ch, volatile unsigned int* mbox)
 
 void getBoardRevision()
 {
-    volatile unsigned int  __attribute__((aligned(16))) mbox[7];
+    volatile uint32_t __attribute__((aligned(16))) mbox[7];
     mbox[0] = 7 * 4; // buffer size in bytes
     mbox[1] = REQUEST_CODE;
     // tags begin
@@ -109,7 +110,7 @@ void getBoardRevision()
 
 void getVCMemory()
 {
-    volatile unsigned int  __attribute__((aligned(16))) mbox[8];
+    volatile uint32_t __attribute__((aligned(16))) mbox[8];
     mbox[0] = 8 * 4; // buffer size in bytes
     mbox[1] = REQUEST_CODE;
     // tags begin
@@ -137,7 +138,7 @@ void getVCMemory()
 
 void setUartClock()
 {
-    volatile unsigned int  __attribute__((aligned(16))) mbox[9];
+    volatile uint32_t __attribute__((aligned(16))) mbox[9];
 
     /* set up clock for consistent divisor values */
     mbox[0] = 9 * 4;

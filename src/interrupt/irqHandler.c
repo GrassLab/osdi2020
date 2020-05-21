@@ -1,40 +1,104 @@
+#include "type.h"
 #include "device/uart.h"
 #include "interrupt/timer.h"
 #include "interrupt/irqTable.h"
 #include "interrupt/irq.h"
+#include "task/taskManager.h"
+#include "task/sysCallTable.h"
 
-#define IRQ_BASIC   ((volatile unsigned int *)(0x3F00B200))
-#define IRQ_PEND1   ((volatile unsigned int *)(0x3F00B204))
-#define IRQ_PEND2   ((volatile unsigned int *)(0x3F00B208))
-#define IRQ_ENABLE1 ((volatile unsigned int *)(0x3F00B210))
-#define GPU_INTERRUPTS_ROUTING ((volatile unsigned int *)(0x4000000C))
-#define CORE0_INTERRUPT_SOURCE ((volatile unsigned int *)(0x40000060))
+#define IRQ_BASIC ((volatile uint32_t *)(0x3F00B200))
+#define IRQ_PEND1 ((volatile uint32_t *)(0x3F00B204))
+#define IRQ_PEND2 ((volatile uint32_t *)(0x3F00B208))
+#define IRQ_ENABLE1 ((volatile uint32_t *)(0x3F00B210))
+#define GPU_INTERRUPTS_ROUTING ((volatile uint32_t *)(0x4000000C))
+#define CORE0_INTERRUPT_SOURCE ((volatile uint32_t *)(0x40000060))
 #define CORE_TIMER_IRQ 2
 #define LOCAL_TIMER_IRQ 2048
 
-#define LAST(k,n) ((k) & ((1<<(n))-1))
-#define MID(k,m,n) LAST((k)>>(m),((n)-(m)))
+#define SVC 21
 
-void excHandler(unsigned long esr, unsigned long elr)
+#define LAST(k, n) ((k) & ((1 << (n)) - 1))
+#define MID(k, m, n) LAST((k) >> (m), ((n) - (m)))
+
+void _userTest()
 {
-    unsigned int iss = LAST(esr, 16);
+    uartPuts("user test\n");
+}
 
-    if (iss == 1)
+void _systemCall()
+{
+    uint64_t sys_call_no;
+    asm volatile("mov %0, x8"
+                 : "=r"(sys_call_no));
+
+    switch (sys_call_no)
     {
-        uartPuts("Exception return address ");
-        uartHex(elr);
-        uartPuts("\nException class (EC) ");
-        uartHex(MID(esr, 26, 32));
-        uartPuts("\nInstruction specific syndrome (ISS) ");
-        uartHex(LAST(esr, 16));
-        uartPuts("\n");
+    case FORK:
+        _sysFork();
+        break;
+    case EXEC:
+        _sysexec();
+        break;
+    case EXIT:
+        _sysexit();
+        break;
+    case GET_TASK_ID:
+        _sysGetTaskId();
+        break;
+    case UART_WRITE:
+        _sysUartWrite();
+        break;
+    case UART_READ:
+        _sysUartRead();
+        break;
+    case USER_TEST:
+        _userTest();
+        break;
+    default:
+        break;
     }
-    else if (iss == 2)
+}
+
+void _printEXCInfo(uint64_t elr, uint64_t ec, uint64_t iss)
+{
+    uartPuts("Exception return address ");
+    uartHex(elr);
+    uartPuts("\nException class (EC) ");
+    uartHex(ec);
+    uartPuts("\nInstruction specific syndrome (ISS) ");
+    uartHex(iss);
+    uartPuts("\n");
+}
+
+void _enableTimer()
+{
+    // uartPuts("Enable timer \n");
+    enableCoreTimer();
+    // localTimerInit();
+    enableIrq();
+}
+
+void excHandler(uint64_t esr, uint64_t elr)
+{
+    uint64_t iss = LAST(esr, 16);
+    uint64_t ec = MID(esr, 26, 32);
+
+    if (ec == SVC)
     {
-        uartPuts("Enable timer \n");
-        enableCoreTimer();
-        localTimerInit();
-        enableIrq();
+        switch (iss)
+        {
+        case 0:
+            _systemCall();
+            break;
+        case 1:
+            _printEXCInfo(elr, iss, ec);
+            break;
+        case 2:
+            _enableTimer();
+            break;
+        default:
+            break;
+        }
     }
 
     return;
@@ -43,12 +107,12 @@ void excHandler(unsigned long esr, unsigned long elr)
 
 void irqHandler()
 {
-    unsigned int cis = *CORE0_INTERRUPT_SOURCE;
-	if (cis == CORE_TIMER_IRQ)
-		coreTimerHandler();
+    uint32_t cis = *CORE0_INTERRUPT_SOURCE;
+    if (cis == CORE_TIMER_IRQ)
+        coreTimerHandler();
     else if (cis == LOCAL_TIMER_IRQ)
         localTimerHandler();
-    else	
+    else
         uartPuts("Unknown pending irq\n");
     return;
 }
