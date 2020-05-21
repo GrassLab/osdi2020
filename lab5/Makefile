@@ -1,6 +1,6 @@
 ARMGNU ?= aarch64-linux-gnu
-CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -Iinc
-ASMOPS = -Iinclude
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -Iinc -g
+ASMOPS = -Iinclude -g
 BUILD_DIR = build
 SRC_DIR = src
 LIB_DIR = lib
@@ -19,14 +19,14 @@ all: clean kernel8.img
 
 $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 	mkdir -p $(@D)
-	$(ARMGNU)-gcc $(CFLAGS) -MMD -c $< -o $@ -g
+	$(ARMGNU)-gcc $(CFLAGS) -MMD -c $< -o $@
 
 $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
 	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
 
 $(BUILD_DIR)/%_c.o: $(LIB_DIR)/%.c
 	mkdir -p $(@D)
-	$(ARMGNU)-gcc $(CFLAGS) -MMD -c $< -o $@ -g
+	$(ARMGNU)-gcc $(CFLAGS) -MMD -c $< -o $@
 
 $(BUILD_DIR)/%_s.o: $(LIB_DIR)/%.S
 	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
