@@ -40,6 +40,7 @@ void put_shell() {
   char *loadimage = "loadimg";
   char *exc = "exc";
   char *irq = "irq";
+  char *task = "tasks";
 
   char str[100];
   int p = 0;
@@ -127,7 +128,8 @@ void put_shell() {
     asm("svc 1");
   else if (strcmp(str, irq) == 0)
     asm("svc 2");
-    //core_timer_enable();
+  else if (strcmp(str, task) == 0)
+    create_tasks();
   else {
     uart_puts("command not found: ");
     uart_puts(str);

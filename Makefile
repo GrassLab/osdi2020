@@ -11,19 +11,19 @@ LIB_DIR = include
 LINKER_FILE = $(SRC_DIR)/linker.ld
 SRCS = $(wildcard $(SRC_DIR)/*.c)
 ASM = $(wildcard $(SRC_DIR)/*.S)
-OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OUTPUT_DIR)/%.o)
-ASM_OBJS = $(ASM:$(SRC_DIR)/%.S=$(OUTPUT_DIR)/%.o)
-CFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib -nostartfiles -I$(LIB_DIR)
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OUTPUT_DIR)/%_c.o)
+ASM_OBJS = $(ASM:$(SRC_DIR)/%.S=$(OUTPUT_DIR)/%_s.o)
+CFLAGS = -Wall -O2 -ffreestanding -nostartfiles -I$(LIB_DIR) -g
 
 ELF = kernel8.elf
 IMG = kernel8.img
 
 all: clean makedir $(IMG)
 
-$(OUTPUT_DIR)/%.o: $(SRC_DIR)/%.S
+$(OUTPUT_DIR)/%_s.o: $(SRC_DIR)/%.S
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
-$(OUTPUT_DIR)/%.o: $(SRC_DIR)/%.c
+$(OUTPUT_DIR)/%_c.o: $(SRC_DIR)/%.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@
 
 $(IMG): $(ASM_OBJS) $(OBJS)

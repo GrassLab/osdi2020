@@ -1,3 +1,5 @@
+#include "task.h"
+
 void core_timer_enable();
 void core_timer_handler();
 void local_timer_enable();
