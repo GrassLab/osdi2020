@@ -41,3 +41,4 @@ virt_mem_init:
 	mrs x2, sctlr_el1
 	orr x2 , x2, 1
 	msr sctlr_el1, x2 // enable MMU, cache remains disabled
+	ret

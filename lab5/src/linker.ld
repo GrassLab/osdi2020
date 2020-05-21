@@ -1,6 +1,6 @@
 SECTIONS
 {
-    . = 0xffff000000000000; // kernel space
+    . = 0xffff000000000000;
     . += 0x80000;
     start_begin = .;
     .text.boot : { *(.text.boot) }
