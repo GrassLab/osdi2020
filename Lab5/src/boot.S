@@ -59,8 +59,9 @@ el1_entry:
 
     bl          page_table_create 
 
-    mov	x0, #VA_START			
-    add	sp, x0, #LOW_MEMORY
+    mov	x0, #VA_START
+    mov x1,#LOW_MEMORY			
+    add	sp, x0, x1
 
     // setup TCR
     ldr x0, = TCR_CONFIG_DEFAULT
@@ -70,15 +71,16 @@ el1_entry:
     ldr	x0, = MAIR_CONFIG_DEFAULT
     msr	mair_el1, x0
 
-    // indirect branch
-    // load before turn on MMU
-    ldr x0 ,=kernel_main  
-    
     mrs x2, sctlr_el1
     orr x2 , x2, 1 
     msr sctlr_el1, x2 // enable MMU, cache remains disabled
-main:
+
+    // indirect branch
+    // load before turn on MMU    
+    //bl kernel_main
+    ldr x0 ,=kernel_main  
     br      x0
+    
     // for failsafe, halt this core too
     b       proc_hang
 
@@ -86,8 +88,12 @@ main:
 
 page_table_create:
     mov x29,x30
-
-    adrp x0, pg_dir // PGD's page frame 
+    
+    // use physical address of page table
+    ldr x0, =pg_dir
+    lsl x0,x0,#16
+    lsr x0,x0,#16
+ 
     add  x1, x0, #PAGE_SIZE // PUD's page frame
     add  x2, x1, #PAGE_SIZE  // 1st PMD's page frame
     add  x14, x2, #PAGE_SIZE // 2nd PMD's page frame
@@ -125,15 +131,25 @@ page_table_create:
     // step4. setting PTE
     mov x4, xzr //x4 for physical memory
     mov x5, xzr
-    mov x6, #0x41000000 
+    mov x6, #0x3F000000 
 1:     
-    ldr x3, = MMU_DEVICE_FLAGS
+    ldr x3, = MMU_FLAGS
     orr x3, x4, x3
     str x3, [x15, x5, lsl #3]
     add x5, x5, #1
     add x4, x4, #PAGE_SIZE 
     cmp x4, x6 
     b.ls 1b
+
+    mov x6, #0x41000000 
+2: 
+    ldr x3, = MMU_DEVICE_FLAGS
+    orr x3, x4, x3
+    str x3, [x15, x5, lsl #3]
+    add x5, x5, #1
+    add x4, x4, #PAGE_SIZE 
+    cmp x4, x6 
+    b.ls 2b
  
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.

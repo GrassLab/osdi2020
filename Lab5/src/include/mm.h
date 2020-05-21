@@ -24,8 +24,6 @@
 #define PMD_SHIFT			(PAGE_SHIFT + TABLE_SHIFT)   //21
 #define PTE_SHIFT                       (PAGE_SHIFT)                 //12
 
-#define PAGE_MASK			0xfffffffffffff000
-
 #define PAGE_ENTRY            (HIGH_MEMORY/PAGE_SIZE)
 #define FIRST_AVAILIBLE_PAGE  (LOW_MEMORY/PAGE_SIZE)
 
@@ -39,6 +37,7 @@ struct page_struct{
 	int used;
 };
 
+int remain_page;
 struct page_struct page[PAGE_ENTRY];
 
 void init_page_struct();
@@ -49,18 +48,20 @@ unsigned long get_free_page();
 unsigned long allocate_kernel_page();
 unsigned long allocate_user_page(struct task_struct *task,unsigned long vir_addr);
 
-void map_page(struct task_struct *task, unsigned long vir_addr, unsigned long page);
+void map_page(struct task_struct *task, unsigned long vir_addr, unsigned long page, unsigned long page_attr);
 unsigned long map_table(unsigned long *table, unsigned long shift,unsigned long vir_addr, struct task_struct *task);
-void map_entry(unsigned long *pte, unsigned long vir_addr,unsigned long phy_addr);
+void map_entry(unsigned long *pte, unsigned long vir_addr,unsigned long phy_addr,unsigned long page_attr);
 
 
 void memzero(unsigned long src, unsigned long n);
-void memcpy(unsigned long dst, unsigned long src, unsigned long n);
 
-void fork_memcpy(void *dest, const void *src, unsigned long len);
+void memcpy(void *dest, const void *src, unsigned long len);
 void free_page(unsigned long p);
 void dump_mem(void *src,unsigned long len);
-int do_mem_abort(unsigned long addr, unsigned long esr);
+int page_fault_handler(unsigned long addr,unsigned long esr);
+int copy_virt_memory(struct task_struct *dst);
+
+void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset);
 #endif
 
 #endif  /*_MM_H */

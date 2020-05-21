@@ -15,6 +15,11 @@ _user_entry:
 .set SYS_UART_WRITE, 7
 .set SYS_UART_READ, 8
 .set SYS_USER_PRINT, 9
+.set SYS_REBOOT,     10
+.set SYS_DELAY,      11
+.set SYS_REMAIN_PAGE, 12
+.set SYS_MMAP,       13
+.set SYS_WAIT,       14
 
 .global call_core_timer
 call_core_timer:
@@ -71,8 +76,38 @@ uart_read:
 	ret
 
 	
-.global user_printf
-user_printf:
+.global printf
+printf:
 	mov x8,SYS_USER_PRINT
+	svc #0
+	ret
+
+.global reboot
+reboot:
+	mov x8, SYS_REBOOT
+	svc #0
+	ret
+
+.global delay
+delay:	
+	mov x8, SYS_DELAY
+	svc #0
+	ret
+
+.global get_remain_page_num
+get_remain_page_num:
+	mov x8, SYS_REMAIN_PAGE
+	svc #0
+	ret
+
+.global mmap
+mmap:
+	mov x8, SYS_MMAP
+	svc #0
+	ret
+
+.global wait
+wait:
+	mov x8, SYS_WAIT
 	svc #0
 	ret

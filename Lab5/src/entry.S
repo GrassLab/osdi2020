@@ -105,7 +105,7 @@ after_push_el1_irq:
     .align 7 
     b push_reg_el0
 after_push_el0:
-    mov x2, x8 //set up argument 
+    mov x6, x8 //set up argument 
     mrs	x25, esr_el1		// read the syndrome register
     lsr	x24, x25, #26		// exception class
     cmp	x24, #0x15		// SVC in 64-bit state
@@ -181,6 +181,7 @@ after_push_el0_irq:
 not_syscall:	
         cmp x24, #0x24
         b.eq     el0_da
+       	
 	mov     x0, #4
     	mrs     x1, esr_el1
     	mrs     x2, elr_el1
@@ -200,10 +201,9 @@ el0_da:
 	bl enable_irq
 	mrs x0, far_el1
 	mrs x1, esr_el1
-	bl do_mem_abort
-	cmp x0,0
+	bl page_fault_handler
+	cmp x0, 0
 	b.eq end
-
 
 .global err_hang
 err_hang:

@@ -21,11 +21,11 @@ core_timer_enable:
 core_timer_handler:
   mov x0, EXPIRE_PERIOD
   msr cntp_tval_el0,x0 
-  /*  
+    
   sub sp,sp,#16
   str x30,[sp,#16*0] 
   bl timer_tick //call schedule in timer
   ldr x30,[sp,#16*0]
   add sp,sp,#16
-  */
+  
   ret

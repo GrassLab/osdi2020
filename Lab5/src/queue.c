@@ -1,6 +1,6 @@
-#include "include/printf.h"
 #include "include/queue.h"
 #include "include/scheduler.h"
+#include "include/uart.h"
 
 int isempty(int head,int tail){
 	return head==tail;
@@ -27,6 +27,9 @@ void push(char* q,int* tail,char c){ //tail call by reference since we want to c
 void init_priority_queue(){
 	runqueue.capacity = QUEUE_SIZE;
 	runqueue.heap_size = 0;
+	
+	waitqueue.capacity = QUEUE_SIZE;
+	waitqueue.heap_size = 0;
 }
 
 // A utility function to swap two elements and keys

@@ -5,11 +5,12 @@
 #include "include/mm.h"
 #include "include/scheduler.h"
 #include "include/fork.h"
-#include "include/printf.h"
 #include "include/irq.h"
 #include "include/peripherals/uart.h"
 #include "include/signal.h"
 #include "include/queue.h"
+#include "include/reboot.h"
+#include "include/exc.h"
 
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
@@ -31,7 +32,7 @@ void exception_handler(unsigned long type,unsigned long esr, \
 		case 0b010101: uart_send_string("System call"); break;
        		case 0b100100: uart_send_string("Data abort, lower EL"); break;
                 case 0b100101: uart_send_string("Data abort, same EL"); break;
-		case 0b011000: uart_send_string("Exception from MSR, MRS, or System instruction execution in AArch64 state");
+		case 0b011000: uart_send_string("Exception from MSR, MRS, or System instruction execution in AArch64 state");break;
 		case 0b111100: uart_send_string("BRK instruction execution in AArch64 state");break;			       
 		case 0b100000: uart_send_string("Instruction Abort from a lower Exception level");break;
 		case 0b100001: uart_send_string("Instruction Abort taken without a change in Exception level");break;
@@ -39,7 +40,6 @@ void exception_handler(unsigned long type,unsigned long esr, \
 		default: uart_send_string("Unknown...?"); break;
         }
         
-	// decode data abort cause
         if(esr>>26==0b100100 || esr>>26==0b100101 || esr>>26==0b100000  ||esr>>26==0b100001 ) {
         	uart_send_string(", ");
         	switch((esr>>2)&0x3) {
@@ -73,18 +73,19 @@ void exception_handler(unsigned long type,unsigned long esr, \
 	uart_send_string("\r\n");
 }
 
-// Since my system call just need no more than two argument now
-unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
+// Now I just use no more than 6 argument
+unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
+		size_t arg4,size_t arg5, size_t sys_call_num){
 	enable_irq();
 
 	switch(sys_call_num){
 		// Core timer
-		case 0:{
+		case CORE_TIMER:{
 			core_timer_enable();
 			return 0;
 		}
 		// DAIF information
-		case 1:{
+		case DAIF:{
 			unsigned int daif;
           		asm volatile ("mrs %0, daif" : "=r" (daif));
           		printf("DAIF is %x\r\n",daif);
@@ -92,7 +93,7 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			return 0;
 		}
 		// kill
-		case 2:{
+		case SYS_KILL:{
 			struct task_struct *p = task[arg0];
 			if(p && p->signal.pending!=SIGKILL)
 				p -> signal.pending = SIGKILL;
@@ -102,31 +103,32 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			return 0;
 		}
 		// fork
-		case 3:{
+		case SYS_FORK:{
 			return user_task_create();
 		}
 		// exec
-		case 4:{
+		case SYS_EXEC:{
+			return 0;
 		 	//return do_exec((void *)arg0);      
 		}
 		// exit
-		case 5:{
+		case SYS_EXIT:{
 			exit_process();
 			return 0;
 		}
 		// get task pid
-		case 6:{
+		case SYS_GET_TASKID:{
 			return current->pid;
 		}
 		//  uart write
-		case 7:{
+		case SYS_UART_WRITE:{
 			// Using blocking write for safety
 			preempt_disable();	
 			
 			int success = 0;
 			int ret = 0;
 			
-			for(int i=0; i<arg1;i++){
+			for(unsigned int i=0; i<arg1;i++){
 				ret = uart_send(((char*)arg0)[i]);
 				if(ret==0)
 					++success;
@@ -136,14 +138,16 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 		 	return success;	
 		}
 		// uart read
-		case 8:{	 
+		case SYS_UART_READ:{	 
 		      char recv_char;
-		      int i = 0;
+		      unsigned int i = 0;
 		      int flag = 0;
-		      
-		      preempt_disable();
-
+		   
 		      for(;i<arg1;i++){
+		      		// put task in waitQ and wait
+			        current->state = TASK_WAIT;
+		      		priorityQ_push(&waitqueue,1,current->pid); 
+				
 				//recv and send
 				recv_char = uart_recv();		
 				uart_send(recv_char);
@@ -158,6 +162,10 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			}
 			
 			while(flag==0){
+		      		// put task in waitQ and wait
+			        current->state = TASK_WAIT;
+				priorityQ_push(&waitqueue,1,current->pid); 
+				
 				//recv and send
 				recv_char = uart_recv();
 				uart_send(recv_char);
@@ -169,16 +177,33 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t sys_call_num){
 			// send "\r\n"
 			uart_send('\r');
 			uart_send('\n');
-
-			preempt_disable();
 			return i;	
 		}
 		// user_printf: allow only one argument now
-		case 9:{
-			printf((char *)arg0,arg1);
+		case SYS_UART_PRINT:{
+			printf((char *)arg0,arg1,arg2,arg3,arg4);
 			return 0;
 		}
-
+		// reboot
+		case SYS_REBOOT:{
+			reset(10000);
+			return 0;	
+		}
+		// delay
+		case SYS_DELAY:{
+			delay(arg0);
+			return 0;
+		}
+		// remain page num
+		case SYS_REMAIN_PAGE:{
+			return remain_page;
+		}
+		case SYS_MMAP: {
+			return (unsigned long)mmap((void *)arg0,arg1,arg2,arg3,(void *)arg4,arg5);	       
+		}
+		case SYS_WAIT: {
+			return current->state = TASK_WAIT;
+		}	
 	}
 	// Not here if no bug happened!
 	return -1;

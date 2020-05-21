@@ -8,7 +8,7 @@ void uart_send_string(char *str);
 void uart_recv_string(int size,char* buf);
 void uart_hex(unsigned int d);
 void uart_IRQhandler();
-void putc( void* p, char c);
+void printf(char *fmt, ...);
 
 #define BUF_SIZE 0xFFF
 

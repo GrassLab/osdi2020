@@ -3,9 +3,10 @@
 #include "include/entry.h"
 #include "include/scheduler.h"
 #include "include/queue.h"
-#include "include/printf.h"
 #include "include/mm.h"
 #include "include/utils.h"
+#include "include/kernel.h"
+#include "include/elf.h"
 
 static unsigned short pid_map[64] = {0,};
 
@@ -31,8 +32,9 @@ int privilege_task_create(void(* fn),int priority){
 	p = (struct task_struct *) allocate_kernel_page();
 	if (!p)
 		return -1;
-
+	
 	struct trapframe *childregs = get_task_trapframe(p);
+	
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
 	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
@@ -58,38 +60,23 @@ int privilege_task_create(void(* fn),int priority){
 
 int user_task_create()
 {
-	/*
 	preempt_disable();
 	struct task_struct *p;
 
-	p = (struct task_struct *) get_free_page();
-	if (!p) {
+	p = (struct task_struct *) allocate_kernel_page();
+	if (!p) 
 		return -1;
-	}
-
+	
 	struct trapframe *childregs = get_task_trapframe(p);
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
 	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
-		
+	
 	struct trapframe * cur_regs = get_task_trapframe(current);
 	*childregs = *cur_regs; //copy content of parent register
 	childregs->regs[0] = 0; //x0 in the new state is set to 0, because x0 will be interpreted by the caller as a return value of the syscall.
-
-	int copy_byte = (current->stack+PAGE_SIZE) - cur_regs->regs[29];
+	copy_virt_memory(p);
 	
-	unsigned long stack = get_free_page(); 
-	if (!stack) {
-		return -1;
-	}
-	
-	childregs->regs[29] = (stack+PAGE_SIZE) - copy_byte;
-	childregs->sp = childregs->regs[29];
-	
-	p->stack=stack;
-
-	fork_memcpy((void *)childregs->regs[29],(void *)cur_regs->regs[29],copy_byte);
-
 	p->cpu_context.x19 = 0; 
 	p->priority = current->priority;
 	p->state = TASK_RUNNING;
@@ -101,11 +88,10 @@ int user_task_create()
 	int pid = get_availible_pid();
 	task[pid] = p;
 	p->pid = pid;
-	
+
 	priorityQ_push(&runqueue,p->priority,p->pid);	
 	preempt_enable();
-	return pid;*/
-	return 0;
+	return pid;
 }
 
 
@@ -123,14 +109,19 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	regs->elr_el1 = pc;             // copy to elr_el1 
 	regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0 
 	regs->sp =  0x0000ffffffffe000; 
-	unsigned long code_page = allocate_user_page(current,pc); 
-	if (!code_page) {
+	
+	unsigned long code_page = allocate_user_page(current,pc);
+//	unsigned long stack = allocate_user_page(current,regs->sp-8);
+	if (!code_page) 
 		return -1;
-	}
-	memcpy(code_page,start,size);
+	// For stack, only map it and allocate when page fault
+	// Since stack grow down, map from 0x0000ffffffffd000
+	mmap((void *)0x0000ffffffffd000, PAGE_SIZE, PROT_READ|PROT_WRITE, \
+			MAP_ANONYMOUS, NULL, 0);	
+	
+	memcpy((void *)code_page,(void *)start,size);
 	//dump_mem((void *)code_page,size);
 	unsigned long user_pgd = current->mm.pgd; 
 	set_pgd(user_pgd);
-	
 	return 0;
 }
