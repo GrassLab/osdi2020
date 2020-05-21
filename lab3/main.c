@@ -34,7 +34,6 @@ char cmd[CMDSIZE] = {0};
 int cmdSize = 0;
 
 
-
 void cmd_process(){
     uart_puts("\r");
 
@@ -105,6 +104,8 @@ void main()
             // printASCII(c);
             cmd_push(c);
         }
+
+        bottom_half_check();
 
     }
 }

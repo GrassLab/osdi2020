@@ -24,8 +24,9 @@
  */
 
 #include "uart.h"
-#include "timer.h"
 #include "irq.h"
+#include "timer.h"
+#include "task.h"
 
 #define CORE0_IRQ_SOURCE ((volatile unsigned int*)0x40000060)
 #define ARM_LOCAL_TIMER_IRQ 0b100000000000
@@ -61,7 +62,6 @@ void show_currentEL(){
 }
 
 void show_esr_elr(unsigned long esr, unsigned long elr){
-    uart_puts("sync_exc1_handler\n");
     uart_puts("***Exception type: Synchronous***\n");
 
     uart_puts("Exception return adress 0x");
@@ -80,61 +80,48 @@ void show_esr_elr(unsigned long esr, unsigned long elr){
 
 
 /* ========================= system call ========================= */
+void sys_uart_read(unsigned long long *argu){
+    char *buf = (char*)argu[9];
+    int num = (int)argu[10];
 
-void sysCall_print_esr_elr(){
-    supervisor_call_1();
+    for(int i=0; i<num; i++){
+        buf[i] = uart_getc();
+    }
 }
 
-void sysCall_set_timer(){
-    supervisor_call_2();
-}
-
-void sysCall_unset_timer(){
-    supervisor_call_3();
-}
-
-void sysCall_miniUART_irq(){
-    supervisor_call_4();
-}
-
-void dequeue_core_timer_bottom_half(){
-    supervisor_call_5();
-}
-
-void dequeue_local_timer_bottom_half(){
-    supervisor_call_6();
-}
-
-void sysCall_handler_el0(int num){
-    unsigned long esr, elr;
+void sysCall_handler_el0(){
+    unsigned long long  num = 16;
+    task_t *curTask = get_cur_task();
+    unsigned long long *argu = (unsigned long long*)(curTask->context.kstack - 32 * 8);
+    num = argu[8];
 
     switch(num){
-        case 1:
-            asm volatile(
-                "mrs %[esr], esr_el1;"
-                "mrs %[elr], elr_el1;"
+        case 0:
+            argu[0] = curTask->taskId;
+            break;
 
-                : [esr] "=r" (esr), [elr] "=r" (elr)
-                ::
-            );
-            show_esr_elr(esr, elr);
+        case 1:
+            schedule();
             break;
+
         case 2:
-            core_timer_enable();
-            arm_local_timer_init();
+            uart_puts((char*)argu[9]);
             break;
+
         case 3:
-            arm_local_timer_cancel();
-            core_timer_cancel();
+            sys_uart_read(argu);
             break;
+
         case 4:
-            enable_miniUART_interrupt();
+            do_exec((void(*)())argu[9]);
             break;
+
         case 5:
-            core_timer_irq_queue = 0;
+            do_fork();
             break;
+
         case 6:
-            local_timer_irq_queue = 0;
+            do_exit( (int)argu[9] );
             break;
 
         default:
@@ -143,23 +130,22 @@ void sysCall_handler_el0(int num){
             uart_puts(" not exist \n");
             break;
     }
+
+    kernel_routine_exit();
 }
 
 
 void sync_exc0_handler(){
     unsigned long esr, elr;
-    asm volatile(
-        "mrs %[esr], esr_el1;"
-        "mrs %[elr], elr_el1;"
-
-        : [esr] "=r" (esr), [elr] "=r" (elr)
-        ::
-    );
+    get_sync_exc_param_el1(&esr, &elr);
 
     if(esr>>26 == 0x15){
-        int supervisorCallNum = esr & 0x1FFFFFF;
-        sysCall_handler_el0( supervisorCallNum );
+        kernel_routine_entry();
+
+        int svcNum = esr & 0x1FFFFFF;
+        if(svcNum==0) sysCall_handler_el0();
     }else{
+        uart_puts("sync_exc0_handler\n");
         show_esr_elr(esr, elr);
     }
 }
@@ -167,70 +153,30 @@ void sync_exc0_handler(){
 void sync_exc1_handler(){
     show_currentEL();
     unsigned long esr, elr;
-
-    asm volatile(
-        "mrs %[esr], esr_el1;"
-        "mrs %[elr], elr_el1;"
-
-        : [esr] "=r" (esr), [elr] "=r" (elr)
-        ::
-    );    
+    get_sync_exc_param_el1(&esr, &elr);  
     
+    uart_puts("sync_exc1_handler\n");
     show_esr_elr(esr, elr);
 }
 
 void sync_exc2_handler(){
     show_currentEL();
     unsigned long esr, elr;
-
-    asm volatile(
-        "mrs %[esr], esr_el2;"
-        "mrs %[elr], elr_el2;"
-
-        : [esr] "=r" (esr), [elr] "=r" (elr)
-        ::
-    );
+    get_sync_exc_param_el2(&esr, &elr);
     
-   show_esr_elr(esr, elr);
+    show_esr_elr(esr, elr);
 }
 
-void core_timer_irq_bottom_half(){
-    uart_puts("start arm core bottom half\n");
-    simulate_bottom_half();
-    uart_puts("finish arm core bottom half\n");
-}
-
-void local_timer_irq_bottom_half(){
-    uart_puts("start arm local bottom half\n");
-    simulate_bottom_half();
-    uart_puts("finish arm local bottom half\n");
-}
+/* ========================= IRQ ========================= */
 
 void irq_exc_handler(){
     unsigned int irq_status = *CORE0_IRQ_SOURCE;
 
     if( irq_status & ARM_CORE_TIMER_IRQ){
-        uart_puts("ARM_CORE_TIMER_IRQ\n");
+        // uart_puts("ARM_CORE_TIMER_IRQ\n");
         core_timer_handler();
-        core_timer_irq_queue = 1;
-        
-
-        // core_timer_irq_bottom_half();
-        return;
-    }
-
-    if( irq_status & ARM_LOCAL_TIMER_IRQ) {
-        uart_puts("ARM_LOCAL_TIMER_IRQ\n");
-        arm_local_timer_handler();
-        local_timer_irq_queue = 1;
-
-        // local_timer_irq_bottom_half();
-        return;
-    }
-
-    unsigned int IRQ_pending = *IRQ_PENDIGN_1;
-    if(IRQ_pending & 1<<29){
-        show_interrupt_status();
+        ReSchedule = 1;
+        schedule();
         return;
     }
         
@@ -240,18 +186,6 @@ void irq_exc_handler(){
 void SError_handler(){   
     uart_puts("SError\n");
 }
-
-void bottom_half_check(){
-    if(core_timer_irq_queue) {
-        core_timer_irq_bottom_half();
-        dequeue_core_timer_bottom_half();
-    }
-    if(local_timer_irq_queue) {
-        local_timer_irq_bottom_half();
-        dequeue_local_timer_bottom_half();
-    }
-}
-
 
 
 
