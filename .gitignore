@@ -1,3 +1,5 @@
-kernel8.elf
-kernel8.img
-a.o
+*kernel8.elf
+*kernel8.img
+*.o
+*build
+*.sh
