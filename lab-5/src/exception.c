@@ -69,6 +69,9 @@ void exception_handler(unsigned long sp)
     task->userContext.spsr_el1 = spsr_el1;
     task->trapframe = sp;
 
+    // uart_puts("ec: ");
+    // uart_print_hex(ec);
+    // uart_puts("\n");
     // SVC
     if ((esr>>26) == 0b010101) {
         el0_svc_handler(sp);

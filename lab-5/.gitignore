@@ -1,4 +1,5 @@
 *.o
+*.d
 *.img
 kernel8.elf
 peda*

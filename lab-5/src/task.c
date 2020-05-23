@@ -4,7 +4,6 @@
 #include "syscall.h"
 
 TaskManager taskManager;
-Task tasks[64];
 
 extern Task* get_current();
 extern void set_current();
@@ -197,7 +196,7 @@ void foo()
         uart_puts(", tmp value ");
         uart_print_int(tmp);
         uart_puts("\n");
-        wait(100000000);
+        wait(100000);
         exit(0);
     }
 }
@@ -237,7 +236,7 @@ void test() {
             uart_puts(", taskCount: ");
             uart_print_int(taskManager.taskCount);
             uart_puts("\n");
-            wait(10000000);
+            wait(100000);
             ++cnt;
         }
         exit(0);

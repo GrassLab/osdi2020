@@ -65,8 +65,8 @@ b	\label
 
 
 .align 11      // important, code has to be properly aligned
-.global exception_table_el1
-exception_table_el1:
+.global exception_table
+exception_table:
     ventry el1_exception
     ventry el1_exception
     ventry el1_exception
@@ -84,27 +84,6 @@ exception_table_el1:
     ventry el1_irq
     ventry el1_exception
     ventry el1_exception
-
-.align 11      // important, code has to be properly aligned
-.global exception_table_el2
-exception_table_el2:
-    ventry el2_exception
-    ventry el2_exception
-    ventry el2_exception
-    ventry el2_exception
-    // synchronous
-    ventry el2_exception
-    // IRQ
-    ventry el2_irq
-    // FIQ
-    ventry el2_exception
-    // SError
-    ventry el2_exception
-
-    ventry el2_exception
-    ventry el2_exception
-    ventry el2_exception
-    ventry el2_exception
 
 el1_exception:
     kernel_entry
@@ -112,16 +91,6 @@ el1_exception:
     kernel_exit
 
 el1_irq:
-    kernel_entry
-    bl irq_handler
-    kernel_exit
-
-el2_exception:
-    kernel_entry
-    bl exception_handler
-    kernel_exit
-
-el2_irq:
     kernel_entry
     bl irq_handler
     kernel_exit
