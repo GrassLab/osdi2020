@@ -11,6 +11,9 @@
 #define PAGE_SIZE   		(1 << PAGE_SHIFT)  //2^12	
 #define SECTION_SIZE		(1 << SECTION_SHIFT) //2^21 
 
+#define EL1_LOW_MEMORY              (2 * SECTION_SIZE)
+#define EL0_LOW_MEMORY              (4 * SECTION_SIZE)
+
 #define HIGH_MEMORY         0x3F000000         // 0x3F000000
 #define LOW_MEMORY          (3 * SECTION_SIZE)  // 3 * 2^21 = 6M
                                                 //          = 0x600000 
@@ -28,8 +31,19 @@
 #define PAGE_USED 1
 #define PAGE_PRESERVE 2
 
+#ifndef __ASSEMBLER__
+
 typedef struct page {
     int used;
 } Page;
+
+void paging_init();
+unsigned long get_free_page();
+void free_page(unsigned long p);
+unsigned long virtual_to_physical(unsigned long);
+unsigned long physical_to_pfn(unsigned long);
+unsigned long virtual_to_pfn(unsigned long);
+
+#endif
 
 #endif

@@ -29,7 +29,7 @@ typedef struct userContext {
 
 typedef struct trapframe {
 	unsigned long regs[31];
-} __attribute__ ((aligned (8))) Trapframe;
+} Trapframe;
 
 typedef struct task {
     CpuContext cpuContext;
