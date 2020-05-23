@@ -11,6 +11,15 @@ struct list_head {
         (ptr)->next = (ptr); (ptr)->prev = (ptr); \
 } while (0)
  
+#define offsetof(TYPE, MEMBER) ((unsigned long) &((TYPE *)0)->MEMBER)
+
+#define container_of(ptr, type, member) ({			\
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+		(type *)( (char *)__mptr - offsetof(type,member) );})
+
+
+#define list_entry(ptr,type,member)	\
+    container_of(ptr, type, member)
 
 static inline void __list_add(struct list_head *new_lst,
 			      struct list_head *prev,
@@ -25,6 +34,25 @@ static inline void __list_add(struct list_head *new_lst,
 static inline void list_add_tail(struct list_head *new_lst, struct list_head *head)
 {
 	__list_add(new_lst, head->prev, head);
+}
+
+static inline void list_add(struct list_head *new, struct list_head *head)
+{
+        __list_add(new, head, head->next);
+}
+
+static inline void list_add_chain_tail(struct list_head *ch,struct list_head *ct, \
+		struct list_head *head){
+
+		ch->prev=head->prev;
+		head->prev->next=ch;
+		head->prev=ct;
+		ct->next=head;
+}
+
+static inline int list_empty(const struct list_head *head)
+{
+	return head->next == head;
 }
 
 #endif

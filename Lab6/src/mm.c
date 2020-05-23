@@ -5,39 +5,91 @@
 #include "include/kernel.h"
 
 int remain_page = PAGE_ENTRY;
-unsigned long get_free_page() // this function can only call by 
-	                      // 1.alloc kernel pg
-       			      // 2. alloc user pg	
-{
-	// Start from first availible memory
-	// Since some region are used for kernel image / stack
-	
-	for (int i = FIRST_AVAILIBLE_PAGE; i < PAGE_ENTRY; i++){
-		// finding availible memory space for your process
-		if (page[i].used == NOT_USED){
-			//printf("Using Page: 0x%x\r\n",i*PAGE_SIZE);
-			page[i].used = USED_NOW;
-			remain_page--;
-			// initialize to zero
-			memzero((unsigned long) (i * PAGE_SIZE) + VA_START, PAGE_SIZE);
-			return i * PAGE_SIZE;
+
+//#####
+struct page_struct* get_pages_from_list(int order){
+	int neworder = order;
+	struct page_struct *page;
+
+	int flag = 0;
+	for(;neworder<MAX_ORDER;neworder++){
+		//no buddy in target order, so find a larger one
+		if(list_empty(&page_buddy[neworder])) 
+			continue;
+		else{
+			page = list_entry(page_buddy[neworder].next,struct page_struct,list);	
+			
+			struct list_head *next_buddy = (&(BUDDY_END(page,neworder)->list))->next;
+			
+			// take the needed page and link else back
+			next_buddy->prev = &page_buddy[neworder];
+			page_buddy[neworder].next = next_buddy->next;
+			flag = 1;
+			break;
 		}
+
+	}	
+
+	printf("select page: %d\r\n",page->page_num);
+	struct list_head *tlst,*tlst1;
+	//printf("### required order %d, get from order %d\r\n",order,neworder);
+	if(flag==0)
+		return (struct page_struct*)NULL;
+	
+	// if we take buddy larger then we required, give back those we don't nedd
+	for(neworder--;neworder>=order;neworder--){
+		tlst1 =&(BUDDY_END(page,neworder)->list);
+		tlst = &(page->list);
+		
+		// take bottom half 
+		page = NEXT_BUDDY_START(page,neworder);
+		// revise the top half order of this page
+		list_entry(tlst,struct page_struct,list)->order=neworder;
+                // and add back to buddy list
+		list_add_chain_tail(tlst,tlst1,&page_buddy[neworder]);
 	}
-	return 0;
+
+	page->used = USED_NOW;
+	page->order = order;
+	
+	return page;
 }
 
-unsigned long allocate_kernel_page(){
-	unsigned long page = get_free_page();
+struct page_struct *alloc_pages(int order){
+	struct page_struct *page = get_pages_from_list(order);
+	if(page==(struct page_struct*)NULL)
+		return (struct page_struct*)NULL;
+	
+	// set all these continuous page to used
+	for(int i=0;i<(1<<order);i++){
+		(page+i)->used = USED_NOW;
+		printf("Using page %d \r\n", (page+i)->page_num);
+		remain_page--;
+		memzero(page[i].phy_addr + VA_START, PAGE_SIZE);
+	}
+	return page;
+}
+
+unsigned long get_free_page(int order){
+	struct page_struct* page;
+	page = alloc_pages(order);
+	if (!page)
+		return -1;
+	return	page->phy_addr;
+}
+
+unsigned long allocate_kernel_page(int order){
+	unsigned long page = get_free_page(order);
 	if(page == 0){
 		return 0;
 	}
 	return page + VA_START;
 }
 
-unsigned long allocate_user_page(struct task_struct *task, \
+unsigned long allocate_user_page(int order,struct task_struct *task, \
 		unsigned long vir_addr){
 
-	unsigned long page = get_free_page(); 
+	unsigned long page = get_free_page(order); 
 	if(page == 0){
 		return 0;
 	}
@@ -52,7 +104,7 @@ void map_page(struct task_struct *task, unsigned long vir_addr, \
 	
 	// If it is the first time to map this task
 	if(!task->mm.pgd){
-		task->mm.pgd = get_free_page();
+		task->mm.pgd = get_free_page(0);
 		task->mm.kernel_pages[task->mm.kernel_pages_count++] = task->mm.pgd;
 	}
 	
@@ -79,7 +131,7 @@ unsigned long map_table(unsigned long *table, unsigned long shift, \
 	unsigned long index = vir_addr >> shift;
     	index = index & (PTRS_PER_TABLE - 1);
     	if(!table[index]){	
-        	unsigned long next_level_table = get_free_page();
+        	unsigned long next_level_table = get_free_page(0);
         	unsigned long entry = next_level_table | PD_TABLE;
         	table[index] = entry;
         	task->mm.kernel_pages[task->mm.kernel_pages_count++] = next_level_table;
@@ -101,8 +153,9 @@ void map_entry(unsigned long *pte, unsigned long vir_addr,\
 }
 
 void free_page(unsigned long p){ //input should be physical address
+	//BUGGGGGGGGGGGGGGG!
 	unsigned long pfn = physical_to_pfn(p);
-	//printf("Free Page %d\r\n", pfn);	
+	printf("Free Page %d\r\n", pfn);	
 	if(page[pfn].used==USED_NOW)
 		page[pfn].used = NOT_USED;
 	remain_page++;
@@ -134,17 +187,19 @@ void init_page_struct(){
 		remain_page--;
 	}
 	
-	//int usable = i;	
+	int usable = i;	
 	int counter = 0;
 	for(;i<PAGE_ENTRY;i++){
 		page[i].used = NOT_USED;
+		page[i].phy_addr = i * PAGE_SIZE;
+		page[i].page_num = i;
+
 		INIT_LIST_HEAD(&(page[i].list));
 		
 		// making the memory max buddy as possible*/
 		if(counter == 0){
 			if( i + PAGE_NUM_FOR_MAX_BUDDY < PAGE_ENTRY+1 ){
 				page[i].order = MAX_ORDER-1;
-				page[i].range_to =  i + PAGE_NUM_FOR_MAX_BUDDY -1;
 				list_add_tail(&(page[i].list),&page_buddy[MAX_ORDER-1]);
 				
 				counter = PAGE_NUM_FOR_MAX_BUDDY-1;
@@ -161,12 +216,11 @@ void init_page_struct(){
 			counter--;
 		}
 	}
-	/*
+	
 	//dump
-	for(i=usable;i<PAGE_ENTRY;i++){
+	for(i=usable;i<usable+513;i++){
 		if(page[i].order!=-1){
 			printf("page number: %d /",i);
-			printf("page to: %d /",page[i].range_to);
 			printf("page order %d\r\n",page[i].order);
 		}
 		if(page[i].order==0){
@@ -176,8 +230,10 @@ void init_page_struct(){
 		
 		}
 	}
-	printf("last entry %d\r\n",PAGE_ENTRY);*/
+	printf("last entry %d\r\n",PAGE_ENTRY);
 }
+
+
 
 unsigned long virtual_to_physical(unsigned long vir){
 	unsigned long pfn = (vir<<16)>>16;
@@ -214,7 +270,7 @@ int copy_virt_memory(struct task_struct *dst){
 
 	for(int i=0;i<current->mm.user_pages_count;i++){
 		struct user_page src = current->mm.user_pages[i];
-		unsigned long page = allocate_user_page(dst, src.vir_addr);
+		unsigned long page = allocate_user_page(0,dst, src.vir_addr);
 		if(!page)
 			return -1;
 
@@ -229,7 +285,7 @@ int copy_virt_memory(struct task_struct *dst){
 }
 
 int page_fault_handler(unsigned long addr,unsigned long esr){
-	//printf("+++ Page fault at 0x%x\r\n",addr);
+	printf("+++ Page fault at 0x%x\r\n",addr);
 	if(((esr>>2)&0x3) != 1){ //If not a translation fault, kill  
   		 switch((esr>>2)&0x3) {
  			  case 0: uart_send_string("Address size fault, "); break;
@@ -246,7 +302,7 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 	struct mm_struct mm = current->mm;
 	for(int i=0;i< mm.vm_area_count;i++){
 		if( (addr >= mm.mmap[i].vm_start) && (addr < mm.mmap[i].vm_end)){	
-			unsigned long page = get_free_page();
+			unsigned long page = get_free_page(0);
 			if (page == 0) 
             			return -1;
         		
@@ -285,6 +341,11 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 
  void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset){
 	unsigned long vir_addr;
+
+	if(file_start!=NULL && file_offset!=0){
+		printf("Map to file: not implement yet");
+		while(1);
+	}
 			
 	// For address:
 	// addr should be page aligned 	

@@ -29,7 +29,7 @@ int privilege_task_create(void(* fn),int priority){
 	preempt_disable();
 	struct task_struct *p;
 
-	p = (struct task_struct *) allocate_kernel_page();
+	p = (struct task_struct *) allocate_kernel_page(0);
 	if (!p)
 		return -1;
 	
@@ -63,7 +63,7 @@ int user_task_create()
 	preempt_disable();
 	struct task_struct *p;
 
-	p = (struct task_struct *) allocate_kernel_page();
+	p = (struct task_struct *) allocate_kernel_page(0);
 	if (!p) 
 		return -1;
 	
@@ -110,7 +110,7 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	regs->spsr_el1 = 0x00000000; // copy to spsr_el1 for enter el0 
 	regs->sp =  0x0000ffffffffe000; 
 	
-	unsigned long code_page = allocate_user_page(current,pc);
+	unsigned long code_page = allocate_user_page(0,current,pc);
 //	unsigned long stack = allocate_user_page(current,regs->sp-8);
 	if (!code_page) 
 		return -1;

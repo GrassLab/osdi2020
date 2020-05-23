@@ -94,7 +94,7 @@ void kernel_process(){
 
     //unsigned long elf_start = (unsigned long)&_binary_user_elf_start;
     //unsigned long elf_end = (unsigned long)&_binary_user_elf_end;
-    //elf_parser(elf_start, elf_end - elf_start);
+    //elf_parser(elf_start);
     
 
     // Note: we naive assume that there's only one shell   
@@ -122,10 +122,18 @@ void kernel_main(void)
     enable_irq();        //clear PSTATE.DAIF
     core_timer_enable(); //enable core timer
     
-    // Here init a task being zombie reaper
-    privilege_task_create(zombie_reaper,1);
 
-    privilege_task_create(kernel_process, 1); 
+    unsigned long p1;
+    p1 = get_free_page(0);
+    printf("the return address of get_free_pages %x\n",p1);
+    
+    //unsigned long p2;
+    //p2 = get_free_page(0);
+    //printf("the return address of get_free_pages %x\n",p2);
+    // Here init a task being zombie reaper
+    //privilege_task_create(zombie_reaper,1);
+
+    //privilege_task_create(kernel_process, 1); 
 
     idle();  
 }

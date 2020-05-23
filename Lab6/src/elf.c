@@ -11,7 +11,7 @@ unsigned long get_u64(char* start){
 	return num;
 }
 
-void elf_parser(unsigned long elf_start, unsigned long size){
+void elf_parser(unsigned long elf_start){
 	Elf64_Ehdr elf_header;
 	Elf64_Phdr prog_header;
 	

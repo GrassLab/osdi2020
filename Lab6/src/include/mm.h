@@ -34,19 +34,22 @@
 
 // available from 2^0~2^8 => 1~256 * 4k => from 4k to 1MB
 #define MAX_ORDER 9
-#define PAGE_NUM_FOR_MAX_BUDDY  ((1<<MAX_ORDER)) // 2^9
+#define PAGE_NUM_FOR_MAX_BUDDY  ((1<<(MAX_ORDER-1))) // 2^8
  
+#define BUDDY_END(x,order)	((x)+(1<<(order))-1)
+#define NEXT_BUDDY_START(x,order)	((x)+(1<<(order)))
+#define PREV_BUDDY_START(x,order)	((x)-(1<<(order)))
 
 #ifndef __ASSEMBLER__
-
 
 struct list_head page_buddy[MAX_ORDER];
 
 struct page_struct{
 	int used;
-	struct list_head list;
 	int order;
-	int range_to; 
+	int page_num;
+	unsigned long phy_addr;
+	struct list_head list;
 };
 
 int remain_page;
@@ -56,9 +59,12 @@ void init_page_struct();
 unsigned long virtual_to_physical(unsigned long vir);
 unsigned long physical_to_pfn(unsigned long phy);
 
-unsigned long get_free_page();
-unsigned long allocate_kernel_page();
-unsigned long allocate_user_page(struct task_struct *task,unsigned long vir_addr);
+struct page_struct* get_pages_from_list(int order);
+struct page_struct* alloc_pages(int order);
+unsigned long get_free_page(int order);
+
+unsigned long allocate_kernel_page(int order);
+unsigned long allocate_user_page(int order,struct task_struct *task,unsigned long vir_addr);
 
 void map_page(struct task_struct *task, unsigned long vir_addr, unsigned long page, unsigned long page_attr);
 unsigned long map_table(unsigned long *table, unsigned long shift,unsigned long vir_addr, struct task_struct *task);
