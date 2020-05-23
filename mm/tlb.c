@@ -192,12 +192,12 @@ tlb_init ()
   for (i = 0x7e000; i < ((size_t) _kernel_end & ~KPGD); i += PAGE_SIZE)
     page_init (&page_pool[i >> 12], KPGD, i | KPGD);
   // peripheral
-  // ffffaaaa00000000-ffffaaaa01000000 -> 00003f000000-000040000000
-  map_virt_to_phys (KPGD, 0xffffaaaa00000000, 0x3f000000, 0x1000000,
+  // ffff00003f000000-ffff000040000000 -> 00003f000000-000040000000
+  map_virt_to_phys (KPGD, 0xffff00003f000000, 0x3f000000, 0x1000000,
 		    pd_encode_peripheral (0));
   // arm local
-  // ffffaaaa01000000-ffffaaaa01040000 -> 000040000000-000040040000
-  map_virt_to_phys (KPGD, 0xffffaaaa01000000, 0x40000000, 0x40000,
+  // ffff000040000000-ffff000040040000 -> 000040000000-000040040000
+  map_virt_to_phys (KPGD, 0xffff000040000000, 0x40000000, 0x40000,
 		    pd_encode_peripheral (0));
 }
 
