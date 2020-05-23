@@ -41,7 +41,7 @@ $(BDIR)/%.asmo: $(SDIR)/%.S
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img rd prog user/user.o user/user_lib.o
+	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img rd prog user/user.o user/user_lib.o user.img user.elf
 
 run: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio

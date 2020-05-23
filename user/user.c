@@ -79,7 +79,8 @@ void shell() {
     } else if (!strcmp(cmd, "fork")) {
         int pid = sys_fork();
         print_s("Child pid: ");
-        print_i(pid);
+        asm volatile("pid:");
+        print_i(pid + 10);
         print_s("\n");
     } else if (!strcmp(cmd, "clear")) {
         print_s("\033[2J\033[1;1H");

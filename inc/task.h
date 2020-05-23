@@ -2,6 +2,7 @@
 #define TASK_H
 
 #include <stdint.h>
+#include "trap.h"
 #define QUEUE_ELE_SIZE 64
 #define STACK_SIZE 4096
 #define SIGKILL 1
@@ -12,40 +13,6 @@ typedef enum {
         ZOMBIE,
 } TASK_STATUS;
 
-
-struct trap_frame_t {
-    uint64_t x30;
-    uint64_t x29;
-    uint64_t x28;
-    uint64_t x27;
-    uint64_t x26;
-    uint64_t x25;
-    uint64_t x24;
-    uint64_t x23;
-    uint64_t x22;
-    uint64_t x21;
-    uint64_t x20;
-    uint64_t x19;
-    uint64_t x18;
-    uint64_t x17;
-    uint64_t x16;
-    uint64_t x15;
-    uint64_t x14;
-    uint64_t x13;
-    uint64_t x12;
-    uint64_t x11;
-    uint64_t x10;
-    uint64_t x9;
-    uint64_t x8;
-    uint64_t x7;
-    uint64_t x6;
-    uint64_t x5;
-    uint64_t x4;
-    uint64_t x3;
-    uint64_t x2;
-    uint64_t x1;
-    uint64_t x0;
-};
 
 struct utask_t {
     uint64_t sp;
@@ -88,24 +55,22 @@ struct queue{
 
 extern struct task_t task_pool[64];
 extern struct queue_element_t queue_elements[QUEUE_ELE_SIZE];
-extern int queue_elements_now;
-struct task_t* get_current();
-struct task_t* privilege_task_create(void (*func)(), int priority);
 extern struct queue runqueue;
 extern struct queue waitqueue;
+extern int queue_elements_now;
 extern char kstack_pool[64][STACK_SIZE];
 extern char ustack_pool[64][STACK_SIZE];
 
+extern void switch_to(struct task_t* prev, struct task_t* next,
+                      uint64_t nextfunc, uint64_t spsr, uint64_t* pgd);
+extern void user_context(uint64_t sp, uint64_t func);
+struct task_t* get_current();
 void context_switch(struct task_t* next);
-void privilege_task_run();
-void schedule();
-void task_init();
 void queue_push(struct queue* queue, struct task_t* task);
 struct task_t* queue_pop(struct queue* queue, TASK_STATUS status);
-void do_exec(uint8_t* func, int size);
-void do_fork(uint64_t elr);
-void do_exit(uint64_t status);
-void kexit(uint64_t status);
-void do_kill(uint64_t pid, uint64_t signal);
-void switch_to_wait();
+struct task_t* privilege_task_create(void (*func)(), int priority);
+void task_init();
+void privilege_task_run();
+void schedule();
+void switch_to_user_mode();
 #endif

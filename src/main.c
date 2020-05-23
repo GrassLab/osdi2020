@@ -2,6 +2,7 @@
 
 #include "io.h"
 #include "lfb.h"
+#include "libsyscall.h"
 #include "mbox.h"
 #include "page.h"
 #include "reset.h"
