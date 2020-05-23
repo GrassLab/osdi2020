@@ -76,8 +76,6 @@ el1_entry:
     msr sctlr_el1, x2 // enable MMU, cache remains disabled
 
     // indirect branch
-    // load before turn on MMU    
-    //bl kernel_main
     ldr x0 ,=kernel_main  
     br      x0
     
