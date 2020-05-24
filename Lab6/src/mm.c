@@ -6,7 +6,6 @@
 
 int remain_page = PAGE_ENTRY;
 
-//#####
 struct page_struct* get_pages_from_list(int order){
 	int neworder = order;
 	struct page_struct *page;
@@ -18,40 +17,46 @@ struct page_struct* get_pages_from_list(int order){
 			continue;
 		else{
 			page = list_entry(page_buddy[neworder].next,struct page_struct,list);	
-			
+			printf("using page %d with order %d\r\n",page->page_num,page->order);	
 			struct list_head *next_buddy = (&(BUDDY_END(page,neworder)->list))->next;
-			
+
 			// take the needed page and link else back
 			next_buddy->prev = &page_buddy[neworder];
-			page_buddy[neworder].next = next_buddy->next;
+			page_buddy[neworder].next = next_buddy;
 			flag = 1;
 			break;
 		}
 
 	}	
 
-	printf("select page: %d\r\n",page->page_num);
-	struct list_head *tlst,*tlst1;
-	//printf("### required order %d, get from order %d\r\n",order,neworder);
-	if(flag==0)
+	printf("$$$ select page: %d: required order %d and origin order %d\r\n",\
+			page->page_num,order,neworder);
+	
+	if(flag==0) //OOM
 		return (struct page_struct*)NULL;
 	
 	// if we take buddy larger then we required, give back those we don't nedd
 	for(neworder--;neworder>=order;neworder--){
-		tlst1 =&(BUDDY_END(page,neworder)->list);
-		tlst = &(page->list);
+			
+		struct page_struct* start_page = NEXT_BUDDY_START(page,neworder); 	
+		struct page_struct* end_page = BUDDY_END(start_page,neworder);
 		
-		// take bottom half 
-		page = NEXT_BUDDY_START(page,neworder);
-		// revise the top half order of this page
-		list_entry(tlst,struct page_struct,list)->order=neworder;
-                // and add back to buddy list
-		list_add_chain_tail(tlst,tlst1,&page_buddy[neworder]);
+		struct list_head* next_buddy_start =  &(start_page->list);    
+		struct list_head* next_buddy_end = &(end_page->list);
+		
+		printf("@@@ cutoff from %d to %d(totally %d page) in order %d list\r\n",\
+				start_page->page_num,end_page->page_num, \
+				end_page->page_num - start_page->page_num+1, neworder);
+		// revise the bottom half order of this page
+		list_entry(next_buddy_start,struct page_struct,list)->order=neworder;
+                // add back the chain to buddy list
+		list_add_chain_tail(next_buddy_start,next_buddy_end,&page_buddy[neworder]);
 	}
 
 	page->used = USED_NOW;
 	page->order = order;
 	
+	printf("alloc from %d to %d\r\n",page->page_num,(BUDDY_END(page,order)->page_num));
 	return page;
 }
 
@@ -63,7 +68,7 @@ struct page_struct *alloc_pages(int order){
 	// set all these continuous page to used
 	for(int i=0;i<(1<<order);i++){
 		(page+i)->used = USED_NOW;
-		printf("Using page %d \r\n", (page+i)->page_num);
+		//printf("Using page %d \r\n", (page+i)->page_num);
 		remain_page--;
 		memzero(page[i].phy_addr + VA_START, PAGE_SIZE);
 	}
@@ -152,13 +157,64 @@ void map_entry(unsigned long *pte, unsigned long vir_addr,\
     pte[index] = entry;
 }
 
+
+void put_pages_to_list(struct page_struct *page,int order){
+	struct page_struct *tprev,*tnext;
+
+	printf("+++ put back page %d\r\n",page->page_num);	
+	for(; order<MAX_ORDER ;order++){
+		tnext=NEXT_BUDDY_START(page,order);
+		tprev=PREV_BUDDY_START(page,order);
+		
+		//printf("prev order %d, num %d\r\n",tprev->order,tprev->page_num);	
+		//printf("next order %d, num %d\r\n",tnext->order,tnext->page_num);	
+		// if find neighbor with same order exist, then merge!
+		if((tnext->used == NOT_USED) && (tnext->order==order)){
+			page->order++;
+			tnext->order = -1;
+			// remove the chain in original list
+			list_remove_chain(&(tnext->list),&(BUDDY_END(tnext,order)->list));
+			printf("merge %d to %d\r\n",tnext->page_num,BUDDY_END(tnext,order)->page_num);
+			
+			// merge them together
+			BUDDY_END(page,order)->list.next=&(tnext->list);
+			tnext->list.prev=&(BUDDY_END(page,order)->list);
+
+			continue;
+		}
+		else if((tprev->used == NOT_USED) && (tprev->order==order)){
+			page->order=-1;
+			// remove the chain in original list
+			list_remove_chain(&(tprev->list),&(BUDDY_END(tprev,order)->list)); //**
+			
+			printf("merge %d to %d\r\n",tprev->page_num,BUDDY_END(tprev,order)->page_num);
+			//merge them together
+			BUDDY_END(tprev,order)->list.next=&(page->list);
+			page->list.prev=&(BUDDY_END(tprev,order)->list);
+
+			page=tprev;
+			page->order++;
+			continue;
+		}
+		else{
+			break;
+		}
+	}
+	printf("+++ merge from page %d to %d in order %d\r\n",\
+			page->page_num,BUDDY_END(page,order)->page_num,order);
+	list_add_chain(&(page->list),&(BUDDY_END(page,order)->list),&page_buddy[order]);
+}
+
 void free_page(unsigned long p){ //input should be physical address
-	//BUGGGGGGGGGGGGGGG!
 	unsigned long pfn = physical_to_pfn(p);
-	printf("Free Page %d\r\n", pfn);	
-	if(page[pfn].used==USED_NOW)
-		page[pfn].used = NOT_USED;
-	remain_page++;
+	
+	for(unsigned int i=pfn; i < ( pfn+(1<<page[pfn].order)); i++){
+		page[i].used = NOT_USED;
+		remain_page++;
+		//printf("Free Page %d\r\n", i);
+	}
+	
+	put_pages_to_list(&page[pfn],page[pfn].order);	
 }
 
 void memcpy (void *dest, const void *src, unsigned long len)
@@ -180,18 +236,11 @@ void buddy_init(void){
 void init_page_struct(){
 	
 	buddy_init();
-	// reset page struct
-	int i = 0;	
-	for(;i<FIRST_AVAILIBLE_PAGE;i++){
-		page[i].used = PRESERVE; // for the preserve page, they should not been alloc
-		remain_page--;
-	}
-	
-	int usable = i;	
+		
 	int counter = 0;
-	for(;i<PAGE_ENTRY;i++){
+	for(int i=0;i<PAGE_ENTRY;i++){
 		page[i].used = NOT_USED;
-		page[i].phy_addr = i * PAGE_SIZE;
+		page[i].phy_addr = LOW_MEMORY + i * PAGE_SIZE;
 		page[i].page_num = i;
 
 		INIT_LIST_HEAD(&(page[i].list));
@@ -218,7 +267,7 @@ void init_page_struct(){
 	}
 	
 	//dump
-	for(i=usable;i<usable+513;i++){
+	for(int i=0;i<513;i++){
 		if(page[i].order!=-1){
 			printf("page number: %d /",i);
 			printf("page order %d\r\n",page[i].order);
@@ -244,7 +293,7 @@ unsigned long virtual_to_physical(unsigned long vir){
 }
 
 unsigned long physical_to_pfn(unsigned long phy){
-	return (phy)>>12;	
+	return (phy-LOW_MEMORY)>>12;	
 }
 
 void dump_mem(void *src,unsigned long len){

@@ -15,9 +15,8 @@
 #define PAGE_SIZE   		(1 << PAGE_SHIFT)  //2^12	
 #define SECTION_SIZE		(1 << SECTION_SHIFT) //2^21 
 
-#define HIGH_MEMORY             0x20000000 // note that we don't use all page entry
-#define LOW_MEMORY              (3 * SECTION_SIZE) // 3 * 2^21 = 6M
-                                                   // =0x60 0000 
+#define HIGH_MEMORY             0x3f000000 
+#define LOW_MEMORY              0xf00000
 
 #define PTRS_PER_TABLE			(1 << TABLE_SHIFT)						   
 #define PGD_SHIFT			(PAGE_SHIFT + 3*TABLE_SHIFT) //39
@@ -25,12 +24,10 @@
 #define PMD_SHIFT			(PAGE_SHIFT + TABLE_SHIFT)   //21
 #define PTE_SHIFT                       (PAGE_SHIFT)                 //12
 
-#define PAGE_ENTRY            (HIGH_MEMORY/PAGE_SIZE)  
-#define FIRST_AVAILIBLE_PAGE  (LOW_MEMORY/PAGE_SIZE)
+#define PAGE_ENTRY            ((HIGH_MEMORY-LOW_MEMORY)/PAGE_SIZE)  
 
 #define NOT_USED 0 
 #define USED_NOW 1
-#define PRESERVE 2
 
 // available from 2^0~2^8 => 1~256 * 4k => from 4k to 1MB
 #define MAX_ORDER 9

@@ -41,6 +41,13 @@ static inline void list_add(struct list_head *new, struct list_head *head)
         __list_add(new, head, head->next);
 }
 
+static inline void list_add_chain(struct list_head *ch,struct list_head *ct,struct list_head *head){
+		ch->prev=head;
+		ct->next=head->next;
+		head->next->prev=ct;
+		head->next=ch;
+}
+
 static inline void list_add_chain_tail(struct list_head *ch,struct list_head *ct, \
 		struct list_head *head){
 
@@ -48,6 +55,11 @@ static inline void list_add_chain_tail(struct list_head *ch,struct list_head *ct
 		head->prev->next=ch;
 		head->prev=ct;
 		ct->next=head;
+}
+
+static inline void list_remove_chain(struct list_head *ch,struct list_head *ct){
+	ch->prev->next=ct->next;
+	ct->next->prev=ch->prev;
 }
 
 static inline int list_empty(const struct list_head *head)

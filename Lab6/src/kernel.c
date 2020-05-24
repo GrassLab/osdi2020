@@ -124,12 +124,24 @@ void kernel_main(void)
     
 
     unsigned long p1;
-    p1 = get_free_page(0);
-    printf("the return address of get_free_pages %x\n",p1);
+    p1 = get_free_page(7);
+    printf("the return address 0x%x \r\n\r\n",p1);
     
-    //unsigned long p2;
-    //p2 = get_free_page(0);
-    //printf("the return address of get_free_pages %x\n",p2);
+    unsigned long p2;
+    p2 = get_free_page(0);
+    printf("the return address 0x%x \r\n\r\n",p2);
+    
+    unsigned long p3;
+    p3 = get_free_page(0);
+    printf("the return address 0x%x \r\n\r\n",p3);
+    
+    free_page(p2);
+    free_page(p3); 
+    
+    unsigned long p4;
+    p4 = get_free_page(7);
+    printf("the return address 0x%x \r\n\r\n",p4);
+    
     // Here init a task being zombie reaper
     //privilege_task_create(zombie_reaper,1);
 
