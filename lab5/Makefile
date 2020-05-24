@@ -1,5 +1,5 @@
 ARMGNU ?= aarch64-linux-gnu
-CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -Iinc -g -fPIC
+CFLAGS = -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -Iinc -g
 ASMOPS = -Iinclude -g
 BUILD_DIR = build
 SRC_DIR = src
@@ -53,7 +53,11 @@ pipe:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial  pipe:/tmp/guest -S -s
 
 debug: 
+	make all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -S -s -d int
 
 gtk:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img
+
+gdb:
+	gdb-multiarch -x cmd.gdb

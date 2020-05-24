@@ -3,7 +3,7 @@
 
 #define TIMER_EN        (1<<0)
 #define TIMER_INTEN     (1<<1)
-#define EXPIRE_PERIOD 0xffffff
+#define EXPIRE_PERIOD 0xff
 
 .globl core_timer_enable
 core_timer_enable:
