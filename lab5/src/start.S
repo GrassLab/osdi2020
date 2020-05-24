@@ -27,7 +27,6 @@ master:
 	ldr	x0, =SPSR_VALUE
 	msr	spsr_el2, x0
 
-
 	adr	x0, el1_start		
 	msr	elr_el2, x0
 
@@ -35,6 +34,10 @@ master:
 	mrs x0, CPACR_EL1
     orr x0, x0, #(3 << 20)
     msr CPACR_EL1, x0
+
+	eret				
+
+el1_start:
 
 virt_mem_init:
 	ldr x0, = TCR_CONFIG_DEFAULT
@@ -46,6 +49,7 @@ virt_mem_init:
 	)
 	msr mair_el1, x0
 
+	/* 
 	mov x0, 0 // PGD's page frame at 0x0
 	mov x1, 0x1000 // PUD's page frame at 0x1000
 
@@ -53,23 +57,53 @@ virt_mem_init:
 	orr x2, x1, x2 // combine the physical address of next level page with attribute.
 	str x2, [x0]
 
-	ldr x2, = BOOT_PUD_ATTR
+	ldr x2, = PMD_ATTR
 	mov x3, 0x00000000
 	orr x3, x2, x3
 	str x3, [x1] // 1st 1GB mapped by the 1st entry of PUD
 	mov x3, 0x40000000
 	orr x3, x2, x3
 	str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
+*/
 
-	msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
-	msr ttbr1_el1, x0 // load PGD to the buttom translation based register.
+  	mov     x0, 0
+    mov     x1, 0x1000
+    mov     x2, 0x2000
+    // create page table
+    ldr     x7, =BOOT_PGD_ATTR
+    orr     x7, x1, x7          // combine the physical address of next level page with attribute.
+    str     x7, [x0]            // setup first PGD entry(pointer to PUD)
+
+    ldr     x7, =BOOT_PUD_ATTR
+    orr     x7, x2, x7          // combine the physical address of next level page with attribute.
+    str     x7, [x1]            // setup first PUD entry(pointer to PMD)
+
+    ldr     x7, =PT_PMD_NOR_ATTR
+    mov     x6, xzr             // PMD idx conter
+nor_pmd:                          //0x000 00000 to 0x3ef fffff(0x2000 to 0x3f78)
+    mov     x5, x6, lsl #21       // block basis
+    orr     x5, x5, x7            // combine block address and attribute to a descriptor
+    str     x5, [x2, x6, lsl #3]
+    add     x6, x6, #1
+    cmp     x6, #0x3F0
+    blo     nor_pmd
+
+    ldr     x7, =PT_PMD_DEV_ATTR
+dev_pmd:                          //0x3F0 00000 to 0x3FF FFFFF(0x3f80 to 0x3ff8)
+    mov     x5, x6, lsl #21       // block basis
+    orr     x5, x5, x7            // combine block address and attribute to a descriptor
+    str     x5, [x2, x6, lsl #3]
+    add     x6, x6, #1
+    cmp     x6, #0x400
+    blo     dev_pmd
+
+    msr     ttbr0_el1, x0         // load PGD to the buttom translation based register.
+    msr     ttbr1_el1, x0         // also load PGD to the upper translation based register.
 
 	mrs x2, sctlr_el1
 	orr x2 , x2, 1
 	msr sctlr_el1, x2 // enable MMU, cache remains disabled
-	eret				
 
-el1_start:
 	adr	x0, __bss_begin
 	adr	x1, __bss_end
 	sub	x1, x1, x0
@@ -92,10 +126,11 @@ el1_start:
 	adr	x0, el0_start		
 	msr	elr_el1, x0
     eret
-*/
 
 
 el0_start:
 	mov	sp, #EL0_LOW_MEMORY
 	bl	main
 	b 	proc_hang		// should never come here
+
+*/
