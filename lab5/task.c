@@ -173,27 +173,62 @@ void do_exec(void(*func)(), char signal)
 
 void new_do_exec(unsigned long long begin, unsigned long long size, void(*func)())
 {
-    unsigned long long *vir_pud,  *vir_pmd, *vir_pte;
+    //to_do
+    unsigned long long vir_pud,  vir_pmd, vir_pte, vir_pgd, tmp_pte, first_pte;
     task *current = get_current_task();
-
-    current->user_ttbr0 = page_alloc(); //pgd
+    //page_alloc will get kernel virtual address
+    vir_pgd = page_alloc();
+    current->user_ttbr0 = virtual_to_physical(vir_pgd); //pgd
+    //set user program (.text .data ...)
     vir_pud = page_alloc();
     vir_pmd = page_alloc();
     vir_pte = page_alloc();
-    *current->user_ttbr0 = ((unsigned long long)vir_pud) | 0b11;
-    *vir_pud = ((unsigned long long)vir_pmd) | 0b11;
-    *vir_pmd = ((unsigned long long)vir_pte) | 0b11;
+
+    *(unsigned long long*)(vir_pgd) = (virtual_to_physical(vir_pud)) | 0b11; //for user program
+    *(unsigned long long*)(vir_pud) = (virtual_to_physical(vir_pmd)) | 0b11;
+    *(unsigned long long*)(vir_pmd) = (virtual_to_physical(vir_pte)) | 0b11;
+    
     for(int i=0; i < (size/PAGE_SIZE)+1 ; i++)
     {
-        vir_pte[i] = ((unsigned long long)page_alloc()) | BOOT_PTE_ATTR;
+        tmp_pte = page_alloc();
+        if(i==0){
+            first_pte = tmp_pte;
+        }
+        tmp_pte = tmp_pte | (1<<10) | (1<<6) | (0<<7) | PD_TABLE | (MAIR_IDX_DEVICE_nGnRnE << 2);
+        ((unsigned long long*)vir_pte)[i] = (virtual_to_physical(tmp_pte));
     }
-    memcpy((unsigned long long*)begin, (unsigned long long*)vir_pte[0], size);
+
+    uart_hex(*(unsigned long long*)(vir_pgd));
+    uart_puts("\r\n");
+    uart_hex(*(unsigned long long*)(vir_pud));
+    uart_puts("\r\n");
+    uart_hex(*(unsigned long long*)(vir_pmd));
+    uart_puts("\r\n");
+    uart_hex(*(unsigned long long*)(vir_pte));
+    uart_puts("\r\n");
     
+    memcpy((unsigned long long*)begin, (unsigned long long*)first_pte, size);
+
+    //set user stack
+    vir_pud = page_alloc();
+    vir_pmd = page_alloc();
+    vir_pte = page_alloc();
+    ((unsigned long long*)vir_pgd)[511] = (virtual_to_physical(vir_pud)) | 0b11;
+    ((unsigned long long*)(vir_pud))[511] = (virtual_to_physical(vir_pmd)) | 0b11;
+    ((unsigned long long*)(vir_pmd))[511] = (virtual_to_physical(vir_pte)) | 0b11;
+    ((unsigned long long*)(vir_pte))[510] = (virtual_to_physical(page_alloc())) | (1<<10) | (1<<6) | (0<<7) | PD_TABLE | (MAIR_IDX_DEVICE_nGnRnE << 2);
+
+
+    
+
+    current->sp_el0 =  0x0000ffffffffe000;
+    current->ubase = 0x0000ffffffffe000;
 
     asm volatile("msr sp_el0, %0"::"r"(current->sp_el0):);
     asm volatile("msr spsr_el1, %0"::"r"(0):);
-    asm volatile("msr elr_el1, %0"::"r"(func):);
-    asm volatile("msr user_ttbr0, %0"::"r"(current->user_ttbr0):);
+    asm volatile("msr elr_el1, %0"::"r"(0):);
+    asm volatile("msr ttbr0_el1, %0"::"r"(current->user_ttbr0):);
+    uart_getc();
     asm volatile("eret");
 }
 

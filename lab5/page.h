@@ -9,12 +9,20 @@
 #define MAIR_IDX_DEVICE_nGnRnE 0
 #define PD_ACCESS (1 << 10)
 #define BOOT_PTE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_TABLE)
+
+#define MM_ACCESS_PERMISSION		(0x01 << 6) 
+#define MM_TYPE_PAGE 			0x3
+#define MT_NORMAL_NC			0x1
+#define MM_ACCESS			(0x1 << 10)
+#define MMU_PTE_FLAGS			(MM_TYPE_PAGE | (MT_NORMAL_NC << 2) | MM_ACCESS | MM_ACCESS_PERMISSION)	
+
 typedef struct page{
     char used;
 } page;
 
 void page_struct_init();
-unsigned long long* page_alloc();
+unsigned long long page_alloc();
 void page_free(unsigned long long vir);
 unsigned long long user_paging();
 void memcpy(unsigned long long* from, unsigned long long* to, unsigned long long size);
+unsigned long long virtual_to_physical(unsigned long long vir);

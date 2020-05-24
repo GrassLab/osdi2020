@@ -29,7 +29,7 @@ void page_struct_init()
     }
 }
 
-unsigned long long* page_alloc() //return page virtual address
+unsigned long long page_alloc() //return kernel virtual address
 {
     unsigned long long i = NON_PRESERV_PAGE;
     for(;i<NUM_PAGE;i++) // i is PFN
@@ -38,7 +38,7 @@ unsigned long long* page_alloc() //return page virtual address
         {
             all_page[i].used = 1;
             avaliable_pages--;
-            return (unsigned long long*)(i * 0x1000);
+            return ((i * 0x1000) | 0xffff000000000000);
         }
     }
     return 0;
@@ -51,21 +51,10 @@ void page_free(unsigned long long vir)
     avaliable_pages++;
 }
 
-unsigned long long user_paging()
-{
-    unsigned long long* vir_pgd = page_alloc();
-    unsigned long long* vir_pud = page_alloc();
-    unsigned long long* vir_pmd = page_alloc();
-    unsigned long long* vir_pte = page_alloc();
-    *vir_pgd = ((unsigned long long)vir_pud) | 0b11;
-    *vir_pud = ((unsigned long long)vir_pmd) | 0b11;
-    *vir_pmd = ((unsigned long long)vir_pte) | 0b11;
-    *vir_pte = ((unsigned long long)page_alloc()) | BOOT_PTE_ATTR;
-    return (unsigned long long)vir_pgd;
-}
 
 void memcpy(unsigned long long* from, unsigned long long* to, unsigned long long size)
 {
+    
     for(unsigned long long i = 0; i < size; i++)
     {
        ((char*)to)[i] = ((char*)from)[i];

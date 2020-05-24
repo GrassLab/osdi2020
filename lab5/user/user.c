@@ -26,5 +26,7 @@ void test_command2() { // test page fault
 
 void main()
 {
-    printf("user program!!");
+    char a[3] = "ab\0";
+    uart_puts(a);
+    //printf("user program!!");
 }

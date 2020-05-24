@@ -28,3 +28,4 @@ int get_task_id();
 void printf(const char *fmt, ...);
 void delay();
 int syscall();
+void uart_puts(char *s);

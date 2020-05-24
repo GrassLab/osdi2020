@@ -1,5 +1,8 @@
 #include "user_lib.h"
 #include "str.h"
+#define MMIO_BASE       0x3F000000
+#define UART0_DR        ((volatile unsigned int*)(MMIO_BASE+0x00201000))
+#define UART0_FR        ((volatile unsigned int*)(MMIO_BASE+0x00201018))
 
 void core_time_enable()
 {
@@ -154,4 +157,31 @@ void delay()
 {
 	unsigned long long size = Idle_size;
 	while(size--){asm volatile("nop");}
+}
+
+void uart_send(unsigned int c) {
+    
+    /*if(*UART0_FR&0x20)
+    {
+        //tran_buf.tail++;
+        tran_buf.buf[tran_buf.tail++] = c;
+    }
+    else
+    {
+        *UART0_DR=c;
+    }*/
+
+    /*-----------------old version for test-----------------*/
+    do{asm volatile("nop");}while(*UART0_FR&0x20);
+    *UART0_DR=c;
+
+}
+
+void uart_puts(char *s) {
+    while(*s) {
+        /* convert newline to carrige return + newline */
+        if(*s=='\n')
+            uart_send('\r');
+        uart_send(*s++);
+    }
 }

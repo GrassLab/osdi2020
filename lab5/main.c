@@ -37,8 +37,8 @@ void idle()
 			break;
 		}
 		//uart_puts("idle now\r\n");
-		//task_schedule();
-		asm volatile("mov x0, 3\r\nsvc #0");
+		task_schedule();
+		//asm volatile("mov x0, 3\r\nsvc #0");
 		delay(1000000);
 	}
 	my_printf("Test finished\n");
@@ -87,6 +87,8 @@ void shell_kernel()
 	extern unsigned long _binary_user_img_start, _binary_user_img_end;
 	unsigned long long begin = (unsigned long)&_binary_user_img_start;
 	unsigned long long end = (unsigned long)&_binary_user_img_end;
+	/*asm volatile("mov x30, %0"::"r"(begin):);
+	asm volatile("ret");*/
 	new_do_exec(begin, end-begin, 0x0);
 
 }
@@ -104,12 +106,12 @@ void kernel_init()
 	task_struct_init();
 	
 	int idleid = privilege_task_create(idle);
-	privilege_task_create(task6);
+	privilege_task_create(shell_kernel);
 
 	asm volatile("msr tpidr_el1, %0"::"r"(&task_pool[idleid]):);
 	asm volatile("mov sp, %0"::"r"(task_pool[idleid].ksp):);
 
-	core_time_enable();
+	//core_time_enable();
 	
 	idle();
 

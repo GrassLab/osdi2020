@@ -22,7 +22,7 @@ typedef struct task{
     char reschedule;
     char privilege;
     unsigned long long int start_coretime;
-    unsigned long long *user_ttbr0;
+    unsigned long long user_ttbr0;
 } task;
 
 extern task task_pool[64];
