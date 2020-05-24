@@ -139,6 +139,12 @@ exception_table:
     ventry exception_handler     // FIQ
     ventry exception_handler     // SError
 
+.globl irq_vector_init
+irq_vector_init:
+    ldr     x0, =exception_table// set up el1 exception table
+    msr     vbar_el1, x0
+    ret
+
 
 .globl enable_irq
 enable_irq:

@@ -1,5 +1,8 @@
 #include "sysregs.h"
 #include "mm.h"
+#include "mmu.h"
+
+
 .section ".text.boot"
 
 .global _start
@@ -29,18 +32,76 @@ master:
     msr     sp_el1, x0
 
     eret                          // from el2 to el1
-// void *memset(void *s, int c, size_t n)
-el1_entry:
-    ldr     x2, =__bss_size       // clear_bss
-    cbz     x2, main_entry
-    ldr     x0, =__bss_start
-    mov     w1, #0
-    bl      memset
 
-    ldr     x0, =exception_table  // set up el1 exception table
-    msr     vbar_el1, x0
+el1_entry:
+    ldr     x0, =TCR_VALUE
+    msr     tcr_el1, x0   
+
+    ldr     x0, =MAIR_VALUE
+    msr     mair_el1, x0
+
+    mov     x0, PGD_BASE
+    mov     x1, PUD_BASE
+    mov     x2, PMD_BASE
+    
+    mov     x7, (2*PAGE_TABLE_SIZE)
+    mov     x6, x0
+clear_table: //invalidate non used PGD, PUD entry
+    str     xzr, [x0], #8
+    subs    x7, x7, #8
+    bgt     clear_table
+    
+    ldr     x7, =PT_DESC_TO_TABLE
+    orr     x7, x1, x7            // get descriptor(entry)
+    str     x7, [x0]              // setup first PGD entry(pointer to PUD)
+
+    ldr     x7, =PT_DESC_TO_TABLE
+    orr     x7, x2, x7            // get descriptor(entry)
+    str     x7, [x1]              // setup first PUD entry(pointer to PMD)
+
+    ldr     x7, =(PT_PMD_NOR_UPPER_ATTR | PT_PMD_NOR_LOWER_ATTR | PT_DESC_TO_BLOCK)
+    mov     x6, xzr               // PMD idx conter
+nor_pmd:                          // 0x000 00000 to 0x3ef fffff
+    mov     x5, x6, lsl #BLOCK_SHIFT// block basis
+    orr     x5, x5, x7
+    str     x5, [x2, x6, lsl #3]
+    add     x6, x6, #1
+    cmp     x6, #(HIGH_MEMORY>>BLOCK_SHIFT)
+    blo     nor_pmd
+
+    ldr     x7, =(PT_PMD_DEV_UPPER_ATTR | PT_PMD_DEV_LOWER_ATTR | PT_DESC_TO_BLOCK)
+dev_pmd:                          // 0x3F0 00000 to 0x3FF FFFFF
+    mov     x5, x6, lsl #BLOCK_SHIFT// block basis
+    orr     x5, x5, x7            // combine block address and attribute to a descriptor
+    str     x5, [x2, x6, lsl #3]
+    add     x6, x6, #1
+    cmp     x6, #(LOCAL_DEV_BASE>>BLOCK_SHIFT)
+    blo     dev_pmd
+
+
+    msr     ttbr0_el1, x0         // load PGD to the buttom translation based register.
+    msr     ttbr1_el1, x0         // also load PGD to the upper translation based register.
+
+    isb
+    mrs     x0, sctlr_el1
+    orr     x0 , x0, SCTLR_MMU_ENABLED
+    msr     sctlr_el1, x0         // enable MMU, cache remains disabled
+    isb
+
+    // jump to 
+    ldr     x2, =main_entry         // indirect branch to the virtual address(Note: bl is pc relative)
+    br      x2
+
 
 main_entry:
-    mov     sp, #(2 * SECTION_SIZE)
+    mov     x0, #KVA_BASE
+    add     sp, sp, x0
+    // clear_bss
+    ldr     x2, =__bss_size
+    cbz     x2, main_entry
+    ldr     x0, =__bss_start
+    mov     w1, wzr
+    bl      memset
+
     bl      kernel_main           // jump to C code, should not return
     b       pe_hang               // for failsafe, halt this core too

@@ -43,6 +43,7 @@ struct trapframe {
 
 // void enable_interrupt_controller();
 // void handle_irq();
+void irq_vector_init();
 void enable_irq();
 void disable_irq();
 void ret_fork_child();
