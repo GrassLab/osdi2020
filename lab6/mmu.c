@@ -7,7 +7,6 @@
 /* 1gb = 2MB * 512 = 4KB * 262144 */
 /* Use 8MB (2048 * 4KB) for now */
 static struct page_struct mmu_page[PAGE_TOTAL];
-unsigned mmu_page_used = 0;
 
 static struct user_space_page_struct user_space_mm;
 
@@ -89,7 +88,6 @@ uint64_t * mmu_page_allocate(int zero)
         memzero_8byte(va, PAGE_SIZE / 8);
       }
       SET_BIT(mmu_page[current_pfn].flag, PAGE_USED);
-      ++mmu_page_used;
 #ifdef DEBUG
       char string_buff[0x20];
 
@@ -107,7 +105,6 @@ uint64_t * mmu_page_allocate(int zero)
 void mmu_page_free(uint64_t * va)
 {
   CLEAR_BIT(mmu_page[MMU_VA_TO_PFN(((uint64_t)va))].flag, PAGE_USED);
-  --mmu_page_used;
 #ifdef DEBUG
   char string_buff[0x20];
 

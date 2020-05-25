@@ -17,24 +17,19 @@ TEST1_C_SOURCE_FILES = test1.c string_util.c syscall.c c_routine.c
 TEST1_C_OBJECT_FILES = $(TEST1_C_SOURCE_FILES:.c=.o)
 TEST2_C_SOURCE_FILES = test2.c string_util.c syscall.c c_routine.c
 TEST2_C_OBJECT_FILES = $(TEST2_C_SOURCE_FILES:.c=.o)
-TEST3_C_SOURCE_FILES = test3.c string_util.c syscall.c c_routine.c
-TEST3_C_OBJECT_FILES = $(TEST3_C_SOURCE_FILES:.c=.o)
 
 all: kernel8.img
 
 kernel8.img: kernel8.elf
 	${OBJCOPY} -O binary kernel8.elf kernel8.img
 
-kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} test1.rd test2.rd test3.rd shell.rd
+kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} test1.rd test2.rd shell.rd
 	${LD} -T kernel.ld $^ -o $@
 
 test1.elf: ${TEST1_C_OBJECT_FILES}
 	${LD} -T user.ld $^ -o $@
 
 test2.elf: ${TEST2_C_OBJECT_FILES}
-	${LD} -T user.ld $^ -o $@
-
-test3.elf: ${TEST3_C_OBJECT_FILES}
 	${LD} -T user.ld $^ -o $@
 
 shell.elf: ${SHELL_C_OBJECT_FILES}

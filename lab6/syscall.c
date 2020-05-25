@@ -50,9 +50,3 @@ int syscall_signal(int task_id, int signalno)
   return 0;
 }
 
-int syscall_print_mmu_page_used(void)
-{
-  asm volatile("svc #9");
-  return 0;
-}
-

@@ -158,11 +158,3 @@ int sys_signal(int task_id, int signalno)
   return 0;
 }
 
-int sys_print_mmu_page_used(void)
-{
-  char string_buff[0x20];
-  string_longlong_to_char(string_buff, mmu_page_used);
-  uart_puts(string_buff);
-  return 0;
-}
-
