@@ -109,14 +109,11 @@ void task_shell(void)
   uart_puts("ID: ");
   string_longlong_to_char(string_buff, (int64_t)current_task_id);
   uart_puts(string_buff);
-  uart_puts(" I'll enter user mode shell when all other user tasks exit\n");
-  while(mmu_page_used != 3)
-  {
-    schedule_yield();
-  }
+  uart_puts(" Entering user mode shell\n");
   uart_puts(ann);
   task_do_exec((uint64_t *)&_binary_shell_bin_start, (uint64_t)&_binary_shell_bin_end - (uint64_t)&_binary_shell_bin_start);
 }
+
 void task_do_exec(uint64_t * start, uint64_t size)
 {
   char string_buff[0x40];

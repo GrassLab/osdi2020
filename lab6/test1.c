@@ -37,7 +37,7 @@ int main(void)
       /* qemu */
       //for(int i = 0; i < 1000000; ++i);
       /* pi */
-      for(int i = 0; i < 100000; ++i);
+      //for(int i = 0; i < 100000; ++i);
     }
     return 0; // all childs exit
   }
