@@ -81,8 +81,10 @@ prepare_mmu:
   br x0 // boot_rest
 
 boot_rest:
+  bl mmu_startup_page_init
   bl uart_init
   bl mmu_page_init
+  bl mmu_user_page_table_init
   bl scheduler_init
 
   // In case return, enter low power mode

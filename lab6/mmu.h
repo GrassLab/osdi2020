@@ -88,8 +88,12 @@ RW:
 #define PGD_FRAME_BASE ((uint64_t *)0x0000u)
 #define PUD_FRAME_BASE ((uint64_t *)0x1000u)
 #define PMD_FRAME_BASE ((uint64_t *)0x2000u)
+#define STARTUP_PAGE_TABLE_BASE ((uint64_t *)0x3000u) /* ~ 0x3400u which is 1KB */
 
-#define PAGE_TOTAL 0x512
+#define STARTUP_PAGE_PA_BASE 0x200000
+#define STARTUP_PAGE_TOTAL 0x80 /* 0x80 * 64bit = 1KB */
+
+#define PAGE_TOTAL 2048 /* 4kb = 64bit(8 byte) * 512, 512 * 4k = 2MB, 2048 Page -> 8MB */
 #define PAGE_4K_TOTAL 0x800
 #define MMU_PAGE_BASE 0x200000
 #define PAGE_PFN_LOW 1
@@ -128,6 +132,9 @@ struct user_space_mm_struct
 };
 
 void mmu_ttbrx_el1_init(void);
+void mmu_startup_page_init(void);
+uint64_t * mmu_startup_page_allocate(int zero);
+void mmu_startup_page_free(uint64_t * va);
 void mmu_page_init(void);
 uint64_t * mmu_page_allocate(int zero);
 void mmu_page_free(uint64_t * va);

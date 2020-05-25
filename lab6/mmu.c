@@ -6,7 +6,7 @@
 
 /* 1gb = 2MB * 512 = 4KB * 262144 */
 /* Use 8MB (2048 * 4KB) for now */
-static struct page_struct mmu_page[PAGE_TOTAL];
+static struct page_struct *mmu_page;
 
 static struct user_space_page_struct user_space_mm;
 
@@ -53,6 +53,62 @@ void mmu_ttbrx_el1_init(void)
   return;
 }
 
+void mmu_startup_page_init(void)
+{
+  /* Setup startup page which is located at STARTUP_PAGE_TABLE_BASE + 1KB(0x400) */
+  /* 1KB = 0x80 * 64bit */
+  for(unsigned startup_page_idx = 0; startup_page_idx < STARTUP_PAGE_TOTAL; ++startup_page_idx)
+  {
+    CLEAR_BIT(((((struct page_struct *)MMU_PA_TO_VA(STARTUP_PAGE_TABLE_BASE)) + startup_page_idx) -> flag), PAGE_USED);
+  }
+  uart_puts(ANSI_MAGENTA"[Startup page allocator]"ANSI_RESET" Init complete\n");
+}
+
+
+uint64_t * mmu_startup_page_allocate(int zero)
+{
+  struct page_struct * startup_page_table_base = (struct page_struct *)MMU_PA_TO_VA(STARTUP_PAGE_TABLE_BASE);
+
+  for(unsigned current_pfn = 0; current_pfn < STARTUP_PAGE_TOTAL; ++current_pfn)
+  {
+    if(!CHECK_BIT(startup_page_table_base[current_pfn].flag, PAGE_USED))
+    {
+      /* uint64_t is 8 byte */
+      uint64_t * pa = (uint64_t *)(uint64_t)(STARTUP_PAGE_PA_BASE + current_pfn * PAGE_4K);
+      uint64_t * va = MMU_PA_TO_VA(pa);
+      if(zero)
+      {
+        memzero_8byte(va, PAGE_4K / 8);
+      }
+      SET_BIT(startup_page_table_base[current_pfn].flag, PAGE_USED);
+
+      /* print allocation message */
+      char string_buff[0x20];
+
+      uart_puts(ANSI_MAGENTA"[Startup page allocator]"ANSI_RESET" Allocate: ");
+      string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
+      uart_puts(string_buff);
+      uart_puts("\n");
+      return pa;
+    }
+  }
+  return 0x0;
+}
+
+void mmu_startup_page_free(uint64_t * va)
+{
+  struct page_struct * startup_page_table_base = (struct page_struct *)MMU_PA_TO_VA(STARTUP_PAGE_TABLE_BASE);
+
+  CLEAR_BIT(startup_page_table_base[MMU_VA_TO_PFN(((uint64_t)va))].flag, PAGE_USED);
+
+  /* free message */
+  char string_buff[0x20];
+  uart_puts(ANSI_MAGENTA"[Startup page allocator] "ANSI_RESET"Free: ");
+  string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
+  uart_puts(string_buff);
+  uart_puts("\n");
+  return;
+}
 void mmu_page_init(void)
 {
   /* each page is 4KB 0x1000 */
@@ -64,19 +120,32 @@ void mmu_page_init(void)
   /* 0x3F000000 / 0x200000 = 504 */
   /* the rest are unused */
 
-  for(unsigned page_idx = 0; page_idx < PAGE_4K_TOTAL; ++page_idx)
+  /* ASSUME nobody allocate and free startup page before, they are all free, we can get a continuous chunk */
+  mmu_page = (struct page_struct *)MMU_PA_TO_VA(mmu_startup_page_allocate(1));
+  for(unsigned page_table_count = 1; page_table_count < PAGE_TOTAL / (PAGE_4K / 8); ++page_table_count)
+  {
+    mmu_startup_page_allocate(1); /* assume the they're continuous */
+  }
+
+  for(unsigned page_idx = 0; page_idx < PAGE_TOTAL; ++page_idx)
   {
     CLEAR_BIT(mmu_page[page_idx].flag, PAGE_USED);
   }
 
-  mmu_user_page_table_init();
+  /* copy startup page table to page table */
+  for(unsigned startup_page_idx = 0; startup_page_idx < STARTUP_PAGE_TOTAL; ++startup_page_idx)
+  {
+    memcopy((char *)MMU_PA_TO_VA(STARTUP_PAGE_TABLE_BASE), (char *)mmu_page, 0x80 * 8);
+  }
+  uart_puts(ANSI_MAGENTA"[Page allocator]"ANSI_RESET" Startup page table transfer complete\n");
 
+  uart_puts(ANSI_MAGENTA"[Page allocator]"ANSI_RESET" Init complete\n");
   return;
 }
 
 uint64_t * mmu_page_allocate(int zero)
 {
-  for(unsigned current_pfn = 0; current_pfn < PAGE_4K_TOTAL; ++current_pfn)
+  for(unsigned current_pfn = 0; current_pfn < PAGE_TOTAL; ++current_pfn)
   {
     if(!CHECK_BIT(mmu_page[current_pfn].flag, PAGE_USED))
     {
@@ -85,17 +154,17 @@ uint64_t * mmu_page_allocate(int zero)
       uint64_t * va = MMU_PA_TO_VA(pa);
       if(zero)
       {
-        memzero_8byte(va, PAGE_SIZE / 8);
+        memzero_8byte(va, PAGE_4K / 8);
       }
+
       SET_BIT(mmu_page[current_pfn].flag, PAGE_USED);
-#ifdef DEBUG
+
       char string_buff[0x20];
 
-      uart_puts(ANSI_MAGENTA"[Page] "ANSI_RESET"Create: ");
+      uart_puts(ANSI_MAGENTA"[Page allocator]"ANSI_RESET" Create: ");
       string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
       uart_puts(string_buff);
       uart_puts("\n");
-#endif
       return pa;
     }
   }
@@ -105,14 +174,12 @@ uint64_t * mmu_page_allocate(int zero)
 void mmu_page_free(uint64_t * va)
 {
   CLEAR_BIT(mmu_page[MMU_VA_TO_PFN(((uint64_t)va))].flag, PAGE_USED);
-#ifdef DEBUG
   char string_buff[0x20];
 
   uart_puts(ANSI_MAGENTA"[Page] "ANSI_RESET"Free: ");
   string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
   uart_puts(string_buff);
   uart_puts("\n");
-#endif
   return;
 }
 
