@@ -24,7 +24,9 @@ struct page_struct
   char in_used;
   size_t PGD;
   size_t virt_addr;
-} page_pool[PAGE_POOL_SIZE];
+} *page_pool;
+
+size_t page_pool_len;
 
 void page_init (struct page_struct *page, size_t PGD, size_t virt_addr);
 void *page_alloc (size_t page_num);
