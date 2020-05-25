@@ -41,6 +41,7 @@ void *virt_to_phys (void *virt);
 extern size_t pd_encode_table (size_t *page_table);
 extern size_t pd_encode_ram (size_t *addr);
 extern size_t pd_encode_peripheral (size_t *addr);
+extern size_t pd_encode_block (size_t *addr);
 extern void mmu_enable (size_t *PGD);
 
 #endif /* ifndef TLB */
