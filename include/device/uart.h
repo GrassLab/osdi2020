@@ -32,7 +32,6 @@ void uartInit();
 void uartSend(uint32_t c);
 char uartGetc();
 void _sysUartWrite();
-void _sysUartRead();
 char uartGetcWithCR();
 void uartPuts(const char *s);
 void uartHex(uint64_t d);

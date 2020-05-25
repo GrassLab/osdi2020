@@ -20,6 +20,8 @@ struct cpu_context
 	uint64_t sp; //6
 	uint64_t elr_el1;
 	uint64_t sp_el0; //7
+	uint64_t ksp_begin;
+	uint64_t usp_begin;
 };
 
 typedef enum

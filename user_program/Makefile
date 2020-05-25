@@ -15,11 +15,8 @@ $(KERNEL).lb: $(KERNEL).img
 $(KERNEL).img: $(KERNEL).elf
 	$(OBJCOPY) -O binary $< $@
 
-$(KERNEL).elf: $(KERNEL).o sysCall.o userLib.o
+$(KERNEL).elf: $(KERNEL).o ../sysCall.o userLib.o
 	$(LD) -T $(LSCRIPT) -o $@ $^
-
-sysCall.o: sysCall.S
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 userLib.o: userLib.S
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@

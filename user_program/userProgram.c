@@ -1,5 +1,6 @@
 // #include "type.h"
-#include "sysCall.h"
+#include "task/sysCall.h"
+#include "device/uart.h"
 
 // bool ustrcmp(const char *s1, const char *s2)
 // {
@@ -78,9 +79,29 @@
 //     }
 // }
 
+void delay(uint32_t count)
+{
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        asm volatile("nop");
+    }
+}
+
+void test_command1() 
+{ 
+    int cnt = 0;
+    if(fork() == 0) 
+    {
+        printf("child\n");
+
+        exit(0); // all childs exit
+    }   
+}
+
 int main()
 {
-    userTest();
+    test_command1();
+    
 
-    return 0;
+    return 5;
 }

@@ -24,9 +24,9 @@ getTaskId:
     svc #0
     ret
 
-.globl uartWrite
-uartWrite:
-    mov x8, UART_WRITE
+.globl printf
+printf:
+    mov x8, PRINTF
     svc #0
     ret 
 
@@ -35,3 +35,9 @@ uartRead:
     mov x8, UART_READ
     svc #0
     ret 
+
+.globl userTest
+userTest:
+    mov x8, USER_TEST
+    svc #0
+    ret

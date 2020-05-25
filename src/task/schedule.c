@@ -4,6 +4,7 @@
 #include "task/taskManager.h"
 #include "task/switch.h"
 #include "task/taskQueue.h"
+#include "memory/memManager.h"
 
 void contextSwitch(struct task *next)
 {
@@ -22,6 +23,7 @@ void contextSwitch(struct task *next)
 	struct task *prev = current;
 	current = next;
 
+	setPgd(next->mm.pgd);
 	copyAndSwitchTo(&prev->kernel_context, &next->kernel_context);
 
 	return;
@@ -34,11 +36,11 @@ void schedule()
 	if ((uint64_t)next_task == 0)
 		return;
 
-	// uartPuts("Reschedule from ");
-	// uartInt(current->task_id);
-	// uartPuts(" to ");
-	// uartInt(next_task->task_id);
-	// uartPuts("\n");
+	uartPuts("Reschedule from ");
+	uartInt(current->task_id);
+	uartPuts(" to ");
+	uartInt(next_task->task_id);
+	uartPuts("\n");
 
 	contextSwitch(next_task);
 

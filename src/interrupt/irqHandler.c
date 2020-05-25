@@ -45,11 +45,8 @@ void _systemCall()
     case GET_TASK_ID:
         _sysGetTaskId();
         break;
-    case UART_WRITE:
+    case PRINTF:
         _sysUartWrite();
-        break;
-    case UART_READ:
-        _sysUartRead();
         break;
     case USER_TEST:
         _userTest();
