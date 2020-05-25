@@ -6,7 +6,7 @@
 #include <uart.h>
 
 static void
-delay (int sec)
+delay (size_t sec)
 {
   size_t t, cnt, freq;
   sys_get_time (&cnt, &freq);
@@ -91,20 +91,6 @@ idle ()
     }
   uart_puts ("test finished");
   while (1);
-}
-
-static void
-zombie_reaper_loop ()
-{
-  enable_irq ();
-  while (1)
-    {
-      if (get_runable_task_num () == 2)
-	break;
-      zombie_reaper ();
-      delay (1);
-    }
-  exit (0);
 }
 
 void

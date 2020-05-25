@@ -25,7 +25,6 @@
 
 #include "uart.h"
 #include "mbox.h"
-#include "homer.h"
 
 unsigned int width, height, pitch, isrgb;	/* dimensions and channel order */
 unsigned char *lfb;		/* raw frame buffer address */
@@ -103,9 +102,9 @@ lfb_init ()
 void
 lfb_showpicture (char buf[3])
 {
-  int x, y;
+  unsigned int x, y;
   unsigned char *ptr = lfb;
-  char *data = homer_data, pixel[4];
+  char pixel[4];
 
   //ptr += (height - homer_height) / 2 * pitch + (width - homer_width) * 2;
   //for (y = 0; y < homer_height; y++)

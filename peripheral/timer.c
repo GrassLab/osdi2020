@@ -23,7 +23,8 @@ core_timer_enable ()
 double
 get_time ()
 {
-  size_t cnt, freq;
+  size_t cnt = 1;
+  size_t freq = 1;
   asm volatile ("mov x1, %0\n" "mov x0, %1\n" "mov x8, #1\n"
 		"svc #0\n"::"r" (&freq), "r" (&cnt):"x0", "x1", "x8");
   return (double) cnt / (double) freq;

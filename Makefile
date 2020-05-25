@@ -6,7 +6,7 @@ HEADER := $(wildcard */*.h)
 SRC := $(wildcard */*.c)
 ASM := $(wildcard asm/*/*.S)
 OBJECTS := $(patsubst %.S,%.o,$(ASM)) $(patsubst %.c,%.o,$(SRC))
-CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched -Ikernel
+CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched -Ikernel -Imm -Wextra -Wall
 ASFLAGS =
 
 .PHONY: all clean qemu debug indent
@@ -15,8 +15,8 @@ all: kernel8.img
 
 $(wildcard */*.o): $(SRC) $(HEADER) $(ASM)
 
-kernel8.elf: $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJECTS)
+kernel8.elf: $(OBJECTS) user_shell
+	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) user/bin_shell.o
 
 kernel8.img: kernel8.elf
 	$(ARMGNU)objcopy -O binary kernel8.elf kernel8.img
@@ -41,3 +41,6 @@ sd: kernel8.img
 
 indent:
 	indent $(SRC) $(HEADER) -Tsize_t
+
+user_shell:
+	make -C user/

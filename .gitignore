@@ -6,3 +6,5 @@ compile_commands.json
 *.o
 *.elf
 tags
+bin_shell
+shell
