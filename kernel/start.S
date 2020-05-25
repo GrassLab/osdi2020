@@ -1,3 +1,5 @@
+#include "kernel/base.h"
+
 .section ".text.boot"
 
 .global _start
@@ -5,24 +7,10 @@
 _start:
   mrs x0, mpidr_el1
   and x0, x0, #3
-  cbz x0, 1f
+  cbz x0, el2_to_el1
 0:
   wfe
   b 0b
-
-1:
-  ldr x0, =_start
-  mov sp, x0
-  ldr x0, =__bss_start
-  ldr x1, =__bss_end
-  sub x1, x1, x0
-  lsr x1, x1, #3
-2:
-  cbz x1, el2_to_el1
-  str xzr, [x0]
-  add x0, x0, #8
-  sub x1, x1, #1
-  b 2b
 
 el2_to_el1:
   mov x0, #(1 << 31)
@@ -50,12 +38,31 @@ el2_to_el1:
   orr x0, x0, #(3 << 20)
   msr cpacr_el1, x0
 
-  adr x0, 3f
+  adr x0, el1_entry
   msr elr_el2, x0
   ldr x0, =kstack_pool
   add x0, x0, #4096
   msr sp_el1, x0
   eret
 
-3:
-  bl main
+el1_entry:
+  adr x0, __bss_start
+  adr x1, __bss_end
+  sub x1, x1, x0
+  lsr x1, x1, #3
+1:
+  cbz x1, 2f
+  str xzr, [x0]
+  add x0, x0, #8
+  sub x1, x1, #1
+  b 1b
+2:
+  bl vm_init
+
+  /* Enable MMU for EL1 and EL0 stage 1 address translation. */
+  mrs x2, sctlr_el1
+  orr x2, x2, 1
+  msr sctlr_el1, x2
+
+  ldr x1, =main
+  br x1

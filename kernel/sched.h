@@ -1,8 +1,8 @@
-#ifndef SCHED_H_
-#define SCHED_H_
+#ifndef KERNEL_SCHED_H_
+#define KERNEL_SCHED_H_
 
-#include "queue.h"
-#include "types.h"
+#include "kernel/lib/queue.h"
+#include "kernel/lib/types.h"
 
 #define MAX_TASK_NUM 64
 #define MAX_STACK_SIZE 4096
@@ -24,6 +24,8 @@ struct task_context {
   uint64_t fp;
   uint64_t lr;
   uint64_t sp;
+
+  uint64_t ttbr0;
 };
 
 enum task_state {
@@ -49,7 +51,6 @@ struct queue runqueue;
 struct task __attribute__((aligned(16))) task_pool[MAX_TASK_NUM];
 bool task_inuse[MAX_TASK_NUM];
 uint8_t __attribute__((aligned(16))) kstack_pool[MAX_TASK_NUM][MAX_STACK_SIZE];
-uint8_t __attribute__((aligned(16))) ustack_pool[MAX_TASK_NUM][MAX_STACK_SIZE];
 
 void idle_task_create(void);
 uint32_t privilege_task_init(void);
@@ -64,4 +65,4 @@ void task_debut_hook(void);
 void preempt_enable(void);
 void preempt_disable(void);
 
-#endif // SCHED_H_
+#endif // KERNEL_SCHED_H_

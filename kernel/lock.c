@@ -1,8 +1,8 @@
-#include "sched.h"
-#include "lock.h"
+#include "kernel/sched.h"
+#include "kernel/lock.h"
 
-#include "syscall.h"
-#include "ioutil.h"
+#include "kernel/syscall.h"
+#include "kernel/lib/ioutil.h"
 
 void mutex_init(struct mutex *lock) {
   lock->lock = 0;

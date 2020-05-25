@@ -1,5 +1,5 @@
-#include "string.h"
-#include "utils.h"
+#include "kernel/lib/string.h"
+#include "kernel/lib/utils.h"
 
 int32_t ctoi(char c) {
   if (c >= 'A' && c <= 'F') {

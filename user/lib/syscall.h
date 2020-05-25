@@ -1,7 +1,7 @@
-#ifndef LIBSYSCALL_H_
-#define LIBSYSCALL_H_
+#ifndef USER_LIB_SYSCALL_H_
+#define USER_LIB_SYSCALL_H_
 
-#include "types.h"
+#include "user/lib/types.h"
 
 uint32_t get_taskid(void);
 size_t uart_read(void *buf, size_t count);
@@ -10,5 +10,6 @@ int exec(void(*func)(void));
 int fork(void);
 void exit(int status);
 int kill(uint32_t id, int sig);
+uint64_t get_remain_page_num(void);
 
-#endif // LIBSYSCALL_H_
+#endif // USER_LIB_SYSCALL_H_

@@ -1,7 +1,7 @@
-#ifndef SHELL_H_
-#define SHELL_H_
+#ifndef KERNEL_SHELL_H_
+#define KERNEL_SHELL_H_
 
-#include "mini_uart.h"
+#include "kernel/mini_uart.h"
 
 #define MAX_CMD_LEN 1024
 #define MAX_TIMER_FRACTION_LEN 6
@@ -20,4 +20,4 @@ void reboot(void);
 
 void shell(void);
 
-#endif // SHELL_H_
+#endif // KERNEL_SHELL_H_

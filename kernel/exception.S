@@ -69,8 +69,9 @@ curr_el_spx_irq:
 lower_el_aarch64_sync:
   exception_prologue
   bl is_syscall
-  cmp x0, #0
-  beq 0f
+//  cmp x0, #0
+//  beq 0f
+  cbz x0, 0f
 
 //  bl enable_interrupt
   ldr x8, [sp, 16 * 4]

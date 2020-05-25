@@ -1,6 +1,6 @@
-#include "mailbox.h"
-#include "types.h"
-#include "mini_uart.h"
+#include "kernel/mailbox.h"
+#include "kernel/lib/types.h"
+#include "kernel/mini_uart.h"
 
 uint32_t get_board_revision() {
   uint32_t __attribute__((aligned(16))) mailbox[7];

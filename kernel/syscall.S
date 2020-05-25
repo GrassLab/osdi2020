@@ -10,11 +10,9 @@ do_fork:
   mov x0, sp
   mov x1, lr
 
-  sub sp, sp, #16
-  str lr, [sp]
+  mov x19, lr
   bl do_fork_helper
-  ldr lr, [sp]
-  add sp, sp, #16
+  mov lr, x19
   ret
 
 .global post_fork_child_hook
