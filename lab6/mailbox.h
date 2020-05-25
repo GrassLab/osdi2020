@@ -27,6 +27,9 @@
 #define MAILBOX_GET_VC_MEMORY           0x00010006
 #define MAILBOX_GET_VC_MEMORY_REQ       0x0
 #define MAILBOX_GET_VC_MEMORY_RESP      0x8
+#define MAILBOX_GET_ARM_MEMORY          0x00010005
+#define MAILBOX_GET_ARM_MEMORY_REQ      0x0
+#define MAILBOX_GET_ARM_MEMORY_RESP     0x8
 
 #define MAILBOX_SET_CLOCK_RATE          0x00038002
 #define MAILBOX_SET_CLOCK_RATE_REQ      12
@@ -65,6 +68,7 @@ extern volatile uint32_t __attribute__((aligned(16))) __mailbox_buffer[0x40];
 
 int send_buffer_to_mailbox(void);
 uint32_t mailbox_get_board_revision(void);
+int mailbox_get_arm_memory(void);
 int mailbox_get_vc_memory(void);
 int mailbox_set_clock_rate(uint32_t device_id, uint32_t clock_rate);
 int mailbox_framebuffer_init(uint32_t width, uint32_t height, uint32_t depth);

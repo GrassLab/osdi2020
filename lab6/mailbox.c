@@ -78,6 +78,21 @@ uint32_t mailbox_get_board_revision(void)
 
 }
 
+int mailbox_get_arm_memory(void)
+{
+
+  __mailbox_buffer[0] = MAILBOX_SINGLE_BUFFER_SIZE(MAILBOX_GET_ARM_MEMORY_REQ, MAILBOX_GET_ARM_MEMORY_RESP);
+  __mailbox_buffer[1] = MAILBOX_BUFFER_REQUEST_CODE;
+  __mailbox_buffer[2] = MAILBOX_GET_ARM_MEMORY;
+  __mailbox_buffer[3] = MAX(MAILBOX_GET_ARM_MEMORY_REQ, MAILBOX_GET_ARM_MEMORY_RESP);
+  __mailbox_buffer[4] = MAILBOX_TAG_REQUEST_CODE;
+  __mailbox_buffer[5] = 0x0;
+  __mailbox_buffer[6] = 0x0;
+  __mailbox_buffer[7] = MAILBOX_TAG_END;
+
+  return mailbox_send_buffer();
+}
+
 int mailbox_get_vc_memory(void)
 {
 
