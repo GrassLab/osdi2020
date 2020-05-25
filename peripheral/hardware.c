@@ -26,6 +26,7 @@ unsigned int
 hardware_info_VC_base ()
 {
   struct mbox_msg *msg;
+  msg = (struct mbox_msg *) &mbox;
 
   // set tag
   msg->tag.id = 0x00010006;
