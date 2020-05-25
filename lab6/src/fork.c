@@ -30,6 +30,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg)
 		childregs->regs[0] = 0;
 		copy_virt_memory(p); // this function will copy pages, including the tables... 
 	}
+	
 	p->flags = clone_flags;
 	p->priority = current->priority;
 	p->state = TASK_RUNNING;
@@ -42,7 +43,6 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg)
 	int pid = nr_tasks++;
 	p->task_id = pid;
 	task[pid] = p;	
-
 	preempt_enable();
 	return pid;
 }

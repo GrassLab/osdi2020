@@ -34,12 +34,12 @@ void insert_block(int index, int order, int page_nums, int pfn) {
     if (buddy_entry[order].head == 0) {
         buddy_entry[order].head = &blocks[index];
         buddy_entry[order].head->next = 0;
-        buddy_entry[order].tail = &blocks[index];
+        buddy_entry[order].tail = buddy_entry[order].head;
         buddy_entry[order].nr_free += 1;
     }
     else {
         buddy_entry[order].tail->next = &blocks[index];
-        buddy_entry[order].tail = &blocks[index];
+        buddy_entry[order].tail = buddy_entry[order].tail->next;
         buddy_entry[order].nr_free += 1;
     }
     return;
@@ -122,7 +122,6 @@ struct block *alloc_block(int num_page) {
             return 0;
         }
     }
-    //printf("%d\r\n", buddy_entry[order].nr_free);
     int alloc_order = order;
     // it is empty in that order
     if(buddy_entry[alloc_order].nr_free == 0) {
@@ -132,11 +131,24 @@ struct block *alloc_block(int num_page) {
         div_block(alloc_order, order);
     }
     ret_block = del_block(order);
+    printf("allocate page pfn: %d\r\n", ret_block->pfn);
+    print_buddy_entry(order);
     return ret_block;
 }
 
 int compute_buddy_block(int pfn, int order) {
     return pfn ^ (1 << order);
+}
+
+void print_buddy_entry(int order) {
+    struct  block *ptr = buddy_entry[order].head;
+    printf("--------\r\n");
+    while(ptr != 0) {
+        printf("%d ",ptr->pfn);
+        ptr = ptr->next;
+    }
+    printf("\r\n--------\r\n");
+    return;
 }
 
 struct block *find_buddy_pfn(int order, int buddy_pfn) {
@@ -159,12 +171,17 @@ int del_buddy_block(int order, int buddy_pfn) {
             // delete buddy_pfn
             if (prev == 0) {
                 buddy_entry[order].head = ptr->next;
+                if (buddy_entry[order].head == 0) buddy_entry[order].tail = 0;
             }
             else {
                 prev->next = ptr->next;
+                if (ptr->next == 0)  buddy_entry[order].tail = buddy_entry[order].head;
             }
+            buddy_entry[order].nr_free -= 1;
             return 1;
         }
+        prev = ptr;
+        ptr = ptr->next;
     }
     return 0;
 }
@@ -174,23 +191,31 @@ void put_back_block(struct block *free_block) {
     // block's order free_block->record_index
     int block_order = free_block->order;
     int pfn = free_block->pfn;
+    printf("put back page pfn: %d order: %d\r\n", pfn, block_order);
     // combine
     while (block_order < MAX_ORDER) {
         // compute the buddy block
         int buddy_pfn = compute_buddy_block(pfn, block_order);
+        printf("buddy_block: %d order: %d\r\n", buddy_pfn, block_order);
         struct block *tmp = find_buddy_pfn(block_order, buddy_pfn);
         if (tmp == 0) {
+            printf("buddy_block not find\r\n");
             //TODO can't find buddy block 
             int block_index;
             block_index = find_block();
-            insert_block(block_index, block_order, (1 << block_order), pfn + (1 << block_order));
+            printf("insert_block: %d order: %d\r\n", pfn, block_order);
+            insert_block(block_index, block_order, (1 << block_order), pfn);
+            print_buddy_entry(block_order);
             break;
         }
         // free tmp block
         del_buddy_block(block_order, buddy_pfn);
-        pfn = buddy_pfn > pfn ? buddy_pfn : pfn;
+        printf("del buddy block: %d in order: %d\r\n", buddy_pfn, block_order);
+        print_buddy_entry(block_order);
+        pfn = buddy_pfn < pfn ? buddy_pfn : pfn;
         block_order += 1;
     }
+    printf("\r\n");
     // free the block_pool
     block_pool[free_block->record_index] = 0;
 }
@@ -205,12 +230,16 @@ struct block *get_free_page()
 struct block *allocate_kernel_page() 
 {
     struct block *alloc = get_free_page(); //TODO record
+    num_free_pages -= 1;
+    //printf("allocate kernel page pfn: %d\r\n", alloc->pfn);
     return alloc;
 }
 
 unsigned long allocate_user_page(struct task_struct *task, unsigned long va, unsigned long prot) {
 	struct block *alloc = get_free_page();
 	map_page(task, va, alloc, prot);
+    //printf("allocate user page pfn: %d\r\n", alloc->pfn);
+    num_free_pages -= 1;
 	return pfn_to_vir(alloc->pfn);
 }
 
@@ -218,7 +247,7 @@ unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long
 	unsigned long index = va >> shift; // find the index of page table
 	index = index & (PTRS_PER_TABLE - 1); // mask the attributes
 	if (!table[index]){ 
-        struct block *alloc_tmp = get_free_page();
+        struct block *alloc_tmp = allocate_kernel_page();
         task->mm.kernel_pages[task->mm.kernel_pages_count++] = alloc_tmp;
 		unsigned long next_level_table = pfn_to_phy(alloc_tmp->pfn);
 		unsigned long entry = next_level_table | MM_TYPE_PAGE_TABLE; //entry is physical address | MM_TYPE 
@@ -232,7 +261,7 @@ void map_page(struct task_struct *task, unsigned long va, struct block *alloc, u
     unsigned long page = pfn_to_phy(alloc->pfn);
 	unsigned long pgd;
 	if (!task->mm.pgd) {
-        struct block *alloc_t = get_free_page();
+        struct block *alloc_t = allocate_kernel_page();
 		task->mm.pgd = pfn_to_phy(alloc_t->pfn); // allocate a page and return physical address
 		task->mm.kernel_pages[task->mm.kernel_pages_count++] = alloc_t;
 	}
@@ -287,8 +316,6 @@ int copy_virt_memory(struct task_struct *dst) {
 int do_mem_abort(unsigned long addr, unsigned long esr) {
 	unsigned long dfs = (esr & 0b111111);
 	if ((dfs & 0b111100) == 0b100) {
-        struct block *alloc = get_free_page();
-		map_page(current, addr & PAGE_MASK, alloc, MMU_PTE_FLAGS);
 		ind++;
 		if (ind > 2){
 			unsigned long val;
@@ -298,6 +325,9 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 			exit_process();
 			return -1;
 		}
+        else {
+            allocate_user_page(current, addr & PAGE_MASK, MMU_PTE_FLAGS);
+        }
 		return 0;
 	}
 	else {
@@ -314,11 +344,9 @@ int get_remain_num() {
 void free_zombie_task() {
 	for (int i = 0 ; i < nr_tasks ; i++) {
 		if (task[i]->state == TASK_ZOMBIE) {
-            printf("123\r\n");
 			free_kernel_page((unsigned long)task[i]);
 			task[i]->state = TASK_FREE;
 			num_free_pages += 1;
-			
 		}
 	}
 } 
