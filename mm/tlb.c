@@ -215,9 +215,9 @@ page_table_init ()
     }
 }
 
-/* assume we just need 2MB memory
- * PGD, PUD, PMD, PTE are physical address
- * mapping rule:
+/**
+ * allocate page table by memory size
+ * page_table mapping rule:
  * phys = virt[47:12] << 12
  * ex:
  * 0x3000 = 0xffff000000003000[47:12] << 12
