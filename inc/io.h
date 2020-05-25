@@ -1,3 +1,5 @@
+#ifndef IO_H
+#define IO_H
 #include "uart.h"
 #include "ftoa.h"
 
@@ -10,3 +12,4 @@ void print_c(char ch);
 void print_i(int x);
 void print_h(int x);
 void print_d(double x);
+#endif

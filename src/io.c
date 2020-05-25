@@ -42,7 +42,6 @@ unsigned long long int hex2int(char *hex) {
 int check_digit(char ch) { return (ch >= '0') && (ch <= '9'); }
 
 char read_c() { return uart_getc(); }
-char read_b() { return uart_getb(); }
 
 char *read_s(char *str, int max_size) {
     for (int i = 0; i < max_size; i++) {

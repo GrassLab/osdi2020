@@ -96,16 +96,6 @@ void read_cmd() {
     cmd[now_cur] = 0;
 }
 
-void loadimg(long long num, int img_size) {
-    print_s("Please send the image with UART.\r\n");
-    char *base_addr = (char *)num;
-    for (int i = 0; i < img_size; i++) {
-        *(base_addr + i) = read_b();
-    }
-    print_s("Down");
-    ((void (*)())num)();
-}
-
 void shell() {
     print_s("# ");
     read_cmd();
@@ -114,7 +104,6 @@ void shell() {
             "help      : print this help menu\n"
             "hello     : print Hello World!\n"
             "timestamp : print system timestamp\n"
-            "loadimg   : load custom image\n"
             "clear     : clear screen\n"
             "reboot    : reboot the device\r\n");
     } else if (!strcmp(cmd, "hello")) {
@@ -133,20 +122,6 @@ void shell() {
     } else if (!strcmp(cmd, "hw")) {
         get_board_revision();
         get_vc_base();
-    } else if (!strcmp(cmd, "loadimg")) {
-        print_s("Please input the address: ");
-        long long int num = read_h();
-        print_s("\r");
-
-        print_s("Image size: ");
-        int img_size = read_i();
-        print_i(img_size);
-        print_s("\r");
-
-        loadimg(num, img_size);
-
-    } else if (!strcmp(cmd, "addr")) {
-        print_h((long)loadimg);
     } else if (!strcmp(cmd, "exc")) {
         asm volatile("exc:");
         asm volatile("svc #1");
