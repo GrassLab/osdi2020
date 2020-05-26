@@ -97,6 +97,7 @@ void core_timer_handler() {
 }
 
 void handle_irq(void) {
+	printf("enter irq -----------------------\n");
 	unsigned int arm_local = *CORE0_INTR_SRC;
   	if (arm_local & 0x800)
 		local_timer_handler();

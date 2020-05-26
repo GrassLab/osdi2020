@@ -66,35 +66,35 @@ virt_mem_init:
 	str x3, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 */
 
-  	mov     x0, 0
-    mov     x1, 0x1000
-    mov     x2, 0x2000
+  	mov     x0, 0     			// PGD addr
+    mov     x1, 0x1000 			// PUD addr
+    mov     x2, 0x2000 			// PMD addr
     // create page table
     ldr     x7, =BOOT_PGD_ATTR
     orr     x7, x1, x7          // combine the physical address of next level page with attribute.
-    str     x7, [x0]            // setup first PGD entry(pointer to PUD)
+    str     x7, [x0]            // set 1st PGD entry(pointer to PUD)
 
     ldr     x7, =BOOT_PUD_ATTR
-    orr     x7, x2, x7          // combine the physical address of next level page with attribute.
-    str     x7, [x1]            // setup first PUD entry(pointer to PMD)
+    orr     x7, x2, x7          // combine the physical address of next level page with attribute(PMD).
+    str     x7, [x1]            // setup 1st PUD entry(pointer to PMD)
 
     ldr     x7, =PT_PMD_NOR_ATTR
-    mov     x6, xzr             // PMD idx conter
-nor_pmd:                          //0x000 00000 to 0x3ef fffff(0x2000 to 0x3f78)
-    mov     x5, x6, lsl #21       // block basis
+    mov     x6, xzr               // PMD idx conter 0,1,2,3...
+nor_pmd:                          // 0x000 00000 to 0x3ef fffff(0x2000 to 0x3f78)
+    mov     x5, x6, lsl #21       // x5 = (x6 << 21) ,x5 = 2MB, 4MB,...
     orr     x5, x5, x7            // combine block address and attribute to a descriptor
-    str     x5, [x2, x6, lsl #3]
-    add     x6, x6, #1
-    cmp     x6, #0x3F0
+    str     x5, [x2, x6, lsl #3]  // set PMD table entry(${x6}th entry)
+    add     x6, x6, #1			  // count++
+    cmp     x6, #(0x3f000000 >> 21)	  // compare if arrive margin
     blo     nor_pmd
 
-    ldr     x7, =PT_PMD_DEV_ATTR
-dev_pmd:                          //0x3F0 00000 to 0x3FF FFFFF(0x3f80 to 0x3ff8)
-    mov     x5, x6, lsl #21       // block basis
+    ldr     x7, =PT_PMD_DEV_ATTR  // set gpio MMBASE 0x3F to device memory
+dev_pmd:                          // 0x3F0 00000 to 0x3FF FFFFF(0x3f80 to 0x3ff8)
+    mov     x5, x6, lsl #21       // x5 = (x6 << 21) ,x5 = 2MB, 4MB,...
     orr     x5, x5, x7            // combine block address and attribute to a descriptor
-    str     x5, [x2, x6, lsl #3]
-    add     x6, x6, #1
-    cmp     x6, #0x400
+    str     x5, [x2, x6, lsl #3]  // set PMD table entry(${x6}th entry)
+    add     x6, x6, #1  		  // count++
+    cmp     x6, #(0x40000000 >> 21)	  // compare if arrive margin
     blo     dev_pmd
 
     msr     ttbr0_el1, x0         // load PGD to the buttom translation based register.

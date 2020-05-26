@@ -139,7 +139,7 @@ void main()
         // init_lfb();
     init_printf(0, putc);
 
-    init_task_manager();
+    // init_task_manager();
 
 
     // task_t* new_task1 = privilege_task_create((unsigned long)&print);
@@ -147,14 +147,14 @@ void main()
     // task_t* new_task3 = privilege_task_create((unsigned long)&print3);
     // task_t* new_task4 = privilege_task_create((unsigned long)&user_task);
     // task_t* new_task5 = privilege_task_create((unsigned long)&user_task2);
-    privilege_task_create((unsigned long)&exec_fork);
+    
+    // privilege_task_create((unsigned long)&exec_fork);
 
     // shell();
-
     enable_interrupt_controller();
 	enable_irq();
     core_timer_enable();
-    idle_task();
+    // idle_task();
 
     // echo everything back
     // while(1) {
