@@ -45,10 +45,10 @@ void insert_block(int index, int order, int page_nums, int pfn) {
     return;
 }
 
-struct block *del_block(int order) {
+struct block *pop_block(int order, int free_use) {
     struct block *ptr = buddy_entry[order].head;
     if(ptr != 0) {
-        block_pool[ptr->record_index] = 1;
+        block_pool[ptr->record_index] = free_use;
         buddy_entry[order].head = ptr->next;
         if (buddy_entry[order].head == 0) {
             buddy_entry[order].tail = 0;
@@ -100,13 +100,9 @@ void div_block(int alloc_order, int order) {
             insert_block(block_index, i, 1 << i, div_block->pfn + (1 << i));
         }
     }
+    
     // free alloc_order block pop from head
-    block_pool[div_block->record_index] = 0;
-    buddy_entry[alloc_order].head = buddy_entry[alloc_order].head->next;
-    if (buddy_entry[alloc_order].head == 0) {
-        buddy_entry[alloc_order].tail = 0;
-    }
-    buddy_entry[alloc_order].nr_free -= 1;
+    pop_block(alloc_order, 0);
 }
 
 // allocate pages from buddy system
@@ -130,9 +126,9 @@ struct block *alloc_block(int num_page) {
         } 
         div_block(alloc_order, order);
     }
-    ret_block = del_block(order);
-    printf("allocate page pfn: %d\r\n", ret_block->pfn);
-    print_buddy_entry(order);
+    ret_block = pop_block(order, 1);
+    //printf("allocate page pfn: %d\r\n", ret_block->pfn);
+    //print_buddy_entry(order);
     return ret_block;
 }
 
@@ -175,7 +171,7 @@ int del_buddy_block(int order, int buddy_pfn) {
             }
             else {
                 prev->next = ptr->next;
-                if (ptr->next == 0)  buddy_entry[order].tail = buddy_entry[order].head;
+                if (prev->next == 0)  buddy_entry[order].tail = prev;
             }
             buddy_entry[order].nr_free -= 1;
             return 1;
@@ -191,32 +187,30 @@ void put_back_block(struct block *free_block) {
     // block's order free_block->record_index
     int block_order = free_block->order;
     int pfn = free_block->pfn;
-    printf("put back page pfn: %d order: %d\r\n", pfn, block_order);
+    //printf("put back page pfn: %d order: %d\r\n", pfn, block_order);
     // combine
     while (block_order < MAX_ORDER) {
         // compute the buddy block
         int buddy_pfn = compute_buddy_block(pfn, block_order);
-        printf("buddy_block: %d order: %d\r\n", buddy_pfn, block_order);
+        //printf("buddy_block: %d order: %d\r\n", buddy_pfn, block_order);
         struct block *tmp = find_buddy_pfn(block_order, buddy_pfn);
         if (tmp == 0) {
-            printf("buddy_block not find\r\n");
+            //printf("buddy_block not find\r\n");
             //TODO can't find buddy block 
             int block_index;
             block_index = find_block();
-            printf("insert_block: %d order: %d\r\n", pfn, block_order);
+            //printf("insert_block: %d order: %d\r\n", pfn, block_order);
             insert_block(block_index, block_order, (1 << block_order), pfn);
-            print_buddy_entry(block_order);
+            //print_buddy_entry(block_order);
             break;
         }
         // free tmp block
         del_buddy_block(block_order, buddy_pfn);
-        printf("del buddy block: %d in order: %d\r\n", buddy_pfn, block_order);
-        print_buddy_entry(block_order);
+        //print_buddy_entry(block_order);
         pfn = buddy_pfn < pfn ? buddy_pfn : pfn;
         block_order += 1;
     }
-    printf("\r\n");
-    // free the block_pool
+    //free the block_pool
     block_pool[free_block->record_index] = 0;
 }
 
@@ -346,7 +340,6 @@ void free_zombie_task() {
 		if (task[i]->state == TASK_ZOMBIE) {
 			free_kernel_page((unsigned long)task[i]);
 			task[i]->state = TASK_FREE;
-			num_free_pages += 1;
 		}
 	}
 } 
