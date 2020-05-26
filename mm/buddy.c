@@ -197,3 +197,25 @@ buddy_free (void *addr)
   buddy_merge (ind, order);
   buddy_status ();
 }
+
+void *
+buddy_realloc (void *addr, size_t size)
+{
+  size_t ind, order;
+  size_t old_size;
+  void *new;
+  ind = (size_t) (addr - buddy_info.start) / BUDDY_BLOCK_MIN;
+  order = buddy_info.bitmap[ind] - 1;
+  old_size = BUDDY_BLOCK_MIN * (1 << order);
+  if (size <= old_size)
+    return addr;
+  new = buddy_malloc (size);
+  if (new == 0)
+    {
+      printf ("%s\r\n", "buddy_realloc fail");
+      while (1);
+    }
+  memcpy (new, addr, old_size);
+  buddy_free (addr);
+  return new;
+}
