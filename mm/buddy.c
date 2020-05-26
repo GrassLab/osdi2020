@@ -52,7 +52,7 @@ buddy_bitmap_set (void *addr, size_t order)
   start = (size_t) (addr - buddy_info.start) / BUDDY_BLOCK_MIN;
   end = start + (1 << order);
   for (; start < end; ++start)
-    buddy_info.bitmap[start / 8] |= 1 << (start % 8);
+    buddy_info.bitmap[start] = order + 1;
 }
 
 void
@@ -73,16 +73,15 @@ buddy_status ()
       uart_puts ("\r\n");
     }
   printf ("%s\r\n", "buddy bitmap:");
+  char c;
   for (i = 0; i < BUDDY_BLOCK_NUM; ++i)
     {
-      if (buddy_info.bitmap[i / 8] & (1 << (i % 8)))
-	{
-	  uart_send ('1');
-	}
+      c = buddy_info.bitmap[i];
+      if (c == 0)
+	c = '_';
       else
-	{
-	  uart_send ('_');
-	}
+	c += '0' - 1;
+      uart_send (c);
     }
   uart_puts ("\r\n");
 }

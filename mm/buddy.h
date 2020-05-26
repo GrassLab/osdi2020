@@ -12,7 +12,7 @@ struct buddy_struct
   void *start;
   void *end;
   size_t size;
-  char bitmap[BUDDY_BLOCK_NUM / 8];
+  char bitmap[BUDDY_BLOCK_NUM];
   struct buddy_chunk
   {
     // TODO: double link list
