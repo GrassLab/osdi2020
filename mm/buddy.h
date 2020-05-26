@@ -21,5 +21,6 @@ struct buddy_struct
 } buddy_info;
 
 void *buddy_malloc (size_t size);
+void buddy_free (void *addr);
 
 #endif /* ifndef BUDDY */
