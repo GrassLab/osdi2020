@@ -3,17 +3,18 @@
 #include <irq.h>
 #include <tlb.h>
 #include <mmap.h>
+#include <buddy.h>
 #include "sched.h"
 
 struct task_struct *
 privilege_task_create (void (*func) ())
 {
-  int i;
+  size_t i;
 
-  for (i = 0; i < POOL_SIZE; ++i)
+  for (i = 0; i < TASK_POOL_LEN; ++i)
     if (task_pool[i].task_id == 0)
       break;
-  if (i == POOL_SIZE)
+  if (i == TASK_POOL_LEN)
     return NULL;
   // init context
   bzero (&task_pool[i].ctx, sizeof (task_pool[i].ctx));
@@ -277,4 +278,16 @@ void
 sys_exit (int status)
 {
   do_exit (status);
+}
+
+void
+task_init ()
+{
+  TASK_POOL_LEN = 64;
+  task_pool = buddy_malloc (sizeof (struct task_struct) * TASK_POOL_LEN);
+  if (task_pool == 0)
+    {
+      printf ("%s\r\n", "TODO: task_init fail");
+      while (1);
+    }
 }

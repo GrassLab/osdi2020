@@ -6,7 +6,7 @@ do_kill (size_t pid, int signal)
   struct task_struct *victim;
 
   // invalid pid
-  if (pid > POOL_SIZE || pid <= 1)
+  if (pid > TASK_POOL_LEN || pid <= 1)
     return -1;
   victim = &task_pool[pid - 1];
   // process not exist
