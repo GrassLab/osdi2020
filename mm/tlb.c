@@ -144,7 +144,7 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	    }
 	}
       table[page_ind] = phys | attr;
-      if (phys < USED_MEMSIZE)
+      if (phys < PHYS_MEM_MAX)
 	{
 	  // setup page_struct
 	  page_init (&page_pool[phys >> 12], PGD, virt);
@@ -166,7 +166,7 @@ page_pool_init ()
   mem_size = hardware_info_memory_size ();
   page_num_max = mem_size / PAGE_SIZE;
   page_pool_size = page_num_max * sizeof (struct page_struct);
-  page_pool_len = page_num_max;
+  PAGE_POOL_LEN = page_num_max;
   kernel_end = (size_t) _kernel_end;
   if (kernel_end & (PAGE_SIZE - 1))
     kernel_end = (kernel_end & ~(PAGE_SIZE - 1)) + PAGE_SIZE;
@@ -293,7 +293,7 @@ page_alloc (size_t page_num)
   size_t i, cnt, target;
   critical_entry ();
   cnt = 0;
-  for (i = 0; i < page_pool_len; ++i)
+  for (i = 0; i < PAGE_POOL_LEN; ++i)
     {
       if (!page_pool[i].in_used)
 	{
@@ -356,7 +356,7 @@ do_page_status (int *free, int *alloc)
   size_t i;
   *free = 0;
   *alloc = 0;
-  for (i = 0; i < page_pool_len; ++i)
+  for (i = 0; i < PAGE_POOL_LEN; ++i)
     {
       if (page_pool[i].in_used)
 	(*alloc)++;
@@ -402,7 +402,7 @@ virt_to_phys (void *virt)
 void *
 phys_to_virt (void *phys)
 {
-  if ((size_t) phys >= USED_MEMSIZE)
+  if ((size_t) phys >= PHYS_MEM_MAX)
     return 0;
   return (void *) (page_pool[(size_t) phys / PAGE_SIZE].virt_addr |
 		   ((size_t) phys & 0xfff));

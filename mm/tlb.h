@@ -7,12 +7,8 @@
 #define M (K * K)
 #define G (M * K)
 #define PAGE_SIZE (4 * K)
-#define PI_MEMSIZE (1 * G)
-#define USED_MEMSIZE (2 * M)
-#define PAGE_POOL_SIZE (USED_MEMSIZE / PAGE_SIZE)
 #define KPGD 0xffff000000000000
-#define INVALID_PHYS_ADDR ((void *) 0xaaaaaaaaaaaaaaaa)
-#define INVALID_VIRT_ADDR ((void *) 0x5555555555555555)
+#define PHYS_MEM_MAX (PAGE_POOL_LEN * PAGE_SIZE)
 
 #define PD_DECODE(pd) ((size_t *)(((size_t) pd & 0xfffffffff000) | 0xffff000000000000))
 #define PD_RW (0x1 << 6)
@@ -26,7 +22,7 @@ struct page_struct
   size_t virt_addr;
 } *page_pool;
 
-size_t page_pool_len;
+size_t PAGE_POOL_LEN;
 
 void page_init (struct page_struct *page, size_t PGD, size_t virt_addr);
 void *page_alloc (size_t page_num);
