@@ -31,6 +31,7 @@ SECTIONS
     .text : { KEEP(*(.text.boot)) *(.text .text.* .gnu.linkonce.t*) } 
     .rodata : { *(.rodata .rodata.* .gnu.linkonce.r*) }
     PROVIDE(_data = .);
+    . = ALIGN(16);
     .data : { *(.data .data.* .gnu.linkonce.d*) }
     .bss (NOLOAD) : {
         . = ALIGN(16);
@@ -39,6 +40,10 @@ SECTIONS
         *(COMMON)
         __bss_end = .;
     }
+
+    . = ALIGN(0x00001000);
+    pg_dir = .;
+    .data.pgd : { . += (3 * (1 << 12)); }
     _end = .;
 
    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }

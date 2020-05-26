@@ -20,6 +20,7 @@
 
 #define INIT_TASK \
 /*cpu_context*/ { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
+/* mm */ { 0, 0, {{0}}, 0, {0}}, \
 /* state etc */ 0,0,1,0,0,PF_KTHREAD,0,0\
 }
 
@@ -39,8 +40,22 @@ struct cpu_context {
     unsigned long pc; //x30
 };
 
+struct user_page {
+    unsigned long phys_addr;
+    unsigned long virt_addr;
+};
+#define MAX_PROCESS_PAGES 16
+struct mm_struct {
+    unsigned long pgd;
+    int user_pages_count;
+    struct user_page user_pages[MAX_PROCESS_PAGES];
+    int kernel_pages_count;
+    unsigned long kernel_pages[MAX_PROCESS_PAGES];
+};
+
 struct task {
     struct cpu_context cpu_context;
+    struct mm_struct mm;
     long state;
     long counter;
     long priority;

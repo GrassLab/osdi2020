@@ -110,6 +110,8 @@ void test() {
   }
 }
 
+// -----------above is user code-------------
+// -----------below is kernel code-------------
 void zombie_reaper(){
     while(1){
         uart_puts("I'm zombie_reaper\n");
@@ -129,11 +131,16 @@ void zombie_reaper(){
     }
 }
 
-// -----------above is user code-------------
-// -----------below is kernel code-------------
-
 void user_test(){
-  do_exec((unsigned long)&test);
+    /*
+    unsigned long start = (unsigned long)&_binary_test_img_start;
+    unsigned long size = (unsigned long)&_binary_test_img_end;
+    int err = do_exec(start, end - start, );
+    if(err < 0){
+        uart_puts("do_exec shell fail\n");
+    }
+    */
+    do_exec((unsigned long)&test);
 }
 
 void idle(){

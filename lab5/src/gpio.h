@@ -1,3 +1,4 @@
+#include "mm.h"
 /*
  * Copyright (C) 2018 bzt (bztsrc@github)
  *
@@ -23,8 +24,8 @@
  *
  */
 
-//#define MMIO_BASE          0x3F000000
-#define MMIO_BASE       0xffff00003F000000
+#define PA_MMIO_BASE       0x3F000000
+#define MMIO_BASE       (VA_START + PA_MMIO_BASE)
 
 #define GPFSEL0         ((volatile unsigned int*)(MMIO_BASE+0x00200000))
 #define GPFSEL1         ((volatile unsigned int*)(MMIO_BASE+0x00200004))
