@@ -113,7 +113,7 @@ buddy_malloc (size_t size)
   if (target != NULL)
     {
       buddy_bitmap_set (target, order);
-      bzero (target, size);
+      bzero (target, BUDDY_BLOCK_MIN * (1 << order));
     }
   buddy_status ();
   return target;
