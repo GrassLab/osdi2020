@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <string.h>
+#include <uart.h>
 #include "tlb.h"
 #include "buddy.h"
 
@@ -54,6 +55,38 @@ buddy_bitmap_set (void *addr, size_t order)
     buddy_info.bitmap[start / 8] |= 1 << (start % 8);
 }
 
+void
+buddy_status ()
+{
+  size_t i;
+  struct buddy_chunk *p;
+
+  printf ("buddy b0dd9: %p-%p\n", buddy_info.start, buddy_info.end);
+  for (i = 0; i <= BUDDY_ORDER_MAX; ++i)
+    {
+      printf ("%d: ", (int) i);
+      p = buddy_info.bins[i];
+      for (; p != NULL; p = p->next)
+	{
+	  printf ("%p -> ", p);
+	}
+      uart_puts ("\r\n");
+    }
+  printf ("%s\r\n", "buddy bitmap:");
+  for (i = 0; i < BUDDY_BLOCK_NUM; ++i)
+    {
+      if (buddy_info.bitmap[i / 8] & (1 << (i % 8)))
+	{
+	  uart_send ('1');
+	}
+      else
+	{
+	  uart_send ('_');
+	}
+    }
+  uart_puts ("\r\n");
+}
+
 void *
 buddy_malloc (size_t size)
 {
@@ -63,10 +96,11 @@ buddy_malloc (size_t size)
   if (buddy_info.start == NULL)
     buddy_init ();
   // calculate order
-  for (order = 0; size < BUDDY_BLOCK_MIN * (1 << order); ++order);
+  for (order = 0; size > BUDDY_BLOCK_MIN * (1 << order); ++order);
 
   target = buddy_find_block (order);
   if (target != NULL)
     buddy_bitmap_set (target, order);
+  buddy_status ();
   return target;
 }
