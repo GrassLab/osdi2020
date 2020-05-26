@@ -24,7 +24,7 @@
 #define PMD_BASE                PUD_BASE + PAGE_TABLE_SIZE
 
 #define NR_PAGE                 4096
-#define FPN_MASK                0x0000fffffffff000
+#define PFN_MASK                0x0000fffffffff000
 
 #define MAX_ORDER               9
 #define MAX_ORDER_SIZE          (1 << MAX_ORDER)
@@ -42,7 +42,6 @@
 
 
 #ifndef __ASSEMBLER__
-#define PFN_MASK                    0x0000FFFFFFFFF000
 #define PHY_ADDR_TO_PFN(addr)       (((((unsigned long)(addr)) - LOW_MEMORY) & PFN_MASK) >> PAGE_SHIFT)
 
 struct page{
@@ -81,6 +80,8 @@ struct obj_alloc allocator_pool[MAX_ALLOCATOR_NUM];
 unsigned long get_kstack_base(unsigned long task_id);
 unsigned long get_ustack_base(unsigned long task_id);
 void mm_init();
+struct page* demand_page();
+void restore_page(struct page* page);
 int register_obj_allocator(unsigned int objsize);
 void *obj_allocate(int token);
 void obj_free(void *obj);
