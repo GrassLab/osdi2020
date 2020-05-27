@@ -16,4 +16,6 @@
 #define SYS_REMAIN_PAGE 12
 #define SYS_MMAP 13
 #define SYS_WAIT 14
+#define SYS_MALLOC 15
+#define SYS_FREE 16
 #endif

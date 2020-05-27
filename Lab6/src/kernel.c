@@ -13,6 +13,7 @@
 #include "include/queue.h"
 #include "include/kernel.h"
 #include "include/elf.h"
+#include "include/pool.h"
 
 void get_board_revision_info(){
   mbox[0] = 7 * 4; // buffer size in bytes
@@ -104,6 +105,62 @@ void kernel_process(){
     }
 }
 
+void mytest1(){
+    //test case
+    unsigned long p1;
+    p1 = get_free_page(0);
+    printf("the return address 0x%x \r\n\r\n",p1); 
+    
+    unsigned long p2;
+    p2 = get_free_page(0);
+    printf("the return address 0x%x \r\n\r\n",p2);
+    
+    unsigned long p3;
+    p3 = get_free_page(0);
+    printf("the return address 0x%x \r\n\r\n",p3);
+    
+    free_page(p2);
+    free_page(p3); 
+ 
+    unsigned long p4;
+    p4 = get_free_page(7);
+    printf("the return address 0x%x \r\n\r\n",p4);
+}
+
+void mytest2(){
+    pool pool_ptr;
+    unsigned long test_ptr1;
+    unsigned long test_ptr2;
+
+    // init memory pool with given parameters 
+    pool_init(&pool_ptr, 0x100);
+
+    // allocate memory from memory pool 
+    test_ptr1 = pool_alloc(&pool_ptr);
+    test_ptr2 = pool_alloc(&pool_ptr);
+    printf("the return address 0x%x\r\n",test_ptr1);
+    printf("the return address 0x%x\r\n",test_ptr2);
+    
+    pool_free(&pool_ptr,test_ptr1);
+    test_ptr1 = pool_alloc(&pool_ptr);
+    printf("the return address 0x%x\r\n",test_ptr1);
+    
+    unsigned long test_ptr3;
+    test_ptr3 = pool_alloc(&pool_ptr);
+    printf("the return address 0x%x\r\n",test_ptr3);
+
+    free_memory_pool(&pool_ptr);  
+    unsigned long p;
+    p = get_free_page(0);
+    printf("the return address 0x%x \r\n\r\n",p);
+}
+
+void mytest3(){
+	int *a = (int *)kmalloc(sizeof(int)*10);
+	a[5] = 3;
+	printf("a[5]= %d at 0x%x\r\n",a[5],&a[5]);
+}
+
 void kernel_main(void)
 {	
     irq_vector_init(); 
@@ -122,30 +179,15 @@ void kernel_main(void)
     enable_irq();        //clear PSTATE.DAIF
     core_timer_enable(); //enable core timer
     
+    //mytest1();
+    //mytest2();
+    //mytest3();
+    
 
-    unsigned long p1;
-    p1 = get_free_page(7);
-    printf("the return address 0x%x \r\n\r\n",p1);
-    
-    unsigned long p2;
-    p2 = get_free_page(0);
-    printf("the return address 0x%x \r\n\r\n",p2);
-    
-    unsigned long p3;
-    p3 = get_free_page(0);
-    printf("the return address 0x%x \r\n\r\n",p3);
-    
-    free_page(p2);
-    free_page(p3); 
-    
-    unsigned long p4;
-    p4 = get_free_page(7);
-    printf("the return address 0x%x \r\n\r\n",p4);
-    
     // Here init a task being zombie reaper
-    //privilege_task_create(zombie_reaper,1);
+    privilege_task_create(zombie_reaper,1);
 
-    //privilege_task_create(kernel_process, 1); 
+    privilege_task_create(kernel_process, 1); 
 
     idle();  
 }

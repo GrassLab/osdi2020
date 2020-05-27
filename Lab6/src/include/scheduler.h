@@ -31,8 +31,9 @@ struct cpu_context {
     unsigned long pc;
 };
 
-#define MAX_PROCESS_PAGES	16	
-#define MAX_AREA                16
+#define MAX_PROCESS_PAGES	28 // this mean we can't use more than 28 pages in user code
+				   // absolutely bad but that's ok for now 
+#define MAX_AREA                16 
 
 struct user_page {
 	unsigned long phy_addr;
@@ -53,11 +54,16 @@ struct user_page {
 struct vm_area_struct{
 	unsigned long vm_end;
 	unsigned long vm_start;
-	unsigned long vm_prot;
-	unsigned long vm_flags;
+	int vm_prot;
+	int vm_flags;
 	unsigned long file_start;
-	unsigned long file_offset;
+	int file_offset;
 };
+
+struct buddy_struct{
+	unsigned long area_start;
+        unsigned long area_size;	
+}; 
 
 struct mm_struct {
 	unsigned long pgd;	

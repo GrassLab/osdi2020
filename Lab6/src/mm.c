@@ -56,7 +56,7 @@ struct page_struct* get_pages_from_list(int order){
 	page->used = USED_NOW;
 	page->order = order;
 	
-	printf("alloc from %d to %d\r\n",page->page_num,(BUDDY_END(page,order)->page_num));
+	printf("$$$ alloc from %d to %d\r\n",page->page_num,(BUDDY_END(page,order)->page_num));
 	return page;
 }
 
@@ -75,6 +75,22 @@ struct page_struct *alloc_pages(int order){
 	return page;
 }
 
+unsigned long kmalloc(unsigned long size){
+	int order;
+	for(int i=0;i<MAX_ORDER;i++){
+		if(size <= (unsigned long)(1<<i)*PAGE_SIZE){
+			order = i;
+			break;
+		}
+	}
+
+	unsigned long page = get_free_page(order);
+	if(page == 0){
+		return 0;
+	}
+	return page + VA_START;
+}
+
 unsigned long get_free_page(int order){
 	struct page_struct* page;
 	page = alloc_pages(order);
@@ -83,18 +99,18 @@ unsigned long get_free_page(int order){
 	return	page->phy_addr;
 }
 
-unsigned long allocate_kernel_page(int order){
-	unsigned long page = get_free_page(order);
+unsigned long allocate_kernel_page(){
+	unsigned long page = get_free_page(0);
 	if(page == 0){
 		return 0;
 	}
 	return page + VA_START;
 }
 
-unsigned long allocate_user_page(int order,struct task_struct *task, \
+unsigned long allocate_user_page(struct task_struct *task, \
 		unsigned long vir_addr){
 
-	unsigned long page = get_free_page(order); 
+	unsigned long page = get_free_page(0); 
 	if(page == 0){
 		return 0;
 	}
@@ -102,8 +118,9 @@ unsigned long allocate_user_page(int order,struct task_struct *task, \
 	return page + VA_START;
 }
 
+// this function can just mapping one page 
 void map_page(struct task_struct *task, unsigned long vir_addr, \
-		unsigned long page,unsigned long page_attr)
+		unsigned long page,unsigned long page_attr) 
 {
 	unsigned long pgd;
 	
@@ -174,32 +191,39 @@ void put_pages_to_list(struct page_struct *page,int order){
 			tnext->order = -1;
 			// remove the chain in original list
 			list_remove_chain(&(tnext->list),&(BUDDY_END(tnext,order)->list));
-			printf("merge %d to %d\r\n",tnext->page_num,BUDDY_END(tnext,order)->page_num);
+			printf(">>> merge %d to %d\r\n",tnext->page_num,BUDDY_END(tnext,order)->page_num);
 			
 			// merge them together
 			BUDDY_END(page,order)->list.next=&(tnext->list);
 			tnext->list.prev=&(BUDDY_END(page,order)->list);
-
-			continue;
+			
+			if(order+1 == MAX_ORDER)
+				break;
+			else
+				continue;
 		}
 		else if((tprev->used == NOT_USED) && (tprev->order==order)){
 			page->order=-1;
 			// remove the chain in original list
 			list_remove_chain(&(tprev->list),&(BUDDY_END(tprev,order)->list)); //**
 			
-			printf("merge %d to %d\r\n",tprev->page_num,BUDDY_END(tprev,order)->page_num);
+			printf("<<< merge %d to %d\r\n",tprev->page_num,BUDDY_END(tprev,order)->page_num);
 			//merge them together
 			BUDDY_END(tprev,order)->list.next=&(page->list);
 			page->list.prev=&(BUDDY_END(tprev,order)->list);
 
 			page=tprev;
 			page->order++;
-			continue;
+			if(order+1 == MAX_ORDER)
+				break;
+			else	
+				continue;
 		}
 		else{
 			break;
 		}
 	}
+
 	printf("+++ merge from page %d to %d in order %d\r\n",\
 			page->page_num,BUDDY_END(page,order)->page_num,order);
 	list_add_chain(&(page->list),&(BUDDY_END(page,order)->list),&page_buddy[order]);
@@ -266,7 +290,7 @@ void init_page_struct(){
 		}
 	}
 	
-	//dump
+	/*dump
 	for(int i=0;i<513;i++){
 		if(page[i].order!=-1){
 			printf("page number: %d /",i);
@@ -279,7 +303,7 @@ void init_page_struct(){
 		
 		}
 	}
-	printf("last entry %d\r\n",PAGE_ENTRY);
+	printf("last entry %d\r\n",PAGE_ENTRY);*/
 }
 
 
@@ -319,7 +343,7 @@ int copy_virt_memory(struct task_struct *dst){
 
 	for(int i=0;i<current->mm.user_pages_count;i++){
 		struct user_page src = current->mm.user_pages[i];
-		unsigned long page = allocate_user_page(0,dst, src.vir_addr);
+		unsigned long page = allocate_user_page(dst, src.vir_addr);
 		if(!page)
 			return -1;
 
@@ -389,6 +413,7 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 }
 
  void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset){
+ 	
 	unsigned long vir_addr;
 
 	if(file_start!=NULL && file_offset!=0){
@@ -412,9 +437,9 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 		// kernel decides the new region’s start address if addr is invalid				 // First, make sure new region not overlap exist region
 		flag = 0;	
 		for(int i=0;i< mm.vm_area_count;i++){
-			if(vir_addr == mm.mmap[i].vm_start){
+			if(vir_addr >= mm.mmap[i].vm_start && vir_addr < mm.mmap[i].vm_end){
 				flag = 1;
-				vir_addr+=PAGE_SIZE;
+				vir_addr = mm.mmap[i].vm_end;
 				break;
 			}
 		}

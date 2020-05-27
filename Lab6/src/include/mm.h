@@ -58,10 +58,11 @@ unsigned long physical_to_pfn(unsigned long phy);
 
 struct page_struct* get_pages_from_list(int order);
 struct page_struct* alloc_pages(int order);
+unsigned long kmalloc(unsigned long size);
 unsigned long get_free_page(int order);
 
-unsigned long allocate_kernel_page(int order);
-unsigned long allocate_user_page(int order,struct task_struct *task,unsigned long vir_addr);
+unsigned long allocate_kernel_page();
+unsigned long allocate_user_page(struct task_struct *task,unsigned long vir_addr);
 
 void map_page(struct task_struct *task, unsigned long vir_addr, unsigned long page, unsigned long page_attr);
 unsigned long map_table(unsigned long *table, unsigned long shift,unsigned long vir_addr, struct task_struct *task);

@@ -11,6 +11,7 @@
 #include "include/queue.h"
 #include "include/reboot.h"
 #include "include/exc.h"
+#include "include/kernel.h"
 
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
@@ -204,6 +205,32 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 		case SYS_WAIT: {
 			return current->state = TASK_WAIT;
 		}	
+		case SYS_MALLOC: {
+			return (unsigned long)mmap(NULL, arg0, PROT_READ|PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+		}
+		case SYS_FREE:{
+			unsigned long vir_addr = (arg0>>12)<<12;
+			// note: we dont't clean vm_struct and page table now
+			// so there are some problem leave to be solve
+			// 1. Since page table not clean, even if user free A, 
+			// he can still access it because page table not
+			// clear, but if any one allocate that page, undefined behavior happened
+			
+			// 2. Since vm_struct not clean, so user will get another virtual address
+			// for malloc, if the virtual address map to a previous allocate and free
+			// page, page fault won't happened. And this mean two different virtual 
+			// address will map to same physical address
+
+			//free using page
+			for(int i=0;i<current->mm.user_pages_count;i++){
+				 if(vir_addr == current->mm.user_pages[i].vir_addr){
+				 	free_page(current->mm.user_pages[i].phy_addr);
+				 	return 0;
+				 }
+			} 
+			
+			return -1;	      
+		}	 
 	}
 	// Not here if no bug happened!
 	return -1;

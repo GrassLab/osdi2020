@@ -20,6 +20,8 @@ _user_entry:
 .set SYS_REMAIN_PAGE, 12
 .set SYS_MMAP,       13
 .set SYS_WAIT,       14
+.set SYS_MALLOC,      15
+.set SYS_FREE,      16
 
 .global call_core_timer
 call_core_timer:
@@ -109,5 +111,17 @@ mmap:
 .global wait
 wait:
 	mov x8, SYS_WAIT
+	svc #0
+	ret
+
+.global malloc
+malloc:
+	mov x8, SYS_MALLOC
+	svc #0
+	ret
+
+.global free
+free:
+	mov x8, SYS_FREE
 	svc #0
 	ret
