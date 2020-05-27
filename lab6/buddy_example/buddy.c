@@ -5,8 +5,16 @@
 
 int cal_index(int size) {
   int targetlevel = 0;
-  while (size >>= 1) ++targetlevel;
-  return targetlevel;
+  int add1_flag = 0;
+  while (size >> 1) {
+
+    if (size & 1) add1_flag = 1;
+
+    ++targetlevel;
+    size >>= 1;
+  }
+
+  return targetlevel + add1_flag;
 }
 
 struct buddy {
@@ -22,6 +30,10 @@ struct buddy *buddy_new(int size) {
 
   /* calcuate the index of power of 2 */
   int x = cal_index(size);
+
+  int x2 = ceil(log(size) / log(2));
+
+  printf("x %d x2 %d\n", x, x2);
 
   /* init memory */
   temp->len = x + 1;
@@ -52,6 +64,10 @@ void buddy_show(struct buddy *self) {
 struct Pair buddy_allocate(struct buddy *self, int size) {
   /* calcuate the index of power of 2 */
   int x = cal_index(size);
+
+  int x2 = ceil(log(size) / log(2));
+
+  printf("s: %d x %d x2 %d\n", size, x, x2);
 
   struct Pair temp;
 
@@ -125,16 +141,16 @@ int main(int argc, char *argv[]) {
   }
   /* status of init bd */
   Buddy.show(bd);
-  struct Pair p = extend_4kb(Buddy.alloc(bd, 32));
-  printf("alloc %x to %x\n", p.lb, p.ub);
+  struct Pair p = Buddy.alloc(bd, 32);
+  printf("alloc %d to %d\n", p.lb, p.ub);
   Buddy.show(bd);
 
-  p = extend_4kb(Buddy.alloc(bd, 7));
-  printf("alloc %x to %x\n", p.lb, p.ub);
+  p = Buddy.alloc(bd, 7);
+  printf("alloc %d to %d\n", p.lb, p.ub);
   Buddy.show(bd);
 
-  p = extend_4kb(Buddy.alloc(bd, 64));
-  printf("alloc %x to %x\n", p.lb, p.ub);
+  p = Buddy.alloc(bd, 64);
+  printf("alloc %d to %d\n", p.lb, p.ub);
   Buddy.show(bd);
 
   printf("dd: %d", sizeof (struct Node));

@@ -5,6 +5,7 @@
 #include "fork.h"
 #include "irq.h"
 #include "kernel.h"
+#include "list.h"
 #include "mini_uart.h"
 #include "mm.h"
 #include "printf.h"
@@ -13,32 +14,30 @@
 #include "timer.h"
 #include "user.h"
 #include "utils.h"
-#include "list.h"
 
 #define USER_PROCESS_BINARY 1
 
 void kernel_process() {
   printf("Kernel process started. EL %d\r\n", get_el());
 
+  while (1) {
+  }
 
+  /* #ifdef USER_PROCESS_BINARY */
+  /*   unsigned long begin = (unsigned long)&_binary_user_img_start; */
+  /*   unsigned long end = (unsigned long)&_binary_user_img_end; */
+  /*   // exit_process(); */
+  /*   int err = do_exec(begin, end - begin, 0x1000); */
+  /* #else */
+  /*   unsigned long begin = (unsigned long)&user_begin; */
+  /*   unsigned long end = (unsigned long)&user_end; */
+  /*   unsigned long process = (unsigned long)&user_process; */
+  /*   int err = move_to_user_mode(begin, end - begin, process - begin); */
+  /* #endif */
 
-  while (1) {}
-
-/* #ifdef USER_PROCESS_BINARY */
-/*   unsigned long begin = (unsigned long)&_binary_user_img_start; */
-/*   unsigned long end = (unsigned long)&_binary_user_img_end; */
-/*   // exit_process(); */
-/*   int err = do_exec(begin, end - begin, 0x1000); */
-/* #else */
-/*   unsigned long begin = (unsigned long)&user_begin; */
-/*   unsigned long end = (unsigned long)&user_end; */
-/*   unsigned long process = (unsigned long)&user_process; */
-/*   int err = move_to_user_mode(begin, end - begin, process - begin); */
-/* #endif */
-
-/*   if (err < 0) { */
-/*     printf("Error while moving process to user mode\n\r"); */
-/*   } */
+  /*   if (err < 0) { */
+  /*     printf("Error while moving process to user mode\n\r"); */
+  /*   } */
 }
 
 void zombie_reaper() {
@@ -81,13 +80,39 @@ void kernel_main() {
     printf("erorr while constructing the buddy system");
     return;
   }
-
-  Buddy.show(bd);
-  struct Pair p = Buddy.alloc(bd, 32);
-  /* struct Pair p = extend_4kb(Buddy.alloc(bd, 32)); */
-  printf("alloc %d to %d\n", p.lb, p.ub);
   Buddy.show(bd);
 
+  {
+    /* allocate 32 */
+    struct Pair p = Buddy.alloc(bd, 32);
+    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
+           p.ub >> 12);
+    Buddy.show(bd);
+  }
+
+  {
+    /* allocate 7 */
+    struct Pair p = Buddy.alloc(bd, 7);
+    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
+           p.ub >> 12);
+    Buddy.show(bd);
+  }
+
+  {
+    /* allocate 64 */
+    struct Pair p = Buddy.alloc(bd, 64);
+    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
+           p.ub >> 12);
+    Buddy.show(bd);
+  }
+
+  /* { */
+  /*   /\* allocate 32 *\/ */
+  /*   struct Pair p = Buddy.alloc(bd, 32); */
+  /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
+  /*          p.ub >> 12); */
+  /*   Buddy.show(bd); */
+  /* } */
 
   sys_core_timer_enable();
 

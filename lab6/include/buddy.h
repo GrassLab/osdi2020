@@ -10,9 +10,7 @@ struct buddy {
   struct Node **pair_array;
 };
 
-/* struct Pair extend_4kb(struct Pair p) { */
-/*   return (struct Pair){p.lb << 12, p.ub << 12}; */
-/* } */
+
 
 struct buddy_type {
   void (*construct)(struct buddy *self);

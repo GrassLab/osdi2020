@@ -4,8 +4,16 @@
 
 int cal_index(int size) {
   int targetlevel = 0;
-  while (size >>= 1) ++targetlevel;
-  return targetlevel;
+  int add1_flag = 0;
+  while (size >> 1) {
+
+    if (size & 1) add1_flag = 1;
+
+    ++targetlevel;
+    size >>= 1;
+  }
+
+  return targetlevel + add1_flag;
 }
 
 struct buddy *buddy_new(int size, unsigned long base_d) {
@@ -49,6 +57,10 @@ void buddy_show(struct buddy *self) {
   }
 }
 
+struct Pair pair_shift(struct Pair p, int shift) {
+  return (struct Pair){p.lb << shift, p.ub << shift};
+}
+
 struct Pair buddy_allocate(struct buddy *self, int size) {
   /* calcuate the index of power of 2 */
   int x = cal_index(size);
@@ -58,7 +70,7 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
   struct Node **arr = &self->pair_array[x];
   if (self->pair_array[x] != 0) {
     temp = remove_node(arr);
-    return temp;
+    return pair_shift((struct Pair){temp.lb, temp.ub}, 12);
   }
 
   /* search for a larger block */
@@ -96,7 +108,7 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
     temp = remove_node(arr);
   }
 
-  return temp;
+  return pair_shift((struct Pair){temp.lb, temp.ub}, 12);
 }
 
 struct buddy_type Buddy = {
