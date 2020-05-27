@@ -5,6 +5,8 @@
 unsigned long base = 0;
 
 void insert_node(struct Node **head, struct Pair p) {
+  /* the base of new ndoe is locate at (base + low-bound * 4KB)  */
+  /* because the (lb, ub) is corresponding to memory area of [lb * 4kB, ub * 4kB]*/
   struct Node *temp = (struct Node *)(base + (p.lb * PAGE_SIZE));
 
   temp->pair = p;

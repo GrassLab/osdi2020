@@ -20,21 +20,7 @@
 void kernel_process() {
   printf("Kernel process started. EL %d\r\n", get_el());
 
-  printf("Hello Buddy");
 
-  struct buddy *bd = Buddy.new(128, LOW_MEMORY + VA_START);
-  if (!bd) {
-    printf("erorr while constructing the buddy system");
-    return;
-  }
-
-  println("Page apge : %d", PAGING_PAGES);
-
-  Buddy.show(bd);
-  struct Pair p = Buddy.alloc(bd, 32);
-  /* struct Pair p = extend_4kb(Buddy.alloc(bd, 32)); */
-  printf("alloc %x to %x\n", p.lb, p.ub);
-  Buddy.show(bd);
 
   while (1) {}
 
@@ -89,21 +75,35 @@ void kernel_main() {
   println("LOW memory: %x", LOW_MEMORY);
   println("HIGH memory: %x", HIGH_MEMORY);
 
+  /* Init the buddy system first with the base memory address */
+  struct buddy *bd = Buddy.new(128, LOW_MEMORY);
+  if (!bd) {
+    printf("erorr while constructing the buddy system");
+    return;
+  }
+
+  Buddy.show(bd);
+  struct Pair p = Buddy.alloc(bd, 32);
+  /* struct Pair p = extend_4kb(Buddy.alloc(bd, 32)); */
+  printf("alloc %d to %d\n", p.lb, p.ub);
+  Buddy.show(bd);
+
+
   sys_core_timer_enable();
 
-  int res;
+  /* int res; */
 
-  res = copy_process(PF_KTHREAD, (unsigned long)&zombie_reaper, 0);
-  if (res < 0) {
-    printf("error while starting zombie reaper");
-    return;
-  }
+  /* res = copy_process(PF_KTHREAD, (unsigned long)&zombie_reaper, 0); */
+  /* if (res < 0) { */
+  /*   printf("error while starting zombie reaper"); */
+  /*   return; */
+  /* } */
 
-  res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
-  if (res < 0) {
-    printf("error while starting kernel process");
-    return;
-  }
+  /* res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0); */
+  /* if (res < 0) { */
+  /*   printf("error while starting kernel process"); */
+  /*   return; */
+  /* } */
 
   while (1) {
     schedule();

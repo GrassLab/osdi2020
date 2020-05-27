@@ -9,7 +9,9 @@ int cal_index(int size) {
 }
 
 struct buddy *buddy_new(int size, unsigned long base_d) {
-  struct buddy *temp = (struct buddy *)allocate_kernel_page();
+  /* create the buddy item & adjust the new base */
+  struct buddy *temp = (struct buddy *)base_d;
+  base_d += sizeof(struct buddy);
 
   /* calcuate the index of power of 2 */
   int x = cal_index(size);
@@ -18,9 +20,13 @@ struct buddy *buddy_new(int size, unsigned long base_d) {
   temp->len = x + 1;
   temp->size = size;
 
+  /* assign the free list array & adjust the new base */
+  temp->pair_array = (struct Node **)base_d;
+  base_d += (sizeof(struct Node) * temp->len);
+
+
   /* the base of the memory which buddy would located */
   base = base_d;
-  temp->pair_array = (struct Node **)allocate_kernel_page();
 
   /* init the index at len */
   struct Node **cur = &temp->pair_array[x];
