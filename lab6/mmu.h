@@ -74,7 +74,7 @@ RW:
 #include <stdint.h>
 
 #define PAGE_SIZE (1 << 21) /* 2mb */
-#define PAGE_4K (1 << 12)
+#define PAGE_4K (1u << 12)
 
 #define PD_TABLE 0x3 // indicate this to another descriptor
 #define PD_BLOCK 0x1 // indicate to physical ram
@@ -104,9 +104,9 @@ RW:
 #define USER_STACK_VA 0x0000ffffffffe000
 
 #define MMU_ADDR_MASK 0xfffffffffffff000uLL
-#define MMU_VA_TO_PA(va) (va & 0x0000fffffffff000uLL)
-#define MMU_VA_TO_PFN(va) (MMU_VA_TO_PA(va) >> 12)
-#define MMU_PA_TO_VA(pa) ((uint64_t *)((uint64_t)pa | 0xffff000000000000))
+#define MMU_VA_TO_PA(va) ((uint64_t *)((uint64_t)(va) & 0x0000ffffffffffffuLL))
+#define MMU_VA_TO_PFN(va) ((uint64_t)MMU_VA_TO_PA(va) >> 12)
+#define MMU_PA_TO_VA(pa) ((uint64_t *)((uint64_t)(pa) | 0xffff000000000000))
 #define MMU_PFN_TO_PA(pfn) (((uint64_t)pfn) << 12)
 
 struct page_struct
@@ -135,8 +135,6 @@ void mmu_ttbrx_el1_init(void);
 void mmu_startup_page_init(void);
 uint64_t * mmu_startup_page_allocate(int zero);
 void mmu_startup_page_free(uint64_t * va);
-void mmu_page_init(void);
-uint64_t * mmu_page_allocate(int zero);
 void mmu_page_free(uint64_t * va);
 void mmu_user_page_table_init(void);
 void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct);

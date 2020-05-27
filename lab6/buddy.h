@@ -3,6 +3,8 @@
 #ifndef __BUDDY_H__
 #define __BUDDY_H__
 
+#define BUDDY_ALLOCATE_TO_PA 1
+
 /* Page linked list for buddy system, split 8MB to */
 /* set to 4MB, 2MB, 1MB, 512KB, 256KB, 128KB, 64KB, 32KB, 16KB, 8KB, 4KB */
 /* 11 size in total */
@@ -29,8 +31,13 @@ struct buddy_page_pa_node_struct
 };
 
 void buddy_init(void);
+uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa);
+
 struct buddy_page_node_struct * buddy_node_allocate(void);
+
 void buddy_insert_page_node(unsigned buddy_table_list_block_size, uint64_t * va);
+struct buddy_page_node_struct * buddy_pop_page_node(unsigned buddy_table_list_block_size, struct buddy_page_node_struct * prev_ptr, struct buddy_page_node_struct * cur_ptr);
+int buddy_split(unsigned block_size);
 
 #endif
 

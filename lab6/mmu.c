@@ -2,6 +2,7 @@
 #include "string_util.h"
 #include "meta_macro.h"
 #include "mmu.h"
+#include "buddy.h"
 #include "uart.h"
 
 /* 1gb = 2MB * 512 = 4KB * 262144 */
@@ -109,67 +110,6 @@ void mmu_startup_page_free(uint64_t * va)
   uart_puts("\n");
   return;
 }
-void mmu_page_init(void)
-{
-  /* each page is 4KB 0x1000 */
-  /* PGD, PUD, PMD occupy 0x0 - 0x2FFF */
-  /* initial kernel stack 0x8000 */
-  /* kernel8.img loads at 0x80000, kernel size is approx. 30KB+ */
-
-  /* peripheral(0x3F000000 - 0x3FFFFFFF) */
-  /* 0x3F000000 / 0x200000 = 504 */
-  /* the rest are unused */
-
-  /* ASSUME nobody allocate and free startup page before, they are all free, we can get a continuous chunk */
-  mmu_page = (struct page_struct *)MMU_PA_TO_VA(mmu_startup_page_allocate(1));
-  for(unsigned page_table_count = 1; page_table_count < PAGE_TOTAL / (PAGE_4K / 8); ++page_table_count)
-  {
-    mmu_startup_page_allocate(1); /* assume the they're continuous */
-  }
-
-  for(unsigned page_idx = 0; page_idx < PAGE_TOTAL; ++page_idx)
-  {
-    CLEAR_BIT(mmu_page[page_idx].flag, PAGE_USED);
-  }
-
-  /* copy startup page table to page table */
-  for(unsigned startup_page_idx = 0; startup_page_idx < STARTUP_PAGE_TOTAL; ++startup_page_idx)
-  {
-    memcopy((char *)MMU_PA_TO_VA(STARTUP_PAGE_TABLE_BASE), (char *)mmu_page, 0x80 * 8);
-  }
-  uart_puts(ANSI_MAGENTA"[Page allocator]"ANSI_RESET" Startup page table transfer complete\n");
-
-  uart_puts(ANSI_MAGENTA"[Page allocator]"ANSI_RESET" Init complete\n");
-  return;
-}
-
-uint64_t * mmu_page_allocate(int zero)
-{
-  for(unsigned current_pfn = 0; current_pfn < PAGE_TOTAL; ++current_pfn)
-  {
-    if(!CHECK_BIT(mmu_page[current_pfn].flag, PAGE_USED))
-    {
-      /* uint64_t is 8 byte */
-      uint64_t * pa = (uint64_t *)((uint64_t)(MMU_PAGE_BASE + current_pfn * PAGE_4K));
-      uint64_t * va = MMU_PA_TO_VA(pa);
-      if(zero)
-      {
-        memzero_8byte(va, PAGE_4K / 8);
-      }
-
-      SET_BIT(mmu_page[current_pfn].flag, PAGE_USED);
-
-      char string_buff[0x20];
-
-      uart_puts(ANSI_MAGENTA"[Page allocator]"ANSI_RESET" Create: ");
-      string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
-      uart_puts(string_buff);
-      uart_puts("\n");
-      return pa;
-    }
-  }
-  return 0x0;
-}
 
 void mmu_page_free(uint64_t * va)
 {
@@ -216,16 +156,22 @@ void mmu_user_page_table_init(void)
    */
   /* total frame: 1PGD, 1PUD, 1PMD, 64 * 2 PTE */
 
+ // For testing
+ // buddy_allocate(0, 0);
+ // buddy_allocate(0, 0);
+ // buddy_allocate(0, 0);
+ // buddy_allocate(0, 0);
+
   /* setup 1 PGD */
-  user_space_mm.pgd_base = mmu_page_allocate(1);
-  user_space_mm.pud_base = mmu_page_allocate(1);
+  user_space_mm.pgd_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);
+  user_space_mm.pud_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);
 
   *user_space_mm.pgd_base = PD_ACCESS | ((uint64_t)(user_space_mm.pud_base)) | PD_TABLE;
 
   *(user_space_mm.pgd_base + 511) = PD_ACCESS | ((uint64_t)(user_space_mm.pud_base + 511)) | PD_TABLE;
 
   /* setup 1 PUD */
-  user_space_mm.pmd_text_base = mmu_page_allocate(1);
+  user_space_mm.pmd_text_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);
   user_space_mm.pmd_stack_base = user_space_mm.pmd_text_base + 511;
 
   *(user_space_mm.pud_base) = PD_ACCESS | ((uint64_t)(user_space_mm.pmd_text_base)) | PD_TABLE;
@@ -245,16 +191,16 @@ void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct)
   /* 24kb for .text, 8kb for stack */
 
   /* setup PTE for .text */
-  mm_struct -> pte_text_base = mmu_page_allocate(1);
-  mm_struct -> pte_stack_base = mmu_page_allocate(1);
+  mm_struct -> pte_text_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);
+  mm_struct -> pte_stack_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);
 
   for(unsigned pd_idx = 0; pd_idx < 6; ++pd_idx)
   {
-   *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) = (uint64_t)mmu_page_allocate(0) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+   *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
   }
 
- *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))) = (uint64_t)mmu_page_allocate(0) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
- *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))) = (uint64_t)mmu_page_allocate(0) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+ *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+ *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
 }
 
 void mmu_user_task_set_pmd(struct user_space_mm_struct * mm_struct)
