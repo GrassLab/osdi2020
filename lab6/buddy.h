@@ -17,8 +17,9 @@ struct buddy_page_node_struct
 
 /* 14 * sizeof(struct buddy_page_pa_node_struct) = 1008 < 1024(1KB */
 #define BUDDY_PAGE_PA_NODE_STRUCT_LENGTH 14
-/* 512 / 64bit = 8 */
-#define BUDDY_BIT_ARRAY_LENGTH 8
+/* 512 / 32bit = 16 */
+/* choose 32 bit because __builtin_ffsll is bugged */
+#define BUDDY_BIT_ARRAY_LENGTH 16
 struct buddy_page_pa_node_struct
 {
   /* struct buddy_page_node_struct * is 8byte, 4KB = 512 * 8byte */

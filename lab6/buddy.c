@@ -50,7 +50,7 @@ struct buddy_page_node_struct * buddy_node_allocate(void)
     }
     for(bit_array_idx = 0; bit_array_idx < BUDDY_BIT_ARRAY_LENGTH; ++bit_array_idx)
     {
-      bit_array_bit = __builtin_ffsll((int64_t)~(buddy_node_page_list[node_page_list_idx].used_bit_array[bit_array_idx]));
+      bit_array_bit = __builtin_ffsl((int32_t)~(buddy_node_page_list[node_page_list_idx].used_bit_array[bit_array_idx]));
       if(bit_array_bit != 0)
       {
         /* for a 64bit * 8 array, unset bit means the space is not occupied, set if occupied */
