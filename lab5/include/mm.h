@@ -35,19 +35,18 @@
 
 #define BOOT_PTE_DEVICE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) )
 #define BOOT_PTE_NORMAL_ATTR (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) )
-#define PT_DESC_AP_PRIVI_RW           (0b01 << 6)// Access permission. el0 cannot access,  el1,2,3 can read, write
-#define PT_DESC_AP_PRIVI_RW           (0b00 << 6)// Access permission.
+#define PT_DESC_AP_RW           (0b00 << 6)// Access permission.
 
 #define PT_DESC_PXN                   (0b1 << 53)// Privileged eXecute Never 
 #define PT_DESC_UXN                   (0b1 << 54)// Uprivileged eXecute Never
 #define PT_DESC_AF                    (0b1 << 10)// Access flag.
-#define PT_DESC_TO_BLOCK              0b01       // This descriptor is valid and store an address to block.
+#define PT_DESC_TO_BLOCK              0b01      // This descriptor is valid and store an address to block.
 
-#define PT_PMD_DEV_LOWER_ATTR         (PT_DESC_AF |  (MAIR_IDX_DEVICE_nGnRnE << 2) | PT_DESC_AP_PRIVI_RW)
-#define PT_PMD_NOR_LOWER_ATTR         (PT_DESC_AF |  (MAIR_IDX_NORMAL_NOCACHE << 2) | PT_DESC_AP_PRIVI_RW)
+#define PT_PMD_DEV_LOWER_ATTR         (PT_DESC_AF |  (MAIR_IDX_DEVICE_nGnRnE << 2) )
+#define PT_PMD_NOR_LOWER_ATTR         (PT_DESC_AF |  (MAIR_IDX_NORMAL_NOCACHE << 2) )
 #define PT_PMD_DEV_UPPER_ATTR         (PT_DESC_UXN | PT_DESC_PXN)
 #define PT_PMD_NOR_UPPER_ATTR         (0x0)
-#define PT_PMD_DEV_ATTR               (PT_PMD_DEV_UPPER_ATTR | PT_PMD_DEV_LOWER_ATTR | PT_DESC_TO_BLOCK)
+#define PT_PMD_DEV_ATTR               (PT_PMD_DEV_LOWER_ATTR | PT_DESC_TO_BLOCK)
 #define PT_PMD_NOR_ATTR               (PT_PMD_NOR_UPPER_ATTR | PT_PMD_NOR_LOWER_ATTR | PT_DESC_TO_BLOCK)
 
 

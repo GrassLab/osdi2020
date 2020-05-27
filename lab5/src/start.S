@@ -78,6 +78,10 @@ virt_mem_init:
     orr     x7, x2, x7          // combine the physical address of next level page with attribute(PMD).
     str     x7, [x1]            // setup 1st PUD entry(pointer to PMD)
 
+	ldr     x7, =PT_PMD_DEV_ATTR
+    orr     x7, x2, x7          // combine the physical address of next level page with attribute(PMD).
+    str     x7, [x1, #8]            // setup 2nd PUD entry(pointer to PMD) for core timer interrupt CORE0_TIMER_IRQ_CTRL
+
     ldr     x7, =PT_PMD_NOR_ATTR
     mov     x6, xzr               // PMD idx conter 0,1,2,3...
 nor_pmd:                          // 0x000 00000 to 0x3ef fffff(0x2000 to 0x3f78)

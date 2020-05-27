@@ -154,6 +154,10 @@ void main()
     enable_interrupt_controller();
 	enable_irq();
     core_timer_enable();
+    while(1){
+        printf("gggg\n");
+        delay(100000000);
+    }
     // idle_task();
 
     // echo everything back
