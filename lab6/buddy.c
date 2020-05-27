@@ -1,6 +1,7 @@
 #include "buddy.h"
 #include "meta_macro.h"
 #include "string_util.h"
+#include "uart.h"
 
 static struct buddy_page_node_struct * buddy_table_list[BUDDY_TABLE_LIST_LENGTH];
 static struct buddy_page_pa_node_struct buddy_node_page_list[BUDDY_PAGE_PA_NODE_STRUCT_LENGTH];
@@ -25,11 +26,13 @@ void buddy_init(void)
 
   /* buddy_page_node_struct_page = STARTUP_PAGE_PA_BASE */
   /* struct buddy_page_node_struct * is 8byte, 4KB = 512 * 8byte */
-  buddy_insert_page_node(&(buddy_table_list[0]), (uint64_t *)(STARTUP_PAGE_PA_BASE + PAGE_4K));
-  for(int i = 1; i < BUDDY_TABLE_LIST_LENGTH; ++i)
+  buddy_insert_page_node(0, (uint64_t *)(STARTUP_PAGE_PA_BASE + PAGE_4K));
+  for(unsigned i = 1; i < BUDDY_TABLE_LIST_LENGTH; ++i)
   {
-    buddy_insert_page_node(&(buddy_table_list[i]), (uint64_t *)(STARTUP_PAGE_PA_BASE + PAGE_4K * (1uLL << i)));
+    buddy_insert_page_node(i, (uint64_t *)(STARTUP_PAGE_PA_BASE + PAGE_4K * (1uLL << i)));
   }
+  uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Startup page table transfer complete\n");
+  uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Init complete\n");
   return;
 }
 
@@ -81,16 +84,16 @@ struct buddy_page_node_struct * buddy_node_allocate(void)
 }
 
 /* insert node into buddy_table */
-void buddy_insert_page_node(struct buddy_page_node_struct ** list_head, uint64_t * va)
+void buddy_insert_page_node(unsigned buddy_table_list_block_size, uint64_t * va)
 {
   struct buddy_page_node_struct * new_node = buddy_node_allocate();
 
   new_node -> va = va;
 
   /* Insert new node into list */
-  if(*list_head == 0x0)
+  if(buddy_table_list[buddy_table_list_block_size] == 0x0)
   {
-    *list_head = new_node;
+    buddy_table_list[buddy_table_list_block_size] = new_node;
     new_node -> next_ptr = 0x0;
   }
   /* TODO: insert if list_head is not null */

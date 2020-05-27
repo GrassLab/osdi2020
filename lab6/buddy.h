@@ -29,7 +29,7 @@ struct buddy_page_pa_node_struct
 
 void buddy_init(void);
 struct buddy_page_node_struct * buddy_node_allocate(void);
-void buddy_insert_page_node(struct buddy_page_node_struct ** list_head, uint64_t * pa);
+void buddy_insert_page_node(unsigned buddy_table_list_block_size, uint64_t * va);
 
 #endif
 
