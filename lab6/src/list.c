@@ -37,15 +37,6 @@ struct Pair remove_node(struct Node **head) {
   return (struct Pair){};
 }
 
-struct List *list_at(struct List *ListHead, int index) {
-  struct List *current = ListHead;
-  while (current != 0 && index-- > 0) {
-    /* move to next */
-    current = current->list_next;
-  }
-  return current;
-}
-
 void show_nodes(struct Node *head) {
   struct Node *cur = head;
   while (cur != 0) {

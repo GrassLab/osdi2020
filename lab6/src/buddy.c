@@ -83,7 +83,7 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
   }
 
   if (i == self->len) {
-    printf("[Error:Alloc] failed to allocate memory");
+    println("[Error:Alloc] failed to allocate memory");
     return (struct Pair){};
   }
 
@@ -104,6 +104,8 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
 
     insert_node(arr, p2);
     insert_node(arr, p1);
+
+    /* Buddy.show(self);  */
 
     temp = remove_node(arr);
   }

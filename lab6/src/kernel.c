@@ -106,9 +106,10 @@ void kernel_main() {
     Buddy.show(bd);
   }
 
+
   /* { */
-  /*   /\* allocate 32 *\/ */
-  /*   struct Pair p = Buddy.alloc(bd, 32); */
+  /*   /\* allocate 56 *\/ */
+  /*   struct Pair p = Buddy.alloc(bd, 56); */
   /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
   /*          p.ub >> 12); */
   /*   Buddy.show(bd); */
