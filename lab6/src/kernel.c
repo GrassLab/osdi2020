@@ -22,7 +22,7 @@ void kernel_process() {
 
   printf("Hello Buddy");
 
-  struct buddy *bd = Buddy.new(128);
+  struct buddy *bd = Buddy.new(128, LOW_MEMORY + VA_START);
   if (!bd) {
     printf("erorr while constructing the buddy system");
     return;
@@ -85,6 +85,9 @@ void zombie_reaper() {
 void kernel_main() {
   uart_init();
   init_printf(NULL, putc);
+
+  println("LOW memory: %x", LOW_MEMORY);
+  println("HIGH memory: %x", HIGH_MEMORY);
 
   sys_core_timer_enable();
 
