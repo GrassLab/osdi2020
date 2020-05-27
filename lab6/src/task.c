@@ -9,19 +9,6 @@
 #include "syscall.h"
 
 #define Task_pt_regs(tsk) ((struct pt_regs*)(tsk->mm.kernel_pages[0] + THREAD_SIZE - sizeof(struct pt_regs)))
-//#define current get_current();
-//extern Task *get_current();
-
-//char kstack_pool[TASK_SIZE][STACK_SIZE];
-//char ustack_pool[TASK_SIZE][STACK_SIZE];
-
-//static Task init_task = INIT_TASK;
-//Task task_pool[TASK_SIZE] = {
-//  [0 ... TASK_SIZE - 1] = {
-//    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-//    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none, {0,}
-//  }
-//};
 
 Task init_task = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -67,11 +54,8 @@ Task *find_task(unsigned long pid){
 }
 
 #define THREAD_SIZE 4096
-void *task_pt_regs(Task *tsk) {
-  return (void *)(tsk + THREAD_SIZE - sizeof(struct pt_regs));
-}
 
-void *ya_task_pt_regs(Task *tsk) {
+void *task_pt_regs(Task *tsk) {
   unsigned long p = ((unsigned long)tsk) + THREAD_SIZE - sizeof(struct pt_regs);
   return (void*)p;
 }
@@ -122,38 +106,24 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
   }
   else{ // null fptr means fork
-    //unsigned long kstack = allocate_kernel_page();
-    //p->mm.kernel_pages[0] = kstack;
-    //p->mm.kernel_pages_count = 1;
-
-    /* TODO copy user stack */
-    //unsigned long ustack = allocate_kernel_page();
-    //p->mm.user_pages[0] = ustack;
-    //p->mm.user_pages_count = 1;
 
     unsigned long ksp_off = current_task->cpu_ctx.sp
       - ((unsigned long)current_task);
-    //- (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
 
     p->cpu_ctx.sp = ksp_off + kp;
 
     unsigned long kfp_off = current_task->cpu_ctx.fp
       - ((unsigned long)current_task);
-    //- (unsigned long)kstack_pool[current_task->pid % TASK_SIZE];
     p->cpu_ctx.fp = kfp_off  + kp;
 
     /*
        p->cpu_ctx.x19 = current_task->cpu_ctx.x19;
        p->cpu_ctx.x20 = current_task->cpu_ctx.x20;
        */
+
     strncpy((void*)(kp + sizeof(Task)),
         (void*)(((unsigned long)current_task) + sizeof(Task)),
-        STACK_SIZE - sizeof(Task) - sizeof(struct pt_regs));
-
-    /* TODO copy user stack */
-    //strncpy(ustack_pool[p->pid % TASK_SIZE],
-    //    ustack_pool[current_task->pid % TASK_SIZE],
-    //    STACK_SIZE);
+        STACK_SIZE - sizeof(Task));
 
     copy_virt_memory(p);
 
@@ -298,7 +268,7 @@ void kernel_process(){
 
 int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc){
 
-  struct pt_regs *regs = ya_task_pt_regs(current_task);
+  struct pt_regs *regs = task_pt_regs(current_task);
   memzero((unsigned long)regs, sizeof(struct pt_regs));
 
   regs->pc = pc;

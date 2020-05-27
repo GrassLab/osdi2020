@@ -30,6 +30,8 @@ int main(void) {
   uart_init();
   //lfb_init();
   //lfb_showpicture();
+  if((unsigned long)&_kend >= LOW_MEMORY)
+    puts("[ALERT]LOW_MEMORY is not \"low\" enough, it will overlap with kernel");
 
 #ifdef TEST
   puts("");
@@ -56,10 +58,14 @@ int main(void) {
 #if !defined(WITHOUT_LOADER) && !defined(NO_RELOC_SELF)
     printf("   kernel segment: 0x%x - 0x%x" NEWLINE NEWLINE, &_kbeg, &_kend);
 #endif
-    mark_reserved_pages((unsigned long)&_kend);
 
     println("UART TYPE: ", UART_TYPE);
 
+
+    printf("LOW_MEM 0x%x" NEWLINE, LOW_MEMORY);
+
+    zone_init(buddy_zone);
+    mark_reserved_pages((unsigned long)&_kend);
   //  if (get_board_revision())
   //    printf("Board revision: %x" NEWLINE, mbox[5]);
   //  if (get_arm_memaddr())

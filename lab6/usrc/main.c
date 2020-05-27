@@ -53,6 +53,16 @@ void test_demand_paging(){
   println(NEWLINE "pass the test, demand paging works");
 }
 
+void test_mmaps(){ // test multiple mmaps
+  //if(fork() == 0) {
+    for(int i = 0; i < 10; ++i){
+        printf("[proc] (%d / 10)" NEWLINE, i);
+        mmap(NULL, 4096, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, -1, 0);
+    }
+    printf("[done] task id is [%d]" NEWLINE, call_sys_task_id());
+  //}
+}
+
 int main(){
   //test_command1();
   //test_command2();
@@ -62,9 +72,9 @@ int main(){
   //write_beyond_boundary();
   //wrong_permission();
   //test_stack_overflow();
-  //mmaps();
+  //test_mmaps();
   //mmap_unalign();
   //write_text();
-  shloop();
+  if(fork()) shloop();
   return 0;
 }

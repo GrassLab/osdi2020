@@ -48,6 +48,7 @@ define__print_as_number_types();
 
 #define println(...) print(__VA_ARGS__, NEWLINE)
 #define puts println
+#define printfmt(fmt, ...) printf(fmt NEWLINE, __VA_ARGS__)
 
 int expect(char *s);
 unsigned long long get_nature(char *, int, int);

@@ -65,6 +65,6 @@ int main(){
   //mmaps();
   //mmap_unalign();
   //write_text();
-  shloop();
+  if(fork()) shloop();
   return 0;
 }

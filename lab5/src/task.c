@@ -68,10 +68,6 @@ Task *find_task(unsigned long pid){
 
 #define THREAD_SIZE 4096
 void *task_pt_regs(Task *tsk) {
-  return (void *)(tsk + THREAD_SIZE - sizeof(struct pt_regs));
-}
-
-void *ya_task_pt_regs(Task *tsk) {
   unsigned long p = ((unsigned long)tsk) + THREAD_SIZE - sizeof(struct pt_regs);
   return (void*)p;
 }
@@ -148,7 +144,7 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
        */
     strncpy((void*)(kp + sizeof(Task)),
         (void*)(((unsigned long)current_task) + sizeof(Task)),
-        STACK_SIZE - sizeof(Task) - sizeof(struct pt_regs));
+        STACK_SIZE - sizeof(Task));
 
     /* TODO copy user stack */
     //strncpy(ustack_pool[p->pid % TASK_SIZE],
@@ -298,7 +294,7 @@ void kernel_process(){
 
 int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc){
 
-  struct pt_regs *regs = ya_task_pt_regs(current_task);
+  struct pt_regs *regs = task_pt_regs(current_task);
   memzero((unsigned long)regs, sizeof(struct pt_regs));
 
   regs->pc = pc;

@@ -40,7 +40,7 @@ struct pt_regs {
 	unsigned long pstate;
 };
 
-#define TASK_BUFFER_SIZE 1024
+#define TASK_BUFFER_SIZE 16
 #define RESCHED 0x1
 #define SIGKILL 0x1
 

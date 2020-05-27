@@ -22,15 +22,12 @@
 #define LOW_MEMORY    (2 * SECTION_SIZE)
 #define HIGH_MEMORY   DEVICE_BASE
 #define PAGING_MEMORY (HIGH_MEMORY - LOW_MEMORY)
-#define PAGING_PAGES 	(PAGING_MEMORY/PAGE_SIZE)
 
 /* refer */
 
 #define PG_DIR_SIZE			(3 * PAGE_SIZE)
 
 #define PHYS_MEMORY_SIZE 		0x40000000
-//#define PHYS_MEMORY_SIZE    0x41000000
-//#define PHYS_MEMORY_SIZE 		0x80000000
 
 #define VA_START  0xffff000000000000
 #define PAGE_MASK 0xfffffffffffff000
@@ -49,6 +46,7 @@ typedef struct page_tag {
     used,
     reserved
   } status;
+  unsigned order;
 } Page;
 
 unsigned long get_free_page();
@@ -75,6 +73,36 @@ void *mmap(void* addr, unsigned long len,
 #define USER_MEM_LIMIT (4 << 20)
 /* 16 kb limit for user stack  */
 #define USER_STK_LIMIT (16 << 10)
+
+// buddy system
+#define MAX_ORDER 10
+
+typedef struct cdr_tag {
+  unsigned long val;
+  struct cdr_tag *cdr;
+} CdrStr, *Cdr;
+
+struct free_area {
+  Cdr                free_list;
+  unsigned long      nr_free;
+};
+
+typedef struct zone_tag {
+  /* free areas of differents sizes */
+  struct free_area        free_area[MAX_ORDER];
+} ZoneStr, *Zone;
+
+extern Zone const buddy_zone;
+
+void zone_init(Zone);
+// all page struct needed is about 2mb
+// all physical can allocate is 503 * 2mb (0x400000)
+unsigned long zone_get_free_pages(Zone zone, int order);
+void zone_free_pages(Zone zone, unsigned long addr);
+
+void zone_show(Zone zone);
+
+#define addr2pgidx(addr) ((addr - ALOC_BEG) / PAGE_SIZE)
 #endif
 
 #endif

@@ -36,8 +36,8 @@
 #include "raspi.h"
 #endif
 
-unsigned int width, height, pitch, isrgb; /* dimensions and channel order */
-unsigned char *lfb;                       /* raw frame buffer address */
+unsigned int width = 0, height = 0, pitch = 0, isrgb = 0; /* dimensions and channel order */
+unsigned char *lfb = 0;                       /* raw frame buffer address */
 
 /**
  * Set screen resolution to 1024x768
