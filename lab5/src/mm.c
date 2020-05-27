@@ -110,13 +110,16 @@ void map_page(struct task_struct *task, unsigned long va, unsigned long page) {
   /* construct table for PUD PMD PTE */
   unsigned long parent_table = pgd;
   unsigned long new_table;
+
+  unsigned long shift = PGD_SHIFT;
   for (int i = 0; i < 3; ++i) {
     unsigned long next = map_table((unsigned long *)(parent_table + VA_START),
-                                   PGD_SHIFT, va, &new_table);
+                                   shift, va, &new_table);
     if (new_table) {
       task->mm.kernel_pages[task->mm.kernel_pages_count++] = next;
     }
     parent_table = next;
+    shift -= TABLE_SHIFT;
   }
 
   map_table_entry((unsigned long *)(parent_table + VA_START), va, page);
@@ -141,6 +144,10 @@ int copy_virt_memory(struct task_struct *dst) {
 }
 
 int do_mem_abort(unsigned long addr, unsigned long esr) {
+  /* println("[mem abort] Segmentation fault @ 0x%X kill the process", addr); */
+  /* exit_process(); */
+  /* return 0; */
+
   unsigned long dfs = (esr & 0b111111); /* 0x3F */
 
   if ((dfs & 0b0101) == 0b101) {
