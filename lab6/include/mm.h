@@ -38,6 +38,9 @@
 
 #ifndef __ASSEMBLER__
 
+
+
+
 #include "task.h"
 
 typedef struct page_tag {
@@ -74,7 +77,7 @@ void *mmap(void* addr, unsigned long len,
 /* 16 kb limit for user stack  */
 #define USER_STK_LIMIT (16 << 10)
 
-// buddy system
+/* buddy system */
 #define MAX_ORDER 10
 
 typedef struct cdr_tag {
@@ -95,14 +98,22 @@ typedef struct zone_tag {
 extern Zone const buddy_zone;
 
 void zone_init(Zone);
-// all page struct needed is about 2mb
-// all physical can allocate is 503 * 2mb (0x400000)
 unsigned long zone_get_free_pages(Zone zone, int order);
 void zone_free_pages(Zone zone, unsigned long addr);
 
-void zone_show(Zone zone);
+void zone_show(Zone zone, unsigned long cnt);
 
 #define addr2pgidx(addr) ((addr - ALOC_BEG) / PAGE_SIZE)
+
+#define enable_buddy_log 1
+
+#if enable_buddy_log
+#define buddy_log(...) printfmt(__VA_ARGS__)
+#define buddy_log_graph(zone) zone_show(zone, 3)
+#else
+#define buddy_log(...) ;
+#define buddy_log_graph(zone) ;
 #endif
 
+#endif /* __ASSEMBLER__ */
 #endif

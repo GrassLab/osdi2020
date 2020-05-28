@@ -296,6 +296,8 @@ void *mmap(void* addr, unsigned long len,
   return (void*)mmap_val;
 }
 
+/* buddy system below */
+
 void init_pages(){
 #if zonealoc
   page_number = (HIGH_MEMORY - LOW_MEMORY) / (PAGE_SIZE);
@@ -349,12 +351,16 @@ void zone_init(Zone zone){
     size = size % (1 << order);
     order--;
   }
+  buddy_log("");
+  buddy_log("inited buddy graph");
+  buddy_log_graph(buddy_zone);
+  buddy_log("");
 }
 
-void zone_show(Zone zone){
+void zone_show(Zone zone, unsigned long limit){
   for(int ord = 0; ord < MAX_ORDER; ord++){
     Cdr b = zone->free_area[ord].free_list;
-    unsigned long nr = zone->free_area[ord].nr_free, cnt = 5;
+    unsigned long nr = zone->free_area[ord].nr_free, cnt = limit;
     printfmt("order [%d] %d items", ord, nr);
     while(b && cnt){
       printfmt("  %s── %x to %x", b->cdr ? "├" : "└",
@@ -368,9 +374,11 @@ void zone_show(Zone zone){
 }
 
 unsigned long zone_get_free_pages(Zone zone, int order){
+
   int ord = order;
   while(ord < MAX_ORDER && !zone->free_area[ord].free_list) ord++;
-  if(ord == MAX_ORDER) return 0;
+
+  if(ord == MAX_ORDER) goto buddy_allocate_failed;
 
   // partition to samller size
   while(ord > order){
@@ -384,23 +392,33 @@ unsigned long zone_get_free_pages(Zone zone, int order){
     zone->free_area[ord - 1].nr_free += 2;
     ord--;
   }
+
+  if(!zone->free_area[ord].free_list)
+    goto buddy_allocate_failed;
+
   // init pages
   Cdr block = zone->free_area[ord].free_list;
   zone->free_area[ord].free_list = block->cdr;
   zone->free_area[ord].nr_free -= 1;
   unsigned base = addr2pgidx(block->val);
 
-  if(base > page_number){
-    puts("wrong base");
-    while(1);
-  }
   for (int i = 0; i < (1 << order); i++){
     mpages[base + i].status = used;
     unsigned long page = ALOC_BEG + (base + i) * PAGE_SIZE;
     memzero(page, PAGE_SIZE);
   }
   mpages[base].order = order;
+  buddy_log("");
+  buddy_log("allocate address 0x%x", ALOC_BEG + base * PAGE_SIZE);
+  buddy_log_graph(buddy_zone);
+  buddy_log("");
   return ALOC_BEG - VA_START + base * PAGE_SIZE;
+
+buddy_allocate_failed:
+  buddy_log("");
+  buddy_log("buddy system allocate failed");
+  buddy_log("");
+  return 0;
 }
 
 void zone_merge_buddy(Zone zone, unsigned long addr, unsigned order){
@@ -421,6 +439,7 @@ void zone_merge_buddy(Zone zone, unsigned long addr, unsigned order){
   while(*iter){
     if((*iter)->val == buddy_addr){
       *iter = (*iter)->cdr;
+      buddy_log("buddy found, merge order %d address %x", order + 1, aligned_addr);
       return zone_merge_buddy(zone, aligned_addr, order + 1);
     }
     iter = &((*iter)->cdr);
@@ -436,5 +455,9 @@ void zone_free_pages(Zone zone, unsigned long addr){
   unsigned base = addr2pgidx(addr);
   for(int i = 0; i < (1 << mpages[base].order); i++)
     mpages[base + i].status = empty;
+
+  buddy_log("free address 0x%x", addr);
+  buddy_log("merge order %d address 0x%x", mpages[base].order, addr);
   zone_merge_buddy(zone, addr, mpages[base].order);
+  buddy_log("");
 }
