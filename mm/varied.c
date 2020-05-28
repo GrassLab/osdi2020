@@ -15,8 +15,7 @@ varied_init ()
       if (varied_info.tokens[i] == 0)
 	return 1;
     }
-  INIT_LIST_HEAD (&varied_info.buddy_head);
-  INIT_LIST_HEAD (&varied_info.fixed_head);
+  INIT_LIST_HEAD (&varied_info.chunk_head);
   return 0;
 }
 
@@ -24,7 +23,6 @@ void *
 varied_malloc (size_t size)
 {
   size_t token_ind;
-  struct list_head *target_head;
   struct allocated_node *new_node;
   void *addr;
 
@@ -40,7 +38,6 @@ varied_malloc (size_t size)
   if (size > VARIED_MAX)
     {
       addr = buddy_malloc (size);
-      target_head = &varied_info.buddy_head;
       new_node->type = buddy;
     }
   else
@@ -49,14 +46,13 @@ varied_malloc (size_t size)
       if (size % VARIED_MIN)
 	++token_ind;
       addr = fixed_malloc (varied_info.tokens[token_ind]);
-      target_head = &varied_info.fixed_head;
       new_node->type = fixed;
     }
   // Record node
   if (addr)
     {
       new_node->addr = addr;
-      list_add (&new_node->list, target_head);
+      list_add (&new_node->list, &varied_info.chunk_head);
     }
   else
     {

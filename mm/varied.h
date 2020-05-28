@@ -25,8 +25,7 @@ struct varied_struct
 {
   size_t node_token;
   size_t tokens[VARIED_TOKEN_LEN];
-  struct list_head buddy_head;
-  struct list_head fixed_head;
+  struct list_head chunk_head;
 };
 
 void *varied_malloc (size_t size);
