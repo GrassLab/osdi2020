@@ -14,11 +14,7 @@ struct allocated_node
 {
   void *addr;
   struct list_head list;
-  enum allocator_type
-  {
-    buddy,
-    fixed
-  } type;
+  void (*free) (void *addr);
 };
 
 struct varied_struct
@@ -29,4 +25,5 @@ struct varied_struct
 };
 
 void *varied_malloc (size_t size);
+void varied_free (void *addr);
 #endif /* ifndef VARIED */

@@ -38,7 +38,7 @@ varied_malloc (size_t size)
   if (size > VARIED_MAX)
     {
       addr = buddy_malloc (size);
-      new_node->type = buddy;
+      new_node->free = buddy_free;
     }
   else
     {
@@ -46,7 +46,7 @@ varied_malloc (size_t size)
       if (size % VARIED_MIN)
 	++token_ind;
       addr = fixed_malloc (varied_info.tokens[token_ind]);
-      new_node->type = fixed;
+      new_node->free = fixed_free;
     }
   // Record node
   if (addr)
@@ -59,4 +59,22 @@ varied_malloc (size_t size)
       fixed_free (new_node);
     }
   return addr;
+}
+
+void
+varied_free (void *addr)
+{
+  struct allocated_node *node;
+  list_for_each_entry (node, &varied_info.chunk_head, list)
+  {
+    if (node->addr == addr)
+      {
+	// free target
+	node->free (addr);
+	// free node
+	list_del (&node->list);
+	fixed_free (node);
+	return;
+      }
+  }
 }
