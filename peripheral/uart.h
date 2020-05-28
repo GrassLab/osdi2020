@@ -37,13 +37,6 @@
 #define QUEUE_GET(q) (q.buf[q.head])
 #define QUEUE_SET(q, val) (q.buf[q.tail] = val)
 
-struct uart_buf
-{
-  int head;
-  int tail;
-  char buf[UARTBUF_SIZE];
-} read_buf, write_buf;
-
 void uart_init ();
 void uart_send (char c);
 void uart_puts (char *s);
