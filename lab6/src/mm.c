@@ -15,7 +15,7 @@ extern Task *current_task;
 unsigned page_number = PAGING_PAGES;
 unsigned long low_memory = 0;
 
-#define zonealoc 0
+#define zonealoc 1
 
 #if zonealoc
 Page *mpages;
@@ -312,10 +312,10 @@ void init_pages(){
   page_number = (HIGH_MEMORY - low_memory) / (PAGE_SIZE);
   printf("final Pages[%d]" NEWLINE, page_number);
   /* VA_START is imporant */
-  low_memory += VA_START;
+  low_memory |= VA_START;
   printf("new aligned low 0x%x" NEWLINE, low_memory);
   /* VA_START is imporant */
-  mpages = (Page*)(LOW_MEMORY + VA_START);
+  mpages = (Page*)(LOW_MEMORY | VA_START);
   for(int i = 0; i < page_number; i++)
     mpages[i].status = empty, mpages[i].order = 0;
 #endif
@@ -388,7 +388,8 @@ unsigned long zone_get_free_pages(Zone zone, int order){
   Cdr block = zone->free_area[ord].free_list;
   zone->free_area[ord].free_list = block->cdr;
   zone->free_area[ord].nr_free -= 1;
-  unsigned long base = (block->val - ALOC_BEG) / (PAGE_SIZE);
+  unsigned base = addr2pgidx(block->val);
+
   if(base > page_number){
     puts("wrong base");
     while(1);
@@ -430,9 +431,10 @@ void zone_merge_buddy(Zone zone, unsigned long addr, unsigned order){
 }
 
 void zone_free_pages(Zone zone, unsigned long addr){
-  return;
-  unsigned long base = addr2pgidx(addr);
+  /* important */
+  addr |= VA_START;
+  unsigned base = addr2pgidx(addr);
   for(int i = 0; i < (1 << mpages[base].order); i++)
     mpages[base + i].status = empty;
-  zone_merge_buddy(zone, base, mpages[base].order);
+  zone_merge_buddy(zone, addr, mpages[base].order);
 }

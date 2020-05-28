@@ -54,13 +54,11 @@ void test_demand_paging(){
 }
 
 void test_mmaps(){ // test multiple mmaps
-  //if(fork() == 0) {
-    for(int i = 0; i < 10; ++i){
-        printf("[proc] (%d / 10)" NEWLINE, i);
-        mmap(NULL, 4096, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, -1, 0);
-    }
-    printf("[done] task id is [%d]" NEWLINE, call_sys_task_id());
-  //}
+  for(int i = 0; i < 10; ++i){
+      printf("[proc] (%d / 10)" NEWLINE, i);
+      mmap(NULL, 4096, PROT_WRITE|PROT_READ, MAP_ANONYMOUS, -1, 0);
+  }
+  printf("[done] task id is [%d]" NEWLINE, call_sys_task_id());
 }
 
 int main(){
@@ -75,6 +73,6 @@ int main(){
   //test_mmaps();
   //mmap_unalign();
   //write_text();
-  if(fork()) shloop();
+  //test_mmaps();
   return 0;
 }
