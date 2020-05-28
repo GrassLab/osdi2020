@@ -12,6 +12,7 @@
 #include "include/reboot.h"
 #include "include/exc.h"
 #include "include/kernel.h"
+#include "include/arm/sysreg.h"
 
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
@@ -72,6 +73,21 @@ void exception_handler(unsigned long type,unsigned long esr, \
 	uart_hex(( ((unsigned int)esr)<<7)>>7);
 
 	uart_send_string("\r\n");
+}
+
+unsigned long get_table(unsigned long *table, unsigned long shift, \
+                 unsigned long vir_addr) {
+ 
+         unsigned long index = vir_addr >> shift;
+         index = index & (PTRS_PER_TABLE - 1);
+   
+         return (table[index]>>12)<<12;
+}
+
+void clean_entry(unsigned long *pte, unsigned long vir_addr) {
+        unsigned long index = vir_addr >> 12;
+        index = index & (PTRS_PER_TABLE - 1);
+        pte[index] = 0; //making page fault happened
 }
 
 // Now I just use no more than 6 argument
@@ -210,22 +226,41 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 		}
 		case SYS_FREE:{
 			unsigned long vir_addr = (arg0>>12)<<12;
-			// note: we dont't clean vm_struct and page table now
-			// so there are some problem leave to be solve
-			// 1. Since page table not clean, even if user free A, 
-			// he can still access it because page table not
-			// clear, but if any one allocate that page, undefined behavior happened
+
+			// find the page entry of virtual address, clean up
+			unsigned long table = current->mm.pgd;
+			int shift = 39;
 			
-			// 2. Since vm_struct not clean, so user will get another virtual address
-			// for malloc, if the virtual address map to a previous allocate and free
-			// page, page fault won't happened. And this mean two different virtual 
-			// address will map to same physical address
+			for(int i=0;i<3;i++){
+				table = get_table((unsigned long *)(table+VA_START),shift,vir_addr); 
+				shift-=9;
+			}
+			clean_entry((unsigned long *)(table+VA_START),vir_addr);
+			set_pgd(current->mm.pgd); // after clean, setup pgd 
+			
+			// clean vm_struct
+			for(int i=0;i<current->mm.vm_area_count;i++){
+			
+				if(vir_addr >= current->mm.mmap[i].vm_start &&\
+					vir_addr < current->mm.mmap[i].vm_end){
+				
+					printf("clean 0x%x\r\n",current->mm.mmap[i].vm_start);	
+					// moving array
+					for(int n=i;n<current->mm.vm_area_count-1;n++){
+						current->mm.mmap[n] = current->mm.mmap[n+1];
+					}
+					current->mm.vm_area_count--;
+					
+					break;
+				}
+			}
 
 			//free using page
 			for(int i=0;i<current->mm.user_pages_count;i++){
 				 if(vir_addr == current->mm.user_pages[i].vir_addr){
 				 	free_page(current->mm.user_pages[i].phy_addr);
-				 	return 0;
+				 	current->mm.user_pages_count--;
+					return 0;
 				 }
 			} 
 			
@@ -235,4 +270,5 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 	// Not here if no bug happened!
 	return -1;
 }
+
 
