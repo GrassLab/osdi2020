@@ -18,3 +18,9 @@ Thanks for all these reference. Without the help of these source code, I couldn'
 [Booting Your Own Kernel on Raspberry Pi via Uart](https://blog.nicolasmesa.co/posts/2019/08/booting-your-own-kernel-on-raspberry-pi-via-uart/)
 
 [Raspbootcom---Python](https://github.com/Paxoo/Raspbootcom---Python)
+
+### Buddy allocator/ Object allocator
+[tzuCarlos/RaspberryPi](https://github.com/tzuCarlos/RaspberryPi)
+
+[jobtalle/pool](https://github.com/jobtalle/pool)
+
