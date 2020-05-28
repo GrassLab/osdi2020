@@ -19,7 +19,7 @@ Thanks for all these reference. Without the help of these source code, I couldn'
 
 [Raspbootcom---Python](https://github.com/Paxoo/Raspbootcom---Python)
 
-### Buddy allocator/ Object allocator
+### Buddy allocator/ Object allocator (Lab6)
 [tzuCarlos/RaspberryPi](https://github.com/tzuCarlos/RaspberryPi)
 
 [jobtalle/pool](https://github.com/jobtalle/pool)
