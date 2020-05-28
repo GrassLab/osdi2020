@@ -44,4 +44,8 @@ int sys_read(unsigned long buff_addr, int size) {
 	return i;
 }
 
-void * const sys_call_table[] = {sys_write, sys_fork, sys_exit, sys_remain_page_num, sys_task_id, sys_read};
+void sys_print_buddy() {
+	print_all_buddy();
+}
+
+void * const sys_call_table[] = {sys_write, sys_fork, sys_exit, sys_remain_page_num, sys_task_id, sys_read, sys_print_buddy};

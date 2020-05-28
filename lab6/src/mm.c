@@ -1,9 +1,18 @@
 #include "mm.h"
 #include "arm/mmu.h"
 #include "printf.h"
+#define DEBUG 0
 #define phy_to_vir(page) page + VA_START
 #define pfn_to_phy(pfn) LOW_MEMORY + (pfn)*PAGE_SIZE
 #define pfn_to_vir(pfn) LOW_MEMORY + (pfn)*PAGE_SIZE + VA_START
+
+#define debug_print(fmt) \
+        do { if(DEBUG) printf(fmt);} while(0)
+#define debug_print_1(fmt, arg) \
+        do { if(DEBUG) printf(fmt, arg);} while(0)
+#define debug_print_2(fmt, arg, arg2) \
+        do { if(DEBUG) printf(fmt, arg, arg2);} while(0) 
+           
 static int ind = 1;
 static unsigned num_free_pages = PAGING_PAGES;
 struct free_area buddy_entry[MAX_ORDER];
@@ -127,6 +136,7 @@ struct block *alloc_block(int num_page) {
         div_block(alloc_order, order);
     }
     ret_block = pop_block(order, 1);
+    debug_print_1("allocate page pfn: %d\r\n", ret_block->pfn);
     //printf("allocate page pfn: %d\r\n", ret_block->pfn);
     //print_buddy_entry(order);
     return ret_block;
@@ -138,14 +148,21 @@ int compute_buddy_block(int pfn, int order) {
 
 void print_buddy_entry(int order) {
     struct  block *ptr = buddy_entry[order].head;
-    printf("--------\r\n");
+    debug_print_1("[order %d]:", order);
     while(ptr != 0) {
-        printf("%d ",ptr->pfn);
+        debug_print_1(" %d", ptr->pfn);
         ptr = ptr->next;
     }
-    printf("\r\n--------\r\n");
+    debug_print("\r\n");
     return;
 }
+
+void print_all_buddy() {
+    for(int i = 9; i >= 0; i--) {
+        print_buddy_entry(i);
+    }    
+}
+
 
 struct block *find_buddy_pfn(int order, int buddy_pfn) {
     struct  block *ptr = buddy_entry[order].head;
@@ -221,6 +238,13 @@ struct block *get_free_page()
 	return alloc;
 }
 
+struct block *get_free_pages(int num_pages)
+{
+    struct block *alloc = alloc_block(num_pages);
+    memzero(pfn_to_vir(alloc->pfn), num_pages * PAGE_SIZE);
+    return alloc;
+}
+
 struct block *allocate_kernel_page() 
 {
     struct block *alloc = get_free_page(); //TODO record
@@ -229,11 +253,11 @@ struct block *allocate_kernel_page()
     return alloc;
 }
 
-unsigned long allocate_user_page(struct task_struct *task, unsigned long va, unsigned long prot) {
-	struct block *alloc = get_free_page();
+
+unsigned long allocate_user_page(struct task_struct *task, unsigned long va, unsigned long prot, int num_pages) {
+	struct block *alloc = get_free_pages(num_pages);
 	map_page(task, va, alloc, prot);
-    //printf("allocate user page pfn: %d\r\n", alloc->pfn);
-    num_free_pages -= 1;
+    num_free_pages -= num_pages;
 	return pfn_to_vir(alloc->pfn);
 }
 
@@ -251,23 +275,28 @@ unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long
 	return table[index] & PAGE_MASK;
 }
 
-void map_page(struct task_struct *task, unsigned long va, struct block *alloc, unsigned long prot){
-    unsigned long page = pfn_to_phy(alloc->pfn);
-	unsigned long pgd;
-	if (!task->mm.pgd) {
-        struct block *alloc_t = allocate_kernel_page();
-		task->mm.pgd = pfn_to_phy(alloc_t->pfn); // allocate a page and return physical address
-		task->mm.kernel_pages[task->mm.kernel_pages_count++] = alloc_t;
-	}
-	pgd = task->mm.pgd;
-	unsigned long pud = map_table((unsigned long *)(phy_to_vir(pgd)), PGD_SHIFT, va, task);
-	unsigned long pmd = map_table((unsigned long *)(phy_to_vir(pud)), PUD_SHIFT, va, task);
-	unsigned long pte = map_table((unsigned long *)(phy_to_vir(pmd)), PMD_SHIFT, va, task);
-	map_table_entry((unsigned long *)(phy_to_vir(pte)), va, page, prot);
-    task->mm.user_va[task->mm.user_pages_count] = va;
-	task->mm.user_pages[task->mm.user_pages_count++] = alloc;
+void map_page(struct task_struct *task, unsigned long va, struct block *alloc, unsigned long prot) 
+{
+    int num_pages = alloc->page_nums;
+    unsigned long start_phy = pfn_to_phy(alloc->pfn);
+    for(int i = 0 ; i < num_pages ; i++) {
+        unsigned long virtual_addr = va + i * PAGE_SIZE;
+        unsigned long physical_addr = start_phy + i * PAGE_SIZE;
+        unsigned long pgd;
+        if(!task->mm.pgd) {
+            struct block *alloc_t = allocate_kernel_page();
+            task->mm.pgd = pfn_to_phy(alloc_t->pfn); // allocate a page and return physical address
+            task->mm.kernel_pages[task->mm.kernel_pages_count++] = alloc_t;
+        }
+        pgd = task->mm.pgd;
+        unsigned long pud = map_table((unsigned long *)(phy_to_vir(pgd)), PGD_SHIFT, virtual_addr, task);
+        unsigned long pmd = map_table((unsigned long *)(phy_to_vir(pud)), PUD_SHIFT, virtual_addr, task);
+	    unsigned long pte = map_table((unsigned long *)(phy_to_vir(pmd)), PMD_SHIFT, virtual_addr, task);
+        map_table_entry((unsigned long *)(phy_to_vir(pte)), virtual_addr, physical_addr, prot);
+        task->mm.user_va[task->mm.user_pages_count] = virtual_addr;
+        if(i == 0) task->mm.user_pages[task->mm.user_pages_count++] = alloc;
+    }
 }
-
 
 void map_table_entry(unsigned long *pte, unsigned long va, unsigned long pa, unsigned long flag) {
 	unsigned long index = va >> PAGE_SHIFT;
@@ -278,8 +307,8 @@ void map_table_entry(unsigned long *pte, unsigned long va, unsigned long pa, uns
 
 void free_user_page(struct task_struct *task) {
 	for (int i = 0 ; i < task->mm.user_pages_count ; i++) {
+        num_free_pages += task->mm.user_pages[i]->page_nums;
 		put_back_block(task->mm.user_pages[i]);
-		num_free_pages += 1;
 	}
     task->mm.user_pages_count = 0;
 	return;
@@ -287,8 +316,8 @@ void free_user_page(struct task_struct *task) {
 
 void free_kernel_page(struct task_struct *task) {
 	for (int i = 0 ; i < task->mm.kernel_pages_count ; i++) {
+        num_free_pages += task->mm.kernel_pages[i]->page_nums;
         put_back_block(task->mm.kernel_pages[i]);
-		num_free_pages += 1;
 	}
     task->mm.user_pages_count = 0;
 	return;
@@ -298,7 +327,8 @@ int copy_virt_memory(struct task_struct *dst) {
 	struct task_struct* src = current;
 	for (int i = 0; i < src->mm.user_pages_count; i++) {
         unsigned long virtual_addr = src->mm.user_va[i];
-		unsigned long kernel_va = allocate_user_page(dst, virtual_addr, MMU_PTE_FLAGS);
+        unsigned long num_pages    = src->mm.user_pages[i]->page_nums;
+		unsigned long kernel_va = allocate_user_page(dst, virtual_addr, MMU_PTE_FLAGS, num_pages);
 		if( kernel_va == 0) {
 			return -1;
 		}
@@ -320,7 +350,7 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 			return -1;
 		}
         else {
-            allocate_user_page(current, addr & PAGE_MASK, MMU_PTE_FLAGS);
+            allocate_user_page(current, addr & PAGE_MASK, MMU_PTE_FLAGS, 1);
         }
 		return 0;
 	}
