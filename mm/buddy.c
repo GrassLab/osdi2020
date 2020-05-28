@@ -210,11 +210,8 @@ buddy_realloc (void *addr, size_t size)
   if (size <= old_size)
     return addr;
   new = buddy_malloc (size);
-  if (new == 0)
-    {
-      printf ("%s\r\n", "buddy_realloc fail");
-      while (1);
-    }
+  if (new == NULL)
+    return NULL;
   memcpy (new, addr, old_size);
   buddy_free (addr);
   return new;
