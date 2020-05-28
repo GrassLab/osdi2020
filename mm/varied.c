@@ -1,3 +1,4 @@
+#include <string.h>
 #include "varied.h"
 
 static struct varied_struct varied_info;
@@ -48,6 +49,7 @@ varied_malloc (size_t size)
       addr = fixed_malloc (varied_info.tokens[token_ind]);
       new_node->free = fixed_free;
     }
+  new_node->request_size = size;
   // Record node
   if (addr)
     {
@@ -77,4 +79,30 @@ varied_free (void *addr)
 	return;
       }
   }
+}
+
+void *
+varied_realloc (void *addr, size_t size)
+{
+  struct allocated_node *node;
+  void *victim;
+  list_for_each_entry (node, &varied_info.chunk_head, list)
+  {
+    if (node->addr == addr)
+      {
+	// TODO: it's possible that new chunk size == old chunk size
+	// because we record unaligned request_size from user
+	if (size > node->request_size)
+	  {
+	    victim = varied_malloc (size);
+	    if (victim == NULL)
+	      return NULL;
+	    memcpy (victim, addr, node->request_size);
+	    node->free (addr);
+	    node->addr = victim;
+	  }
+	return node->addr;
+      }
+  }
+  return NULL;
 }

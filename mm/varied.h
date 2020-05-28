@@ -15,6 +15,7 @@ struct allocated_node
   void *addr;
   struct list_head list;
   void (*free) (void *addr);
+  size_t request_size;
 };
 
 struct varied_struct
@@ -25,5 +26,6 @@ struct varied_struct
 };
 
 void *varied_malloc (size_t size);
+void *varied_realloc (void *addr, size_t size);
 void varied_free (void *addr);
 #endif /* ifndef VARIED */
