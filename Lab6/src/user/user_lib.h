@@ -11,6 +11,7 @@
 #define MAP_FIXED 0
 #define MAP_ANONYMOUS 1
 
+
 int call_core_timer();
 void call_daif();
 int fork();
@@ -28,4 +29,11 @@ void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start,
 void wait();
 unsigned long malloc(unsigned long size);
 int free(unsigned long p);
+
+int allocator_register(unsigned long size);
+unsigned long allocator_alloc(int allocator_num);
+void allocator_free(int allocator_num,unsigned long ptr);
+void allocator_unregister(int allocator_num);
+
+
 #endif  

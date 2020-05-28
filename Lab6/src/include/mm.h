@@ -73,6 +73,8 @@ void memzero(unsigned long src, unsigned long n);
 
 void memcpy(void *dest, const void *src, unsigned long len);
 void free_page(unsigned long p);
+int free_user_page(unsigned long vir_addr);
+
 void dump_mem(void *src,unsigned long len);
 int page_fault_handler(unsigned long addr,unsigned long esr);
 int copy_virt_memory(struct task_struct *dst);

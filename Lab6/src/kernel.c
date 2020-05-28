@@ -128,31 +128,25 @@ void mytest1(){
 }
 
 void mytest2(){
-    pool pool_ptr;
+    int pool_num = allocator_register(0x100);
     unsigned long test_ptr1;
     unsigned long test_ptr2;
 
-    // init memory pool with given parameters 
-    pool_init(&pool_ptr, 0x100);
-
     // allocate memory from memory pool 
-    test_ptr1 = pool_alloc(&pool_ptr);
-    test_ptr2 = pool_alloc(&pool_ptr);
+    test_ptr1 = allocator_alloc(pool_num,KERNEL_ALLOC);
+    test_ptr2 = allocator_alloc(pool_num,KERNEL_ALLOC);
     printf("the return address 0x%x\r\n",test_ptr1);
     printf("the return address 0x%x\r\n",test_ptr2);
     
-    pool_free(&pool_ptr,test_ptr1);
-    test_ptr1 = pool_alloc(&pool_ptr);
+    allocator_free(pool_num,test_ptr1);
+    test_ptr1 = allocator_alloc(pool_num,KERNEL_ALLOC);
     printf("the return address 0x%x\r\n",test_ptr1);
     
     unsigned long test_ptr3;
-    test_ptr3 = pool_alloc(&pool_ptr);
+    test_ptr3 = allocator_alloc(pool_num,KERNEL_ALLOC);
     printf("the return address 0x%x\r\n",test_ptr3);
 
-    free_memory_pool(&pool_ptr);  
-    unsigned long p;
-    p = get_free_page(0);
-    printf("the return address 0x%x \r\n\r\n",p);
+    allocator_unregister(pool_num,KERNEL_ALLOC);
 }
 
 void mytest3(){
@@ -179,8 +173,9 @@ void kernel_main(void)
     enable_irq();        //clear PSTATE.DAIF
     core_timer_enable(); //enable core timer
     
+    allocator_init(); 
     //mytest1();
-    //mytest2();
+    mytest2();
     //mytest3();
     
 

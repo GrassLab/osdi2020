@@ -32,18 +32,44 @@ int check_string(char * str){
 	return 0;
 }
 
-void main()
-{
-	printf("Hello for user %d\r\n",get_taskid());
+void test1(){
 	int *m = (int *)malloc(sizeof(int)*10);	
 	m[12] = 5;
 	printf("m[12] = %d at 0x%x\r\n",m[12],m);
 	free((unsigned long)m);
 	
-	//`m = (int *)malloc(sizeof(int)*10);	
+	//m = (int *)malloc(sizeof(int)*10);	
 	m[12] = 5;
-	//printf("m[12] = %d at 0x%x\r\n",m[12],m);
-	
+}
+
+void test2(){
+	int pool_num = allocator_register(0x100);
+	printf("### pool num %d\r\n",pool_num);
+	unsigned long test_ptr1;
+	unsigned long test_ptr2;
+ 
+	// allocate memory from memory pool 
+	test_ptr1 = allocator_alloc(pool_num);
+	test_ptr2 = allocator_alloc(pool_num);
+	printf("the return address 0x%x\r\n",test_ptr1);
+	printf("the return address 0x%x\r\n",test_ptr2);
+
+	allocator_free(pool_num,test_ptr1);
+	test_ptr1 = allocator_alloc(pool_num);
+	printf("the return address 0x%x\r\n",test_ptr1);
+
+   	unsigned long test_ptr3;
+	test_ptr3 = allocator_alloc(pool_num);
+	printf("the return address 0x%x\r\n",test_ptr3);
+
+	allocator_unregister(pool_num);	
+}
+
+void main()
+{
+	printf("Hello for user %d\r\n",get_taskid());
+	test2();
+
 	char buffer[128];
 	while(1){	
 		printf(">>");

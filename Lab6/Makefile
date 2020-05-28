@@ -32,7 +32,7 @@ src/user/user.o: src/user/user.c
 src/user/user_lib.o: src/user/user_lib.S
 	$(ARMGNU)-gcc $(COPS) -g -c src/user/user_lib.S -o src/user/user_lib.o
 
-rd: src/user/user.o src/user/user_lib.o build/string_c.o
+rd: src/user/user.o src/user/user_lib.o build/string_c.o 
 	$(ARMGNU)-ld -T src/user/linker.ld -o user.elf src/user/user.o src/user/user_lib.o build/string_c.o 
 	$(ARMGNU)-objcopy user.elf -O binary user.img
 	$(ARMGNU)-ld -r -b binary user.img -o rd

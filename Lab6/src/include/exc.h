@@ -18,4 +18,9 @@
 #define SYS_WAIT 14
 #define SYS_MALLOC 15
 #define SYS_FREE 16
+#define SYS_OBJ_ALLOCATOR_INIT 17
+#define SYS_OBJ_ALLOC 18
+#define SYS_OBJ_FREE 19
+#define SYS_OBJ_ALLOCATOR_FREE 20
+
 #endif

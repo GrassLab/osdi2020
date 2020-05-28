@@ -3,6 +3,7 @@
 #include "include/arm/sysreg.h"
 #include "include/scheduler.h"
 #include "include/kernel.h"
+#include "include/utils.h"
 
 int remain_page = PAGE_ENTRY;
 
@@ -241,6 +242,69 @@ void free_page(unsigned long p){ //input should be physical address
 	put_pages_to_list(&page[pfn],page[pfn].order);	
 }
 
+/*************************************************************************/
+unsigned long get_table(unsigned long *table, unsigned long shift, \
+                 unsigned long vir_addr) {
+ 
+         unsigned long index = vir_addr >> shift;
+         index = index & (PTRS_PER_TABLE - 1);
+   
+         return (table[index]>>12)<<12;
+}
+
+void clean_entry(unsigned long *pte, unsigned long vir_addr) {
+        unsigned long index = vir_addr >> 12;
+        index = index & (PTRS_PER_TABLE - 1);
+        pte[index] = 0; //making page fault happened
+}
+
+// For user page, thingd become more complicated, you have to clean up 
+// 1. page entry of virtual address
+// 2. relative vm_struct
+// 3. physical page which the virtual page mapping
+int free_user_page(unsigned long vir_addr){
+	vir_addr = (vir_addr>>12)<<12;
+
+	// find the page entry of virtual address, clean up
+	unsigned long table = current->mm.pgd;
+	int shift = 39;
+			
+	for(int i=0;i<3;i++){
+		table = get_table((unsigned long *)(table+VA_START),shift,vir_addr); 
+		shift-=9;
+	}
+	
+	clean_entry((unsigned long *)(table+VA_START),vir_addr);
+	set_pgd(current->mm.pgd); // after clean, setup pgd 
+			
+	// clean vm_struct
+	for(int i=0;i<current->mm.vm_area_count;i++){	
+	
+		if(vir_addr >= current->mm.mmap[i].vm_start &&\
+			vir_addr < current->mm.mmap[i].vm_end){
+				
+			printf("clean 0x%x\r\n",current->mm.mmap[i].vm_start);	
+			// moving array
+			for(int n=i;n<current->mm.vm_area_count-1;n++){
+				current->mm.mmap[n] = current->mm.mmap[n+1];
+			}	
+			current->mm.vm_area_count--;		
+			break;
+		}
+	}
+
+	//free using page
+	for(int i=0;i<current->mm.user_pages_count;i++){
+			if(vir_addr == current->mm.user_pages[i].vir_addr){
+				free_page(current->mm.user_pages[i].phy_addr);
+				current->mm.user_pages_count--;
+				return 0;
+			 }
+	} 
+			
+	return -1;	      
+}
+/**********************************************************************************/
 void memcpy (void *dest, const void *src, unsigned long len)
 {
   	char *d = dest;
@@ -399,7 +463,8 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 				memcpy((void *)page, \
 					(void*)(vm_area.file_start +  vm_area.file_offset),\
 					    vm_area.vm_end - vm_area.vm_start);
-			}	
+			}
+
 			map_page(current, addr, page, page_attr);		
 			return 0;
 		}
@@ -482,7 +547,7 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 	vm_area->file_offset = 0;
 	
 	current->mm.vm_area_count++;
-		
+	
 	return (void *)vir_addr;
  }
 

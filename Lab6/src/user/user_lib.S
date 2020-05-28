@@ -22,6 +22,11 @@ _user_entry:
 .set SYS_WAIT,       14
 .set SYS_MALLOC,      15
 .set SYS_FREE,      16
+.set SYS_OBJ_ALLOCATOR_INIT, 17
+.set SYS_OBJ_ALLOC, 18
+.set SYS_OBJ_FREE, 19
+.set SYS_OBJ_ALLOCATOR_FREE, 20
+
 
 .global call_core_timer
 call_core_timer:
@@ -125,3 +130,28 @@ free:
 	mov x8, SYS_FREE
 	svc #0
 	ret
+
+.global allocator_register
+allocator_register:
+	mov x8, SYS_OBJ_ALLOCATOR_INIT
+	svc #0
+	ret
+
+.global allocator_alloc
+allocator_alloc:
+	mov x8, SYS_OBJ_ALLOC
+	svc #0
+	ret
+
+.global allocator_free
+allocator_free:
+	mov x8, SYS_OBJ_FREE
+	svc #0
+	ret
+
+.global allocator_unregister
+allocator_unregister:
+	mov x8, SYS_OBJ_ALLOCATOR_FREE
+	svc #0
+	ret
+

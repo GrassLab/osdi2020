@@ -13,7 +13,7 @@
 #include "include/exc.h"
 #include "include/kernel.h"
 #include "include/arm/sysreg.h"
-
+#include "include/pool.h"
 void exception_handler(unsigned long type,unsigned long esr, \
 		unsigned long elr){
         
@@ -73,21 +73,6 @@ void exception_handler(unsigned long type,unsigned long esr, \
 	uart_hex(( ((unsigned int)esr)<<7)>>7);
 
 	uart_send_string("\r\n");
-}
-
-unsigned long get_table(unsigned long *table, unsigned long shift, \
-                 unsigned long vir_addr) {
- 
-         unsigned long index = vir_addr >> shift;
-         index = index & (PTRS_PER_TABLE - 1);
-   
-         return (table[index]>>12)<<12;
-}
-
-void clean_entry(unsigned long *pte, unsigned long vir_addr) {
-        unsigned long index = vir_addr >> 12;
-        index = index & (PTRS_PER_TABLE - 1);
-        pte[index] = 0; //making page fault happened
 }
 
 // Now I just use no more than 6 argument
@@ -225,47 +210,22 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 			return (unsigned long)mmap(NULL, arg0, PROT_READ|PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 		}
 		case SYS_FREE:{
-			unsigned long vir_addr = (arg0>>12)<<12;
-
-			// find the page entry of virtual address, clean up
-			unsigned long table = current->mm.pgd;
-			int shift = 39;
-			
-			for(int i=0;i<3;i++){
-				table = get_table((unsigned long *)(table+VA_START),shift,vir_addr); 
-				shift-=9;
-			}
-			clean_entry((unsigned long *)(table+VA_START),vir_addr);
-			set_pgd(current->mm.pgd); // after clean, setup pgd 
-			
-			// clean vm_struct
-			for(int i=0;i<current->mm.vm_area_count;i++){
-			
-				if(vir_addr >= current->mm.mmap[i].vm_start &&\
-					vir_addr < current->mm.mmap[i].vm_end){
-				
-					printf("clean 0x%x\r\n",current->mm.mmap[i].vm_start);	
-					// moving array
-					for(int n=i;n<current->mm.vm_area_count-1;n++){
-						current->mm.mmap[n] = current->mm.mmap[n+1];
-					}
-					current->mm.vm_area_count--;
-					
-					break;
-				}
-			}
-
-			//free using page
-			for(int i=0;i<current->mm.user_pages_count;i++){
-				 if(vir_addr == current->mm.user_pages[i].vir_addr){
-				 	free_page(current->mm.user_pages[i].phy_addr);
-				 	current->mm.user_pages_count--;
-					return 0;
-				 }
-			} 
-			
-			return -1;	      
-		}	 
+			return free_user_page(arg0);	      
+		}
+		case SYS_OBJ_ALLOCATOR_INIT:{
+			return allocator_register(arg0);			    
+		}
+		case SYS_OBJ_ALLOC:{
+			return allocator_alloc(arg0,USER_ALLOC);  
+		}
+		case SYS_OBJ_FREE:{
+			allocator_free(arg0,arg1);		  
+			return 0;
+		}
+		case SYS_OBJ_ALLOCATOR_FREE:{
+			allocator_unregister(arg0,USER_ALLOC);
+			return 0;	
+		} 
 	}
 	// Not here if no bug happened!
 	return -1;
