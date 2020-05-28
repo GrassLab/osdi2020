@@ -1,3 +1,4 @@
+#include <string.h>
 #include "buddy.h"
 #include "fixed.h"
 #include "tlb.h"
@@ -80,6 +81,7 @@ fixed_malloc (size_t token_id)
 {
   size_t i;
   struct fixed_token *token;
+  void *victim;
 
   if (fixed_info.tokens == NULL)
     if (fixed_init ())
@@ -98,7 +100,9 @@ fixed_malloc (size_t token_id)
       return NULL;
   // set inused
   token->chunk_bitmap[i] = 1;
-  return token->chunks + i * token->chunk_size;
+  victim = token->chunks + i * token->chunk_size;
+  bzero (victim, token->chunk_size);
+  return victim;
 }
 
 void
