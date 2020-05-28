@@ -114,9 +114,12 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
     insert_node(arr, p2);
     insert_node(arr, p1);
 
-    /* Buddy.show(self);  */
+    self->map[p1.lb] = p1.ub - p1.lb + 1;
+    self->map[p2.lb] = p2.ub - p2.lb + 1;
 
+    /* Buddy.show(self);  */
     temp = remove_node(arr);
+    self->map[temp.lb] = temp.ub - temp.lb + 1;
   }
 
   /* put the lb, and size into map */
@@ -157,6 +160,13 @@ void try_coalescing(struct buddy *self, int s) {
   for (struct Node *cur = *arr_x; cur != 0; cur = cur->next) {
     /* buddy is also free */
     if ((*cur).pair.lb == bA) {
+      /* check size */
+      /* if the size of two item is not same */
+      if (self->map[cur->pair.lb] != block_size) {
+        return;
+      }
+
+      /* if (self->map[cur->pair.lb] != block_size) {println("wired!!!!!!!!!!!"); continue;} */
       println("vvvvvvvvvvvvv pre coalescing vvvvvvvvvvvv");
       Buddy.show(self);
       println("-----------------------------------------");

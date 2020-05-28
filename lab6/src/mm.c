@@ -4,7 +4,7 @@
 
 int remain_page = PAGING_PAGES;
 
-static unsigned short mem_map[PAGING_PAGES] = {
+static unsigned short mem_map[1] = {
     0,
 };
 

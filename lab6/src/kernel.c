@@ -76,7 +76,10 @@ void kernel_main() {
 
   /* Init the buddy system first with the base memory address */
   /* struct buddy *bd = Buddy.new(128, LOW_MEMORY + VA_START); */
-  struct buddy *bd = Buddy.new(128, LOW_MEMORY);
+#define GB_1_PAGES ((1 << 30) >> 12)
+  struct buddy *bd = Buddy.new(GB_1_PAGES, LOW_MEMORY);
+
+
   if (!bd) {
     printf("erorr while constructing the buddy system");
     return;
