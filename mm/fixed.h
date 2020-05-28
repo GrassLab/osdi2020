@@ -18,6 +18,7 @@ struct fixed_struct
   size_t token_len;
 };
 
+void fixed_free (void *addr);
 void *fixed_malloc (size_t token_id);
 size_t token_register (size_t size);
 #endif /* ifndef FIXED */

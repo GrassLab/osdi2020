@@ -100,3 +100,24 @@ fixed_malloc (size_t token_id)
   token->chunk_bitmap[i] = 1;
   return token->chunks + i * token->chunk_size;
 }
+
+void
+fixed_free (void *addr)
+{
+  size_t token_ind, chunk_ind;
+  struct fixed_token *token;
+
+  token = NULL;
+  // find token
+  for (token_ind = 0; token_ind < fixed_info.token_len; ++token_ind)
+    {
+      token = &fixed_info.tokens[token_ind];
+      if (token->id && token->chunks <= addr
+	  && addr < token->chunks + token->chunk_len * token->chunk_size)
+	break;
+    }
+  if (token_ind == fixed_info.token_len)
+    return;
+  chunk_ind = (addr - token->chunks) / token->chunk_size;
+  token->chunk_bitmap[chunk_ind] = 0;
+}
