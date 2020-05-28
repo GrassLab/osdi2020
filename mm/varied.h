@@ -14,6 +14,11 @@ struct allocated_node
 {
   void *addr;
   struct list_head list;
+  enum allocator_type
+  {
+    buddy,
+    fixed
+  } type;
 };
 
 struct varied_struct
