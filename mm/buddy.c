@@ -107,7 +107,7 @@ buddy_malloc (size_t size)
   if (buddy_info.start == NULL)
     buddy_init ();
   // calculate order
-  for (order = 0; size > BUDDY_BLOCK_MIN * (1 << order); ++order);
+  for (order = 0; size > BUDDY_BLOCK_MIN * (1u << order); ++order);
 
   target = buddy_find_block (order);
   if (target != NULL)
@@ -123,7 +123,7 @@ int
 buddy_is_freed (size_t ind, size_t order)
 {
   size_t i;
-  for (i = 0; i < (1 << order); ++i)
+  for (i = 0; i < (1u << order); ++i)
     if (buddy_info.bitmap[ind + i])
       return 0;
   return 1;
