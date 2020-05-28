@@ -13,8 +13,8 @@ _start:
   cbnz x1, loop
 
   # init bss
-  ldr x1, =_bstart
-  ldr x2, =_bend
+  adr x1, _bstart
+  adr x2, _bend
   b cmp_adr
 set_zero:
   str xzr, [x1]
