@@ -75,6 +75,7 @@ void kernel_main() {
   println("HIGH memory: %x", HIGH_MEMORY);
 
   /* Init the buddy system first with the base memory address */
+  /* struct buddy *bd = Buddy.new(128, LOW_MEMORY + VA_START); */
   struct buddy *bd = Buddy.new(128, LOW_MEMORY);
   if (!bd) {
     printf("erorr while constructing the buddy system");
@@ -84,7 +85,7 @@ void kernel_main() {
 
   {
     /* allocate 32 */
-    struct Pair p = Buddy.alloc(bd, 32);
+    struct Pair p = Buddy.alloc(bd, 16);
     printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
            p.ub >> 12);
     Buddy.show(bd);
@@ -92,7 +93,7 @@ void kernel_main() {
 
   {
     /* allocate 7 */
-    struct Pair p = Buddy.alloc(bd, 7);
+    struct Pair p = Buddy.alloc(bd, 16);
     printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
            p.ub >> 12);
     Buddy.show(bd);
@@ -100,9 +101,45 @@ void kernel_main() {
 
   {
     /* allocate 64 */
-    struct Pair p = Buddy.alloc(bd, 64);
+    struct Pair p = Buddy.alloc(bd, 16);
     printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
            p.ub >> 12);
+    Buddy.show(bd);
+  }
+
+  {
+    /* allocate 64 */
+    struct Pair p = Buddy.alloc(bd, 16);
+    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
+           p.ub >> 12);
+    Buddy.show(bd);
+  }
+
+  {
+    Buddy.dealloc(bd, 0);
+    Buddy.show(bd);
+  }
+
+
+  {
+    Buddy.dealloc(bd, 9);
+    Buddy.show(bd);
+  }
+
+  {
+    Buddy.dealloc(bd, 32);
+    Buddy.show(bd);
+  }
+
+
+  {
+    Buddy.dealloc(bd, 16);
+    Buddy.show(bd);
+  }
+
+
+  {
+    Buddy.dealloc(bd, 48);
     Buddy.show(bd);
   }
 
