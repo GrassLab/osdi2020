@@ -77,43 +77,21 @@ void *mmap(void* addr, unsigned long len,
 /* 16 kb limit for user stack  */
 #define USER_STK_LIMIT (16 << 10)
 
-/* buddy system */
-#define MAX_ORDER 10
+#define DemandPaging 1
 
-typedef struct cdr_tag {
-  unsigned long val;
-  struct cdr_tag *cdr;
-} CdrStr, *Cdr;
-
-struct free_area {
-  Cdr                free_list;
-  unsigned long      nr_free;
-};
-
-typedef struct zone_tag {
-  /* free areas of differents sizes */
-  struct free_area        free_area[MAX_ORDER];
-} ZoneStr, *Zone;
-
-extern Zone const buddy_zone;
-
-void zone_init(Zone);
-unsigned long zone_get_free_pages(Zone zone, int order);
-void zone_free_pages(Zone zone, unsigned long addr);
-
-void zone_show(Zone zone, unsigned long cnt);
-
-#define addr2pgidx(addr) ((addr - ALOC_BEG) / PAGE_SIZE)
-
-#define enable_buddy_log 1
-
-#if enable_buddy_log
-#define buddy_log(...) printfmt(__VA_ARGS__)
-#define buddy_log_graph(zone) zone_show(zone, 3)
+#define PAGING_PAGES (1024 * 64)
+#define zonealoc 1
+#if zonealoc
+extern Page *mpages;
+#define ALOC_BEG low_memory
 #else
-#define buddy_log(...) ;
-#define buddy_log_graph(zone) ;
+extern Page mpages[PAGING_PAGES];
+#define ALOC_BEG LOW_MEMORY
 #endif
+
+
+extern unsigned page_number;
+extern unsigned long low_memory;
 
 #endif /* __ASSEMBLER__ */
 #endif

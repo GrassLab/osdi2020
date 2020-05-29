@@ -32,5 +32,6 @@ extern void set_pgd(unsigned long pgd);
     }                                                                          \
   } while (0)
 
+#define sizeofType(type) printfmt("size of " #type " is %d", sizeof(type))
 
 #endif

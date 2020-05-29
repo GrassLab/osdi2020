@@ -8,6 +8,8 @@
 #include "sched.h"
 #include "uart.h"
 #include "mm.h"
+#include "util.h"
+#include "allocator.h"
 
 #ifdef TEST
 #include "test.h"
@@ -48,6 +50,13 @@ int main(void) {
     println("\\ \\ /\\ / / _ \\ |/ __/ _ \\| '_ ` _ \\ / _ \\");
     println(" \\ V  V /  __/ | (_| (_) | | | | | |  __/");
     println("  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|" NEWLINE);
+
+    FixedBookStr s;
+    sizeofType(s);
+    sizeofType(s.page_addr);
+    sizeofType(s.free_nr);
+    sizeofType(s.table);
+    sizeofType(s.next);
 
 #ifdef BUILD_STAMP
 #define xstr(a) str(a)
