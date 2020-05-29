@@ -66,6 +66,11 @@ void buddy_show(struct buddy *self) {
   }
 }
 
+int bd_phy2n(unsigned long addr) {
+  return (addr - base) >> 12;
+}
+
+
 struct Pair pair_shift(struct Pair p, int shift) {
   return (struct Pair){base + (p.lb << shift), base + (p.ub << shift)};
 }
@@ -82,7 +87,7 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
 
     /* put the lb, and size into map */
     self->map[temp.lb] = temp.ub - temp.lb + 1;
-    Buddy.show(self);
+    /* Buddy.show(self); */
     return pair_shift((struct Pair){temp.lb, temp.ub}, 12);
   }
 
@@ -128,7 +133,7 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
 
   /* put the lb, and size into map */
   self->map[temp.lb] = temp.ub - temp.lb + 1;
-  Buddy.show(self);
+  /* Buddy.show(self); */
   return pair_shift((struct Pair){temp.lb, temp.ub}, 12);
 }
 

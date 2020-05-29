@@ -24,3 +24,6 @@ struct buddy_type {
 extern struct buddy_type Buddy;
 
 extern struct buddy *global_bd;
+
+
+int bd_phy2n(unsigned long addr);

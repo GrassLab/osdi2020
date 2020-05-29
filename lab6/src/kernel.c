@@ -79,10 +79,8 @@ void kernel_main() {
   /* Init the buddy system first with the base memory address */
   /* struct buddy *bd = Buddy.new(128, LOW_MEMORY + VA_START); */
 #define GB_1_PAGES ((1 << 30) >> 12)
-  struct buddy *bd = Buddy.new(GB_1_PAGES, LOW_MEMORY);
+  struct buddy *bd = Buddy.new(GB_1_PAGES, LOW_MEMORY + VA_START);
   global_bd = bd;
-
-
   if (!bd) {
     printf("erorr while constructing the buddy system");
     return;
@@ -90,15 +88,25 @@ void kernel_main() {
   /* the initial state of buddy system */
   Buddy.show(bd);
 
-  /* allocate first page for slab's meta */
-  struct Pair p = Buddy.alloc(bd, 1);
-  /* overall slab allocator initialize */
-  global_slab_meta = slab_meta_alloc(p.lb);
+  kalloc_init(bd);
 
-  int i32;
-  kalloc(sizeof(i32));
-  kalloc(sizeof(struct buddy));
-  kalloc(sizeof(struct buddy));
+  Buddy.show(bd);;
+
+  unsigned long i32;
+  unsigned long *v = kalloc(sizeof(i32));
+  *v = 100;
+
+  Buddy.show(bd);
+
+  kfree(v);
+
+
+  Buddy.show(bd);
+
+
+  /* v = kalloc(sizeof(struct buddy)); */
+
+  /* v = kalloc(sizeof(struct buddy)); */
 
 
 
