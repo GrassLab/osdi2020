@@ -15,7 +15,7 @@ build:
 	mkdir -p build
 
 run: all
-	qemu-system-aarch64 -M raspi3 -kernel $(BUILD_DIR)/kernel8.img -serial null -serial stdio -display none # -d in_asm
+	qemu-system-aarch64 -M raspi3 -kernel $(BUILD_DIR)/kernel8.img -serial null -serial stdio -display none -d in_asm
 
 $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 	$(ARMGNU)-gcc $(COPS) -MMD -c $< -o $@
