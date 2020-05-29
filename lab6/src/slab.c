@@ -70,8 +70,10 @@ static struct Slab *slab_meta_alloc(unsigned long slabStart) {
   /* initilize this slab with given slabStart */
   init_slab(&meta, slabStart, sizeof(struct Slab));
 
-  /*  */
+  /* allocate the object for current meta information */
   unsigned long slabLoc;
+  int success = slab_alloc(&meta, sizeof(struct Slab), &slabLoc);
+
 
 }
 
