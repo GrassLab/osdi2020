@@ -1,7 +1,7 @@
 #pragma once
 
 struct Pair {
-  int lb, ub;
+  unsigned long lb, ub;
 };
 
 struct Node {

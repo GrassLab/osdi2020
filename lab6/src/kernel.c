@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "slab.h"
 #include "buddy.h"
 #include "fork.h"
 #include "irq.h"
@@ -14,6 +15,7 @@
 #include "timer.h"
 #include "user.h"
 #include "utils.h"
+
 
 #define USER_PROCESS_BINARY 1
 
@@ -84,76 +86,98 @@ void kernel_main() {
     printf("erorr while constructing the buddy system");
     return;
   }
+  /* the initial state of buddy system */
   Buddy.show(bd);
 
-  {
-    /* allocate 32 */
-    struct Pair p = Buddy.alloc(bd, 16);
-    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
-           p.ub >> 12);
-    Buddy.show(bd);
-  }
 
-  {
-    /* allocate 7 */
-    struct Pair p = Buddy.alloc(bd, 16);
-    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
-           p.ub >> 12);
-    Buddy.show(bd);
-  }
+  /* allocate 1 page for slab node */
+  struct Pair p = Buddy.alloc(bd, 1);
+  printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
+         p.ub >> 12);
+  Buddy.show(bd);
 
-  {
-    /* allocate 64 */
-    struct Pair p = Buddy.alloc(bd, 16);
-    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
-           p.ub >> 12);
-    Buddy.show(bd);
-  }
+  struct Slab *slab_loc = (struct Slab *)(p.lb << 12);
 
-  {
-    /* allocate 64 */
-    struct Pair p = Buddy.alloc(bd, 16);
-    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
-           p.ub >> 12);
-    Buddy.show(bd);
-  }
+  /* allocate 1 page for slab free list*/
+  p = Buddy.alloc(bd, 1);
+  printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
+         p.ub >> 12);
+  Buddy.show(bd);
 
-  {
-    Buddy.dealloc(bd, 0);
-    Buddy.show(bd);
-  }
+  unsigned long req_loc = (unsigned long)(p.lb << 12);
+
+  init_slab((struct Slab *)slab_loc, req_loc, 32);
+
+  /* Buddy.dealloc(bd, 0); */
+  Buddy.show(bd);
 
 
-  {
-    Buddy.dealloc(bd, 9);
-    Buddy.show(bd);
-  }
+  Buddy.dealloc(bd, 0);
+  Buddy.dealloc(bd, 1);
 
-  {
-    Buddy.dealloc(bd, 32);
-    Buddy.show(bd);
-  }
-
-
-  {
-    Buddy.dealloc(bd, 16);
-    Buddy.show(bd);
-  }
-
-
-  {
-    Buddy.dealloc(bd, 48);
-    Buddy.show(bd);
-  }
+  Buddy.show(bd);
 
 
   /* { */
-  /*   /\* allocate 56 *\/ */
-  /*   struct Pair p = Buddy.alloc(bd, 56); */
+  /*   /\* allocate 32 *\/ */
+  /*   struct Pair p = Buddy.alloc(bd, 16); */
   /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
   /*          p.ub >> 12); */
   /*   Buddy.show(bd); */
   /* } */
+
+  /* { */
+  /*   /\* allocate 7 *\/ */
+  /*   struct Pair p = Buddy.alloc(bd, 16); */
+  /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
+  /*          p.ub >> 12); */
+  /*   Buddy.show(bd); */
+  /* } */
+
+  /* { */
+  /*   /\* allocate 64 *\/ */
+  /*   struct Pair p = Buddy.alloc(bd, 16); */
+  /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
+  /*          p.ub >> 12); */
+  /*   Buddy.show(bd); */
+  /* } */
+
+  /* { */
+  /*   /\* allocate 64 *\/ */
+  /*   struct Pair p = Buddy.alloc(bd, 16); */
+  /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
+  /*          p.ub >> 12); */
+  /*   Buddy.show(bd); */
+  /* } */
+
+  /* { */
+  /*   Buddy.dealloc(bd, 0); */
+  /*   Buddy.show(bd); */
+  /* } */
+
+
+  /* { */
+  /*   Buddy.dealloc(bd, 9); */
+  /*   Buddy.show(bd); */
+  /* } */
+
+  /* { */
+  /*   Buddy.dealloc(bd, 32); */
+  /*   Buddy.show(bd); */
+  /* } */
+
+
+  /* { */
+  /*   Buddy.dealloc(bd, 16); */
+  /*   Buddy.show(bd); */
+  /* } */
+
+
+  /* { */
+  /*   Buddy.dealloc(bd, 48); */
+  /*   Buddy.show(bd); */
+  /* } */
+
 
   sys_core_timer_enable();
 
