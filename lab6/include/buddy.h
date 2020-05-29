@@ -22,3 +22,5 @@ struct buddy_type {
 };
 
 extern struct buddy_type Buddy;
+
+extern struct buddy *global_bd;

@@ -2,6 +2,9 @@
 #include "mm.h"
 #include "printf.h"
 
+struct buddy *global_bd = 0;
+
+
 int cal_index(int size) {
   int targetlevel = 0;
   int add1_flag = 0;
@@ -64,7 +67,7 @@ void buddy_show(struct buddy *self) {
 }
 
 struct Pair pair_shift(struct Pair p, int shift) {
-  return (struct Pair){p.lb << shift, p.ub << shift};
+  return (struct Pair){base + (p.lb << shift), base + (p.ub << shift)};
 }
 
 struct Pair buddy_allocate(struct buddy *self, int size) {
@@ -79,6 +82,7 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
 
     /* put the lb, and size into map */
     self->map[temp.lb] = temp.ub - temp.lb + 1;
+    Buddy.show(self);
     return pair_shift((struct Pair){temp.lb, temp.ub}, 12);
   }
 
@@ -124,9 +128,9 @@ struct Pair buddy_allocate(struct buddy *self, int size) {
 
   /* put the lb, and size into map */
   self->map[temp.lb] = temp.ub - temp.lb + 1;
+  Buddy.show(self);
   return pair_shift((struct Pair){temp.lb, temp.ub}, 12);
 }
-
 
 void try_coalescing(struct buddy *self, int s) {
   unsigned long block_size = self->map[s];
@@ -166,13 +170,14 @@ void try_coalescing(struct buddy *self, int s) {
         return;
       }
 
-      /* if (self->map[cur->pair.lb] != block_size) {println("wired!!!!!!!!!!!"); continue;} */
+      /* if (self->map[cur->pair.lb] != block_size)
+       * {println("wired!!!!!!!!!!!"); continue;} */
       println("vvvvvvvvvvvvv pre coalescing vvvvvvvvvvvv");
       Buddy.show(self);
       println("-----------------------------------------");
 
       /* buddy is the block after block */
-      struct Node **next_block = &self->pair_array[x+1];
+      struct Node **next_block = &self->pair_array[x + 1];
       int bd = bN & 1 ? bA : s;
       struct Pair new_pair = (struct Pair){bd, bd + 2 * (1 << x) - 1};
 
@@ -201,7 +206,7 @@ void try_coalescing(struct buddy *self, int s) {
 
     pre = cur;
   }
-  return ;
+  return;
 }
 
 void buddy_deallocate(struct buddy *self, int s) {

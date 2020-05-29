@@ -80,6 +80,7 @@ void kernel_main() {
   /* struct buddy *bd = Buddy.new(128, LOW_MEMORY + VA_START); */
 #define GB_1_PAGES ((1 << 30) >> 12)
   struct buddy *bd = Buddy.new(GB_1_PAGES, LOW_MEMORY);
+  global_bd = bd;
 
 
   if (!bd) {
@@ -89,33 +90,46 @@ void kernel_main() {
   /* the initial state of buddy system */
   Buddy.show(bd);
 
+  /* allocate first page for slab's meta */
+  struct Pair p = Buddy.alloc(bd, 1);
+  /* overall slab allocator initialize */
+  global_slab_meta = slab_meta_alloc(p.lb);
+
+  int i32;
+  kalloc(sizeof(i32));
+  kalloc(sizeof(struct buddy));
+  kalloc(sizeof(struct buddy));
+
+
+
 
   /* allocate 1 page for slab node */
-  struct Pair p = Buddy.alloc(bd, 1);
-  printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
-         p.ub >> 12);
-  Buddy.show(bd);
+  /* struct Pair p = Buddy.alloc(bd, 1); */
+  /* Buddy.show(bd); */
 
-  struct Slab *slab_loc = (struct Slab *)(p.lb << 12);
 
-  /* allocate 1 page for slab free list*/
-  p = Buddy.alloc(bd, 1);
-  printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12,
-         p.ub >> 12);
-  Buddy.show(bd);
 
-  unsigned long req_loc = (unsigned long)(p.lb << 12);
 
-  init_slab((struct Slab *)slab_loc, req_loc, 32);
+  /* struct Slab *slab_loc = (struct Slab *)(p.lb << 12); */
+
+  /* /\* allocate 1 page for slab free list*\/ */
+  /* p = Buddy.alloc(bd, 1); */
+  /* printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
+  /*        p.ub >> 12); */
+  /* Buddy.show(bd); */
+
+  /* unsigned long req_loc = (unsigned long)(p.lb << 12); */
+
+  /* init_slab((struct Slab *)slab_loc, req_loc, 32); */
+
+  /* /\* Buddy.dealloc(bd, 0); *\/ */
+  /* Buddy.show(bd); */
+
 
   /* Buddy.dealloc(bd, 0); */
-  Buddy.show(bd);
+  /* Buddy.dealloc(bd, 1); */
 
-
-  Buddy.dealloc(bd, 0);
-  Buddy.dealloc(bd, 1);
-
-  Buddy.show(bd);
+  /* Buddy.show(bd); */
 
 
   /* { */
