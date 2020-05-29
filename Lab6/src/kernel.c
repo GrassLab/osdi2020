@@ -83,11 +83,27 @@ void zombie_reaper(){
 				// 2.kernel_stack(memory)
 				free_page(virtual_to_physical((unsigned long)p));
 				task[i] = 0;
+				
 			}
 		}
 	}
 }
 
+
+void mytest3(){
+	int *a = (int *)kmalloc(sizeof(int)*10);
+	int *b = (int *)kmalloc(sizeof(int)*10);
+	printf("a at 0x%x\r\n",a);
+	printf("b at 0x%x\r\n",b);
+	kfree((unsigned long)a);
+	int *c = (int *)kmalloc(sizeof(int)*10);
+	printf("c at 0x%x\r\n",c);
+
+	int *d = (int *)kmalloc(0x330);
+	int *e = (int *)kmalloc(0x330);
+	printf("d at 0x%x\r\n",d);
+	printf("e at 0x%x\r\n",e);
+}
 
 void kernel_process(){
     unsigned long begin = (unsigned long)&_binary_user_img_start;
@@ -97,7 +113,6 @@ void kernel_process(){
     //unsigned long elf_end = (unsigned long)&_binary_user_elf_end;
     //elf_parser(elf_start);
     
-
     // Note: we naive assume that there's only one shell   
     int err = do_exec(begin, end - begin, 0x1000);
     if (err < 0){
@@ -133,27 +148,22 @@ void mytest2(){
     unsigned long test_ptr2;
 
     // allocate memory from memory pool 
-    test_ptr1 = allocator_alloc(pool_num,KERNEL_ALLOC);
-    test_ptr2 = allocator_alloc(pool_num,KERNEL_ALLOC);
+    test_ptr1 = allocator_kernel_alloc(pool_num);
+    test_ptr2 = allocator_kernel_alloc(pool_num);
     printf("the return address 0x%x\r\n",test_ptr1);
     printf("the return address 0x%x\r\n",test_ptr2);
     
     allocator_free(pool_num,test_ptr1);
-    test_ptr1 = allocator_alloc(pool_num,KERNEL_ALLOC);
+    test_ptr1 = allocator_kernel_alloc(pool_num);
     printf("the return address 0x%x\r\n",test_ptr1);
     
     unsigned long test_ptr3;
-    test_ptr3 = allocator_alloc(pool_num,KERNEL_ALLOC);
+    test_ptr3 = allocator_kernel_alloc(pool_num);
     printf("the return address 0x%x\r\n",test_ptr3);
 
-    allocator_unregister(pool_num,KERNEL_ALLOC);
+    allocator_kernel_unregister(pool_num);
 }
 
-void mytest3(){
-	int *a = (int *)kmalloc(sizeof(int)*10);
-	a[5] = 3;
-	printf("a[5]= %d at 0x%x\r\n",a[5],&a[5]);
-}
 
 void kernel_main(void)
 {	
@@ -175,13 +185,10 @@ void kernel_main(void)
     
     allocator_init(); 
     //mytest1();
-    mytest2();
-    //mytest3();
+    //mytest2();
     
-
     // Here init a task being zombie reaper
     privilege_task_create(zombie_reaper,1);
-
     privilege_task_create(kernel_process, 1); 
 
     idle();  

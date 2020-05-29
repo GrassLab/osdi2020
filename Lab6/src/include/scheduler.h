@@ -1,9 +1,10 @@
 #ifndef _SCHEDULER_H
 #define _SCHEDULER_H
 
-#define THREAD_CPU_CONTEXT 0 	// offset of cpu_context in task_struct 
 
+#define THREAD_CPU_CONTEXT 0 	// offset of cpu_context in task_struct 
 #ifndef __ASSEMBLER__
+
 #define NR_TASKS 64 
 #define THREAD_SIZE  4096
 
@@ -32,8 +33,9 @@ struct cpu_context {
 };
 
 #define MAX_PROCESS_PAGES	28 // this mean we can't use more than 28 pages in user code
-				   // absolutely bad but that's ok for now 
-#define MAX_AREA                16 
+				   // absolutely bad but that's ok for us now
+
+#define MAX_AREA                16 // Same, each task can use no more than 16 times mmap 
 
 struct user_page {
 	unsigned long phy_addr;
@@ -77,7 +79,6 @@ struct mm_struct {
 	struct vm_area_struct mmap[MAX_AREA];
 };
 
-
 struct signal_struct{
 	int pending;
 	int block;
@@ -111,9 +112,8 @@ extern void exit_process();
 #define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 	{0,0}, \
 	0,0,1,0,0, \
-	{0,0,{{0,}},0,{0},0,{{0,}}}, \
+	{0,0,{{0,}},0,{0},0,{{0,}}},\
 }
-
 
 #endif
 #endif /*_SCHEDULER_H */

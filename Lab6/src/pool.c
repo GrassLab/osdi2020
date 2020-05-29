@@ -2,10 +2,21 @@
 #include "include/kernel.h"
 #include "include/mm.h"
 #include "include/uart.h"
+#include "include/scheduler.h"
+
+void init_default_allocator(int pid){
+	
+	// init default allocator for IDLE task
+	for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++){
+		pool_init(&default_allocator[pid][i],MIN_DEFAULT_ALLOCATOR_SIZE*(i+1));
+	}
+}
 
 void allocator_init(){
 	for(int i=0;i<MAX_ALLOCATOR_NUM;i++)
 		allocator_used_map[i] = POOL_NOT_USE;
+	
+	init_default_allocator(current->pid);
 }
 
 int allocator_register(unsigned long size){
@@ -17,34 +28,31 @@ int allocator_register(unsigned long size){
 		}
 	}
 	
-	printf("register more than 8 allocator, not handle right now");
+	printf("register more than 64 allocator, not handle right now");
 	return -1;
 }
 
-unsigned long allocator_alloc(int allocator_num,int type){
-	 if (type == KERNEL_ALLOC)
-	 	return pool_alloc_kernel(&obj_allocator[allocator_num]);
-	 else if(type == USER_ALLOC)
-		return pool_alloc_user(&obj_allocator[allocator_num]);
-	 else
-		return -1; // error
+unsigned long allocator_kernel_alloc(int allocator_num){
+	 return pool_alloc_kernel(&obj_allocator[allocator_num]);
+}
+
+unsigned long allocator_user_alloc(int allocator_num){
+	return pool_alloc_user(&obj_allocator[allocator_num]);
 }
 
 void allocator_free(int allocator_num,unsigned long ptr){
 	pool_free(&obj_allocator[allocator_num],ptr);
 }
 
-void allocator_unregister(int allocator_num,int type){
-	if (type == KERNEL_ALLOC)
-		free_kernel_memory_pool(&obj_allocator[allocator_num]);
-	else if(type == USER_ALLOC)
-		free_user_memory_pool(&obj_allocator[allocator_num]);
-	else
-		printf("ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\r\n");
-
+void allocator_kernel_unregister(int allocator_num){
+	free_kernel_memory_pool(&obj_allocator[allocator_num]);
 	allocator_used_map[allocator_num] = POOL_NOT_USE;
 }
 
+void allocator_user_unregister(int allocator_num){
+	free_user_memory_pool(&obj_allocator[allocator_num]);
+	allocator_used_map[allocator_num] = POOL_NOT_USE;
+}
 
 void poolFreeAll(pool *p){
 	p->used = p->chunk_per_page- 1;

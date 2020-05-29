@@ -4,6 +4,7 @@
 #include "include/scheduler.h"
 #include "include/kernel.h"
 #include "include/utils.h"
+#include "include/pool.h"
 
 int remain_page = PAGE_ENTRY;
 
@@ -18,7 +19,6 @@ struct page_struct* get_pages_from_list(int order){
 			continue;
 		else{
 			page = list_entry(page_buddy[neworder].next,struct page_struct,list);	
-			printf("using page %d with order %d\r\n",page->page_num,page->order);	
 			struct list_head *next_buddy = (&(BUDDY_END(page,neworder)->list))->next;
 
 			// take the needed page and link else back
@@ -77,19 +77,36 @@ struct page_struct *alloc_pages(int order){
 }
 
 unsigned long kmalloc(unsigned long size){
-	int order;
-	for(int i=0;i<MAX_ORDER;i++){
-		if(size <= (unsigned long)(1<<i)*PAGE_SIZE){
-			order = i;
-			break;
+	// If the allocated size is larger than the maximum size of allocator,
+	// it calls page allocator directly to allocate contiguous page frames.
+	if(size > (MIN_DEFAULT_ALLOCATOR_SIZE * DEFAULT_ALLOCATOR_NUM)){ 
+		int order;
+		for(int i=0;i<MAX_ORDER;i++){
+			if(size <= (unsigned long)(1<<i)*PAGE_SIZE){
+				order = i;
+				break;
+			}
 		}
-	}
 
-	unsigned long page = get_free_page(order);
-	if(page == 0){
-		return 0;
+		unsigned long page = get_free_page(order);
+		if(page == 0){
+			return 0;
+		}
+		
+		printf("*** allocate from buudy system order %d\r\n",order);
+		return page + VA_START;
 	}
-	return page + VA_START;
+	else{
+		int allocator_num;
+		for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++){
+			if(size <= (unsigned long)MIN_DEFAULT_ALLOCATOR_SIZE*(i+1)){
+				allocator_num = i;
+				break;
+			}
+		}
+		printf("*** allocate from allocator number %d\r\n",allocator_num);
+		return pool_alloc_kernel(&(default_allocator[current->pid][allocator_num]));	
+	}
 }
 
 unsigned long get_free_page(int order){
@@ -230,6 +247,24 @@ void put_pages_to_list(struct page_struct *page,int order){
 	list_add_chain(&(page->list),&(BUDDY_END(page,order)->list),&page_buddy[order]);
 }
 
+// free memory allocate by kmalloc
+void kfree(unsigned long p){
+	// if your memory was allocated from pool, put it back
+	for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++){
+ 		pool tmp_pool = default_allocator[current->pid][i];
+		for(int page=0; page<=tmp_pool.page; page++){
+			if ( ((p>>12)<<12) == (((tmp_pool.pages_addr[page].vir_addr)>>12)<<12)){
+				pool_free(&default_allocator[current->pid][i],p);
+				printf("*** free to allocator number %d\r\n",i);
+				return;	
+			}
+		}
+ 	}
+
+	printf("*** free to buddy system\r\n");
+	// else free it to buddy system
+	free_page(p);
+}
 void free_page(unsigned long p){ //input should be physical address
 	unsigned long pfn = physical_to_pfn(p);
 	

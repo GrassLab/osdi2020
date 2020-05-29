@@ -38,8 +38,10 @@ void test1(){
 	printf("m[12] = %d at 0x%x\r\n",m[12],m);
 	free((unsigned long)m);
 	
-	//m = (int *)malloc(sizeof(int)*10);	
-	m[12] = 5;
+	m = (int *)malloc(sizeof(int)*10);	
+	printf("at 0x%x\r\n",m);
+	m = (int *)malloc(sizeof(int)*10);		
+	printf("at 0x%x\r\n",m);
 }
 
 void test2(){
@@ -68,7 +70,7 @@ void test2(){
 void main()
 {
 	printf("Hello for user %d\r\n",get_taskid());
-	test2();
+	test1();
 
 	char buffer[128];
 	while(1){	

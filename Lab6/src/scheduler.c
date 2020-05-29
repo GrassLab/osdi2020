@@ -5,6 +5,7 @@
 #include "include/mm.h"
 #include "include/utils.h"
 #include "include/fork.h"
+#include "include/pool.h"
 
 static struct task_struct idle_task = IDLE_TASK;
 struct task_struct * task[NR_TASKS] = {&(idle_task), };
@@ -124,6 +125,13 @@ void exit_process(){
 		free_page(current->mm.kernel_pages[i]);
 		//printf("Free pid: %d, phy: %x\r\n",current->pid, current->mm.kernel_pages[i]);
 	}
+	
+	// reclaim default allocator!!
+	// note that no matter it's the exit of user or kernel, 
+	// since the mapping is not important now,
+	// just call free_kernel_memory_pool is fine!!
+	for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++)
+		 free_kernel_memory_pool(&(default_allocator[current->pid][i]));
 
 	printf(">>> Done task %d, now exit\r\n",current->pid);
 	
@@ -132,3 +140,5 @@ void exit_process(){
 	
 	schedule();
 }
+
+

@@ -1,13 +1,13 @@
 #ifndef _POOL_H
 #define _POOL_H
 
-#include "mm.h"
+#include "scheduler.h"
 
-#define MAX_ALLOCATOR_NUM 16 //this mean out os can only handle 16 allocator
-#define MAX_POOL_PAGE 8  //all each allocator can use no more than 8 page
+#define DEFAULT_ALLOCATOR_NUM 5
+#define MIN_DEFAULT_ALLOCATOR_SIZE 0x100
 
-#define KERNEL_ALLOC 0
-#define USER_ALLOC   1
+#define MAX_ALLOCATOR_NUM 64 // this mean our os can only handle 64 allocator
+#define MAX_POOL_PAGE   16// each allocator can use no more than 16 page
 
 typedef struct free_list{
 	struct free_list *next;
@@ -34,11 +34,18 @@ typedef struct {
 char allocator_used_map[MAX_ALLOCATOR_NUM];
 pool obj_allocator[MAX_ALLOCATOR_NUM];
 
+// since I am too weak so......
+// just simply let every task has their own allocator
+pool default_allocator[NR_TASKS][DEFAULT_ALLOCATOR_NUM]; 
+
+void init_default_allocator(int pid);
 void allocator_init();
 int allocator_register(unsigned long size);
-unsigned long allocator_alloc(int allocator_num,int type);
+unsigned long allocator_kernel_alloc(int allocator_num);
+unsigned long allocator_user_alloc(int allocator_num);
 void allocator_free(int allocator_num,unsigned long ptr);
-void allocator_unregister(int allocator_num,int type);
+void allocator_kernel_unregister(int allocator_num);
+void allocator_user_unregister(int allocator_num);
 
 void poolFreeAll(pool *p);
 void pool_init(pool *p,unsigned long element_size);

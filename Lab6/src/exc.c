@@ -207,23 +207,51 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 			return current->state = TASK_WAIT;
 		}	
 		case SYS_MALLOC: {
-			return (unsigned long)mmap(NULL, arg0, PROT_READ|PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+			if(arg0 > (MIN_DEFAULT_ALLOCATOR_SIZE * DEFAULT_ALLOCATOR_NUM)){
+				printf("allocate by mmap\r\n");
+				return (unsigned long)mmap(NULL, arg0, PROT_READ|PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
+			}
+			else{
+				int allocator_num;
+		                
+				for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++){
+	                        	if(arg0 <= (unsigned long)MIN_DEFAULT_ALLOCATOR_SIZE*(i+1)){
+                                 		allocator_num = i;
+                                 		break;
+                         		}
+	                 	}
+                 		printf("allocate from allocator number %d\r\n",allocator_num);
+				return pool_alloc_user(&(default_allocator[current->pid][allocator_num]));
+
+			}
 		}
 		case SYS_FREE:{
+			  // if your memory was allocated from pool, put it back
+	        	for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++){
+                 		pool tmp_pool = default_allocator[current->pid][i];
+                 		for(int page=0; page<=tmp_pool.page; page++){
+                         		if ( ((arg0>>12)<<12) == (((tmp_pool.pages_addr[page].vir_addr)>>12)<<12)){
+                                 		pool_free(&default_allocator[current->pid][i],arg0);
+                                 		printf("*** free to allocator number %d\r\n",i);
+                                 		return 0;
+                         		}
+                 		}
+         		}
+
 			return free_user_page(arg0);	      
 		}
 		case SYS_OBJ_ALLOCATOR_INIT:{
 			return allocator_register(arg0);			    
 		}
 		case SYS_OBJ_ALLOC:{
-			return allocator_alloc(arg0,USER_ALLOC);  
+			return allocator_user_alloc(arg0);  
 		}
 		case SYS_OBJ_FREE:{
 			allocator_free(arg0,arg1);		  
 			return 0;
 		}
 		case SYS_OBJ_ALLOCATOR_FREE:{
-			allocator_unregister(arg0,USER_ALLOC);
+			allocator_user_unregister(arg0);
 			return 0;	
 		} 
 	}

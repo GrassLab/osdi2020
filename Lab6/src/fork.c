@@ -7,6 +7,7 @@
 #include "include/utils.h"
 #include "include/kernel.h"
 #include "include/elf.h"
+#include "include/pool.h"
 
 static unsigned short pid_map[64] = {0,};
 
@@ -53,6 +54,9 @@ int privilege_task_create(void(* fn),int priority){
 	task[pid] = p;	
 	p->pid = pid;
 
+	// init default allocator for kernel
+	init_default_allocator(pid);
+
 	priorityQ_push(&runqueue,p->priority,p->pid);	
 	preempt_enable();
 	return pid;
@@ -89,6 +93,9 @@ int user_task_create()
 	task[pid] = p;
 	p->pid = pid;
 
+	// init default allocator for user
+ 	init_default_allocator(pid);
+	
 	priorityQ_push(&runqueue,p->priority,p->pid);	
 	preempt_enable();
 	return pid;
@@ -122,5 +129,13 @@ int do_exec(unsigned long start, unsigned long size, unsigned long pc)
 	//dump_mem((void *)code_page,size);
 	unsigned long user_pgd = current->mm.pgd; 
 	set_pgd(user_pgd);
+	
+	// From kernel -> user, first clean up the allocator
+	for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++)
+                 free_kernel_memory_pool(&(default_allocator[current->pid][i]));
+	
+	// then init it again
+ 	init_default_allocator(current->pid);	
+	
 	return 0;
 }
