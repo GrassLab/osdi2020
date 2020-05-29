@@ -25,7 +25,7 @@ void test_command1() { // test fork functionality
       uart_send('\n');
       uart_send('\r');
 
-      delay(10000000);
+      delay(100000);
     }
     exit(0); // all childs exit
   }

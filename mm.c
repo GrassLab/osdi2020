@@ -268,7 +268,7 @@ void free_page(unsigned long pfn)
 
     uart_puts("free page: ");
     uart_send_int(pfn);
-    _uart_send('\n');
+    _uart_send('\n\r');
 
     /*
     for (int i = 0; i < PAGING_PAGES; i++)
