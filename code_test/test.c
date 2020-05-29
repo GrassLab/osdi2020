@@ -1,6 +1,5 @@
 #include "lib.h"
 
-
 void delay(unsigned long num)
 {
     for (unsigned long i = 0; i < num; i++)
@@ -9,41 +8,47 @@ void delay(unsigned long num)
     }
 }
 
-void test_command1() { // test fork functionality
-  int cnt = 0;
-  if(fork() == 0) {
-    fork();
-    fork();
-    while(cnt < 10) {
-      //printf("task id: %d, sp: 0x%llx cnt: %d\n", get_taskid(), &cnt, cnt++); // address should be the same across tasks, but the cnt should be increased indepndently
-      uart_puts("\n\rtask_id: ");
-      uart_send_hex(get_taskid());
-      uart_puts("sp: ");
-      uart_send_hex((unsigned int)(unsigned long)&cnt);
-      uart_puts("cnt: ");
-      uart_send_hex(cnt++);
-      uart_send('\n');
-      uart_send('\r');
+void test_command1()
+{ // test fork functionality
+    int cnt = 0;
+    if (fork() == 0)
+    {
+        fork();
+        fork();
+        while (cnt < 10)
+        {
+            //printf("task id: %d, sp: 0x%llx cnt: %d\n", get_taskid(), &cnt, cnt++); // address should be the same across tasks, but the cnt should be increased indepndently
+            uart_puts("\n\rtask_id: ");
+            uart_send_hex(get_taskid());
+            uart_puts("sp: ");
+            uart_send_hex((unsigned int)(unsigned long)&cnt);
+            uart_puts("cnt: ");
+            uart_send_hex(cnt++);
+            uart_send('\n');
+            uart_send('\r');
 
-      delay(100000);
+            delay(10000000);
+        }
+        exit(0); // all childs exit
     }
-    exit(0); // all childs exit
-  }
 }
 
-void test_command2() { // test page fault
-  if(fork() == 0) {
-    int* a = 0xffff0000f0000000; // a non-mapped address.
-    uart_send_hex(*a);
-  }
+void test_command2()
+{ // test page fault
+    if (fork() == 0)
+    {
+        int *a = (unsigned int *)0xffff0000f0000000; // a non-mapped address.
+        uart_send_hex(*a);
+    }
 }
 
-void test_command3() { // test page reclaim.
+void test_command3()
+{ // test page reclaim.
     uart_puts("Remaining page frames :0x");
     uart_send_hex(remain_page_num());
     uart_send('\n');
     uart_send('\r');
-  //printf("Remaining page frames : %d\n", remain_page_num()); // get number of remaining page frames from kernel by system call.
+    //printf("Remaining page frames : %d\n", remain_page_num()); // get number of remaining page frames from kernel by system call.
 }
 
 void print()
@@ -79,31 +84,38 @@ int main()
         uart_send('\r');
         uart_send('\n');
 
-        if (strcmp(cmd, "") == 0){
-
+        if (strcmp(cmd, "") == 0)
+        {
         }
-        else if(strcmp(cmd, "reboot") == 0){
+        else if (strcmp(cmd, "reboot") == 0)
+        {
             reboot();
         }
-        else if(strcmp(cmd, "exit") == 0){
+        else if (strcmp(cmd, "exit") == 0)
+        {
             exit(0);
         }
-        else if(strcmp(cmd, "hello") == 0){
+        else if (strcmp(cmd, "hello") == 0)
+        {
             uart_puts("Hello, World\n");
         }
-        else if(strcmp(cmd, "t1") == 0){
+        else if (strcmp(cmd, "t1") == 0)
+        {
             test_command1();
         }
-        else if(strcmp(cmd, "t2") == 0){
+        else if (strcmp(cmd, "t2") == 0)
+        {
             test_command2();
         }
-        else if(strcmp(cmd, "t3") == 0){
+        else if (strcmp(cmd, "t3") == 0)
+        {
             test_command3();
         }
-        else if(strcmp(cmd, "") == 0){
-
+        else if (strcmp(cmd, "") == 0)
+        {
         }
-        else{
+        else
+        {
             uart_send('<');
             uart_puts(cmd);
             uart_puts(">: Command not find\n\r");
@@ -112,5 +124,4 @@ int main()
         // default command
         // x = sh_default_command(cmd);
     }
-
 }

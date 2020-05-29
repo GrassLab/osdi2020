@@ -14,6 +14,7 @@
 #include "signal.h"
 
 #include "mm.h"
+#include "mm_allocator.h"
 
 #define INPUT_BUFFER_SIZE 64
 
@@ -23,7 +24,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 5.4.2\n");
+    uart_print("Version : 6.0.1\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -200,9 +201,10 @@ void task_program()
 
     printf("\ntask_id: %d\n", get_taskid());
 
-     _do_exec(program_start, program_size);
+    _do_exec(program_start, program_size);
     //do_exec((unsigned long)test);
-    if (check_reschedule()){
+    if (check_reschedule())
+    {
         schedule();
     }
 }
@@ -215,17 +217,55 @@ void task_program_2()
 
     printf("\ntask_id: %d\n", get_taskid());
 
-     _do_exec(program_start, program_size);
+    _do_exec(program_start, program_size);
     //do_exec((unsigned long)test);
-    if (check_reschedule()){
+    if (check_reschedule())
+    {
         schedule();
     }
 }
 
+/* from lab6 to lab8, just in one thread without VM and interrupt */
 int kernel_main()
 {
+    uart_init();
+    init_printf(0, putc);
+    system_start();
 
-    char *s = "Writing through MMIO mapped in higher half!\r\n";
+    init_buddy_system();
+
+    unsigned long m1 = get_free_space(2048);
+    printf("get memory address: %x\n", m1);
+
+    unsigned long m2 = get_free_space(PAGE_SIZE * 256);
+    printf("get memory address: %x\n", m2);
+
+    unsigned long m3 = get_free_space(4096);
+    printf("get memory address: %x\n", m3);
+
+    unsigned long m4 = get_free_space(2048);
+    printf("get memory address: %x\n", m4);
+
+    unsigned long m5 = get_free_space(4097);
+    printf("get memory address: %x\n", m5);
+
+    unsigned long m6 = get_free_space(PAGE_SIZE * 512);
+    printf("get memory address: %x\n", m6);
+
+    // this will fail
+    unsigned long m7 = get_free_space(PAGE_SIZE * 1024);
+    printf("get memory address: %x\n", m7);
+
+    free_space(m3);
+    free_space(m1);
+    while (1)
+    {
+    }
+    return 0;
+}
+
+int kernel_main_full()
+{
 
     // set uart
     uart_init();
@@ -237,30 +277,12 @@ int kernel_main()
 
     system_start();
 
-    /* You can't know Current EL, if you in EL0 */
-    /*
-    uart_puts("Current EL: ");
-    uart_send_int(get_current_el());
-    uart_puts("\n");
-    */
-
-
     task_init();
 
-
-    /*
-    privilege_task_create((unsigned long)task_111, 0);
-    */
     privilege_task_create((unsigned long)task_1, 0);
-    // privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
-    // privilege_task_create((unsigned long)task_3, 0);
 
-    //privilege_task_create((unsigned long)task_11, 0);
     privilege_task_create((unsigned long)task_program, 0);
     privilege_task_create((unsigned long)task_program_2, 0);
-
-    // privilege_task_create((unsigned long)task_4, 0);
-    // privilege_task_create((unsigned long)user_test, 0);
 
     // enable_irq();
 
