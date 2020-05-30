@@ -1,5 +1,6 @@
 #include "io.h"
 #include "mm.h"
+#include "string.h"
 #include "allocator.h"
 
 /* buddy system below */
@@ -174,28 +175,72 @@ void zone_free_pages(Zone zone, unsigned long addr){
 
 /* fixed size allocator below */
 
+FixedBook newFixedBook(unsigned long addr,
+    unsigned long page_addr, unsigned free_nr, FixedBook next){
+  FixedBook new = (FixedBook)addr;
+  memset(new->table, 0, FixedBookTableSzie);
+  new->page_addr = page_addr;
+  new->free_nr = free_nr;
+  new->next = next;
+  return new;
+}
+
 FixedAllocator fixed_allocator = 0;
 
 unsigned long fixed_sized_get_token(unsigned long size){
+
+  if(!size) return 0;
+
   FixedAllocator *iter = &fixed_allocator, fa;
-  while(*iter) iter = &((*iter)->next);
-  unsigned long token = get_free_page();
-  *iter = fa = (FixedAllocator)token;
-  fa->size = size;
-  fa->next = 0;
-  unsigned book_nr = (PAGE_SIZE - sizeof(FixedBookStr)) / sizeof(FixedBookStr);
-  FixedBook *book_ptr = &(fa->book);
-  for(unsigned i = 1; i <= book_nr; i++){
-     *book_ptr = (FixedBook)(token + i * sizeof(FixedBookStr));
-     (*book_ptr)->next = 0;
-     (*book_ptr)->free_nr = PAGE_SIZE / size;
-     (*book_ptr)->page_addr = 0;
-     book_ptr = &((*book_ptr)->next);
+  while(*iter && (*iter)->size) iter = &((*iter)->next);
+
+  if(*iter){
+    /* if exist empty fixed allocator */
+    fa = *iter;
   }
-  return token;
+  else{
+    /* new allocators and books */
+    unsigned long addr = get_free_page();
+    if(!addr) return 0;
+    fa = (FixedAllocator)addr;
+    unsigned nr = PAGE_SIZE / (sizeof(FixedAllocatorStr) + sizeof(FixedBookStr));
+    for(unsigned i = 0; i < nr; i++){
+      unsigned long allocator_addr = addr + i * sizeof(FixedAllocatorStr),
+                    book_addr = addr + nr * sizeof(FixedAllocatorStr) + i * sizeof(FixedBookStr);
+      (*iter) = (FixedAllocator)allocator_addr;
+      (*iter)->size = 0;
+      (*iter)->book = newFixedBook(book_addr, 0, PAGE_SIZE / size, 0);
+      iter = &((*iter)->next);
+    }
+    *iter = 0;
+  }
+  fa->size = size;
+  return (unsigned long)fa;
 }
 
 unsigned long fixed_sized_alloc(unsigned long token){
+
+  if(!token) return 0;
+
+  FixedAllocator aloctor = fixed_allocator;
+
+  while(aloctor)
+    if(aloctor == (FixedAllocator)token) break;
+    else aloctor = aloctor->next;
+
+  if(!aloctor) return 0;
+
+  FixedBook booker = aloctor->book;
+  while(booker->page_addr && (!booker->free_nr))
+    booker = booker->next;
+
+  if(booker->page_addr){
+    /* take an object from book */
+  }
+  else{
+    /* allocate new page */
+  }
+
   return 0;
 }
 

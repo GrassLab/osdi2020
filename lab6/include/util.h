@@ -34,4 +34,10 @@ extern void set_pgd(unsigned long pgd);
 
 #define sizeofType(type) printfmt("size of " #type " is %d", sizeof(type))
 
+#define SetBit(A,k)     ( A[(k)/8] |=  (1 << ((k)%8)) )
+#define ClearBit(A,k)   ( A[(k)/8] &= ~(1 << ((k)%8)) )
+#define TestBit(A,k)    ( A[(k)/8] &   (1 << ((k)%8)) )
+
+unsigned long pow2roundup(unsigned long x);
+
 #endif

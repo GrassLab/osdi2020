@@ -41,18 +41,18 @@ void zone_show(Zone zone, unsigned long cnt);
 
 /* fixed size allocator below */
 
-// 536
+#define FixedBookTableSzie 512
 typedef struct FixedBook_tag {
   unsigned long page_addr;
   unsigned free_nr;
-  char table[512];
-  struct fixedSizeBookTable_tag *next;
+  char table[FixedBookTableSzie];
+  struct FixedBook_tag *next;
 } FixedBookStr, *FixedBook;
 
 typedef struct FixedAllocator_tag {
   /* free areas of differents sizes */
   unsigned long size;
-  struct fallocator_tag *next;
+  struct FixedAllocator_tag *next;
   FixedBook book;
 } FixedAllocatorStr, *FixedAllocator;
 
