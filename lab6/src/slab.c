@@ -125,8 +125,24 @@ void slab_put_obj(unsigned long obj_addr)
     slab_ptr->inuse += 1;
 }
 
+unsigned long kmem_cache_alloc(struct kmem_cache *kmemche)
+{
+    struct slab *slab_ptr = kmemche->slab_head;
+    while((slab_ptr != 0) && (slab_ptr->inuse == 0)) {
+        slab_ptr = slab_ptr->next;
+    }
+    if(slab_ptr == 0) {
+        slab_ptr = slab_create(kmemche);
+    }
+    return slab_get_obj(slab_ptr, kmemche->obj_size);
+}
+
+
 unsigned long obj_allocate(int size) 
 {
+    if(size >= 2049) {
+        get_free_pages(1 + (size/PAGE_SIZE));
+    }
     struct kmem_cache *kmemche_ptr = kmemche_l.head;
     while((kmemche_ptr != 0) && (size != kmemche_ptr->obj_size)) {
         kmemche_ptr = kmemche_ptr->next;

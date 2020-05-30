@@ -29,6 +29,8 @@
 
 #ifndef __ASSEMBLER__
 #include "sched.h"
+// for debug
+void print_all_buddy();
 
 // allocate block from buddy system and return physical address of first page from given size
 struct block *alloc_block(int num_page);
@@ -56,7 +58,7 @@ void memcpy(unsigned long src, unsigned long dst, unsigned long n);
 
 int copy_virt_memory(struct task_struct *dst);
 struct block *allocate_kernel_page();
-unsigned long allocate_user_page(struct task_struct *task, unsigned long va, unsigned long prot);
+unsigned long allocate_user_page(struct task_struct *task, unsigned long va, unsigned long prot, int num_pages);
 int get_remain_num();
 
 extern unsigned long pg_dir;

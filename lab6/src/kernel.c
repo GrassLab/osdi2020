@@ -38,14 +38,22 @@ void kernel_main()
 	init_buddy_system();
 
 	init_obj_allocator();
-	unsigned long *test[1000];
-	for(int i = 0 ; i < 1000; i++) {
-		test[i] = obj_allocate(8);
-	}
-	*test[102] = 10;
-	printf("0x%x\r\n", test[102]);
-	slab_put_obj(&test);
 
+	struct kmem_cache *kmem_cache_16 = kmem_cache_create(sizeof(int) * 2);
+	int *test = kmem_cache_alloc(kmem_cache_16);
+	test[0] = 1;
+	test[1] = 4;
+	printf("test[0] 0x%x: %d\r\n", &test[0], test[0]);
+	printf("test[1] 0x%x: %d\r\n", &test[1], test[1]);
+	slab_put_obj(test);
+	int *test2 = kmem_cache_alloc(kmem_cache_16);
+	
+	printf("test[0] 0x%x: %d\r\n", &test2[0], test2[0]);
+	printf("test[1] 0x%x: %d\r\n", &test2[1], test2[1]);
+	int *test3 = obj_allocate(sizeof(int) * 4096);
+	test3[4000] = 50;
+	printf("test3[4000] 0x%x: %d\r\n", &test3[4000], test3[4000]);
+	
 	enable_core_timer();
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
 	
