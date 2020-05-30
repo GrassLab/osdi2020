@@ -80,6 +80,7 @@ void start_kernel() {
     el1_vector_init();
     enable_core_timer();
     enable_irq();
+    init_page_status();
 
     uart_puts("Welcome to MiniKernel 0.0.4\n");
     int ret;

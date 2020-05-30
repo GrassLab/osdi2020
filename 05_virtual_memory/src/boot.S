@@ -113,7 +113,7 @@ fill_normal_mem:
     cmp     x5, x7
     b.ls fill_normal_mem
 
-    mov     x7, #0x41000000
+    mov     x7, #0x40000000
 fill_device_mem:
     ldr     x8, =DEVICE_MEM_FLAGS
     orr     x8, x5, x8          // start from 0x3F000000
