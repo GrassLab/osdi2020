@@ -10,7 +10,7 @@
 #include "sched.h"
 #include "mini_uart.h"
 #include "sys.h"
-
+#include "slab.h"
 
 extern unsigned long user_begin;
 extern unsigned long user_end;
@@ -36,6 +36,16 @@ void kernel_main()
 	init_printf(NULL, putc);
 	irq_vector_init();
 	init_buddy_system();
+
+	init_obj_allocator();
+	unsigned long *test[1000];
+	for(int i = 0 ; i < 1000; i++) {
+		test[i] = obj_allocate(8);
+	}
+	*test[102] = 10;
+	printf("0x%x\r\n", test[102]);
+	slab_put_obj(&test);
+
 	enable_core_timer();
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
 	

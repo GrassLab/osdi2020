@@ -19,7 +19,7 @@ struct free_area buddy_entry[MAX_ORDER];
 static int block_pool[MAX_PAGE]; // record the used of block
 static struct block blocks[MAX_PAGE];
 
-// return the index of free block address
+// return the index of free block index
 int find_block(){
    for (int i = 0 ; i < MAX_PAGE ; i++) {
        if (block_pool[i] == 0) {
