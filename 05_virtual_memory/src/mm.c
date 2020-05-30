@@ -1,7 +1,7 @@
 #include "mm.h"
 
 unsigned short memory_map[NUM_PAGES] = {0,};
-struct page_struct page[32768];
+struct page_struct page[LAST_PAGE];
 
 /* simple allocate a continuous memory */
 unsigned long allocate_task_struct() {
@@ -30,8 +30,25 @@ unsigned long get_pfn(unsigned long addr) {
     return addr;
 }
 
+/* 0 means allocate failed, caller should check */
+unsigned long page_alloc() {
+    unsigned long addr = 0;
+    for (int i = FIRST_AVAIL_PAGE; i < LAST_PAGE; ++ i) {
+        if (page[i].in_use)
+            continue;
+        page[i].in_use = 1;
+        addr = i * PAGE_SIZE;
+        memzero(addr, PAGE_SIZE);
+    }
+    return addr;
+}
+
+void page_free(unsigned long addr) {
+    page[get_pfn(addr)].in_use = 0;
+}
+
 void init_page_status() {
-    for (int i = 0; i < FIRST_AVAILABLE_PAGE; ++ i) {
+    for (int i = 0; i < FIRST_AVAIL_PAGE; ++ i) {
         page[i].in_use = 1;
     }
 }

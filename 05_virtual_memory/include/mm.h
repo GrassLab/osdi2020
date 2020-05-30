@@ -17,7 +17,8 @@
 #define HIGH_MEMORY             0x3f000000
 
 #define NUM_PAGES               (HIGH_MEMORY >> PAGE_SHIFT)
-#define FIRST_AVAILABLE_PAGE    (LOW_MEMORY >> PAGE_SHIFT)
+#define FIRST_AVAIL_PAGE        (LOW_MEMORY >> PAGE_SHIFT)
+#define LAST_PAGE               16384
 
 #ifndef __ASSEMBLER__
 
@@ -25,6 +26,9 @@ void memzero(unsigned long src, unsigned long n);
 void memcpy(unsigned long dst, unsigned long src, unsigned long n);
 unsigned long allocate_task_struct();
 void free_task_struct(unsigned long ptr);
+
+unsigned long page_alloc();
+void page_free();
 
 unsigned long vaddr_to_paddr(unsigned long);
 unsigned long get_pfn(unsigned long);
@@ -34,7 +38,7 @@ struct page_struct {
     char in_use;
 };
 
-extern struct page_struct page[32768];
+extern struct page_struct page[LAST_PAGE];
 #endif
 
 #endif /*_MM_H */
