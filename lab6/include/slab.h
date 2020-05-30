@@ -14,6 +14,7 @@ struct Slab {
   int size;
   int free_length;
   int length;
+  int fixed;
 };
 
 extern unsigned long global_mem_start;

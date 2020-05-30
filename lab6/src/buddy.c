@@ -57,13 +57,15 @@ struct buddy *buddy_new(int size, unsigned long base_d) {
 void buddy_construct(struct buddy *self) {} /* not used in this moment */
 
 void buddy_show(struct buddy *self) {
-  struct Node *cur = 0;
+  println("===== buddy information ======");
   for (int i = 0; i < self->len; ++i) {
     printf("List %d: ", i);
-    cur = self->pair_array[i];
+    struct Node *cur = self->pair_array[i];
     show_nodes(cur);
-    printf("\n");
+    println("");
   }
+  println("==============================");
+
 }
 
 int bd_phy2n(unsigned long addr) {

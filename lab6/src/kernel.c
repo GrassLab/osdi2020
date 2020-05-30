@@ -69,6 +69,26 @@ void zombie_reaper() {
   }
 }
 
+void test_buddy(struct buddy *bd) {
+  Buddy.show(bd);
+  unsigned long free_arr[4] = {0,};
+  for (int i = 0; i < 4; ++i) {
+    /* allocate 16 pages */
+    struct Pair p = Buddy.alloc(bd, 16);
+    printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, bd_phy2n(p.lb), bd_phy2n(p.ub));
+    free_arr[i] = bd_phy2n(p.lb);
+    Buddy.show(bd);
+  }
+
+  for (int i = 0; i < 4; ++i) {
+    Buddy.dealloc(bd, free_arr[i]);
+  }
+  Buddy.show(bd);
+
+}
+
+
+
 void kernel_main() {
   uart_init();
   init_printf(NULL, putc);
@@ -79,126 +99,34 @@ void kernel_main() {
   /* Init the buddy system first with the base memory address */
   /* struct buddy *bd = Buddy.new(128, LOW_MEMORY + VA_START); */
 #define GB_1_PAGES ((1 << 30) >> 12)
+
+  /* create a buddy system */
   struct buddy *bd = Buddy.new(GB_1_PAGES, LOW_MEMORY + VA_START);
   global_bd = bd;
   if (!bd) {
     printf("erorr while constructing the buddy system");
     return;
   }
-  /* the initial state of buddy system */
-  Buddy.show(bd);
 
+#ifdef BUDDY
+  test_buddy(bd);
+#else
+  /* initalize the slab allocator */
+  /* it will reegsiter some specific size alloactor for it */
   kalloc_init(bd);
 
-  Buddy.show(bd);;
+  /* try to allocate a sizeof(i32) integer */
+  int *i32 = kalloc(sizeof(int));
+  *i32 = 123;
+  unsigned long *u64 = kalloc(sizeof(unsigned long));
+  *u64 = 456;
 
-  unsigned long i32;
-  unsigned long *v = kalloc(sizeof(i32));
-  *v = 100;
+  println("i32: %d , u64: %d", *i32, *u64);
 
-  Buddy.show(bd);
+  kfree(i32);
+  kfree(u64);
 
-  kfree(v);
-
-
-  Buddy.show(bd);
-
-
-  /* v = kalloc(sizeof(struct buddy)); */
-
-  /* v = kalloc(sizeof(struct buddy)); */
-
-
-
-
-  /* allocate 1 page for slab node */
-  /* struct Pair p = Buddy.alloc(bd, 1); */
-  /* Buddy.show(bd); */
-
-
-
-
-  /* struct Slab *slab_loc = (struct Slab *)(p.lb << 12); */
-
-  /* /\* allocate 1 page for slab free list*\/ */
-  /* p = Buddy.alloc(bd, 1); */
-  /* printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
-  /*        p.ub >> 12); */
-  /* Buddy.show(bd); */
-
-  /* unsigned long req_loc = (unsigned long)(p.lb << 12); */
-
-  /* init_slab((struct Slab *)slab_loc, req_loc, 32); */
-
-  /* /\* Buddy.dealloc(bd, 0); *\/ */
-  /* Buddy.show(bd); */
-
-
-  /* Buddy.dealloc(bd, 0); */
-  /* Buddy.dealloc(bd, 1); */
-
-  /* Buddy.show(bd); */
-
-
-  /* { */
-  /*   /\* allocate 32 *\/ */
-  /*   struct Pair p = Buddy.alloc(bd, 16); */
-  /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
-  /*          p.ub >> 12); */
-  /*   Buddy.show(bd); */
-  /* } */
-
-  /* { */
-  /*   /\* allocate 7 *\/ */
-  /*   struct Pair p = Buddy.alloc(bd, 16); */
-  /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
-  /*          p.ub >> 12); */
-  /*   Buddy.show(bd); */
-  /* } */
-
-  /* { */
-  /*   /\* allocate 64 *\/ */
-  /*   struct Pair p = Buddy.alloc(bd, 16); */
-  /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
-  /*          p.ub >> 12); */
-  /*   Buddy.show(bd); */
-  /* } */
-
-  /* { */
-  /*   /\* allocate 64 *\/ */
-  /*   struct Pair p = Buddy.alloc(bd, 16); */
-  /*   printf("alloc [%x to %x] w/ pair {%d, %d}\n", p.lb, p.ub, p.lb >> 12, */
-  /*          p.ub >> 12); */
-  /*   Buddy.show(bd); */
-  /* } */
-
-  /* { */
-  /*   Buddy.dealloc(bd, 0); */
-  /*   Buddy.show(bd); */
-  /* } */
-
-
-  /* { */
-  /*   Buddy.dealloc(bd, 9); */
-  /*   Buddy.show(bd); */
-  /* } */
-
-  /* { */
-  /*   Buddy.dealloc(bd, 32); */
-  /*   Buddy.show(bd); */
-  /* } */
-
-
-  /* { */
-  /*   Buddy.dealloc(bd, 16); */
-  /*   Buddy.show(bd); */
-  /* } */
-
-
-  /* { */
-  /*   Buddy.dealloc(bd, 48); */
-  /*   Buddy.show(bd); */
-  /* } */
+#endif
 
 
   sys_core_timer_enable();

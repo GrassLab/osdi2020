@@ -13,7 +13,7 @@ clean :
 
 $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 	mkdir -p $(@D)
-	$(ARMGNU)-gcc $(COPS) -MMD -c $< -o $@
+	$(ARMGNU)-gcc $(TESTFLAGS) $(COPS) -MMD -c $< -o $@
 
 $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
 	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
@@ -49,3 +49,8 @@ stdio: kernel8.img
 
 gdb: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s
+
+# Test the buddy system
+buddy:
+	make clean
+	make "TESTFLAGS+=-DBUDDY -DSHOW"
