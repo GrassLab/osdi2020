@@ -23,6 +23,12 @@ void foo() {
     }
 }
 
+void foo2() {
+    while (1) {
+        delay(delay_interval);
+    }
+}
+
 void test() {
     int cnt = 1;
     if (fork() == 0) {

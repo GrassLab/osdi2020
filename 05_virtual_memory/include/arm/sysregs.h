@@ -82,18 +82,13 @@
 #define PD_TABLE            0b11
 #define PD_BLOCK            0b01
 #define PD_PAGE             0b11
-#define PD_ACCESS           (1 << 10)
-// #define BOOT_PGD_ATTR   PD_TABLE
-// #define BOOT_PUD_ATTR   (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define PD_ACCESS           (1 << 10) 
+
 #define PGD_ATTR            PD_TABLE
 #define PUD_ATTR            PD_TABLE
 #define PMD_ATTR            PD_TABLE
+
 #define NORMAL_MEM_FLAGS    (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
 #define DEVICE_MEM_FLAGS    (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2)  | PD_PAGE)
-
-// #define MMU_NONE            ((MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE) // non-accessible 
-// #define MMU_FLAGS           (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
-// #define MMU_DEVICE_FLAGS    (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2)  | PD_PAGE)
-// #define MMU_PTE_FLAGS       (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE | PD_ACCESS_PERMISSION)
 
 #endif
