@@ -32,6 +32,21 @@ struct cpu_context {
     unsigned long pc;  // x30
 };
 
+#define MAX_PAGES_PER_PROCESS   16
+
+struct user_page {
+    unsigned long phys_addr;
+    unsigned long virt_addr;
+};
+
+struct mm_struct {
+    unsigned long pgd;
+    int user_pages_count;
+    struct user_page user_pages[MAX_PAGES_PER_PROCESS];
+    int kernel_pages_count;
+    unsigned long kernel_pages[MAX_PAGES_PER_PROCESS];
+};
+
 struct task_struct {
     struct cpu_context cpu_context;
     tid_t task_id;
@@ -41,11 +56,14 @@ struct task_struct {
     int preempt_count;
     unsigned long stack;
     unsigned long flags;
+    struct mm_struct mm;
 };
 
-#define INIT_TASK \
-{ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \
-   0, TASK_RUNNING, 5, 5, 0, PF_KTHREAD, 0}
+#define INIT_TASK { \
+   /* cpu_context */ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   \
+   /* state etc   */  0, TASK_RUNNING, 5, 5, 0, PF_KTHREAD, 0, \
+   /* mm          */ {0, 0, {{0}}, 0, {0}}                      \
+}
 
 tid_t acquire_unused_task_id();
 void preempt_enable();
