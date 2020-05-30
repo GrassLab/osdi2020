@@ -1,8 +1,13 @@
 #ifndef THREAD_H
 #define THREAD_H
 
-#define STACK_SIZE 4096
+#define STACK_SIZE    4096
 #define MAX_TASK_SIZE 64
+
+typedef struct cpu_context  cpu_context_t;
+typedef struct user_context user_context_t;
+typedef struct task         task_t;
+typedef struct task_manager task_manager_t;
 
 struct cpu_context {
     unsigned long x19;
@@ -20,16 +25,11 @@ struct cpu_context {
     unsigned long pc;
 }__attribute__ ((aligned (8)));
 
-typedef struct cpu_context cpu_context_t;
-
-
 struct user_context {
     unsigned long sp_el0;   // user stack
     unsigned long elr_el1;  // user pc 
     unsigned long spsr_el1; // user cpu state
 } __attribute__ ((aligned (8)));
-
-typedef struct user_context user_context_t;
 
 typedef struct trapframe {
 	unsigned long regs[31];
@@ -47,16 +47,12 @@ struct task {
     unsigned long trapframe;
 };
 
-typedef struct task task_t;
-
 struct task_manager {
     task_t task_pool[MAX_TASK_SIZE];
     char kstack_pool[MAX_TASK_SIZE][STACK_SIZE];
     char ustack_pool[MAX_TASK_SIZE][STACK_SIZE];
     int task_num;
 };
-
-typedef struct task_manager task_manager_t;
 
 enum {
     THREAD_RUNNABLE,

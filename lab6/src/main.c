@@ -8,6 +8,7 @@
 #include "thread.h"
 #include "syscall.h"
 #include "sched.h"
+#include "mm.h"
 
 task_manager_t TaskManager;
 task_t* current;
@@ -147,14 +148,20 @@ void main()
     // task_t* new_task3 = privilege_task_create((unsigned long)&print3);
     // task_t* new_task4 = privilege_task_create((unsigned long)&user_task);
     // task_t* new_task5 = privilege_task_create((unsigned long)&user_task2);
-    privilege_task_create((unsigned long)&exec_fork);
+    // privilege_task_create((unsigned long)&exec_fork);
 
     // shell();
 
-    enable_interrupt_controller();
-	enable_irq();
-    core_timer_enable();
-    idle_task();
+    // enable_interrupt_controller();
+	// enable_irq();
+    // core_timer_enable();
+    init_page_sys();
+    // idle_task();
+
+    while(1){
+        printf("waittt\n");
+        delay(100000000);
+    }
 
     // echo everything back
     // while(1) {

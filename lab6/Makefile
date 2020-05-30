@@ -48,3 +48,6 @@ debug:
 
 gtk:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img
+	
+gdb:
+	gdb-multiarch -x cmd.gdb
