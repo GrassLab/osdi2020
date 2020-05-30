@@ -10,6 +10,8 @@
 #define PAGE_SIZE               (1 << PAGE_SHIFT)
 #define SECTION_SIZE            (1 << SECTION_SHIFT)
 
+#define TABLE_MASK              ((1 << TABLE_SHIFT) - 1)
+
 // 4MB (page table) + 512KB (kernel start) + xxx (kernel code)
 // 1028 * 4096 + 2048 * 1024
 // round to 6MB for convinence
@@ -27,7 +29,7 @@ void memcpy(unsigned long dst, unsigned long src, unsigned long n);
 unsigned long allocate_task_struct();
 void free_task_struct(unsigned long ptr);
 
-unsigned long page_alloc();
+unsigned long get_free_page();
 void page_free();
 
 unsigned long vaddr_to_paddr(unsigned long);
