@@ -48,6 +48,9 @@ debug:
 
 gtk:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img
-	
+
 gdb:
 	gdb-multiarch -x cmd.gdb
+
+dump:
+	aarch64-linux-gnu-objdump -d ./build/kernel8.elf | less

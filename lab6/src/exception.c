@@ -97,7 +97,14 @@ void exception_handler(unsigned long trapframe)
     // Set trapframe
     task_t *task = get_current();
     printf("In the exception_handler , current task id is %d\n", current->task_id);
+    
+    
+    while(1){
 
+    }
+
+
+    
     //set user mode conetxt
     task->user_context.sp_el0 = sp_el0;
     task->user_context.elr_el1 = elr_el1;

@@ -3,6 +3,8 @@
 
 #include "list.h"
 
+#define NULL                    ((void *)0) 
+
 #define PAGE_SHIFT	 		    12
 #define TABLE_SHIFT 			9
 #define SECTION_SHIFT			(PAGE_SHIFT + TABLE_SHIFT)
@@ -24,6 +26,8 @@
 #define TOTAL_PAGE_NUMBER       2048
 #define MAX_BUDDY_PAGE_NUMBER   (1 << (MAX_ORDER-1))
 
+#define NEXT_BUDDY_START(now,order)	((now)+(1<<(order)))
+
 #ifndef __ASSEMBLER__
     void memzero(unsigned long src, unsigned long n);
     void init_buddy_sys();
@@ -38,11 +42,11 @@
         int order;
         int page_index;
         unsigned long phy_addr;
-        struct list_pointer list;
+        list_ptr_t list;
     };
     typedef struct page page_t;
     page_t page_t_pool[TOTAL_PAGE_NUMBER];
-    struct list_pointer page_buddy[MAX_ORDER];
+    list_ptr_t page_buddy[MAX_ORDER];
 
 #endif
 

@@ -140,7 +140,7 @@ void main()
         // init_lfb();
     init_printf(0, putc);
 
-    init_task_manager();
+    // init_task_manager();
 
 
     // task_t* new_task1 = privilege_task_create((unsigned long)&print);
