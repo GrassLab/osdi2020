@@ -1,5 +1,6 @@
 #include "io.h"
 #include "mm.h"
+#include "util.h"
 #include "string.h"
 #include "allocator.h"
 
@@ -175,14 +176,41 @@ void zone_free_pages(Zone zone, unsigned long addr){
 
 /* fixed size allocator below */
 
-FixedBook newFixedBook(unsigned long addr,
-    unsigned long page_addr, unsigned free_nr, FixedBook next){
-  FixedBook new = (FixedBook)addr;
-  memset(new->table, 0, FixedBookTableSzie);
-  new->page_addr = page_addr;
-  new->free_nr = free_nr;
+FixedAllocator newFixedAllocator(unsigned long addr,
+    unsigned long size, FixedBook book, FixedAllocator next){
+  FixedAllocator new = (FixedAllocator)addr;
+  new->size = size;
+  new->rs = pow2roundup(size);
   new->next = next;
+  new->book = book;
   return new;
+}
+
+FixedBook newFixedBook(FixedBook new,
+    unsigned long page_addr, FixedBook next){
+  new->page_addr = page_addr;
+  new->next = next;
+  new->free_nr = 0;
+  new->table = 0;
+  return new;
+}
+
+FixedBook appendFixedBooks(){
+  unsigned long addr = get_free_page();
+  unsigned nr = PAGE_SIZE / sizeof(FixedBookStr);
+  FixedBook iter = (FixedBook)addr;
+  for(unsigned i = 1; i < nr; i++)
+    iter = newFixedBook(iter, 0, (FixedBook)(addr + i * sizeof(FixedBookStr)))->next;
+  newFixedBook(iter, 0, 0);
+  return (FixedBook)addr;
+}
+
+unsigned long dispatch_tables(FixedBook book){
+  unsigned long tables = get_free_page();
+  unsigned nr = PAGE_SIZE / FixedBookTableSzie;
+  for(int i = 0; i < nr && book && tables; i++, book = book->next)
+    book->table = (char*)(tables + i * FixedBookTableSzie);
+  return tables;
 }
 
 FixedAllocator fixed_allocator = 0;
@@ -200,18 +228,12 @@ unsigned long fixed_sized_get_token(unsigned long size){
   }
   else{
     /* new allocators and books */
-    unsigned long addr = get_free_page();
-    if(!addr) return 0;
+    unsigned long addr;
+    if(!(addr = get_free_page())) return 0;
     fa = (FixedAllocator)addr;
-    unsigned nr = PAGE_SIZE / (sizeof(FixedAllocatorStr) + sizeof(FixedBookStr));
-    for(unsigned i = 0; i < nr; i++){
-      unsigned long allocator_addr = addr + i * sizeof(FixedAllocatorStr),
-                    book_addr = addr + nr * sizeof(FixedAllocatorStr) + i * sizeof(FixedBookStr);
-      (*iter) = (FixedAllocator)allocator_addr;
-      (*iter)->size = 0;
-      (*iter)->book = newFixedBook(book_addr, 0, PAGE_SIZE / size, 0);
-      iter = &((*iter)->next);
-    }
+    unsigned nr = PAGE_SIZE / sizeof(FixedAllocatorStr);
+    for(unsigned i = 0; i < nr; i++, iter = &((*iter)->next))
+      (*iter) = newFixedAllocator(addr + i * sizeof(FixedAllocatorStr), 0, 0, 0);
     *iter = 0;
   }
   fa->size = size;
@@ -230,20 +252,76 @@ unsigned long fixed_sized_alloc(unsigned long token){
 
   if(!aloctor) return 0;
 
-  FixedBook booker = aloctor->book;
-  while(booker->page_addr && (!booker->free_nr))
-    booker = booker->next;
+  FixedBook *bookptr = &(aloctor->book);
+  while((*bookptr) && (*bookptr)->page_addr && (!(*bookptr)->free_nr))
+    bookptr = &((*bookptr)->next);
 
-  if(booker->page_addr){
-    /* take an object from book */
-  }
-  else{
-    /* allocate new page */
+  if(!(*bookptr))
+    (*bookptr) = appendFixedBooks();
+
+  if(!((*bookptr)->page_addr)){
+    if(aloctor->rs > PAGE_SIZE){
+      unsigned ord = 0;
+      while((PAGE_SIZE << ord) < aloctor->rs) ord++;
+      (*bookptr)->page_addr = zone_get_free_pages(buddy_zone, ord);
+      (*bookptr)->free_nr = 1;
+    }
+    else{
+      (*bookptr)->page_addr = get_free_page();
+      (*bookptr)->free_nr = PAGE_SIZE / aloctor->rs;
+    }
   }
 
-  return 0;
+  if(!((*bookptr)->page_addr))
+    return 0;
+
+  if(!((*bookptr)->table) && !dispatch_tables((*bookptr)))
+    return 0;
+
+  /* take an object from book */
+  unsigned long offset = 0;
+  while(btst((*bookptr)->table, offset) && offset < PAGE_SIZE)
+    offset += aloctor->rs;
+
+  bset((*bookptr)->table, offset);
+  (*bookptr)->free_nr -= 1;
+
+  return (*bookptr)->page_addr + offset;
 }
 
-unsigned long fixed_sized_free(unsigned long addr){
-  return 0;
+void fixed_sized_free(unsigned long token, unsigned long addr){
+  if(!token) return;
+
+  FixedAllocator aloctor = fixed_allocator;
+
+  while(aloctor)
+    if(aloctor == (FixedAllocator)token) break;
+    else aloctor = aloctor->next;
+
+  if(!aloctor) return;
+
+  FixedBook bookiter = aloctor->book;
+  while(bookiter)
+    if((bookiter->page_addr & PAGE_MASK) == (addr & PAGE_MASK))
+      break;
+    else bookiter = bookiter->next;
+
+  if(!bookiter) return;
+
+  bclr(bookiter->table, (addr - bookiter->page_addr));
+  bookiter->free_nr += 1;
+
+  /* release the page */
+  if(aloctor->rs > PAGE_SIZE){
+    if(bookiter->free_nr){
+      free_page(bookiter->page_addr);
+      bookiter->page_addr = 0;
+    }
+  }
+  else{
+    if(bookiter->free_nr == (PAGE_SIZE / aloctor->rs)){
+      free_page(bookiter->page_addr);
+      bookiter->page_addr = 0;
+    }
+  }
 }

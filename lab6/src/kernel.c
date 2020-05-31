@@ -51,13 +51,6 @@ int main(void) {
     println(" \\ V  V /  __/ | (_| (_) | | | | | |  __/");
     println("  \\_/\\_/ \\___|_|\\___\\___/|_| |_| |_|\\___|" NEWLINE);
 
-    FixedBookStr s;
-    sizeofType(s);
-    sizeofType(s.page_addr);
-    sizeofType(s.free_nr);
-    sizeofType(s.table);
-    sizeofType(s.next);
-
 #ifdef BUILD_STAMP
 #define xstr(a) str(a)
 #define str(a) #a
@@ -72,6 +65,10 @@ int main(void) {
 
 
     printf("LOW_MEM 0x%x" NEWLINE, LOW_MEMORY);
+
+    sizeofType(FixedAllocatorStr);
+    sizeofType(FixedBookStr);
+    while(1);
 
     zone_init(buddy_zone);
     mark_reserved_pages((unsigned long)&_kend);
