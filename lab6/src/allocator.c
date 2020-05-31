@@ -246,21 +246,20 @@ int fixed_is_book_full(FixedAllocator aloctor, FixedBook bookiter){
     || (aloctor->rs <= PAGE_SIZE && bookiter->free_nr == (PAGE_SIZE / aloctor->rs));
 }
 
-FixedAllocator fixed_find_by_token(unsigned long token){
-  FixedAllocator aloctor = fixed_allocator;
+FixedAllocator fixed_find_by_token(unsigned long token, FixedAllocator fixed){
+  FixedAllocator aloctor = fixed;
   while(aloctor)
     if(aloctor == (FixedAllocator)token) break;
     else aloctor = aloctor->next;
   return aloctor;
 }
 
-
-unsigned long fixed_get_token(unsigned long size){
+unsigned long fixed_get_token_by(unsigned long size, FixedAllocator *fixedptr){
 
   disable_irq();
   if(!size) goto fixed_get_token_failed;
 
-  FixedAllocator avail = fixed_allocator;
+  FixedAllocator avail = *fixedptr;
 
   while(avail && avail->size) avail = avail->next;
 
@@ -272,11 +271,11 @@ unsigned long fixed_get_token(unsigned long size){
 
     unsigned nr = PAGE_SIZE / sizeof(FixedAllocatorStr);
     for(unsigned i = 0; i < nr; i++)
-      fixed_allocator = newFixedAllocator(
+      *fixedptr = newFixedAllocator(
           addr + i * sizeof(FixedAllocatorStr),
-          0, 0, fixed_allocator);
+          0, 0, *fixedptr);
 
-    avail = fixed_allocator;
+    avail = *fixedptr;
   }
   setFixedAllocator(avail, size);
   enable_irq();
@@ -287,13 +286,13 @@ fixed_get_token_failed:
   return 0;
 }
 
-void fixed_free_token(unsigned long token){
+void fixed_free_token_by(unsigned long token, FixedAllocator fixed){
 
   disable_irq();
 
   FixedAllocator aloctor;
 
-  if(!(aloctor = fixed_find_by_token(token)))
+  if(!(aloctor = fixed_find_by_token(token, fixed)))
     goto fixed_free_token_end;
 
   /* if any book is not full, return */
@@ -328,12 +327,12 @@ fixed_free_token_end:
   enable_irq();
 }
 
-unsigned long fixed_alloc(unsigned long token){
+unsigned long fixed_alloc_by(unsigned long token, FixedAllocator fixed){
   disable_irq();
 
   FixedAllocator aloctor;
 
-  if(!(aloctor = fixed_find_by_token(token)))
+  if(!(aloctor = fixed_find_by_token(token, fixed)))
     goto fixed_alloc_failed;
 
   FixedBook book = aloctor->book;
@@ -380,13 +379,13 @@ fixed_alloc_failed:
   return 0;
 }
 
-void fixed_free(unsigned long token, unsigned long addr){
+void fixed_free_by(unsigned long token, unsigned long addr, FixedAllocator fixed){
 
   disable_irq();
 
   FixedAllocator aloctor;
 
-  if(!(aloctor = fixed_find_by_token(token)))
+  if(!(aloctor = fixed_find_by_token(token, fixed)))
     goto fixed_free_end;
 
   FixedBook bookiter = aloctor->book;
@@ -411,6 +410,22 @@ fixed_free_end:
   enable_irq();
 }
 
+unsigned long fixed_get_token(unsigned long size){
+  return fixed_get_token_by(size, &fixed_allocator);
+}
+
+void fixed_free_token(unsigned long token){
+  fixed_free_token_by(token, fixed_allocator);
+}
+
+unsigned long fixed_alloc(unsigned long token){
+  return fixed_alloc_by(token, fixed_allocator);
+}
+
+void fixed_free(unsigned long token, unsigned long addr){
+  fixed_free_by(token, addr, fixed_allocator);
+}
+
 VariedAllocator varied_allocator = 0;
 unsigned long varied_token = 0;
 
@@ -428,10 +443,17 @@ unsigned long varied_get_token(){
 }
 
 void varied_free_token(unsigned long size){
-
 }
 
-unsigned long varied_alloc(unsigned long token){
+unsigned long varied_alloc(unsigned long token, unsigned long size){
+  VariedAllocator var = (VariedAllocator)token;
+  FixedAllocator iter = var->fixed;
+  size = pow2roundup(size);
+  while(iter && iter->rs != size)
+    iter = iter->next;
+  if(iter){
+  
+  }
   return 0;
 }
 

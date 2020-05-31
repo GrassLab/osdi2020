@@ -86,7 +86,7 @@ typedef struct VariedAllocator_tag {
 
 unsigned long varied_get_token();
 void varied_free_token(unsigned long size);
-unsigned long varied_alloc(unsigned long token);
+unsigned long varied_alloc(unsigned long token, unsigned long size);
 void varied_free(unsigned long token, unsigned long addr);
 
 #endif
