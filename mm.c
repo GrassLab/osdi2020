@@ -43,7 +43,8 @@ unsigned long va_to_pa(unsigned long va)
     return page_table[(va - 0xffff000000000000) / PAGE_SIZE].pa;
 }
 
-unsigned long pfn_to_pa(unsigned long pfn){
+unsigned long pfn_to_pa(unsigned long pfn)
+{
     return page_table[pfn].pa;
 }
 
@@ -197,7 +198,6 @@ void mmu_init()
 
     mem_map_init();
 
-
     // Require 1-3: Set up identity mapping. Enable MMU
     // tell the MMU where our translation tables are. TTBR_CNP bit not documented, but required
     // lower half, kernel space
@@ -268,7 +268,8 @@ void free_page(unsigned long pfn)
 
     uart_puts("free page: ");
     uart_send_int(pfn);
-    _uart_send('\n\r');
+    _uart_send('\n');
+    _uart_send('\r');
 
     /*
     for (int i = 0; i < PAGING_PAGES; i++)
@@ -281,10 +282,13 @@ void free_page(unsigned long pfn)
     */
 }
 
-int mm_remain_page_num(){
+int mm_remain_page_num()
+{
     int num = 0;
-    for(int i = 0; i < 1000; i++){
-        if(page_table[i].used == 0){
+    for (int i = 0; i < 1000; i++)
+    {
+        if (page_table[i].used == 0)
+        {
             num++;
         }
     }

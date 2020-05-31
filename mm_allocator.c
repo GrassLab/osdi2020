@@ -1,6 +1,7 @@
 #include "mm_allocator.h"
 #include "printf.h"
 #include "uart.h"
+#include "common.h"
 
 #define PAGE_SIZE 4096
 
@@ -51,6 +52,42 @@ void init_buddy_system()
         buddy_pool[i] = b;
     }
     buddy_pool[0] = b;
+}
+
+typedef struct m_node_pool_t
+{
+    m_node_t node;
+    int used;
+} m_node_pool_t;
+m_node_pool_t m_node_pool[1024];
+
+m_node_t *get_m_node()
+{
+    for (int i = 0; i < 1024; i++)
+    {
+        if (m_node_pool[i].used == 0)
+        {
+            m_node_pool[i].used = 1;
+            return &m_node_pool[i].node;
+        }
+    }
+    return NULL;
+}
+
+void free_m_node(m_node_t *node)
+{
+    for (int i = 0; i < 1024; i++)
+    {
+        if (node == &m_node_pool[i].node)
+        {
+            if (m_node_pool[i].used == 1)
+                m_node_pool[i].used = 0;
+            else
+                printf("Error: double free m node\n");
+            return;
+        }
+    }
+    printf("Error: wrong address\n");
 }
 
 // return address
@@ -145,6 +182,7 @@ void merge_buddy(int pfn)
     buddy->u = 0;
     buddy->size = 0;
     printf("After merge [%d, size: %d, used: %d]\n", pfn, b->size, b->used);
+    merge_buddy(pfn);
 }
 
 void free_space(unsigned long address)
@@ -154,4 +192,189 @@ void free_space(unsigned long address)
     b->used = 0;
 
     merge_buddy(pfn);
+}
+
+/* object allocator */
+varied_size_allocator_t register_varied_size_allocator()
+{
+    unsigned long pages = 1;
+    varied_size_allocator_t allocator;
+    allocator.pages = pages;
+    allocator.space = get_free_space(pages * PAGE_SIZE);
+
+    m_node_t *free_space = get_m_node();
+    free_space->address = allocator.space;
+    free_space->next = NULL;
+    free_space->size = pages * PAGE_SIZE;
+
+    allocator.free_space = free_space;
+    allocator.used_space = NULL;
+
+    return allocator;
+}
+
+void *kmalloc(varied_size_allocator_t *allocator, unsigned long size)
+{
+    m_node_t *free_head = allocator->free_space;
+    while (free_head != NULL)
+    {
+        if (free_head->size >= size)
+        {
+            unsigned long address = free_head->address;
+            free_head->address += size;
+            free_head->size -= size;
+
+            m_node_t *node = get_m_node();
+            node->address = address;
+            node->size = size;
+            node->next = allocator->used_space;
+            allocator->used_space = node;
+
+            printf("Allocate varied object: address ");
+            uart_send_hex(address >> 32);
+            uart_send_hex(address);
+            printf(" size %d\n", size);
+            return address;
+        }
+        free_head = free_head->next;
+    }
+    printf("Error: kmalloc fail, not enough memory\n");
+    return NULL;
+}
+
+void free_varied_memory(varied_size_allocator_t *allocator, unsigned long address)
+{
+    m_node_t *used_head = allocator->used_space;
+    m_node_t *prev = NULL;
+    while (used_head != NULL)
+    {
+        if (used_head->address == address)
+        {
+            if (prev == NULL)
+            {
+                allocator->used_space = used_head->next;
+            }
+            else
+            {
+                prev->next = used_head->next;
+            }
+            used_head->next = allocator->free_space;
+            allocator->free_space = used_head;
+
+            printf("Free varied object: address ");
+            uart_send_hex(address >> 32);
+            uart_send_hex(address);
+            printf(" size %d\n", used_head->size);
+            return;
+        }
+        prev = used_head;
+        used_head = used_head->next;
+    }
+    printf("Error: double free, or you don't allocate thie memory\n");
+}
+
+fixed_size_allocator_t register_fixed_size_allocator()
+{
+    fixed_size_allocator_t allocator;
+    allocator.address = get_free_space(1);
+    for (int i = 0; i < 4; i++)
+        allocator.m256[i] = 0;
+    for (int i = 0; i < 32; i++)
+        allocator.m32[i] = 0;
+    for (int i = 0; i < 256; i++)
+        allocator.m8[i] = 0;
+
+    return allocator;
+}
+
+void *kmalloc_256(fixed_size_allocator_t *allocator)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (allocator->m256[i] == 0)
+        {
+            allocator->m256[i] = 1;
+            unsigned long address = allocator->address + i * 256;
+            printf("Allocate fixed object: address ");
+            uart_send_hex(address >> 32);
+            uart_send_hex(address);
+            printf(" size 256\n");
+            return (void *)address;
+        }
+    }
+    return NULL;
+}
+
+void *kmalloc_32(fixed_size_allocator_t *allocator)
+{
+    for (int i = 0; i < 32; i++)
+    {
+        if (allocator->m32[i] == 0)
+        {
+            allocator->m32[i] = 1;
+            unsigned long address = allocator->address + 4 * 256 + i * 32;
+            printf("Allocate fixed object: address ");
+            uart_send_hex(address >> 32);
+            uart_send_hex(address);
+            printf(" size 32\n");
+            return (void *)address;
+        }
+    }
+    return NULL;
+}
+
+void *kmalloc_8(fixed_size_allocator_t *allocator)
+{
+    for (int i = 0; i < 256; i++)
+    {
+        if (allocator->m8[i] == 0)
+        {
+            allocator->m8[i] = 1;
+            unsigned long address = allocator->address + 4 * 256 + 32 * 32 + i * 8;
+            printf("Allocate fixed object: address ");
+            uart_send_hex(address >> 32);
+            uart_send_hex(address);
+            printf(" size 8\n");
+            return (void *)address;
+        }
+    }
+    return NULL;
+}
+
+void free_fixed_memory(fixed_size_allocator_t *allocator, unsigned long address)
+{
+    unsigned long offset = address - allocator->address;
+    int index;
+    int size;
+    if (address < allocator->address)
+    {
+        printf("Error: address out of allocator memory");
+        return;
+    }
+    if (offset < 4 * 256)
+    {
+        index = offset / 256;
+        allocator->m256[index] = 0;
+        size = 256;
+    }
+    else if (offset < 4 * 256 + 32 * 32)
+    {
+        index = (offset - 4 * 256) / 32;
+        allocator->m32[index] = 0;
+        size = 32;
+    }
+    else if (offset < 4 * 256 + 32 * 32 + 256 * 8)
+    {
+        index = (offset - 4 * 256 - 32 * 32) / 8;
+        allocator->m8[index] = 0;
+        size = 8;
+    }
+    else
+    {
+        printf("Error: address out of allocator memory");
+    }
+    printf("Free fixed object: address ");
+    uart_send_hex(address >> 32);
+    uart_send_hex(address);
+    printf(" size %d\n", size);
 }

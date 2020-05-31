@@ -24,7 +24,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 6.0.1\n");
+    uart_print("Version : 6.3.1\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -258,6 +258,35 @@ int kernel_main()
 
     free_space(m3);
     free_space(m1);
+
+    fixed_size_allocator_t o_allocator = register_fixed_size_allocator();
+    unsigned long o1, o2, o3;
+    o1 = kmalloc_8(&o_allocator);
+    free_fixed_memory(&o_allocator, o1);
+    o1 = kmalloc_8(&o_allocator);
+    o2 = kmalloc_8(&o_allocator);
+    free_fixed_memory(&o_allocator, o1);
+    free_fixed_memory(&o_allocator, o2);
+    o1 = kmalloc_256(&o_allocator);
+    o2 = kmalloc_256(&o_allocator);
+    o3 = kmalloc_32(&o_allocator);
+    free_fixed_memory(&o_allocator, o1);
+    free_fixed_memory(&o_allocator, o2);
+    free_fixed_memory(&o_allocator, o3);
+
+    varied_size_allocator_t v_allocator = register_varied_size_allocator();
+    unsigned long v1, v2, v3;
+    v1 = kmalloc(&v_allocator, 32);
+    v2 = kmalloc(&v_allocator, 64);
+    free_varied_memory(&v_allocator, v1);
+    free_varied_memory(&v_allocator, v2);
+    v1 = kmalloc(&v_allocator, 32);
+    v2 = kmalloc(&v_allocator, 128);
+    free_varied_memory(&v_allocator, v1);
+    v3 = kmalloc(&v_allocator, 128);
+    free_varied_memory(&v_allocator, v2);
+    free_varied_memory(&v_allocator, v3);
+
     while (1)
     {
     }
