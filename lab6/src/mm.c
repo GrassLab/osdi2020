@@ -11,15 +11,20 @@ void print_buddy_info(){
     for(int l = 0; l < MAX_ORDER; l++){
         if(!is_list_empty(&page_buddy[l])){
             list_ptr_t *tmp = page_buddy[l].next;
-            do{
-                page_t* page = list_entry(tmp, page_t ,list);
-                if(page->order > 0){
-                    printf("now buddy order: %d\n",page->order);
-                    printf("now buddy used info: %d\n",page->used);
-                    printf("now buddy addr: %d\n",page->phy_addr);
+            page_t* page = list_entry(tmp, page_t ,list);
+            while(1){
+                printf("start now buddy order: %d\n",page->order);
+                printf("start now buddy used info: %d\n",page->used);
+                printf("start now buddy addr: %x\n",page->phy_addr);
+                printf("start now buddy index: %d\n",page->page_index);
+                page_t* next_buddy_end_page = BUDDY_END(page, l);
+
+                page_t* page_next = list_entry((&(BUDDY_END(page, l))->list)->next, page_t ,list);
+                if((&(BUDDY_END(page, l))->list)->next == (&page_buddy[l])){
+                    break;
                 }
-                tmp = tmp->next;
-            }while(tmp != page_buddy[l].next);
+                page = page_next;
+            }
         }else{
             printf("buddy system level empty value is: %d\n",l);
         }
@@ -27,8 +32,19 @@ void print_buddy_info(){
 }
 
 page_t* get_back_redundant_memory(page_t* alloc_page, int get_page_level, int req_page_level){
-    for(; req_page_level < get_page_level; get_page_level--){
+    for(int r = get_page_level-1 ; r >= req_page_level; r--){
+        page_t* next_buddy_start_page = NEXT_BUDDY_START(alloc_page, r); 
+        page_t* next_buddy_end_page = BUDDY_END(next_buddy_start_page, r);
+        next_buddy_start_page->order = r;
 
+        list_ptr_t* next_buddy_start =  &(next_buddy_start_page->list);    
+		list_ptr_t* next_buddy_end = &(next_buddy_end_page->list);
+
+        printf("****** cutoff memory from %d to %d(totally %d page) in order %d list\r\n",\
+				next_buddy_start_page->page_index, next_buddy_end_page->page_index, \
+				next_buddy_end_page->page_index - next_buddy_start_page->page_index+1, r);
+
+        list_add_chain_tail(next_buddy_start,next_buddy_end,&page_buddy[r]);
     }
     return alloc_page;
 }
@@ -40,16 +56,29 @@ page_t* get_pages_from_list(int order){
         if(!is_list_empty(&page_buddy[o])){
             alloc_page = list_entry(page_buddy[o].next, page_t, list);
 
+            printf("request buddy order: %d\n",order);
             printf("want to allocate buddy order: %d\n",alloc_page->order);
             printf("want to allocate buddy used info: %d\n",alloc_page->used);
-            printf("want to allocate buddy addr: %d\n",alloc_page->phy_addr);
+            printf("want to allocate buddy addr: %x\n",alloc_page->phy_addr);
+            printf("want to allocate buddy index: %d\n",alloc_page->page_index);
+            printf("want to allocate buddy total page number: %d\n",(1 << alloc_page->order));
+
             
-            list_ptr_t* next_buddy = (&(NEXT_BUDDY_START(alloc_page, o))->list);
+
+            list_ptr_t* next_buddy =  (&(BUDDY_END(alloc_page, o)->list))->next;
+            printf("-----------------\n");
+            printf("request buddy order: %d\n",order);
+            printf("want to allocate buddy order: %d\n",alloc_page->order);
+            printf("want to allocate buddy used info: %d\n",alloc_page->used);
+            printf("want to allocate buddy addr: %x\n",alloc_page->phy_addr);
+            printf("want to allocate buddy index: %d\n",alloc_page->page_index);
+            printf("want to allocate buddy total page number: %d\n",(1 << alloc_page->order));
+            printf("page struct addr is : %x\n",&alloc_page);
+            printf("-----------------\n");
             
+
             next_buddy->prev = (&page_buddy[o]);
             page_buddy[o].next = next_buddy;
-
-            alloc_page = list_entry(next_buddy, page_t, list);
 
             break;
         }
@@ -90,6 +119,8 @@ void init_page_sys(){
                 printf("head value is:%d\n", p);
                 printf("end value is:%d\n", (p+MAX_BUDDY_PAGE_NUMBER-1));
                 printf("remain_counter is : %d\n",remain_counter);
+                printf("addr is : %x\n",page_t_pool[p].phy_addr);
+                printf("page struct addr is : %x\n",&page_t_pool[p]);
                 list_add_tail(&(page_t_pool[p].list),&page_buddy[MAX_ORDER-1]);
                 page_t_pool[p].order = MAX_ORDER-1;
             }
@@ -108,7 +139,21 @@ void init_page_sys(){
     print_buddy_info();
     printf("------\n");
 
-    get_pages_from_list(8);
+    get_pages_from_list(5);
 
     print_buddy_info();
+    printf("------\n");
+
+    get_pages_from_list(3);
+    print_buddy_info();
+
+    printf("------\n");
+
+    get_pages_from_list(2);
+    print_buddy_info();
+
+    // printf("------\n");
+
+    // get_pages_from_list(5);
+    // print_buddy_info();
 }

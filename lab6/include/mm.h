@@ -27,6 +27,7 @@
 #define MAX_BUDDY_PAGE_NUMBER   (1 << (MAX_ORDER-1))
 
 #define NEXT_BUDDY_START(now,order)	((now)+(1<<(order)))
+#define BUDDY_END(now,order)	((now)+(1<<(order))-1)
 
 #ifndef __ASSEMBLER__
     void memzero(unsigned long src, unsigned long n);
