@@ -6,38 +6,61 @@ OBJCPY = $(TOOLCHAIN_PREFIX)objcopy
 BUILD_DIR = build
 SRC_DIR = src
 LIB_DIR = lib
+USER_DIR = user
 
-LINKER_FILE = $(SRC_DIR)/linker.ld
-SRCS_C = $(wildcard $(SRC_DIR)/*.c)
-OBJS_C = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/c/%.o)
-SRCS_ASM = $(wildcard $(SRC_DIR)/*.S)
-OBJS_ASM = $(SRCS_ASM:$(SRC_DIR)/%.S=$(BUILD_DIR)/asm/%.o)
-SRCS_LIB = $(wildcard $(LIB_DIR)/*.c)
-OBJS_LIB = $(SRCS_LIB:$(LIB_DIR)/%.c=$(BUILD_DIR)/lib/%.o)
+LIB_C = $(wildcard $(LIB_DIR)/*.c)
+LIB_OBJS_FILES = $(LIB_C:$(LIB_DIR)/%.c=$(BUILD_DIR)/lib/%_c.o)
 
-CFLAGS = -Wall -Wextra -Werror -nostdlib -nostdinc -Iinclude -Ilib -c
+SRC_C = $(wildcard $(SRC_DIR)/*.c)
+SRC_ASM = $(wildcard $(SRC_DIR)/*.S)
+SRC_OBJS_FILES = $(SRC_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/src/%_c.o)
+SRC_OBJS_FILES += $(SRC_ASM:$(SRC_DIR)/%.S=$(BUILD_DIR)/src/%_asm.o)
+
+USER_C = $(wildcard $(USER_DIR)/*.c)
+USER_ASM = $(wildcard $(USER_DIR)/*.S)
+USER_OBJS_FILES = $(USER_C:$(USER_DIR)/%.c=$(BUILD_DIR)/user/%_c.o)
+USER_OBJS_FILES += $(USER_ASM:$(USER_DIR)/%.S=$(BUILD_DIR)/user/%_asm.o)
+
+CFLAGS = -Wall -Wextra -nostdlib -nostdinc -fno-builtin-printf -fno-builtin-memcpy -Iinclude -Ilib -c -Werror
 
 .PHONY: all clean
 
 all: build_dir kernel8.img
 
-# build
+# build library
 
-$(BUILD_DIR)/c/%.o: $(SRC_DIR)/%.c
+$(BUILD_DIR)/lib/%_c.o: $(LIB_DIR)/%.c
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/lib/%.o: $(LIB_DIR)/%.c
+# build kernel
+
+$(BUILD_DIR)/src/%_c.o: $(SRC_DIR)/%.c
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/asm/%.o: $(SRC_DIR)/%.S
+$(BUILD_DIR)/src/%_asm.o: $(SRC_DIR)/%.S
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
-kernel8.img: $(OBJS_C) $(OBJS_ASM) $(OBJS_LIB)
-	$(LD) $(OBJS_C) $(OBJS_ASM) $(OBJS_LIB) -T $(LINKER_FILE) -o kernel8.elf
-	$(OBJCPY) -O binary kernel8.elf kernel8.img 
+kernel8.img: $(SRC_OBJS_FILES) $(LIB_OBJS_FILES) user_embed.elf
+	$(LD) $(SRC_OBJS_FILES) $(LIB_OBJS_FILES) user_embed.elf -T $(SRC_DIR)/linker.ld -o kernel8.elf
+	$(OBJCPY) -O binary kernel8.elf kernel8.img
+
+# build user library
+
+$(BUILD_DIR)/user/%_c.o: $(USER_DIR)/%.c
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -fno-zero-initialized-in-bss $< -o $@
+
+$(BUILD_DIR)/user/%_asm.o: $(USER_DIR)/%.S
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -fno-zero-initialized-in-bss $< -o $@
+
+user_embed.elf: $(USER_OBJS_FILES) $(LIB_OBJS_FILES) build/src/sys_asm.o
+	$(LD) $(USER_OBJS_FILES) $(LIB_OBJS_FILES) build/src/sys_asm.o -T $(USER_DIR)/linker.ld -o user.elf
+	$(OBJCPY) -O binary user.elf user.img
+	$(LD) -r -b binary user.img -o user_embed.elf
 
 # run emulator
 

@@ -1,18 +1,17 @@
-#include "shell.h"
 #include "uart0.h"
 #include "frame_buffer.h"
 #include "mbox.h"
 #include "util.h"
 #include "schedule.h"
-
-#define CMD_LEN 128
+#include "mm.h"
 
 void boot_init() {
+    mm_init();
     task_init();
 
     // Initialize UART
-    uart_init();
-    uart_flush();
+    uart0_init();
+    uart0_flush();
     uart_printf("\n[%f] Init PL011 UART done", get_timestamp());
 
     // Initialize Frame Buffer
@@ -33,13 +32,5 @@ void boot_init() {
 
     while (1) {
         schedule();
-    }
-}
-
-int main() {
-    while (1) {
-        char cmd[CMD_LEN];
-        shell_input(cmd);
-        shell_controller(cmd);
     }
 }

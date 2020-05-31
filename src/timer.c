@@ -1,4 +1,4 @@
-#include "peripherals/timer.h"
+#include "peripherals/arm.h"
 
 void arm_core_timer_enable() {
     // enable timer

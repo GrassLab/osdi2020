@@ -1,8 +1,7 @@
 #include "peripherals/irq.h"
 #include "peripherals/uart0.h"
-#include "peripherals/timer.h"
+#include "peripherals/arm.h"
 #include "timer.h"
-#include "queue.h"
 #include "uart0.h"
 #include "exception.h"
 #include "schedule.h"
@@ -46,19 +45,15 @@ void sys_uart_write(struct trapframe* trapframe) {
     const char* buf = (char*) trapframe->x[0];
     uint32_t size = trapframe->x[1];
 
-    irq_enable();
-    for (uint32_t i = 0; i < size; i++) {
-        uart0_write(buf[i]);
-    }
-    irq_disable();
+    uart_printf("%s", buf);
     trapframe->x[0] = size;
 }
 
-void sys_exec(struct trapframe* trapframe) {
-    void (*func)() = (void(*)()) trapframe->x[0];
-    do_exec(func);
-    trapframe->x[0] = 0;
-}
+// void sys_exec(struct trapframe* trapframe) {
+//     void (*func)() = (void(*)()) trapframe->x[0];
+//     do_exec(func);
+//     trapframe->x[0] = 0;
+// }
 
 void sys_fork(struct trapframe* trapframe) {
     struct task_t* parent_task = get_current_task();
@@ -66,27 +61,27 @@ void sys_fork(struct trapframe* trapframe) {
     int child_id = privilege_task_create(return_from_fork, parent_task->priority);
     struct task_t* child_task = &task_pool[child_id];
 
+    // copy kernel stack
     char* child_kstack = &kstack_pool[child_task->id][KSTACK_TOP_IDX];
     char* parent_kstack = &kstack_pool[parent_task->id][KSTACK_TOP_IDX];
-    char* child_ustack = &ustack_pool[child_task->id][USTACK_TOP_IDX];
-    char* parent_ustack = &ustack_pool[parent_task->id][USTACK_TOP_IDX];
-
     uint64_t kstack_offset = parent_kstack - (char*)trapframe;
-    uint64_t ustack_offset = parent_ustack - (char*)trapframe->sp_el0;
-
     for (uint64_t i = 0; i < kstack_offset; i++) {
         *(child_kstack - i) = *(parent_kstack - i);
     }
-    for (uint64_t i = 0; i < ustack_offset; i++) {
-        *(child_ustack - i) = *(parent_ustack - i);
-    }
-
     // place child's kernel stack to right place
     child_task->cpu_context.sp = (uint64_t)child_kstack - kstack_offset;
 
+    // copy all user pages
+    for (uint64_t i = 0; i < parent_task->mm.user_pages_count; i++) {
+        uint64_t user_addr = parent_task->mm.user_pages[i];
+        uint64_t page_addr = user_addr_to_page_addr(user_addr, parent_task->mm.pgd);
+        void* page = get_page_user(child_task, user_addr);
+        memcpy(page, (void*)page_addr, PAGE_SIZE);
+    }
+
     // place child's user stack to right place
     struct trapframe* child_trapframe = (struct trapframe*) child_task->cpu_context.sp;
-    child_trapframe->sp_el0 = (uint64_t)child_ustack - ustack_offset;
+    child_trapframe->sp_el0 = trapframe->sp_el0;
 
     child_trapframe->x[0] = 0;
     trapframe->x[0] = child_task->id;
@@ -110,9 +105,9 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
             sys_uart_write(trapframe);
             break;
 
-        case SYS_EXEC:
-            sys_exec(trapframe);
-            break;
+        // case SYS_EXEC:
+        //     sys_exec(trapframe);
+        //     break;
 
         case SYS_FORK:
             sys_fork(trapframe);
@@ -121,10 +116,23 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
         case SYS_EXIT:
             sys_exit(trapframe);
             break;
+
+        case SYS_REMAIN_PAGE:
+            trapframe->x[0] = remain_page;
+            break;
     }
 }
 
+void page_fault_handler() {
+    register uint64_t fault_addr;
+    asm volatile("mrs %0, FAR_EL1": "=r"(fault_addr));
+    uart_printf("Page fault address at 0x%x, killed\n", fault_addr);
+    exit(0);
+}
+
 void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* trapframe) {
+    // irq_enable();
+
     int ec = (esr >> 26) & 0b111111;
     int iss = esr & 0x1FFFFFF;
     if (ec == 0b010101) {  // system call
@@ -149,6 +157,9 @@ void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* tra
         //         asm volatile ("mrs %0, cntpct_el0" : "=r" (cntpct_el0)); // read current counter
         //         break;
         // }
+    }
+    else if (ec == 0x24) {
+        page_fault_handler();
     }
     else {
         uart_printf("Exception return address 0x%x\n", elr);
@@ -190,7 +201,7 @@ void arm_core_timer_intr_handler() {
         current->counter = 0;
         current->need_resched = 1;
     }
-    irq_enable();
+    // irq_enable();
 }
 
 void arm_local_timer_intr_handler() {
