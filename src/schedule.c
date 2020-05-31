@@ -136,14 +136,19 @@ void zombie_reaper() {
     }
 }
 
+void user_program(){
+    extern uint64_t _binary_user_img_start;
+    extern uint64_t _binary_user_img_end;
+    uint64_t begin = (uint64_t)&_binary_user_img_start;
+    uint64_t end = (uint64_t)&_binary_user_img_end;
+
+    do_exec(begin, end - begin, 0x1000);
+}
+
 void schedule_init() {
     runqueue_init();
-    // privilege_task_create(zombie_reaper, 10);
-
-    privilege_task_create(demo_lab5_req3, 10);
-    // privilege_task_create(demo_lab5_req3, 10);
-    // privilege_task_create(demo_lab5_req3, 10);
-
+    privilege_task_create(zombie_reaper, 10);
+    privilege_task_create(user_program, 10);
     arm_core_timer_enable();
     schedule();
 }
