@@ -1,7 +1,5 @@
+#include "user_lib.h"
 #include "my_string.h"
-#include "uart0.h"
-#include "util.h"
-#include "exception.h"
 #include "sys.h"
 
 void delay(int period) {

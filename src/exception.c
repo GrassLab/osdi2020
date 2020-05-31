@@ -127,7 +127,7 @@ void page_fault_handler() {
     register uint64_t fault_addr;
     asm volatile("mrs %0, FAR_EL1": "=r"(fault_addr));
     uart_printf("Page fault address at 0x%x, killed\n", fault_addr);
-    exit(0);
+    do_exit(0);
 }
 
 void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* trapframe) {
