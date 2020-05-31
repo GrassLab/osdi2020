@@ -37,11 +37,6 @@ struct cpu_context {
 
 #define MAX_AREA                16 // Same, each task can use no more than 16 times mmap 
 
-struct user_page {
-	unsigned long phy_addr;
-	unsigned long vir_addr;
-};
-
 //prot
 #define PROT_NONE 0b000  // non-executable page frame for EL0
 #define PROT_READ 0b100  // rwx bit represent
@@ -53,6 +48,11 @@ struct user_page {
 #define MAP_ANONYMOUS 1
 #define MAP_POPULATE 2
 
+struct user_page {
+	unsigned long phy_addr;
+	unsigned long vir_addr;
+};
+
 struct vm_area_struct{
 	unsigned long vm_end;
 	unsigned long vm_start;
@@ -61,11 +61,6 @@ struct vm_area_struct{
 	unsigned long file_start;
 	int file_offset;
 };
-
-struct buddy_struct{
-	unsigned long area_start;
-        unsigned long area_size;	
-}; 
 
 struct mm_struct {
 	unsigned long pgd;	

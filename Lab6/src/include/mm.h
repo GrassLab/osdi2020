@@ -67,7 +67,7 @@ void map_entry(unsigned long *pte, unsigned long vir_addr,unsigned long phy_addr
 void memzero(unsigned long src, unsigned long n);
 void memcpy(void *dest, const void *src, unsigned long len);
 void kfree(unsigned long p);
-void free_page(unsigned long p);
+int free_page(unsigned long p);
 int free_user_page(unsigned long vir_addr);
 void dump_mem(void *src,unsigned long len);
 int page_fault_handler(unsigned long addr,unsigned long esr);

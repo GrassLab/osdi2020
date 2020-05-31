@@ -20,6 +20,13 @@ void allocator_init(){
 }
 
 int allocator_register(unsigned long size){
+	// We will refuse to build allocator if your object is larger then PAGE_SIZE
+	// Allocating by kmalloc/malloc will be a better choice
+	if (size>=PAGE_SIZE){
+		printf("Object too large! please use kmalloc/malloc to allocate\r\n");
+		return -1;
+	}
+
 	for(int i=0;i<MAX_ALLOCATOR_NUM;i++){
 		if (allocator_used_map[i] == POOL_NOT_USE){
 			allocator_used_map[i] = POOL_USE;

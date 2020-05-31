@@ -208,7 +208,7 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 		}	
 		case SYS_MALLOC: {
 			if(arg0 > (MIN_DEFAULT_ALLOCATOR_SIZE * DEFAULT_ALLOCATOR_NUM)){
-				printf("allocate by mmap\r\n");
+				printf("$$$ allocate by mmap\r\n");
 				return (unsigned long)mmap(NULL, arg0, PROT_READ|PROT_WRITE, MAP_ANONYMOUS, NULL, 0);
 			}
 			else{
@@ -220,13 +220,13 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
                                  		break;
                          		}
 	                 	}
-                 		printf("allocate from allocator number %d\r\n",allocator_num);
+                 		printf("$$$ allocate from allocator number %d\r\n",allocator_num);
 				return pool_alloc_user(&(default_allocator[current->pid][allocator_num]));
 
 			}
 		}
 		case SYS_FREE:{
-			  // if your memory was allocated from pool, put it back
+			 // if your memory was allocated from pool, put it back
 	        	for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++){
                  		pool tmp_pool = default_allocator[current->pid][i];
                  		for(int page=0; page<=tmp_pool.page; page++){
@@ -237,7 +237,6 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
                          		}
                  		}
          		}
-
 			return free_user_page(arg0);	      
 		}
 		case SYS_OBJ_ALLOCATOR_INIT:{

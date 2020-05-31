@@ -33,14 +33,16 @@ int check_string(char * str){
 }
 
 void test1(){
-	int *m = (int *)malloc(sizeof(int)*10);	
-	m[12] = 5;
-	printf("m[12] = %d at 0x%x\r\n",m[12],m);
+	int *m = (int *)malloc(0x4000);	
+	m[0] = 5;
+	printf("m[0] = %d at 0x%x\r\n",m[0],m);
+	m[3200] = 1;
+	printf("m[3200] = %d at 0x%x\r\n",m[3200],m+3200);
 	free((unsigned long)m);
 	
-	m = (int *)malloc(sizeof(int)*10);	
+	m = (int *)malloc(0x4000);	
 	printf("at 0x%x\r\n",m);
-	m = (int *)malloc(sizeof(int)*10);		
+	m = (int *)malloc(0x4000);		
 	printf("at 0x%x\r\n",m);
 }
 

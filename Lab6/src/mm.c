@@ -265,16 +265,19 @@ void kfree(unsigned long p){
 	// else free it to buddy system
 	free_page(p);
 }
-void free_page(unsigned long p){ //input should be physical address
+int free_page(unsigned long p){ //input should be physical address
 	unsigned long pfn = physical_to_pfn(p);
 	
-	for(unsigned int i=pfn; i < ( pfn+(1<<page[pfn].order)); i++){
+	int order = page[pfn].order;
+	for(unsigned int i=pfn; i < ( pfn+(1<<order)); i++){
 		page[i].used = NOT_USED;
 		remain_page++;
 		//printf("Free Page %d\r\n", i);
 	}
 	
-	put_pages_to_list(&page[pfn],page[pfn].order);	
+	put_pages_to_list(&page[pfn],order);
+	
+	return order;
 }
 
 /*************************************************************************/
@@ -293,32 +296,24 @@ void clean_entry(unsigned long *pte, unsigned long vir_addr) {
         pte[index] = 0; //making page fault happened
 }
 
-// For user page, thingd become more complicated, you have to clean up 
-// 1. page entry of virtual address
-// 2. relative vm_struct
+// For user page, things become more complicated, you have to clean up 
+// 1. relative vm_struct
+// 2. page entry of virtual address
 // 3. physical page which the virtual page mapping
 int free_user_page(unsigned long vir_addr){
 	vir_addr = (vir_addr>>12)<<12;
-
-	// find the page entry of virtual address, clean up
-	unsigned long table = current->mm.pgd;
-	int shift = 39;
-			
-	for(int i=0;i<3;i++){
-		table = get_table((unsigned long *)(table+VA_START),shift,vir_addr); 
-		shift-=9;
-	}
 	
-	clean_entry((unsigned long *)(table+VA_START),vir_addr);
-	set_pgd(current->mm.pgd); // after clean, setup pgd 
-			
-	// clean vm_struct
+	// Step 1. If the vir_addr map to a vm_struct, clean it
+	// this is for reuse of virtual address
+	
+	// vm_end is used for check if we need to free not only one user page
+	// by default one page
+	unsigned long vm_end = vir_addr + PAGE_SIZE; 
 	for(int i=0;i<current->mm.vm_area_count;i++){	
-	
 		if(vir_addr >= current->mm.mmap[i].vm_start &&\
 			vir_addr < current->mm.mmap[i].vm_end){
-				
-			printf("clean 0x%x\r\n",current->mm.mmap[i].vm_start);	
+			
+			vm_end = current->mm.mmap[i].vm_end;	
 			// moving array
 			for(int n=i;n<current->mm.vm_area_count-1;n++){
 				current->mm.mmap[n] = current->mm.mmap[n+1];
@@ -328,18 +323,41 @@ int free_user_page(unsigned long vir_addr){
 		}
 	}
 
-	//free using page
-	for(int i=0;i<current->mm.user_pages_count;i++){
-			if(vir_addr == current->mm.user_pages[i].vir_addr){
-				free_page(current->mm.user_pages[i].phy_addr);
-				current->mm.user_pages_count--;
-				return 0;
-			 }
-	} 
+	// Step 2+3. free "all" user pages and its page table
+	// For user, all using page will be order 0
+	// but note that the vir_addr may use more than one page
+	
+	int count = current->mm.user_pages_count;
+	for(int i=0;i<count;i++){
+		if(current->mm.user_pages[i].vir_addr >= vir_addr &&\
+			current->mm.user_pages[i].vir_addr < vm_end){
+			printf("+++ free page vir addr 0x%x, phy addr 0x%x\r\n",current->mm.user_pages[i].vir_addr,current->mm.user_pages[i].phy_addr);
+			free_page(current->mm.user_pages[i].phy_addr);
+			// moving array
+			for(int n=i;n<current->mm.user_pages_count-1;n++){
+				current->mm.user_pages[n] = current->mm.user_pages[n+1];
+			}	
+			current->mm.user_pages_count--;
 			
-	return -1;	      
+			// find table entry and clean it
+			unsigned long table = current->mm.pgd;
+			unsigned long target_va = current->mm.user_pages[i].vir_addr;
+			int shift = 39;
+			
+			for(int iter=0;iter<3;iter++){
+				table = get_table((unsigned long *)(table+VA_START),shift,vir_addr); 
+				shift-=9;
+			}
+			clean_entry((unsigned long *)(table+VA_START),target_va);
+		 }
+	}
+
+	set_pgd(current->mm.pgd); // after clean, setup pgd 
+			
+	return 0;	      
 }
-/**********************************************************************************/
+/**************************************************************************************/
+
 void memcpy (void *dest, const void *src, unsigned long len)
 {
   	char *d = dest;
