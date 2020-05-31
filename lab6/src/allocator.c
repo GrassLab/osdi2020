@@ -241,6 +241,20 @@ unsigned long dispatch_tables(FixedBook book){
 
 FixedAllocator fixed_allocator = 0;
 
+int fixed_is_book_full(FixedAllocator aloctor, FixedBook bookiter){
+  return (aloctor->rs > PAGE_SIZE && bookiter->free_nr)
+    || (aloctor->rs <= PAGE_SIZE && bookiter->free_nr == (PAGE_SIZE / aloctor->rs));
+}
+
+FixedAllocator fixed_find_by_token(unsigned long token){
+  FixedAllocator aloctor = fixed_allocator;
+  while(aloctor)
+    if(aloctor == (FixedAllocator)token) break;
+    else aloctor = aloctor->next;
+  return aloctor;
+}
+
+
 unsigned long fixed_get_token(unsigned long size){
 
   disable_irq();
@@ -276,20 +290,24 @@ fixed_get_token_failed:
 void fixed_free_token(unsigned long token){
 
   disable_irq();
-  if(!token) goto fixed_free_token_end;
 
-  FixedAllocator aloctor = fixed_allocator;
+  FixedAllocator aloctor;
 
-  while(aloctor)
-    if(aloctor == (FixedAllocator)token) break;
-    else aloctor = aloctor->next;
+  if(!(aloctor = fixed_find_by_token(token)))
+    goto fixed_free_token_end;
 
-  if(!aloctor) goto fixed_free_token_end;
-
-  aloctor->size = aloctor->rs = 0;
+  /* if any book is not full, return */
   FixedBook book = aloctor->book;
-
   while(book){
+    if(!fixed_is_book_full(aloctor, book))
+      goto fixed_free_token_end;
+    book = book->next;
+  }
+
+  /* release all book memory */
+  book = aloctor->book;
+  while(book){
+
     book->free_nr = 0;
     if(book->page_addr){
       fixed_log("free page 0x%x", book->page_addr);
@@ -304,6 +322,7 @@ void fixed_free_token(unsigned long token){
     book = book->next;
   }
   aloctor->book = 0;
+  aloctor->size = aloctor->rs = 0;
 
 fixed_free_token_end:
   enable_irq();
@@ -312,20 +331,10 @@ fixed_free_token_end:
 unsigned long fixed_alloc(unsigned long token){
   disable_irq();
 
-  //show_sp();
-  //__asm__ volatile("ldp	x1, x0, [sp], #96");
-  //__asm__ volatile("bl show_addr");
+  FixedAllocator aloctor;
 
-
-  if(!token) goto fixed_alloc_failed;
-
-  FixedAllocator aloctor = fixed_allocator;
-
-  while(aloctor)
-    if(aloctor == (FixedAllocator)token) break;
-    else aloctor = aloctor->next;
-
-  if(!aloctor) goto fixed_alloc_failed;
+  if(!(aloctor = fixed_find_by_token(token)))
+    goto fixed_alloc_failed;
 
   FixedBook *bookptr = &(aloctor->book);
   while((*bookptr) && (*bookptr)->page_addr && (!(*bookptr)->free_nr))
@@ -376,15 +385,11 @@ fixed_alloc_failed:
 void fixed_free(unsigned long token, unsigned long addr){
 
   disable_irq();
-  if(!token) goto fixed_free_end;
 
-  FixedAllocator aloctor = fixed_allocator;
+  FixedAllocator aloctor;
 
-  while(aloctor)
-    if(aloctor == (FixedAllocator)token) break;
-    else aloctor = aloctor->next;
-
-  if(!aloctor) goto fixed_free_end;
+  if(!(aloctor = fixed_find_by_token(token)))
+    goto fixed_free_end;
 
   FixedBook bookiter = aloctor->book;
   while(bookiter)
@@ -398,21 +403,36 @@ void fixed_free(unsigned long token, unsigned long addr){
   bookiter->free_nr += 1;
 
   /* release the page */
-  if(aloctor->rs > PAGE_SIZE){
-    if(bookiter->free_nr){
-      fixed_log("free page 0x%x", bookiter->page_addr);
-      free_page(bookiter->page_addr);
-      bookiter->page_addr = 0;
-    }
-  }
-  else{
-    if(bookiter->free_nr == (PAGE_SIZE / aloctor->rs)){
-      fixed_log("free page 0x%x", bookiter->page_addr);
-      free_page(bookiter->page_addr);
-      bookiter->page_addr = 0;
-    }
+  if(fixed_is_book_full(aloctor, bookiter)){
+    fixed_log("free page 0x%x", bookiter->page_addr);
+    free_page(bookiter->page_addr);
+    bookiter->page_addr = 0;
   }
 
 fixed_free_end:
   enable_irq();
+}
+
+VariedAllocator varied_allocator = 0;
+unsigned long varied_token = 0;
+
+unsigned long varied_get_token(){
+
+  if(!varied_token)
+    varied_token = fixed_get_token(sizeof(VariedAllocatorStr));
+
+
+  return 0;
+}
+
+void varied_free_token(unsigned long size){
+
+}
+
+unsigned long varied_alloc(unsigned long token){
+  return 0;
+}
+
+void varied_free(unsigned long token, unsigned long addr){
+
 }

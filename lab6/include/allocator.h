@@ -42,10 +42,18 @@ void zone_show(Zone zone, unsigned long cnt);
 
 #if enable_fixed_log
 #define fixed_log(...) printfmt(__VA_ARGS__)
-#define fixed_log_graph(zone) fixed_show(zone, 3)
+#define fixed_log_graph(fixed) fixed_show(fixed, 3)
 #else
 #define fixed_log(...) ;
-#define fixed_log_graph(zone) ;
+#define fixed_log_graph(fixed) ;
+#endif
+
+#if enable_varied_log
+#define varied_log(...) printfmt(__VA_ARGS__)
+#define varied_log_graph(varied) varied_show(varied, 3)
+#else
+#define varied_log(...) ;
+#define varied_log_graph(varied) ;
 #endif
 
 /* fixed size allocator below */
@@ -70,5 +78,15 @@ unsigned long fixed_get_token(unsigned long size);
 void fixed_free_token(unsigned long size);
 unsigned long fixed_alloc(unsigned long token);
 void fixed_free(unsigned long token, unsigned long addr);
+
+typedef struct VariedAllocator_tag {
+  FixedAllocator fixed;
+  struct VariedAllocator_tag *next;
+} VariedAllocatorStr, *VariedAllocator;
+
+unsigned long varied_get_token();
+void varied_free_token(unsigned long size);
+unsigned long varied_alloc(unsigned long token);
+void varied_free(unsigned long token, unsigned long addr);
 
 #endif
