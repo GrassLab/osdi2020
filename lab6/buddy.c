@@ -185,11 +185,6 @@ struct buddy_page_node_struct * buddy_pop_page_node(unsigned buddy_table_list_bl
 int buddy_split(unsigned block_size)
 {
   char string_buff[0x20];
-  if(block_size == 4)
-  {
-    block_size = block_size + 1;
-    block_size = block_size - 1;
-  }
 
   struct buddy_page_node_struct * block_to_be_split_ptr;
   if(block_size >= BUDDY_TABLE_LIST_LENGTH || block_size == 0)
