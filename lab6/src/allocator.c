@@ -221,13 +221,13 @@ FixedBook newFixedBook(FixedBook new,
   return new;
 }
 
-FixedBook appendFixedBooks(){
+FixedBook prependFixedBooks(FixedBook next){
   unsigned long addr = get_free_page();
   unsigned nr = PAGE_SIZE / sizeof(FixedBookStr);
   FixedBook iter = (FixedBook)addr;
   for(unsigned i = 1; i < nr; i++)
     iter = newFixedBook(iter, 0, (FixedBook)(addr + i * sizeof(FixedBookStr)))->next;
-  newFixedBook(iter, 0, 0);
+  newFixedBook(iter, 0, next);
   return (FixedBook)addr;
 }
 
@@ -260,27 +260,27 @@ unsigned long fixed_get_token(unsigned long size){
   disable_irq();
   if(!size) goto fixed_get_token_failed;
 
-  FixedAllocator *iter = &fixed_allocator, fa;
-  while(*iter && (*iter)->size) iter = &((*iter)->next);
+  FixedAllocator avail = fixed_allocator;
 
-  if(*iter){
-    /* if exist empty fixed allocator */
-    fa = *iter;
-  }
-  else{
+  while(avail && avail->size) avail = avail->next;
+
+  if(!avail){
     /* new allocators and books */
     unsigned long addr;
     if(!(addr = get_free_page()))
       goto fixed_get_token_failed;
-    fa = (FixedAllocator)addr;
+
     unsigned nr = PAGE_SIZE / sizeof(FixedAllocatorStr);
-    for(unsigned i = 0; i < nr; i++, iter = &((*iter)->next))
-      (*iter) = newFixedAllocator(addr + i * sizeof(FixedAllocatorStr), 0, 0, 0);
-    *iter = 0;
+    for(unsigned i = 0; i < nr; i++)
+      fixed_allocator = newFixedAllocator(
+          addr + i * sizeof(FixedAllocatorStr),
+          0, 0, fixed_allocator);
+
+    avail = fixed_allocator;
   }
-  setFixedAllocator(fa, size);
+  setFixedAllocator(avail, size);
   enable_irq();
-  return (unsigned long)fa;
+  return (unsigned long)avail;
 
 fixed_get_token_failed:
   enable_irq();
@@ -336,46 +336,44 @@ unsigned long fixed_alloc(unsigned long token){
   if(!(aloctor = fixed_find_by_token(token)))
     goto fixed_alloc_failed;
 
-  FixedBook *bookptr = &(aloctor->book);
-  while((*bookptr) && (*bookptr)->page_addr && (!(*bookptr)->free_nr))
-    bookptr = &((*bookptr)->next);
+  FixedBook book = aloctor->book;
+  while(book && book->page_addr && !(book->free_nr))
+    book = book->next;
 
-  if(!(*bookptr)){
-    (*bookptr) = appendFixedBooks();
-  }
+  if(!book) aloctor->book = book = prependFixedBooks(aloctor->book);
 
-  if(!((*bookptr)->page_addr)){
+  if(!(book->page_addr)){
     if(aloctor->rs > PAGE_SIZE){
       unsigned ord = 0;
       while((PAGE_SIZE << ord) < aloctor->rs) ord++;
-      (*bookptr)->page_addr = zone_get_free_pages(buddy_zone, ord);
-      (*bookptr)->free_nr = 1;
+      book->page_addr = zone_get_free_pages(buddy_zone, ord);
+      book->free_nr = 1;
     }
     else{
-      (*bookptr)->page_addr = get_free_page();
-      (*bookptr)->free_nr = PAGE_SIZE / aloctor->rs;
+      book->page_addr = get_free_page();
+      book->free_nr = PAGE_SIZE / aloctor->rs;
     }
   }
 
-  if(!((*bookptr)->page_addr))
+  if(!(book->page_addr))
     goto fixed_alloc_failed;
 
-  if(!((*bookptr)->table) && !dispatch_tables((*bookptr)))
+  if(!(book->table) && !dispatch_tables(book))
     goto fixed_alloc_failed;
 
   /* take an object from book */
   unsigned long offset = 0;
-  while(btst((*bookptr)->table, offset) && offset < PAGE_SIZE){
+  while(btst(book->table, offset) && offset < PAGE_SIZE){
     offset += aloctor->rs;
   }
 
   fixed_log("book = %d", offset);
 
-  bset((*bookptr)->table, offset);
-  (*bookptr)->free_nr -= 1;
+  bset(book->table, offset);
+  book->free_nr -= 1;
 
   enable_irq();
-  return (*bookptr)->page_addr + offset;
+  return book->page_addr + offset;
 
 fixed_alloc_failed:
   enable_irq();
@@ -416,13 +414,17 @@ fixed_free_end:
 VariedAllocator varied_allocator = 0;
 unsigned long varied_token = 0;
 
+VariedAllocator newVariedAllocator(unsigned long addr,
+    FixedAllocator fixed, VariedAllocator next){
+  VariedAllocator new = (VariedAllocator)addr;
+  new->fixed = fixed;
+  new->next = next;
+  return new;
+}
+
 unsigned long varied_get_token(){
-
-  if(!varied_token)
-    varied_token = fixed_get_token(sizeof(VariedAllocatorStr));
-
-
-  return 0;
+  if(!varied_token) varied_token = fixed_get_token(sizeof(VariedAllocatorStr));
+  return (unsigned long) newVariedAllocator(fixed_alloc(varied_token), 0, 0);
 }
 
 void varied_free_token(unsigned long size){

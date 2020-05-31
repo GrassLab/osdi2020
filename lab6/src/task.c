@@ -237,14 +237,6 @@ void task_allocation() {
     unsigned times = 10;
     unsigned long addrs[times];
     unsigned long token = fixed_get_token(size);
-#if 0
-    if(size % 100 == 0){
-      puts("delay");
-      do{ int r = 500000 * 100;
-        while(r--) __asm__ volatile("nop");
-      }while(0);
-    }
-#endif
 
     for(int i = 0; i < times; i++){
       addrs[i] = fixed_alloc(token);
@@ -255,8 +247,8 @@ void task_allocation() {
     }
 
     fixed_free_token(token);
-    //zone_show(buddy_zone, 3);
     printfmt("size = %d", size);
+
   }
   printf(NEWLINE "============    [%d] TASK  alloc done    ============"  NEWLINE,
       current_task->pid);
