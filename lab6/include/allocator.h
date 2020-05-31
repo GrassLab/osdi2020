@@ -75,7 +75,7 @@ typedef struct FixedAllocator_tag {
 } FixedAllocatorStr, *FixedAllocator;
 
 unsigned long fixed_get_token(unsigned long size);
-void fixed_free_token(unsigned long size);
+void fixed_free_token(unsigned long token);
 unsigned long fixed_alloc(unsigned long token);
 void fixed_free(unsigned long token, unsigned long addr);
 
@@ -85,7 +85,7 @@ typedef struct VariedAllocator_tag {
 } VariedAllocatorStr, *VariedAllocator;
 
 unsigned long varied_get_token();
-void varied_free_token(unsigned long size);
+void varied_free_token(unsigned long token);
 unsigned long varied_alloc(unsigned long token, unsigned long size);
 void varied_free(unsigned long token, unsigned long addr);
 
