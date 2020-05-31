@@ -66,10 +66,6 @@ int main(void) {
 
     printf("LOW_MEM 0x%x" NEWLINE, LOW_MEMORY);
 
-    sizeofType(FixedAllocatorStr);
-    sizeofType(FixedBookStr);
-    while(1);
-
     zone_init(buddy_zone);
     mark_reserved_pages((unsigned long)&_kend);
   //  if (get_board_revision())

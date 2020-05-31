@@ -6,6 +6,8 @@
 #include "info.h"
 #include "string.h"
 #include "mm.h"
+#include "irq.h"
+#include "allocator.h"
 #include "syscall.h"
 
 #define Task_pt_regs(tsk) ((struct pt_regs*)(tsk->mm.kernel_pages[0] + THREAD_SIZE - sizeof(struct pt_regs)))
@@ -39,17 +41,10 @@ void preempt_disable() {
   //printf("[%d] disable preempt" NEWLINE, current_task->pid);
 }
 
-//int talloc(){
-//  for (int i = 0; i < TASK_SIZE; i++)
-//    if (task_pool[i].status == none) // || task_pool[i].status == zombie
-//      return i;
-//  return -1;
-//}
-
 Task *find_task(unsigned long pid){
   for(int i = 0; i < TASK_SIZE; i++)
-      if(tasks[i] && tasks[i]->pid == pid)
-        return tasks[i];
+    if(tasks[i] && tasks[i]->pid == pid)
+      return tasks[i];
   return 0;
 }
 
@@ -148,14 +143,6 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
   return p;
 }
 
-
-int *show_sp(){
-  int *sp;
-  __asm__ volatile("mov %0, sp":"=r"(sp));
-  printf("sp = 0x%x" NEWLINE, sp);
-  return sp;
-}
-
 #if 0
 char* getline(char *buffer, char c){
   char *p = buffer;
@@ -195,6 +182,7 @@ void exit(){
   preempt_disable();
   current_task->status = zombie;
   preempt_enable();
+  schedule();
 }
 
 #define TASK_(n) void task_ ## n () { \
@@ -231,6 +219,49 @@ void kexec_user_main(){
   }
 }
 
+void test_val(unsigned long addr){
+  for(int i = -10; i < -10; i++){
+    printfmt("%x the val 0x%x", addr + 48 + i * 8, *(unsigned long*)(addr + 48 + i * 8));
+  }
+}
+
+void task_allocation() { 
+
+
+  printf(NEWLINE "============    [%d] TASK  allocation    ============"  NEWLINE,
+      current_task->pid);
+
+
+  for(unsigned size = 1; size < 515; size++){
+
+    unsigned times = 10;
+    unsigned long addrs[times];
+    unsigned long token = fixed_get_token(size);
+#if 0
+    if(size % 100 == 0){
+      puts("delay");
+      do{ int r = 500000 * 100;
+        while(r--) __asm__ volatile("nop");
+      }while(0);
+    }
+#endif
+
+    for(int i = 0; i < times; i++){
+      addrs[i] = fixed_alloc(token);
+      printfmt("addr = 0x%x", addrs[i]);
+    }
+    for(int i = 0; i < times; i++){
+      fixed_free(token, addrs[i]);
+    }
+
+    fixed_free_token(token);
+    //zone_show(buddy_zone, 3);
+    printfmt("size = %d", size);
+  }
+  printf(NEWLINE "============    [%d] TASK  alloc done    ============"  NEWLINE,
+      current_task->pid);
+  exit();
+}
 
 void kernel_process(){
   puts("kernel process begin...");
@@ -238,7 +269,8 @@ void kernel_process(){
   //privilege_task_create(do_exec, (UL)user_login, 3);
   //privilege_task_create(do_exec, (UL)user_shell, 2);
   privilege_task_create(task_1, 0, current_task->priority);
-  privilege_task_create(task_2, 0, current_task->priority);
+  //privilege_task_create(task_3, 0, current_task->priority);
+  privilege_task_create(task_allocation, 0, current_task->priority);
   //privilege_task_create(task_3, 0, current_task->priority);
   //privilege_task_create(task_4, 0, current_task->priority);
   //privilege_task_create(do_exec, (UL)user_fork, current_task->priority);
@@ -248,7 +280,7 @@ void kernel_process(){
   //privilege_task_create(do_exec, (UL)user_mutex, current_task->priority);
   //privilege_task_create(do_exec, (UL)user_write, current_task->priority);
   //privilege_task_create(do_exec, (UL)user_hang, current_task->priority);
-  privilege_task_create(kexec_user_main, 0, current_task->priority);
+  //privilege_task_create(kexec_user_main, 0, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_2, 0);
   //privilege_task_create(task_3, 0);

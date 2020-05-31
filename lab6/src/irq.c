@@ -100,6 +100,7 @@ void handle_uart_irq(void) {
 
 #define miniUART_IRQ (1 << 0)
 void irq_handler() {
+
   unsigned int irq = *(IRQ_PENDING_1);
   // unsigned int aux_irq = *(AUX_IRQ);
   //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);

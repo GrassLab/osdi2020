@@ -1,5 +1,6 @@
 #include "io.h"
 #include "mm.h"
+#include "irq.h"
 #include "util.h"
 #include "string.h"
 #include "allocator.h"
@@ -86,20 +87,28 @@ void zone_show(Zone zone, unsigned long limit){
 }
 
 unsigned long zone_get_free_pages(Zone zone, int order){
-
+  preempt_disable();
   int ord = order;
-  while(ord < MAX_ORDER && !zone->free_area[ord].free_list) ord++;
+  while(ord < MAX_ORDER &&
+      !zone->free_area[ord].free_list)
+    ord++;
 
+  printfmt("nr %d list = %x", zone->free_area[ord].nr_free, zone->free_area[ord].free_list);
   if(ord == MAX_ORDER) goto buddy_allocate_failed;
 
   // partition to samller size
   while(ord > order){
+    printfmt("ord = %d", ord);
     // 1st block
     Cdr block = zone->free_area[ord].free_list;
     zone->free_area[ord].free_list = block->cdr;
     zone->free_area[ord - 1].free_list = block;
     // 2nd block
     block->cdr = newCdr(block->val + (1 << (ord - 1 + PAGE_SHIFT)), 0);
+    if(zone->free_area[ord].nr_free == 0){
+      printfmt("wrong 104 0x%x", zone->free_area[ord].free_list);
+      while(1);
+    }
     zone->free_area[ord].nr_free -= 1;
     zone->free_area[ord - 1].nr_free += 2;
     ord--;
@@ -111,6 +120,10 @@ unsigned long zone_get_free_pages(Zone zone, int order){
   // init pages
   Cdr block = zone->free_area[ord].free_list;
   zone->free_area[ord].free_list = block->cdr;
+  if(zone->free_area[ord].nr_free == 0){
+    puts("wrong 119");
+    while(1);
+  }
   zone->free_area[ord].nr_free -= 1;
   unsigned base = addr2pgidx(block->val);
 
@@ -124,12 +137,14 @@ unsigned long zone_get_free_pages(Zone zone, int order){
   buddy_log("allocate address 0x%x", ALOC_BEG + base * PAGE_SIZE);
   buddy_log_graph(buddy_zone);
   buddy_log("");
+  preempt_enable();
   return ALOC_BEG - VA_START + base * PAGE_SIZE;
 
 buddy_allocate_failed:
   buddy_log("");
   buddy_log("buddy system allocate failed");
   buddy_log("");
+  preempt_enable();
   return 0;
 }
 
@@ -152,6 +167,7 @@ void zone_merge_buddy(Zone zone, unsigned long addr, unsigned order){
     if((*iter)->val == buddy_addr){
       *iter = (*iter)->cdr;
       buddy_log("buddy found, merge order %d address %x", order + 1, aligned_addr);
+      zone->free_area[order].nr_free -= 1;
       return zone_merge_buddy(zone, aligned_addr, order + 1);
     }
     iter = &((*iter)->cdr);
@@ -159,9 +175,11 @@ void zone_merge_buddy(Zone zone, unsigned long addr, unsigned order){
 
   zone->free_area[order].free_list =
     newCdr(addr, zone->free_area[order].free_list);
+  zone->free_area[order].nr_free += 1;
 }
 
 void zone_free_pages(Zone zone, unsigned long addr){
+  preempt_disable();
   /* important */
   addr |= VA_START;
   unsigned base = addr2pgidx(addr);
@@ -172,6 +190,7 @@ void zone_free_pages(Zone zone, unsigned long addr){
   buddy_log("merge order %d address 0x%x", mpages[base].order, addr);
   zone_merge_buddy(zone, addr, mpages[base].order);
   buddy_log("");
+  preempt_enable();
 }
 
 /* fixed size allocator below */
@@ -184,6 +203,13 @@ FixedAllocator newFixedAllocator(unsigned long addr,
   new->next = next;
   new->book = book;
   return new;
+}
+
+FixedAllocator setFixedAllocator(FixedAllocator this,
+    unsigned long size){
+  this->size = size;
+  this->rs = pow2roundup(size);
+  return this;
 }
 
 FixedBook newFixedBook(FixedBook new,
@@ -215,9 +241,10 @@ unsigned long dispatch_tables(FixedBook book){
 
 FixedAllocator fixed_allocator = 0;
 
-unsigned long fixed_sized_get_token(unsigned long size){
+unsigned long fixed_get_token(unsigned long size){
 
-  if(!size) return 0;
+  disable_irq();
+  if(!size) goto fixed_get_token_failed;
 
   FixedAllocator *iter = &fixed_allocator, fa;
   while(*iter && (*iter)->size) iter = &((*iter)->next);
@@ -229,20 +256,27 @@ unsigned long fixed_sized_get_token(unsigned long size){
   else{
     /* new allocators and books */
     unsigned long addr;
-    if(!(addr = get_free_page())) return 0;
+    if(!(addr = get_free_page()))
+      goto fixed_get_token_failed;
     fa = (FixedAllocator)addr;
     unsigned nr = PAGE_SIZE / sizeof(FixedAllocatorStr);
     for(unsigned i = 0; i < nr; i++, iter = &((*iter)->next))
       (*iter) = newFixedAllocator(addr + i * sizeof(FixedAllocatorStr), 0, 0, 0);
     *iter = 0;
   }
-  fa->size = size;
+  setFixedAllocator(fa, size);
+  enable_irq();
   return (unsigned long)fa;
+
+fixed_get_token_failed:
+  enable_irq();
+  return 0;
 }
 
-unsigned long fixed_sized_alloc(unsigned long token){
+void fixed_free_token(unsigned long token){
 
-  if(!token) return 0;
+  disable_irq();
+  if(!token) goto fixed_free_token_end;
 
   FixedAllocator aloctor = fixed_allocator;
 
@@ -250,14 +284,56 @@ unsigned long fixed_sized_alloc(unsigned long token){
     if(aloctor == (FixedAllocator)token) break;
     else aloctor = aloctor->next;
 
-  if(!aloctor) return 0;
+  if(!aloctor) goto fixed_free_token_end;
+
+  aloctor->size = aloctor->rs = 0;
+  FixedBook book = aloctor->book;
+
+  while(book){
+    book->free_nr = 0;
+    if(book->page_addr){
+      fixed_log("free page 0x%x", book->page_addr);
+      free_page(book->page_addr);
+    }
+    if(book->table){
+      if(!((unsigned long)book->table & (~PAGE_MASK))){
+        fixed_log("free page 0x%x", book->table);
+        free_page((unsigned long)book->table);
+      }
+    }
+    book = book->next;
+  }
+  aloctor->book = 0;
+
+fixed_free_token_end:
+  enable_irq();
+}
+
+unsigned long fixed_alloc(unsigned long token){
+  disable_irq();
+
+  //show_sp();
+  //__asm__ volatile("ldp	x1, x0, [sp], #96");
+  //__asm__ volatile("bl show_addr");
+
+
+  if(!token) goto fixed_alloc_failed;
+
+  FixedAllocator aloctor = fixed_allocator;
+
+  while(aloctor)
+    if(aloctor == (FixedAllocator)token) break;
+    else aloctor = aloctor->next;
+
+  if(!aloctor) goto fixed_alloc_failed;
 
   FixedBook *bookptr = &(aloctor->book);
   while((*bookptr) && (*bookptr)->page_addr && (!(*bookptr)->free_nr))
     bookptr = &((*bookptr)->next);
 
-  if(!(*bookptr))
+  if(!(*bookptr)){
     (*bookptr) = appendFixedBooks();
+  }
 
   if(!((*bookptr)->page_addr)){
     if(aloctor->rs > PAGE_SIZE){
@@ -273,24 +349,34 @@ unsigned long fixed_sized_alloc(unsigned long token){
   }
 
   if(!((*bookptr)->page_addr))
-    return 0;
+    goto fixed_alloc_failed;
 
   if(!((*bookptr)->table) && !dispatch_tables((*bookptr)))
-    return 0;
+    goto fixed_alloc_failed;
 
   /* take an object from book */
   unsigned long offset = 0;
-  while(btst((*bookptr)->table, offset) && offset < PAGE_SIZE)
+  while(btst((*bookptr)->table, offset) && offset < PAGE_SIZE){
     offset += aloctor->rs;
+  }
+
+  fixed_log("book = %d", offset);
 
   bset((*bookptr)->table, offset);
   (*bookptr)->free_nr -= 1;
 
+  enable_irq();
   return (*bookptr)->page_addr + offset;
+
+fixed_alloc_failed:
+  enable_irq();
+  return 0;
 }
 
-void fixed_sized_free(unsigned long token, unsigned long addr){
-  if(!token) return;
+void fixed_free(unsigned long token, unsigned long addr){
+
+  disable_irq();
+  if(!token) goto fixed_free_end;
 
   FixedAllocator aloctor = fixed_allocator;
 
@@ -298,7 +384,7 @@ void fixed_sized_free(unsigned long token, unsigned long addr){
     if(aloctor == (FixedAllocator)token) break;
     else aloctor = aloctor->next;
 
-  if(!aloctor) return;
+  if(!aloctor) goto fixed_free_end;
 
   FixedBook bookiter = aloctor->book;
   while(bookiter)
@@ -306,7 +392,7 @@ void fixed_sized_free(unsigned long token, unsigned long addr){
       break;
     else bookiter = bookiter->next;
 
-  if(!bookiter) return;
+  if(!bookiter) goto fixed_free_end;
 
   bclr(bookiter->table, (addr - bookiter->page_addr));
   bookiter->free_nr += 1;
@@ -314,14 +400,19 @@ void fixed_sized_free(unsigned long token, unsigned long addr){
   /* release the page */
   if(aloctor->rs > PAGE_SIZE){
     if(bookiter->free_nr){
+      fixed_log("free page 0x%x", bookiter->page_addr);
       free_page(bookiter->page_addr);
       bookiter->page_addr = 0;
     }
   }
   else{
     if(bookiter->free_nr == (PAGE_SIZE / aloctor->rs)){
+      fixed_log("free page 0x%x", bookiter->page_addr);
       free_page(bookiter->page_addr);
       bookiter->page_addr = 0;
     }
   }
+
+fixed_free_end:
+  enable_irq();
 }

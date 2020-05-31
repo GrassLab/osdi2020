@@ -40,4 +40,8 @@ extern void set_pgd(unsigned long pgd);
 
 unsigned long pow2roundup(unsigned long x);
 
+int *show_sp();
+
+void show_addr(unsigned long addr);
+
 #endif

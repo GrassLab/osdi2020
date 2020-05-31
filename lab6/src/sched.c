@@ -75,10 +75,6 @@ void schedule_tail() {
 }
 
 
-void show_addr(unsigned long a){
-  printf("addr %x" NEWLINE, a);
-}
-
 void schedule(){
   current_task->counter = 0;
   _schedule();

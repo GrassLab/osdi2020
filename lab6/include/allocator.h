@@ -29,7 +29,8 @@ void zone_show(Zone zone, unsigned long cnt);
 
 #define addr2pgidx(addr) ((addr - ALOC_BEG) / PAGE_SIZE)
 
-#define enable_buddy_log 1
+#define enable_buddy_log 0
+#define enable_fixed_log 1
 
 #if enable_buddy_log
 #define buddy_log(...) printfmt(__VA_ARGS__)
@@ -37,6 +38,14 @@ void zone_show(Zone zone, unsigned long cnt);
 #else
 #define buddy_log(...) ;
 #define buddy_log_graph(zone) ;
+#endif
+
+#if enable_fixed_log
+#define fixed_log(...) printfmt(__VA_ARGS__)
+#define fixed_log_graph(zone) fixed_show(zone, 3)
+#else
+#define fixed_log(...) ;
+#define fixed_log_graph(zone) ;
 #endif
 
 /* fixed size allocator below */
@@ -57,8 +66,9 @@ typedef struct FixedAllocator_tag {
   FixedBook book;
 } FixedAllocatorStr, *FixedAllocator;
 
-unsigned long fixed_sized_get_token(unsigned long size);
-unsigned long fixed_sized_alloc(unsigned long token);
-void fixed_sized_free(unsigned long token, unsigned long addr);
+unsigned long fixed_get_token(unsigned long size);
+void fixed_free_token(unsigned long size);
+unsigned long fixed_alloc(unsigned long token);
+void fixed_free(unsigned long token, unsigned long addr);
 
 #endif

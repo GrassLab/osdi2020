@@ -93,6 +93,9 @@ void core_timer_handler() {
     __asm__ volatile("msr spsr_el1, %0" ::"r"(spsr_el1));
   }
   else{
+    __asm__ volatile("mov x0, sp");
+    __asm__ volatile("bl show_addr");
+    puts("disable preempt");
     printf("preempt_count %d" NEWLINE, current_task->preempt_count);
   }
 }
