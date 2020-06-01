@@ -1,3 +1,25 @@
+// TCR_EL1
+#define TCR_CONFIG_REGION_48bit (((64 - 48) << 0) | ((64 - 48) << 16))
+#define TCR_CONFIG_4KB ((0b00 << 14) |  (0b10 << 30))
+#define TCR_CONFIG_DEFAULT (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
+// MAIR_EL1
+#define MAIR_DEVICE_nGnRnE 0b00000000
+#define MAIR_NORMAL_NOCACHE 0b01000100
+#define MAIR_IDX_DEVICE_nGnRnE 0
+#define MAIR_IDX_NORMAL_NOCACHE 1
+// identity mapping
+#define PD_TABLE 0b11
+#define PD_PAGE  0b11
+#define PD_BLOCK 0b01
+#define PD_ACCESS (1 << 10)
+#define PD_ACCESS_PERMISSION	(1 << 6) 
+#define BOOT_PGD_ATTR PD_TABLE
+#define BOOT_PUD_ATTR PD_TABLE
+#define BOOT_PMD_ATTR PD_TABLE
+#define BOOT_PTE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
+
+# define page_size (1<<12)
+
 .global switch_to
 switch_to:
   mov x9, sp
@@ -56,3 +78,51 @@ ret_to_usr:
   add sp, sp, 32 * 8
   mov x0,0
   eret
+
+.global set_pagetable
+set_pagetable:
+    add x1, x0, #100 // PUD's page frame
+    add x2, x1, #100 // PMD's page 1 frame
+    add x3, x2, #100 // PMD's page 2 frame
+    add x8, x3, #100 // PTE's page1  frame
+    // set PGD
+    ldr x6, = BOOT_PGD_ATTR
+    orr x6, x1, x6 // combine the physical address of next level page with attribute.
+    str x6, [x0]
+
+    // set PUD
+    ldr x6, = BOOT_PUD_ATTR
+    orr x6, x2, x6 
+    str x6, [x1] // 1st 1GB mapped by the 1st entry of PUD
+
+    ldr x6, = BOOT_PUD_ATTR
+    orr x6, x3, x6
+    str x6, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
+
+    // set PMD
+    mov x1, x8 // x1 page_offset
+    mov x4, xzr
+    mov x5, #1024 // PMD = 512 * 2 (page1 and 2)
+
+3:
+    ldr x6, = BOOT_PMD_ATTR
+    orr x6, x1 , x6
+    str x6, [x2 , x4, lsl #3]
+    add x1 , x1 , #page_size
+    add x4, x4, #1
+    cmp x4, x5
+    b.ls 3b
+
+     // set PTE
+    mov x1 , xzr
+    mov x4, xzr
+    mov x5, #0x100
+1:
+    ldr x6, = BOOT_PTE_ATTR
+    orr x6, x1 , x6
+    str x6, [x8, x4, lsl #3]
+    add x1 , x1 , #page_size
+    add x4, x4, #1
+    cmp x4, x5
+    b.ls 1b
+  ret

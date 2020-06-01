@@ -14,9 +14,12 @@ clean:
 %.o: %.c
 	aarch64-linux-gnu-gcc $(CFLAGS) -c $< -o $@ -O0
 
+
+
 kernel8.img: $(OBJS)
-	aarch64-linux-gnu-ld  $(OBJS) -T link.ld -o kernel8.elf
+	aarch64-linux-gnu-ld  $(OBJS) rd -T link.ld -o kernel8.elf
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf kernel8.img
+
 
 debug: kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty -s -S

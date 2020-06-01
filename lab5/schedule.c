@@ -3,12 +3,16 @@
 #include "task.h"
 #include "timer.h"
 #include "uart.h"
+extern void _binary_usr_img_start();
+
 unsigned int runtaskcount;
-static task_t init_task = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                           0, /* state etc */
-                           0,
-                           0,
-                           0};
+static task_t init_task = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    0, /* state etc */
+    0,
+    0,
+    0,
+};
 
 task_t *task_pool[64] = {
     &(init_task),
@@ -26,7 +30,7 @@ static char kstack_pool[64][THREAD_SIZE] = {0};
 static char ks[64][THREAD_SIZE] = {0};
 static char ustack_pool[64][THREAD_SIZE] = {0};
 
-int privilege_task_create(unsigned long func, int usr, int isexec) {
+int privilege_task_create(unsigned long func, int usr) {
   int task_id;
   task_id = task_count;
   task_count++;
@@ -47,12 +51,8 @@ int privilege_task_create(unsigned long func, int usr, int isexec) {
     user_pool[task_id].elr_el1 = func;
     user_pool[task_id].sp = (unsigned long)&ustack_pool[task_id][THREAD_SIZE];
     printf(" sp = > %x\n", user_pool[task_id].sp);
-    if (isexec == 1) {
-      printf("nnnew\n");
-      p->cpu_context.x19 = (unsigned long)&jmp_to_new_usr;
-    } else {
-      p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
-    }
+    set_pagetable((unsigned long)&user_pool[task_id].page_table);
+    p->cpu_context.x19 = (unsigned long)&jmp_to_usr;
   } else {
     p->cpu_context.x19 = func;
   }
@@ -64,7 +64,7 @@ int privilege_task_create(unsigned long func, int usr, int isexec) {
 }
 
 void task_init() {
-  int task_id = privilege_task_create((unsigned long)init, 0, 0);
+  int task_id = privilege_task_create((unsigned long)init, 0);
   task_pool[task_id]->state = TASK_IDLE;
   runtaskcount--;
   set_current(task_id);
@@ -129,16 +129,6 @@ void jmp_to_usr() {
   ret_to_usr();
 }
 
-void jmp_to_new_usr() {
-  int now;
-  printf("jmp_new_task\n");
-  now = get_current();
-  asm volatile("msr sp_el0, %0" ::"r"(user_pool[now].sp) :);
-  asm volatile("msr spsr_el1, %0" ::"r"(0) :);
-  asm volatile("msr elr_el1, %0" ::"r"(user_pool[now].elr_el1) :);
-  asm volatile("eret");
-}
-
 void do_exec(unsigned long fun) {
   int task_id = get_current();
   for (int i = 0; i < THREAD_SIZE; i++) {
@@ -160,6 +150,7 @@ void exec(unsigned long rfun) {
   asm volatile("mov x0, #2");
   asm volatile("svc #0");
 }
+
 int get_taskid() {
   asm volatile("mov x0, #9");
   asm volatile("svc #0");
@@ -264,9 +255,9 @@ void idle1() {
 void test1() {
   task_init();
   for (int i = 0; i < 4; ++i) { // N should > 2
-    privilege_task_create((unsigned long)&foo1, 0, 0);
+    privilege_task_create((unsigned long)&foo1, 0);
   }
-  privilege_task_create((unsigned long)&idle1, 0, 0);
+  privilege_task_create((unsigned long)&idle1, 0);
   core_timer_enable();
   schedule();
 }
@@ -305,9 +296,9 @@ void idle() {
 
 void test2() {
   task_init();
-  privilege_task_create((unsigned long)&idle, 0, 0);
-  privilege_task_create((unsigned long)&user_test1, 0, 0);
-  privilege_task_create((unsigned long)&user_test2, 0, 0);
+  privilege_task_create((unsigned long)&idle, 0);
+  privilege_task_create((unsigned long)&user_test1, 0);
+  privilege_task_create((unsigned long)&user_test2, 0);
   core_timer_enable();
   schedule();
 }
@@ -318,7 +309,6 @@ void foo2() {
 }
 
 void test() {
-
   int cnt = 1;
   printf("run tests");
   int pid = fork();
@@ -346,13 +336,13 @@ void test() {
   }
 }
 
-void user_test() { do_exec((unsigned long)&test); }
+void user_test() { do_exec((unsigned long)&_binary_usr_img_start); }
 
 void test3() {
   task_init();
-  privilege_task_create((unsigned long)&idle, 0, 0);
+  privilege_task_create((unsigned long)&idle, 0);
 
-  privilege_task_create((unsigned long)&user_test, 0, 0);
+  privilege_task_create((unsigned long)&user_test, 0);
   core_timer_enable();
   printf("runtaskcount = %d\n", runtaskcount);
   schedule();

@@ -11,5 +11,7 @@ SECTIONS
         *(.bss);
         __bss_end = .;
     }
+    . = ALIGN(0x00001000);
+    pg_dir = .;
     _end = .;
 }

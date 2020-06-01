@@ -9,13 +9,16 @@
 #define MAIR_IDX_NORMAL_NOCACHE 1
 // identity mapping
 #define PD_TABLE 0b11
+#define PD_PAGE  0b11
 #define PD_BLOCK 0b01
 #define PD_ACCESS (1 << 10)
+#define PD_ACCESS_PERMISSION	(1 << 6) 
 #define BOOT_PGD_ATTR PD_TABLE
 #define BOOT_PUD_ATTR PD_TABLE
-#define BOOT_PMD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PMD_ATTR PD_TABLE
+#define BOOT_PTE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_PAGE)
 
-# define page_size (1<<21)
+# define page_size (1<<12)
 
 .section ".text"
 _start:
@@ -84,39 +87,56 @@ loop:
     b loop
 
 set_vm:
-    mov x0, 0 // PGD's page frame at 0x0
-    add x1, x0, page_size // PUD's page frame
-    add x2, x1, page_size // PMD's page 1 frame
-    add x3, x2, page_size // PMD's page 2 frame
-
+    mov x29,x30
+    mov x0, #0x150000
+    add x1, x0, #page_size // PUD's page frame
+    add x2, x1, #page_size // PMD's page 1 frame
+    add x3, x2, #page_size // PMD's page 2 frame
+    add x8, x3, #page_size // PTE's page1  frame
     // set PGD
     ldr x6, = BOOT_PGD_ATTR
-    orr x4, x6, x1 // combine the physical address of next level page with attribute.
-    str x4, [x0]
+    orr x6, x1, x6 // combine the physical address of next level page with attribute.
+    str x6, [x0]
 
     // set PUD
     ldr x6, = BOOT_PUD_ATTR
-    orr x4, x6, x2 
-    str x4, [x1] // 1st 1GB mapped by the 1st entry of PUD
+    orr x6, x2, x6 
+    str x6, [x1] // 1st 1GB mapped by the 1st entry of PUD
 
     ldr x6, = BOOT_PUD_ATTR
-    orr x4, x6, x3
-    str x4, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
+    orr x6, x3, x6
+    str x6, [x1, 8] // 2nd 1GB mapped by the 2nd entry of PUD
 
     // set PMD
-    mov x1, #0 // x1 page_offset
-    mov x4, #0
+    mov x1, x8 // x1 page_offset
+    mov x4, xzr
     mov x5, #1024 // PMD = 512 * 2 (page1 and 2)
 
-set_PMD:
+3:
     ldr x6, = BOOT_PMD_ATTR
-    orr x7, x6 , x1
-    str x7, [x2 , x4, lsl #3]
-    add x1 , x1 , page_size
+    orr x6, x1 , x6
+    str x6, [x2 , x4, lsl #3]
+    add x1 , x1 , #page_size
     add x4, x4, #1
     cmp x4, x5
-    b.ls set_PMD
+    b.ls 3b
+
+     // set PTE
+    mov x1 , xzr
+    mov x4, xzr
+    mov x5, #0x41
+    lsl x5, x5 ,#12     // 0x410000
+1:
+    ldr x6, = BOOT_PTE_ATTR
+    orr x6, x1 , x6
+    str x6, [x8, x4, lsl #3]
+    add x1 , x1 , #page_size
+    add x4, x4, #1
+    cmp x4, x5
+    b.ls 1b
+
 
     msr ttbr0_el1, x0 // load PGD to the buttom translation based register.
     msr ttbr1_el1, x0 // also load PGD to the upper translation based register.
+    mov x30,x29
     ret

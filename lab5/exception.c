@@ -1,4 +1,5 @@
 #include "schedule.h"
+#include "syscall.h"
 #include "timer.h"
 #include "uart.h"
 
@@ -22,35 +23,38 @@ void print_time() {
   printf("%d ms\n", result);
 }
 
-int syscall(unsigned int x0, unsigned int x1, unsigned int x2,
-            unsigned int x3) {
+int syscall(unsigned long x0, unsigned long x1, unsigned long x2,
+            unsigned long x3) {
   int rev = 0;
   switch (x0) {
-  case 0:
+  case SYS_timer_enable:
     core_timer_enable();
     printf("start timer\n");
     break;
-  case 1:
+  case SYS_time:
     print_time();
     break;
-  case 2:
+  case SYS_exec:
     do_exec(x1);
     break;
-  case 7:
+  case SYS_fork:
     rev = do_fork();
     break;
-  case 8:
+  case SYS_exit:
     do_exit();
     break;
-  case 9:
+  case SYS_getpid:
     rev = do_get_current();
+    break;
+  case SYS_printf:
+    printf((char *)x0, x1, x2, x3);
     break;
   }
   return rev;
 }
 
-int exception_router(unsigned int x0, unsigned int x1, unsigned int x2,
-                     unsigned int x3) {
+int exception_router(unsigned long x0, unsigned long x1, unsigned long x2,
+                     unsigned long x3) {
   int rev = 0;
   unsigned int elr_el1, esr_el1;
   unsigned int ec, iss;
