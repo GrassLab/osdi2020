@@ -3,6 +3,8 @@
 #ifndef __BUDDY_H__
 #define __BUDDY_H__
 
+#define BUDDY_ALLOCATE_NO_MEM_ZERO 0
+#define BUDDY_ALLOCATE_MEM_ZERO 1
 #define BUDDY_ALLOCATE_TO_VA 0
 #define BUDDY_ALLOCATE_TO_PA 1
 

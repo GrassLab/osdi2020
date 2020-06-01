@@ -4,6 +4,7 @@
 #include "mmu.h"
 #include "buddy.h"
 #include "uart.h"
+#include "slab.h"
 
 static struct user_space_page_struct user_space_mm;
 
@@ -141,15 +142,22 @@ void mmu_user_page_table_init(void)
   /* total frame: 1PGD, 1PUD, 1PMD, 64 * 2 PTE */
 
   // For testing
-  //uint64_t * a = buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_VA);
-  //uint64_t * b = buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_VA);
-  //uint64_t * c = buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_VA);
-  //uint64_t * d = buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_VA);
-  //buddy_free(a);
-  //buddy_free(b);
-  //buddy_free(c);
-  //buddy_free(d);
-  //while(1);
+  uint64_t token_a = slab_regist(23);
+  uint64_t token_b = slab_regist(42);
+  uint64_t token_c = slab_regist(41);
+  uint64_t* space_1 = slab_allocate(token_a);
+  uint64_t* space_2 = slab_allocate(token_b);
+  uint64_t* space_3 = slab_allocate(token_c);
+  uint64_t* space_4 = slab_allocate(token_a);
+  uint64_t* space_5 = slab_allocate(token_b);
+  uint64_t* space_6 = slab_allocate(token_c);
+  slab_free(token_a, space_1);
+  slab_free(token_b, space_2);
+  slab_free(token_c, space_3);
+  slab_free(token_a, space_4);
+  slab_free(token_b, space_5);
+  slab_free(token_c, space_6);
+  while(1);
 
   /* setup 1 PGD */
   user_space_mm.pgd_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);
