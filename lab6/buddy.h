@@ -38,6 +38,7 @@ uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa);
 void buddy_free(uint64_t * va);
 
 struct buddy_page_node_struct * buddy_node_allocate(void);
+void buddy_node_free(struct buddy_page_node_struct * node);
 
 void buddy_insert_node(struct buddy_page_node_struct ** list_head, struct buddy_page_node_struct * node);
 void buddy_new_page_node(unsigned buddy_table_list_block_size, uint64_t * va);

@@ -190,6 +190,22 @@ struct buddy_page_node_struct * buddy_node_allocate(void)
 
 }
 
+void buddy_node_free(struct buddy_page_node_struct * node)
+{
+  for(unsigned node_page_list_idx = 0; node_page_list_idx < BUDDY_PAGE_PA_NODE_STRUCT_LENGTH; ++node_page_list_idx)
+  {
+    /* find the corresponding 4k page */
+    if((uint64_t)buddy_node_page_list[node_page_list_idx].va == ((uint64_t)node & MMU_ADDR_MASK))
+    {
+      uint64_t offset = ((uint64_t)node - (uint64_t)buddy_node_page_list[node_page_list_idx].va) / sizeof(struct buddy_page_node_struct);
+      unsigned bit_array_idx = (unsigned)(offset / 32);
+      unsigned bit_array_bit = (unsigned)(offset - (bit_array_idx * 32));
+      CLEAR_BIT(buddy_node_page_list[node_page_list_idx].used_bit_array[bit_array_idx], bit_array_bit);
+      return;
+    }
+  }
+}
+
 void buddy_insert_node(struct buddy_page_node_struct ** list_head, struct buddy_page_node_struct * node)
 {
   /* Insert node into empty list */
@@ -300,7 +316,8 @@ int buddy_split(unsigned block_size)
   uart_puts(string_buff);
   uart_putc('\n');
 
-  /* TODO: Free the node */
+  /* Free the node */
+  buddy_node_free(block_to_be_split_ptr);
 
   return 1;
 }
@@ -359,8 +376,13 @@ int buddy_merge(unsigned block_size)
       uart_puts(string_buff);
       uart_putc('\n');
 
-      /* TODO free node */
-      if(cur_node -> next_ptr == 0)
+      struct buddy_page_node_struct * cur_node_next_ptr = cur_node -> next_ptr;
+
+      /* Free cur_node and prev_node */
+      buddy_node_free(cur_node);
+      buddy_node_free(prev_node);
+
+      if(cur_node_next_ptr == 0)
       {
         break;
       }
