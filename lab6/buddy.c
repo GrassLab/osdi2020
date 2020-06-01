@@ -8,7 +8,7 @@ buddy_allocated buddy_allocated_list;
 void show_alloc_message(buddy_node node){
 	char buf[16] = {0};
 
-	uart_puts("allocate memory PFN ( from ");
+	uart_puts("[Buddy system] allocate memory PFN ( from ");
 	ullToStr(node.start, buf);
 	uart_puts(buf);
 	uart_puts(" to ");
@@ -20,7 +20,7 @@ void show_alloc_message(buddy_node node){
 void show_free_message(buddy_node node){
 	char buf[16] = {0};
 
-	uart_puts("free memory PFN ( from ");
+	uart_puts("[Buddy system] free memory PFN ( from ");
 	ullToStr(node.start, buf);
 	uart_puts(buf);
 	uart_puts(" to ");
@@ -33,7 +33,7 @@ void show_free_message(buddy_node node){
 void show_merge_message(buddy_node node1, buddy_node node2){
 	char buf[16] = {0};
 
-	uart_puts("merge ( from ");
+	uart_puts("[Buddy system] merge ( from ");
 	ullToStr(node1.start, buf);
 	uart_puts(buf);
 	uart_puts(" to ");
