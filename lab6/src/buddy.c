@@ -47,9 +47,17 @@ void buddy_init(int num_pages){
     }
 }
 int buddy_alloc(int size){
+    
     uart_puts("Allocate for size: ");
     uart_send_int(size);
     uart_puts("\n");
+
+    if(size > (1<<MAX_ORDER-1)){
+        uart_puts("Can't handle such size!");
+        uart_puts("\n");
+        return -1;
+    }
+
     int order = cal_order(size);
     
     while(buddy_pool[order].len==0){
@@ -60,7 +68,8 @@ int buddy_alloc(int size){
             uart_puts("\n");
             return -1;
         }
-        // Spilt one buddy into two
+        
+        // Split one buddy into two
         struct buddy* head = buddy_pool[remain_order].page;
         buddy_pool[remain_order].page = head->next;
         buddy_pool[remain_order].len--;
@@ -76,6 +85,12 @@ int buddy_alloc(int size){
         temp->page_frame_number = big_page_num+big_page_size;
         temp->next = 0;
         head->next = temp;
+
+        // uart_puts("Split for order: ");
+        // uart_send_int(remain_order);
+        // uart_puts(" in: ");
+        // uart_send_int(big_page_num);
+        // uart_puts("\n");
     }
 
     if(order<MAX_ORDER && buddy_pool[order].len>0){
@@ -86,6 +101,10 @@ int buddy_alloc(int size){
         buddy_pool[order].len--;
         uart_puts("Allocate success in: ");
         uart_send_int(ret_page);
+        uart_puts(" physical address: ");
+        uart_hex(pfn2phy(ret_page));
+        uart_puts(" size: ");
+        uart_send_int((1<<order));
         uart_puts("\n");
         return ret_page;
     }
@@ -113,4 +132,7 @@ void buddy_show(){
         }
         uart_puts("NULL\n\n");
     }
+}
+int pfn2phy(int page_frame_number){
+    return LOW_MEMORY + (page_frame_number * PAGE_SIZE);
 }

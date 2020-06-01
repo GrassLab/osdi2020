@@ -2,7 +2,7 @@
 
 ## Buddy System
 
-- [ ] `required 1` Implement the buddy system for contiguous pages allocation.
+- [x] `required 1` Implement the buddy system for contiguous pages allocation.
 - [ ] `question 1` Is buddy allocator perfectly eliminate external fragmentation? If yes, prove it? If no, give an external fragmentation example.
 
 ## Object Allocator
