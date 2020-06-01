@@ -5,6 +5,7 @@
 #include "uart.h"
 
 static struct buddy_page_node_struct * buddy_table_list[BUDDY_TABLE_LIST_LENGTH];
+static struct buddy_page_node_struct * buddy_used_table_list[BUDDY_TABLE_LIST_LENGTH];
 static struct buddy_page_pa_node_struct buddy_node_page_list[BUDDY_PAGE_PA_NODE_STRUCT_LENGTH];
 
 void buddy_init(void)
@@ -18,19 +19,20 @@ void buddy_init(void)
     buddy_node_page_list[i].va = 0x0;
   }
 
-  /* init each buddy_table_list as empty linked list */
+  /* init buddy_table_list and buddy_used_table_list as empty linked list */
   for(int i = 0; i < BUDDY_TABLE_LIST_LENGTH; ++i)
   {
     buddy_table_list[i] = 0x0;
+    buddy_used_table_list[i] = 0x0;
   }
 
 
   /* buddy_page_node_struct_page = STARTUP_PAGE_PA_BASE */
   /* struct buddy_page_node_struct * is 8byte, 4KB = 512 * 8byte */
-  buddy_insert_page_node(0, (uint64_t *)(STARTUP_PAGE_PA_BASE + PAGE_4K));
+  buddy_new_page_node(0, MMU_PA_TO_VA((uint64_t *)(STARTUP_PAGE_PA_BASE + PAGE_4K)));
   for(unsigned i = 1; i < BUDDY_TABLE_LIST_LENGTH; ++i)
   {
-    buddy_insert_page_node(i, MMU_PA_TO_VA(STARTUP_PAGE_PA_BASE + (uint64_t)(PAGE_4K << i)));
+    buddy_new_page_node(i, MMU_PA_TO_VA(STARTUP_PAGE_PA_BASE + (uint64_t)(PAGE_4K << i)));
   }
   uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Startup page table transfer complete\n");
   uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Init complete\n");
@@ -40,6 +42,7 @@ void buddy_init(void)
 uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa)
 {
   char string_buff[0x20];
+  struct buddy_page_node_struct * ret_node;
   uint64_t * ret_ptr;
 
   task_guard_section();
@@ -54,7 +57,11 @@ uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa)
   }
 
   /* return the first availible block */
-  ret_ptr = buddy_pop_page_node(block_size, 0x0, buddy_table_list[block_size]) -> va;
+  ret_node = buddy_pop_page_node(&(buddy_table_list[block_size]), 0x0, buddy_table_list[block_size]);
+  ret_ptr = ret_node -> va;
+
+  /* put the current node into buddy_used_table_list */
+  buddy_insert_node(&(buddy_used_table_list[block_size]), ret_node);
 
   task_unguard_section();
   if(zero)
@@ -75,6 +82,58 @@ uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa)
     ret_ptr = MMU_VA_TO_PA(ret_ptr);
   }
   return ret_ptr;
+}
+
+void buddy_free(uint64_t * va)
+{
+  char string_buff[0x20];
+
+  struct buddy_page_node_struct * node_to_free;
+
+  task_guard_section();
+  /* traverse buddy_used_table_list to find the node */
+  for(unsigned block_size_idx = 0; block_size_idx < BUDDY_TABLE_LIST_LENGTH; ++block_size_idx)
+  {
+    struct buddy_page_node_struct * cur_node = buddy_used_table_list[block_size_idx];
+    struct buddy_page_node_struct * prev_node = buddy_used_table_list[block_size_idx];
+    while(cur_node -> va != va && cur_node -> next_ptr != 0)
+    {
+      prev_node = cur_node;
+      cur_node = cur_node -> next_ptr;
+    }
+    if(cur_node -> va == va)
+    {
+      node_to_free = cur_node;
+
+      /* Remove node from buddy_used_table_list */
+      buddy_pop_page_node(&(buddy_used_table_list[block_size_idx]), prev_node, node_to_free);
+
+      /* Move the node to buddy_table_list */
+      buddy_insert_node(&(buddy_table_list[block_size_idx]), node_to_free);
+
+      /* Print free complete messages */
+      uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Free[Size:");
+      string_longlong_to_char(string_buff, block_size_idx);
+      uart_puts(string_buff);
+      uart_puts("]: ");
+      string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
+      uart_puts(string_buff);
+      uart_putc('\n');
+
+      /* Perform merge */
+      buddy_merge(block_size_idx);
+
+      return;
+    }
+  }
+
+  task_unguard_section();
+
+  uart_puts("[Buddy system] Free failed: ");
+  string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
+  uart_puts(string_buff);
+  uart_puts(" Entering busy while loop\n");
+  while(1);
 }
 
 struct buddy_page_node_struct * buddy_node_allocate(void)
@@ -127,25 +186,20 @@ struct buddy_page_node_struct * buddy_node_allocate(void)
 
 }
 
-/* insert node into buddy_table */
-void buddy_insert_page_node(unsigned buddy_table_list_block_size, uint64_t * va)
+void buddy_insert_node(struct buddy_page_node_struct ** list_head, struct buddy_page_node_struct * node)
 {
-  struct buddy_page_node_struct * new_node = buddy_node_allocate();
-
-  new_node -> va = va;
-
-  /* Insert new node into empty list */
-  if(buddy_table_list[buddy_table_list_block_size] == 0x0)
+  /* Insert node into empty list */
+  if(*list_head == 0x0)
   {
-    buddy_table_list[buddy_table_list_block_size] = new_node;
-    new_node -> next_ptr = 0x0;
+    *list_head = node;
+    node -> next_ptr = 0x0;
   }
   /* Find the correct place to insert */
   else
   {
-    struct buddy_page_node_struct * prev_node;
-    struct buddy_page_node_struct * cur_node = buddy_table_list[buddy_table_list_block_size];
-    while(cur_node -> va < va && cur_node -> next_ptr != 0)
+    struct buddy_page_node_struct * prev_node = 0x0;
+    struct buddy_page_node_struct * cur_node = *list_head;
+    while(cur_node -> va < node -> va && cur_node -> next_ptr != 0)
     {
       prev_node = cur_node;
       cur_node = cur_node -> next_ptr;
@@ -153,22 +207,37 @@ void buddy_insert_page_node(unsigned buddy_table_list_block_size, uint64_t * va)
     if(cur_node -> next_ptr == 0x0)
     {
       /* insert at end of list */
-      cur_node -> next_ptr = new_node;
-      new_node -> next_ptr = 0x0;
+      cur_node -> next_ptr = node;
+      node -> next_ptr = 0x0;
+    }
+    else if(prev_node == 0x0)
+    {
+      /* insert at head */
+      node -> next_ptr = *list_head;
+      *list_head = node;
     }
     else
     {
-      prev_node -> next_ptr = new_node;
-      new_node -> next_ptr = cur_node;
+      prev_node -> next_ptr = node;
+      node -> next_ptr = cur_node;
     }
   }
 }
 
-struct buddy_page_node_struct * buddy_pop_page_node(unsigned buddy_table_list_block_size, struct buddy_page_node_struct * prev_ptr, struct buddy_page_node_struct * cur_ptr)
+/* insert node into buddy_table */
+void buddy_new_page_node(unsigned buddy_table_list_block_size, uint64_t * va)
 {
-  if(buddy_table_list[buddy_table_list_block_size] == cur_ptr)
+  struct buddy_page_node_struct * new_node = buddy_node_allocate();
+
+  new_node -> va = va;
+  buddy_insert_node(&(buddy_table_list[buddy_table_list_block_size]), new_node);
+}
+
+struct buddy_page_node_struct * buddy_pop_page_node(struct buddy_page_node_struct ** list_head, struct buddy_page_node_struct * prev_ptr, struct buddy_page_node_struct * cur_ptr)
+{
+  if(*list_head == cur_ptr)
   {
-    buddy_table_list[buddy_table_list_block_size] = cur_ptr -> next_ptr;
+    *list_head = cur_ptr -> next_ptr;
   }
   else if(cur_ptr -> next_ptr == 0x0)
   {
@@ -204,18 +273,110 @@ int buddy_split(unsigned block_size)
     }
   }
   /* Remove the first block from the linked list */
-  block_to_be_split_ptr = buddy_pop_page_node(block_size, 0x0, buddy_table_list[block_size]);
+  block_to_be_split_ptr = buddy_pop_page_node(&(buddy_table_list[block_size]), 0x0, buddy_table_list[block_size]);
 
   /* Insert the two splited node into smaller size linked list */
-  buddy_insert_page_node(block_size - 1, block_to_be_split_ptr -> va);
-  buddy_insert_page_node(block_size - 1, (uint64_t *)((uint64_t)(block_to_be_split_ptr -> va) + (PAGE_4K << (block_size - 1))));
+  buddy_new_page_node(block_size - 1, block_to_be_split_ptr -> va);
+  buddy_new_page_node(block_size - 1, (uint64_t *)((uint64_t)(block_to_be_split_ptr -> va) + (PAGE_4K << (block_size - 1))));
+
+  uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" splitted. From[");
+  string_longlong_to_char(string_buff, block_size);
+  uart_puts(string_buff);
+  uart_puts("]: ");
+  string_ulonglong_to_hex_char(string_buff, (uint64_t)(block_to_be_split_ptr -> va));
+  uart_puts(string_buff);
+  uart_puts(" To[");
+  string_longlong_to_char(string_buff, block_size - 1);
+  uart_puts(string_buff);
+  uart_puts("]: ");
+  string_ulonglong_to_hex_char(string_buff, (uint64_t)(block_to_be_split_ptr -> va));
+  uart_puts(string_buff);
+  uart_puts(", ");
+  string_ulonglong_to_hex_char(string_buff, (uint64_t)(block_to_be_split_ptr -> va) + (PAGE_4K << (block_size - 1)));
+  uart_puts(string_buff);
+  uart_putc('\n');
 
   /* TODO: Free the node */
 
-  uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Size ");
-  string_longlong_to_char(string_buff, block_size);
-  uart_puts(string_buff);
-  uart_puts(" splitted\n");
   return 1;
+}
+
+int buddy_merge(unsigned block_size)
+{
+  char string_buff[0x20];
+
+  /* Impossible to merge largest order block */
+  if(block_size >= BUDDY_TABLE_LIST_LENGTH - 1)
+  {
+    return 0x0;
+  }
+  /* current block is empty, impossible to merge */
+  /* need at least two block to perform merge */
+  if(buddy_table_list[block_size] == 0x0 || buddy_table_list[block_size] -> next_ptr == 0x0)
+  {
+    return 0x0;
+  }
+
+  /* Merge current order blocks */
+  struct buddy_page_node_struct * prev_prev_node = 0x0;
+  struct buddy_page_node_struct * prev_node = buddy_table_list[block_size];
+  struct buddy_page_node_struct * cur_node = buddy_table_list[block_size] -> next_ptr;
+  while(cur_node != 0)
+  {
+    /* merge if buddy exist */
+    /* The page frame number(PFN) and the block size order can be used to find the
+     * page frame's buddy. For example, if a memory block's PFN is 8 and the block
+     * size is 16KB (order = 2) you can find its buddy by 0b1000 xor 0b100 = 0b1100 = 12.
+     */
+    if((MMU_VA_TO_PFN(prev_node -> va) ^ (1uLL << block_size)) == MMU_VA_TO_PFN(cur_node -> va))
+    {
+      struct buddy_page_node_struct * new_node = buddy_node_allocate();
+
+      buddy_pop_page_node(&(buddy_table_list[block_size]), prev_node, cur_node);
+      buddy_pop_page_node(&(buddy_table_list[block_size]), prev_prev_node, prev_node);
+
+      new_node -> va = prev_node -> va;
+      buddy_insert_node(&(buddy_table_list[block_size + 1]), new_node);
+
+      uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" merged. From[");
+      string_longlong_to_char(string_buff, block_size);
+      uart_puts(string_buff);
+      uart_puts("]: ");
+      string_ulonglong_to_hex_char(string_buff, (uint64_t)(prev_node -> va));
+      uart_puts(string_buff);
+      uart_puts(", ");
+      string_ulonglong_to_hex_char(string_buff, (uint64_t)(cur_node -> va));
+      uart_puts(string_buff);
+      uart_puts(" To[");
+      string_longlong_to_char(string_buff, block_size + 1);
+      uart_puts(string_buff);
+      uart_puts("]: ");
+      string_ulonglong_to_hex_char(string_buff, (uint64_t)(prev_node -> va));
+      uart_puts(string_buff);
+      uart_putc('\n');
+
+      /* TODO free node */
+      if(cur_node -> next_ptr == 0)
+      {
+        break;
+      }
+    }
+    /* advance pointer */
+    prev_prev_node = prev_node;
+    prev_node = cur_node;
+    cur_node = cur_node -> next_ptr;
+
+    /* list has less than two nodes */
+    if(buddy_table_list[block_size] == 0x0 || buddy_table_list[block_size] -> next_ptr == 0x0)
+    {
+      break;
+    }
+  }
+
+
+  /* Attempt to merge higher order blocks */
+  buddy_merge(block_size + 1);
+
+  return 0x0;
 }
 

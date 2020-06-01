@@ -135,7 +135,6 @@ void mmu_ttbrx_el1_init(void);
 void mmu_startup_page_init(void);
 uint64_t * mmu_startup_page_allocate(int zero);
 void mmu_startup_page_free(uint64_t * va);
-void mmu_page_free(uint64_t * va);
 void mmu_user_page_table_init(void);
 void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct);
 void mmu_user_task_set_pmd(struct user_space_mm_struct * mm_struct);

@@ -5,10 +5,6 @@
 #include "buddy.h"
 #include "uart.h"
 
-/* 1gb = 2MB * 512 = 4KB * 262144 */
-/* Use 8MB (2048 * 4KB) for now */
-static struct page_struct *mmu_page;
-
 static struct user_space_page_struct user_space_mm;
 
 void mmu_ttbrx_el1_init(void)
@@ -111,18 +107,6 @@ void mmu_startup_page_free(uint64_t * va)
   return;
 }
 
-void mmu_page_free(uint64_t * va)
-{
-  CLEAR_BIT(mmu_page[MMU_VA_TO_PFN(((uint64_t)va))].flag, PAGE_USED);
-  char string_buff[0x20];
-
-  uart_puts(ANSI_MAGENTA"[Page] "ANSI_RESET"Free: ");
-  string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
-  uart_puts(string_buff);
-  uart_puts("\n");
-  return;
-}
-
 void mmu_user_page_table_init(void)
 {
   /* 2MB = 64 * 32kb */
@@ -156,11 +140,16 @@ void mmu_user_page_table_init(void)
    */
   /* total frame: 1PGD, 1PUD, 1PMD, 64 * 2 PTE */
 
- // For testing
- // buddy_allocate(0, 0);
- // buddy_allocate(0, 0);
- // buddy_allocate(0, 0);
- // buddy_allocate(0, 0);
+  // For testing
+  //uint64_t * a = buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_VA);
+  //uint64_t * b = buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_VA);
+  //uint64_t * c = buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_VA);
+  //uint64_t * d = buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_VA);
+  //buddy_free(a);
+  //buddy_free(b);
+  //buddy_free(c);
+  //buddy_free(d);
+  //while(1);
 
   /* setup 1 PGD */
   user_space_mm.pgd_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);
@@ -257,13 +246,13 @@ void mmu_reclaim_user_pages(struct user_space_mm_struct * mm_struct)
 {
   for(int pd_idx = 0; pd_idx < 6; ++pd_idx)
   {
-    mmu_page_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) & MMU_ADDR_MASK)));
+    buddy_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) & MMU_ADDR_MASK)));
   }
-  mmu_page_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509))) & MMU_ADDR_MASK)));
-  mmu_page_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510))) & MMU_ADDR_MASK)));
+  buddy_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509))) & MMU_ADDR_MASK)));
+  buddy_free(MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510))) & MMU_ADDR_MASK)));
 
-  mmu_page_free(MMU_PA_TO_VA(mm_struct -> pte_text_base));
-  mmu_page_free(MMU_PA_TO_VA(mm_struct -> pte_stack_base));
+  buddy_free(MMU_PA_TO_VA(mm_struct -> pte_text_base));
+  buddy_free(MMU_PA_TO_VA(mm_struct -> pte_stack_base));
 
   return;
 }
