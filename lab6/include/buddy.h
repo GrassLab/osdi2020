@@ -17,6 +17,7 @@ struct buddy_head{
 struct buddy_head buddy_pool[MAX_ORDER];
 
 void buddy_init();
+int buddy_alloc(int size);
 
 
 #endif

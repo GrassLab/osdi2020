@@ -61,6 +61,15 @@ void main(){
     
     buddy_init(PAGING_PAGES);
     buddy_show();
+
+    int alloc_num = 5;
+    int alloced_pool[alloc_num];
+    int alloc_size[] = {16, 16, 16, 16, 16};
+    for(int i=0;i<alloc_num;i++){
+        alloced_pool[i] = buddy_alloc(alloc_size[i]);
+        buddy_show();
+    }
+
     shell();
 }	
 void run_program()
