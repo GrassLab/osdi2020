@@ -35,6 +35,7 @@ void kernelMain()
 {
     // set up serial console
     uartInit();
+    initPage();
 
     uartPuts("test message\n");
 

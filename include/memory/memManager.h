@@ -29,6 +29,16 @@
 struct page
 {
     bool used;
+    uint32_t pfn;
+    uint32_t order;
+    struct page* prev;
+    struct page* next;
+};
+
+struct buddyList
+{
+    struct page* head;
+    size_t size;
 };
 
 void memzero(unsigned long src, unsigned long n);
@@ -37,6 +47,8 @@ void setPgd();
 
 uint64_t allocateKernelPage();
 uint64_t allocateUserPage(struct task *task, uint64_t va);
+uint64_t getFreePage(uint32_t order);
 void freePage(uint64_t p);
+void initPage();
 
 #endif
