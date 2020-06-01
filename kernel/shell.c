@@ -1,10 +1,10 @@
 #include <uart.h>
 #include <string.h>
 #include <mm.h>
-#include <mbox.h>
 #include <lfb.h>
 #include <timer.h>
 #include <sched.h>
+#include <hardware.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -149,43 +149,12 @@ picture (char buf[3])
 void
 hardware ()
 {
-  unsigned int base_addr;
-  unsigned int revision;
-  struct mbox_msg *msg;
-  msg = (struct mbox_msg *) &mbox;
-
-  // set tag
-  msg->tag.id = 0x00010002;
-  msg->tag.buf_size = 4;
-  msg->tag.code = 0;
-  // set message
-  msg->buf_size = sizeof (struct mbox_msg) + msg->tag.buf_size + 4;
-  msg->code = 0;
-  // set tag buf and tag end
-  bzero (msg + 1, msg->tag.buf_size + 4);
-  mbox_call (MBOX_CH_PROP);
-
-  revision = *(unsigned int *) (msg + 1);
-
-  // set tag
-  msg->tag.id = 0x00010006;
-  msg->tag.buf_size = 8;
-  msg->tag.code = 0;
-  // set mseeage
-  msg->buf_size = sizeof (struct mbox_msg) + msg->tag.buf_size + 4;
-  msg->code = 0;
-  // set tag buf and tag end
-  bzero (msg + 1, msg->tag.buf_size + 4);
-  mbox_call (MBOX_CH_PROP);
-
-  base_addr = *(unsigned int *) (msg + 1);
-
   uart_puts ("board revision: ");
-  uart_hex (revision);
+  uart_hex (hardware_info_revision ());
   uart_puts ("\n");
 
   uart_puts ("VC Core base address: ");
-  uart_hex (base_addr);
+  uart_hex (hardware_info_VC_base ());
   uart_puts ("\n");
 }
 

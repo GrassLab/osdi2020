@@ -5,7 +5,6 @@
 #include <list.h>
 #include <signal.h>
 
-#define POOL_SIZE 64
 #define STACK_SIZE 0x2000
 #define USER_STACK_ADDR 0x0000ffffffffe000
 #define VA_MAP_SIZE 0x30
@@ -53,7 +52,9 @@ struct task_struct
   size_t signal_map;
   int exit_status;
   struct va_map_struct va_maps[VA_MAP_SIZE];
-} task_pool[POOL_SIZE];
+} *task_pool;
+
+size_t TASK_POOL_LEN;
 
 struct task_struct *privilege_task_create (void (*func) ());
 
@@ -79,5 +80,6 @@ int sys_kill (size_t pid, int signal);
 size_t load_binary (size_t bin_addr);
 void va_map_clear ();
 void va_map_add (size_t start, size_t size);
+void task_init ();
 
 #endif /* ifndef SCHED */

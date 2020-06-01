@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <irq.h>
 #include <sched.h>
+#include <hardware.h>
 #include "tlb.h"
 
 void *
@@ -143,7 +144,7 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
 	    }
 	}
       table[page_ind] = phys | attr;
-      if (phys < USED_MEMSIZE)
+      if (phys < PHYS_MEM_MAX)
 	{
 	  // setup page_struct
 	  page_init (&page_pool[phys >> 12], PGD, virt);
@@ -152,9 +153,71 @@ map_virt_to_phys (size_t PGD, size_t virt_addr, size_t phys_addr,
   return 0;
 }
 
-/* assume we just need 2MB memory
- * PGD, PUD, PMD, PTE are physical address
- * mapping rule:
+static void
+page_pool_init ()
+{
+  extern char _kernel_end[];
+  size_t page_num_max;
+  size_t page_pool_size;
+  size_t mem_size;
+  size_t kernel_end;
+  size_t i;
+
+  mem_size = hardware_info_memory_size ();
+  page_num_max = mem_size / PAGE_SIZE;
+  page_pool_size = page_num_max * sizeof (struct page_struct);
+  PAGE_POOL_LEN = page_num_max;
+  kernel_end = (size_t) _kernel_end;
+  if (kernel_end & (PAGE_SIZE - 1))
+    kernel_end = (kernel_end & ~(PAGE_SIZE - 1)) + PAGE_SIZE;
+  if (mem_size - kernel_end < page_pool_size)
+    {
+      // impossible
+      while (1);
+    }
+  page_pool = (struct page_struct *) kernel_end;
+  bzero (page_pool, page_pool_size);
+  for (i = kernel_end; i < (size_t) page_pool + page_pool_size;
+       i += PAGE_SIZE)
+    page_init (&page_pool[(i - KPGD) / PAGE_SIZE], KPGD, i);
+}
+
+static void
+page_table_init ()
+{
+  size_t mem_size;
+  size_t i;
+  size_t *table;
+  size_t tlb_ind, page_ind;
+  size_t virt;
+
+  mem_size = hardware_info_memory_size ();
+
+  bzero ((void *) KPGD, PAGE_SIZE);
+  for (i = 0; i < mem_size; i += 2 * M)
+    {
+      table = (void *) KPGD;
+      virt = i | KPGD;
+      for (tlb_ind = 39; tlb_ind > 12; tlb_ind -= 9)
+	{
+	  page_ind = ((size_t) virt >> tlb_ind) & 0x1ff;
+	  if (!table[page_ind])
+	    {
+	      table[page_ind] = pd_encode_table (page_alloc (1));
+	      if (table[page_ind] == pd_encode_table (0))
+		{
+		  while (1);
+		}
+	      bzero (PD_DECODE (table[page_ind]), PAGE_SIZE);
+	    }
+	  table = PD_DECODE (table[page_ind]);
+	}
+    }
+}
+
+/**
+ * allocate page table by memory size
+ * page_table mapping rule:
  * phys = virt[47:12] << 12
  * ex:
  * 0x3000 = 0xffff000000003000[47:12] << 12
@@ -163,41 +226,59 @@ void
 tlb_init ()
 {
   extern char _kernel_end[];
-  size_t *PGD, *PUD, *PMD, *PTE;
+  extern char _kernel_start[];
+  size_t *PGD, *PUD;
   size_t i;
-  // setup default page tables to prevent recursive
-  bzero (0, 0x4000);
-  PGD = 0;
-  PUD = (size_t *) 0x1000;
-  PMD = (size_t *) 0x2000;
-  PTE = (size_t *) 0x3000;
-  // PGD -> PUD -> PMD -> PTE
+  size_t kernel_start;
+  size_t kernel_end;
+  size_t mem_size;
+  struct page_struct *page;
+  // setup 2 level tlb for startup allocator
+  // 0x1000 for temp PGD, we will set PGD back to 0 later
+  PGD = (size_t *) 0x1000;
+  PUD = (size_t *) 0x2000;
+  bzero (PGD, 0x2000);
   PGD[0] = pd_encode_table (PUD);
-  PUD[0] = pd_encode_table (PMD);
-  PMD[0] = pd_encode_table (PTE);
-  // page table
-  // ffff000000000000-ffff000000004000 -> 00000000-00004000
-  PTE[0] = pd_encode_ram (PGD);
-  PTE[1] = pd_encode_ram (PUD);
-  PTE[2] = pd_encode_ram (PMD);
-  PTE[3] = pd_encode_ram (PTE);
-  // kernel
-  // start from kernel stack
-  for (i = 0x7e000; i < ((size_t) _kernel_end & ~KPGD); i += PAGE_SIZE)
-    PTE[i >> 12] = pd_encode_ram ((size_t *) i);
+  PUD[0] = pd_encode_block (0);
   mmu_enable (PGD);
-  // set used pages
-  for (i = 0; i < 0x4000; i += PAGE_SIZE)
-    page_init (&page_pool[i >> 12], KPGD, i | KPGD);
-  for (i = 0x7e000; i < ((size_t) _kernel_end & ~KPGD); i += PAGE_SIZE)
-    page_init (&page_pool[i >> 12], KPGD, i | KPGD);
+  // allocate page_pool
+  page_pool_init ();
+  // setup used pages
+  // we need 0 for kernel PGD, so set in used first
+  page_init (&page_pool[0], KPGD, (size_t) KPGD);
+  page_init (&page_pool[1], KPGD, (size_t) PGD);
+  page_init (&page_pool[2], KPGD, (size_t) PUD);
+  // setup used kernel
+  kernel_start = (size_t) _kernel_start - STACK_SIZE;
+  kernel_end = (size_t) _kernel_end;
+  for (i = kernel_start; i < kernel_end; i += PAGE_SIZE)
+    page_init (&page_pool[(i - KPGD) / PAGE_SIZE], KPGD, i);
+  // setup page tables
+  page_table_init ();
+  // mapping in used pages
+  mem_size = hardware_info_memory_size ();
+  for (i = 0; i < mem_size; i += PAGE_SIZE)
+    {
+      page = &page_pool[i / PAGE_SIZE];
+      if (page->in_used)
+	{
+	  map_virt_to_phys (KPGD, i | KPGD, i, PAGE_SIZE, pd_encode_ram (0));
+	  page_init (page, KPGD, i | KPGD);
+	}
+    }
+  // switch back to KPGD
+  asm volatile ("dsb ish\n" "msr ttbr0_el1, xzr\n" "msr ttbr1_el1, xzr\n"
+		"tlbi vmalle1is\n" "dsb ish\n" "isb\n");
+  // free temp PGD PUD
+  page_free_virt (KPGD, 0x1000 | KPGD, 2);
+  // TODO: preserve direct mapping address (ffff000000000000 -> ffff000_MEM_SIZE)
   // peripheral
-  // ffffaaaa00000000-ffffaaaa01000000 -> 00003f000000-000040000000
-  map_virt_to_phys (KPGD, 0xffffaaaa00000000, 0x3f000000, 0x1000000,
+  // ffff00003f000000-ffff000040000000 -> 00003f000000-000040000000
+  map_virt_to_phys (KPGD, 0xffff00003f000000, 0x3f000000, 0x1000000,
 		    pd_encode_peripheral (0));
   // arm local
-  // ffffaaaa01000000-ffffaaaa01040000 -> 000040000000-000040040000
-  map_virt_to_phys (KPGD, 0xffffaaaa01000000, 0x40000000, 0x40000,
+  // ffff000040000000-ffff000040040000 -> 000040000000-000040040000
+  map_virt_to_phys (KPGD, 0xffff000040000000, 0x40000000, 0x40000,
 		    pd_encode_peripheral (0));
 }
 
@@ -212,7 +293,7 @@ page_alloc (size_t page_num)
   size_t i, cnt, target;
   critical_entry ();
   cnt = 0;
-  for (i = 0; i < PAGE_POOL_SIZE; ++i)
+  for (i = 0; i < PAGE_POOL_LEN; ++i)
     {
       if (!page_pool[i].in_used)
 	{
@@ -272,10 +353,10 @@ page_init (struct page_struct *page, size_t PGD, size_t virt_addr)
 void
 do_page_status (int *free, int *alloc)
 {
-  int i;
+  size_t i;
   *free = 0;
   *alloc = 0;
-  for (i = 0; i < PAGE_POOL_SIZE; ++i)
+  for (i = 0; i < PAGE_POOL_LEN; ++i)
     {
       if (page_pool[i].in_used)
 	(*alloc)++;
@@ -321,7 +402,7 @@ virt_to_phys (void *virt)
 void *
 phys_to_virt (void *phys)
 {
-  if ((size_t) phys >= USED_MEMSIZE)
+  if ((size_t) phys >= PHYS_MEM_MAX)
     return 0;
   return (void *) (page_pool[(size_t) phys / PAGE_SIZE].virt_addr |
 		   ((size_t) phys & 0xfff));

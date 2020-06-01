@@ -1,5 +1,5 @@
 .section ".text"
-#define CORE0_TIMER_IRQ_CTRL (0xffffaaaa00000000+0x1000040)
+#define CORE0_TIMER_IRQ_CTRL (0xffff00003f000000+0x1000040)
 .global sys_core_timer_enable
 sys_core_timer_enable:
   stp x29, x30, [sp, #-16]!

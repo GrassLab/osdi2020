@@ -62,6 +62,7 @@ main (int error, char *argv[])
       uart_puts ("-----------------------------\n");
     }
 
+  task_init ();
   privilege_task_create (idle);
   privilege_task_create (user_shell);
   sys_core_timer_enable ();
