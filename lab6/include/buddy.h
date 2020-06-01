@@ -19,6 +19,7 @@ struct buddy_head buddy_pool[MAX_ORDER];
 void buddy_init();
 int buddy_alloc(int size);
 int pfn2phy(int page_frame_number);
+void buddy_free(int page_frame_number, int page_frame_size);
 
 
 #endif

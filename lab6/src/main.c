@@ -20,6 +20,25 @@ void task_program()
 struct node{
     int a;
 };
+
+void test_buddy(){
+    buddy_init(PAGING_PAGES);
+    buddy_show();
+
+    int alloc_num = 10;
+    int alloced_pool[alloc_num];
+    int alloc_size[] = {34, 66, 35, 67, 1024, 4, 16, 17, 257, 53};
+    for(int i=0;i<alloc_num;i++){
+        alloced_pool[i] = buddy_alloc(alloc_size[i]);
+        buddy_show();
+    }
+    for(int i=0;i<alloc_num;i++){
+        if(alloced_pool[i]==-1)continue;
+        buddy_free(alloced_pool[i], alloc_size[i]);
+        buddy_show();
+    }
+
+}
 void main(){
     // set up serial console
     uart_init();
@@ -58,18 +77,8 @@ void main(){
     uart_puts("PAGING_PAGES: ");
     uart_send_int(PAGING_PAGES);
     uart_puts("\n");
+    test_buddy();
     
-    buddy_init(PAGING_PAGES);
-    buddy_show();
-
-    int alloc_num = 5;
-    int alloced_pool[alloc_num];
-    int alloc_size[] = {1023, 1023, 1023, 1023, 1025};
-    for(int i=0;i<alloc_num;i++){
-        alloced_pool[i] = buddy_alloc(alloc_size[i]);
-        buddy_show();
-    }
-
     shell();
 }	
 void run_program()

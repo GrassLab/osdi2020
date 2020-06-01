@@ -86,11 +86,11 @@ int buddy_alloc(int size){
         temp->next = 0;
         head->next = temp;
 
-        // uart_puts("Split for order: ");
-        // uart_send_int(remain_order);
-        // uart_puts(" in: ");
-        // uart_send_int(big_page_num);
-        // uart_puts("\n");
+        uart_puts("Split for order: ");
+        uart_send_int(remain_order);
+        uart_puts(" in: ");
+        uart_send_int(big_page_num);
+        uart_puts("\n");
     }
 
     if(order<MAX_ORDER && buddy_pool[order].len>0){
@@ -108,13 +108,50 @@ int buddy_alloc(int size){
         uart_puts("\n");
         return ret_page;
     }
+    uart_puts("Unknown error!");
+    uart_puts("\n");
+    return -1;
 }
+
+void buddy_free(int page_frame_number, int page_frame_size){
+    uart_puts("Free page number: ");
+    uart_send_int(page_frame_number);
+    uart_puts("\n");
+    uart_puts("Free size: ");
+    uart_send_int(page_frame_size);
+    uart_puts("\n");
+    int order = cal_order(page_frame_size);
+    
+    struct buddy* temp = (struct buddy*)pfn2phy(page_frame_number);
+    temp->page_frame_number = page_frame_number;
+    temp->next = 0;
+
+    if(buddy_pool[order].len==0){
+        buddy_pool[order].page = temp;
+    }else{
+        struct buddy* head = buddy_pool[order].page;
+        if(page_frame_number < head->page_frame_number){
+            temp->next = head;
+            buddy_pool[order].page = temp;            
+        }
+        else{
+            while(head->next!=0 && head->next->page_frame_number < page_frame_number)head = head->next;
+            temp->next = head->next;
+            head->next = temp;
+        }
+    }
+    buddy_pool[order].len++;
+}
+
+
 void buddy_show(){
     for(int order=0;order<MAX_ORDER;order++){
 
         // if(buddy_pool[order].len==0)continue;
         uart_puts("Order: ");
         uart_send_int(order);
+        uart_puts(" ");
+        uart_send_int(1<<order);
         uart_puts("\n");
         uart_puts("Len: ");
         uart_send_int(buddy_pool[order].len);
