@@ -3,6 +3,7 @@
 #include "task/taskManager.h"
 #include "task/schedule.h"
 #include "task/sysCall.h"
+#include "memory/memManager.h"
 
 extern uint64_t _binary_user_img_start;
 extern uint64_t _binary_user_img_end;
@@ -123,4 +124,34 @@ void kernelTask()
             schedule();
         // }
     }
+}
+
+void memTestTask()
+{
+    uint64_t addr0 = getFreePage(0);
+
+    uartPuts("get free page address: ");
+    uartHex(addr0);
+    uartPuts("\n");
+
+    freePage(addr0);
+
+    int32_t token = getFreePool(32);
+    if (token != -1)
+    {
+        uint64_t addr1 = allocSlot(token);
+        uartPuts("get free slot address: ");
+        uartHex(addr1);
+        uartPuts("\n");
+
+        uint64_t addr2 = allocSlot(token);
+        uartPuts("get free slot address: ");
+        uartHex(addr2);
+        uartPuts("\n");
+
+        freeSlot(token, addr1);
+        freeSlot(token, addr2);
+    }
+
+    busyloop();
 }

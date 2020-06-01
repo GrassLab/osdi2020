@@ -36,15 +36,15 @@ void kernelMain()
     // set up serial console
     uartInit();
     initPage();
-
-    uartPuts("test message\n");
+    initMemPool();
+    memTestTask();
 
     // for (int i = 0; i < 3; ++i)
     // { // N should > 2
     //     createPrivilegeTask(&kernelTask, 0);
     // }
     // createPrivilegeTask(&zombieReaper, 0);
-    createPrivilegeTask(&execTask, 0);
+    // createPrivilegeTask(&memTestTask, 0);
 
     // Enable core timer
     asm volatile("svc #2");

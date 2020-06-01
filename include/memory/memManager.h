@@ -1,9 +1,6 @@
 #ifndef _MM_H
 #define _MM_H
 
-#include "type.h"
-#include "task/taskStruct.h"
-
 #define VA_START 0xffff000000000000
 
 #define PAGE_MASK			0xfffffffffffff000
@@ -26,6 +23,11 @@
 #define PUD_SHIFT			PAGE_SHIFT + 2*TABLE_SHIFT
 #define PMD_SHIFT			PAGE_SHIFT + TABLE_SHIFT
 
+#ifndef __ASSEMBLER__
+
+#include "type.h"
+#include "task/taskStruct.h"
+
 struct page
 {
     bool used;
@@ -41,6 +43,15 @@ struct buddyList
     size_t size;
 };
 
+struct memPool
+{
+    uint64_t init_addr;
+	uint64_t slot_size;
+	uint32_t max_slot_num;
+	bool pool_used;
+	bool slot_used[4096]; 
+};
+
 void memzero(unsigned long src, unsigned long n);
 void memcpy(unsigned long dst, unsigned long src, unsigned long n);
 void setPgd();
@@ -51,4 +62,10 @@ uint64_t getFreePage(uint32_t order);
 void freePage(uint64_t p);
 void initPage();
 
+uint64_t allocSlot(uint32_t token);
+int32_t getFreePool(uint64_t size);
+void freeSlot(uint32_t token, uint64_t addr);
+void initMemPool();
+
+#endif
 #endif

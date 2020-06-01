@@ -97,14 +97,15 @@ void _mergePage(struct page* delete_page)
         else
             new_page = delete_page;
 
+        new_page->order = delete_page->order + 1;
+        buddy[new_page->order].size++;
+
         uartPuts(" to page ");
         uartInt(new_page->pfn);
         uartPuts(" of order ");
         uartInt(new_page->order);
         uartPuts("\n");
-
-        new_page->order = delete_page->order + 1;
-        buddy[new_page->order].size++;
+        
         if (buddy[new_page->order].head == (struct page* )0)
             buddy[new_page->order].head = new_page;
         else 
@@ -149,9 +150,9 @@ uint64_t getFreePage(uint32_t order)
     return 0;
 }
 
-void freePage(uint64_t p)
+void freePage(uint64_t addr)
 {
-    struct page* delete_page = &pages[(p - LOW_MEMORY) / PAGE_SIZE];
+    struct page* delete_page = &pages[(addr - LOW_MEMORY) / PAGE_SIZE];
     delete_page->used = false;
     _mergePage(delete_page);
 }
