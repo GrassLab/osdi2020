@@ -1,5 +1,5 @@
 ARM_GNU = aarch64-linux-gnu
-CFLAGS = -Wall -Werror -g -nostdlib -nostartfiles -ffreestanding -Iinc -mgeneral-regs-only -D__DEBUG
+CFLAGS = -Wall -Werror -g -nostdlib -nostartfiles -ffreestanding -Iinc -mgeneral-regs-only# -D__DEBUG
 # -Wextra 
 S_SRCS = $(wildcard src/*.S)
 C_SRCS = $(wildcard src/*.c)
@@ -8,7 +8,7 @@ C_LSRCS = $(wildcard lib/*.c)
 S_OBJS = $(S_SRCS:src/%.S=build/%_s.o) $(S_LSRCS:lib/%.S=build/%_s.o)
 C_OBJS = $(C_SRCS:src/%.c=build/%_c.o) $(C_LSRCS:lib/%.c=build/%_c.o)
 
-all:kernel8.img
+all: kernel8.img
 
 build/%_s.o: src/%.S
 	$(ARM_GNU)-gcc $(CFLAGS) -c $< -o $@
@@ -30,9 +30,9 @@ clean:
 	rm kernel8.elf build/* >/dev/null 2>/dev/null || true
 
 .PHONY: run
-run:
+run: kernel8.img
 	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
 
 .PHONY: debug
-debug:
+debug: kernel8.img
 	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -d int -s -S

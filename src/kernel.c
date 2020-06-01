@@ -1,5 +1,6 @@
 #include "exce.h"
 #include "mailbox.h"
+#include "mm.h"
 #include "printf.h"
 #include "schedule.h"
 #include "svc.h"
@@ -70,11 +71,17 @@ int kernel_main()
     get_board_info();
 
     // create test process
-    privilege_task_create(user_test);
+    // privilege_task_create(user_test);
     // for(int i = 0; i < 5; ++i) { // N should > 2
     //     privilege_task_create(foo);
     // }
-
+    mm_init();
+    struct page* addr = __buddy_block_alloc(1);
+    struct page* addr2 = __buddy_block_alloc(5);
+    struct page* addr3 = __buddy_block_alloc(5);
+    __buddy_block_free(addr3);
+    __buddy_block_free(addr2);
+    __buddy_block_free(addr);
     core_timer_enable();
 
     idle_task();
