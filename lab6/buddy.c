@@ -13,7 +13,10 @@ void buddy_init(void)
   /* Assume nobody has asked for page yet */
   /* buddy_node_page_list[0].pa will take STARTUP_PAGE_PA_BASE */
   buddy_node_page_list[0].va = MMU_PA_TO_VA(mmu_startup_page_allocate(0));
-  memzero_8byte(buddy_node_page_list[0].used_bit_array, 8);
+
+  /* clear used_bit_array, clears 8 byte at once, but data type is 32bit(4 byte) */
+  memzero_8byte((uint64_t *)buddy_node_page_list[0].used_bit_array, (BUDDY_BIT_ARRAY_LENGTH / 2));
+
   for(int i = 1; i < BUDDY_PAGE_PA_NODE_STRUCT_LENGTH; ++i)
   {
     buddy_node_page_list[i].va = 0x0;
@@ -151,6 +154,7 @@ struct buddy_page_node_struct * buddy_node_allocate(void)
       /* Setup node_page_list_idx, bit_array_idx, bit_array_bit */
       //buddy_node_page_list[node_page_list_idx].va = MMU_PA_TO_VA(mmu_startup_page_allocate(0));
       /* TODO */
+      /* 1. clear used_bit_array */
       uart_puts_blocking("Unimplemented error on buddy_node_allocate\n");
       while(1);
     }
@@ -176,7 +180,7 @@ struct buddy_page_node_struct * buddy_node_allocate(void)
         SET_BIT(buddy_node_page_list[node_page_list_idx].used_bit_array[bit_array_idx], bit_array_bit);
 
         /* Change pointer to uint64_t to prevent offset multiplier */
-        return (struct buddy_page_node_struct *)((uint64_t)buddy_node_page_list[node_page_list_idx].va + sizeof(struct buddy_page_node_struct) * (bit_array_idx * 64 + (unsigned)bit_array_bit));
+        return (struct buddy_page_node_struct *)((uint64_t)buddy_node_page_list[node_page_list_idx].va + sizeof(struct buddy_page_node_struct) * (bit_array_idx * 32 + (unsigned)bit_array_bit));
       }
     }
   }

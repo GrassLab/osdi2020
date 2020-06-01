@@ -18,18 +18,20 @@ struct buddy_page_node_struct
   uint64_t * va;
 };
 
-/* 14 * sizeof(struct buddy_page_pa_node_struct) = 1008 < 1024(1KB */
-#define BUDDY_PAGE_PA_NODE_STRUCT_LENGTH 14
 /* 512 / 32bit = 16 */
 /* choose 32 bit because __builtin_ffsll is bugged */
 #define BUDDY_BIT_ARRAY_LENGTH 16
 struct buddy_page_pa_node_struct
 {
   /* struct buddy_page_node_struct * is 8byte, 4KB = 512 * 8byte */
-  /* 512 / 64bit = 8 */
-  uint64_t used_bit_array[BUDDY_BIT_ARRAY_LENGTH];
+  /* 512 / 32bit = 16 (BUDDY_BIT_ARRAY_LENGTH) */
+  uint32_t used_bit_array[BUDDY_BIT_ARRAY_LENGTH];
   uint64_t * va;
 };
+
+/* struct buddy_page_pa_node_struct is 4 * 16 + 8 = 72 bytes */
+/* 14 * (72 bytes) sizeof(struct buddy_page_pa_node_struct) = 1008 < 1024(1KB */
+#define BUDDY_PAGE_PA_NODE_STRUCT_LENGTH 14
 
 void buddy_init(void);
 uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa);
