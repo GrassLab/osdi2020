@@ -21,8 +21,6 @@ void scheduler_init(void)
                "msr tpidr_el1, x0\n");
   task_privilege_task_create(schedule_idle, TASK_PRIORITY_LOW);
   task_privilege_task_create(schedule_zombie_reaper, TASK_PRIORITY_HIGH);
-  task_privilege_task_create(task_test1, TASK_PRIORITY_HIGH);
-  task_privilege_task_create(task_test2, TASK_PRIORITY_HIGH);
   task_privilege_task_create(task_shell, TASK_PRIORITY_HIGH);
   irq_int_enable();
   timer_enable_core_timer();

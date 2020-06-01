@@ -70,10 +70,6 @@ void task_guard_section(void);
 void task_unguard_section(void);
 int task_is_guarded(void);
 
-extern char _binary_test1_bin_start;
-extern char _binary_test1_bin_end;
-extern char _binary_test2_bin_start;
-extern char _binary_test2_bin_end;
 extern char _binary_shell_bin_start;
 extern char _binary_shell_bin_end;
 

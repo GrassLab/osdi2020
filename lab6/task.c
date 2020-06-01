@@ -69,36 +69,6 @@ uint64_t task_get_current_task_id(void)
   return current_task_id;
 }
 
-void task_test1(void)
-{
-  char ann[] = ANSI_BLUE"[Kernel test command 1] "ANSI_RESET;
-  char string_buff[0x80];
-  uint64_t current_task_id = task_get_current_task_id();
-
-  uart_puts(ann);
-  uart_puts("ID: ");
-  string_longlong_to_char(string_buff, (int64_t)current_task_id);
-  uart_puts(string_buff);
-  uart_puts("\n");
-  uart_puts(ann);
-  task_do_exec((uint64_t *)&_binary_test1_bin_start, (uint64_t)&_binary_test1_bin_end - (uint64_t)&_binary_test1_bin_start);
-}
-
-void task_test2(void)
-{
-  char ann[] = ANSI_YELLOW"[Kernel test command 2] "ANSI_RESET;
-  char string_buff[0x80];
-  uint64_t current_task_id = task_get_current_task_id();
-
-  uart_puts(ann);
-  uart_puts("ID: ");
-  string_longlong_to_char(string_buff, (int64_t)current_task_id);
-  uart_puts(string_buff);
-  uart_puts("\n");
-  uart_puts(ann);
-  task_do_exec((uint64_t *)&_binary_test2_bin_start, (uint64_t)&_binary_test2_bin_end - (uint64_t)&_binary_test2_bin_start);
-}
-
 void task_shell(void)
 {
   char ann[] = ANSI_BG_GREEN ANSI_BLACK"[Kernel mode shell]"ANSI_RESET" ";
