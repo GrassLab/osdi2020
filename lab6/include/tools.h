@@ -5,6 +5,7 @@
 #include "shed.h"
 #include "mmu.h"
 #include "printf.h"
+#include "buddy.h"
 
 #define size_t unsigned int
 

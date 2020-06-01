@@ -35,16 +35,33 @@ void main(){
      
     
     //init_init_task(shell);
-    extern unsigned long _binary_user_code_test_img_start;
-    unsigned long program_start = (unsigned long)&_binary_user_code_test_img_start;
+    // extern unsigned long _binary_user_code_test_img_start;
+    // unsigned long program_start = (unsigned long)&_binary_user_code_test_img_start;
     // echo everything back
     //privilege_task_create(program_start);
     //schedule();
     //print_hello();
     
-    uart_puts("# ");
+    //uart_puts("# ");
+    //shell();
+
+
+    uart_puts("LOW_MEMORY: ");
+    uart_hex(LOW_MEMORY);
+    uart_puts("\n");
+    uart_puts("HIGH_MEMORY: ");
+    uart_hex(HIGH_MEMORY);
+    uart_puts("\n");
+    uart_puts("PAGING_MEMORY: ");
+    uart_send_int(PAGING_MEMORY);
+    uart_puts("\n");
+    uart_puts("PAGING_PAGES: ");
+    uart_send_int(PAGING_PAGES);
+    uart_puts("\n");
+    
+    buddy_init(PAGING_PAGES);
+    buddy_show();
     shell();
-   
 }	
 void run_program()
 {
