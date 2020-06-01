@@ -7,9 +7,6 @@
 #include "string.h"
 #include "syscall.h"
 
-
-extern Task *current_task, *tasks[TASK_SIZE];
-
 char sys_read(){
   uart_read_enqueue(current_task);
   unsigned long elr, sp_el0, spsr_el1;

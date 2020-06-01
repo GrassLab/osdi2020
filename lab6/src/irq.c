@@ -29,7 +29,6 @@ void bottom_half(void) {
 Task *read_tasks[TASK_SIZE];
 int rtbeg = 0, rtend = 0;
 
-extern Task *current_task;
 void uart_read_enqueue(Task *task){
   read_tasks[rtend] = task;
   rtend = (rtend + 1) % TASK_SIZE;

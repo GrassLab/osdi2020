@@ -10,6 +10,7 @@
 #include "mm.h"
 #include "util.h"
 #include "allocator.h"
+#include "process.h"
 
 #ifdef TEST
 #include "test.h"

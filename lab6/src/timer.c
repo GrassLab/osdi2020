@@ -70,7 +70,6 @@ void core_timer_init() {
 #define EXPIRE_PERIOD "0x1ffffff"
 //__asm__ volatile("mov x0, " EXPIRE_PERIOD);
 #define RESCHED_INTERVAL 3
-extern Task *current_task;
 void core_timer_handler() {
   static unsigned int jiffies = 0;
   __asm__ volatile("mrs x0, cntfrq_el0");

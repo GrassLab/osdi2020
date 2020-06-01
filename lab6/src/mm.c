@@ -5,8 +5,6 @@
 #include "syscall.h"
 #include "allocator.h"
 
-extern Task *current_task;
-
 unsigned page_number = PAGING_PAGES;
 unsigned long low_memory = 0;
 

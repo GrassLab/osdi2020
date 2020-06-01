@@ -2,8 +2,6 @@
 #include "task.h"
 #include "util.h"
 
-extern Task *tasks[TASK_SIZE], *current_task, *next_task;
-
 int *switch_to(Task*, Task*);
 
 int tasks_pos(Task *task){
