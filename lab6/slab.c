@@ -5,6 +5,7 @@
 #include "string_util.h"
 
 static struct slab_struct * slab_list;
+static struct malloc_struct * malloc_list;
 
 uint64_t slab_regist(unsigned bytes)
 {
@@ -156,5 +157,139 @@ void slab_insert_slab(struct slab_struct * node)
     prev_node -> next_ptr = node;
     node -> next_ptr = cur_node;
   }
+}
+
+uint64_t * slab_malloc(unsigned bytes)
+{
+  char string_buff[0x20];
+  uint64_t * ret_ptr;
+  /*Use buddy system for higher volume
+   *kmalloc-2k
+   *kmalloc-1k
+   *kmalloc-512
+   *kmalloc-256
+   *kmalloc-192 (ignored)
+   *kmalloc-128
+   *kmalloc-96 (ignored)
+   *kmalloc-64
+   *kmalloc-32
+   *kmalloc-16
+   *kmalloc-8
+   */
+  uint32_t lower_bytes = (uint32_t)bytes;
+  int leading_zeroes = __builtin_clz(lower_bytes);
+
+  struct malloc_struct * new_node = (struct malloc_struct *)slab_allocate(slab_regist(sizeof(struct malloc_struct)));
+
+  if(malloc_list == 0)
+  {
+    malloc_list = new_node;
+    new_node -> next_ptr = 0;
+  }
+  else /* prepend to list */
+  {
+    new_node -> next_ptr = malloc_list;
+    malloc_list = new_node;
+  }
+
+  if(bytes >= PAGE_4K)
+  {
+    int block_size = (19 - leading_zeroes);
+    /* 0x1000 leading_zeroes = 19 */
+    /* 0x2000 leading_zeroes = 18 */
+
+    CLEAR_BIT(lower_bytes, block_size + 12);
+    if(lower_bytes == 0)
+    {
+      /* lower_bytes is power of 2 */
+      ret_ptr = buddy_allocate((unsigned)block_size, BUDDY_ALLOCATE_NO_MEM_ZERO, BUDDY_ALLOCATE_TO_VA);
+    }
+    else
+    {
+      /* allocate one order larger */
+      ret_ptr = buddy_allocate((unsigned)block_size + 1, BUDDY_ALLOCATE_NO_MEM_ZERO, BUDDY_ALLOCATE_TO_VA);
+    }
+    new_node -> token = 0;
+  }
+  else
+  {
+    /* 0x8 leading_zeroes = 28 */
+    int fixed_size = (28 - leading_zeroes);
+    uint64_t token;
+
+    CLEAR_BIT(lower_bytes, fixed_size + 3);
+
+    if(lower_bytes == 0)
+    {
+      /* lower_bytes is power of 2 */
+      token = slab_regist(1u << (fixed_size + 3));
+      ret_ptr = slab_allocate(token);
+    }
+    else
+    {
+      /* allocate one order larger */
+      token = slab_regist(1u << (fixed_size + 3 + 1));
+      ret_ptr = slab_allocate(token);
+    }
+    new_node -> token = token;
+  }
+
+  new_node -> va = (uint64_t *)ret_ptr;
+
+  uart_puts(ANSI_BLUE"[Malloc]"ANSI_RESET" Allocate Size: ");
+  string_ulonglong_to_hex_char(string_buff, bytes);
+  uart_puts(string_buff);
+  uart_puts(" Token: ");
+  string_ulonglong_to_hex_char(string_buff, new_node -> token);
+  uart_puts(string_buff);
+  uart_puts(" VA: ");
+  string_ulonglong_to_hex_char(string_buff, (uint64_t)ret_ptr);
+  uart_puts(string_buff);
+  uart_putc('\n');
+
+  return ret_ptr;
+}
+
+void slab_malloc_free(uint64_t * va)
+{
+  char string_buff[0x20];
+
+  struct malloc_struct * cur_node = malloc_list;
+  struct malloc_struct * prev_node = 0x0;
+
+  while(cur_node != 0x0)
+  {
+    if(cur_node -> va == va)
+    {
+      if(prev_node == 0x0)
+      {
+        malloc_list = cur_node -> next_ptr;
+      }
+      else
+      {
+        prev_node -> next_ptr = cur_node -> next_ptr;
+      }
+
+      if(cur_node -> token == 0)
+      {
+        buddy_free(cur_node -> va);
+      }
+      else
+      {
+        slab_free(cur_node -> token, cur_node -> va);
+      }
+      slab_free(slab_regist(sizeof(struct malloc_struct)), (uint64_t *)cur_node);
+
+      uart_puts(ANSI_BLUE"[Malloc]"ANSI_RESET" Free VA: ");
+      string_ulonglong_to_hex_char(string_buff, (uint64_t)va);
+      uart_puts(string_buff);
+      uart_putc('\n');
+
+      return;
+    }
+    prev_node = cur_node;
+    cur_node = cur_node -> next_ptr;
+  }
+  return;
 }
 

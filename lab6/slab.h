@@ -17,6 +17,13 @@ struct slab_struct
 /* sizeof(slab_struct) == 80 bytes, 4KB can contain 51 */
 #define SLAB_NODE_POOL_SIZE 8
 
+struct malloc_struct
+{
+  struct malloc_struct * next_ptr;
+  uint64_t * va;
+  uint64_t token; /* if token is null, buddy system is used */
+};
+
 uint64_t slab_regist(unsigned bytes);
 uint64_t * slab_allocate(uint64_t token);
 void slab_free(uint64_t token, uint64_t * va);
@@ -24,6 +31,9 @@ void slab_free(uint64_t token, uint64_t * va);
 struct slab_struct * slab_find_or_create_slab(unsigned bytes);
 struct slab_struct * slab_allocate_slab(void);
 void slab_insert_slab(struct slab_struct * node);
+
+uint64_t * slab_malloc(unsigned bytes);
+void slab_malloc_free(uint64_t * va);
 
 #endif
 

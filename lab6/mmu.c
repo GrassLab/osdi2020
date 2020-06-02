@@ -142,21 +142,23 @@ void mmu_user_page_table_init(void)
   /* total frame: 1PGD, 1PUD, 1PMD, 64 * 2 PTE */
 
   // For testing
-  uint64_t token_a = slab_regist(23);
-  uint64_t token_b = slab_regist(42);
-  uint64_t token_c = slab_regist(41);
-  uint64_t* space_1 = slab_allocate(token_a);
-  uint64_t* space_2 = slab_allocate(token_b);
-  uint64_t* space_3 = slab_allocate(token_c);
-  uint64_t* space_4 = slab_allocate(token_a);
-  uint64_t* space_5 = slab_allocate(token_b);
-  uint64_t* space_6 = slab_allocate(token_c);
-  slab_free(token_a, space_1);
-  slab_free(token_b, space_2);
-  slab_free(token_c, space_3);
-  slab_free(token_a, space_4);
-  slab_free(token_b, space_5);
-  slab_free(token_c, space_6);
+  uart_puts("===\n");
+  uint64_t * a = slab_malloc(64);
+  uart_puts("===\n");
+  uint64_t * b = slab_malloc(23);
+  uart_puts("===\n");
+  uint64_t * c = slab_malloc(0x1000);
+  uart_puts("===\n");
+  uint64_t * d = slab_malloc(0x2001);
+  uart_puts("===\n");
+  slab_malloc_free(a);
+  uart_puts("===\n");
+  slab_malloc_free(c);
+  uart_puts("===\n");
+  slab_malloc_free(b);
+  uart_puts("===\n");
+  slab_malloc_free(d);
+  uart_puts("===\n");
   while(1);
 
   /* setup 1 PGD */
