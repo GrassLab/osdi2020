@@ -46,6 +46,9 @@ qemu: all
 copy: all
 	sudo mount /dev/sdb1 /mnt/ && sudo cp kernel8.img /mnt/ && sudo umount /mnt
 
+nm: kernel8.elf
+	nm --size-sort -S kernel8.elf | awk '{if($$3~/b|B/){print $$0;}}'
+
 .PHONY: qemu_dbg
 qemu_dbg: debug
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -vnc :0 -s -S -serial pty
