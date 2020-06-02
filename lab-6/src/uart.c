@@ -148,3 +148,11 @@ void print_uart_clock()
         uart_puts("\n");
     } else uart_puts("Unable to read uart clock!");
 }
+
+// for printf
+void putc(void *p, char c) {
+    if(c == '\n'){
+        uart_send('\r');
+    }
+	uart_send(c);
+}

@@ -6,7 +6,7 @@
 TaskManager taskManager;
 
 extern Task* get_current();
-extern void set_current(Task *);
+extern void set_current();
 extern void switch_to(Task* prev, Task* next);
 extern void switch_exit();
 extern void fork_child_exit();
@@ -98,6 +98,7 @@ void print_task_context(Task *task)
             uart_puts("\n");
         }
     }
+
 }
 
 void __exit(int status)
@@ -180,7 +181,7 @@ void foo12()
         uart_puts("Task id: ");
         uart_print_int(get_taskid());
         uart_puts("\n");
-        wait(1000000);
+        wait(10000000);
     }
 }
 
@@ -267,7 +268,6 @@ void uart_test() {
 void do_exec(void(*func)())
 {
     uart_puts("do_exec\n");
-
     Task *task = get_current();
     unsigned long userStack = task->userContext.sp_el0;
     unsigned long userCpuState = 0x0;

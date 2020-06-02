@@ -1,6 +1,7 @@
-.section ".text.boot"
 #include "register.h"
 #include "memory.h"
+
+.section ".text.boot"
 
 .globl _start
 _start:
@@ -19,34 +20,24 @@ master:
 	ldr	x0, =HCR_VALUE
 	msr	hcr_el2, x0
 
-    # ldr	x0, =SCR_VALUE
-	# msr	scr_el2, x0
-
 	ldr	x0, =SPSR_VALUE
 	msr	spsr_el2, x0
 
 	adr	x0, el1_start		
 	msr	elr_el2, x0
-
-	eret
+	eret				
 
 el1_start:
 	ldr	x0, =__bss_start
     ldr x1, =__bss_size
 	bl 	memzero
-	# mov	sp, #EL1_LOW_MEMORY
-	mov	sp, #EL0_LOW_MEMORY
+	mov	sp, #EL1_LOW_MEMORY
 
-	adr x0, exception_handler		// load VBAR_EL1 with virtual
+	adr x0, exception_table		// load VBAR_EL1 with virtual
 	msr	vbar_el1, x0		// vector table address
 
-	ldr x0, =EL1_SPSR_VALUE
-	msr spsr_el1, x0
-
-	adr	x0, el0_start		
-	msr	elr_el1, x0
-
-    eret
+	bl	main
+	b 	proc_hang		// should never come here
 
 el0_start:
 	mov	sp, #EL0_LOW_MEMORY

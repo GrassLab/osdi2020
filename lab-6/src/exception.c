@@ -23,8 +23,7 @@ static void el0_svc_handler(unsigned long sp)
     } else if (x8 == SYSCALL_LOCAL_TIMER_INIT) {
         __local_timer_init();
     } else if (x8 == SYSCALL_EXEC) {
-        // do_exec(x0);
-        // not implemented
+        do_exec(x0);
     } else if (x8 == SYSCALL_EXIT) {
         __exit(x0);
     } else if (x8 == SYSCALL_FORK) {

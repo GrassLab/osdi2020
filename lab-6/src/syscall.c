@@ -37,6 +37,7 @@ void __get_timestamp()
     uart_puts(".");
     uart_print_int(floatPart);
     uart_puts("]");
+int __uart_write();
     uart_puts("\n");
 }
 

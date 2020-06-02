@@ -1,13 +1,9 @@
 #ifndef TASK_H
 #define TASK_H
 
-#include "memory.h"
-
 #define IN_KERNEL_MODE 0
 #define IN_USER_MODE 1
 #define ZOMBIE 2
-
-#define MAX_PROCESS_PAGES 16	
 
 typedef struct cpuContext {
     unsigned long x19;
@@ -35,18 +31,9 @@ typedef struct trapframe {
 	unsigned long regs[31];
 } Trapframe;
 
-typedef struct pageInfo {
-    unsigned long pgd;
-	int userPageCount;
-	int kernelPageCount;
-	Page userPages[MAX_PROCESS_PAGES];
-	unsigned long kernelPages[MAX_PROCESS_PAGES];
-} PageInfo;
-
 typedef struct task {
     CpuContext cpuContext;
     UserContext userContext;
-    PageInfo pageInfo;
     int id;
     int rescheduleFlag;
     int timeCount;

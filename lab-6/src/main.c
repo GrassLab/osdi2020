@@ -1,21 +1,64 @@
 #include "uart.h"
+#include "string.h"
+#include "utility.h"
+#include "mailbox.h"
+#include "time.h"
+#include "command.h"
 #include "task.h"
+#include "printf.h"
+#include "list.h"
+#include "memory.h"
 
+void test_lab6() {
+    page_sys_init();
+
+    print_buddy();
+    printf("------\n");
+
+    Page *p = get_page(5);
+    print_buddy();
+    printf("------\n");
+
+    Page *p2 = get_page(3);
+    print_buddy();
+    printf("------\n");
+
+    Page *p3 = get_page(2);
+    print_buddy();
+    printf("------\n");
+
+    Page *p4 = get_page(2);
+    print_buddy();
+    printf("------\n");
+
+    Page *p5 = get_page(2);
+    print_buddy();
+    printf("------\n");
+
+    free_page(p2->physicalAddr);
+    print_buddy();
+    printf("------\n");
+
+    free_page(p3->physicalAddr);
+    print_buddy();
+    printf("------\n");
+
+    free_page(p4->physicalAddr);
+    print_buddy();
+    printf("------\n");
+
+    free_page(p5->physicalAddr);
+    print_buddy();
+    printf("------\n");
+
+    free_page(p->physicalAddr);
+    print_buddy();
+    printf("------\n");
+}
 
 int main()
 {
     uart_init();
-    uart_puts("Hello!\n");
-    task_manager_init(idle);
-
-    // for(int i = 0; i < 4; ++i) {
-    //     privilege_task_create(req12_test);
-    // }
-
-    privilege_task_create(req34_test);
-    enable_irq();
-    core_timer_init();
-
-    // idle12();
-    idle();
+    init_printf(0, putc);
+    test_lab6();
 }
