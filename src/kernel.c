@@ -75,15 +75,39 @@ int kernel_main()
     // for(int i = 0; i < 5; ++i) { // N should > 2
     //     privilege_task_create(foo);
     // }
+
     mm_init();
+    //buddy test
     struct page* addr = __buddy_block_alloc(1);
     struct page* addr2 = __buddy_block_alloc(5);
     struct page* addr3 = __buddy_block_alloc(5);
     __buddy_block_free(addr3);
     __buddy_block_free(addr2);
     __buddy_block_free(addr);
-    core_timer_enable();
 
+    //object allocator.full test
+    __init_obj_page(&bookkeep[1], 64);
+    int token0 = register_obj_allocator(64);
+    int token1 = register_obj_allocator(32);
+    void *obj0[128];// should allocate two page
+    void *obj1[256];// should allocate two page
+    for(int i=0; i<128; i++){
+        obj0[i] = obj_allocate(token0);
+        obj1[2*i  ] = obj_allocate(token1);
+        obj1[2*i+1] = obj_allocate(token1);
+    }
+    // object allocator.partial test
+    obj_free(obj0[25]);
+    obj_free(obj0[26]);
+    obj0[25] = obj_allocate(token0);
+    obj0[26] = obj_allocate(token0);
+    // object allocator.empty test
+    for(int i=0; i<128; i++){
+        obj_free(obj0[i]);
+    }
+    obj0[0] = obj_allocate(token0);
+
+    core_timer_enable();
     idle_task();
     return -1;
 }
