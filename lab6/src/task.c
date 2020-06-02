@@ -10,15 +10,27 @@
 #include "allocator.h"
 #include "syscall.h"
 
+#define THREAD_SIZE 4096
 #define Task_pt_regs(tsk) ((struct pt_regs*)(tsk->mm.kernel_pages[0] + THREAD_SIZE - sizeof(struct pt_regs)))
 
-Task init_task = {
-  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-  {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none, {0,}
-};
+Task *init_task = 0;
+Task *current_task = 0, *next_task;
+Task **tasks = 0, **read_tasks = 0;
 
-Task *current_task = &init_task, *next_task;
-Task *tasks[TASK_SIZE] = { &init_task, };
+void task_init(){
+  show_task_msg("task init");
+  init_task = (Task*)kalloc(sizeof(Task));
+  *init_task = (Task){
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none, {0,}
+  };
+  tasks = (Task**)kalloc(sizeof(Task*) * TASK_SIZE);
+  tasks[0] = current_task = init_task;
+  for(int i = 1; i < TASK_SIZE; i++) tasks[i] = 0;
+  read_tasks = (Task**)kalloc(sizeof(Task*) * TASK_SIZE);
+  for(int i = 0; i < TASK_SIZE; i++) read_tasks[i] = 0;
+  show_task_msg("task init done");
+}
 
 void append_task(Task *task){
   static int ptr = 1;
@@ -32,13 +44,11 @@ int unique_pid(){
 }
 
 void preempt_enable() {
-  //printf("[%d] enable preempt" NEWLINE, current_task->pid);
   current_task->preempt_count--;
 }
 int preempt_reschedable() { return !current_task->preempt_count; }
 void preempt_disable() {
   current_task->preempt_count++;
-  //printf("[%d] disable preempt" NEWLINE, current_task->pid);
 }
 
 Task *find_task(unsigned long pid){
@@ -47,8 +57,6 @@ Task *find_task(unsigned long pid){
       return tasks[i];
   return 0;
 }
-
-#define THREAD_SIZE 4096
 
 void *task_pt_regs(Task *tsk) {
   unsigned long p = ((unsigned long)tsk) + THREAD_SIZE - sizeof(struct pt_regs);
@@ -73,8 +81,6 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
   memzero((unsigned long)&p->cpu_ctx, sizeof(struct cpu_ctx));
   memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
 
-  //if(!func){ memzero(p, p + sizeof(Task)); }
-
   p->pid = unique_pid();
   p->flag = 0;
   p->signals = 0;
@@ -85,11 +91,6 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
 
   if(func){
 
-    //unsigned long kstack = allocate_kernel_page();
-    //p->mm.kernel_pages[0] = kstack;
-    //p->mm.kernel_pages_count = 1;
-    //p->cpu_ctx.sp = (unsigned long)kstack_pool[p->pid % TASK_SIZE] + STACK_SIZE;
-    //p->cpu_ctx.fp = (unsigned long)kstack_pool[p->pid % TASK_SIZE] + STACK_SIZE;
     p->cpu_ctx.sp = kp + STACK_SIZE - sizeof(struct pt_regs);
     p->cpu_ctx.fp = kp + STACK_SIZE - sizeof(struct pt_regs);
 
@@ -123,12 +124,6 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
     struct pt_regs *cur_regs = task_pt_regs(current_task);
     *childregs = *cur_regs;     /* new pt_regs <- old pt_regs */
     childregs->regs[0] = 0;      /* aissgn the return value */
-
-    /* TODO copy user stack */
-    //unsigned long usp_off = cur_regs->sp
-    //  - (unsigned long)ustack_pool[current_task->pid % TASK_SIZE];
-
-    //childregs->sp = usp_off + (unsigned long)ustack_pool[p->pid % TASK_SIZE];
 
     p->cpu_ctx.lr = (unsigned long)ret_from_fork;
   }
@@ -198,4 +193,14 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
 void do_exec(unsigned long pc){
   puts("not support now, use move_to_user_mode instead.");
   exit();
+}
+
+void show_task_msg(char *s){
+  int w = 24 - strlen(s);
+  int l = w / 2, r = w - w / 2;
+  printf(NEWLINE "============");
+  while(l--) putchar(' ');
+  printf("[%d] %s", current_task->pid, s);
+  while(r--) putchar(' ');
+  printf("============" NEWLINE);
 }

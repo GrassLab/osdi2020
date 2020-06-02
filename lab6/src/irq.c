@@ -11,7 +11,9 @@
 
 #define nb8p(bytes, n, p) (((1 << n) - 1) & (bytes >> (p)))
 
-#define task_size 32
+// refacor the bottom_half in the future
+// task size maybe 32
+#define task_size 0
 
 unsigned int task_ptr = 0;
 void (*task_queue[task_size])(void);
@@ -26,7 +28,6 @@ void bottom_half(void) {
   puts(NEWLINE "isr rest done.");
 }
 
-Task *read_tasks[TASK_SIZE];
 int rtbeg = 0, rtend = 0;
 
 void uart_read_enqueue(Task *task){

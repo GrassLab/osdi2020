@@ -528,7 +528,7 @@ unsigned long varied_alloc(unsigned long token, unsigned long size){
   VariedAllocator var = varied_find_by_token(token, varied_allocator);
   unsigned long addr = fixed_alloc_by((FixedAllocator)fixed_get_token_by(
         pow2roundup(size), var ? &(var->fixed) : 0));
-  varied_log("varied alloc %d bytes @ 0x%x", size, addr);
+  varied_log("varied alloc %d bytes @0x%x", size, addr);
   varied_log("");
   return addr;
 }
@@ -544,4 +544,10 @@ void varied_free(unsigned long token, unsigned long addr){
     }
     fixed = fixed->next;
   }
+}
+
+unsigned long kalloc(unsigned long size){
+  static unsigned long token = 0;
+  if(!token) token = varied_get_token();
+  return varied_alloc(token, size);
 }

@@ -5,16 +5,6 @@
 #include "string.h"
 #include "allocator.h"
 
-void show_task_msg(char *s){
-  int w = 24 - strlen(s);
-  int l = w / 2, r = w - w / 2;
-  printf(NEWLINE "============");
-  while(l--) putchar(' ');
-  printf("[%d] %s", current_task->pid, s);
-  while(r--) putchar(' ');
-  printf("============" NEWLINE);
-}
-
 void zombie_reaper(){
   char msg[20];
   show_task_msg("zombie reaper");

@@ -41,13 +41,6 @@ COPS += -DMINIUART
 COPS += -DUARTINT -DMINIUART
 ASMOPS += -DUARTINT -DMINIUART
 
-# elective 3
-# enable deffered interrupt handle
-#COPS += -DBOTTOM_HALF
-#ASMOPS += -DBOTTOM_HALF
-#COPS += -DDEFFERED
-#ASMOPS += -DDEFFERED
-
 # longer bottom half delay if on qemu
 COPS += -DON_QEMU
 ASMOPS += -DON_QEMU

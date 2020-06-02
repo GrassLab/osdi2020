@@ -90,14 +90,16 @@ void preempt_enable();
 void preempt_disable();
 int preempt_reschedable();
 
+void task_init();
 void init_task_pool();
 Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long p);
 void do_exec(unsigned long);
 int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc);
 Task *find_task(unsigned long pid);
 
-extern Task *current_task, *tasks[TASK_SIZE], *next_task;
+extern Task *current_task, *next_task, **tasks, **read_tasks;
 
+void show_task_msg(char *s);
 void exit();
 
 #endif
