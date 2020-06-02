@@ -2,7 +2,6 @@
 #define _MM_H
 #include "peripherals/base.h"
 
-// TODO: Understand those shift
 #define PAGE_SHIFT              12
 #define TABLE_SHIFT             9
 #define SECTION_SHIFT           (PAGE_SHIFT + TABLE_SHIFT)
@@ -16,19 +15,21 @@
 
 #define PAGE_MASK               (~(PAGE_SIZE-1))
 
-#define KERNEL_PAGING_START     (LOW_MEMORY + 2 * SECTION_SIZE)
-#define KERNEL_PAGING_END       (KERNEL_PAGING_START + NUM_PAGES * PAGE_SIZE)
+#define KERNEL_PAGING_START     (LOW_MEMORY + NUM_PAGES * PAGE_SIZE)
+#define KERNEL_PAGING_END       (KERNEL_PAGING_START + KERNEL_PAGE_NUM * PAGE_SIZE)
 
 #define KERNEL_PAGE_START       (KERNEL_PAGING_END)
-#define KERNEL_PAGE_END         (KERNEL_PAGE_START + NUM_PAGES * sizeof(struct page))
+#define KERNEL_PAGE_END         (KERNEL_PAGE_START + KERNEL_PAGE_NUM * sizeof(struct page))
 
-#define MAX_BUDDY_PAGE_NUM      9
+#define MAX_BUDDY_PAGE_NUM      10
 #define PAGE_NUM_FOR_MAX_BUDDY  ((1 << (MAX_BUDDY_PAGE_NUM - 1)) - 1)
 
 #define PAGING_MEMORY           (HIGH_MEMORY - LOW_MEMORY)
 
-#ifndef __ASSEMBLER__
+#define NUM_ALLOCATORS          64
+#define ALLOCATOR_ORDER         6
 
+#ifndef __ASSEMBLER__
 struct list_head {
     struct list_head *next, *prev;
 };
@@ -54,6 +55,24 @@ void free_task_struct(unsigned long ptr);
 void show_buddy_system();
 void init_page_map();
 void* get_free_pages(unsigned long, int);
+void put_free_pages(void*, int);
+
+/* fixed sized allocator */
+struct allocator {
+    unsigned long base_addr;
+    unsigned long addr;
+    unsigned long chunk_size;
+    unsigned long num_chunk;
+};
+
+extern char allocator_used_map[NUM_ALLOCATORS];
+extern struct allocator allocator_pool[NUM_ALLOCATORS];
+
+unsigned long allocator_register(unsigned long);
+unsigned long allocator_alloc(unsigned long);
+void allocator_free(unsigned long, unsigned long);
+void allocator_unregister(unsigned long);
+
 #endif
 
 #endif /*_MM_H */

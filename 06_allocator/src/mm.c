@@ -304,3 +304,60 @@ struct page* virt_to_page(unsigned long addr) {
 void put_free_pages(void *addr, int order) {
     free_pages(virt_to_page((unsigned long)addr), order);
 }
+
+char allocator_used_map[NUM_ALLOCATORS];
+struct allocator allocator_pool[NUM_ALLOCATORS];
+
+void pool_init(struct allocator* allocator, unsigned long size) {
+    allocator->chunk_size = size;
+    allocator->base_addr = (unsigned long)get_free_pages(PAGE_AVAILABLE, ALLOCATOR_ORDER);
+    unsigned long page_size_from_buddy = (1 << ALLOCATOR_ORDER) * PAGE_SIZE;
+    unsigned long num_chunk = page_size_from_buddy / (1 + size);
+    allocator->num_chunk = num_chunk;
+
+    // first num_chunk for recording the usage
+    for (int i = 0; i < num_chunk; ++ i) {
+        ((char*)(allocator->base_addr))[i] = 0;
+    }
+    allocator->addr = allocator->base_addr + num_chunk;
+}
+
+/* fixed sized allocator */
+unsigned long allocator_register(unsigned long size) {
+    for (int i = 0; i < NUM_ALLOCATORS; ++ i) {
+        if (!allocator_used_map[i]) {
+            allocator_used_map[i] = 1;
+            pool_init(allocator_pool + i, size);
+            return i;
+        }
+    }
+    // error 
+    return -1;
+}
+
+unsigned long allocator_alloc(unsigned long allocator_id) {
+    struct allocator* ar = allocator_pool + allocator_id;
+    char* used_map = (char*)ar->base_addr;
+    for (int i = 0; i < ar->num_chunk; ++ i) {
+        if (!used_map[i]) {
+            used_map[i] = 1;
+            return ar->addr + ar->chunk_size * i;
+        }
+    }
+    // error
+    return 0;
+}
+
+void allocator_free(unsigned long allocator_id, unsigned long addr) {
+    // assume user pass the correct addr
+    struct allocator* ar = allocator_pool + allocator_id;
+    char* used_map = (char*)ar->base_addr;
+    unsigned long idx = (addr - ar->base_addr) / ar->chunk_size;
+    used_map[idx] = 0;
+}
+
+void allocator_unregister(unsigned long allocator_id) {
+    struct allocator* ar = allocator_pool + allocator_id;
+    put_free_pages((void*)ar->base_addr, ALLOCATOR_ORDER);
+    allocator_used_map[allocator_id] = 0;
+}

@@ -10,6 +10,10 @@ void handle_sync(unsigned long esr, unsigned long address) {
     uart_send_hex(esr & 0x1ffffff);
 }
 */
+#define SYS_ALLOCATOR_REGISTER      5
+#define SYS_ALLOCATOR_ALLOC         6
+#define SYS_ALLOCATOR_FREE          7
+#define SYS_ALLOCATOR_UNREGISTER    8
 
 int handle_el0_sync(unsigned long arg0, unsigned long arg1) {
     int syscall;
@@ -30,6 +34,17 @@ int handle_el0_sync(unsigned long arg0, unsigned long arg1) {
         return __clone(0, 0, 0);
     } else if (syscall == SYS_EXIT) {
         exit_process();
+        return 0;
+    } else if (syscall == SYS_ALLOCATOR_REGISTER) {
+        uart_send_ulong(arg0);
+        return sys_allocator_register(arg0);
+    } else if (syscall == SYS_ALLOCATOR_ALLOC) {
+        return sys_allocator_alloc(arg0);
+    } else if (syscall == SYS_ALLOCATOR_FREE) {
+        sys_allocator_free(arg0, arg1);
+        return 0;
+    } else if (syscall == SYS_ALLOCATOR_UNREGISTER) {
+        sys_allocator_unregister(arg0);
         return 0;
     }
     uart_puts("unknown syscall\n");

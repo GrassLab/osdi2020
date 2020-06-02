@@ -81,6 +81,16 @@ void demo_memory() {
     show_buddy_system();
     put_free_pages(addr, 6);
     show_buddy_system();
+
+    unsigned long allocator_id = allocator_register(47);
+    unsigned long addr1 = allocator_alloc(allocator_id);
+    unsigned long addr2 = allocator_alloc(allocator_id);
+    uart_puts("## Fixed size allocated memory: ");
+    uart_send_ulong(addr1); uart_send(' ');
+    uart_send_ulong(addr2), uart_send('\n');
+    allocator_free(allocator_id, addr1);
+    allocator_free(allocator_id, addr2);
+    allocator_unregister(allocator_id);
 }
 
 void start_kernel() {
