@@ -35,7 +35,7 @@
 #define MMU_FLAGS	 		        (MM_TYPE_PAGE | (MAIR_IDX_NORMAL_NOCACHE << 2) | MM_ACCESS)	
 #define MMU_DEVICE_FLAGS		    (MM_TYPE_PAGE | (MAIR_IDX_DEVICE_nGnRnE << 2) | MM_ACCESS)	
 #define MMU_PTE_FLAGS			    (MM_TYPE_PAGE | (MAIR_IDX_NORMAL_NOCACHE << 2) | MM_ACCESS | MM_ACCESS_PERMISSION)	
-
+#define MMU_PTE_FLAGS2			    (MM_TYPE_PAGE | (MAIR_IDX_NORMAL_NOCACHE << 2) | MM_ACCESS )
 // #define TCR_T0SZ			        (64 - 48) 
 // #define TCR_T1SZ			        ((64 - 48) << 16)
 // #define TCR_TG0_4K			        (0 << 14)

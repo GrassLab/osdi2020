@@ -212,7 +212,7 @@ page_table_create:
     mov x5, xzr
     mov x6, #0x41000000  
 1:     
-    ldr x3, = MMU_DEVICE_FLAGS
+    ldr x3, = MMU_PTE_FLAGS2
     orr x3, x4, x3
     str x3, [x15, x5, lsl #3] // +=8
     add x5, x5, #1

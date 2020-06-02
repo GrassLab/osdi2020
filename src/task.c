@@ -175,17 +175,22 @@ void do_exec(unsigned long start, unsigned long size, void(*func)())
     if (current->state == RUN_IN_KERNEL_MODE) { // first user task
         // return to user mode
         struct trapframe_regs* kstack_regs = get_task_trapframe(current);
-        // memzero((unsigned long)kstack_regs, sizeof(struct trapframe_regs));
-
-        kstack_regs->sp_el0 = 2 *  PAGE_SIZE;//0x0000ffffffffe000;
-        kstack_regs->spsr_el1 = 0;//PSR_MODE_EL0t;
-        kstack_regs->elr_el1 = func;
-
+        memzero((unsigned long)kstack_regs, sizeof(struct trapframe_regs));
+        unsigned long stack_page = allocate_user_page(current, 0x0000ffffffffd000);
+        if (stack_page == 0)	{
+            return -1;
+        }
         unsigned long code_page = allocate_user_page(current, func);
         if (code_page == 0)	{
             return -1;
         }
         memcpy(code_page, start, size);
+
+        // kstack_regs->sp_el0 = 2 *  PAGE_SIZE;
+        kstack_regs->sp_el0 = 0x0000ffffffffe000;
+        kstack_regs->spsr_el1 = 0;//PSR_MODE_EL0t;
+        kstack_regs->elr_el1 = func;
+
         // uart_puts("new user context\n");
         current->state = RUN_IN_USER_MODE;
         // unsigned long ttbr1_el1;
@@ -197,14 +202,14 @@ void do_exec(unsigned long start, unsigned long size, void(*func)())
         unsigned long user_pgd = current->mm.pgd;
         // printf("user_pgd: %x\n", user_pgd);
         set_pgd(user_pgd);
-        return 0;
+        // return 0;
         
-        // unsigned long user_stack = 0x0000ffffffffe000;//current->user_context.sp_el0;
-        // unsigned long user_cpu_state = PSR_MODE_EL0t;
-        // asm volatile("msr sp_el0, %0" :: "r" (user_stack));
-        // asm volatile("msr spsr_el1, %0" :: "r" (user_cpu_state));
-        // asm volatile("msr elr_el1, %0" :: "r" (func));
-        // asm volatile("eret");
+        // unsigned long user_stack = 2 *  PAGE_SIZE;//0x0000ffffffffe000;//current->user_context.sp_el0;
+        // unsigned long user_cpu_state = 0;
+        asm volatile("msr sp_el0, %0" :: "r" (kstack_regs->sp_el0));
+        asm volatile("msr spsr_el1, %0" :: "r" (kstack_regs->spsr_el1));
+        asm volatile("msr elr_el1, %0" :: "r" (kstack_regs->elr_el1));
+        asm volatile("eret");
 
     } else if (current->state == EXC_CONTEXT){ // exeception handler
         struct trapframe_regs* kstack_regs = current->trapframe;

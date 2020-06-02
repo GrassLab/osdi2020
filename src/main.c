@@ -40,10 +40,10 @@ void kernel_process(){
     // if (err < 0){
     //     printf("Error while moving process to user mode\n\r");
     // }
-    // printf("before do_exec\n");
+    // uart_puts("before do_exec\n");
     // do_exec(begin, end - begin, user_process-begin);
-    do_exec(begin, end - begin, 0x1000);
-    printf("after do_exec\n"); // should not be here
+    do_exec(begin, end - begin, 0x0);
+    // printf("after do_exec\n"); // should not be here
     while(1);
 }
 void main()

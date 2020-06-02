@@ -25,11 +25,15 @@ void init_page()
 
 unsigned long va_to_pa(unsigned long va)
 {
-	unsigned long pfn = (va<<16)>>16;
-	unsigned long offset = (va<<52)>>52;
-	pfn = (pfn)>>PTE_SHIFT;
+	unsigned long pfn = (va << 16) >> 16;
+	unsigned long offset = (va << 52) >> 52;
+	pfn = pfn >> PTE_SHIFT;
 
-	return pfn*PAGE_SIZE | offset;
+	return (pfn * PAGE_SIZE) | offset;
+}
+
+unsigned long pa_to_pfn(unsigned long pa){
+	return pa >> 12;	
 }
 
 unsigned long allocate_kernel_page() 
@@ -145,4 +149,34 @@ void map_entry(unsigned long *pte, unsigned long va, unsigned long pa, unsigned 
 // 	else{
 // 		va = 0x2000;
 // 	}
+// }
+
+// void page_fault_handler()
+// {
+// 	unsigned long far_el1, esr_el1;
+// 	asm volatile ("mrs %0, far_el1" : "=r"(far_el1));
+// 	asm volatile ("mrs %0, esr_el1" : "=r"(esr_el1));
+// }
+
+// int page_fault_handler(unsigned long addr,unsigned long esr){
+//         //printf("+++ Page faalt at 0x%x\r\n",addr);
+// 	if(((esr>>2)&0x3) != 1){ //If not a translation fault, kill  
+//   		 switch((esr>>2)&0x3) {
+//  			  case 0: uart_send_string("Address size fault at"); break;
+//                           case 2: uart_send_string("Access flag fault at"); break;
+//                           case 3: uart_send_string("Permission fault at"); break;
+//                   }
+ 
+//                  printf("### Data abort at 0x%x, killed\r\n",addr);
+//                  exit_process();
+//                  return -1;
+//          }
+
+	
+
+// 	// If not a map region, kill
+// 	printf("### Page fault address at 0x%x, killed\r\n",addr);
+// 	exit_process(); 	
+// 	return -1;
+		
 // }

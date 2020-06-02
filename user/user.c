@@ -55,7 +55,8 @@ void strncmp(const char *cs, const char *ct, int len)
 // }
 
 void main(){
-	call_sys_uart_write("Welcome to UUUUser.\n");
+	// call_sys_uart_write("Welcome to UUUUser.\n");
+    call_sys_get_taskid();
 	while(1);
 	// shell();
 }

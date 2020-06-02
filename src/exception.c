@@ -88,6 +88,7 @@ void exception_handler(unsigned int trapframe)
 
     // syscall - svc #0
     if ((esr>>26)==0b010101) {
+        uart_puts("syscall receive\n");
         if ((esr&0x1ffffff)==0) {
             // decode_exception(esr, elr, spsr);
 
@@ -96,7 +97,11 @@ void exception_handler(unsigned int trapframe)
             sys_ret_val = el0_svc_handler(trapframe);
             *(unsigned int*)trapframe = sys_ret_val;
         }
-    } 
+    }
+    // page fault 
+    else if ((esr>>26)==0x24) {
+        while(1);
+    }
     else {
         uart_hex(current->user_context.sp_el0);
         uart_hex(current->user_context.spsr_el1);

@@ -23,20 +23,23 @@ user_raw: user/user.o user/lib.o
 	$(ARMGNU)-objcopy user.elf -O binary user.img
 	$(ARMGNU)-ld -r -b binary user.img -o user_raw
 
+# user_prog: user/user.o user_raw
+# 	$(ARMGNU)-ld -r -b binary user.elf -o user_prog
+
 SRCS = $(wildcard src/*.c)
 ASMS = $(wildcard src/*.S)
 OBJS = $(SRCS:src/%.c=src/%_c.o)
 OBJS += $(ASMS:src/%.S=src/%_s.o)
 
 
-kernel8.elf: $(OBJS) src/link.ld user_raw
+kernel8.elf: $(OBJS) src/link.ld user_raw #user_prog
 	$(ARMGNU)-ld $(OBJS) user_raw -T src/link.ld -o kernel8.elf 
 
 kernel8.img: kernel8.elf
 	$(ARMGNU)-objcopy -O binary kernel8.elf kernel8.img
 
 clean:
-	rm kernel8.img kernel8.elf src/*.o >/dev/null 2>/dev/null || true
+	rm kernel8.img kernel8.elf src/*.o user_prog user_raw user.elf user.img >/dev/null 2>/dev/null || true
 
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio

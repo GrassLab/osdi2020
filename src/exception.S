@@ -136,6 +136,7 @@ __el0_exception_routine:
     LOAD_CONTEXT 0
     eret
 
+.global __el1_exception_routine
 __el1_exception_routine:
     STORE_CONTEXT 1
     bl      exception_handler
@@ -186,7 +187,7 @@ _exception_table:
 
     // Current exception level with SP_ELx, x > 0.
     .align 7 // synchronous //  0x200
-    b __el0_exception_routine
+    b __el1_exception_routine
 
     .align 7 // IRQ //  0x280
     b __el1_interrupt_routine
