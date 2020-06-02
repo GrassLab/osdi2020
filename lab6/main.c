@@ -21,11 +21,18 @@ void alloc_test() {
   char *get3 = (char *)fix_object_array[i].obj;
   printf("get obj = %x , index = %d\n", get3, i);
 
-  fix_obj_free(1);
+  obj_free(1);
 
   i = fix_obj_alloc();
   char *get4 = (char *)fix_object_array[i].obj;
   printf("get obj = %x , index = %d\n", get4, i);
+}
+
+void v_alloc_test() {
+  int i = varied_size_alloc(8000);
+  char *get1 = (char *)fix_object_array[i].obj;
+  printf("get obj = %x , index = %d\n", get1, i);
+  obj_free(i);
 }
 
 void buddy_test() {
@@ -99,6 +106,8 @@ void compair(char *buf) {
     buddy_test();
   } else if (strcpy(buf, "alloc")) {
     alloc_test();
+  } else if (strcpy(buf, "valloc")) {
+    v_alloc_test();
   } else {
     printf("unknow command %s\n", buf);
   }
