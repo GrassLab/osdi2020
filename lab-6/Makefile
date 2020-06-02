@@ -13,7 +13,7 @@ $(BUILD_DIR)/%_c.o: $(SRC_DIR)/%.c
 	$(ARMGNU)-gcc $(CFLAGS) -MMD -c $< -o $@ -g
 
 $(BUILD_DIR)/%_s.o: $(SRC_DIR)/%.S
-	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@
+	$(ARMGNU)-gcc $(ASMOPS) -MMD -c $< -o $@ -g
 	
 C_FILES = $(wildcard $(SRC_DIR)/*.c) 
 ASM_FILES = $(wildcard $(SRC_DIR)/*.S) 
@@ -24,7 +24,7 @@ DEP_FILES = $(OBJ_FILES:%.o=%.d)
 -include $(DEP_FILES)
 
 kernel8.img: $(SRC_DIR)/linker.ld $(OBJ_FILES)
-	$(ARMGNU)-ld -nostdlib -nostartfiles $(OBJ_FILES) -T $(SRC_DIR)/linker.ld  -o $(BUILD_DIR)/kernel8.elf 
+	$(ARMGNU)-ld -nostdlib -nostartfiles $(OBJ_FILES) -T $(SRC_DIR)/linker.ld -o $(BUILD_DIR)/kernel8.elf 
 	$(ARMGNU)-objcopy -O binary $(BUILD_DIR)/kernel8.elf kernel8.img
 
 clean:

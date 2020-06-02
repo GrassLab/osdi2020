@@ -1,0 +1,5 @@
+break main
+break task_manager_init
+break privilege_task_create
+break set_current
+

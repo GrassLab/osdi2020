@@ -1,6 +1,4 @@
-#include "syscall.h"
-#include "task.h"
-#include "uart.h"
+#include "userlib.h"
 
 int get_taskid()
 {
@@ -81,4 +79,3 @@ void uart_write(char *c)
     asm volatile("mov x0, %0" : :"r"(c));
     asm volatile("svc #0");
 }
-

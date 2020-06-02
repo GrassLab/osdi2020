@@ -68,8 +68,7 @@ void task_manager_init(void(*func)());
 void privilege_task_create(void(*func)());
 void context_switch(Task* next);
 void schedule();
-Trapframe* get_task_trapframe(struct task *task);
-void do_exec(unsigned long start, unsigned long size, void(*func)());
+void do_exec(void(*func)());
 void __exit(int status);
 int __fork();
 

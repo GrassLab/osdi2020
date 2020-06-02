@@ -45,14 +45,6 @@ typedef struct page {
     int used;
 } Page;
 
-void paging_init();
-unsigned long get_free_page();
-unsigned long allocate_kernel_page();
-void free_page(unsigned long p);
-unsigned long virtual_to_physical(unsigned long);
-unsigned long physical_to_pfn(unsigned long);
-unsigned long virtual_to_pfn(unsigned long);
-// unsigned long allocate_user_page(struct task *task, unsigned long va);
 
 #endif
 #endif

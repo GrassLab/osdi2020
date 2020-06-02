@@ -36,11 +36,31 @@
 #define MAIR_IDX_NORMAL_NOCACHE 1
 #define MAIR_CONFIG_DEFAULT  (MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) | (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8)) 
 
+#define MMU_FLAGS	 		        (MM_TYPE_PAGE | (MAIR_IDX_NORMAL_NOCACHE << 2) | MM_ACCESS)	
+#define MMU_DEVICE_FLAGS		    (MM_TYPE_PAGE | (MAIR_IDX_DEVICE_nGnRnE << 2) | MM_ACCESS)	
+#define MMU_PTE_FLAGS			    (MM_TYPE_PAGE | (MAIR_IDX_NORMAL_NOCACHE << 2) | MM_ACCESS | MM_ACCESS_PERMISSION)	
+
+
+#define PT_DESC_PXN                   (0b1 << 53)// Privileged eXecute Never 
+#define PT_DESC_UXN                   (0b1 << 54)// Uprivileged eXecute Never
+#define PT_DESC_AF                    (0b1 << 10)// Access flag.
+#define PT_DESC_TO_BLOCK              0b01      // This descriptor is valid and store an address to block.
+
+#define PT_PMD_DEV_LOWER_ATTR         (PT_DESC_AF |  (MAIR_IDX_DEVICE_nGnRnE << 2) )
+#define PT_PMD_NOR_LOWER_ATTR         (PT_DESC_AF |  (MAIR_IDX_NORMAL_NOCACHE << 2) )
+#define PT_PMD_DEV_UPPER_ATTR         (PT_DESC_UXN | PT_DESC_PXN)
+#define PT_PMD_NOR_UPPER_ATTR         (0x0)
+#define PT_PMD_DEV_ATTR               (PT_PMD_DEV_LOWER_ATTR | PT_DESC_TO_BLOCK)
+#define PT_PMD_NOR_ATTR               (PT_PMD_NOR_UPPER_ATTR | PT_PMD_NOR_LOWER_ATTR | PT_DESC_TO_BLOCK)
+
 #define PD_TABLE 0b11
 #define PD_BLOCK 0b01
 #define PD_ACCESS (1 << 10)
 #define BOOT_PGD_ATTR PD_TABLE
-#define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+// #define BOOT_PUD_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK)
+#define BOOT_PUD_ATTR PD_TABLE
+#define BOOT_PMD_NORMAL_ATTR (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_BLOCK) 
+#define BOOT_PMD_DEVICE_ATTR (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_BLOCK) 
 
 #define MMU_FLAGS (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_TABLE)
 #define MMU_DEVICE_FLAGS   (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2) | PD_TABLE)
