@@ -114,7 +114,7 @@ void test() {
 }
 
 void test1(){
-    unsigned long token = allocator_register(0xdac);
+    unsigned long token = allocator_register(0x60);
 
     void *ptr1 = allocator_alloc(token);
     uart_puts("Get address ");
@@ -134,7 +134,26 @@ void test1(){
     uart_hex(ptr3);
     uart_puts("\n");
     allocator_free(token, ptr3);
+
+    test2();
     return;
+}
+
+void test2(){
+    unsigned long token = allocator_register(0x90);
+    void *ptr1 = allocator_alloc(token);
+    uart_puts("Get address ");
+    uart_hex(ptr1);
+    uart_puts("\n");
+
+    void *ptr2 = malloc(0x50);
+    uart_puts("Get address ");
+    uart_hex(ptr2);
+    uart_puts("\n");
+    
+    allocator_free(token, ptr1);   
+    free(ptr2);    
+    return;    
 }
 
 void zombie_reaper(){

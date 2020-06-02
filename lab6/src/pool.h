@@ -19,6 +19,6 @@ struct st_allocator allocators[NUM_ALLOCATOR];
 
 void init_allocator();
 unsigned long register_allocator(unsigned long size);
-unsigned long allocate(unsigned long token);
-void free(unsigned long token, unsigned long ptr);
+unsigned long chunk_allocate(unsigned long token);
+void chunk_free(unsigned long token, unsigned long ptr);
 

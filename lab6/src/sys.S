@@ -54,3 +54,15 @@ allocator_free:
     mov w8, SYS_FREE_ALLOCATE
     svc #0
     ret
+
+.globl malloc
+malloc:
+     mov x8, SYS_MALLOC
+     svc #0
+     ret
+
+.globl free
+free:
+     mov x8, SYS_FREE
+     svc #0
+     ret

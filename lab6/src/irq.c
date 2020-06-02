@@ -3,6 +3,8 @@
 #include "sys.h"
 #include "fork.h"
 #include "pool.h"
+
+#define VARIED_SIZE_DEMARCATION 4096 * 3 
 char *entry_error_messages[] = {
 	"SYNC_INVALID_ELxt",
 	"IRQ_INVALID_ELxt",		
@@ -177,9 +179,52 @@ int sync_handler(unsigned long x0, unsigned long x1){
         }else if(val == SYS_REGISTER_ALLOCATOR){
             return register_allocator(x0);
         }else if(val == SYS_REQ_ALLOCATE){
-            return allocate(x0);
+            return chunk_allocate(x0);
         }else if(val == SYS_FREE_ALLOCATE){
-            free(x0, x1);
+            chunk_free(x0, x1);
+        }else if(val == SYS_MALLOC){
+            /*try rounds up the allocated size to one of the registered allocators and uses the token to the fixed-sized allocator*/
+            if(x0 < VARIED_SIZE_DEMARCATION){
+                unsigned long diff = 0xffffffff;
+                unsigned long token = -1; 
+                for(int i = 0; i <  NUM_ALLOCATOR; i++){
+                    if(allocators[i].flag == USED){
+                        if(allocators[i].pool.size >= x0){
+                            //close
+                            if(diff > (allocators[i].pool.size - x0)){
+                                diff = allocators[i].pool.size - x0;
+                                token = i;
+                            } 
+                        }        
+                    } 
+                } 
+                if(token != -1){
+                    return chunk_allocate(token);
+                }
+            }
+            /*If the allocated size is very big, it calls page allocator directly to allocate contiguous page frames. */
+            //cal how many page needed
+            int pg_count = x0 / PAGE_SIZE;
+            if(pg_count % PAGE_SIZE != 0){
+                pg_count++;
+            }
+            //cal which order needed
+            int order = 0;
+            while(pg_count != 0){
+                pg_count = pg_count >> 1;
+                order++;
+            }
+            return get_free_page(order);
+        }else if(val == SYS_FREE){
+            for(int i = 0; i <  NUM_ALLOCATOR; i++){
+                if(allocators[i].flag == USED){
+                    if((x0 - allocators[i].pool.book_info) < (16 * PAGE_SIZE)){
+                        chunk_free(i, x0);    
+                        return;
+                    }
+                }
+            }
+            free_page(x0);
         }
         disable_irq();
     }
@@ -192,7 +237,7 @@ void irq_handler(void)
 {
     core_timer_handler();
     core_jiffies += 1;
-    //uart_puts("Core timer interrupt, jiffies ");
+    uart_puts("Core timer interrupt, jiffies ");
     uart_hex(core_jiffies);
     uart_puts("\n");
 

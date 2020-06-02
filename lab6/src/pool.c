@@ -29,7 +29,7 @@ unsigned long register_allocator(unsigned long size){
     return -1;
 }
 
-unsigned long allocate(unsigned long token){
+unsigned long chunk_allocate(unsigned long token){
     //check the token 
     if(allocators[token].flag != USED){
         uart_puts("invalid token, please register_allocator !");
@@ -48,7 +48,7 @@ unsigned long allocate(unsigned long token){
     return -1;
 }
 
-void free(unsigned long token, unsigned long ptr){
+void chunk_free(unsigned long token, unsigned long ptr){
     char *book_info_addr = (char *)allocators[token].pool.book_info;
     unsigned long start_addr = allocators[token].pool.start_addr;
     int index = (ptr - start_addr) / allocators[token].pool.size;
