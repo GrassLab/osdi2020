@@ -22,13 +22,66 @@ void buddy_push(struct buddy_t* bd, struct list_head* elmt) {
     bd->nr_free++;
 }
 
+struct page_t* buddy_pop(struct buddy_t* bd) {
+    if (bd->head.next == &bd->head) return NULL;
+    bd->nr_free--;
+    struct list_head* target = bd->head.next;
+    target->next->prev = target->prev;
+    target->prev->next = target->next;
+    target->next = NULL;
+    target->prev = NULL;
+    return (struct page_t*)target; // list_head is the first member of the structure
+}
+
 void buddy_info() {
     for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
         uart_printf("order: %d %d\n", i, buddy[i].nr_free);
     }
 }
 
+struct page_t* buddy_release_redundant(struct page_t* p, int target_order) {
+    uart_printf("release order: %d targer: %d\n", p->order, target_order);
+    int cur_order = p->order;
+    // recursive release if not reach to target_order
+    if (cur_order > target_order) {
+        int prev_order = cur_order - 1;
+        int prev_order_pages = 1 << prev_order;
+        struct page_t* bottom = p;
+        struct page_t* top = p + prev_order_pages;
+        // push bottom half back to buddy system
+        for (int i = 0; i < (1 << cur_order); i++) {
+            (p + i)->order = prev_order;
+        }
+        buddy_push(&(buddy[prev_order]), &(bottom->list));
+        return buddy_release_redundant(top, target_order);
+    }
+    return p;
+}
+
+void* buddy_alloc(int order) {
+    for (int i = order; i < MAX_BUDDY_ORDER; i++) {
+        if (buddy[i].nr_free > 0) {
+            uart_printf("buddy_alloc: %d\n", i);
+            struct page_t* p = buddy_pop(&buddy[i]);
+            struct page_t* target_p = buddy_release_redundant(p, order);
+            uint64_t page_virt_addr = (target_p->idx * PAGE_SIZE) | KERNEL_VIRT_BASE;
+            return (void*)page_virt_addr;
+        }
+    }
+    return NULL;
+}
+
+void buddy_init() {
+    for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
+        buddy[i].head.next = &buddy[i].head;
+        buddy[i].head.prev = &buddy[i].head;
+        buddy[i].nr_free = 0;
+    }
+}
+
 void mm_init() {
+    buddy_init();
+
     extern uint8_t __kernel_end;  // defined in linker
     uint8_t* kernel_end = &__kernel_end;
     int kernel_end_page = (uint64_t)kernel_end / PAGE_SIZE;
@@ -45,6 +98,7 @@ void mm_init() {
         // init page counter times
         if (counter) {
             remain_page++;
+            page[i].idx = i;
             page[i].used = AVAL;
             page[i].order = order;
             page[i].list.next = NULL;
@@ -54,6 +108,7 @@ void mm_init() {
         // page i can fill current order
         else if (i + (1 << order) < mmio_base_page) {
             remain_page++;
+            page[i].idx = i;
             page[i].used = AVAL;
             page[i].order = order;
             buddy_push(&(buddy[order]), &(page[i].list));
@@ -72,6 +127,9 @@ void mm_init() {
 
     first_aval_page = kernel_end_page + 1;
     last_aval_page = mmio_base_page - 1;
+    buddy_info();
+    void* addr = buddy_alloc(2);
+    uart_printf("%x\n", addr);
     buddy_info();
 }
 

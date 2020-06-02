@@ -27,9 +27,10 @@ struct buddy_t {
 };
 
 struct page_t {
+    struct list_head list;
     enum page_status used;
     int order;
-    struct list_head list;
+    int idx; // debug used
 };
 
 /* Variables init in mm.c */
