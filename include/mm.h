@@ -34,7 +34,7 @@ struct page_t {
 };
 
 /* Variables init in mm.c */
-extern struct buddy_t buddy[MAX_BUDDY_ORDER];
+extern struct buddy_t free_area[MAX_BUDDY_ORDER];
 extern struct page_t page[PAGE_FRAMES_NUM];
 extern uint64_t remain_page;
 

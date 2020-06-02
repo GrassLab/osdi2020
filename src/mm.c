@@ -5,7 +5,7 @@
 #include "schedule.h"
 #include "uart0.h"
 
-struct buddy_t buddy[MAX_BUDDY_ORDER];
+struct buddy_t free_area[MAX_BUDDY_ORDER];
 struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
 uint64_t remain_page = 0;
@@ -33,9 +33,17 @@ struct page_t* buddy_pop(struct buddy_t* bd) {
     return (struct page_t*)target; // list_head is the first member of the structure
 }
 
+void buddy_remove(struct buddy_t* bd, struct list_head* elmt) {
+    bd->nr_free--;
+    elmt->prev->next = elmt->next;
+    elmt->next->prev = elmt->prev;
+    elmt->prev = NULL;
+    elmt->next = NULL;
+}
+
 void buddy_info() {
     for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
-        uart_printf("order: %d %d\n", i, buddy[i].nr_free);
+        uart_printf("order: %d %d\n", i, free_area[i].nr_free);
     }
 }
 
@@ -52,17 +60,20 @@ struct page_t* buddy_release_redundant(struct page_t* p, int target_order) {
         for (int i = 0; i < (1 << cur_order); i++) {
             (p + i)->order = prev_order;
         }
-        buddy_push(&(buddy[prev_order]), &(bottom->list));
+        buddy_push(&(free_area[prev_order]), &(bottom->list));
         return buddy_release_redundant(top, target_order);
+    }
+    // book keeping
+    for (int i = 0; i < (1 << cur_order); i++) {
+        (p + i)->used = USED;
     }
     return p;
 }
 
 void* buddy_alloc(int order) {
     for (int i = order; i < MAX_BUDDY_ORDER; i++) {
-        if (buddy[i].nr_free > 0) {
-            uart_printf("buddy_alloc: %d\n", i);
-            struct page_t* p = buddy_pop(&buddy[i]);
+        if (free_area[i].nr_free > 0) {
+            struct page_t* p = buddy_pop(&free_area[i]);
             struct page_t* target_p = buddy_release_redundant(p, order);
             uint64_t page_virt_addr = (target_p->idx * PAGE_SIZE) | KERNEL_VIRT_BASE;
             return (void*)page_virt_addr;
@@ -71,11 +82,60 @@ void* buddy_alloc(int order) {
     return NULL;
 }
 
+void buddy_merge(struct page_t *bottom, struct page_t *top, int order) {
+    uart_printf("merge buddy from order %d to %d (%d %d)\n", order, order+1, bottom->idx, top->idx);
+    int new_order = order + 1;
+    int buddy_pfn = bottom->idx ^ (1 << new_order);
+    struct page_t *buddy = &page[buddy_pfn];
+    // check buddy exist in new order, if exist => recursively merge
+    if (buddy->used == AVAL && buddy->order == new_order) {
+        buddy_remove(&free_area[new_order], &buddy->list);
+        if (buddy > bottom)
+            buddy_merge(bottom, buddy, new_order);
+        else
+            buddy_merge(buddy, bottom, new_order);
+    }
+    // merge bottom and top to same block
+    else {
+        for (int i = 0; i < (1 << order); i++) {
+            (bottom + i)->used = AVAL;
+            (bottom + i)->order = new_order;
+            (top + i)->used = AVAL;
+            (top + i)->order = new_order;
+        }
+        buddy_push(&(free_area[new_order]), &(bottom->list));
+    }
+}
+
+void buddy_free(void* virt_addr) {
+    int pfn = phy_to_pfn(virtual_to_physical((uint64_t)virt_addr));
+    struct page_t *p = &page[pfn];
+    int order = p->order;
+    int buddy_pfn = pfn ^ (1 << order);
+    struct page_t *buddy = &page[buddy_pfn];
+    // can not merge, just free current order's pages
+    if (buddy->used == USED || buddy->order != order) {
+        uart_printf("free but no merge\n");
+        for (int i = 0; i < (1 << order); i++) {
+            (p + i)->used = AVAL;
+        }
+        buddy_push(&(free_area[order]), &(p->list));
+    }
+    // merge buddy iteratively
+    else {
+        buddy_remove(&free_area[order], &buddy->list);
+        if (buddy > p)
+            buddy_merge(p, buddy, order);
+        else
+            buddy_merge(buddy, p, order);
+    }
+}
+
 void buddy_init() {
     for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
-        buddy[i].head.next = &buddy[i].head;
-        buddy[i].head.prev = &buddy[i].head;
-        buddy[i].nr_free = 0;
+        free_area[i].head.next = &free_area[i].head;
+        free_area[i].head.prev = &free_area[i].head;
+        free_area[i].nr_free = 0;
     }
 }
 
@@ -88,7 +148,7 @@ void mm_init() {
     int mmio_base_page = MMIO_PHYSICAL / PAGE_SIZE;
 
     int i = 0;
-    for (; i < kernel_end_page; i++) {
+    for (; i <= kernel_end_page; i++) {
         page[i].used = USED;
     }
 
@@ -106,12 +166,12 @@ void mm_init() {
             counter--;
         }
         // page i can fill current order
-        else if (i + (1 << order) < mmio_base_page) {
+        else if (i + (1 << order) - 1 < mmio_base_page) {
             remain_page++;
             page[i].idx = i;
             page[i].used = AVAL;
             page[i].order = order;
-            buddy_push(&(buddy[order]), &(page[i].list));
+            buddy_push(&(free_area[order]), &(page[i].list));
             counter = (1 << order) - 1;
         }
         // reduce order, try again
@@ -128,8 +188,13 @@ void mm_init() {
     first_aval_page = kernel_end_page + 1;
     last_aval_page = mmio_base_page - 1;
     buddy_info();
-    void* addr = buddy_alloc(2);
-    uart_printf("%x\n", addr);
+    void* addr1 = buddy_alloc(0);
+    buddy_info();
+    void* addr2 = buddy_alloc(0);
+    buddy_info();
+    buddy_free(addr1);
+    buddy_info();
+    buddy_free(addr2);
     buddy_info();
 }
 
