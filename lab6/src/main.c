@@ -89,28 +89,52 @@ void test() {
       if(cnt == 6){
         fork();
       }
-/*      uart_puts("Task id: ");
+      uart_puts("Task id: ");
       uart_hex(get_taskid());
       uart_puts(", cnt: ");
       uart_hex(cnt);
       uart_puts("\n");
-*/
+
       delay(10000);
       ++cnt;
     }
     exit(0);
     uart_puts("Should not be printed\n");
   } else {
-/*    uart_puts("Task ");
+    uart_puts("Task ");
     uart_hex(get_taskid());
     uart_puts(" before exec, cnt address 0x");
     uart_hex(&cnt);
     uart_puts(", cnt value ");
     uart_hex(cnt);
     uart_puts("\n");
-*/  
+  
     exec(foo);
   }
+}
+
+void test1(){
+    unsigned long token = allocator_register(0xdac);
+
+    void *ptr1 = allocator_alloc(token);
+    uart_puts("Get address ");
+    uart_hex(ptr1);
+    uart_puts("\n");
+    
+    void *ptr2 = allocator_alloc(token);
+    uart_puts("Get address ");
+    uart_hex(ptr2);
+    uart_puts("\n");
+
+    allocator_free(token, ptr1);
+    allocator_free(token, ptr2);
+
+    void *ptr3 = allocator_alloc(token);
+    uart_puts("Get address ");
+    uart_hex(ptr3);
+    uart_puts("\n");
+    allocator_free(token, ptr3);
+    return;
 }
 
 void zombie_reaper(){
@@ -136,7 +160,7 @@ void zombie_reaper(){
 // -----------below is kernel code-------------
 
 void user_test(){
-  do_exec((unsigned long)&test);
+  do_exec((unsigned long)&test1);
 }
 
 void idle(){

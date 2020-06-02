@@ -273,7 +273,10 @@ void put_pages_to_list(struct page *pg,int order){
 	        uart_getc();
 */			BUDDY_END(pg,order)->list.next=&(tnext->list);
 			tnext->list.prev=&(BUDDY_END(pg,order)->list);
-			continue;
+            if(order+1 == MAX_BUDDY_PAGE_NUM)
+                 break;
+			else
+                continue;
 		}else if((!(tprev->flags&PAGE_BUDDY_BUSY))&&(tprev->order==order)){
             uart_puts("Merge \n");
             uart_hex(pg->number);

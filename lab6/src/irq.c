@@ -2,6 +2,7 @@
 #include "uart.h"
 #include "sys.h"
 #include "fork.h"
+#include "pool.h"
 char *entry_error_messages[] = {
 	"SYNC_INVALID_ELxt",
 	"IRQ_INVALID_ELxt",		
@@ -173,7 +174,13 @@ int sync_handler(unsigned long x0, unsigned long x1){
 			return success;	
         }else if(val == SYS_GET_TASKID_NUMBER){
             return current->id;
-        }    
+        }else if(val == SYS_REGISTER_ALLOCATOR){
+            return register_allocator(x0);
+        }else if(val == SYS_REQ_ALLOCATE){
+            return allocate(x0);
+        }else if(val == SYS_FREE_ALLOCATE){
+            free(x0, x1);
+        }
         disable_irq();
     }
     return 0;

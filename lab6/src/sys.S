@@ -37,5 +37,20 @@ uart_write:
     svc #0
     ret
 
+.globl allocator_register
+allocator_register:
+    mov w8, SYS_REGISTER_ALLOCATOR
+    svc #0
+    ret
 
+.globl allocator_alloc
+allocator_alloc:
+    mov w8, SYS_REQ_ALLOCATE
+    svc #0
+    ret
 
+.globl allocator_free
+allocator_free:
+    mov w8, SYS_FREE_ALLOCATE
+    svc #0
+    ret

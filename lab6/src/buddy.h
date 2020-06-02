@@ -2,7 +2,7 @@
 #define _BUDDY_H
 
 #define MAX_BUDDY_PAGE_NUM	(9)
-#define PAGE_NUM_FOR_MAX_BUDDY	((1<<MAX_BUDDY_PAGE_NUM)-1)
+#define PAGE_NUM_FOR_MAX_BUDDY	((1<<MAX_BUDDY_PAGE_NUM - 1)-1)
 
 /*page flags*/
 #define PAGE_AVAILABLE		0x00
