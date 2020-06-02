@@ -151,7 +151,21 @@ void memTestTask()
 
         freeSlot(token, addr1);
         freeSlot(token, addr2);
+        freePool(token);
     }
+
+    uint64_t addr3 = allocDynamic(8);
+    uartPuts("get free memory address: ");
+    uartHex(addr3);
+    uartPuts("\n");
+
+    uint64_t addr4 = allocDynamic(5000);
+    uartPuts("get free memory address: ");
+    uartHex(addr4);
+    uartPuts("\n");
+
+    freeDynamic(addr3);
+    freeDynamic(addr4);
 
     busyloop();
 }

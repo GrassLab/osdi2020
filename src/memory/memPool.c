@@ -2,8 +2,9 @@
 #include "memory/memManager.h"
 #include "device/uart.h"
 
-static const uint32_t MAX_POOLS = 32;
-static struct memPool pool[32];
+static const uint32_t MAX_POOLS = 41;
+static const uint32_t MAX_FREE_POOLS = 32;
+static struct memPool pool[41];
 
 uint64_t allocSlot(uint32_t token)
 {
@@ -39,7 +40,7 @@ uint64_t allocSlot(uint32_t token)
 
 int32_t getFreePool(uint64_t size)
 {
-    for (int32_t i = 0; i < MAX_POOLS; ++i)
+    for (int32_t i = 0; i < MAX_FREE_POOLS; ++i)
     {
         if (pool[i].pool_used == false)
         {
@@ -75,12 +76,66 @@ void freeSlot(uint32_t token, uint64_t addr)
     pool[token].slot_used[index] = false;
 }
 
+void freePool(uint32_t token)
+{
+    uartPuts("free pool ");
+    uartInt(token);
+    uartPuts("\n");
+
+    pool[token].pool_used = false;
+    freePage(pool[token].init_addr);
+}
+
+uint64_t allocDynamic(uint64_t size)
+{
+    for (uint32_t i = MAX_FREE_POOLS; i < MAX_POOLS; ++i)
+    {
+        if (size < pool[i].slot_size)
+        {
+            return allocSlot(i);
+        }
+    }
+
+    for (uint32_t i = 0; i <= MAX_ORDER; ++i)
+    {
+        if (size < PAGE_SIZE * (1 << i))
+        {
+            return getFreePage(i);
+        }
+    }
+}
+
+void freeDynamic(uint64_t addr)
+{
+    for (uint32_t i = MAX_FREE_POOLS; i < MAX_POOLS; ++i)
+    {
+        if (addr >= pool[i].init_addr && addr < (pool[i].init_addr + PAGE_SIZE))
+        {
+            freeSlot(i, addr);
+            return;
+        }
+    }
+
+    freePage(addr);
+}
+
 void initMemPool()
 {
-    for (uint32_t i = 0; i < MAX_POOLS; ++i)
+    for (uint32_t i = 0; i < MAX_FREE_POOLS; ++i)
     {
         pool[i].pool_used = false;
         pool[i].init_addr = 0;
+        for (uint64_t j = 0; j < 4096; ++j)
+            pool[i].slot_used[j] = false;
+    }
+
+    for (uint32_t i = MAX_FREE_POOLS, j = 3; i < MAX_POOLS; ++i, ++j)
+    {
+        uint64_t size = 1 << j;
+        pool[i].pool_used = true;
+        pool[i].slot_size = size;
+        pool[i].max_slot_num = PAGE_SIZE / size;
+        pool[i].init_addr = getFreePage(0);
         for (uint64_t j = 0; j < 4096; ++j)
             pool[i].slot_used[j] = false;
     }
