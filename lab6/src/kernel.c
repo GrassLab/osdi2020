@@ -68,15 +68,15 @@ int main(void) {
     printf("LOW_MEM 0x%x" NEWLINE, LOW_MEMORY);
 
     zone_init(buddy_zone);
-    mark_reserved_pages((unsigned long)&_kend);
-  //  if (get_board_revision())
-  //    printf("Board revision: %x" NEWLINE, mbox[5]);
-  //  if (get_arm_memaddr())
-  //    printf("ARM base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
-  //  if (get_vc_memaddr())
-  //    printf("VC Core base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
-  //  puts("");
-  //  flush();
+    //mark_reserved_pages((unsigned long)&_kend);
+    if (get_board_revision())
+      printf("Board revision: %x" NEWLINE, mbox[5]);
+    if (get_arm_memaddr())
+      printf("ARM base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
+    if (get_vc_memaddr())
+      printf("VC Core base addr: 0x%x size 0x%x" NEWLINE, mbox[5], mbox[6]);
+    puts("");
+    flush();
 
 
     core_timer_init();

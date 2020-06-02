@@ -15,7 +15,7 @@
 #define TAG_SETCLKRATE 0x38002
 #define UART_CLOCK 0x000000002
 
-int get_board_revision(unsigned int *mbox) {
+int get_board_revision() {
   mbox[0] = 7 * 4;              // buffer size in bytes
   mbox[1] = REQUEST_CODE;       // tags begin
   mbox[2] = GET_BOARD_REVISION; // tag identifier
@@ -23,10 +23,10 @@ int get_board_revision(unsigned int *mbox) {
   mbox[4] = TAG_REQUEST_CODE;
   mbox[5] = 0;       // value buffer
   mbox[6] = END_TAG; // tags end
-  return mbox_call(MBOX_CH_PROP, mbox);
+  return mbox_call(MBOX_CH_PROP);
 }
 
-int get_vc_memaddr(unsigned int *mbox) {
+int get_vc_memaddr() {
   mbox[0] = 8 * 4;         // buffer size in bytes
   mbox[1] = REQUEST_CODE;  // tags begin
   mbox[2] = GET_VC_MEMORY; // tag identifier
@@ -35,10 +35,10 @@ int get_vc_memaddr(unsigned int *mbox) {
   mbox[5] = 0;       // address
   mbox[6] = 0;       // size
   mbox[7] = END_TAG; // tags end
-  return mbox_call(MBOX_CH_PROP, mbox);
+  return mbox_call(MBOX_CH_PROP);
 }
 
-int get_arm_memaddr(unsigned int *mbox) {
+int get_arm_memaddr() {
   mbox[0] = 8 * 4;          // buffer size in bytes
   mbox[1] = REQUEST_CODE;   // tags begin
   mbox[2] = GET_ARM_MEMORY; // tag identifier
@@ -47,10 +47,10 @@ int get_arm_memaddr(unsigned int *mbox) {
   mbox[5] = 0;       // address
   mbox[6] = 0;       // size
   mbox[7] = END_TAG; // tags end
-  return mbox_call(MBOX_CH_PROP, mbox);
+  return mbox_call(MBOX_CH_PROP);
 }
 
-int get_clock(unsigned int *mbox) {
+int get_clock() {
   mbox[0] = 8 * 4;        // buffer size in bytes
   mbox[1] = REQUEST_CODE; // tags begin
   mbox[2] = GET_CLOCK;    // tag identifier
@@ -59,7 +59,7 @@ int get_clock(unsigned int *mbox) {
   mbox[5] = UART_CLOCK;
   mbox[6] = 0;
   mbox[7] = END_TAG; // tags end
-  return mbox_call(MBOX_CH_PROP, mbox);
+  return mbox_call(MBOX_CH_PROP);
 }
 
 void get_current_el() {

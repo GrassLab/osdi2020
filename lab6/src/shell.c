@@ -165,14 +165,12 @@ int shell_execute(char *cmd, int el) {
     }
     else puts("not support timer on el0 currently");
   } else if (EQS("board", cmd)) {
-    unsigned int mbox[MBOX_SIZE];
-    if (get_board_revision(mbox))
+    if (get_board_revision())
       printf("0x%x" NEWLINE, mbox[5]);
     else
       puts("get_board_reversion() failed");
   } else if (EQS("vcaddr", cmd)) {
-    unsigned int mbox[MBOX_SIZE];
-    if (get_vc_memaddr(mbox))
+    if (get_vc_memaddr())
       printf("0x%x\n", mbox[5]); // it should be 0xa020d3 for rpi3 b+
     else
       puts("get_vc_memaddr() failed");

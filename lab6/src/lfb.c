@@ -43,7 +43,6 @@ unsigned char *lfb = 0;                       /* raw frame buffer address */
  * Set screen resolution to 1024x768
  */
 void lfb_init() {
-  unsigned int mbox[MBOX_SIZE];
   mbox[0] = 35 * 4;
   mbox[1] = MBOX_REQUEST;
 
@@ -90,7 +89,7 @@ void lfb_init() {
 
   // this might not return exactly what we asked for, could be
   // the closest supported resolution instead
-  if (mbox_call(MBOX_CH_PROP, mbox) && mbox[20] == 32 && mbox[28] != 0) {
+  if (mbox_call(MBOX_CH_PROP) && mbox[20] == 32 && mbox[28] != 0) {
     mbox[28] &= 0x3FFFFFFF; // convert GPU address to ARM address
     width = mbox[5];        // get actual physical width
     height = mbox[6];       // get actual physical height
