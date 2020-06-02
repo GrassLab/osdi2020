@@ -14,7 +14,7 @@ void main()
 {
     uart_init();
     init_memory();
-    malloc(4);
+    malloc(sizeof(free_area_t));
     malloc(1);
     malloc((unsigned int)(0x1 << 14));
     malloc((unsigned int)(0x1 << 14));

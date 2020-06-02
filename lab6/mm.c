@@ -85,11 +85,13 @@ void *malloc(unsigned int size)
     if(size%PAGE_SIZE != 0) {
         page_n++;
     }
+    uart_print_int(size);
+    uart_puts(" bytes ");
     uart_print_int(page_n);
     uart_puts(" pages\r\n");
 
-    // resize to align 4KB
-    size = (0x1 << (page_n-1)) << PAGE_SHIFT;
+    // resize to align 4KB  
+    size = (1 << PAGE_SHIFT) * page_n;
     uart_puts("Allocated ");
     uart_print_int(size);
     uart_puts(" Bytes\r\n");
