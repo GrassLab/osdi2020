@@ -5,6 +5,7 @@
 #define PAGE_SIZE               4096
 #define PAGE_FRAMES_NUM         (0x40000000 / PAGE_SIZE)
 #define PAGE_MASK               ~0xFFF
+#define MAX_BUDDY_ORDER         9 // 2^0 ~ 2^8 => 4k to 1MB
 
 #ifndef __ASSEMBLY__
 
@@ -16,11 +17,23 @@ enum page_status {
     USED,
 };
 
+struct list_head {
+    struct list_head *next, *prev;
+};
+
+struct buddy_t {
+    uint32_t nr_free;
+    struct list_head head;
+};
+
 struct page_t {
     enum page_status used;
+    int order;
+    struct list_head list;
 };
 
 /* Variables init in mm.c */
+extern struct buddy_t buddy[MAX_BUDDY_ORDER];
 extern struct page_t page[PAGE_FRAMES_NUM];
 extern uint64_t remain_page;
 

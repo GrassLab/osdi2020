@@ -5,9 +5,28 @@
 #include "schedule.h"
 #include "uart0.h"
 
+struct buddy_t buddy[MAX_BUDDY_ORDER];
 struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
 uint64_t remain_page = 0;
+
+void list_add(struct list_head* elmt, struct list_head* prev, struct list_head* next) {
+	next->prev = elmt;
+	elmt->next = next;
+	elmt->prev = prev;
+	prev->next = elmt;
+}
+
+void buddy_push(struct buddy_t* bd, struct list_head* elmt) {
+    list_add(elmt, bd->head.prev, &bd->head);
+    bd->nr_free++;
+}
+
+void buddy_info() {
+    for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
+        uart_printf("order: %d %d\n", i, buddy[i].nr_free);
+    }
+}
 
 void mm_init() {
     extern uint8_t __kernel_end;  // defined in linker
@@ -19,16 +38,41 @@ void mm_init() {
     for (; i < kernel_end_page; i++) {
         page[i].used = USED;
     }
+
+    int order = MAX_BUDDY_ORDER - 1;
+    int counter = 0;
     for (; i < mmio_base_page; i++) {
-        remain_page++;
-        page[i].used = AVAL;
+        // init page counter times
+        if (counter) {
+            remain_page++;
+            page[i].used = AVAL;
+            page[i].order = order;
+            page[i].list.next = NULL;
+            page[i].list.prev = NULL;
+            counter--;
+        }
+        // page i can fill current order
+        else if (i + (1 << order) < mmio_base_page) {
+            remain_page++;
+            page[i].used = AVAL;
+            page[i].order = order;
+            buddy_push(&(buddy[order]), &(page[i].list));
+            counter = (1 << order) - 1;
+        }
+        // reduce order, try again
+        else {
+            order--;
+            i--;
+        }
     }
+
     for (; i < PAGE_FRAMES_NUM; i++) {
         page[i].used = USED;
     }
 
     first_aval_page = kernel_end_page + 1;
     last_aval_page = mmio_base_page - 1;
+    buddy_info();
 }
 
 
