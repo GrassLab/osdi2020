@@ -28,6 +28,7 @@
 
 #define NUM_ALLOCATORS          64
 #define ALLOCATOR_ORDER         6
+#define NUM_DYNAMIC_ALLOC       64
 
 #ifndef __ASSEMBLER__
 struct list_head {
@@ -72,6 +73,17 @@ unsigned long allocator_register(unsigned long);
 unsigned long allocator_alloc(unsigned long);
 void allocator_free(unsigned long, unsigned long);
 void allocator_unregister(unsigned long);
+
+/* varied-sized alloc */
+struct dalloc_info {
+    char used;
+    unsigned long addr;
+    unsigned long size;
+};
+
+extern struct dalloc_info dynamic_alloc_pool[NUM_DYNAMIC_ALLOC];
+unsigned long dynamic_alloc(unsigned long size);
+void dynamic_free(unsigned long addr);
 
 #endif
 

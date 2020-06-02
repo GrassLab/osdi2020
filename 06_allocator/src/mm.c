@@ -332,7 +332,7 @@ unsigned long allocator_register(unsigned long size) {
         }
     }
     // error 
-    return -1;
+    return 99999;
 }
 
 unsigned long allocator_alloc(unsigned long allocator_id) {
@@ -360,4 +360,43 @@ void allocator_unregister(unsigned long allocator_id) {
     struct allocator* ar = allocator_pool + allocator_id;
     put_free_pages((void*)ar->base_addr, ALLOCATOR_ORDER);
     allocator_used_map[allocator_id] = 0;
+}
+
+unsigned long ffs(unsigned long val) {
+    unsigned long ret = 0;
+    while (val > 0) {
+        val /= 2;
+        ret += 1;
+    }
+    return ret;
+}
+
+struct dalloc_info dynamic_alloc_pool[NUM_DYNAMIC_ALLOC];
+
+unsigned long dynamic_alloc(unsigned long size) {
+    for (int i = 0; i < NUM_DYNAMIC_ALLOC; ++ i) {
+        if (!dynamic_alloc_pool[i].used) {
+            dynamic_alloc_pool[i].used = 1;
+            dynamic_alloc_pool[i].size = size;
+            unsigned long order = ffs(size / PAGE_SIZE) - 1;
+            if (size < PAGE_SIZE) order = 0;
+            dynamic_alloc_pool[i].addr = (unsigned long)get_free_pages(PAGE_AVAILABLE, order);
+            return dynamic_alloc_pool[i].addr;
+        }
+    }
+    return 0;
+}
+
+void dynamic_free(unsigned long addr) {
+    for (int i = 0; i < NUM_DYNAMIC_ALLOC; ++ i) {
+        if (dynamic_alloc_pool[i].addr == addr) {
+            unsigned long order = ffs(dynamic_alloc_pool[i].size / PAGE_SIZE) - 1;
+            if (dynamic_alloc_pool[i].size < PAGE_SIZE) order = 0;
+            put_free_pages((void*)addr, order); 
+            dynamic_alloc_pool[i].addr = 0;
+            dynamic_alloc_pool[i].size = 0;
+            dynamic_alloc_pool[i].used = 0;
+            return;
+        }
+    }
 }
