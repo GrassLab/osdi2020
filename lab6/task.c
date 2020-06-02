@@ -9,9 +9,17 @@
 #include "shell.h"
 #include "signal.h"
 #include "mmu.h"
+#include "slab.h"
 
-struct task_struct kernel_task_pool[TASK_POOL_SIZE];
-uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
+struct task_struct * kernel_task_pool;
+uint16_t * task_kernel_stack_pool;
+
+void task_init()
+{
+  kernel_task_pool = (struct task_struct *)slab_malloc(sizeof(struct task_struct) * TASK_POOL_SIZE);
+  task_kernel_stack_pool = (uint16_t *)slab_malloc(sizeof(uint16_t) * TASK_POOL_SIZE * TASK_KERNEL_STACK_SIZE);
+  return;
+}
 
 uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
 {
@@ -52,8 +60,8 @@ uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.lr = (uint64_t)start_func;
 
   /* stack grow from high to low */
-  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(task_kernel_stack_pool[new_id]);
-  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool[new_id]);
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(task_kernel_stack_pool + new_id * TASK_KERNEL_STACK_SIZE);
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool + new_id * TASK_KERNEL_STACK_SIZE);
 
   /* push into queue */
   schedule_enqueue(new_id, (unsigned)priority);

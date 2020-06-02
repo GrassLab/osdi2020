@@ -20,9 +20,8 @@ int sys_fork(struct trapframe_struct * trapframe);
 int sys_exit(int status);
 int sys_signal(int task_id, int signalno);
 
-extern struct task_struct kernel_task_pool[TASK_POOL_SIZE];
-extern uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
-extern uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];
+extern struct task_struct * kernel_task_pool;
+extern uint16_t * task_kernel_stack_pool;
 
 extern void __sys_fork_child_entry(void);
 extern int schedule_zombie_count;

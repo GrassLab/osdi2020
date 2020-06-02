@@ -7,9 +7,8 @@
 #define SCHEDULE_DEFAULT_QUANTUM 3
 #define SCHEDULE_TIMEOUT_MS 10
 
-extern struct task_struct kernel_task_pool[TASK_POOL_SIZE];
-extern uint16_t task_kernel_stack_pool[TASK_POOL_SIZE][TASK_KERNEL_STACK_SIZE];
-extern uint16_t task_user_stack_pool[TASK_POOL_SIZE][TASK_USER_STACK_SIZE];
+extern struct task_struct * kernel_task_pool;
+extern uint16_t * task_kernel_stack_pool;
 
 void scheduler_init(void);
 void schedule_context_switch(uint64_t current_id, uint64_t next_id);

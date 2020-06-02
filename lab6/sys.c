@@ -102,13 +102,13 @@ int sys_fork(struct trapframe_struct * trapframe)
 
   /* copy kernel stack */
   /* task_kernel_stack_size is uint16_t (2 bytes) */
-  memcopy((char *)task_kernel_stack_pool[TASK_ID_TO_IDX(current_task_id)], (char *)task_kernel_stack_pool[TASK_ID_TO_IDX(new_task_id)], TASK_KERNEL_STACK_SIZE * 2);
+  memcopy((char *)(task_kernel_stack_pool + TASK_ID_TO_IDX(current_task_id) * TASK_KERNEL_STACK_SIZE), (char *)(task_kernel_stack_pool + TASK_ID_TO_IDX(new_task_id) * TASK_KERNEL_STACK_SIZE), TASK_KERNEL_STACK_SIZE * 2);
 
   /* setup kernel stack sp */
   /* address should be stack based - the offset of how much stack space used */
   /* pointer trapframe is current task sp */
   /* kernel sp will be used when context switch to new task */
-  kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp = (uint64_t)task_kernel_stack_pool[new_task_id] - ((uint64_t)task_kernel_stack_pool[current_task_id] - (uint64_t)trapframe);
+  kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool + new_task_id * TASK_KERNEL_STACK_SIZE) - ((uint64_t)(task_kernel_stack_pool + current_task_id * TASK_KERNEL_STACK_SIZE) - (uint64_t)trapframe);
 
   /* setup user stack sp */
   /* should be the same as the curret one */

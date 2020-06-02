@@ -21,6 +21,8 @@ void scheduler_init(void)
   pqueue_uint64_t_init(schedule_run_queue);
   QUEUE_INIT(*schedule_wait_queue);
 
+  task_init();
+
   asm volatile("mov x0, xzr\n"
                "msr tpidr_el1, x0\n");
   task_privilege_task_create(schedule_idle, TASK_PRIORITY_LOW);

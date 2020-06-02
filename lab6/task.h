@@ -55,12 +55,10 @@ struct task_struct
   struct cpu_context_struct cpu_context;
 };
 
-
+void task_init();
 uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority);
 uint64_t task_get_current_task_id(void);
 uint64_t task_user_get_current_task_id(void);
-void task_test1(void);
-void task_test2(void);
 void task_shell(void);
 void task_do_exec(uint64_t * start, uint64_t size);
 uint64_t task_get_current_task_signal(void);
