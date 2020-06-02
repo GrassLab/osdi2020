@@ -127,6 +127,14 @@ void string_ulonglong_to_hex_char(char * string, const unsigned long long i)
   char output_buffer[36];
   unsigned long long process_integer = i;
   int string_idx = 0;
+  if(i == 0)
+  {
+    string[0] = '0';
+    string[1] = 'x';
+    string[2] = '0';
+    string[3] = '\0';
+    return;
+  }
   while(process_integer != 0)
   {
     int hex = (int)(process_integer % 16);
