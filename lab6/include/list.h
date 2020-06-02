@@ -3,6 +3,7 @@
 
 #ifndef __ASSEMBLER__
 
+// super great method 
 struct list_pointer {
     struct list_pointer *next, *prev; //double link list
 };
@@ -44,22 +45,32 @@ static inline int is_list_empty(list_ptr_t *new_list){
     return new_list == new_list->next;
 }
 
-//If we have one element
-// |---------------------|           |---------------------|    |---------------------|
-// |      add_head       | .......-> |      add_end        | -> | be_added_list(head) |
-// |---------------------| .......<- |---------------------| <- |---------------------|
-//If we have two element
-// |---------------------|           |---------------------|    |---------------------| .......   |---------------------|    |---------------------|
-// |      add_head1      | .......-> |      add_end1       | -> |      add_head2      | .......-> |      add_end2       | -> | be_added_list(head) |
-// |---------------------| .......<- |---------------------| <- |---------------------| .......<- |---------------------| <- |---------------------|
+// add chain between head and head->next
+static inline void list_add_chain(list_ptr_t *add_head, 
+                                list_ptr_t *add_end,
+                                list_ptr_t *be_added_list){
+    add_head->prev = be_added_list;
+    add_end->next = be_added_list->next;
+    be_added_list->next->prev = add_end;
+    be_added_list->next = add_head;
+}
+
+// add chain in list tail
 static inline void list_add_chain_tail(list_ptr_t *add_head, \
                                         list_ptr_t *add_end, \
 		                                list_ptr_t *be_added_list)
 {
-    add_head->prev=be_added_list;
-    add_end->next=be_added_list->next;
-    be_added_list->next->prev=add_end;
-    be_added_list->next=add_head;
+    add_head->prev = be_added_list;
+    add_end->next = be_added_list->next;
+    be_added_list->next->prev = add_end;
+    be_added_list->next = add_head;
+}
+
+//link between (node which ahead chain) and (node which behind chain)
+static inline void list_remove_chain(list_ptr_t *chain_head, \
+                                    list_ptr_t *chain_end){
+	chain_head->prev->next = chain_end->next;
+	chain_end->next->prev = chain_head->prev;
 }
 
 #endif
