@@ -106,8 +106,6 @@ struct task_queue_elmt_t* get_runqueue_elmt(struct task_t* task) {
 
 void mm_struct_init(struct mm_struct *m) {
     m->pgd = 0;
-    m->user_pages_count = 0;
-    m->kernel_pages_count = 0;
 }
 
 void task_init() {
@@ -192,8 +190,8 @@ void schedule() {
 }
 
 int do_exec(uint64_t start, uint64_t size, uint64_t pc) {
-    void* code_page = get_page_user(current_task, pc);
-    void* stack_page = get_page_user(current_task, USTACK_ADDR);
+    void* code_page = map_page(current_task, pc);
+    void* stack_page = map_page(current_task, USTACK_ADDR);
     if (!code_page || !stack_page) return -1;
 
     // copy code to pc
