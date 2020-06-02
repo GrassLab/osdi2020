@@ -48,7 +48,6 @@ uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa)
   struct buddy_page_node_struct * ret_node;
   uint64_t * ret_ptr;
 
-  task_guard_section();
   /* Check if list contains availible block */
   if(buddy_table_list[block_size] == 0)
   {
@@ -66,7 +65,6 @@ uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa)
   /* put the current node into buddy_used_table_list */
   buddy_insert_node(&(buddy_used_table_list[block_size]), ret_node);
 
-  task_unguard_section();
   if(zero)
   {
     memzero_8byte(ret_ptr, (PAGE_4K << block_size) / 8);
@@ -93,44 +91,43 @@ void buddy_free(uint64_t * va)
 
   struct buddy_page_node_struct * node_to_free;
 
-  task_guard_section();
   /* traverse buddy_used_table_list to find the node */
   for(unsigned block_size_idx = 0; block_size_idx < BUDDY_TABLE_LIST_LENGTH; ++block_size_idx)
   {
     struct buddy_page_node_struct * cur_node = buddy_used_table_list[block_size_idx];
     struct buddy_page_node_struct * prev_node = buddy_used_table_list[block_size_idx];
-    while(cur_node -> va != va && cur_node -> next_ptr != 0)
+    while(cur_node != 0 && cur_node -> va != va)
     {
       prev_node = cur_node;
       cur_node = cur_node -> next_ptr;
     }
-    if(cur_node -> va == va)
+    if(cur_node == 0)
     {
-      node_to_free = cur_node;
-
-      /* Remove node from buddy_used_table_list */
-      buddy_pop_page_node(&(buddy_used_table_list[block_size_idx]), prev_node, node_to_free);
-
-      /* Move the node to buddy_table_list */
-      buddy_insert_node(&(buddy_table_list[block_size_idx]), node_to_free);
-
-      /* Print free complete messages */
-      uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Free[Size:");
-      string_longlong_to_char(string_buff, block_size_idx);
-      uart_puts(string_buff);
-      uart_puts("]: ");
-      string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
-      uart_puts(string_buff);
-      uart_putc('\n');
-
-      /* Perform merge */
-      buddy_merge(block_size_idx);
-
-      return;
+      continue;
     }
-  }
 
-  task_unguard_section();
+    node_to_free = cur_node;
+
+    /* Remove node from buddy_used_table_list */
+    buddy_pop_page_node(&(buddy_used_table_list[block_size_idx]), prev_node, node_to_free);
+
+    /* Move the node to buddy_table_list */
+    buddy_insert_node(&(buddy_table_list[block_size_idx]), node_to_free);
+
+    /* Print free complete messages */
+    uart_puts(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Free[Size:");
+    string_longlong_to_char(string_buff, block_size_idx);
+    uart_puts(string_buff);
+    uart_puts("]: ");
+    string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
+    uart_puts(string_buff);
+    uart_putc('\n');
+
+    /* Perform merge */
+    buddy_merge(block_size_idx);
+
+    return;
+  }
 
   uart_puts("[Buddy system] Free failed: ");
   string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
