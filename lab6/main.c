@@ -9,7 +9,24 @@
 #include "timer.h"
 #include "uart.h"
 
-void alloc_test() { fix_obj_alloc(2000); }
+void alloc_test() {
+  printf("page addr = %x\n", &page);
+  int i = fix_obj_alloc();
+  char *get1 = (char *)fix_object_array[i].obj;
+  printf("get obj = %x , index = %d\n", get1, i);
+  i = fix_obj_alloc();
+  char *get2 = (char *)fix_object_array[i].obj;
+  printf("get obj = %x , index = %d\n", get2, i);
+  i = fix_obj_alloc();
+  char *get3 = (char *)fix_object_array[i].obj;
+  printf("get obj = %x , index = %d\n", get3, i);
+
+  fix_obj_free(1);
+
+  i = fix_obj_alloc();
+  char *get4 = (char *)fix_object_array[i].obj;
+  printf("get obj = %x , index = %d\n", get4, i);
+}
 
 void buddy_test() {
   printf("frame addr = %x\n", &page);

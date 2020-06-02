@@ -10,5 +10,6 @@ struct fix_object
 };
 
 int fix_object_count;
-int fix_obj_alloc(int size);
+int fix_obj_alloc();
+int fix_obj_free(int free_index);
 struct fix_object fix_object_array[100];
