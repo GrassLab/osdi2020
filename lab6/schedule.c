@@ -7,15 +7,19 @@
 #include "task.h"
 #include "queue.h"
 #include "mmu.h"
+#include "slab.h"
 
-static uint64_t_pqueue schedule_run_queue;
-static uint64_t_queue schedule_wait_queue;
+static uint64_t_pqueue * schedule_run_queue;
+static uint64_t_queue * schedule_wait_queue;
 int schedule_zombie_count = 0;
 
 void scheduler_init(void)
 {
-  pqueue_uint64_t_init(&schedule_run_queue);
-  QUEUE_INIT(schedule_wait_queue);
+  schedule_run_queue = (uint64_t_pqueue *)slab_allocate(slab_regist(sizeof(uint64_t_pqueue)));
+  schedule_wait_queue = (uint64_t_queue *)slab_allocate(slab_regist(sizeof(uint64_t_queue)));
+
+  pqueue_uint64_t_init(schedule_run_queue);
+  QUEUE_INIT(*schedule_wait_queue);
 
   asm volatile("mov x0, xzr\n"
                "msr tpidr_el1, x0\n");
@@ -59,26 +63,26 @@ void scheduler(void)
     /* start from high priority */
     unsigned priority = QUEUE_TOTAL_PRIORITIES - 1;
 
-    while(pqueue_uint64_t_empty(&schedule_run_queue, priority))
+    while(pqueue_uint64_t_empty(schedule_run_queue, priority))
     {
       --priority;
     }
 
-    uint64_t next_id = pqueue_uint64_t_pop(&schedule_run_queue, priority);
+    uint64_t next_id = pqueue_uint64_t_pop(schedule_run_queue, priority);
     uint64_t next_idx = TASK_ID_TO_IDX(next_id);
 
     /* task in zombie or wait state will not be queued */
     while(CHECK_BIT(kernel_task_pool[next_idx].flag, TASK_STATE_ZOMBIE) || CHECK_BIT(kernel_task_pool[next_idx].flag, TASK_STATE_WAIT))
     {
-      if(pqueue_uint64_t_empty(&schedule_run_queue, priority))
+      if(pqueue_uint64_t_empty(schedule_run_queue, priority))
       {
         --priority;
         /* should be stuck at lowest priotiy, because of idle */
       }
-      next_id = pqueue_uint64_t_pop(&schedule_run_queue, priority);
+      next_id = pqueue_uint64_t_pop(schedule_run_queue, priority);
       next_idx = TASK_ID_TO_IDX(next_id);
     }
-    pqueue_uint64_t_push(&schedule_run_queue, priority, next_id);
+    pqueue_uint64_t_push(schedule_run_queue, priority, next_id);
     schedule_context_switch(current_privilege_task_id, next_id);
     task_unguard_section();
   }
@@ -120,7 +124,7 @@ int schedule_check_self_reschedule(void)
 void schedule_enqueue(uint64_t id, unsigned priority)
 {
   task_guard_section();
-  pqueue_uint64_t_push(&schedule_run_queue, priority, id);
+  pqueue_uint64_t_push(schedule_run_queue, priority, id);
   task_unguard_section();
   return;
 }
@@ -128,26 +132,26 @@ void schedule_enqueue(uint64_t id, unsigned priority)
 void schedule_enqueue_wait(uint64_t id)
 {
   task_guard_section();
-  QUEUE_PUSH(schedule_wait_queue, id);
+  QUEUE_PUSH(*schedule_wait_queue, id);
   task_unguard_section();
 }
 
 uint64_t schedule_dequeue_wait(void)
 {
   task_guard_section();
-  if(QUEUE_EMPTY(schedule_wait_queue))
+  if(QUEUE_EMPTY(*schedule_wait_queue))
   {
     task_unguard_section();
     return 0;
   }
-  uint64_t id = QUEUE_POP(schedule_wait_queue);
+  uint64_t id = QUEUE_POP(*schedule_wait_queue);
   task_unguard_section();
   return id;
 }
 
 int schedule_check_queue_empty(unsigned priority)
 {
-  return pqueue_uint64_t_empty(&schedule_run_queue, priority);
+  return pqueue_uint64_t_empty(schedule_run_queue, priority);
 }
 
 void schedule_yield(void)
@@ -198,28 +202,28 @@ void schedule_zombie_reaper(void)
 
         /* remove all the zombie in schedule_run_queue */
         /* There will always be idle and zombie reaper in queue */
-        int queue_length = pqueue_uint64_t_size(&schedule_run_queue, zombie_priority);
+        int queue_length = pqueue_uint64_t_size(schedule_run_queue, zombie_priority);
 
         for(int queue_idx = 0; queue_idx < queue_length; ++queue_idx)
         {
-          uint64_t task_id = pqueue_uint64_t_pop(&schedule_run_queue, zombie_priority);
+          uint64_t task_id = pqueue_uint64_t_pop(schedule_run_queue, zombie_priority);
           /* queue back if the task is not zombie */
           if(task_id != task_idx + 1)
           {
-            pqueue_uint64_t_push(&schedule_run_queue, zombie_priority, task_id);
+            pqueue_uint64_t_push(schedule_run_queue, zombie_priority, task_id);
           }
         }
 
         /* remove all the zombie in the wait_queue */
-        queue_length = queue_uint64_t_size(&schedule_wait_queue);
+        queue_length = queue_uint64_t_size(schedule_wait_queue);
         for(int queue_idx = 0; queue_idx < queue_length; ++queue_idx)
         {
-          uint64_t task_id = QUEUE_POP(schedule_wait_queue);
+          uint64_t task_id = QUEUE_POP(*schedule_wait_queue);
 
           /* queue back if the task is not zombie */
           if(task_id != task_idx + 1)
           {
-            QUEUE_PUSH(schedule_wait_queue, task_id);
+            QUEUE_PUSH(*schedule_wait_queue, task_id);
           }
         }
 

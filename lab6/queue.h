@@ -27,11 +27,11 @@ typedef struct _uint64_t_priority_queue
 } uint64_t_pqueue;
 
 /* WARNING: Take care of macro expansion */
-#define QUEUE_INIT(q) q.head = 0; q.tail = 0 /* Required if it is not stored in static (bss) */
-#define QUEUE_PUSH(q, val) q.data[q.tail] = val; q.tail = (q.tail + 1) % QUEUE_MAX_SIZE
-#define QUEUE_POP(q) q.data[q.head]; q.head = (q.head + 1) % QUEUE_MAX_SIZE
-#define QUEUE_EMPTY(q) (q.head == q.tail)
-#define QUEUE_FULL(q) ((q.tail + 1) % QUEUE_MAX_SIZE == q.head)
+#define QUEUE_INIT(q) (q).head = 0; (q).tail = 0 /* Required if it is not stored in static (bss) */
+#define QUEUE_PUSH(q, val) (q).data[(q).tail] = val; (q).tail = ((q).tail + 1) % QUEUE_MAX_SIZE
+#define QUEUE_POP(q) (q).data[(q).head]; (q).head = ((q).head + 1) % QUEUE_MAX_SIZE
+#define QUEUE_EMPTY(q) ((q).head == (q).tail)
+#define QUEUE_FULL(q) (((q).tail + 1) % QUEUE_MAX_SIZE == (q).head)
 
 int queue_uint64_t_size(uint64_t_queue * q);
 

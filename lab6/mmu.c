@@ -142,24 +142,24 @@ void mmu_user_page_table_init(void)
   /* total frame: 1PGD, 1PUD, 1PMD, 64 * 2 PTE */
 
   // For testing
-  uart_puts("===\n");
-  uint64_t * a = slab_malloc(64);
-  uart_puts("===\n");
-  uint64_t * b = slab_malloc(23);
-  uart_puts("===\n");
-  uint64_t * c = slab_malloc(0x1000);
-  uart_puts("===\n");
-  uint64_t * d = slab_malloc(0x2001);
-  uart_puts("===\n");
-  slab_malloc_free(a);
-  uart_puts("===\n");
-  slab_malloc_free(c);
-  uart_puts("===\n");
-  slab_malloc_free(b);
-  uart_puts("===\n");
-  slab_malloc_free(d);
-  uart_puts("===\n");
-  while(1);
+  //uart_puts("===\n");
+  //uint64_t * a = slab_malloc(64);
+  //uart_puts("===\n");
+  //uint64_t * b = slab_malloc(23);
+  //uart_puts("===\n");
+  //uint64_t * c = slab_malloc(0x1000);
+  //uart_puts("===\n");
+  //uint64_t * d = slab_malloc(0x2001);
+  //uart_puts("===\n");
+  //slab_malloc_free(a);
+  //uart_puts("===\n");
+  //slab_malloc_free(c);
+  //uart_puts("===\n");
+  //slab_malloc_free(b);
+  //uart_puts("===\n");
+  //slab_malloc_free(d);
+  //uart_puts("===\n");
+  //while(1);
 
   /* setup 1 PGD */
   user_space_mm.pgd_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);
