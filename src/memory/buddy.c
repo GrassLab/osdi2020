@@ -1,10 +1,12 @@
 #include "type.h"
 #include "memory/memManager.h"
+#include "memory/buddy.h"
 #include "device/uart.h"
 
 static const uint32_t MAX_PAGES = 5120;
-static struct page pages[5120];
-static struct buddyList buddy[10];
+struct page* pages;
+struct buddyList* buddy;
+uint64_t used_mem;
 
 struct page* _allocFreePage(uint32_t order)
 {
@@ -53,13 +55,13 @@ void _dividePage(uint32_t srcOrder, uint32_t dstOrder)
     }
 }
 
-void _mergePage(struct page* delete_page)
+void _mergePage(struct page* freed_page)
 {
-    struct page* buddy_page = &pages[delete_page->pfn ^ (1 << delete_page->order)];
-    if ((buddy_page->order == delete_page->order) && buddy_page->used == false && buddy_page->order < 9)
+    struct page* buddy_page = &pages[freed_page->pfn ^ (1 << freed_page->order)];
+    if ((buddy_page->order == freed_page->order) && buddy_page->used == false && buddy_page->order < 9)
     {
         uartPuts("merge page ");
-        uartInt(delete_page->pfn);
+        uartInt(freed_page->pfn);
         uartPuts(" and page ");
         uartInt(buddy_page->pfn);
 
@@ -81,12 +83,12 @@ void _mergePage(struct page* delete_page)
         }
 
         struct page* new_page;
-        if (delete_page->pfn > buddy_page->pfn)
+        if (freed_page->pfn > buddy_page->pfn)
             new_page = buddy_page;
         else
-            new_page = delete_page;
+            new_page = freed_page;
 
-        new_page->order = delete_page->order + 1;
+        new_page->order = freed_page->order + 1;
 
         uartPuts(" to page ");
         uartInt(new_page->pfn);
@@ -98,20 +100,20 @@ void _mergePage(struct page* delete_page)
     }
     else
     {
-        buddy[delete_page->order].size++;
+        buddy[freed_page->order].size++;
 
-        if (buddy[delete_page->order].head == (struct page* )0)
-            buddy[delete_page->order].head = delete_page;
+        if (buddy[freed_page->order].head == (struct page* )0)
+            buddy[freed_page->order].head = freed_page;
         else 
         {
-            buddy[delete_page->order].head->prev = delete_page;
-            delete_page->next = buddy[delete_page->order].head;
-            buddy[delete_page->order].head = delete_page;
+            buddy[freed_page->order].head->prev = freed_page;
+            freed_page->next = buddy[freed_page->order].head;
+            buddy[freed_page->order].head = freed_page;
         }
     }
 }
 
-uint64_t getFreePage(uint32_t order)
+uint64_t allocFreePage(uint32_t order)
 {
     uartPuts("try to allocate page with order ");
     uartInt(order);
@@ -138,7 +140,7 @@ uint64_t getFreePage(uint32_t order)
     if (free_page != (struct page* )0)
     {
         free_page->used = true;
-        uint64_t page = LOW_MEMORY + free_page->pfn * PAGE_SIZE;
+        uint64_t page = LOW_MEMORY + used_mem + free_page->pfn * PAGE_SIZE;
         memzero(page + VA_START, PAGE_SIZE * (1 << order));
         return page;
     }
@@ -148,18 +150,23 @@ uint64_t getFreePage(uint32_t order)
 
 void freePage(uint64_t addr)
 {
-    struct page* delete_page = &pages[(addr - LOW_MEMORY) / PAGE_SIZE];
-    delete_page->used = false;
+    struct page* freed_page = &pages[(addr - LOW_MEMORY - used_mem) / PAGE_SIZE];
+    freed_page->used = false;
 
     uartPuts("free page ");
-    uartInt(delete_page->pfn);
+    uartInt(freed_page->pfn);
     uartPuts("\n");
 
-    _mergePage(delete_page);
+    _mergePage(freed_page);
 }
 
-void initPage()
+void initBuddy()
 {
+    pages = (struct page* )(VA_START + LOW_MEMORY); 
+    used_mem = sizeof(struct page) * MAX_PAGES;
+    buddy = (struct buddyList* )(VA_START + LOW_MEMORY + used_mem); 
+    used_mem += sizeof(struct buddyList) * (MAX_ORDER + 1);
+
     for (uint32_t i = 0; i < 5120; ++i)
     {
         pages[i].used = false;

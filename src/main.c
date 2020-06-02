@@ -30,14 +30,18 @@
 #include "task/switch.h"
 #include "task/runnableTask.h"
 #include "memory/memManager.h"
+#include "memory/buddy.h"
+#include "memory/memPool.h"
 
 void kernelMain()
 {
     // set up serial console
     uartInit();
-    initPage();
+    initBuddy();
     initMemPool();
+    initTaskPool();
     memTestTask();
+
 
     // for (int i = 0; i < 3; ++i)
     // { // N should > 2

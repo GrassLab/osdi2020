@@ -1,16 +1,19 @@
 #include "type.h"
 #include "memory/memManager.h"
+#include "memory/buddy.h"
+#include "memory/memPool.h"
 #include "device/uart.h"
 
 static const uint32_t MAX_POOLS = 41;
 static const uint32_t MAX_FREE_POOLS = 32;
-static struct memPool pool[41];
+struct memPool* pool;
+extern uint64_t used_mem;
 
 uint64_t allocSlot(uint32_t token)
 {
     if (pool[token].init_addr == 0)
     {
-        pool[token].init_addr = getFreePage(0);
+        pool[token].init_addr = allocFreePage(0);
 
         uartPuts("allocate free page with init address: ");
         uartHex(pool[token].init_addr);
@@ -92,17 +95,24 @@ uint64_t allocDynamic(uint64_t size)
     {
         if (size < pool[i].slot_size)
         {
-            return allocSlot(i);
+            uint64_t addr = allocSlot(i);
+            if (!addr)
+                return addr;
+            else 
+                continue;
         }
     }
 
+    // If there's no free slot or the size is larger than 2048
     for (uint32_t i = 0; i <= MAX_ORDER; ++i)
     {
         if (size < PAGE_SIZE * (1 << i))
         {
-            return getFreePage(i);
+            return allocFreePage(i);
         }
     }
+
+    return 0;
 }
 
 void freeDynamic(uint64_t addr)
@@ -121,6 +131,9 @@ void freeDynamic(uint64_t addr)
 
 void initMemPool()
 {
+    pool = (struct memPool* )(VA_START + LOW_MEMORY + used_mem); 
+    used_mem += sizeof(struct memPool) * MAX_POOLS;
+
     for (uint32_t i = 0; i < MAX_FREE_POOLS; ++i)
     {
         pool[i].pool_used = false;
@@ -129,13 +142,14 @@ void initMemPool()
             pool[i].slot_used[j] = false;
     }
 
+    // Allocate memory pool from size 8 to size 2048
     for (uint32_t i = MAX_FREE_POOLS, j = 3; i < MAX_POOLS; ++i, ++j)
     {
         uint64_t size = 1 << j;
         pool[i].pool_used = true;
         pool[i].slot_size = size;
         pool[i].max_slot_num = PAGE_SIZE / size;
-        pool[i].init_addr = getFreePage(0);
+        pool[i].init_addr = allocFreePage(0);
         for (uint64_t j = 0; j < 4096; ++j)
             pool[i].slot_used[j] = false;
     }

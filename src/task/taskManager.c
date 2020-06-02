@@ -7,7 +7,8 @@
 #include "memory/memManager.h"
 
 const static uint32_t MAX_TASK_NUMBER = 64;
-struct task* task_pool[64];
+struct task** task_pool;
+extern struct task_node* task_node_pool;
 uint32_t task_count = 0;
 uint64_t pool_occupied = 0;
 struct task *current = 0;
@@ -194,4 +195,12 @@ uint32_t createPrivilegeTask(void (*func)(), uint32_t priority)
 	pushQueue(new_task);
 
 	return free_pool_num;
+}
+
+void initTaskPool()
+{
+	uint64_t addr = allocateKernelPage();
+	task_pool = (struct task** )addr; 
+	uint64_t used = sizeof(struct task**) * 64;
+	task_node_pool = (struct task_node* )(addr + used); 
 }

@@ -5,7 +5,7 @@
 
 uint64_t allocateKernelPage()
 {
-    uint64_t page = getFreePage(0);
+    uint64_t page = allocFreePage(0);
     if (page == 0)
     {
         return 0;
@@ -15,7 +15,7 @@ uint64_t allocateKernelPage()
 
 uint64_t allocateUserPage(struct task *task, uint64_t va) 
 {
-	uint64_t page = getFreePage(0);
+	uint64_t page = allocFreePage(0);
 	if (page == 0) 
     {
 		return 0;
@@ -37,7 +37,7 @@ uint64_t mapTable(uint64_t *table, uint64_t shift, uint64_t va, int* new_table) 
 	if (!table[index])
     {
 		*new_table = 1;
-		uint64_t next_level_table = getFreePage(0);
+		uint64_t next_level_table = allocFreePage(0);
 		uint64_t entry = next_level_table | PD_TABLE;
 		table[index] = entry;
 		return next_level_table;
@@ -50,7 +50,7 @@ uint64_t mapTable(uint64_t *table, uint64_t shift, uint64_t va, int* new_table) 
 void mapPage(struct task *task, uint64_t va, uint64_t page){
 	uint64_t pgd;
 	if (!task->mm.pgd) {
-		task->mm.pgd = getFreePage(0);
+		task->mm.pgd = allocFreePage(0);
 		task->mm.kernel_pages[++task->mm.kernel_pages_count] = task->mm.pgd;
 	}
 	pgd = task->mm.pgd;

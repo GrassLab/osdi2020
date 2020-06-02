@@ -23,8 +23,6 @@
 #define PUD_SHIFT			PAGE_SHIFT + 2*TABLE_SHIFT
 #define PMD_SHIFT			PAGE_SHIFT + TABLE_SHIFT
 
-#define MAX_ORDER  9
-
 #ifndef __ASSEMBLER__
 
 #include "type.h"
@@ -39,38 +37,12 @@ struct page
     struct page* next;
 };
 
-struct buddyList
-{
-    struct page* head;
-    size_t size;
-};
-
-struct memPool
-{
-    uint64_t init_addr;
-	uint64_t slot_size;
-	uint32_t max_slot_num;
-	bool pool_used;
-	bool slot_used[4096]; 
-};
-
 void memzero(unsigned long src, unsigned long n);
 void memcpy(unsigned long dst, unsigned long src, unsigned long n);
 void setPgd();
 
 uint64_t allocateKernelPage();
 uint64_t allocateUserPage(struct task *task, uint64_t va);
-uint64_t getFreePage(uint32_t order);
-void freePage(uint64_t addr);
-void initPage();
-
-uint64_t allocSlot(uint32_t token);
-int32_t getFreePool(uint64_t size);
-void freeSlot(uint32_t token, uint64_t addr);
-void freePool(uint32_t token);
-uint64_t allocDynamic(uint64_t size);
-void freeDynamic(uint64_t addr);
-void initMemPool();
 
 #endif
 #endif

@@ -17,5 +17,6 @@ void _sysexit();
 void doExec(uint64_t start, uint64_t size, uint64_t pc);
 uint32_t createPrivilegeTask(void (*func)(), uint32_t priority);
 void zombieReaper();
+void initTaskPool();
 
 #endif
