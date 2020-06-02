@@ -70,10 +70,10 @@ void zone_init(Zone zone){
   buddy_log("");
 }
 
-void zone_show(Zone zone, unsigned long limit){
+void zone_show(Zone zone, unsigned limit){
   for(int ord = 0; ord < MAX_ORDER; ord++){
     Cdr b = zone->free_area[ord].free_list;
-    unsigned long nr = zone->free_area[ord].nr_free, cnt = limit;
+    unsigned nr = zone->free_area[ord].nr_free, cnt = limit;
     printfmt("order [%d] %d items", ord, nr);
     while(b && cnt){
       printfmt("  %s── %x to %x", b->cdr ? "├" : "└",
@@ -93,12 +93,10 @@ unsigned long zone_get_free_pages(Zone zone, int order){
       !zone->free_area[ord].free_list)
     ord++;
 
-  printfmt("nr %d list = %x", zone->free_area[ord].nr_free, zone->free_area[ord].free_list);
   if(ord == MAX_ORDER) goto buddy_allocate_failed;
 
   // partition to samller size
   while(ord > order){
-    printfmt("ord = %d", ord);
     // 1st block
     Cdr block = zone->free_area[ord].free_list;
     zone->free_area[ord].free_list = block->cdr;
@@ -134,6 +132,7 @@ unsigned long zone_get_free_pages(Zone zone, int order){
   }
   mpages[base].order = order;
   buddy_log("");
+  buddy_log("allocate order %d, %d bytes", order, PAGE_SIZE << order);
   buddy_log("allocate address 0x%x", ALOC_BEG + base * PAGE_SIZE);
   buddy_log_graph(buddy_zone);
   buddy_log("");
@@ -254,8 +253,20 @@ FixedAllocator fixed_find_by_token(unsigned long token, FixedAllocator fixed){
   return aloctor;
 }
 
+void fixed_show(FixedAllocator fixed, unsigned limit){
+  if(!fixed) return;
+  printfmt("fixed 0x%x size %d (%d)",
+      fixed, fixed->size, fixed->rs);
+  FixedBook book = fixed->book;
+  while(book){
+    printfmt("  %s── book 0x%x free %d",
+        book->next ? "├" : "└", book, book->free_nr);
+    book = book->next;
+  }
+}
+
 unsigned long fixed_get_token_by(unsigned long size, FixedAllocator *fixedptr){
-  
+
   if(!fixedptr) return 0;
 
   disable_irq();
@@ -280,10 +291,19 @@ unsigned long fixed_get_token_by(unsigned long size, FixedAllocator *fixedptr){
     avail = *fixedptr;
   }
   setFixedAllocator(avail, size);
+
+
+  fixed_log("");
+  fixed_log("fixed token %x size %d", avail, size);
+  fixed_log_graph(avail);
+  fixed_log("");
   enable_irq();
   return (unsigned long)avail;
 
 fixed_get_token_failed:
+  fixed_log("");
+  fixed_log("fixed get token failed");
+  fixed_log("");
   enable_irq();
   return 0;
 }
@@ -327,11 +347,17 @@ int fixed_free_token_by(FixedAllocator aloctor){
   aloctor->book = 0;
   aloctor->size = aloctor->rs = 0;
 
+  fixed_log("");
+  fixed_log("fixed free token %x", aloctor);
+  fixed_log("");
   enable_irq();
   return 0;
 #if free_token_check_exist
 fixed_free_token_failed:
 #endif
+  fixed_log("");
+  fixed_log("fixed free token failed");
+  fixed_log("");
   enable_irq();
   return 1;
 }
@@ -373,20 +399,25 @@ unsigned long fixed_alloc_by(FixedAllocator aloctor){
     offset += aloctor->rs;
   }
 
-  fixed_log("book = %d", offset);
 
   bset(book->table, offset);
   book->free_nr -= 1;
 
+  fixed_log("");
+  fixed_log("fixed alloc %d bytes @0x%x by allocator %x",
+      aloctor->size, book->page_addr + offset, aloctor);
   enable_irq();
   return book->page_addr + offset;
 
 fixed_alloc_failed:
+  fixed_log("");
+  fixed_log("fixed allocate failed");
+  fixed_log("");
   enable_irq();
   return 0;
 }
 
-int fixed_free_by(unsigned long addr, FixedAllocator aloctor){
+int fixed_free_by(unsigned long addr, FixedAllocator aloctor, char test){
 
   if(!aloctor) return 0;
 
@@ -398,7 +429,10 @@ int fixed_free_by(unsigned long addr, FixedAllocator aloctor){
       break;
     else bookiter = bookiter->next;
 
-  if(!bookiter) goto fixed_free_failed;
+  if(!bookiter){
+    if(test) goto fixed_free_test;
+    else goto fixed_free_failed;
+  }
 
   bclr(bookiter->table, (addr - bookiter->page_addr));
   bookiter->free_nr += 1;
@@ -410,11 +444,17 @@ int fixed_free_by(unsigned long addr, FixedAllocator aloctor){
     bookiter->page_addr = 0;
   }
 
+  fixed_log("");
+  fixed_log("fixed free 0x%x", addr);
   enable_irq();
   return addr;
 
 fixed_free_failed:
+  fixed_log("");
+  fixed_log("fixed free failed");
+  fixed_log("");
   enable_irq();
+fixed_free_test:
   return 0;
 }
 
@@ -431,7 +471,7 @@ unsigned long fixed_alloc(unsigned long token){
 }
 
 void fixed_free(unsigned long token, unsigned long addr){
-  fixed_free_by(addr, fixed_find_by_token(token, fixed_allocator));
+  fixed_free_by(addr, fixed_find_by_token(token, fixed_allocator), 0);
 }
 
 VariedAllocator varied_allocator = 0;
@@ -453,10 +493,22 @@ VariedAllocator varied_find_by_token(unsigned long token, VariedAllocator varied
   return aloctor;
 }
 
+void varied_show(VariedAllocator varied, unsigned limit){
+  if(!varied) return;
+  printfmt("varied 0x%x ", varied);
+  FixedAllocator fixed = varied->fixed;
+  while(fixed){
+    fixed_show(fixed, 3);
+    fixed = fixed->next;
+  }
+}
+
 unsigned long varied_get_token(){
   if(!varied_token) varied_token = fixed_get_token(sizeof(VariedAllocatorStr));
-  return (unsigned long)
-    (varied_allocator = newVariedAllocator(fixed_alloc(varied_token), 0, varied_allocator));
+  varied_allocator = newVariedAllocator(fixed_alloc(varied_token), 0, varied_allocator);
+  varied_log("varied token %x", varied_allocator);
+  varied_log("");
+  return (unsigned long)varied_allocator;
 }
 
 void varied_free_token(unsigned long token){
@@ -468,12 +520,17 @@ void varied_free_token(unsigned long token){
     fixed = fixed->next;
   }
   free_page((unsigned long)(var->fixed));
+  varied_log("varied free token %x", token);
+  varied_log("");
 }
 
 unsigned long varied_alloc(unsigned long token, unsigned long size){
   VariedAllocator var = varied_find_by_token(token, varied_allocator);
-  return fixed_alloc_by((FixedAllocator)fixed_get_token_by(
+  unsigned long addr = fixed_alloc_by((FixedAllocator)fixed_get_token_by(
         pow2roundup(size), var ? &(var->fixed) : 0));
+  varied_log("varied alloc %d bytes @ 0x%x", size, addr);
+  varied_log("");
+  return addr;
 }
 
 void varied_free(unsigned long token, unsigned long addr){
@@ -481,7 +538,10 @@ void varied_free(unsigned long token, unsigned long addr){
   if(!var) return;
   FixedAllocator fixed = var->fixed;
   while(fixed){
-    if(fixed_free_by(addr, fixed)) return;
+    if(fixed_free_by(addr, fixed, 1)){
+      varied_log("varied free 0x%x", addr);
+      return;
+    }
     fixed = fixed->next;
   }
 }

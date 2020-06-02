@@ -2,18 +2,28 @@
 #include "task.h"
 #include "util.h"
 #include "sched.h"
+#include "string.h"
 #include "allocator.h"
 
+void show_task_msg(char *s){
+  int w = 24 - strlen(s);
+  int l = w / 2, r = w - w / 2;
+  printf(NEWLINE "============");
+  while(l--) putchar(' ');
+  printf("[%d] %s", current_task->pid, s);
+  while(r--) putchar(' ');
+  printf("============" NEWLINE);
+}
+
 void zombie_reaper(){
-  printf(NEWLINE "============      [%d] zombie reaper     ============"
-      NEWLINE, current_task->pid);
+  char msg[20];
+  show_task_msg("zombie reaper");
   while(1){
-    printf(NEWLINE "============     [%d] zreaper running    ============"
-        NEWLINE, current_task->pid);
+    show_task_msg("zreaper running");
     for(int i = 0; i < TASK_SIZE; i++){
       if(tasks[i] && tasks[i]->status == zombie){
-        printf(NEWLINE "============ ZombieReaper kill zombie %d ============"
-            NEWLINE, tasks[i]->pid);
+        sprintf(msg, "reaper kill zombie %d", tasks[i]->pid);
+        show_task_msg(msg);
         tasks[i]->status = none;
         tasks[i] = 0;
       }
@@ -24,11 +34,9 @@ void zombie_reaper(){
 }
 
 #define TASK_(n) void task_ ## n () { \
-  printf(NEWLINE "============      [%d] TASK" #n " daemon      ============" \
-      NEWLINE, current_task->pid); \
+  show_task_msg("TASK" #n " daemon"); \
   while(1){ \
-    printf(NEWLINE "============      [%d] TASK" #n " running     ============" \
-        NEWLINE, current_task->pid); \
+    show_task_msg("TASK" #n " running"); \
     delay(5000000); \
     check_resched(); \
   } \
@@ -41,19 +49,18 @@ extern unsigned long _binary____usrbuild_user_img_end;
 extern void user_entry();
 
 void user_hang() {
-  printf(NEWLINE "============      user  hang       ============"  NEWLINE);
+  show_task_msg("user hang");
   while(1){
     delay(1000000);
-    printf(NEWLINE "============     user is hanging    ============"  NEWLINE);
+    show_task_msg("user is hanging");
   }
 }
 
 void kexec_user_main(){
-  printf(NEWLINE "============     [%d] kexec user main     ============"
-      NEWLINE, current_task->pid);
+  show_task_msg("kexec user main");
   unsigned long begin = (unsigned long)&_binary____usrbuild_user_img_start;
   unsigned long end = (unsigned long)&_binary____usrbuild_user_img_end;
-  unsigned long process = (unsigned long)begin - (unsigned long)begin;//(unsigned long)&user_entry;
+  unsigned long process = (unsigned long)begin - (unsigned long)begin;
   int err = move_to_user_mode(begin, end - begin, process);
   if (err < 0){
     printf("Error while moving process to user mode\n\r");
@@ -66,12 +73,29 @@ void test_val(unsigned long addr){
   }
 }
 
-void task_fixed_aloc() { 
+void task_buddy_aloc() {
 
-  printf(NEWLINE "============    [%d] TASK  allocation    ============"
-      NEWLINE, current_task->pid);
+  show_task_msg("TASK allocation");
 
+  const unsigned size = 6;
+  const unsigned times = 3;
+  unsigned long pages[size][times];
 
+  for(unsigned s = 0; s < size; s++)
+    for(int i = 0; i < times; i++)
+      pages[s][i] = zone_get_free_pages(buddy_zone, s);
+
+  for(unsigned s = 0; s < size; s++)
+    for(int i = 0; i < times; i++)
+      zone_free_pages(buddy_zone, pages[s][i]);
+
+  show_task_msg("TASK alloc done");
+  exit();
+}
+
+void task_fixed_aloc() {
+
+  show_task_msg("TASK allocation");
   for(unsigned size = 1; size < 515; size++){
 
     unsigned times = 10;
@@ -80,79 +104,49 @@ void task_fixed_aloc() {
 
     for(int i = 0; i < times; i++){
       addrs[i] = fixed_alloc(token);
-      printfmt("addr = 0x%x", addrs[i]);
     }
     for(int i = 0; i < times; i++){
       fixed_free(token, addrs[i]);
     }
 
     fixed_free_token(token);
-    printfmt("size = %d", size);
-
   }
-  printf(NEWLINE "============    [%d] TASK  alloc done    ============"
-      NEWLINE, current_task->pid);
+  show_task_msg("TASK alloc done");
   exit();
 }
 
-void task_varied_aloc() { 
+void task_varied_aloc() {
 
-  printf(NEWLINE "============    [%d] TASK  allocation    ============"
-      NEWLINE, current_task->pid);
+  show_task_msg("TASK allocation");
 
   unsigned long token = varied_get_token();
-  for(unsigned size = 1; size < 515; size++){
+  for(unsigned size = 1; size < 66; size += 6){
 
-    unsigned times = 10;
+    unsigned times = 1;
     unsigned long addrs[times];
 
     for(int i = 0; i < times; i++){
       addrs[i] = varied_alloc(token, size);
-      printfmt("addr = 0x%x", addrs[i]);
     }
     for(int i = 0; i < times; i++){
       varied_free(token, addrs[i]);
     }
-    printfmt("size = %d", size);
   }
-  varied_free_token(token);
-  printf(NEWLINE "============    [%d] TASK  alloc done    ============"
-      NEWLINE, current_task->pid);
+  //varied_free_token(token);
+  show_task_msg("TASK alloc done");
   exit();
 }
 
 void kernel_process(){
   puts("kernel process begin...");
-  //printf("kstack: %x, ustack %x" NEWLINE, kstack_pool, ustack_pool);
-  //privilege_task_create(do_exec, (UL)user_login, 3);
-  //privilege_task_create(do_exec, (UL)user_shell, 2);
   privilege_task_create(task_1, 0, current_task->priority);
-  //privilege_task_create(task_3, 0, current_task->priority);
+  //privilege_task_create(task_2, current_task->priority);
+  //privilege_task_create(task_3, current_task->priority);
+  //privilege_task_create(task_4, current_task->priority);
+  //privilege_task_create(task_buddy_aloc, 0, current_task->priority);
   //privilege_task_create(task_fixed_aloc, 0, current_task->priority);
   privilege_task_create(task_varied_aloc, 0, current_task->priority);
-  //privilege_task_create(task_3, 0, current_task->priority);
-  //privilege_task_create(task_4, 0, current_task->priority);
-  //privilege_task_create(do_exec, (UL)user_fork, current_task->priority);
-  //privilege_task_create(do_exec, (UL)user_exec, current_task->priority);
-  //privilege_task_create(do_exec, (UL)user_mutex, current_task->priority);
-  //privilege_task_create(do_exec, (UL)user_mutex, current_task->priority);
-  //privilege_task_create(do_exec, (UL)user_mutex, current_task->priority);
-  //privilege_task_create(do_exec, (UL)user_write, current_task->priority);
-  //privilege_task_create(do_exec, (UL)user_hang, current_task->priority);
-  //privilege_task_create(kexec_user_main, 0, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);
-  //privilege_task_create(task_2, 0);
-  //privilege_task_create(task_3, 0);
-  //privilege_task_create(task_4, 0);
   //irq_shell_loop();
-  //puts("kernel stack:");
-  //show_sp();
-  /* do_exec((unsigned long)user_exit); */
-  //exit();
-  //do_exec((unsigned long)user_write);
   exit();
-  while(1){
-    puts("kernel process scheduling");
-    schedule();
-  }
 }

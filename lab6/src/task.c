@@ -156,7 +156,6 @@ int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
   regs->pc = pc;
   regs->pstate = PSR_MODE_EL0t;
 
-
   if(mmap(0x0, size, PROT_READ, MAP_ANONYMOUS, start, 0x0) == MAP_FAILED){
     puts("cannot allocate text code page");
     exit();

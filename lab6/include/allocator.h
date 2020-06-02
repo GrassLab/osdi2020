@@ -25,12 +25,13 @@ void zone_init(Zone);
 unsigned long zone_get_free_pages(Zone zone, int order);
 void zone_free_pages(Zone zone, unsigned long addr);
 
-void zone_show(Zone zone, unsigned long cnt);
+void zone_show(Zone zone, unsigned limit);
 
 #define addr2pgidx(addr) ((addr - ALOC_BEG) / PAGE_SIZE)
 
-#define enable_buddy_log 0
+#define enable_buddy_log 1
 #define enable_fixed_log 1
+#define enable_varied_log 1
 
 #if enable_buddy_log
 #define buddy_log(...) printfmt(__VA_ARGS__)
@@ -78,6 +79,7 @@ unsigned long fixed_get_token(unsigned long size);
 void fixed_free_token(unsigned long token);
 unsigned long fixed_alloc(unsigned long token);
 void fixed_free(unsigned long token, unsigned long addr);
+void fixed_show(FixedAllocator fixed, unsigned limit);
 
 typedef struct VariedAllocator_tag {
   FixedAllocator fixed;
@@ -88,5 +90,6 @@ unsigned long varied_get_token();
 void varied_free_token(unsigned long token);
 unsigned long varied_alloc(unsigned long token, unsigned long size);
 void varied_free(unsigned long token, unsigned long addr);
+void varied_show(VariedAllocator varied, unsigned limit);
 
 #endif
