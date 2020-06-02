@@ -90,6 +90,8 @@ int buddy_alloc(int size){
         uart_send_int(remain_order);
         uart_puts(" in: ");
         uart_send_int(big_page_num);
+        uart_puts(" and: ");
+        uart_send_int(big_page_num+big_page_size);
         uart_puts("\n");
     }
 
@@ -112,16 +114,66 @@ int buddy_alloc(int size){
     uart_puts("\n");
     return -1;
 }
+void check_merge(){
+    for(int order=0;order<MAX_ORDER-1;order++){
+        if(buddy_pool[order].len==0)continue;
+        struct buddy* head = buddy_pool[order].page;
+        while(head!=0 && head->next!=0){
+            int buddy_num = (head->page_frame_number ^ (1<<order));
+            if(buddy_num==head->next->page_frame_number){
+                uart_puts("Merge buddy: ");
+                uart_send_int(head->page_frame_number);
+                uart_puts(" ");
+                uart_send_int(head->next->page_frame_number);
+                uart_puts("\n");
+                struct buddy* next_head = head->next->next;                
+                // remove node for current order
+                if(buddy_pool[order].page->page_frame_number == head->page_frame_number){
+                    buddy_pool[order].page = next_head;
+                }else{
+                    struct buddy* pre_head = buddy_pool[order].page;
+                    while(pre_head->next->page_frame_number != head->page_frame_number)pre_head = pre_head->next;                    
+                    pre_head->next = next_head;
+                }
 
+                // find position in next order
+                if(buddy_pool[order+1].len==0){
+                    buddy_pool[order+1].page = head;
+                    head->next = 0;
+                }else{
+                    if(head->page_frame_number < buddy_pool[order+1].page->page_frame_number){                        
+                        head->next = buddy_pool[order+1].page;
+                        buddy_pool[order+1].page = head;                        
+                    }
+                    else{
+                        struct buddy* next_order_head = buddy_pool[order+1].page;
+                        while(next_order_head->next!=0 && next_order_head->next->page_frame_number < head->page_frame_number)next_order_head = next_order_head->next;                        
+                        head->next = next_order_head->next;
+                        next_order_head->next = head;
+                    }
+                    
+                }   
+                
+                buddy_pool[order].len -= 2;
+                buddy_pool[order+1].len += 1;
+                head = next_head;
+            }else
+                head = head->next;
+            
+        }
+        
+    }
+}
 void buddy_free(int page_frame_number, int page_frame_size){
     uart_puts("Free page number: ");
     uart_send_int(page_frame_number);
     uart_puts("\n");
     uart_puts("Free size: ");
     uart_send_int(page_frame_size);
-    uart_puts("\n");
     int order = cal_order(page_frame_size);
-    
+    uart_puts(" order: ");
+    uart_send_int((1<<order));
+    uart_puts("\n");
     struct buddy* temp = (struct buddy*)pfn2phy(page_frame_number);
     temp->page_frame_number = page_frame_number;
     temp->next = 0;
@@ -141,10 +193,14 @@ void buddy_free(int page_frame_number, int page_frame_size){
         }
     }
     buddy_pool[order].len++;
+    check_merge();
 }
 
 
 void buddy_show(){
+    uart_puts("\n");
+    uart_puts("Show Buddy");
+    uart_puts("\n");
     for(int order=0;order<MAX_ORDER;order++){
 
         // if(buddy_pool[order].len==0)continue;
