@@ -80,4 +80,6 @@ int uart_getint ( );
  */
 void uart_puts ( char * s );
 
+void uart_printf ( const char * format, ... );
+
 #endif

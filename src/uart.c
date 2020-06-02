@@ -28,7 +28,8 @@
 #include "ctype.h"
 #include "gpio.h"
 #include "mailbox.h"
-
+#include "stdarg.h"
+#include "string.h"
 
 /**
  * Set baud rate and characteristics (115200 8N1) and map to GPIO
@@ -101,6 +102,39 @@ void uart_send ( unsigned int c )
 }
 
 /**
+ * Send a integer
+ */
+void uart_send_int ( int c, int field_length, int base )
+{
+    char buffer[20];
+
+    switch ( base )
+    {
+        case 10:
+            itoa ( c, buffer, field_length );
+            break;
+        case 16:
+            itohex_str ( c, sizeof ( int ), buffer );
+            break;
+    }
+
+    uart_puts ( buffer );
+}
+
+/**
+ * Send a float
+ */
+void uart_send_float ( float f, int field_length )
+{
+    char buffer[20];
+    ftoa ( f, buffer, 6 );
+    uart_puts ( buffer );
+
+    // wextra are screaming
+    field_length += 1;
+}
+
+/**
  * Receive a character
  */
 char uart_getc ( )
@@ -153,4 +187,71 @@ void uart_puts ( char * s )
     {
         uart_send ( *s++ );
     }
+}
+
+void uart_printf ( const char * format, ... )
+{
+    const char * temp = format;
+    int field_length;
+    int d;
+    char c;
+    char * s;
+    float f;
+    va_list arguments;
+
+    va_start ( arguments, format );
+
+    do
+    {
+        if ( *temp == '%' )
+        {
+            temp++;
+
+            // field length
+            field_length = 0;
+            if ( isdigit ( *temp ) )
+            {
+                field_length = *temp;
+
+                while ( isdigit ( *temp ) )
+                {
+                    field_length *= 10;
+                    field_length += ( *temp );
+                    temp++;
+                }
+            }
+
+            // format different argument
+            switch ( *temp )
+            {
+                case 'd':
+                    d = va_arg ( arguments, int );
+                    uart_send_int ( d, field_length, 10 );
+                    break;
+                case 's':
+                    s = va_arg ( arguments, char * );
+                    uart_puts ( s );
+                    break;
+                case 'c':
+                    c = (char) va_arg ( arguments, int );
+                    uart_send ( c );
+                    break;
+                case 'x':
+                    d = va_arg ( arguments, int );
+                    uart_send_int ( d, field_length, 16 );
+                    break;
+                case 'f':
+                    f = va_arg ( arguments, double );
+                    uart_send_float ( f, field_length );
+                    break;
+            }
+        }
+        else
+        {
+            uart_send ( *temp );
+        }
+
+        temp++;
+
+    } while ( *temp != '\0' );
 }

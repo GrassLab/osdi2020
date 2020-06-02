@@ -3,7 +3,6 @@
 #include "math.h"
 #include "type.h"
 
-
 int strcmp ( char * s1, char * s2 )
 {
     int i;
@@ -39,7 +38,7 @@ int strlen ( char * s )
 
     return i;
 }
-
+#include "uart.h"
 // https://www.geeksforgeeks.org/convert-floating-point-number-string/
 void itoa ( int x, char str[], int d )
 {
@@ -121,7 +120,7 @@ void reverse ( char * s )
     for ( i = 0; i < strlen ( s ) / 2; i++ )
     {
         temp                    = s[strlen ( s ) - i - 1];
-        s[strlen ( s ) - i - 1] = s[0];
-        s[0]                    = temp;
+        s[strlen ( s ) - i - 1] = s[i];
+        s[i]                    = temp;
     }
 }
