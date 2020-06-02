@@ -16,7 +16,13 @@
 #define PAGING_MEMORY (HIGH_MEMORY - LOW_MEMORY)
 #define PAGING_PAGES (PAGING_MEMORY / PAGE_SIZE)
 
+typedef struct free_area {
+    struct free_area *next;
+    unsigned long *map;
+} free_area_t;
+
 void *malloc(unsigned int size);
 void free(void *ptr);
+void init_memory();
 
 #endif

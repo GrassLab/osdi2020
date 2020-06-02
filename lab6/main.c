@@ -1,6 +1,7 @@
 #include "system.h"
 #include "uart.h"
 #include "util.h"
+#include "mm.h"
 
 #define CMD_HELP "help"
 #define CMD_HELLO "hello"
@@ -8,11 +9,17 @@
 #define CMD_REBOOT "reboot"
 
 void get_timestamp();
-void uart_read_line(char* line);
 
 void main()
 {
     uart_init();
+    init_memory();
+    malloc(4);
+    malloc(1);
+    malloc((unsigned int)(0x1 << 14));
+    malloc((unsigned int)(0x1 << 14));
+    malloc(4);
+    malloc(4);
     // char *welcome = " _ _ _   _   __  ___   __  _ _  _  _ _ \n| | | | / \\ |
     // \\| __| / _|| U || || U |\n| V V || o || o ) _|  \\_ \\|   || ||   |\n
     // \\_n_/ |_n_||__/|___| |__/|_n_||_||_n_|\n\n";
@@ -68,21 +75,4 @@ void get_timestamp()
     char res[30];
     ftoa(((float)c / (float)f), res, 10);
     uart_puts(res);
-}
-
-void uart_read_line(char* line)
-{
-    char c;
-    int index = 0;
-
-    while (c != '\n') {
-        c = uart_getc();
-        uart_send(c);
-        if (c == '\n') {
-            line[index] = '\0';
-        } else {
-            line[index] = c;
-        }
-        index++;
-    }
 }
