@@ -5,6 +5,7 @@
 #include "schedule/task.h"
 #include "schedule/schedule.h"
 #include "mmu/vma.h"
+#include "mmu/buddy.h"
 
 void kernel_main(void) {
     initUART();
@@ -18,8 +19,18 @@ void kernel_main(void) {
     sendHexUART(getVCBaseAddress());
     sendUART('\n');
 
+    gBuddy.construct();
+    gBuddy.show();
+    Page *page1 = gBuddy.allocate(0xe4000);
+    Page *page2 = gBuddy.allocate(0xe40);
+    gBuddy.deallocate(page1);
+    gBuddy.deallocate(page2);
+
     sendStringUART("Press enter to continue...");
     sendUART(recvUART());
+
+    while (1)
+        ;
 
     initPageFrames();
 
