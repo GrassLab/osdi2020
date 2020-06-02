@@ -24,6 +24,8 @@ asm:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -d in_asm
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial pty
+show:
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 debug:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s -serial pty
 

@@ -120,14 +120,76 @@ void uart_puts(char *s) {
 /**
  * Display a binary value in hexadecimal
  */
-void uart_hex(unsigned int d) {
-    unsigned int n;
+void uart_hex(unsigned long long d) {
+    unsigned long long int n;
     int c;
-    for(c=28;c>=0;c-=4) {
+    for(c=60;c>=0;c-=4) {
         // get highest tetrad
         n=(d>>c)&0xF;
         // 0-9 => '0'-'9', 10-15 => 'A'-'F'
         n+=n>9?0x37:0x30;
         uart_send(n);
     }
+}
+
+void sys_num(unsigned int num, int base) 
+{ 
+	static char Representation[]= "0123456789ABCDEF";
+	static char buffer[50]; 
+	char *ptr; 
+	ptr = &buffer[49]; 
+	*ptr = '\0'; 
+	
+	do 
+	{ 
+		*--ptr = Representation[num%base]; 
+		num /= base; 
+	}while(num != 0); 
+
+    uart_puts(ptr);
+}
+
+void my_printf(const char *fmt, ...)
+{
+	static char mutex = 0;
+	while(mutex){
+		asm volatile("nop");
+	}
+	mutex = 1;
+    __builtin_va_list args;
+    __builtin_va_start(args, fmt);
+    const char *traverse; 
+	//unsigned int i; 
+	//char *s; 
+	for(traverse = fmt; *traverse != '\0'; traverse++) 
+	{ 
+        if(*traverse == '%')
+        {
+            traverse++;
+            switch(*traverse)
+            {
+                case '%':
+                    uart_send('%');
+                    break;
+                case 's':
+                    //char *p = va_arg(args, char *);
+                    uart_puts(__builtin_va_arg(args, char *));
+                    break;
+                case 'd':
+                    //int arg = va_arg(args, int);
+                    sys_num(__builtin_va_arg(args, int), 10);
+                    break;
+                case 'x':
+                    //int arg = va_arg(args, int);
+                    sys_num(__builtin_va_arg(args, int), 16);
+                    break;
+            }
+        }
+        else
+        {
+            uart_send(*traverse);
+        }
+    }
+    __builtin_va_end(args);
+	mutex = 0;
 }
