@@ -19,6 +19,7 @@ typedef struct buddy
     int used;
     uint64_t addr;
     int pages; /* occupy how many pages */
+    int self_index;
     struct buddy * next_sibling;
     struct buddy * left;
     struct buddy * right;
@@ -28,5 +29,6 @@ typedef struct buddy
 
 void buddy_init ( );
 void * allocate_free_mem ( int size_in_byte );
+void free_mem ( void * addr );
 
 #endif
