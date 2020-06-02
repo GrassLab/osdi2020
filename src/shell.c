@@ -123,7 +123,6 @@ void shell() {
         get_board_revision();
         get_vc_base();
     } else if (!strcmp(cmd, "exc")) {
-        asm volatile("exc:");
         asm volatile("svc #1");
     } else if (!strcmp(cmd, "irq")) {
         asm volatile("svc #2");

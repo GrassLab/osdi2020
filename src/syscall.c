@@ -9,7 +9,6 @@ void do_exec(uint8_t* func, int size) {
     struct task_t* task = get_current();
     struct page_t* user_page = page_alloc();
     task->pages[task->pages_now++] = user_page->id;
-    asm volatile("b:");
     for (int i = 0; i < size; i++) {
         *((uint8_t*)user_page->content + i) = *(func + i);
     }
@@ -22,7 +21,6 @@ void do_exec(uint8_t* func, int size) {
     /* task->utask.sp = 0x0000ffffffffe000; */
     task->utask.sp = 0x0000fffffffff000;
 
-    asm volatile("pgd:");
     uint64_t utask_addr = (uint64_t)&task->utask;
     move_ttbr(task->pgd);
 

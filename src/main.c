@@ -1,12 +1,8 @@
 #include <stdint.h>
 
+#include "alloc.h"
 #include "io.h"
-#include "lfb.h"
-#include "libsyscall.h"
-#include "mbox.h"
 #include "page.h"
-#include "reset.h"
-#include "shell.h"
 #include "syscall.h"
 #include "task.h"
 #include "tests.h"
@@ -27,26 +23,6 @@ extern volatile unsigned int _end;
 extern volatile void set_aux();
 extern uint64_t _binary_user_img_start;
 extern uint64_t _binary_user_img_end;
-
-void run() {
-    print_s("\033[2J\033[1;1H");
-    print_s(
-        "██████╗  ██████╗  ██████╗ ████████╗██╗      ██████╗  █████╗ ██████╗ "
-        "███████╗██████╗ \r\n"
-        "██╔══██╗██╔═══██╗██╔═══██╗╚══██╔══╝██║     "
-        "██╔═══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗\r\n"
-        "██████╔╝██║   ██║██║   ██║   ██║   ██║     ██║   ██║███████║██║  "
-        "██║█████╗  ██████╔╝\r\n"
-        "██╔══██╗██║   ██║██║   ██║   ██║   ██║     ██║   ██║██╔══██║██║  "
-        "██║██╔══╝  ██╔══██╗\r\n"
-        "██████╔╝╚██████╔╝╚██████╔╝   ██║   ███████╗╚██████╔╝██║  "
-        "██║██████╔╝███████╗██║  ██║\r\n"
-        "╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ "
-        "╚══════╝╚═╝  ╚═╝\r\n");
-    while (1) {
-        shell();
-    }
-}
 
 void idle() {
     if (runqueue.head->next == 0) {
@@ -72,7 +48,7 @@ void zombie_killer() {
 
 void foo_kernel() {
     print_s("foo kernel\n");
-    do_exec((uint8_t*)&_binary_user_img_start,
+    do_exec((uint8_t *)&_binary_user_img_start,
             ((uint64_t)(&_binary_user_img_end) -
              (uint64_t)(&_binary_user_img_start)));
     while (1)
@@ -87,15 +63,21 @@ void foo() {
 int main() {
     // set up serial console
     uart_init();
-    lfb_init();
-    lfb_showpicture();
     task_init();
     set_aux();
     asm volatile("svc #2");
 
-    privilege_task_create(idle, 3);
-    foo();
-    privilege_task_run();
+    /* privilege_task_create(idle, 3); */
+    /* foo(); */
+    /* privilege_task_run(); */
+    buddy_init();
+    print_s("buddy init done\n");
+    int *a = kmalloc(4);
+    *a = 3;
+    print_s("kmalloc init done\n");
+    asm volatile("a:");
+    while (1)
+        ;
 
     /* run(); */
 }

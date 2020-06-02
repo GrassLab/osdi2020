@@ -4,7 +4,6 @@
 
 #include "page.h"
 #include "utils.h"
-#define current get_current();
 
 struct task_t task_pool[64];
 struct queue_element_t queue_elements[QUEUE_ELE_SIZE];
@@ -32,7 +31,6 @@ void context_switch(struct task_t* next) {
         print_s(" has been killed\n");
         schedule();
     } else {
-        asm volatile("e:");
         switch_to(prev, next, nextfunc, next->spsr, next->pgd);
     }
 }
