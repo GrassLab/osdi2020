@@ -39,18 +39,14 @@ el1_entry:
 
     ldr     x0, =MAIR_VALUE
     msr     mair_el1, x0
+    // invalidate non used PGD PUD entry
+    mov     x0, PGD_BASE    
+    mov     x1, (2*PAGE_TABLE_SIZE)
+    bl      memzero_64
 
-    mov     x0, PGD_BASE
     mov     x1, PUD_BASE
     mov     x2, PMD_BASE
-    
-//    mov     x7, (2*PAGE_TABLE_SIZE)
-//    mov     x6, x0
-//clear_table: //invalidate non used PGD, PUD entry
-//    str     xzr, [x6], #8
-//    subs    x7, x7, #8
-//    bgt     clear_table
-    
+
     // setup first PGD entry(pointer to PUD)    
     ldr     x7, =PT_DESC_TO_TABLE
     orr     x7, x7, x1
@@ -102,11 +98,10 @@ main_entry:
     mov     x0, #KVA_BASE
     add     sp, sp, x0
     // clear_bss
-    ldr     x2, =__bss_size
-    cbz     x2, main_entry
+    ldr     x1, =__bss_size
+    cbz     x1, main_entry
     ldr     x0, =__bss_start
-    mov     w1, wzr
-    bl      memset
+    bl      memzero_64
 
     bl      kernel_main           // jump to C code, should not return
     b       pe_hang               // for failsafe, halt this core too

@@ -7,7 +7,6 @@
 #include "string.h"
 #include "uart.h"
 
-
 static struct page bookkeeping[NR_PAGE];
 static char kstack_pool[NR_TASKS][THREAD_SIZE];
 static char ustack_pool[NR_TASKS][THREAD_SIZE];
@@ -27,11 +26,11 @@ struct page* demand_page()
         if(bookkeeping[pfn].used)
             continue;
         page = &bookkeeping[pfn];
-		memset((void *)page->phy_addr, 0, PAGE_SIZE);
+		memzero_64((void *)page->phy_addr, PAGE_SIZE>>3);
         bookkeeping[pfn].used = 1;
         return page;
     }
-    printf("[page_alloc] There are not free page!\n");
+    printf("[demand_page] There are not free page!\n");
     return NULL;
 }
 

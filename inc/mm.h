@@ -77,6 +77,7 @@ struct obj_alloc{
 
 struct obj_alloc allocator_pool[MAX_ALLOCATOR_NUM];
 
+void *memzero_64(void *dest, unsigned long size);
 unsigned long get_kstack_base(unsigned long task_id);
 unsigned long get_ustack_base(unsigned long task_id);
 void mm_init();
