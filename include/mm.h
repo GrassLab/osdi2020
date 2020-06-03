@@ -61,7 +61,6 @@ void buddy_free(void* virt_addr);
 
 int obj_alloc_register(uint64_t size);
 uint64_t obj_alloc_kernel(int token);
-uint64_t obj_alloc_user(int token);
 void obj_free(int token, uint64_t virt_addr);
 
 void mm_init();

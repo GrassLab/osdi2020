@@ -11,6 +11,10 @@ struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
 uint64_t remain_page = 0;
 
+/*
+ *  Obj allocator
+ */
+
 void pool_init(struct pool_t* pool, uint64_t size) {
     pool->obj_size = size;
     pool->obj_per_page = PAGE_SIZE / size;
@@ -58,12 +62,6 @@ uint64_t obj_alloc_kernel(int token) {
     uint64_t addr = pool->page_addr[pool->page_used - 1] + pool->obj_used * pool->obj_size;
     pool->obj_used++;
     return addr;
-}
-
-uint64_t obj_alloc_user(int token) {
-    int pool_num = token;
-    struct pool_t* pool = &obj_allocator[pool_num];
-    return 0;
 }
 
 void obj_free(int token, uint64_t virt_addr) {
