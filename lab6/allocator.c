@@ -38,7 +38,7 @@ unsigned long long PFN2ADDR(int PFN){
 }
 
 
-void fix_allocator_alloc(fix_allocator *self){
+void fix_allocator_request_page(fix_allocator *self){
 	int PFN = buddy_alloc(1);
 	
 	int thisPFN_Id = self->PFN_num;
@@ -56,7 +56,7 @@ fix_allocator* fix_allocator_init(int size){
 	fix_alloc_pool[thisId].obj_size = size;
 	fix_alloc_pool[thisId].mem_pool_init = (FIX_ALLOCATOR_MEM_POOL_FULL << ( size==64?63:PAGE_SIZE/size )) ;
 
-	fix_allocator_alloc(&fix_alloc_pool[thisId]);
+	fix_allocator_request_page(&fix_alloc_pool[thisId]);
 
 	return &fix_alloc_pool[thisId];
 }
@@ -111,24 +111,34 @@ dynamic_allocator* dynamic_allocator_init(){
 	int thisId = dynamic_allocator_gid;
 	dynamic_allocator_gid++;
 
-	dynamic_alloc_pool[thisId].fix_allocator_64 = fix_allocator_init(64);
-	dynamic_alloc_pool[thisId].fix_allocator_128 = fix_allocator_init(128);
-	dynamic_alloc_pool[thisId].fix_allocator_256 = fix_allocator_init(256);
+	dynamic_alloc_pool[thisId].fix_allocator_512 = fix_allocator_init(512);
+	dynamic_alloc_pool[thisId].fix_allocator_2048 = fix_allocator_init(2048);
+	dynamic_alloc_pool[thisId].fix_allocator_4096 = fix_allocator_init(4096);
 
 	return &dynamic_alloc_pool[thisId];
 }
 
 void* dynamic_alloc(dynamic_allocator *self, int req_size){
 	void* retAddr;
-	if(req_size <= 64) retAddr = fix_alloc(self->fix_allocator_64);
-	else if(req_size <= 128) retAddr = fix_alloc(self->fix_allocator_128);
-	else retAddr = fix_alloc(self->fix_allocator_256);
+	if(req_size <= 512) retAddr = fix_alloc(self->fix_allocator_512);
+	else if(req_size <= 2048) retAddr = fix_alloc(self->fix_allocator_2048);
+	else if(req_size <= 4096) retAddr = fix_alloc(self->fix_allocator_4096);
+	else{
+		int PFN = buddy_alloc( (req_size/4096) + (req_size%4096?1:0) );
+		retAddr = (void*)PFN2ADDR(PFN);
+	}
+
 
 	return retAddr;
 }
 
 void dynamic_free(dynamic_allocator *self, void* addr){
-	if(fix_free(self->fix_allocator_64, addr)) return;
-	else if (fix_free(self->fix_allocator_128, addr)) return;
-	else fix_free(self->fix_allocator_256, addr);
+	if(fix_free(self->fix_allocator_512, addr)) return;
+	else if (fix_free(self->fix_allocator_2048, addr)) return;
+	else if (fix_free(self->fix_allocator_4096, addr)) return;
+	else{
+		unsigned long long phyAddr = ((unsigned long long)addr & 0x0000FFFFFFFFFFFF);
+		int PFN = phyAddr >> 12;
+		buddy_free(PFN);
+	}
 }

@@ -14,9 +14,9 @@ typedef struct{
 } fix_allocator;
 
 typedef struct{
-	fix_allocator *fix_allocator_64;
-	fix_allocator *fix_allocator_128;
-	fix_allocator *fix_allocator_256;
+	fix_allocator *fix_allocator_512;
+	fix_allocator *fix_allocator_2048;
+	fix_allocator *fix_allocator_4096;
 } dynamic_allocator;
 
 fix_allocator* fix_allocator_init(int size);

@@ -89,6 +89,9 @@ buddy_node buddy_list_pop(buddy_head *list){
 	int step = list->num;
 	int cur = 1;
 	while(step != 0){
+		// list->node_list[cur-1].start = list->node_list[cur].start;
+		// list->node_list[cur-1].end = list->node_list[cur].end;
+		// list->node_list[cur-1].allocated = list->node_list[cur].allocated;
 		list->node_list[cur-1] = list->node_list[cur];
 		
 		step--;
@@ -211,6 +214,7 @@ int buddy_alloc(int page_request_num){
 	if(is_power_of_2(page_request_num)) alloc_num = page_request_num;
 	else alloc_num = next_power_of_2(page_request_num);
 
+
 	int request_id = log_2(alloc_num);
 	if(buddy[request_id].num > 0){
 		buddy_node alloc_node = buddy_list_pop(&buddy[request_id]);
@@ -228,8 +232,10 @@ int buddy_alloc(int page_request_num){
 		return -1;
 	}
 
+
 	buddy_node temp_node = buddy_list_pop(&buddy[id]);
 	id--;
+
 	while(id >= request_id){
 		buddy_list_push(&buddy[id], temp_node);
 		temp_node = buddy_list_pop(&buddy[id]);

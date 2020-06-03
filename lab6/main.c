@@ -37,6 +37,8 @@ void main()
     test = dynamic_alloc(dyalloc, 128);
     dynamic_free(dyalloc, test);
     test = dynamic_alloc(dyalloc, 200);
+    test = dynamic_alloc(dyalloc, 5000);
+    dynamic_free(dyalloc, test);
 
 
     test[0] = '\0'; // make gcc happy :-)
