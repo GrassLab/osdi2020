@@ -53,4 +53,10 @@ void show_addr(unsigned long addr);
 #define MAX(a, b) (a > b ? a : b)
 #define MIN(a, b) (a < b ? a : b)
 
+#ifdef RUN_ON_EL0
+#define EL 0
+#else
+#define EL 1
+#endif
+
 #endif

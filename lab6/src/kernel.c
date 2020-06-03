@@ -15,12 +15,6 @@
 #include "test.h"
 #endif
 
-#ifdef RUN_ON_EL0
-#define EL 0
-#else
-#define EL 1
-#endif
-
 #if !defined(WITHOUT_LOADER) && !defined(NO_RELOC_SELF)
 char *_kend, *_kbeg;
 #endif

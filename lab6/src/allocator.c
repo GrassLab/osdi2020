@@ -47,7 +47,9 @@ unsigned long startup_allocate(unsigned long size, unsigned long mask){
     startup_have_allocated |= 1;
   }
   addr = search_addr(addr, size, mask);
-  printfmt("allocate addr = %x end = %x", addr, addr + size);
+
+  startup_log("startup alloc %d bytes @0x%x", size, addr);
+
   if(addr + size > HIGH_MEMORY) return 0;
   startup_addrs[startup_cur] = addr;
   startup_sizes[startup_cur] = size;
@@ -84,7 +86,7 @@ Cdr newCdr(unsigned long addr, Cdr next){
 }
 
 void zone_init(Zone zone){
-  puts("zone init");
+
   unsigned long mask = (1 << (MAX_ORDER + PAGE_SHIFT - 1)) - 1, addr;
   unsigned rest_page = zone->page_number, order = MAX_ORDER - 1, block;
   addr = zone->addr = MM_START | startup_allocate(zone->page_number * PAGE_SIZE, mask);
@@ -197,10 +199,12 @@ void zone_merge_buddy(Zone zone, unsigned long addr, unsigned order){
   if(mask & addr){
     buddy_addr = (~mask) & addr;
     aligned_addr = buddy_addr;
+    buddy_log("merge order %d, address 0x%x is younger brother, buddy 0x%x", order, addr, buddy_addr);
   }
   else{
-    buddy_addr = addr + (1 << (order + PAGE_SIZE));
+    buddy_addr = addr + (1 << (order + PAGE_SHIFT));
     aligned_addr = addr;
+    buddy_log("merge order %d, address 0x%x is older brother, buddy 0x%x", order, addr, buddy_addr);
   }
 
   Cdr *iter = &(zone->free_area[order].free_list);
@@ -267,8 +271,13 @@ FixedBook prependFixedBooks(FixedBook next){
   unsigned long addr = get_free_page();
   unsigned nr = PAGE_SIZE / sizeof(FixedBookStr);
   FixedBook iter = (FixedBook)addr;
-  for(unsigned i = 1; i < nr; i++)
+  fixed_log("add fixed book %x", iter);
+  fixed_log("... ... ... ...");
+  fixed_log("... ... ... ...");
+  for(unsigned i = 1; i < nr; i++){
     iter = newFixedBook(iter, 0, (FixedBook)(addr + i * sizeof(FixedBookStr)))->next;
+  }
+  fixed_log("add fixed book %x", iter);
   newFixedBook(iter, 0, next);
   return (FixedBook)addr;
 }
@@ -276,8 +285,10 @@ FixedBook prependFixedBooks(FixedBook next){
 unsigned long dispatch_tables(FixedBook book){
   unsigned long tables = get_free_page();
   unsigned nr = PAGE_SIZE / FixedBookTableSzie;
-  for(int i = 0; i < nr && book && tables; i++, book = book->next)
+  for(int i = 0; i < nr && book && tables; i++, book = book->next){
     book->table = (char*)(tables + i * FixedBookTableSzie);
+    fixed_log("book 0x%x bind table 0x%x", book, book->table);
+  }
   return tables;
 }
 
@@ -423,10 +434,12 @@ unsigned long fixed_alloc_by(FixedAllocator aloctor){
       while((PAGE_SIZE << ord) < aloctor->rs) ord++;
       book->page_addr = zone_get_free_pages(buddy_zone, ord);
       book->free_nr = 1;
+      fixed_log("book 0x%x bind %d pages 0x%x", book, 1 << ord, book->page_addr);
     }
     else{
       book->page_addr = get_free_page();
       book->free_nr = PAGE_SIZE / aloctor->rs;
+      fixed_log("book 0x%x bind page 0x%x", book, book->page_addr);
     }
   }
 

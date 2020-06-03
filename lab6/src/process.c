@@ -2,6 +2,7 @@
 #include "task.h"
 #include "util.h"
 #include "sched.h"
+#include "shell.h"
 #include "string.h"
 #include "allocator.h"
 
@@ -63,9 +64,11 @@ void test_val(unsigned long addr){
   }
 }
 
-void task_buddy_aloc() {
+void task_buddy_aloc(int ret) {
 
   show_task_msg("TASK allocation");
+
+  zone_show(buddy_zone, 5);
 
   const unsigned size = 6;
   const unsigned times = 3;
@@ -79,14 +82,16 @@ void task_buddy_aloc() {
     for(int i = 0; i < times; i++)
       zone_free_pages(buddy_zone, pages[s][i]);
 
+  zone_show(buddy_zone, 5);
   show_task_msg("TASK alloc done");
-  exit();
+
+  if(!ret) exit();
 }
 
-void task_fixed_aloc() {
+void task_fixed_aloc(int ret) {
 
   show_task_msg("TASK allocation");
-  for(unsigned size = 1; size < 515; size++){
+  for(unsigned size = 1; size < 515; size += 127){
 
     unsigned times = 10;
     unsigned long addrs[times];
@@ -102,10 +107,11 @@ void task_fixed_aloc() {
     fixed_free_token(token);
   }
   show_task_msg("TASK alloc done");
-  exit();
+
+  if(!ret) exit();
 }
 
-void task_varied_aloc() {
+void task_varied_aloc(int ret) {
 
   show_task_msg("TASK allocation");
 
@@ -122,21 +128,22 @@ void task_varied_aloc() {
       varied_free(token, addrs[i]);
     }
   }
-  //varied_free_token(token);
+  varied_free_token(token);
   show_task_msg("TASK alloc done");
-  exit();
+
+  if(!ret) exit();
 }
 
 void kernel_process(){
   puts("kernel process begin...");
-  privilege_task_create(task_1, 0, current_task->priority);
+  //privilege_task_create(task_1, 0, current_task->priority);
   //privilege_task_create(task_2, current_task->priority);
   //privilege_task_create(task_3, current_task->priority);
   //privilege_task_create(task_4, current_task->priority);
   //privilege_task_create(task_buddy_aloc, 0, current_task->priority);
   //privilege_task_create(task_fixed_aloc, 0, current_task->priority);
-  privilege_task_create(task_varied_aloc, 0, current_task->priority);
-  privilege_task_create(zombie_reaper, 0, current_task->priority);
-  //irq_shell_loop();
-  exit();
+  //privilege_task_create(task_varied_aloc, 0, current_task->priority);
+  //privilege_task_create(zombie_reaper, 0, current_task->priority);
+  privilege_task_create(irq_shell_loop, EL, current_task->priority);
+  while(1){ delay(500000); schedule(); }
 }

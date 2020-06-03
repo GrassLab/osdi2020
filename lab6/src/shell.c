@@ -9,7 +9,8 @@
 #include "timer.h"
 #include "util.h"
 #include "task.h"
-#include "syscall.h"
+#include "sys.h"
+#include "process.h"
 
 #ifndef WITHOUT_LOADER
 #include "loadimg.h"
@@ -94,10 +95,10 @@ int shell_execute(char *cmd, int el) {
   } else if (EQS("exit", cmd) || cmd[0] == 4) {
     //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
     //__asm__ volatile ("msr daifset, #0xf":::"memory");
-    __asm__ volatile("stp x8, x9, [sp, #-16]!");
-    __asm__ volatile("mov x8, #2");
-    __asm__ volatile("svc #0");
-    __asm__ volatile("ldp x8, x9, [sp], #16");
+    //__asm__ volatile("stp x8, x9, [sp, #-16]!");
+    //__asm__ volatile("mov x8, #2");
+    //__asm__ volatile("svc #0");
+    //__asm__ volatile("ldp x8, x9, [sp], #16");
     return -1;
   } else if (EQS("clear", cmd)) {
     print("\e[1;1H\e[2J");
@@ -121,30 +122,7 @@ int shell_execute(char *cmd, int el) {
       __asm__ volatile("mov %0, sp" : "=r"(sp));
       printf("sp = 0x%x\n", sp);
 #endif
-
-      //        unsigned long gpr_ctx[31];
-      //        unsigned long ret_ctx[31];
-      //#define SAVE_GPRCTX(x, ctxp)  __asm__ volatile ("str x" #x ", %0" :
-      //"=m"(ctxp[x])); #define save_ctx 1 #if save_ctx #define SAVE_PRECTX(x)
-      // SAVE_GPRCTX(x, gpr_ctx)
-      //        MAP(SAVE_PRECTX, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-      //                10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-      //                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30);
-      //#endif
-
       __asm__ volatile("svc #1");
-
-      //#define SAVE_RETCTX(x) SAVE_GPRCTX(x, ret_ctx)
-      //        MAP(SAVE_RETCTX, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-      //                10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-      //                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30);
-      //
-      //#define diffctx
-      //#ifdef diffctx
-      //        for(int i = 0; i < 31; i++)
-      //            printf("ctx diff (pre:ret) x%d (%d:%d)\n", i, gpr_ctx[i],
-      //            ret_ctx[i]);
-      //#endif
     }
   } else if (EQS("brk", cmd)) {
     if(!el) puts("cannot do exc on el0 currently");
@@ -191,11 +169,20 @@ int shell_execute(char *cmd, int el) {
     int pid = cmd[4] - '0';
     if(pid >= 0 && pid < TASK_SIZE){
       printf("kill pid %c" NEWLINE, cmd[4]);
-      call_sys_signal(pid, SIGKILL);
+      sys_signal(pid, SIGKILL);
     }
     else{
       printf("invalid pid %c" NEWLINE, cmd[4]);
     }
+  }
+  else if (EQS("buddy", cmd)) {
+    task_buddy_aloc(1);
+  }
+  else if (EQS("fixed", cmd)) {
+    task_fixed_aloc(1);
+  }
+  else if (EQS("varied", cmd)) {
+    task_varied_aloc(1);
   }
   else if (strlen(cmd)) {
     print("command not found: ", cmd, NEWLINE);
@@ -269,7 +256,7 @@ void irq_shell_loop(int el){
   ptr = buffer - 1;
   print("# ");
   while (1) {
-    exec_ptr = shell_stuff_line(call_sys_read(), &ptr, buffer);
+    exec_ptr = shell_stuff_line(sys_read(), &ptr, buffer);
     if (exec_ptr) {
       shell_execute(exec_ptr, el);
       exec_ptr = 0;

@@ -39,9 +39,18 @@ void zone_show(Zone zone, unsigned limit);
 
 #define addr2pgidx(_addr, _zone) ((_addr - (_zone->addr)) / PAGE_SIZE)
 
+#define enable_startup_log 1
 #define enable_buddy_log 1
 #define enable_fixed_log 1
 #define enable_varied_log 1
+
+#if enable_startup_log
+#define startup_log(...) printfmt(__VA_ARGS__)
+#define startup_log_graph(zone) startup_show(zone, 3)
+#else
+#define startup_log(...) ;
+#define startup_log_graph(zone) ;
+#endif
 
 #if enable_buddy_log
 #define buddy_log(...) printfmt(__VA_ARGS__)
