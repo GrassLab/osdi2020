@@ -1,3 +1,6 @@
+#ifndef ALLOC_H
+#define ALLOC_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #define MAX_ORDER 8
@@ -31,7 +34,11 @@ extern struct zone_node_t* zone[10];
 struct buddy_node_t* new_buddy_node(uint64_t addr, uint64_t size);
 void buddy_init();
 
-void* kmalloc(uint64_t size);
+struct buddy_node_t* alloc_buddy(uint64_t size);
+void free_buddy(struct buddy_node_t* buddy_node);
+
+void zone_delete(struct zone_node_t* zone_node);
 void zone_push(struct zone_node_t* zone_node);
 struct zone_node_t* zone_pop(uint64_t order);
-struct buddy_node_t* get_buddy(uint64_t order);
+struct buddy_node_t* get_buddy_by_order(uint64_t order);
+#endif

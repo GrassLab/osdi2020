@@ -152,9 +152,3 @@ go_main:
     // for failsafe, halt this core too
 1:
     b       1b
-
-go_el0:
-
-
-el0_entry:
-

@@ -36,19 +36,49 @@ void buddy_init() {
     asm volatile("b:");
 }
 
-void* kmalloc(uint64_t size) {
+struct buddy_node_t* alloc_buddy(uint64_t size) {
     uint64_t target_size = 1;
     int order = 0;
     while (size > target_size) {
         target_size <<= 1;
         order++;
     }
-    struct buddy_node_t* buddy_node = get_buddy(order);
-    return (void*)buddy_node->addr;
+    struct buddy_node_t* buddy_node = get_buddy_by_order(order);
+    return buddy_node;
+}
+
+void free_buddy(struct buddy_node_t* buddy_node) {
+    buddy_node->used = false;
+    if (buddy_node->parent->left == buddy_node &&
+        buddy_node->right->used == false) {
+        buddy_node->parent->used = false;
+        zone_delete(&buddy_node->parent->left->zone_node);
+        free_buddy(buddy_node->parent->zone_node.buddy_node);
+    } else if (buddy_node->parent->right == buddy_node &&
+               buddy_node->left->used == false) {
+        buddy_node->parent->used = false;
+        zone_delete(&buddy_node->parent->left->zone_node);
+        zone_push(&buddy_node->parent->zone_node);
+        free_buddy(buddy_node->parent->zone_node.buddy_node);
+    } else {
+        zone_push(&buddy_node->zone_node);
+    }
+}
+
+void zone_delete(struct zone_node_t* zone_node) {
+    if (!zone_node->prev && !zone_node->next) {
+        zone[zone_node->order] = 0;
+        return;
+    }
+    if (zone_node->prev) {
+        zone_node->prev->next = zone_node->next;
+    }
+    if (zone_node->next) {
+        zone_node->next->prev = zone_node->prev;
+    }
 }
 
 void zone_push(struct zone_node_t* zone_node) {
-    asm volatile("p:");
     zone_node->next = zone[zone_node->order];
     zone[zone_node->order]->prev = zone_node;
     zone[zone_node->order] = zone_node;
@@ -63,12 +93,12 @@ struct zone_node_t* zone_pop(uint64_t order) {
     return zone_node;
 }
 
-struct buddy_node_t* get_buddy(uint64_t order) {
+struct buddy_node_t* get_buddy_by_order(uint64_t order) {
     if (order > MAX_ORDER) {
         return 0;
     }
     if (!zone[order]) {
-        struct buddy_node_t* buddy = get_buddy(order + 1);
+        struct buddy_node_t* buddy = get_buddy_by_order(order + 1);
         buddy->used = true;
         buddy->left->used = true;
         zone_push(&buddy->right->zone_node);
