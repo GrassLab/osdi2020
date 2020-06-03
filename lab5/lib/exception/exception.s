@@ -4,6 +4,8 @@ _exception_ret_addr: .asciz "Exception return address "
 _exception_class: .asciz "Exception class (EC) "
 _exception_iss: .asciz "Instruction specific syndrom (ISS) "
 
+_exception_data_abort: .asciz "Page fault @"
+
 .section ".text.exception"
 
 .align 11 // aligned to 0x800 (2^11)
@@ -101,7 +103,10 @@ add sp, sp, #256
 bl getCurrentTask
 mov x9, sp
 str x9, [x0, 16 * 6]
-mov sp, 0x400000
+mov x9, 0x3E000000
+mov x10, 0xffff000000000000
+orr x9, x10, x9
+mov sp, x9
 .endm
 
 .macro _interrupt_exit
@@ -115,8 +120,30 @@ mov sp,  x9
 _exception_handler:
     _kernel_entry
 
+    mrs x0, ESR_EL1
+    // logical shift right
+    // EC: [31:26]
+    lsr x0, x0, #26
+    cmp x0, #21 // SVC in 64-bit state
+    b.eq el0_svc
+    cmp x0, #36 // data abort in EL0
+    b.eq el0_data_abort
+
+el0_svc:
     mov x0, sp
     bl handleSVC
+    b leave
+
+el0_data_abort:
+    ldr x0, =_exception_data_abort
+    bl sendStringUART
+    mrs x0, FAR_EL1
+    bl sendHexUART
+    mov x0, #10
+    bl sendUART
+    // FIXME: should pass addressable status for exit()
+    bl doExit
+
     // ldr x0, =_exception_ret_addr
     // bl sendStringUART
     // mrs x0, ELR_EL1

@@ -6,6 +6,7 @@
 #define SYS_EXEC 2u
 #define SYS_FORK 3u
 #define SYS_EXIT 4u
+#define SYS_GET_TASK_ID 5u
 
 #include <stdint.h>
 

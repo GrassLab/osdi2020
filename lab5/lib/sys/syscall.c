@@ -24,12 +24,14 @@ static void handleExec(uint64_t *trapframe) {
     doExec((void (*)())trapframe[1]);
 }
 
-static void handleFork(uint64_t *trapframe) {
-    doFork(trapframe);
-}
+static void handleFork(uint64_t *trapframe) { doFork(trapframe); }
 
-static void handleExit(uint64_t *trapframe) {
-    doExit(trapframe[1]);
+static void handleExit(uint64_t *trapframe) { doExit(trapframe[1]); }
+
+static void handleGetTaskId(uint64_t *trapframe) {
+    TaskStruct *cur_task = getCurrentTask();
+
+    trapframe[0] = cur_task->id;
 }
 
 void handleSVC(uint64_t *trapframe) {
@@ -37,23 +39,27 @@ void handleSVC(uint64_t *trapframe) {
 
     uint64_t x0 = trapframe[0];
     switch (x0) {
-    case 0:
+    case SYS_RECV_UART:
         handleRecvUart(trapframe);
         break;
-    case 1:
+    case SYS_SEND_UART:
         handleSendUart(trapframe);
         break;
-    case 2:
+    case SYS_EXEC:
         handleExec(trapframe);
         break;
-    case 3:
+    case SYS_FORK:
         handleFork(trapframe);
         break;
-    case 4:
+    case SYS_EXIT:
         handleExit(trapframe);
         break;
+    case SYS_GET_TASK_ID:
+        handleGetTaskId(trapframe);
+        break;
     default:
-        sendStringUART("[ERROR] Unknown syscall number, shouldn't reach here\n");
+        sendStringUART(
+            "[ERROR] Unknown syscall number, shouldn't reach here\n");
         break;
     }
 }

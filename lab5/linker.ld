@@ -1,7 +1,8 @@
 SECTIONS
 {
     . = 0xffff000000000000;
-    . += 0x80000;
+    kernel_start = 0x80000;
+    . += kernel_start;
 
     .text.boot : { *(.text.boot) }
     .text.mmu : { *(.text.mmu) }
@@ -13,4 +14,6 @@ SECTIONS
     bss_begin = .;
     .bss : { *(.bss*) }
     bss_end = .;
+    . = ALIGN(0x1000);
+    kernel_end = .;
 }

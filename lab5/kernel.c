@@ -4,6 +4,7 @@
 #include "exception/timer.h"
 #include "schedule/task.h"
 #include "schedule/schedule.h"
+#include "mmu/vma.h"
 
 void kernel_main(void) {
     initUART();
@@ -20,16 +21,22 @@ void kernel_main(void) {
     sendStringUART("Press enter to continue...");
     sendUART(recvUART());
 
-    while (1)
-        ;
+    initPageFrames();
 
     initIdleTaskState();
 
-    _enable_core_timer();
-
-    for (uint32_t i = 0; i < 3; ++i) {
-        createPrivilegeTask(fooTask);
+    sendStringUART("Want to see process of page reclaim? [y/n]\n");
+    if (recvUART() == 'y') {
+        page_counter_flag = 1lu;
+        createPrivilegeTask(fooTask, test_command1);
+        createPrivilegeTask(fooTask, test_command2);
+        createPrivilegeTask(fooTask, test_command3);
+    } else {
+        createPrivilegeTask(fooTask, test_command1);
+        createPrivilegeTask(fooTask, test_command2);
     }
+
+    _enable_core_timer();
 
     idle();
 }
