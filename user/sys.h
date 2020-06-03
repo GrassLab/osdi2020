@@ -8,6 +8,7 @@
 #define SYS_FORK            4
 #define SYS_EXIT            5
 #define SYS_REMAIN_PAGE     6
+#define SYS_OBJ_ALLOC_INIT  7
 
 #endif
 
@@ -24,5 +25,6 @@ int fork();
 void exit(int status);
 void printf(char* fmt, ...);
 uint64_t remain_page_num();
+int obj_alloc_init(uint64_t size);
 
 #endif

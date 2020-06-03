@@ -42,3 +42,9 @@ remain_page_num:
     mov x8, SYS_REMAIN_PAGE
     svc #0
     ret
+
+.global obj_alloc_init
+obj_alloc_init:
+    mov x8, SYS_OBJ_ALLOC_INIT
+    svc #0
+    ret

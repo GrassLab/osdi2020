@@ -5,10 +5,38 @@
 #include "schedule.h"
 #include "uart0.h"
 
+struct pool_t obj_allocator[MAX_POOL_NUM];
 struct buddy_t free_area[MAX_BUDDY_ORDER];
 struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
 uint64_t remain_page = 0;
+
+void pool_init(struct pool_t* pool, uint64_t size) {
+    pool->elmt_size = size;
+    pool->obj_per_page = PAGE_SIZE / size;
+}
+
+int obj_alloc_register(uint64_t size) {
+    if (size > PAGE_SIZE) {
+        uart_printf("Object too large\n");
+        return -1;
+    }
+
+    for (int i = 0; i < MAX_POOL_NUM; i++) {
+        if (obj_allocator[i].used == AVAL) {
+            obj_allocator[i].used = USED;
+            pool_init(&obj_allocator[i], size);
+            return i;
+        }
+    }
+
+    uart_printf("No avaliable pool for current request\n");
+    return -1;
+}
+
+/*
+ *  Buddy System
+ */
 
 struct page_t* find_buddy(int pfn, int order) {
     int buddy_pfn = pfn ^ (1 << order);

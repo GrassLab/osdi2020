@@ -6,13 +6,14 @@
 #define PAGE_FRAMES_NUM         (0x40000000 / PAGE_SIZE)
 #define PAGE_MASK               ~0xFFF
 #define MAX_BUDDY_ORDER         9 // 2^0 ~ 2^8 => 4k to 1MB
+#define MAX_POOL_NUM            32
 
 #ifndef __ASSEMBLY__
 
 #include "typedef.h"
 #include "schedule.h"
 
-enum page_status {
+enum booking_status {
     AVAL,
     USED,
 };
@@ -28,17 +29,26 @@ struct buddy_t {
 
 struct page_t {
     struct list_head list;
-    enum page_status used;
+    enum booking_status used;
     int order;
     int idx; // debug used
 };
 
+struct pool_t {
+    enum booking_status used;
+    int elmt_size;
+    int obj_per_page;
+};
+
 /* Variables init in mm.c */
+extern struct pool_t obj_allocator[MAX_POOL_NUM];
 extern struct buddy_t free_area[MAX_BUDDY_ORDER];
 extern struct page_t page[PAGE_FRAMES_NUM];
 extern uint64_t remain_page;
 
 /* Function in mm.c */
+int obj_alloc_register(uint64_t size);
+
 void mm_init();
 void* page_alloc();
 void fork_pgd(struct task_t* target, struct task_t* dest);
