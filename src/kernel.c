@@ -109,6 +109,18 @@ int kernel_main()
         obj_free(obj1[j*2+1]);
     }
     obj0[0] = obj_allocate(token0);
+    // kmalloc
+    void * t_block0 = kmalloc(7);
+    void * s_block0 = kmalloc(8);
+    void * s_block1 = kmalloc(2048);
+    void * l_block0 = kmalloc(2049);
+    void * l_block1 = kmalloc(4097);
+    // kfree
+    kfree(t_block0);
+    kfree(s_block0);
+    kfree(s_block1);
+    kfree(l_block0);
+    kfree(l_block1);
 
     core_timer_enable();
     idle_task();

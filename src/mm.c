@@ -62,9 +62,9 @@ struct page *__buddy_block_alloc(int order)
         return 0;
     }
     
-    uart_puts("[buddy allocate] **start**\n");
+    printf("[buddy allocate] order: %d\tsize: %d\n", order, 1<<order);
     #ifdef __DEBUG
-    uart_puts("before\n");
+    uart_puts("\tbefore\n");
     dump_buddy();
     #endif//__DEBUG
     for(int ord_ext=order; ord_ext<=MAX_ORDER; ord_ext++){
@@ -88,10 +88,10 @@ struct page *__buddy_block_alloc(int order)
         }
         printf("\tallocated block(PFN:%d, Order:%d)\n", to_alloc->pfn, to_alloc->order);
         #ifdef __DEBUG   
-        uart_puts("after\n");
+        uart_puts("\tafter\n");
         dump_buddy();
         #endif//__DEBUG
-        uart_puts("[buddy allocate] **end**\n\n");
+        uart_puts("[buddy allocate] **done**\n\n");
         return to_alloc;
     }
     uart_puts("[__buddy_block_alloc] No free space!\n");
@@ -131,7 +131,7 @@ void __buddy_block_free(struct page* block)
     uart_puts("after\n");
     dump_buddy();
     #endif//__DEBUG
-    uart_puts("[buddy free] **end**\n\n");
+    uart_puts("[buddy free] **done**\n\n");
 }
 
 void __init_obj_alloc(struct obj_alloc *alloc, unsigned int size)
@@ -193,6 +193,7 @@ void __init_obj_page(struct page* page, unsigned size)
 void dump_alloc(struct obj_alloc* alloc){
     list_head_t *list;
     uart_puts("\t\tobj_alloc = {\n");
+    printf("\t\talloc.objsize=%d\n", alloc->objsize);
     printf("\t\talloc.curr_page{pfn=%d}\n", (alloc->curr_page == 0) ? -1 : alloc->curr_page->pfn);
     printf("\t\t - nr_unused: %d\n", (alloc->curr_page == 0) ? -1 : alloc->curr_page->nr_unused);
     list =  alloc->partial.next;
@@ -257,7 +258,7 @@ void *obj_allocate(int token)
     #ifdef __DEBUG
     uart_puts("\tafter allocation\n");
     dump_alloc(alloc);
-    uart_puts("[obj_allocate] **end**\n\n");
+    uart_puts("[obj_allocate] **done**\n\n");
     #endif//__DEBUG
     return obj;
 }
@@ -301,7 +302,57 @@ void obj_free(void *obj)
     printf("\t\tfreelist --> (0x%X) --> (0x%X)\n", page->obj_freelist, *page->obj_freelist);
     dump_alloc(alloc);
     printf("\t\tnr_unused: %d\n", page->nr_unused);
-    uart_puts("[obj_free] **end**\n\n");
+    uart_puts("[obj_free] **done**\n\n");
+    #endif//__DEBUG
+}
+
+void __init_kmalloc()
+{
+    for (unsigned int i=MIN_KMALLOC_ORDER; i<=MAX_KMALLOC_ORDER; i++){
+        register_obj_allocator(1<<i);
+    }
+}
+
+void *kmalloc(unsigned int size)
+{
+    #ifdef __DEBUG
+    printf("[kmalloc] size: %d\n", size);
+    #endif//__DEBUG
+    void *block;
+    for(unsigned int i=MIN_KMALLOC_ORDER; i<MAX_KMALLOC_ORDER; i++){
+        if(size <= (1<<i)){
+            block = obj_allocate(i-MIN_KMALLOC_ORDER);
+            #ifdef __DEBUG
+            printf("[kmalloc] **done** block@ 0x%X\n\n", block);
+            #endif//__DEBUG
+            return block;
+        }
+    }
+    for(unsigned int i=0; i<MAX_ORDER; i++){
+        if(size <= 1<<(i+PAGE_SHIFT)){
+            block = (void *)(__buddy_block_alloc(i)->phy_addr);
+            #ifdef __DEBUG
+            printf("[kmalloc] **done** block@ 0x%X\n\n", block);
+            #endif//__DEBUG
+            return block;
+        }
+    }
+    uart_puts("[kmalloc] too large!\n");
+    return NULL;
+}
+
+void kfree(void * block)
+{
+    #ifdef __DEBUG
+    printf("[kfree] block@ 0x%X\n", block);
+    #endif//__DEBUG
+    int pfn = PHY_ADDR_TO_PFN(block);
+    struct page* page = &bookkeep[pfn];
+    if(page->obj_alloc)
+        obj_free(block);
+    __buddy_block_free(page);
+    #ifdef __DEBUG
+    printf("[kfree] **done**\n\n");
     #endif//__DEBUG
 }
 
@@ -309,5 +360,6 @@ void mm_init()
 {
     __init_page_struct();// must do before buddy or it will break the list
     __init_buddy();
+    __init_kmalloc();
     // __init_obj_allocator; // init bss should set them to size 0(inused)
 }
