@@ -56,11 +56,13 @@ extern struct page_t page[PAGE_FRAMES_NUM];
 extern uint64_t remain_page;
 
 /* Function in mm.c */
+void* kmalloc(uint64_t size);
+
 void* buddy_alloc(int order);
 void buddy_free(void* virt_addr);
 
 int obj_alloc_register(uint64_t size);
-uint64_t obj_alloc_kernel(int token);
+void* obj_alloc_kernel(int token);
 void obj_free(int token, uint64_t virt_addr);
 
 void mm_init();

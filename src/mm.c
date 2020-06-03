@@ -11,6 +11,33 @@ struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
 uint64_t remain_page = 0;
 
+void* kmalloc(uint64_t size) {
+    // size too large
+    if (size > PAGE_SIZE) {
+        uart_printf("kmalloc using buddy\n");
+        int order;
+        for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
+            if (size <= (uint64_t)((1 << i) * PAGE_SIZE)) {
+                order = i;
+                break;
+            }
+        }
+        return buddy_alloc(order);
+    }
+    else {
+        uart_printf("kmalloc using object allocator\n");
+        // check exist object allocator
+        for (int i = 0; i < MAX_OBJ_ALLOCTOR_NUM; i++) {
+            if (obj_allocator[i].obj_size == size) {
+                return (void*) obj_alloc_kernel(i);
+            }
+        }
+        // register new obj allocator
+        int token = obj_alloc_register(size);
+        return obj_alloc_kernel(token);
+    }
+}
+
 /*
  *  Obj allocator
  */
@@ -41,7 +68,7 @@ int obj_alloc_register(uint64_t size) {
     return -1;
 }
 
-uint64_t obj_alloc_kernel(int token) {
+void* obj_alloc_kernel(int token) {
     int pool_num = token;
     struct pool_t* pool = &obj_allocator[pool_num];
 
@@ -49,7 +76,7 @@ uint64_t obj_alloc_kernel(int token) {
     if (pool->free != NULL) {
         struct free_list *obj = pool->free;
         pool->free = pool->free->next;
-        return (uint64_t)obj;
+        return obj;
     }
 
     // need new page
@@ -61,7 +88,7 @@ uint64_t obj_alloc_kernel(int token) {
     // allocate new obj
     uint64_t addr = pool->page_addr[pool->page_used - 1] + pool->obj_used * pool->obj_size;
     pool->obj_used++;
-    return addr;
+    return (void*) addr;
 }
 
 void obj_free(int token, uint64_t virt_addr) {
@@ -249,22 +276,12 @@ void mm_init() {
     first_aval_page = kernel_end_page + 1;
     last_aval_page = mmio_base_page - 1;
     buddy_info();
-    // void* addr1 = buddy_alloc(0);
-    // buddy_info();
-    // void* addr2 = buddy_alloc(0);
-    // buddy_info();
-    // buddy_free(addr1);
-    // buddy_info();
-    // buddy_free(addr2);
-    // buddy_info();
-    int token = obj_alloc_register(0x100);
-    uint64_t addr1 = obj_alloc_kernel(token);
-    uart_printf("obj alloc: %x\n", addr1);
-    uint64_t addr2 = obj_alloc_kernel(token);
-    uart_printf("obj alloc: %x\n", addr2);
-    obj_free(token, addr1);
-    uint64_t addr3 = obj_alloc_kernel(token);
-    uart_printf("obj alloc: %x\n", addr3);
+    void* addr1 = kmalloc(0x100);
+    uart_printf("%x\n", (uint64_t)addr1);
+    void* addr2 = kmalloc(4096);
+    uart_printf("%x\n", (uint64_t)addr2);
+    void* addr3 = kmalloc(4097);
+    uart_printf("%x\n", (uint64_t)addr3);
 }
 
 
