@@ -21,7 +21,7 @@ void test_buddy(){
         buddy_show();
     }
 
-    for(int i=0;i<alloc_num;i++){
+    for(int i=alloc_num-1;i>=0;i--){
         if(alloced_pool[i]==-1)continue;
         buddy_free(alloced_pool[i], alloc_size[i]);
         buddy_show();
@@ -35,8 +35,8 @@ int chunk_size3 = 68;
 
 void test_slab(){
     buddy_init(PAGING_PAGES);    
-
-    uart_puts("\n=====TEST on Fixed-sized allocator=====\n");
+    init_all_allocator();
+    // uart_puts("\n=====TEST on Fixed-sized allocator=====\n");
     int allocator_id = init_allocator(chunk_size1);
     int allocator_id1 = init_allocator(chunk_size2);
     int allocator_id2 = init_allocator(chunk_size3);
@@ -94,28 +94,28 @@ void test_slab(){
     // show_allocator(allocator_id2);
     // uart_puts("\n--------------------------------\n");
 
-    // uart_puts("\n=====TEST on Varied-sized allocator=====\n");
-    // init_var_allocator();
-    // const int alloc_num = 6;
-    // int alloc_size[] = {34, 66, 35, 67, 1024, 4098};
-    // int alloced_pool[alloc_num];
-    // for(int i=0;i<alloc_num;i++){
-    //     uart_puts("\n--------------------------------\n");
-    //     alloced_pool[i] = var_alloc(alloc_size[i]);
-    //     uart_puts("Get address: ");
-    //     uart_hex(alloced_pool[i]);
-    //     uart_puts("\n");
-    // }
-    // uart_puts("\n--------------------------------\n");
+    uart_puts("\n=====TEST on Varied-sized allocator=====\n");
+    init_var_allocator();
+    const int alloc_num = 6;
+    int alloc_size[] = {34, 66, 35, 67, 1024, 4098};
+    int alloced_pool[alloc_num];
+    for(int i=0;i<alloc_num;i++){
+        uart_puts("\n--------------------------------\n");
+        alloced_pool[i] = var_alloc(alloc_size[i]);
+        uart_puts("Get address: ");
+        uart_hex(alloced_pool[i]);
+        uart_puts("\n");
+    }
+    uart_puts("\n--------------------------------\n");
 
-    // for(int i=0;i<alloc_num;i++){
-    //     uart_puts("\n--------------------------------\n");
-    //     uart_puts("Free address: ");
-    //     uart_hex(alloced_pool[i]);
-    //     uart_puts("\n");
-    //     var_free(alloced_pool[i], alloc_size[i]);
-    // }
-    // uart_puts("\n--------------------------------\n");
+    for(int i=0;i<alloc_num;i++){
+        uart_puts("\n--------------------------------\n");
+        uart_puts("Free address: ");
+        uart_hex(alloced_pool[i]);
+        uart_puts("\n");
+        var_free(alloced_pool[i], alloc_size[i]);
+    }
+    uart_puts("\n--------------------------------\n");
 
 }
 void main(){

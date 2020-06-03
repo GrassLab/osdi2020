@@ -95,7 +95,7 @@ int buddy_alloc(int size){
         uart_send_int(big_page_num+big_page_size);
         uart_puts("\n");
     }
-
+    //return page
     if(order<MAX_ORDER && buddy_pool[order].len>0){
         struct buddy* head = buddy_pool[order].page;
         int ret_page = head->page_frame_number;
@@ -116,10 +116,12 @@ int buddy_alloc(int size){
     return -1;
 }
 void check_merge(){
+    //MAX_ORDER can't merge
     for(int order=0;order<MAX_ORDER-1;order++){
         if(buddy_pool[order].len==0)continue;
         struct buddy* head = buddy_pool[order].page;
         while(head!=0 && head->next!=0){
+            //search for buddy
             int buddy_num = (head->page_frame_number ^ (1<<order));
             if(buddy_num==head->next->page_frame_number){
                 uart_puts("[Buddy]Merge buddy: ");
@@ -129,9 +131,11 @@ void check_merge(){
                 uart_puts("\n");
                 struct buddy* next_head = head->next->next;                
                 // remove node for current order
+                // for merge first two page 
                 if(buddy_pool[order].page->page_frame_number == head->page_frame_number){
                     buddy_pool[order].page = next_head;
                 }else{
+                    // for merge others, due to not keep last pointer
                     struct buddy* pre_head = buddy_pool[order].page;
                     while(pre_head->next->page_frame_number != head->page_frame_number)pre_head = pre_head->next;                    
                     pre_head->next = next_head;
@@ -142,6 +146,7 @@ void check_merge(){
                     buddy_pool[order+1].page = head;
                     head->next = 0;
                 }else{
+                    //first insert in first position
                     if(head->page_frame_number < buddy_pool[order+1].page->page_frame_number){                        
                         head->next = buddy_pool[order+1].page;
                         buddy_pool[order+1].page = head;                        
@@ -179,10 +184,13 @@ void buddy_free(int page_frame_number, int page_frame_size){
     temp->page_frame_number = page_frame_number;
     temp->next = 0;
 
+    
     if(buddy_pool[order].len==0){
         buddy_pool[order].page = temp;
     }else{
+        //search for suitable position
         struct buddy* head = buddy_pool[order].page;
+        //first is smaller
         if(page_frame_number < head->page_frame_number){
             temp->next = head;
             buddy_pool[order].page = temp;            
