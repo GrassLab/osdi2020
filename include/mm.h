@@ -56,25 +56,30 @@ extern struct page_t *page;
 extern uint64_t remain_page;
 
 /* Function in mm.c */
-void* kmalloc(uint64_t size);
-
-void* buddy_alloc(int order);
-void buddy_free(void* virt_addr);
-
-int obj_alloc_register(uint64_t size);
-void* obj_alloc_kernel(int token);
-void obj_free(int token, uint64_t virt_addr);
-
 void mm_init();
+void* kmalloc(uint64_t size);
 void fork_pgd(struct task_t* target, struct task_t* dest);
 void* map_page(struct task_t* task, uint64_t user_addr);
 void page_reclaim(uint64_t pgd_phy);
 
+// object allocator
+int obj_alloc_register(uint64_t size);
+void* obj_alloc_kernel(int token);
+void obj_free(int token, uint64_t virt_addr);
+
+// buddy system
+void buddy_init();
+void buddy_push(struct buddy_t* bd, struct list_head* elmt);
+void* buddy_alloc(int order);
+void buddy_free(void* virt_addr);
+
+// utility function
 uint64_t user_addr_to_page_addr(uint64_t user_addr, uint64_t pgd);
 void memzero(uint8_t* addr, int size);
 void memcpy(void *dest, void *src, uint64_t size);
 uint64_t virtual_to_physical(uint64_t virt_addr);
 uint64_t phy_to_pfn(uint64_t phy_addr);
+struct page_t* find_buddy(int pfn, int order);
 
 #endif /* __ASSEMBLY__ */
 
