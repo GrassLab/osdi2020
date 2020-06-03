@@ -39,13 +39,15 @@ void zombie_killer() {
 }
 
 void foo_kernel() {
-    print_s("foo kernel\n");
-    uint8_t* p8 = kmalloc(1);
-    uint8_t* p8_2 = kmalloc(1);
-    asm volatile("fo:");
-    uint32_t* p32 = kmalloc(4);
-    uint32_t* p32_2 = kmalloc(4);
-    asm volatile("fo2:");
+    uint8_t* p8 = kmalloc(sizeof(uint8_t));
+    kfree(p8);
+    uint8_t* p8_2 = kmalloc(sizeof(uint8_t));
+    kfree(p8_2);
+
+    uint32_t* p32 = kmalloc(sizeof(uint32_t) * 1024);
+    kfree(p32);
+    uint32_t* p32_2 = kmalloc(sizeof(uint32_t) * 1024);
+    kfree(p32_2);
     /* do_exec((uint8_t*)&_binary_user_img_start, */
     /* ((uint64_t)(&_binary_user_img_end) - */
     /* (uint64_t)(&_binary_user_img_start))); */
@@ -53,10 +55,7 @@ void foo_kernel() {
         ;
 }
 
-void foo() {
-    privilege_task_create(foo_kernel, 0);
-    privilege_task_create(foo_kernel, 0);
-}
+void foo() { privilege_task_create(foo_kernel, 0); }
 
 int main() {
     // set up serial console
@@ -66,19 +65,8 @@ int main() {
     buddy_init();
     // init core timer
     asm volatile("svc #2");
-    print_h((uint64_t)&_end);
 
     privilege_task_create(idle, 3);
     foo();
     privilege_task_run();
-
-    print_s("buddy init done\n");
-    struct buddy_node_t* buddy_node = alloc_buddy(4);
-    int* a = (int*)buddy_node->addr;
-    *a = 3;
-    free_buddy(buddy_node);
-    print_s("kmalloc and kfree done\n");
-    asm volatile("a:");
-    while (1)
-        ;
 }

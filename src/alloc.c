@@ -11,6 +11,9 @@ struct buddy_node_t* new_buddy_node(uint64_t addr, uint64_t size) {
     struct buddy_node_t* node = &buddy_node_pool[buddy_node_pool_now++];
     node->used = false;
     node->addr = addr + 0xffff000000000000;
+    node->zone_node.order = __builtin_ctz(size);  // !!!!!!1
+    node->zone_node.buddy_node = node;
+    node->size = size;
     if (size == 1) {
         node->left = 0;
         node->right = 0;
@@ -20,9 +23,6 @@ struct buddy_node_t* new_buddy_node(uint64_t addr, uint64_t size) {
     node->right = new_buddy_node(addr + size / 2 * 0x1000, size / 2);
     node->left->parent = node;
     node->right->parent = node;
-    node->size = size;
-    node->zone_node.order = __builtin_ctz(size);  // !!!!!!1
-    node->zone_node.buddy_node = node;
     return node;
 }
 
@@ -36,13 +36,7 @@ void buddy_init() {
     asm volatile("b:");
 }
 
-struct buddy_node_t* alloc_buddy(uint64_t size) {
-    uint64_t target_size = 1;
-    int order = 0;
-    while (size > target_size) {
-        target_size <<= 1;
-        order++;
-    }
+struct buddy_node_t* alloc_buddy(uint64_t order) {
     struct buddy_node_t* buddy_node = get_buddy_by_order(order);
     return buddy_node;
 }
@@ -50,12 +44,12 @@ struct buddy_node_t* alloc_buddy(uint64_t size) {
 void free_buddy(struct buddy_node_t* buddy_node) {
     buddy_node->used = false;
     if (buddy_node->parent->left == buddy_node &&
-        buddy_node->right->used == false) {
+        buddy_node->parent->right->used == false) {
         buddy_node->parent->used = false;
         zone_delete(&buddy_node->parent->left->zone_node);
         free_buddy(buddy_node->parent->zone_node.buddy_node);
     } else if (buddy_node->parent->right == buddy_node &&
-               buddy_node->left->used == false) {
+               buddy_node->parent->left->used == false) {
         buddy_node->parent->used = false;
         zone_delete(&buddy_node->parent->left->zone_node);
         zone_push(&buddy_node->parent->zone_node);

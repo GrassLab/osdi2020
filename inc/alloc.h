@@ -34,7 +34,7 @@ extern struct zone_node_t* zone[10];
 struct buddy_node_t* new_buddy_node(uint64_t addr, uint64_t size);
 void buddy_init();
 
-struct buddy_node_t* alloc_buddy(uint64_t size);
+struct buddy_node_t* alloc_buddy(uint64_t order);
 void free_buddy(struct buddy_node_t* buddy_node);
 
 void zone_delete(struct zone_node_t* zone_node);
