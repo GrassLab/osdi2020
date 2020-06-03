@@ -171,11 +171,11 @@ unsigned long zone_get_free_pages(Zone zone, int order){
   unsigned base = addr2pgidx(block->val, zone);
 
   for (int i = 0; i < (1 << order); i++){
-    mpages[base + i].status = used;
+    zone->pages[base + i].status = used;
     unsigned long page = zone->addr + (base + i) * PAGE_SIZE;
     memzero(page, PAGE_SIZE);
   }
-  mpages[base].order = order;
+  zone->pages[base].order = order;
   buddy_log("");
   buddy_log("allocate order %d, %d bytes", order, PAGE_SIZE << order);
   buddy_log("allocate address 0x%x", zone->addr + base * PAGE_SIZE);
@@ -229,12 +229,12 @@ void zone_free_pages(Zone zone, unsigned long addr){
   /* important */
   addr |= VA_START;
   unsigned base = addr2pgidx(addr, zone);
-  for(int i = 0; i < (1 << mpages[base].order); i++)
-    mpages[base + i].status = empty;
+  for(int i = 0; i < (1 << zone->pages[base].order); i++)
+    zone->pages[base + i].status = empty;
 
   buddy_log("free address 0x%x", addr);
-  buddy_log("merge order %d address 0x%x", mpages[base].order, addr);
-  zone_merge_buddy(zone, addr, mpages[base].order);
+  buddy_log("merge order %d address 0x%x", zone->pages[base].order, addr);
+  zone_merge_buddy(zone, addr, zone->pages[base].order);
   buddy_log("");
   preempt_enable();
 }

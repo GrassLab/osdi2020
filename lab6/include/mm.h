@@ -79,10 +79,8 @@ void *mmap(void* addr, unsigned long len,
 
 #define zonealoc 1
 #if zonealoc
-#define mpages (buddy_zone->pages)
 #define MM_START VA_START
 #else
-extern Page mpages[PAGING_PAGES];
 extern unsigned page_number;
 #endif
 
