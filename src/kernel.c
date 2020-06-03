@@ -85,16 +85,17 @@ int kernel_main()
     __buddy_block_free(addr2);
     __buddy_block_free(addr);
 
-    //object allocator.full test
     __init_obj_page(&bookkeep[1], 64);
+
+    //object allocator.full test
     int token0 = register_obj_allocator(64);
     int token1 = register_obj_allocator(32);
     void *obj0[128];// should allocate two page
     void *obj1[256];// should allocate two page
     for(int i=0; i<128; i++){
         obj0[i] = obj_allocate(token0);
-        obj1[2*i  ] = obj_allocate(token1);
-        obj1[2*i+1] = obj_allocate(token1);
+        obj1[i*2  ] = obj_allocate(token1);
+        obj1[i*2+1] = obj_allocate(token1);
     }
     // object allocator.partial test
     obj_free(obj0[25]);
@@ -102,8 +103,10 @@ int kernel_main()
     obj0[25] = obj_allocate(token0);
     obj0[26] = obj_allocate(token0);
     // object allocator.empty test
-    for(int i=0; i<128; i++){
-        obj_free(obj0[i]);
+    for(int j=0; j<128; j++){
+        obj_free(obj0[j]);
+        obj_free(obj1[j*2]);
+        obj_free(obj1[j*2+1]);
     }
     obj0[0] = obj_allocate(token0);
 

@@ -39,12 +39,21 @@ void __init_buddy()
     }
 }
 
-void mm_init()
+#ifdef __DEBUG
+void dump_buddy()
 {
-    __init_page_struct();// must do before buddy or it will break the list
-    __init_buddy();
-    // __init_obj_allocator; // init bss should set them to size 0(inused)
+    uart_puts("\tbuddy_freelist={\n");
+    for(int i=0; i<=MAX_ORDER; i++){
+        printf("\t\tORDER_%d",i);
+        list_head_t *next;
+        for(next = buddy_freelist[i].next; next!=&buddy_freelist[i]; next = next->next){
+            printf(" --> {pfn(%d)}", ((struct page *)next)->pfn);
+        }
+        uart_puts("\n");
+    }
+    uart_puts("\t}\n");
 }
+#endif//__DEBUG
 
 struct page *__buddy_block_alloc(int order)
 {
@@ -54,6 +63,10 @@ struct page *__buddy_block_alloc(int order)
     }
     
     uart_puts("[buddy allocate] **start**\n");
+    #ifdef __DEBUG
+    uart_puts("before\n");
+    dump_buddy();
+    #endif//__DEBUG
     for(int ord_ext=order; ord_ext<=MAX_ORDER; ord_ext++){
         if(list_empty(&buddy_freelist[ord_ext])){
             continue;
@@ -63,6 +76,7 @@ struct page *__buddy_block_alloc(int order)
         struct page *to_alloc = (struct page *)buddy_freelist[ord_ext].next;
         list_crop(&to_alloc->list, &to_alloc->list);
         to_alloc->order = order;
+        to_alloc->used = 1;
 
         // Release redundant memory block
         while(--ord_ext >= order){
@@ -72,7 +86,12 @@ struct page *__buddy_block_alloc(int order)
             list_add_tail(&buddy->list, &buddy_freelist[ord_ext]);
             printf("\tfree redundant(PFN:%d, Order:%d)\n", buddy->pfn, buddy->order);
         }
-        printf("\tallocated block(PFN:%d, Order:%d)\n[buddy allocate] **end**\n\n", to_alloc->pfn, to_alloc->order);
+        printf("\tallocated block(PFN:%d, Order:%d)\n", to_alloc->pfn, to_alloc->order);
+        #ifdef __DEBUG   
+        uart_puts("after\n");
+        dump_buddy();
+        #endif//__DEBUG
+        uart_puts("[buddy allocate] **end**\n\n");
         return to_alloc;
     }
     uart_puts("[__buddy_block_alloc] No free space!\n");
@@ -84,6 +103,10 @@ void __buddy_block_free(struct page* block)
     long buddy_pfn, lbuddy_pfn, rbuddy_pfn;
     struct page *buddy, *lbuddy, *rbuddy;
     printf("[buddy free] **start**\n\tblock(PFN:%d, Order:%d)\n", block->pfn, block->order);
+    #ifdef __DEBUG
+    uart_puts("before\n");
+    dump_buddy();
+    #endif//__DEBUG
     block->used = 0;
     // coalesce free buddy
     buddy_pfn = FIND_BUDDY_PFN(block->pfn, block->order);
@@ -94,9 +117,9 @@ void __buddy_block_free(struct page* block)
         printf("\tcoalesce free buddy(PFN:%d, Order:%d)\n", buddy->pfn, buddy->order);
         rbuddy_pfn = FIND_RBUDDY_PFN(block->pfn, block->order);
         rbuddy = &bookkeep[rbuddy_pfn];
-        rbuddy->order = -1;
         lbuddy_pfn = FIND_LBUDDY_PFN(block->pfn, block->order);
         lbuddy = &bookkeep[lbuddy_pfn];
+        rbuddy->order = -1;
         lbuddy->order += 1;
         //next iteration
         block = lbuddy;
@@ -104,6 +127,10 @@ void __buddy_block_free(struct page* block)
         buddy = &bookkeep[buddy_pfn];
     }
     list_add_tail(&block->list, &buddy_freelist[block->order]);
+    #ifdef __DEBUG
+    uart_puts("after\n");
+    dump_buddy();
+    #endif//__DEBUG
     uart_puts("[buddy free] **end**\n\n");
 }
 
@@ -126,6 +153,9 @@ int register_obj_allocator(unsigned int objsize)
         if(allocator_pool[token].objsize)
             continue;
         __init_obj_alloc(&allocator_pool[token], objsize);
+        #ifdef __DEBUG
+        printf("[register_obj_allocator] successed!\n\tobjsize: %d\ttoken: %d\n\n",objsize, token);
+        #endif//__DEBUG
         return token;
     }
     uart_puts("[register_obj_allocator] Allocator pool has fulled\n");
@@ -162,8 +192,9 @@ void __init_obj_page(struct page* page, unsigned size)
 #ifdef __DEBUG
 void dump_alloc(struct obj_alloc* alloc){
     list_head_t *list;
+    uart_puts("\t\tobj_alloc = {\n");
     printf("\t\talloc.curr_page{pfn=%d}\n", (alloc->curr_page == 0) ? -1 : alloc->curr_page->pfn);
-    printf("\t\t  - nr_unused: %d\n", (alloc->curr_page == 0) ? -1 : alloc->curr_page->nr_unused);
+    printf("\t\t - nr_unused: %d\n", (alloc->curr_page == 0) ? -1 : alloc->curr_page->nr_unused);
     list =  alloc->partial.next;
     uart_puts("\t\talloc.partial");
     while(list != &alloc->partial){
@@ -182,7 +213,7 @@ void dump_alloc(struct obj_alloc* alloc){
         printf("--> {pfn=%d}", ((struct page*)list)->pfn);
         list = list->next;
     }
-    uart_puts("\n");
+    uart_puts("\n}\n");
 }
 #endif//__DEBUG
 
@@ -194,7 +225,7 @@ void *obj_allocate(int token)
     }
     struct obj_alloc* alloc = &allocator_pool[token];
     #ifdef __DEBUG
-    uart_puts("[obj_allocate] **start**\n");
+    printf("[obj_allocate] token: %d\tsize: %d\n",token, alloc->objsize);
     uart_puts("\tbefore allocation\n");
     dump_alloc(alloc);
     #endif//__DEBUG
@@ -241,6 +272,7 @@ void obj_free(void *obj)
     printf("\tbefore free\n");
     printf("\t\tfreelist --> (0x%X)\n", page->obj_freelist);
     dump_alloc(alloc);
+    printf("\t\tnr_unused: %d\n", page->nr_unused);
     #endif//__DEBUG
     // add to freelist
     void **header = (void **)obj;
@@ -257,15 +289,25 @@ void obj_free(void *obj)
     if(page->nr_unused == page->nr_obj){
         list_crop(&page->list, &page->list);
         //keep one empty page to prevent frequentlly page demand
-        if(list_empty(&alloc->empty))
+        if(list_empty(&alloc->empty)){
             list_add_tail(&page->list, &alloc->empty);
-        else
+        }else{
+            page->obj_alloc = NULL;
             __buddy_block_free(page);
+        }
     }
     #ifdef __DEBUG
     printf("\tafter free\n");
     printf("\t\tfreelist --> (0x%X) --> (0x%X)\n", page->obj_freelist, *page->obj_freelist);
     dump_alloc(alloc);
+    printf("\t\tnr_unused: %d\n", page->nr_unused);
     uart_puts("[obj_free] **end**\n\n");
     #endif//__DEBUG
+}
+
+void mm_init()
+{
+    __init_page_struct();// must do before buddy or it will break the list
+    __init_buddy();
+    // __init_obj_allocator; // init bss should set them to size 0(inused)
 }
