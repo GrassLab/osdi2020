@@ -219,7 +219,7 @@ free_area_t *allocate_page(free_area_t *p, int i, unsigned int page_n) {
     uart_puts(", block at: 0x");
     uart_hex(target->map);
     uart_puts("\r\n");
-    unsigned int remain = block_size - page_n;
+    int remain = block_size - page_n;
     uart_puts("remain page: ");
     uart_print_int(remain);
     uart_puts("\r\n");
@@ -255,9 +255,15 @@ void *malloc(unsigned int size)
     uart_puts(" Bytes\r\n");
     
     int tmp_page_n = page_n;
-	for(int i=0; i<32; i++) {
-        if((tmp_page_n & (0x1)) == 0x1) {
-            for(int j=i; j<32; j++) {
+	for(int i=31; i>=0; i--) {
+        if((tmp_page_n & (0x80000000)) == 0x80000000) {
+            int start = i;
+            if(((tmp_page_n << 1) & 0xffffffff) != 0x0) {
+                uart_puts("extend...\r\n");
+                start++;
+            }
+            uart_print_int(start);
+            for(int j=start; j<32; j++) {
                 free_area_t *p = &free_block[j];
                 if(p->next != 0) {
                     p = allocate_page(p, j, page_n);
@@ -272,7 +278,7 @@ void *malloc(unsigned int size)
                 }
             }
         }
-        tmp_page_n = (tmp_page_n >> 1);
+        tmp_page_n = (tmp_page_n << 1);
     }
     uart_puts("malloc failed.\r\n");
 	return 0;
