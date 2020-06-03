@@ -99,8 +99,8 @@ void * allocate_free_mem ( int size_in_byte )
         temp->right->used         = 0;
         temp->right->next_sibling = NULL;
 
-        uart_printf ( "[Split] | [addr: %d\tlen: %d\t] ==> [addr: %d\tlen: %d\t], [addr: %d\tlen: %d\t] \n", temp->addr, temp->pages * PAGE_SIZE, temp->left->addr, temp->left->pages * PAGE_SIZE,
-                      temp->right->addr, temp->right->pages * PAGE_SIZE );
+        uart_printf ( "\033[0;31m[Split]\033[0m [addr: %d\tlen: %d\t] ==> [addr: %d\tlen: %d\t], [addr: %d\tlen: %d\t] \n", temp->addr, temp->pages * PAGE_SIZE, temp->left->addr,
+                      temp->left->pages * PAGE_SIZE, temp->right->addr, temp->right->pages * PAGE_SIZE );
 
         push_buddy_list ( buddy_pool_index - 1, temp->left );
         push_buddy_list ( buddy_pool_index - 1, temp->right );
@@ -112,7 +112,7 @@ void * allocate_free_mem ( int size_in_byte )
 
     temp->used = 1;
 
-    uart_printf ( "[Allocated] | Request %d, Get %d | address: %d\n", size_in_byte, temp->pages * PAGE_SIZE, temp->addr );
+    uart_printf ( "\033[0;32m[Allocated]\033[0m Request %d, Get %d | address: %d\n", size_in_byte, temp->pages * PAGE_SIZE, temp->addr );
 
     return (void *) ( temp->addr );
 }
@@ -145,7 +145,7 @@ void free_mem ( void * addr )
         }
     }
 
-    uart_printf ( "[Free] | [addr: %d, len: %d]\n", addr, ( temp->pages ) * PAGE_SIZE );
+    uart_printf ( "\033[0;32m[Free]\033[0m [addr: %d, len: %d]\n", addr, ( temp->pages ) * PAGE_SIZE );
 
     do
     {
@@ -155,7 +155,7 @@ void free_mem ( void * addr )
         {
             temp->used = 0;
 
-            uart_printf ( "[Merge] | [addr: %d\tlen: %d\t], [addr: %d\tlen: %d\t] ==> [addr: %d\tlen: %d\t]  \n", temp->left->addr, temp->left->pages * PAGE_SIZE, temp->right->addr,
+            uart_printf ( "\033[0;31m[Merge]\033[0m [addr: %d\tlen: %d\t], [addr: %d\tlen: %d\t] ==> [addr: %d\tlen: %d\t]  \n", temp->left->addr, temp->left->pages * PAGE_SIZE, temp->right->addr,
                           temp->right->pages * PAGE_SIZE, temp->addr, temp->pages * PAGE_SIZE );
 
             pop_buddy_list ( i - 1, temp->left );

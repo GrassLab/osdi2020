@@ -1,3 +1,4 @@
+#include "allocator.h"
 #include "mem.h"
 #include "shell.h"
 #include "uart.h"
@@ -21,6 +22,8 @@ int main ( )
     free_mem ( b );
     free_mem ( c );
     free_mem ( d );
+
+    /*allocator_t * bytes_30_allocator = */ register_fixed_size_allocator ( 30 );
 
     // start shell
     shell_start ( );
