@@ -44,3 +44,21 @@ char *strtrim(char *s) {
   *(end + 1) = '\0';
   return begin;
 }
+
+char *strtok(char *str, const char *delim) {
+  static char *last_pos;
+  if (str != NULL) {
+    last_pos = str;
+  }
+  char *tmp = last_pos;
+  for (; *last_pos != '\0'; ++last_pos) {
+    for (int i = 0; i < strlen(delim); ++i) {
+      if (*last_pos == delim[i]) {
+        *last_pos = '\0';
+        ++last_pos;
+        return tmp;
+      }
+    }
+  }
+  return tmp;
+}
