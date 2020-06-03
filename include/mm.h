@@ -35,6 +35,10 @@ struct page_t {
     int idx; // debug used
 };
 
+struct free_list {
+    struct free_list *next;
+};
+
 struct pool_t {
     enum booking_status used;
     int obj_size;
@@ -42,6 +46,7 @@ struct pool_t {
     int obj_used;
     int page_used;
     uint64_t page_addr[MAX_POOL_PAGES];
+    struct free_list* free;
 };
 
 /* Variables init in mm.c */
@@ -57,6 +62,7 @@ void buddy_free(void* virt_addr);
 int obj_alloc_register(uint64_t size);
 uint64_t obj_alloc_kernel(int token);
 uint64_t obj_alloc_user(int token);
+void obj_free(int token, uint64_t virt_addr);
 
 void mm_init();
 void* page_alloc();

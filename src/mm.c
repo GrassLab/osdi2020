@@ -16,6 +16,7 @@ void pool_init(struct pool_t* pool, uint64_t size) {
     pool->obj_per_page = PAGE_SIZE / size;
     pool->page_used = 0;
     pool->obj_used = 0;
+    pool->free = NULL;
 }
 
 int obj_alloc_register(uint64_t size) {
@@ -41,6 +42,11 @@ uint64_t obj_alloc_kernel(int token) {
     struct pool_t* pool = &obj_allocator[pool_num];
 
     // reused free obj
+    if (pool->free != NULL) {
+        struct free_list *obj = pool->free;
+        pool->free = pool->free->next;
+        return (uint64_t)obj;
+    }
 
     // need new page
     if (pool->obj_used >= pool->page_used * pool->obj_per_page) {
@@ -58,6 +64,15 @@ uint64_t obj_alloc_user(int token) {
     int pool_num = token;
     struct pool_t* pool = &obj_allocator[pool_num];
     return 0;
+}
+
+void obj_free(int token, uint64_t virt_addr) {
+    int pool_num = token;
+    struct pool_t* pool = &obj_allocator[pool_num];
+    struct free_list* free_head = pool->free;
+    pool->free = (struct free_list*) virt_addr;
+    pool->free->next = free_head;
+    pool->obj_used--;
 }
 
 /*
@@ -245,12 +260,13 @@ void mm_init() {
     // buddy_free(addr2);
     // buddy_info();
     int token = obj_alloc_register(0x100);
-    uint64_t addr = obj_alloc_kernel(token);
-    uart_printf("obj alloc: %x\n", addr);
-    addr = obj_alloc_kernel(token);
-    uart_printf("obj alloc: %x\n", addr);
-    addr = obj_alloc_kernel(token);
-    uart_printf("obj alloc: %x\n", addr);
+    uint64_t addr1 = obj_alloc_kernel(token);
+    uart_printf("obj alloc: %x\n", addr1);
+    uint64_t addr2 = obj_alloc_kernel(token);
+    uart_printf("obj alloc: %x\n", addr2);
+    obj_free(token, addr1);
+    uint64_t addr3 = obj_alloc_kernel(token);
+    uart_printf("obj alloc: %x\n", addr3);
 }
 
 
