@@ -198,8 +198,8 @@ void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct)
    *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
   }
 
- *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
- *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+  *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+  *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
 }
 
 void mmu_user_task_set_pmd(struct user_space_mm_struct * mm_struct)
@@ -223,7 +223,7 @@ void mmu_copy_user_to_text(char * src, struct user_space_mm_struct * dst_mm_stru
   {
     char * dst = (char *)MMU_PA_TO_VA(((uint64_t)(*MMU_PA_TO_VA(((dst_mm_struct -> pte_text_base) + pd_idx))) & MMU_ADDR_MASK));
 
-    memcopy(src + (PAGE_4K * pd_idx), dst, (current_size % PAGE_4K) != 0 ? current_size % PAGE_4K : PAGE_4K);
+    memcopy(src + (PAGE_4K * pd_idx), dst, (current_size / PAGE_4K) == 0 ? current_size : PAGE_4K);
     if(current_size < PAGE_4K)
     {
       break;
