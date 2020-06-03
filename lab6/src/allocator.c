@@ -7,15 +7,7 @@
 
 /* buddy system below */
 
-#if 0
 Zone buddy_zone = 0;
-#else
-Zone buddy_zone = &(ZoneStr){
-      .addr = 0,
-      .size = 0,
-      .free_area = { [0 ... MAX_ORDER - 1] = {0, 0} },
-};
-#endif
 
 #define STARTUP_ARRAY_SIZE 4
 unsigned startup_array_size = STARTUP_ARRAY_SIZE;
