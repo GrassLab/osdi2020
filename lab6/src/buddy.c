@@ -1,5 +1,6 @@
 #include "buddy.h"
 #include "tools.h"
+
 int cal_order(int size) {
   int targetlevel = 0;
   int add1_flag = 0;
@@ -48,12 +49,12 @@ void buddy_init(int num_pages){
 }
 int buddy_alloc(int size){
     
-    uart_puts("Allocate for size: ");
+    uart_puts("[Buddy]Allocate for size: ");
     uart_send_int(size);
     uart_puts("\n");
 
     if(size > (1<<MAX_ORDER-1)){
-        uart_puts("Can't handle such size!");
+        uart_puts("[Buddy]Can't handle such size!");
         uart_puts("\n");
         return -1;
     }
@@ -64,7 +65,7 @@ int buddy_alloc(int size){
         int remain_order = order+1;
         while(buddy_pool[remain_order].len==0 && remain_order<MAX_ORDER)remain_order++;
         if(remain_order==MAX_ORDER){
-            uart_puts("Allocate fail!");
+            uart_puts("[Buddy]Allocate fail!");
             uart_puts("\n");
             return -1;
         }
@@ -86,7 +87,7 @@ int buddy_alloc(int size){
         temp->next = 0;
         head->next = temp;
 
-        uart_puts("Split for order: ");
+        uart_puts("[Buddy]Split for order: ");
         uart_send_int(remain_order);
         uart_puts(" in: ");
         uart_send_int(big_page_num);
@@ -101,7 +102,7 @@ int buddy_alloc(int size){
         
         buddy_pool[order].page = head->next;
         buddy_pool[order].len--;
-        uart_puts("Allocate success in: ");
+        uart_puts("[Buddy]Allocate success in: ");
         uart_send_int(ret_page);
         uart_puts(" physical address: ");
         uart_hex(pfn2phy(ret_page));
@@ -110,7 +111,7 @@ int buddy_alloc(int size){
         uart_puts("\n");
         return ret_page;
     }
-    uart_puts("Unknown error!");
+    uart_puts("[Buddy]Unknown error!");
     uart_puts("\n");
     return -1;
 }
@@ -121,7 +122,7 @@ void check_merge(){
         while(head!=0 && head->next!=0){
             int buddy_num = (head->page_frame_number ^ (1<<order));
             if(buddy_num==head->next->page_frame_number){
-                uart_puts("Merge buddy: ");
+                uart_puts("[Buddy]Merge buddy: ");
                 uart_send_int(head->page_frame_number);
                 uart_puts(" ");
                 uart_send_int(head->next->page_frame_number);
@@ -165,10 +166,10 @@ void check_merge(){
     }
 }
 void buddy_free(int page_frame_number, int page_frame_size){
-    uart_puts("Free page number: ");
+    uart_puts("[Buddy]Free page number: ");
     uart_send_int(page_frame_number);
     uart_puts("\n");
-    uart_puts("Free size: ");
+    uart_puts("[Buddy]Free size: ");
     uart_send_int(page_frame_size);
     int order = cal_order(page_frame_size);
     uart_puts(" order: ");
@@ -199,17 +200,17 @@ void buddy_free(int page_frame_number, int page_frame_size){
 
 void buddy_show(){
     uart_puts("\n");
-    uart_puts("Show Buddy");
+    uart_puts("[Buddy]Show Buddy");
     uart_puts("\n");
     for(int order=0;order<MAX_ORDER;order++){
 
         // if(buddy_pool[order].len==0)continue;
-        uart_puts("Order: ");
+        uart_puts("[Buddy]Order: ");
         uart_send_int(order);
         uart_puts(" ");
         uart_send_int(1<<order);
         uart_puts("\n");
-        uart_puts("Len: ");
+        uart_puts("[Buddy]Len: ");
         uart_send_int(buddy_pool[order].len);
         uart_puts("\n");
         struct buddy* head = buddy_pool[order].page;

@@ -17,16 +17,13 @@ void task_program()
     call_exec(program_start, program_size);
     
 }
-struct node{
-    int a;
-};
 
 void test_buddy(){
     buddy_init(PAGING_PAGES);
     buddy_show();
 
-    int alloc_num = 10;
-    int alloc_size[] = {34, 66, 35, 67, 1024, 4, 16, 17, 257, 53};
+    int alloc_num = 11;
+    int alloc_size[] = {34, 66, 35, 67, 1024, 4, 16, 17, 257, 53, 0};
     // int alloc_num = 5;
     // int alloc_size[] = {34, 66, 35, 67, 1024};
     int alloced_pool[alloc_num];
@@ -41,6 +38,33 @@ void test_buddy(){
         buddy_show();
     }
 
+}
+int alloc_num = 5;
+int chunk_size1 = 256;
+int chunk_size2 = 16;
+int chunk_size3 = 16;
+
+void test_slab(){
+    buddy_init(PAGING_PAGES);    
+    int allocator_id = init_allocator(chunk_size1);
+
+    int addrs[alloc_num];
+    for(int i=0;i<alloc_num;i++){
+        show_allocator(allocator_id);
+        addrs[i] = alloc(allocator_id);
+        show_allocator(allocator_id);
+
+        uart_puts("\n");
+        uart_puts("addr: ");
+        uart_hex(addrs[i]);
+        uart_puts("\n");
+    }
+    // for(int i=0;i<alloc_num;i++){
+        // show_allocator(allocator_id);
+        // free_alloc(allocator_id, addrs[i]);
+        // show_allocator(allocator_id);
+    // }
+    
 }
 void main(){
     // set up serial console
@@ -81,7 +105,8 @@ void main(){
     uart_send_int(PAGING_PAGES);
     uart_puts("\n");
 
-    test_buddy();
+    // test_buddy();
+    test_slab();
     
     shell();
 }	
