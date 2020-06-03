@@ -8,7 +8,6 @@ pc means Po-Chun, NOT personal computer
 #include "common.h"
 #include "string.h"
 #include "system.h"
-#include "bootloader.h"
 #include "pcsh.h"
 #include "timer.h"
 
@@ -27,7 +26,6 @@ static cmd_t default_cmd_arr[] = {
     {"hello", "print Hello World!", cmd_hello},
     {"reboot", "reboot system", cmd_reboot},
     {"timestamp", "system running time", cmd_timestamp},
-    {"load_images", "load images from UART", cmd_load_images},
     {"exc", "svc #1", cmd_exc},
     {"brk", "brk #1", cmd_brk},
     {"irq", "start irq", cmd_irq},
@@ -75,15 +73,6 @@ int cmd_timestamp(int i)
     uart_send_float((float)t, 4);
     printf("]\n\r");
     //uart_send('\n');
-}
-
-int cmd_load_images(int i)
-{
-    loadimg();
-    /*
-    asm volatile("mov x0, #3");
-    asm volatile("svc #0x80");
-    */
 }
 
 int cmd_exc(int i)

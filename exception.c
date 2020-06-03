@@ -199,6 +199,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
 
     DEBUG_LOG_EXCEPTION(("*Interrput*: <Synchronous>\r\n"));
     // decode exception type (some, not all. See ARM DDI0487B_b chapter D10.2.28)
+    unsigned long address;
     switch (esr >> 26)
     {
     case 0b000000:
@@ -223,10 +224,10 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         uart_puts("Instruction alignment fault");
         break;
     case 0b100100:
-        uart_puts("Data abort, lower EL");
+        uart_puts("Data abort, lower EL\n");
         break;
     case 0b100101:
-        uart_puts("Data abort, same EL");
+        uart_puts("Data abort, same EL\n");
         break;
     case 0b100110:
         uart_puts("Stack alignment fault");
@@ -259,6 +260,20 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         DEBUG_LOG_EXCEPTION(("\n===\n"));
     }
 
+    // page fault handler
+    if ((esr >> 26 == 0b100101) || ( esr >> 26 == 0b100100)){
+        printf("FAR_EL1: ");
+        asm volatile("mrs %0, FAR_EL1" :"=r"(address));
+        uart_send_hex(address >> 32);
+        uart_send_hex(address);
+        uart_send('\n');
+
+        // call syscall kill
+        uart_puts("segmentation fault\n\r");
+        // printf("kill");
+        syscall_router(0x32, 0x0, x2, x3);
+    }
+
     if (esr >> 26 != 0b010101)
     {
         reset(0);
@@ -266,6 +281,7 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         {
         }
     }
+
 }
 
 void irq_handler()

@@ -107,8 +107,9 @@ ret_from_fork:
     cbz   x19, ret_to_user            // not a kernel thread
     // mov   x0, x20
     blr   x19
+.global ret_to_user
 ret_to_user:
-    bl disable_irq
+    // bl disable_irq
     // mov x19, x0
     // mov x0, #0
     // blr   x19

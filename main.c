@@ -13,7 +13,8 @@
 
 #include "signal.h"
 
-#include "mmu.h"
+#include "mm.h"
+#include "mm_allocator.h"
 
 #define INPUT_BUFFER_SIZE 64
 
@@ -23,7 +24,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 4.4.2\n");
+    uart_print("Version : 6.3.1\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -69,6 +70,7 @@ void user_task_4()
 
 void user_syscall_test()
 {
+    printf("\ntask_id: %d\n", get_taskid());
     int pid = fork();
     //int pid = 0;
     if (pid == 0)
@@ -105,16 +107,31 @@ void task_111()
 
 void task_2()
 {
+    printf("\ntask_id: %d\n", get_taskid());
     do_exec((unsigned long)user_syscall_test);
+    uart_send('^');
     while (check_reschedule())
         schedule();
 }
 
 void task_3()
 {
+    printf("\ntask_id: %d\n", get_taskid());
+    uart_send_hex((unsigned long)user_task_3);
+
+    //((void (*)(void))user_task_3)();
     do_exec((unsigned long)user_task_3);
-    //do_exec((unsigned long)&pcsh);
-    while (check_reschedule())
+
+    /*
+    uart_send('\n');
+    // check user space set in 0xffff000000000000
+    uart_send_hex(((unsigned long *)(0xffff000000000000))[0]);
+    uart_send('\n');
+
+    uart_send('=');
+    */
+
+    if (check_reschedule())
         schedule();
 }
 
@@ -167,53 +184,136 @@ void user_test()
     do_exec((unsigned long)test);
 }
 
-#define KERNEL_UART0_DR        ((volatile unsigned int*)0xFFFFFFFFFFE00000)
-#define KERNEL_UART0_FR        ((volatile unsigned int*)0xFFFFFFFFFFE00018)
-
-int main()
+void run_program()
 {
+    extern unsigned long _binary_test_img_start;
+    unsigned long program_start = (unsigned long)&_binary_test_img_start;
+
+    ((void (*)(void))program_start)();
+}
+
+void task_program()
+{
+    extern unsigned long _binary_test_img_start;
+    extern unsigned long _binary_test_img_size;
+    unsigned long program_start = (unsigned long)&_binary_test_img_start;
+    unsigned long program_size = (unsigned long)&_binary_test_img_size;
+
+    printf("\ntask_id: %d\n", get_taskid());
+
+    _do_exec(program_start, program_size);
+    //do_exec((unsigned long)test);
+    if (check_reschedule())
+    {
+        schedule();
+    }
+}
+void task_program_2()
+{
+    extern unsigned long _binary_test2_img_start;
+    extern unsigned long _binary_test2_img_size;
+    unsigned long program_start = (unsigned long)&_binary_test2_img_start;
+    unsigned long program_size = (unsigned long)&_binary_test2_img_size;
+
+    printf("\ntask_id: %d\n", get_taskid());
+
+    _do_exec(program_start, program_size);
+    //do_exec((unsigned long)test);
+    if (check_reschedule())
+    {
+        schedule();
+    }
+}
+
+/* from lab6 to lab8, just in one thread without VM and interrupt */
+int kernel_main()
+{
+    uart_init();
+    init_printf(0, putc);
+    system_start();
+
+    init_buddy_system();
+
+    unsigned long m1 = get_free_space(2048);
+    printf("get memory address: %x\n", m1);
+
+    unsigned long m2 = get_free_space(PAGE_SIZE * 256);
+    printf("get memory address: %x\n", m2);
+
+    unsigned long m3 = get_free_space(4096);
+    printf("get memory address: %x\n", m3);
+
+    unsigned long m4 = get_free_space(2048);
+    printf("get memory address: %x\n", m4);
+
+    unsigned long m5 = get_free_space(4097);
+    printf("get memory address: %x\n", m5);
+
+    unsigned long m6 = get_free_space(PAGE_SIZE * 512);
+    printf("get memory address: %x\n", m6);
+
+    // this will fail
+    unsigned long m7 = get_free_space(PAGE_SIZE * 1024);
+    printf("get memory address: %x\n", m7);
+
+    free_space(m3);
+    free_space(m1);
+
+    fixed_size_allocator_t o_allocator = register_fixed_size_allocator();
+    unsigned long o1, o2, o3;
+    o1 = kmalloc_8(&o_allocator);
+    free_fixed_memory(&o_allocator, o1);
+    o1 = kmalloc_8(&o_allocator);
+    o2 = kmalloc_8(&o_allocator);
+    free_fixed_memory(&o_allocator, o1);
+    free_fixed_memory(&o_allocator, o2);
+    o1 = kmalloc_256(&o_allocator);
+    o2 = kmalloc_256(&o_allocator);
+    o3 = kmalloc_32(&o_allocator);
+    free_fixed_memory(&o_allocator, o1);
+    free_fixed_memory(&o_allocator, o2);
+    free_fixed_memory(&o_allocator, o3);
+
+    varied_size_allocator_t v_allocator = register_varied_size_allocator();
+    unsigned long v1, v2, v3;
+    v1 = kmalloc(&v_allocator, 32);
+    v2 = kmalloc(&v_allocator, 64);
+    free_varied_memory(&v_allocator, v1);
+    free_varied_memory(&v_allocator, v2);
+    v1 = kmalloc(&v_allocator, 32);
+    v2 = kmalloc(&v_allocator, 128);
+    free_varied_memory(&v_allocator, v1);
+    v3 = kmalloc(&v_allocator, 128);
+    free_varied_memory(&v_allocator, v2);
+    free_varied_memory(&v_allocator, v3);
+
+    while (1)
+    {
+    }
+    return 0;
+}
+
+int kernel_main_full()
+{
+
     // set uart
     uart_init();
-
-    char *s="Writing through MMIO mapped in higher half!\r\n";
-
+    init_printf(0, putc);
 
     mmu_init();
 
-    uart_puts("Writing through identity mapped MMIO.\n");
-
-    // test mapping
-    while(*s) {
-        /* wait until we can send */
-        do{asm volatile("nop");}while(*KERNEL_UART0_FR&0x20);
-        /* write the character to the buffer */
-        *KERNEL_UART0_DR=*s++;
-    }
-
-    init_printf(0, putc);
     signal_init();
 
     system_start();
 
-    // enable_irq();
-
-    /* You can't know Current EL, if you in EL0 */
-    /*
-    uart_puts("Current EL: ");
-    uart_send_int(get_current_el());
-    uart_puts("\n");
-    */
-
     task_init();
-    /*
-    privilege_task_create((unsigned long)task_11, 0);
-    privilege_task_create((unsigned long)task_111, 0);
-    */
+
     privilege_task_create((unsigned long)task_1, 0);
-    privilege_task_create((unsigned long)task_2, 0); // fork: delay, shell
-    privilege_task_create((unsigned long)task_3, 0);
-    privilege_task_create((unsigned long)task_4, 0);
-    privilege_task_create((unsigned long)user_test, 0);
+
+    privilege_task_create((unsigned long)task_program, 0);
+    privilege_task_create((unsigned long)task_program_2, 0);
+
+    // enable_irq();
 
     // core timer enable, every 1ms
     core_timer(1);

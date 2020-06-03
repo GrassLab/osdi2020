@@ -14,7 +14,7 @@
 #define PF_KTHREAD 0x00000002
 #define PF_FORK 0x00000004
 
-#define TASK_NUM 16
+#define TASK_NUM 64
 enum
 {
     TASK_IDLE,
@@ -62,14 +62,22 @@ typedef struct task_t
     long priority;
     long preempt_count;
     unsigned long stack;
+    unsigned long stack_pfn;
     unsigned long flags;
     unsigned long signal_source;
+
+    // page table
+    unsigned long pgd;
+    unsigned long pud;
+    unsigned long pmd;
+    unsigned long pte;
     //unsigned long user_context_num;
 } task_t;
 
 extern int get_current();
 extern void set_current(int);
 extern unsigned long ret_from_fork();
+extern unsigned long ret_to_user();
 extern void switch_to(task_t *, task_t *, unsigned long);
 
 void schedule();
@@ -78,6 +86,8 @@ int privilege_task_create(unsigned long func, unsigned long arg);
 user_context_t *task_user_context(task_t *task);
 
 int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack);
+
+int _do_exec(unsigned long start, unsigned long size);
 
 int do_exec(unsigned long pc);
 
@@ -100,5 +110,7 @@ void exit_process(int task_id);
 task_t *task(int task_id);
 
 unsigned long task_signal_source();
+
+void set_pgd(unsigned long pgd);
 
 #endif
