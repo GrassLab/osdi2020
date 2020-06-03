@@ -4,6 +4,44 @@ import os
 import sys
 import logging, coloredlogs
 import termios
+import string
+
+class _Getch:
+    """Gets a single character from standard input.  Does not echo to the
+screen."""
+    def __init__(self):
+        try:
+            self.impl = _GetchWindows()
+        except ImportError:
+            self.impl = _GetchUnix()
+
+    def __call__(self): return self.impl()
+
+
+class _GetchUnix:
+    def __init__(self):
+        import tty, sys
+
+    def __call__(self):
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+
+class _GetchWindows:
+    def __init__(self):
+        import msvcrt
+
+    def __call__(self):
+        import msvcrt
+        return msvcrt.getch()
+
 
 '''
 create logger
@@ -49,9 +87,8 @@ def main():
     logger.info("waiting...")
 
     
-    while True:
+    while True:    
         NO_REBOOT = True
-        
         while NO_REBOOT:
             
             res_line = b''
@@ -86,4 +123,40 @@ def main():
             send_kernel(s, KERNEL_IMG_SIZE)
             logger.info("finish!")
             print(s.readline()) ### b'Loading kernel at 0x00100000 with size 0x00007010 ...\r\n'
+
+    # logger.info("starting interactive mode...")
+    # getch = _Getch()
+    # while True:
+    #     serial_read_line = b''
+    #     stdin_read_line = b''
+    #     while True:
+    #         stdin_read_char = getch().encode()#sys.stdin.read(1)
+    #         if stdin_read_char is not b'\r':
+    #             try:
+    #                 if stdin_read_char not in [__ascii.encode() for __ascii in string.printable]:
+    #                     print("non-printable!!")
+    #                     exit(0)
+    #             except:
+    #                 print("error")
+    #                 exit(0)    
+    #             s.write(b"\n")
+    #         else:
+    #             s.write(stdin_read_char)
+
+    #         stdin_read_line += stdin_read_char
+
+    #         serial_read_char = s.read()
+    #         serial_read_line += serial_read_char
+    #         if (serial_read_char == b'\n'):
+    #             sys.stdout.write("\n")
+    #             sys.stdout.flush()
+    #         else:
+    #             sys.stdout.write("\r" + serial_read_line.decode())
+    #             sys.stdout.flush()
+            
+
+
+
+
+
 main()

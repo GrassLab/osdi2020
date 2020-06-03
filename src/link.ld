@@ -1,19 +1,22 @@
 SECTIONS
 {
-    . = 0x80000;
+    . = 0xffff000000000000;
+    . += 0x80000;
+    __kernel_start = .;
+    .text.boot : { *(.text.boot) }
     .text : { *(.text) }
+    .rodata : { *(.rodata) }
+    . = ALIGN(0x10);
     .data : { *(.data) }
     .bss : { 
-        __bss_start = ALIGN(0x10); 
+        . = ALIGN(0x10);
+        __bss_start = .; 
         *(.bss); 
-        __bss_end = ALIGN(0x10); 
+        __bss_end = .; 
     }
-    .bootloader : {
-        __bootloader_start = . ;
-        *(.bootloader);
-        __bootloader_end = . ;
-    }
-
+    __kernel_end = .;
+    . = ALIGN(0x1000);
+    pg_dir = .;
+    .data.pgd : { . += ( 524* (1 << 12)); } /*(1+1+2+512+8)*/
+    . = ALIGN(0x1000);
 }
-__bss_size = (__bss_end - __bss_start)>>3;
-__bootloader_size = (__bootloader_end - __bootloader_start)>>3;

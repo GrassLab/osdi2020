@@ -88,6 +88,7 @@ void exception_handler(unsigned int trapframe)
 
     // syscall - svc #0
     if ((esr>>26)==0b010101) {
+        uart_puts("syscall receive\n");
         if ((esr&0x1ffffff)==0) {
             // decode_exception(esr, elr, spsr);
 
@@ -96,7 +97,11 @@ void exception_handler(unsigned int trapframe)
             sys_ret_val = el0_svc_handler(trapframe);
             *(unsigned int*)trapframe = sys_ret_val;
         }
-    } 
+    }
+    // page fault 
+    else if ((esr>>26)==0x24) {
+        while(1);
+    }
     else {
         uart_hex(current->user_context.sp_el0);
         uart_hex(current->user_context.spsr_el1);
@@ -146,7 +151,9 @@ unsigned long el0_svc_handler(unsigned int trapframe)
             // uart_puts("sys_get_taskid success!\n");
             break;
         case SYS_EXEC:
-            do_exec(x0);
+            printf("not implement");
+            while(1);
+            // do_exec(x0);
             break;
         case SYS_FORK:
             sys_ret_val = do_fork();

@@ -1,1 +1,1 @@
-void loadimg(unsigned int kernel_addr);
+void loadimg(char* kernel_addr);

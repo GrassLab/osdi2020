@@ -1,4 +1,18 @@
-#include "../include/syscall.h"
+.section ".text.entry"
+
+.global _user_entry
+_user_entry:
+	bl main
+	bl exit
+
+.set SYS_CORE_TIMER_IRQ_ENABLE,   0
+.set SYS_GET_TASKID,              1
+.set SYS_EXIT,                    2
+.set SYS_FORK,                    3    
+.set SYS_UART_READ,               4
+.set SYS_UART_WRITE,              5   
+.set SYS_KILL,                    6
+.set SYS_EXEC,                    7
 
 .global call_sys_get_taskid
 call_sys_get_taskid:
@@ -35,9 +49,3 @@ call_sys_uart_write:
     mov x8, #SYS_UART_WRITE
     svc #0
     ret
-
-.global call_sys_printf
-call_sys_printf:
-	mov x8, #SYS_PRINTF
-	svc #0
-	ret

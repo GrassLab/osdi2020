@@ -6,7 +6,7 @@
 #include "../include/interrupt.h"
 
 int LOADIMG = 0;
-unsigned int KERNEL_ADDR = 0x100000;
+char* KERNEL_ADDR = (char*)0x100000;
 
 void shell()
 {
