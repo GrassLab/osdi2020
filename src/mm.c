@@ -218,7 +218,7 @@ void* page_alloc() {
 // create pgd, return pgd address
 void* create_pgd(struct task_t* task) {
     if (!task->mm.pgd) {
-        void* page = page_alloc();
+        void* page = buddy_alloc(0);
         if (page == NULL) return NULL;
         task->mm.pgd = virtual_to_physical((uint64_t)page);
     }
@@ -229,7 +229,7 @@ void* create_pgd(struct task_t* task) {
 void* create_page_table(uint64_t* table, uint64_t idx) {
     if (table == NULL) return NULL;
     if (!table[idx]) {
-        void* page = page_alloc();
+        void* page = buddy_alloc(0);
         if (page == NULL) return NULL;
         table[idx] = virtual_to_physical((uint64_t)page) | PD_TABLE;
     }
@@ -240,7 +240,7 @@ void* create_page_table(uint64_t* table, uint64_t idx) {
 void* create_page(uint64_t* pte, uint64_t idx) {
     if (pte == NULL) return NULL;
     if (!pte[idx]) {
-        void* page = page_alloc();
+        void* page = buddy_alloc(0);
         if (page == NULL) return NULL;
         pte[idx] = virtual_to_physical((uint64_t)page) | PTE_NORAL_ATTR | PD_ACCESS_PERM_RW;
     }
@@ -323,10 +323,10 @@ void page_reclaim_pte(uint64_t pte_phy) {
     for (int i = 0; i < 512; i++) {
         if (pte[i]) {
             void* page = (void*)((pte[i] & PAGE_MASK) | KERNEL_VIRT_BASE);
-            page_free(page);
+            buddy_free(page);
         }
     }
-    page_free(pte);
+    buddy_free(pte);
 }
 
 void page_reclaim_pmd(uint64_t pmd_phy) {
@@ -336,7 +336,7 @@ void page_reclaim_pmd(uint64_t pmd_phy) {
             page_reclaim_pte(pmd[i] & PAGE_MASK);
         }
     }
-    page_free(pmd);
+    buddy_free(pmd);
 }
 
 void page_reclaim_pud(uint64_t pud_phy) {
@@ -346,7 +346,7 @@ void page_reclaim_pud(uint64_t pud_phy) {
             page_reclaim_pmd(pud[i] & PAGE_MASK);
         }
     }
-    page_free(pud);
+    buddy_free(pud);
 }
 
 void page_reclaim(uint64_t pgd_phy) {
@@ -356,7 +356,7 @@ void page_reclaim(uint64_t pgd_phy) {
             page_reclaim_pud(pgd[i] & PAGE_MASK);
         }
     }
-    page_free(pgd);
+    buddy_free(pgd);
 }
 
 /*
