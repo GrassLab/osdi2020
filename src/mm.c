@@ -10,6 +10,11 @@ struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
 uint64_t remain_page = 0;
 
+struct page_t* find_buddy(int pfn, int order) {
+    int buddy_pfn = pfn ^ (1 << order);
+    return &page[buddy_pfn];
+}
+
 void buddy_push(struct buddy_t* bd, struct list_head* elmt) {
     bd->nr_free++;
     elmt->next = &(bd->head);
@@ -77,8 +82,7 @@ void* buddy_alloc(int order) {
 void buddy_merge(struct page_t *bottom, struct page_t *top, int order) {
     uart_printf("merge buddy from order %d to %d (%d %d)\n", order, order+1, bottom->idx, top->idx);
     int new_order = order + 1;
-    int buddy_pfn = bottom->idx ^ (1 << new_order);
-    struct page_t *buddy = &page[buddy_pfn];
+    struct page_t *buddy = find_buddy(bottom->idx, new_order);
     // check buddy exist in new order, if exist => recursively merge
     if (buddy->used == AVAL && buddy->order == new_order) {
         buddy_remove(&free_area[new_order], &buddy->list);
@@ -89,12 +93,11 @@ void buddy_merge(struct page_t *bottom, struct page_t *top, int order) {
     }
     // merge bottom and top to same block
     else {
-        for (int i = 0; i < (1 << order); i++) {
+        for (int i = 0; i < (1 << new_order); i++) {
             (bottom + i)->used = AVAL;
-            (bottom + i)->order = new_order;
-            (top + i)->used = AVAL;
-            (top + i)->order = new_order;
         }
+        bottom->order = new_order;
+        top->order = -1;
         buddy_push(&(free_area[new_order]), &(bottom->list));
     }
 }
@@ -103,8 +106,7 @@ void buddy_free(void* virt_addr) {
     int pfn = phy_to_pfn(virtual_to_physical((uint64_t)virt_addr));
     struct page_t *p = &page[pfn];
     int order = p->order;
-    int buddy_pfn = pfn ^ (1 << order);
-    struct page_t *buddy = &page[buddy_pfn];
+    struct page_t *buddy = find_buddy(pfn, order);
     // can not merge, just free current order's pages
     if (buddy->used == USED || buddy->order != order) {
         uart_printf("free but no merge\n");
