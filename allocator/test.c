@@ -34,13 +34,13 @@ void testcase3()
     buddy_view();
     buddy_alloc(0x100);
     buddy_view();
-    
+
 }
 
 void testcase4()
 {
     buddy_init();
-    // buddy_view();
+    buddy_view();
     unsigned long addr1 = buddy_alloc(0x100);
     unsigned long addr2 = buddy_alloc(0x100);
     // buddy_view();
@@ -100,7 +100,7 @@ int main()
     // testcase5();
     
     printf("This is demo of Varied-size object allocator\n");
-    testcase6();
+    // testcase6();
     
 
     return 0;
