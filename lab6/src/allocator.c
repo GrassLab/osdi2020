@@ -7,33 +7,65 @@
 
 /* buddy system below */
 
-Zone const buddy_zone = &(ZoneStr){
-  .free_area = { [0 ... MAX_ORDER - 1] = {0, 0} }
+#if 0
+Zone buddy_zone = 0;
+#else
+Zone buddy_zone = &(ZoneStr){
+      .addr = 0,
+      .size = 0,
+      .free_area = { [0 ... MAX_ORDER - 1] = {0, 0} },
 };
-
-void init_pages(){
-#if zonealoc
-  page_number = (HIGH_MEMORY - LOW_MEMORY) / (PAGE_SIZE);
-  printf("need Pages[%d]" NEWLINE, page_number);
-  low_memory = LOW_MEMORY + (sizeof(Page) * page_number);
-  unsigned long mask = (1 << (MAX_ORDER + PAGE_SHIFT)) - 1;
-  printf("mask %x" NEWLINE, mask);
-  printf("new temp low %x" NEWLINE, low_memory);
-  if(mask & low_memory){
-    printf("rmtail low %x" NEWLINE, (~mask & low_memory));
-    printf("align samll %x" NEWLINE, (1 << (MAX_ORDER + PAGE_SHIFT - 1)));
-    low_memory = (~mask & low_memory) + (1 << (MAX_ORDER + PAGE_SHIFT - 1));
-  }
-  page_number = (HIGH_MEMORY - low_memory) / (PAGE_SIZE);
-  printf("final Pages[%d]" NEWLINE, page_number);
-  /* VA_START is imporant */
-  low_memory |= VA_START;
-  printf("new aligned low 0x%x" NEWLINE, low_memory);
-  /* VA_START is imporant */
-  mpages = (Page*)(LOW_MEMORY | VA_START);
-  for(int i = 0; i < page_number; i++)
-    mpages[i].status = empty, mpages[i].order = 0;
 #endif
+
+#define STARTUP_ARRAY_SIZE 4
+unsigned startup_array_size = STARTUP_ARRAY_SIZE;
+unsigned startup_cur = 0;
+unsigned long *startup_addrs = (unsigned long []){[0 ... STARTUP_ARRAY_SIZE - 1] = 0};
+unsigned long *startup_sizes = (unsigned long []){[0 ... STARTUP_ARRAY_SIZE - 1] = 0};
+
+unsigned long search_addr(unsigned long addr, unsigned long size, unsigned long mask){
+research:
+  for(int i = 0; i < startup_cur; i++)
+    if(overlap(addr, size, startup_addrs[i], startup_sizes[i])){
+      addr = startup_addrs[i] + startup_sizes[i];
+      if(mask & addr) addr = (~mask & addr) + (mask + 1);
+      goto research;
+    }
+  return addr;
+}
+
+unsigned long startup_allocate(unsigned long size, unsigned long mask){
+  unsigned long addr = LOW_MEMORY;
+  if(startup_cur >= startup_array_size){
+    // reallocate array dynamically
+  }
+  addr = search_addr(addr, size, mask);
+  printfmt("allocate addr = %x end = %x", addr, addr + size);
+  if(addr + size > HIGH_MEMORY) return 0;
+  startup_addrs[startup_cur] = addr;
+  startup_sizes[startup_cur] = size;
+  startup_cur++;
+  return addr;
+}
+
+unsigned long startup_max_cont_space_left(unsigned long mask){
+  unsigned long beg = LOW_MEMORY, size = 0, end = HIGH_MEMORY;
+  if(mask & beg) beg = (~mask & beg) + (mask + 1);
+  for(int i = 0; i < startup_cur; i++)
+    if(end > startup_addrs[i]) end = startup_addrs[i];
+  size = end - beg;
+  for(int i = 0; i < startup_cur; i++){
+    end = HIGH_MEMORY;
+    beg = startup_addrs[i] + startup_sizes[i];
+    if(mask & beg) beg = (~mask & beg) + (mask + 1);
+    printfmt("new beg %x", beg);
+    for(int j = 0; j < startup_cur; j++){
+      if(startup_addrs[j] > beg && end > startup_addrs[j])
+        end = startup_addrs[j];
+    }
+    size = MAX(end - beg, size);
+  }
+  return size;
 }
 
 Cdr newCdr(unsigned long addr, Cdr next){
@@ -45,14 +77,13 @@ Cdr newCdr(unsigned long addr, Cdr next){
 }
 
 void zone_init(Zone zone){
-#if !zonealoc
-  return;
-#endif
-  init_pages();
-  unsigned size = page_number, order = MAX_ORDER - 1, block;
-  unsigned long addr = ALOC_BEG;
+  puts("zone init");
+  unsigned long mask = (1 << (MAX_ORDER + PAGE_SHIFT - 1)) - 1, addr;
+  unsigned rest_page = zone->page_number, order = MAX_ORDER - 1, block;
+  addr = zone->addr = MM_START | startup_allocate(zone->page_number * PAGE_SIZE, mask);
+
   while(order){
-    block = size / (1 << order);
+    block = rest_page / (1 << order);
     Cdr *iter = &(zone->free_area[order].free_list);
     while(block){
       zone->free_area[order].nr_free++;
@@ -61,12 +92,12 @@ void zone_init(Zone zone){
       addr += (1 << (order + PAGE_SHIFT));
       block--;
     }
-    size = size % (1 << order);
+    rest_page = rest_page % (1 << order);
     order--;
   }
   buddy_log("");
-  buddy_log("inited buddy graph");
-  buddy_log_graph(buddy_zone);
+  buddy_log("inited zone graph");
+  buddy_log_graph(zone);
   buddy_log("");
 }
 
@@ -93,7 +124,10 @@ unsigned long zone_get_free_pages(Zone zone, int order){
       !zone->free_area[ord].free_list)
     ord++;
 
-  if(ord == MAX_ORDER) goto buddy_allocate_failed;
+  if(ord == MAX_ORDER){
+    puts(" == max order");
+    goto buddy_allocate_failed;
+  }
 
   // partition to samller size
   while(ord > order){
@@ -112,8 +146,10 @@ unsigned long zone_get_free_pages(Zone zone, int order){
     ord--;
   }
 
-  if(!zone->free_area[ord].free_list)
+  if(!zone->free_area[ord].free_list){
+    puts("no free list");
     goto buddy_allocate_failed;
+  }
 
   // init pages
   Cdr block = zone->free_area[ord].free_list;
@@ -123,21 +159,21 @@ unsigned long zone_get_free_pages(Zone zone, int order){
     while(1);
   }
   zone->free_area[ord].nr_free -= 1;
-  unsigned base = addr2pgidx(block->val);
+  unsigned base = addr2pgidx(block->val, zone);
 
   for (int i = 0; i < (1 << order); i++){
     mpages[base + i].status = used;
-    unsigned long page = ALOC_BEG + (base + i) * PAGE_SIZE;
+    unsigned long page = zone->addr + (base + i) * PAGE_SIZE;
     memzero(page, PAGE_SIZE);
   }
   mpages[base].order = order;
   buddy_log("");
   buddy_log("allocate order %d, %d bytes", order, PAGE_SIZE << order);
-  buddy_log("allocate address 0x%x", ALOC_BEG + base * PAGE_SIZE);
+  buddy_log("allocate address 0x%x", zone->addr + base * PAGE_SIZE);
   buddy_log_graph(buddy_zone);
   buddy_log("");
   preempt_enable();
-  return ALOC_BEG - VA_START + base * PAGE_SIZE;
+  return zone->addr - VA_START + base * PAGE_SIZE;
 
 buddy_allocate_failed:
   buddy_log("");
@@ -181,7 +217,7 @@ void zone_free_pages(Zone zone, unsigned long addr){
   preempt_disable();
   /* important */
   addr |= VA_START;
-  unsigned base = addr2pgidx(addr);
+  unsigned base = addr2pgidx(addr, zone);
   for(int i = 0; i < (1 << mpages[base].order); i++)
     mpages[base + i].status = empty;
 

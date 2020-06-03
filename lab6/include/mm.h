@@ -39,8 +39,6 @@
 #ifndef __ASSEMBLER__
 
 
-
-
 #include "task.h"
 
 typedef struct page_tag {
@@ -67,8 +65,6 @@ unsigned long allocate_user_page_with_attr(
 #define allocate_user_page(task, va) \
   allocate_user_page_with_attr(task, va, MMU_PTE_FLAGS)
 
-void mark_reserved_pages(unsigned long end);
-
 void *mmap(void* addr, unsigned long len,
     int prot, int flags, int file_start, int file_offset);
 
@@ -80,18 +76,16 @@ void *mmap(void* addr, unsigned long len,
 #define DemandPaging 1
 
 #define PAGING_PAGES (1024 * 64)
+
 #define zonealoc 1
 #if zonealoc
-extern Page *mpages;
-#define ALOC_BEG low_memory
+#define mpages (buddy_zone->pages)
+#define MM_START VA_START
 #else
 extern Page mpages[PAGING_PAGES];
-#define ALOC_BEG LOW_MEMORY
+extern unsigned page_number;
 #endif
 
-
-extern unsigned page_number;
-extern unsigned long low_memory;
 
 #endif /* __ASSEMBLER__ */
 #endif

@@ -38,10 +38,19 @@ extern void set_pgd(unsigned long pgd);
 #define bclr(A,k) ( (A)[(k)/8] &= ~(1 << ((k)%8)) )
 #define btst(A,k) ( (A)[(k)/8] &   (1 << ((k)%8)) )
 
+#define overlap(addr, size, pos, len) \
+  (addr <= pos && (addr) + (size) > pos) || (pos <= addr && (pos) + (len) > addr)
+#define overlap_end(beg, end, _beg, _end)                                          \
+  ((beg <= _end && _beg < end) || (end >= _beg && beg < _end))
+
+
 unsigned long pow2roundup(unsigned long x);
 
 int *show_sp();
 
 void show_addr(unsigned long addr);
+
+#define MAX(a, b) (a > b ? a : b)
+#define MIN(a, b) (a < b ? a : b)
 
 #endif

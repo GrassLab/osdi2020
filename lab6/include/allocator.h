@@ -1,6 +1,8 @@
 #ifndef __ALLOCATOR_H__
 #define __ALLOCATOR_H__
 
+#include "mm.h"
+
 /* buddy system */
 #define MAX_ORDER 10
 
@@ -17,17 +19,25 @@ struct free_area {
 typedef struct zone_tag {
   /* free areas of differents sizes */
   struct free_area        free_area[MAX_ORDER];
+  unsigned long addr;
+  unsigned long size;
+  unsigned long page_number;
+  Page *pages;
 } ZoneStr, *Zone;
 
-extern Zone const buddy_zone;
+extern Zone buddy_zone;
 
+Zone page_allocate(Zone *zone, unsigned long size);
 void zone_init(Zone);
+
+unsigned long startup_allocate(unsigned long size, unsigned long mask);
+
 unsigned long zone_get_free_pages(Zone zone, int order);
 void zone_free_pages(Zone zone, unsigned long addr);
 
 void zone_show(Zone zone, unsigned limit);
 
-#define addr2pgidx(addr) ((addr - ALOC_BEG) / PAGE_SIZE)
+#define addr2pgidx(_addr, _zone) ((_addr - (_zone->addr)) / PAGE_SIZE)
 
 #define enable_buddy_log 1
 #define enable_fixed_log 1
@@ -93,5 +103,6 @@ void varied_free(unsigned long token, unsigned long addr);
 void varied_show(VariedAllocator varied, unsigned limit);
 
 unsigned long kalloc(unsigned long size);
+unsigned long startup_max_cont_space_left();
 
 #endif

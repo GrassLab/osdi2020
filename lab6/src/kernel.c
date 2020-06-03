@@ -7,7 +7,6 @@
 #include "timer.h"
 #include "sched.h"
 #include "uart.h"
-#include "mm.h"
 #include "util.h"
 #include "allocator.h"
 #include "process.h"
@@ -76,7 +75,15 @@ int main(void) {
     puts("");
     flush();
 
-    zone_init(buddy_zone);
+#ifndef zonealoc
+#error Must Define zonealoc, Do you forget include mm.h?
+#endif
+
+#if zonealoc
+    zone_init(page_allocate(&buddy_zone, 0ul));
+#elif ! defined(zonealoc)
+#endif
+
     task_init();
 
     core_timer_init();

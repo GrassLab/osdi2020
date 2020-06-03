@@ -8,8 +8,6 @@ extern unsigned char _kend;
 extern unsigned char _bootloader_beg;
 
 #define MEMTOP ((char *)0x40000000)
-#define overlap(beg, end, _beg, _end)                                          \
-  ((beg <= _end && _beg < end) || (end >= _beg && beg < _end))
 
 char *nkbeg, *nkend;
 unsigned long nksize;
@@ -35,8 +33,8 @@ char *schedule_tmp_kernel(char *okbeg, char *okend, char *nkbeg, char *nkend) {
   unsigned long oksize = okend - okbeg;
   for (tkbeg = (char *)0x80000;
        tkbeg + oksize < MEMTOP && tkbeg < tkbeg + oksize; tkbeg += 0x10000) {
-    if (!overlap(tkbeg, tkbeg + oksize, okbeg, okend) &&
-        !overlap(tkbeg, tkbeg + oksize, nkbeg, nkend)) {
+    if (!overlap_end(tkbeg, tkbeg + oksize, okbeg, okend) &&
+        !overlap_end(tkbeg, tkbeg + oksize, nkbeg, nkend)) {
       return tkbeg;
     }
   }
@@ -65,7 +63,7 @@ void loadimg() {
   char *tkbeg, *okbeg = (char *)&_kbeg, *okend = (char *)&_kend,
                *bootloader_beg = (char *)&_bootloader_beg;
 
-  if (overlap(okbeg, okend, nkbeg, nkend)) {
+  if (overlap_end(okbeg, okend, nkbeg, nkend)) {
 
     /* move self kernel code to temp location */
     if ((tkbeg = schedule_tmp_kernel(okbeg, okend, nkbeg, nkend))) {

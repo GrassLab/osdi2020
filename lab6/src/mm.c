@@ -2,17 +2,50 @@
 #include "mm.h"
 #include "mmu.h"
 #include "task.h"
+#include "util.h"
 #include "syscall.h"
 #include "allocator.h"
 
-unsigned page_number = PAGING_PAGES;
-unsigned long low_memory = 0;
 
-#if zonealoc
-Page *mpages;
-#else
+#if !zonealoc
+unsigned page_number = PAGING_PAGES;
 Page mpages[PAGING_PAGES] = {[0 ... PAGING_PAGES - 1] = {empty, 0} };
 #endif
+
+Zone page_allocate(Zone *zoneptr, unsigned long page_number){
+
+  /* error */
+  if(!zoneptr) return 0;
+
+  if(!page_number)
+    page_number = startup_max_cont_space_left(0) / (PAGE_SIZE);
+
+  unsigned long mask = (1 << (MAX_ORDER + PAGE_SHIFT - 1)) - 1;
+  printf("need Pages[%d]" NEWLINE, page_number);
+
+  /* MM_START is imporant */
+#define TOTAL_PA_SIZE (sizeof(Page) * page_number + sizeof(ZoneStr))
+  unsigned long addr = MM_START | startup_allocate(TOTAL_PA_SIZE, mask);
+
+  unsigned long feasible = startup_max_cont_space_left(mask) / (PAGE_SIZE);
+  page_number = MIN(page_number, feasible);
+  printf("final Pages[%d]" NEWLINE, page_number);
+
+  /* if page fragment, then page buddy after it, or put buddy 0x0 */
+  *zoneptr = (Zone)(addr + sizeof(Page) * page_number);
+  *(*zoneptr) = (ZoneStr){
+      .addr = 0,
+      .size = 0,
+      .page_number = page_number,
+      .pages = (Page*)addr,
+      .free_area = { [0 ... MAX_ORDER - 1] = {0, 0} },
+  };
+
+  for(int i = 0; i < page_number; i++)
+    (*zoneptr)->pages[i].status = empty, (*zoneptr)->pages[i].order = 0;
+
+  return *zoneptr;
+}
 
 unsigned long vir2phy(unsigned long vir){
   unsigned long pfn = (vir << 16) >> 16;
@@ -25,20 +58,6 @@ unsigned long phy2pfn(unsigned long phy){
   return phy >> 12;
 }
 
-void mark_reserved_pages(unsigned long end){
-  printf("LOW_MEMORY: 0x%x " NEWLINE
-      "HIGH_MEMORY: 0x%x" NEWLINE,
-      ALOC_BEG, HIGH_MEMORY);
-  return;
-  for (int i = 0; i < page_number; i++){
-    unsigned long addr = ALOC_BEG + i*PAGE_SIZE + VA_START;
-    if(addr <= end || addr >= VA_START + HIGH_MEMORY){
-      mpages[i].status = reserved;
-      printf("page[%d] %x reserved." NEWLINE, i, addr);
-    }
-  }
-}
-
 #if zonealoc
 unsigned long get_free_page(){
   return zone_get_free_pages(buddy_zone, 0);
@@ -49,7 +68,7 @@ unsigned long get_free_page()
   for (int i = 0; i < page_number; i++){
     if (mpages[i].status == empty){
       mpages[i].status = used;
-      unsigned long page = ALOC_BEG + i * PAGE_SIZE;
+      unsigned long page = LOW_MEMORY + i * PAGE_SIZE;
       memzero(page + VA_START, PAGE_SIZE);
       return page;
     }
@@ -138,7 +157,7 @@ void free_page(unsigned long p){
 }
 #else
 void free_page(unsigned long p){
-  mpages[(p - ALOC_BEG) / PAGE_SIZE].status = empty;
+  mpages[(p - LOW_MEMORY) / PAGE_SIZE].status = empty;
 }
 #endif
 
@@ -200,12 +219,8 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
 int is_overlap_user_va(unsigned long addr, unsigned long len){
   struct mm_struct *mmp = &(current_task->mm);
   for(int i = 0; i < mmp->user_pages_count; i++)
-    if((addr <= mmp->user_pages[i].virt_addr &&
-          addr + len > mmp->user_pages[i].virt_addr) ||
-        (mmp->user_pages[i].virt_addr <= addr &&
-         mmp->user_pages[i].virt_addr + PAGE_SIZE > addr)){
+    if(overlap(addr, len, mmp->user_pages[i].virt_addr, PAGE_SIZE))
       return 1;
-    }
   return 0;
 }
 

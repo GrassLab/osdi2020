@@ -35,7 +35,6 @@
  */
 void uart_init() {
   register unsigned int r;
-  unsigned int mbox[MBOX_SIZE];
 
   /* initialize UART */
   *UART0_CR = 0; // turn off UART0
@@ -50,7 +49,7 @@ void uart_init() {
   mbox[6] = 4000000; // 4Mhz
   mbox[7] = 0;       // clear turbo
   mbox[8] = MBOX_TAG_LAST;
-  mbox_call(MBOX_CH_PROP, mbox);
+  mbox_call(MBOX_CH_PROP);
 
   /* map UART0 to GPIO pins */
   r = *GPFSEL1;
