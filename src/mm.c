@@ -1,11 +1,13 @@
 #include "mm.h"
 
-#include "printf.h"
-#include "schedule.h"
-#include "uart.h"
 #include <stddef.h>
 
+#include "printf.h"
+#include "schedule.h"
+#include "string.h"
+#include "uart.h"
 
+static struct page bookkeeping[NR_PAGE];
 static char kstack_pool[NR_TASKS][THREAD_SIZE];
 static char ustack_pool[NR_TASKS][THREAD_SIZE];
 
@@ -15,6 +17,26 @@ unsigned long get_kstack_base(unsigned long task_id){
 
 unsigned long get_ustack_base(unsigned long task_id){
     return (unsigned long)(ustack_pool[task_id]);
+}
+
+struct page* demand_page()
+{
+    struct page* page;
+    for(int pfn=0; pfn<NR_PAGE; pfn++){
+        if(bookkeeping[pfn].used)
+            continue;
+        page = &bookkeeping[pfn];
+		memzero_64((void *)page->phy_addr, PAGE_SIZE>>3);
+        bookkeeping[pfn].used = 1;
+        return page;
+    }
+    printf("[demand_page] There are not free page!\n");
+    return NULL;
+}
+
+void restore_page(struct page* page)
+{
+    page->used = 0;
 }
 
 void __init_page_struct()

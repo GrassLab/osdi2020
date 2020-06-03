@@ -66,6 +66,7 @@ void user_test(){//kernel code
 
 int kernel_main()
 {
+    irq_vector_init();
     uart_init();
     init_printf(0, uart_putc);  
     get_board_info();

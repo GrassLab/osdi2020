@@ -38,7 +38,7 @@ void sync_router(unsigned long esr, unsigned long elr, struct trapframe *tf){
     switch(esr>>26) {
         case 0b010101: sync_svc64_handler(esr, elr, tf); break;
         default:
-            printf("Unknown sync. EC: 0x%X", esr>>26);
+            printf("Unknown sync. EC: 0x%X\t ISS: 0x%X", esr>>26, esr&0x7fffff);
             while(1);
             break;
     }
