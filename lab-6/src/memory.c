@@ -109,9 +109,10 @@ void free_page(Page *page) {
     Page *end_page = NULL;
     Page *buddy_page = NULL;
 
-    for (;order < BUDDY_MAX_ORDER - 1; order++) {
+    for (;order < BUDDY_MAX_ORDER; order++) {
         buddy_page_index = page->index ^ (1 << order);
         buddy_page = &pagePool[buddy_page_index];
+        printf("[merge buddy] check page order: %d\n", page->order);
         printf("[merge buddy] check page index: %d - %d\n", page->index, page->index + (1<< order));
         printf("[merge buddy] check buddy index: %d - %d\n", buddy_page_index, buddy_page_index+ (1<< order));
         printf("[merge buddy] check buddy used: %d\n", pagePool[buddy_page_index].used);
