@@ -221,17 +221,21 @@ void buddy_insert_node(struct buddy_page_node_struct ** list_head, struct buddy_
       prev_node = cur_node;
       cur_node = cur_node -> next_ptr;
     }
-    if(cur_node -> next_ptr == 0x0)
+    /* list contains single node */
+    if(prev_node == 0x0)
     {
-      /* insert at end of list */
-      cur_node -> next_ptr = node;
-      node -> next_ptr = 0x0;
-    }
-    else if(prev_node == 0x0)
-    {
-      /* insert at head */
-      node -> next_ptr = *list_head;
-      *list_head = node;
+      if(cur_node -> va < node -> va)
+      {
+        /* insert at end */
+        node -> next_ptr = 0;
+        cur_node -> next_ptr = node;
+      }
+      else
+      {
+        /* insert at start */
+        node -> next_ptr = cur_node;
+        *list_head = node;
+      }
     }
     else
     {
