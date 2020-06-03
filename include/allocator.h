@@ -10,6 +10,8 @@ typedef struct fixed_allocator
     int size;
     uint64_t allocate_status;
     intptr_t start_addr;
+    struct fixed_allocator * prev;
+    struct fixed_allocator * next;
 
 } fixed_allocator_t;
 

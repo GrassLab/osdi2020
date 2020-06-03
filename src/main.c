@@ -13,9 +13,11 @@ int main ( )
     // say hello
     uart_puts ( "Hello World!\n" );
 
-    uart_printf ( "\033[0;35m===========================================\n" );
+    uart_printf ( "\033[0;35m" );
+    uart_printf ( "==========================================\n" );
     uart_printf ( "             Buddy System Test             \n" );
-    uart_printf ( "===========================================\033[0m\n" );
+    uart_printf ( "==========================================\n" );
+    uart_printf ( "\033[0;33" );
 
     void * a = allocate_free_mem ( 5960 );
     void * b = allocate_free_mem ( 568 );
@@ -27,29 +29,37 @@ int main ( )
     free_mem ( c );
     free_mem ( d );
 
-    uart_printf ( "\033[0;35m==========================================\n" );
-    uart_printf ( "            Fix Allocator Test            \n" );
-    uart_printf ( "==========================================\033[0m\n" );
+    uart_printf ( "\033[0;35m" );
+    uart_printf ( "==========================================\n" );
+    uart_printf ( "           Fixed Allocator Test           \n" );
+    uart_printf ( "==========================================\n" );
+    uart_printf ( "\033[0;33" );
 
     fixed_allocator_t * bytes_30_allocator = register_fixed_size_allocator ( 30 );
     void * byte_30_fixed_a                 = fixed_alloc ( bytes_30_allocator );
+    void * byte_30_fixed_b                 = fixed_alloc ( bytes_30_allocator );
 
-    fixed_allocator_t * bytes_60_allocator = register_fixed_size_allocator ( 60 );
-    void * byte_60_fixed_a                 = fixed_alloc ( bytes_60_allocator );
-
-    void * byte_30_fixed_b = fixed_alloc ( bytes_30_allocator );
-
-    fixed_allocator_t * bytes_90_allocator = register_fixed_size_allocator ( 90 );
-    void * byte_90_fixed_a                 = fixed_alloc ( bytes_90_allocator );
+    int i;
+    void * byte_30_ptrs[65];
+    for ( i = 0; i < 65; i++ )
+    {
+        uart_printf ( "%d:\t", i );
+        byte_30_ptrs[i] = fixed_alloc ( bytes_30_allocator );
+    }
 
     fixed_free ( bytes_30_allocator, byte_30_fixed_a );
-    fixed_free ( bytes_60_allocator, byte_60_fixed_a );
     fixed_free ( bytes_30_allocator, byte_30_fixed_b );
-    fixed_free ( bytes_90_allocator, byte_90_fixed_a );
+    for ( i = 0; i < 65; i++ )
+    {
+        uart_printf ( "%d:\t", i );
+        fixed_free ( bytes_30_allocator, byte_30_ptrs[i] );
+    }
 
-    uart_printf ( "\033[0;35m==========================================\n" );
+    uart_printf ( "\033[0;35m" );
+    uart_printf ( "==========================================\n" );
     uart_printf ( "          Dynamic Allocator Test          \n" );
-    uart_printf ( "==========================================\033[0m\n" );
+    uart_printf ( "==========================================\n" );
+    uart_printf ( "\033[0;33" );
 
     dynamic_allocator_t * dynamic_allocator = register_varied_size_allocator ( );
 

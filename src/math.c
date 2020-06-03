@@ -35,7 +35,7 @@ int find_first_0_in_bit ( uint64_t n )
 
     for ( i = 0; i < 64; i++ )
     {
-        if ( ( n & ( 0b1 << i ) ) == 0 )
+        if ( ( n & ( 01UL << i ) ) == 0 )
         {
             return i;
         }

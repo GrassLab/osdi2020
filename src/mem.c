@@ -99,7 +99,7 @@ void * allocate_free_mem ( int size_in_byte )
         temp->right->used         = 0;
         temp->right->next_sibling = NULL;
 
-        uart_printf ( "\033[0;31m[Split]\033[0m [addr: %d\tlen: %d\t] ==> [addr: %d\tlen: %d\t], [addr: %d\tlen: %d\t] \n", temp->addr, temp->pages * PAGE_SIZE, temp->left->addr,
+        uart_printf ( "\033[0;31m[Split]\033[0m [addr: %d\tlen: %d\t] ==> [addr: %d\tlen: %d\t],\t[addr: %d\tlen: %d\t] \n", temp->addr, temp->pages * PAGE_SIZE, temp->left->addr,
                       temp->left->pages * PAGE_SIZE, temp->right->addr, temp->right->pages * PAGE_SIZE );
 
         push_buddy_list ( buddy_pool_index - 1, temp->left );
@@ -112,7 +112,7 @@ void * allocate_free_mem ( int size_in_byte )
 
     temp->used = 1;
 
-    uart_printf ( "\033[0;32m[Allocate Contunuous Pages]\033[0m\t\tRequest %d, Get %d | address: %d\n", size_in_byte, temp->pages * PAGE_SIZE, temp->addr );
+    uart_printf ( "\033[0;32m[Allocate Contunuous Pages]\033[0m\t\t\tRequest %d, Get %d | address: %d\n", size_in_byte, temp->pages * PAGE_SIZE, temp->addr );
 
     return (void *) ( temp->addr );
 }
@@ -145,7 +145,7 @@ void free_mem ( void * addr )
         }
     }
 
-    uart_printf ( "\033[0;32m[Free]\033[0m [addr: %d, len: %d]\n", addr, ( temp->pages ) * PAGE_SIZE );
+    uart_printf ( "\033[0;32m[Free Contunuous Pages]\033[0m\t\t\t\t[addr: %d, len: %d]\n", addr, ( temp->pages ) * PAGE_SIZE );
 
     do
     {

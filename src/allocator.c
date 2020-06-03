@@ -15,8 +15,10 @@ fixed_allocator_t * register_fixed_size_allocator ( int size )
     allocator->allocate_status = 0;
     allocator->size            = size;
     allocator->start_addr      = ( intptr_t ) ( allocator ) + sizeof ( fixed_allocator_t );
+    allocator->next            = NULL;
+    allocator->prev            = NULL;
 
-    uart_printf ( "\033[0;33m[Register Fixed Allocator %d]\033[0m\t[addr: %d, len %d]\n", allocator, allocator->start_addr, size );
+    uart_printf ( "\033[0;33m[Register Fixed Allocator]\033[0m\t%d, [addr: %d, len %d]\n", allocator, allocator->start_addr, size );
 
     return allocator;
 }
@@ -25,7 +27,7 @@ dynamic_allocator_t * register_varied_size_allocator ( )
 {
     dynamic_allocator_t * allocator = (dynamic_allocator_t *) allocate_free_mem ( PAGE_SIZE );
 
-    uart_printf ( "\033[0;33m[Register Varied Allocator %d]\033[0m\t[addr: %d, len %d]\n", allocator );
+    uart_printf ( "\033[0;33m[Register Varied Allocator]\033[0m\t\t[addr: %d]\n", allocator );
 
     allocator->byte_64_fixed  = register_fixed_size_allocator ( 64 );
     allocator->byte_128_fixed = register_fixed_size_allocator ( 128 );
@@ -45,11 +47,22 @@ void * fixed_alloc ( fixed_allocator_t * allocator )
 
     index = find_first_0_in_bit ( allocator->allocate_status );
 
+    if ( index == -1 )
+    {
+        if ( allocator->next == NULL )
+        {
+            allocator->next       = register_fixed_size_allocator ( allocator->size );
+            allocator->next->prev = allocator;
+        }
+
+        return fixed_alloc ( allocator->next );
+    }
+
     allocator->allocate_status |= 1UL << index;
 
     addr = (void *) ( allocator->start_addr + ( allocator->size ) * index );
 
-    uart_printf ( "\033[0;34m[Allocate From Fixed Allocator]\033[0m\t\t[index: %d addr: %d, len %d]\n", index, addr, ( allocator->size ) );
+    uart_printf ( "\033[0;34m[Allocate From Fixed Allocator]\033[0m\t\tallocator_addr: %d[index: %d addr: %d, len %d]\n", allocator, index, addr, ( allocator->size ) );
 
     return addr;
 }
@@ -57,12 +70,34 @@ void * fixed_alloc ( fixed_allocator_t * allocator )
 void fixed_free ( fixed_allocator_t * allocator, void * addr )
 {
     int index;
+    intptr_t address = (intptr_t) addr;
 
-    index = ( (intptr_t) addr - ( allocator->start_addr ) ) / allocator->size;
+    while ( allocator != NULL )
+    {
+        index = ( address - ( allocator->start_addr ) ) / allocator->size;
+
+        if ( address < allocator->start_addr || ( address - ( allocator->start_addr ) ) % allocator->size != 0 || index > MAX_FIXED_ALLOCATOR_ENTITY )
+            allocator = allocator->next;
+        else
+            break;
+    }
+
+    if ( allocator == NULL )
+    {
+        uart_printf ( "\033[0;34m[Free From Fixed Allocator]\033[0m\t\t[addr: %d] **FAILED**\n", address );
+        return;
+    }
 
     allocator->allocate_status &= ~( 1UL << index );
 
-    uart_printf ( "\033[0;34m[Free From Fixed Allocator]\033[0m\t\t[index: %d addr: %d, len %d]\n", index, addr, ( allocator->size ) );
+    uart_printf ( "\033[0;34m[Free From Fixed Allocator]\033[0m\t\t\tallocator_addr: %d [index: %d addr: %d, len %d]\n", allocator, index, addr, ( allocator->size ) );
+
+    if ( allocator->allocate_status == 0 && allocator->prev != NULL )
+    {
+        allocator->prev->next = allocator->next;
+        free_mem ( allocator );
+        uart_printf ( "\033[0;34m[Release Fixed Allocator]\033[0m\t\t\t[addr: %d, len: %d]\n", allocator, allocator->size );
+    }
 }
 
 void * dynamic_alloc ( dynamic_allocator_t * allocator, int size )
@@ -173,16 +208,23 @@ int check_addr_belong_fixed_allocator ( fixed_allocator_t * allocator, void * ad
     intptr_t addr = (intptr_t) address;
     int index;
 
-    if ( addr < allocator->start_addr )
+    if ( allocator == NULL )
         return 0;
 
+    if ( addr < allocator->start_addr )
+    {
+        return check_addr_belong_fixed_allocator ( allocator->next, address );
+    }
+
     if ( ( addr - allocator->start_addr ) % ( allocator->size ) != 0 )
-        return 0;
+    {
+        return check_addr_belong_fixed_allocator ( allocator->next, address );
+    }
 
     index = ( addr - allocator->start_addr ) / ( allocator->size );
 
     if ( index < PAGE_MAX_ORDER )
         return 1;
     else
-        return 0;
+        return check_addr_belong_fixed_allocator ( allocator->next, address );
 }
