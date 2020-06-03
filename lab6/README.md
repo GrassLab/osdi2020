@@ -7,8 +7,8 @@
 
 ## Object Allocator
 
-- [ ] `required 2-1` Implement the API for register a fixed-size allocator.
-- [ ] `required 2-2` Implement the API for allocate and free for fixed-size object.
+- [x] `required 2-1` Implement the API for register a fixed-size allocator.
+- [x] `required 2-2` Implement the API for allocate and free for fixed-size object.
 
 - [ ] `question 2` If the registered object size is 2049 byte, one page frame can only fit in one object. Hence the internal fragmentation is around 50%. How to decrease the percentage of the internal fragmentation in this case?
 

@@ -63,7 +63,6 @@ void irq_router ()
         uart_puts ("local timer: ");
         uart_send_int (++local_counter);
         uart_send ('\n');
-        local_timer_handler ();
     }
     else
     {

@@ -1,5 +1,6 @@
 #include "slab.h"
 #include "tools.h"
+
 void init_all_allocator(){
     for(int i=0;i<NUM_ALLOCATOR;i++){
         allocator_used[i]=0;
@@ -7,7 +8,10 @@ void init_all_allocator(){
 }
 int init_allocator(int size){
     for(int i=0;i<NUM_ALLOCATOR;i++){
-        if(allocator_used[i]==0){            
+        if(allocator_used[i]==0){      
+            uart_puts("[Slab]New Allocator for size:");
+            uart_send_int(size);
+            uart_puts("\n");  
             allocator_pool[i].len = 0;
             allocator_pool[i].size = size;
             allocator_pool[i].chunk_head = 0;
@@ -109,7 +113,64 @@ void free_alloc(int allocator_id, int addr){
     allocator_pool[allocator_id].len++;
 }
 
-// void print123(){
-//     uart_puts("\n[Slab]print123");   
-//     uart_puts("\n");
-// }
+void init_var_allocator(){
+    uart_puts("[Slab]init_var_alloc!\n");   
+    int sizes[] = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
+    int num = 10;
+    for(int i=0;i<num;i++){
+        init_allocator(sizes[i]);
+    }
+    
+    //int allocator_id = init_allocator(chunk_size1);
+    // int allocator_id1 = init_allocator(chunk_size2);
+    // int allocator_id2 = init_allocator(chunk_size3);
+}
+
+int var_alloc(int size){
+    int alloc_id = -1;
+    int minn = 999999;
+    for(int i=0;i<NUM_ALLOCATOR;i++){
+        if(allocator_used[i]==0)continue;
+        if(allocator_pool[i].size < size)continue;
+        int dis = (allocator_pool[i].size - size);        
+        if(dis < minn){
+            alloc_id = i;
+            minn = dis;
+        }
+    }
+    if(alloc_id==-1){
+        uart_puts("[Slab]Can't find suitable Allocator!\n"); 
+        return -1;
+    }
+    uart_puts("[Slab]Find Allocator for size: ");   
+    uart_send_int(size);
+    uart_puts(" in: ");   
+    uart_send_int(allocator_pool[alloc_id].size);
+    uart_puts(" Allocator id: ");   
+    uart_send_int(alloc_id);        
+    uart_puts("\n");
+    // int ret = 0;
+    int ret = alloc(alloc_id);
+        
+    return ret;
+}
+void var_free(int address, int size){
+    if(address==-1){
+        uart_puts("[Slab]Invalid address!\n"); 
+        return;
+    }
+    int alloc_id = -1;
+    int minn = 999999;
+    for(int i=0;i<NUM_ALLOCATOR;i++){
+        if(allocator_used[i]==0)continue;
+        if(allocator_pool[i].size < size)continue;
+        int dis = (allocator_pool[i].size - size);        
+        if(dis < minn){
+            alloc_id = i;
+            minn = dis;
+        }
+    }
+    show_allocator(alloc_id);
+    free_alloc(alloc_id, address);
+    show_allocator(alloc_id);
+}

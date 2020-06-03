@@ -1,5 +1,4 @@
 #include "tools.h"
-#include "mm.h"
 void sys_write(char * buf){
 	uart_puts(buf);
 }
