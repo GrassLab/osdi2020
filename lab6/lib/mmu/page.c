@@ -136,7 +136,7 @@ static Page **getIndirectNextPage(Page *page) {
     return &page->next;
 }
 
-static uint64_t getPFN(uint64_t addr) {
+uint64_t getPFN(uint64_t addr) {
     // max PFN << 12 for masking
     // 0x3ffff000 == 1GB / 4KB == # of pages
     const uint64_t kMaxPFN = 0x3ffff000;

@@ -15,7 +15,7 @@ const uint64_t kBuddySystemBase = BUDDY_SYSTEM_BASE;
 
 // memory space for allocatable pages (size: 512 MB/0x20000000)
 const uint64_t kTotalMemorySizeInMB = 8;
-const uint64_t kBuddiesBase = 0x600000 + VIRTUAL_ADDRESS_BASE;
+const uint64_t kBuddiesBase = 0x800000 + VIRTUAL_ADDRESS_BASE;
 const uint64_t kMaxOrderSize = 0x400000;
 
 typedef struct __Buddy {
@@ -167,14 +167,16 @@ static void deallocateFromBuddy(Page *page) {
         Page **indirect_next = &main_buddy.pages[page_order];
         Page *cur_page = *indirect_next;
 
-        uint64_t prev_buddy = gPage.getBlock(page)->lower - (1 << page_order) * PAGE_SIZE;
-        uint64_t post_buddy = gPage.getBlock(page)->lower + (1 << page_order) * PAGE_SIZE;
+        uint64_t buddy = getPFN(gPage.getBlock(page)->lower) ^ (1 << page_order);
         while (cur_page) {
             Block *block = gPage.getBlock(page);;
-            if (gPage.getBlock(cur_page)->lower == prev_buddy) {
-                block->lower = gPage.getBlock(cur_page)->lower;
-            } else if (gPage.getBlock(cur_page)->lower == post_buddy) {
-                block->upper = gPage.getBlock(cur_page)->upper;
+
+            if (getPFN(gPage.getBlock(cur_page)->lower) == buddy) {
+                if (gPage.getBlock(cur_page)->lower < block->lower) {
+                    block->lower = gPage.getBlock(cur_page)->lower;
+                } else {
+                    block->upper = gPage.getBlock(cur_page)->upper;
+                }
             } else {
                 indirect_next = gPage.getIndirectNext(cur_page);
                 cur_page = gPage.getNext(cur_page);

@@ -32,4 +32,6 @@ typedef struct __PageType {
 
 extern PageType gPage;
 
+uint64_t getPFN(uint64_t addr);
+
 #endif
