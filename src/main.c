@@ -25,9 +25,16 @@ void main() {
   free_space(m1);
   free_space(m5);
 
-  /*
+  int token = register_obj_allocator(2);
+  void* obj[7];
+  for(int i = 0; i < 7; i++){
+    obj[i] = fixed_obj_allocate(token);
+    uart_puts("memory allocate at: ");
+    uart_hex(obj[i]);
+    uart_puts("\n");
+  }
+
   for(;;) {
     put_shell();
   }
-  */
 }

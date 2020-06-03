@@ -1,10 +1,12 @@
 #include "mm_allocator.h"
 
 struct buddy buddy_system;
-struct block block_pool[4096];
+struct block block_pool[MAX_ALLOCATOR_NUM];
+struct obj_alloc allocator_pool[MAX_ALLOCATOR_NUM];
+struct chunk chunk_pool[MAX_CHUNK_NUM];
 
 void init_buddy_system() {
-  for (int num = 0; num < 4096; num++)
+  for (int num = 0; num < MAX_ALLOCATOR_NUM; num++)
     block_pool[num].status = FREE;
   struct block* max_block = get_free_descriptor();
   max_block->addr_start = ADDR_START;
@@ -61,7 +63,7 @@ int get_free_level(unsigned long bytes) {
 }
 
 struct block* get_free_descriptor() {
-  for (int num = 0; num < 4096; num++)
+  for (int num = 0; num < MAX_ALLOCATOR_NUM; num++)
     if (block_pool[num].status == FREE) {
       block_pool[num].status = USED;
       return &(block_pool[num]);
@@ -71,6 +73,7 @@ struct block* get_free_descriptor() {
 
 void free_space(struct block* free_block) {
   unsigned long size = free_block->addr_end - free_block->addr_start;
+  free_block->status = FREE;
   int level = get_free_level(size << 10);
   int current_level = level;
   int flag = 1;
@@ -133,5 +136,78 @@ void print_buddy() {
     }
     uart_puts("\n");
   }
+}
+
+int register_obj_allocator(int size) {
+  struct obj_alloc* allocator = get_free_allocator();
+  allocator->obj_size = size;
+  allocator->chunk_list = NULL;
+  allocator->block_list = block_allocate(&(allocator->chunk_list), allocator->obj_size);
+  print_chunk(allocator->chunk_list);
+  return allocator->id;
+}
+
+struct block* block_allocate(struct chunk** chunk_list, int size) {
+  struct block* new_block = get_space(size);
+  unsigned long block_size = new_block->addr_end - new_block->addr_start;
+  unsigned long current_addr = new_block->addr_start;
+  for (int num = 0; num <= block_size / size; num++) {
+    struct chunk* new_chunk = get_free_chunk();
+    new_chunk->addr = current_addr;
+    new_chunk->next = *chunk_list;
+    *chunk_list = new_chunk;
+    current_addr += size;
+  }
+  return new_block;
+}
+
+void* fixed_obj_allocate(int token) {
+  struct obj_alloc* allocator = &(allocator_pool[token]);
+  if (allocator->chunk_list == NULL) {
+    struct block* new_block = block_allocate(&(allocator->chunk_list), allocator->obj_size);
+    new_block->next = allocator->block_list;
+    allocator->block_list = new_block;
+  }
+  void* addr = allocator->chunk_list->addr;
+  uart_puts("before allocate:\n");
+  print_chunk(allocator->chunk_list);
+  allocator->chunk_list = allocator->chunk_list->next;
+  uart_puts("after allocate:\n");
+  print_chunk(allocator->chunk_list);
+  uart_puts("\n");
+  return addr;
+}
+
+void* fixed_obj_free(void* obj)
+
+struct obj_alloc* get_free_allocator() {
+  for (int num = 0; num < MAX_ALLOCATOR_NUM; num++)
+    if (allocator_pool[num].status == FREE) {
+      allocator_pool[num].status = USED;
+      allocator_pool[num].id = num;
+      return &(allocator_pool[num]);
+    }
+  return NULL;
+}
+
+struct chunk* get_free_chunk() {
+  for (int num = 0; num < MAX_CHUNK_NUM; num++)
+    if (chunk_pool[num].status == FREE) {
+      chunk_pool[num].status = USED;
+      return &(chunk_pool[num]);
+    }
+  return NULL;
+}
+
+void print_chunk(struct chunk* chunk_list) {
+  struct chunk* pc = chunk_list;
+  uart_puts("print chunk: ");
+  while (pc != NULL) {
+    uart_puts(" |  ");
+    uart_hex(pc->addr);
+    uart_puts("  | -> ");
+    pc = pc->next;
+  }
+  uart_puts("\n");
 }
 

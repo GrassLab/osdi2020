@@ -227,7 +227,7 @@ void do_fork() {
 int N = 3;
 void create_tasks() {
   task_init();
-  for (int num = 0; num < N; num++)
-    privilege_task_create(foo);
+  //for (int num = 0; num < N; num++)
+    //privilege_task_create(foo);
   idle();
 }
