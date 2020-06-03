@@ -13,8 +13,12 @@
 #define LOW_MEMORY (2 * SECTION_SIZE)
 #define HIGH_MEMORY PBASE
 
-#define PAGING_MEMORY (HIGH_MEMORY - LOW_MEMORY)
+// 1GB
+#define PAGING_MEMORY ((1 << 16) * PAGE_SIZE)
 #define PAGING_PAGES (PAGING_MEMORY / PAGE_SIZE)
+
+// for variable-size allocator
+#define VARIABLE_LOW_MEMORY (LOW_MEMORY + PAGING_MEMORY)
 
 typedef struct free_area {
     struct free_area *next;
@@ -25,5 +29,8 @@ void *malloc(unsigned int size);
 void free_memory(unsigned long addr);
 void init_memory();
 void print_memory_pool();
+void variable_free(unsigned int addr);
+void *variable_malloc(unsigned int size);
+void print_variable_memory_pool();
 
 #endif

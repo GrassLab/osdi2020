@@ -1,7 +1,7 @@
 #include "uart.h"
 #include "mm.h"
 
-static unsigned short mem_map [PAGING_PAGES] = {0,};
+// static unsigned short mem_map [PAGING_PAGES] = {0,};
 static free_area_t free_block[32] = {
     {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
     {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
@@ -296,4 +296,70 @@ void free_memory(unsigned long addr){
 
     recycle(addr, (*memory_size));
     // print_memory_pool();
+}
+
+unsigned int variable_base = VARIABLE_LOW_MEMORY;
+static int mem_map[36] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+void *variable_malloc(unsigned int size) {
+    uart_puts("==========VARIABLE MALLOC==========\r\n");
+    size += sizeof(int);
+    uart_puts("malloc need ");
+    uart_print_int(size);
+    uart_puts(" bytes\r\n");
+
+    for(int i=0; i<9; i++) {
+        if((0x1 << i) < size) continue;
+        for(int j=0; j<4; j++) {
+            if(mem_map[i*4+j] == 0) {
+                mem_map[i*4+j] = 1;
+                unsigned int ret_addr = 0;
+                for(int k=0; k<i-1; k++) {
+                    for(int m=0; m<4; m++) {
+                        ret_addr += (0x1 << k);
+                    }
+                }
+                for(int k=0; k<j; k++) {
+                    ret_addr += (0x1 << i);
+                }
+                int *stmp = VARIABLE_LOW_MEMORY + ret_addr;
+                *stmp = i*4+j;
+
+                uart_puts("[Allocate at 0x");
+                uart_hex((unsigned int)(VARIABLE_LOW_MEMORY + ret_addr + sizeof(int)));
+                uart_puts("]\r\n");
+
+                return VARIABLE_LOW_MEMORY + ret_addr + sizeof(int);
+            }
+        }
+    }
+    uart_puts("malloc failed.\r\n");
+    return 0;
+}
+
+void print_variable_memory_pool() {
+    for(int i=0; i<9; i++) {
+        for(int j=0; j<4; j++) {
+            uart_print_int(mem_map[i*4+j]);
+            uart_puts(" ");
+        }
+        uart_puts("\r\n");
+    }
+}
+
+
+void variable_free(unsigned int addr) {
+    uart_puts("==========VARIABLE FREE==========\r\n");
+    uart_puts("free at 0x");
+    uart_hex(addr);
+    uart_puts("\r\n");
+    addr -= sizeof(int);
+    int *stamp = addr;
+    mem_map[*stamp] = 0;
+    // print_variable_memory_pool();
 }
