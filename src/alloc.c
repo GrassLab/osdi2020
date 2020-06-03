@@ -1,4 +1,5 @@
 #include "alloc.h"
+#include "io.h"
 #include "page.h"
 #include "task.h"
 
@@ -42,14 +43,23 @@ struct buddy_node_t* alloc_buddy(uint64_t order) {
 }
 
 void free_buddy(struct buddy_node_t* buddy_node) {
+    print_s("free buddy of order ");
+    print_i(buddy_node->zone_node.order);
+    print_s("\n");
     buddy_node->used = false;
     if (buddy_node->parent->left == buddy_node &&
         buddy_node->parent->right->used == false) {
+        print_s("merge two order ");
+        print_i(buddy_node->zone_node.order);
+        print_s(" buddy and free again\n");
         buddy_node->parent->used = false;
         zone_delete(&buddy_node->parent->left->zone_node);
         free_buddy(buddy_node->parent->zone_node.buddy_node);
     } else if (buddy_node->parent->right == buddy_node &&
                buddy_node->parent->left->used == false) {
+        print_s("merge two order ");
+        print_i(buddy_node->zone_node.order);
+        print_s(" buddy and free again\n");
         buddy_node->parent->used = false;
         zone_delete(&buddy_node->parent->left->zone_node);
         zone_push(&buddy_node->parent->zone_node);

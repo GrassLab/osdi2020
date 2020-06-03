@@ -39,10 +39,13 @@ void zombie_killer() {
 }
 
 void foo_kernel() {
+    print_s("\n\n");
     uint8_t* p8 = kmalloc(sizeof(uint8_t));
     kfree(p8);
     uint8_t* p8_2 = kmalloc(sizeof(uint8_t));
     kfree(p8_2);
+
+    print_s("\n\n");
 
     uint32_t* p32 = kmalloc(sizeof(uint32_t) * 1024);
     kfree(p32);
