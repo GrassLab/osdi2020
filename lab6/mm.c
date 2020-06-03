@@ -294,7 +294,17 @@ void free_memory(unsigned long addr){
     uart_print_int(*memory_size);
     uart_puts(" pages\r\n");
 
-    recycle(addr, (*memory_size));
+    unsigned int pages = *memory_size;
+    unsigned int accu = 0;
+    for(int i=0; i<31; i++) {
+        if((pages&0x1) == 0x1) {
+            unsigned tmp_addr = addr + (*memory_size)*PAGE_SIZE;
+            tmp_addr = tmp_addr - (0x1 << (i))*PAGE_SIZE - accu;
+            accu += (0x1 << (i))*PAGE_SIZE;
+            recycle(tmp_addr, (0x1 << i));
+        }
+        pages = pages >> 1;
+    }
     // print_memory_pool();
 }
 
