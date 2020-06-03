@@ -119,14 +119,10 @@ void init_var_allocator(){
     int num = 10;
     for(int i=0;i<num;i++){
         init_allocator(sizes[i]);
-    }
-    
-    //int allocator_id = init_allocator(chunk_size1);
-    // int allocator_id1 = init_allocator(chunk_size2);
-    // int allocator_id2 = init_allocator(chunk_size3);
+    }    
 }
 
-int var_alloc(int size){
+int find_id(int size){
     int alloc_id = -1;
     int minn = 999999;
     for(int i=0;i<NUM_ALLOCATOR;i++){
@@ -138,6 +134,10 @@ int var_alloc(int size){
             minn = dis;
         }
     }
+    return alloc_id;
+}
+int var_alloc(int size){
+    int alloc_id = find_id(size);
     if(alloc_id==-1){
         uart_puts("[Slab]Can't find suitable Allocator!\n"); 
         return -1;
@@ -159,17 +159,7 @@ void var_free(int address, int size){
         uart_puts("[Slab]Invalid address!\n"); 
         return;
     }
-    int alloc_id = -1;
-    int minn = 999999;
-    for(int i=0;i<NUM_ALLOCATOR;i++){
-        if(allocator_used[i]==0)continue;
-        if(allocator_pool[i].size < size)continue;
-        int dis = (allocator_pool[i].size - size);        
-        if(dis < minn){
-            alloc_id = i;
-            minn = dis;
-        }
-    }
+    int alloc_id = find_id(size);
     show_allocator(alloc_id);
     free_alloc(alloc_id, address);
     show_allocator(alloc_id);

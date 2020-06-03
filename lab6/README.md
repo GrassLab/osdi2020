@@ -14,6 +14,6 @@
 
 ## Varied-sized allocator
 
-- [ ] `required 3` Implement a varied-sized allocator.
+- [x] `required 3` Implement a varied-sized allocator.
 
 - [ ] `question 3` What’s the benefit to prevent static allocation?
