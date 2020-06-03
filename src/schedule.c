@@ -5,7 +5,7 @@
 #include "sysregs.h"
 #include "mm.h"
 
-struct task_t task_pool[TASK_POOL_SIZE];
+struct task_t *task_pool;
 char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
 struct task_queue_elmt_t runqueue_elmt_pool[TASK_POOL_SIZE];
 struct task_queue_t runqueue;
@@ -109,6 +109,8 @@ void mm_struct_init(struct mm_struct *m) {
 }
 
 void task_init() {
+    task_pool = (struct task_t*) kmalloc(sizeof(struct task_t) * TASK_POOL_SIZE);
+
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         task_pool[i].id = i;
         task_pool[i].state = EXIT;

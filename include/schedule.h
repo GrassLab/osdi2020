@@ -65,7 +65,7 @@ struct task_t {
 };
 
 /* Variables init in schedule.c */
-extern struct task_t task_pool[TASK_POOL_SIZE];
+extern struct task_t *task_pool;
 extern char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
 
 /* Function in schedule.S */

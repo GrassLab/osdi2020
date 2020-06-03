@@ -6,8 +6,9 @@
 #include "exception.h"
 #include "schedule.h"
 #include "sys.h"
+#include "mm.h"
 
-char intr_stack[INTR_STK_SIZE];
+char *intr_stack;
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
 uint64_t cntfrq_el0, cntpct_el0;
 
@@ -17,6 +18,10 @@ void irq_enable() {
 
 void irq_disable() {
     asm volatile("msr daifset, #2");
+}
+
+void exc_init() {
+    intr_stack = (char*) kmalloc(INTR_STK_SIZE);
 }
 
 /*

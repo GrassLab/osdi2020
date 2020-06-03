@@ -4,6 +4,7 @@
 #include "util.h"
 #include "schedule.h"
 #include "mm.h"
+#include "exception.h"
 
 void boot_init() {
     // Get the amount of RAM
@@ -13,6 +14,7 @@ void boot_init() {
     // Initialize Memory
     mm_init();
     task_init();
+    exc_init();
 
     // Initialize UART
     uart0_init();
