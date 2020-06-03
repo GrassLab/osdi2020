@@ -1,8 +1,6 @@
 #ifndef _SCHEDULER_H
 #define _SCHEDULER_H
 
-
-#define THREAD_CPU_CONTEXT 0 	// offset of cpu_context in task_struct 
 #ifndef __ASSEMBLER__
 
 #define NR_TASKS 64 
@@ -32,10 +30,10 @@ struct cpu_context {
     unsigned long pc;
 };
 
-#define MAX_PROCESS_PAGES	28 // this mean we can't use more than 28 pages in user code
+#define MAX_PROCESS_PAGES	16 // this mean we can't use more than 28 pages in user code
 				   // absolutely bad but that's ok for us now
 
-#define MAX_AREA                16 // Same, each task can use no more than 16 times mmap 
+#define MAX_AREA                8 // Same, each task can use no more than 16 times mmap 
 
 //prot
 #define PROT_NONE 0b000  // non-executable page frame for EL0
@@ -64,13 +62,13 @@ struct vm_area_struct{
 
 struct mm_struct {
 	unsigned long pgd;	
-	int user_pages_count;
+	unsigned int user_pages_count;
 	struct user_page user_pages[MAX_PROCESS_PAGES];
 	
-	int kernel_pages_count;
+	unsigned int kernel_pages_count;
 	unsigned long kernel_pages[MAX_PROCESS_PAGES];
 	
-	int vm_area_count;
+	unsigned int vm_area_count;
 	struct vm_area_struct mmap[MAX_AREA];
 };
 

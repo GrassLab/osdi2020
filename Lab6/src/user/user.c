@@ -1,37 +1,6 @@
 #include "user_lib.h"
 #include "string.h"
 
-int check_string(char * str){
-
-	if(strcmp(str,"help")==0){
-		// print all available commands
-		printf("hello : print Hello World!\r\n");
-		printf("help : help\r\n");
-		printf("reboot: reboot raspi\r\n");
-		printf("exit : exit the user program\r\n");
-	}
-	else if(strcmp(str,"hello")==0){
-		// print hello
-		printf("Hello World!\r\n");
-	}
-	else if(strcmp(str,"exit")==0){
-		printf("Now exit\r\n");
-		return -1;
-	}
-	else if(strcmp(str,"reboot")==0){
-		printf("Rebooting......\r\n");
-		reboot();
-		return 1;
-	}
-	else{
-		printf("Err:command ");
-		printf(str);
-		printf(" not found, try <help>\r\n");
-	}
-
-	return 0;
-}
-
 void test1(){
 	int *m = (int *)malloc(0x4000);	
 	m[0] = 5;
@@ -42,8 +11,11 @@ void test1(){
 	
 	m = (int *)malloc(0x4000);	
 	printf("at 0x%x\r\n",m);
+	free((unsigned long)m);
+	
 	m = (int *)malloc(0x4000);		
 	printf("at 0x%x\r\n",m);
+	free((unsigned long)m);
 }
 
 void test2(){
@@ -69,10 +41,46 @@ void test2(){
 	allocator_unregister(pool_num);	
 }
 
+int check_string(char * str){
+
+	if(strcmp(str,"help")==0){
+		// print all available commands
+		printf("hello : print Hello World!\r\n");
+		printf("help : help\r\n");
+		printf("reboot: reboot raspi\r\n");
+		printf("exit : exit the user program\r\n");
+	}
+	else if(strcmp(str,"hello")==0){
+		// print hello
+		printf("Hello World!\r\n");
+	}
+	else if(strcmp(str,"exit")==0){
+		printf("Now exit\r\n");
+		return -1;
+	}
+	else if(strcmp(str,"reboot")==0){
+		printf("Rebooting......\r\n");
+		reboot();
+		return 1;
+	}
+	else if(strcmp(str,"t1")==0){
+		test1();
+	}
+	else if(strcmp(str,"t2")==0){
+		test2();
+	}
+	else{
+		printf("Err:command ");
+		printf(str);
+		printf(" not found, try <help>\r\n");
+	}
+
+	return 0;
+}
+
 void main()
 {
 	printf("Hello for user %d\r\n",get_taskid());
-	test1();
 
 	char buffer[128];
 	while(1){	

@@ -171,7 +171,7 @@ void kernel_main(void)
     
     uart_init();   
     printf("Hello, world!\r\n");
-    
+
     //get hardware information by mailbox
     get_board_revision_info();
     get_VC_core_base_addr();
@@ -184,8 +184,13 @@ void kernel_main(void)
     core_timer_enable(); //enable core timer
     
     allocator_init(); 
-    //mytest1();
-    //mytest2();
+    
+    printf("####### My Test 1\r\n");
+    mytest1();
+    printf("####### My Test 2\r\n");
+    mytest2();
+    printf("####### My Test 3\r\n");
+    mytest3();
     
     // Here init a task being zombie reaper
     privilege_task_create(zombie_reaper,1);
