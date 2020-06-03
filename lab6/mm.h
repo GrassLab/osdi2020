@@ -24,5 +24,6 @@ typedef struct free_area {
 void *malloc(unsigned int size);
 void free_memory(unsigned long addr);
 void init_memory();
+void print_memory_pool();
 
 #endif

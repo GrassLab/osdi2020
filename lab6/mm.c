@@ -52,7 +52,7 @@ void init_memory() {
             }
 
             // init next free_area
-            free_area_t *tmp = base + ((0x1 << i)*PAGE_SIZE) - sizeof(free_area_t);
+            free_area_t *tmp = base + sizeof(free_area_t);
             tmp->next = 0;
             tmp->map = base;
             free_area_t_p->next = tmp;
@@ -74,9 +74,6 @@ void recycle(unsigned int addr, unsigned int page_n) {
     uart_puts("\r\n");
 
     for(int i=31; i>=0; i--) {
-        // uart_puts("At: ");
-        // uart_print_int(i);
-        // uart_puts("\r\n");
         if((page_n & (0x80000000)) == 0x80000000) {
             free_area_t_p = &free_block[i];
             while(free_area_t_p->next != 0) {
@@ -84,33 +81,39 @@ void recycle(unsigned int addr, unsigned int page_n) {
             }
             
             // init next free_area
-            free_area_t *tmp = base + (i*PAGE_SIZE) - sizeof(free_area_t);
+            free_area_t *tmp = base + sizeof(free_area_t);
             tmp->next = 0;
-            tmp->map = 0;
+            tmp->map = (unsigned int)base;
             free_area_t_p->next = tmp;
-            free_area_t_p->map = base + (i*PAGE_SIZE);
-            base += (i*PAGE_SIZE);
+            base += (0x1 << i)*PAGE_SIZE;
         }
         page_n = (page_n << 1);
     }
 }
 
-void allocate_page(free_area_t *p, int i, unsigned int page_n) {
+free_area_t * allocate_page(free_area_t *p, int i, unsigned int page_n) {
+    uart_puts("Allocate at slot: ");
+    uart_print_int(i);
     free_area_t *target = p->next;
     p->next = target->next;
     target->next = 0;
 
     unsigned int block_size = (unsigned int)((0x1 << i));
-    uart_puts("pages in the block: ");
+    uart_puts(", pages in the block: ");
     uart_print_int(block_size);
-    uart_puts(" need page: ");
+    uart_puts(", need page: ");
     uart_print_int(page_n);
+    uart_puts(", block at: 0x");
+    uart_hex(target->map);
     uart_puts("\r\n");
     unsigned int remain = block_size - page_n;
     uart_puts("remain page: ");
     uart_print_int(remain);
     uart_puts("\r\n");
-    recycle((unsigned int)(p->map) + (page_n << PAGE_SHIFT), (remain));
+    if(remain > 0) {
+        recycle((unsigned int)((target->map) + (unsigned int)(page_n*PAGE_SIZE)), (remain));
+    }
+    return target;
 }
 
 void *malloc(unsigned int size)
@@ -136,23 +139,18 @@ void *malloc(unsigned int size)
     
     int tmp_page_n = page_n;
 	for(int i=31; i>=0; i--) {
-        // uart_puts("0x");
-        // uart_hex(page_n);
-        // uart_puts("\r\n");
         if((tmp_page_n & (0x80000000)) == 0x80000000) {
-            // uart_print_int(i);
-            // uart_puts(" match\r\n");
             for(int j=i; j<32; j++) {
                 free_area_t *p = &free_block[j];
                 if(p->next != 0) {
-                    allocate_page(p, j, page_n);
+                    p = allocate_page(p, j, page_n);
                     uart_puts("[Allocate at 0x");
                     uart_hex((unsigned int)(p->map));
                     uart_puts("]\r\n");
                     int *memory_size = p->map;
                     
                     *memory_size = page_n;
-                    print_memory_pool();
+                    
                     return (unsigned int)(p->map) + sizeof(int);
                 }
             }
@@ -175,4 +173,5 @@ void free_memory(unsigned long addr){
 
     recycle(addr, (*memory_size));
     uart_puts("************************\r\n");
+    print_memory_pool();
 }
