@@ -110,6 +110,7 @@ void uart_puts(char *s) {
 void uart_hex(unsigned int d) {
     unsigned int n;
     int c;
+    uart_puts("0x");
     for(c=28;c>=0;c-=4) {
         // get highest tetrad
         n=(d>>c)&0xF;

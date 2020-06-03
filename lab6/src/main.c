@@ -2,6 +2,7 @@
 #include "sched.h"
 #include "fork.h"
 #include "buddy.h"
+#include "sys.h"
 //required 1 & required 2
 /*
 void foo(){
@@ -64,7 +65,7 @@ void uart_test(){
 
 void foo(){
   int tmp = 5;
-/*
+
   uart_puts("Task ");
   uart_hex(get_taskid());
   uart_puts(" after exec, tmp address 0x");
@@ -72,48 +73,35 @@ void foo(){
   uart_puts(", tmp value ");
   uart_hex(tmp);
   uart_puts("\n");
-*/  
-  uart_test();  
+  
+  //uart_test();  
 
   exit(0);
   uart_puts("Should not be printed\n");
 }
 
-void test() {
-  int cnt = 1;
-  if (fork() == 0) {
-    fork();
-    delay(100000);
-    fork();
-    while(cnt < 10) {
-      if(cnt == 6){
-        fork();
-      }
-      uart_puts("Task id: ");
-      uart_hex(get_taskid());
-      uart_puts(", cnt: ");
-      uart_hex(cnt);
-      uart_puts("\n");
-
-      delay(10000);
-      ++cnt;
-    }
-    exit(0);
-    uart_puts("Should not be printed\n");
-  } else {
-    uart_puts("Task ");
-    uart_hex(get_taskid());
-    uart_puts(" before exec, cnt address 0x");
-    uart_hex(&cnt);
-    uart_puts(", cnt value ");
-    uart_hex(cnt);
+void test2(){
+    unsigned long token = allocator_register(0x90);
+    void *ptr1 = allocator_alloc(token);
+    uart_puts("Get address ");
+    uart_hex(ptr1);
     uart_puts("\n");
-  
-    exec(foo);
-  }
+
+    void *ptr2 = malloc(0x50);
+    uart_puts("Get address ");
+    uart_hex(ptr2);
+    uart_puts("\n");
+    
+    allocator_free(token, ptr1);   
+    free(ptr2);   
+    uart_getc() ;
+    
+    exit();
 }
 
+
 void test1(){
+    
     unsigned long token = allocator_register(0x60);
 
     void *ptr1 = allocator_alloc(token);
@@ -134,28 +122,41 @@ void test1(){
     uart_hex(ptr3);
     uart_puts("\n");
     allocator_free(token, ptr3);
+    
+    uart_getc() ;
 
     test2();
-    return;
 }
 
-void test2(){
-    unsigned long token = allocator_register(0x90);
-    void *ptr1 = allocator_alloc(token);
-    uart_puts("Get address ");
-    uart_hex(ptr1);
-    uart_puts("\n");
 
-    void *ptr2 = malloc(0x50);
-    uart_puts("Get address ");
-    uart_hex(ptr2);
+void test() {
+  int cnt = 1;
+  if (fork() == 0) {
+    delay(100000);
+    while(cnt < 10) {
+      uart_puts("Task id: ");
+      uart_hex(get_taskid());
+      uart_puts(", cnt: ");
+      uart_hex(cnt);
+      uart_puts("\n");
+
+      delay(10000);
+      ++cnt;
+    }
+    exit(0);
+    uart_puts("Should not be printed\n");
+  } else {
+    uart_puts("Task ");
+    uart_hex(get_taskid());
+    uart_puts(" before exec, cnt address 0x");
+    uart_hex(&cnt);
+    uart_puts(", cnt value ");
+    uart_hex(cnt);
     uart_puts("\n");
-    
-    allocator_free(token, ptr1);   
-    free(ptr2);    
-    return;    
+  
+    exec(test1);
+  }
 }
-
 void zombie_reaper(){
     while(1){
         uart_puts("I'm zombie_reaper\n");
@@ -179,7 +180,7 @@ void zombie_reaper(){
 // -----------below is kernel code-------------
 
 void user_test(){
-  do_exec((unsigned long)&test1);
+  do_exec((unsigned long)&test);
 }
 
 void idle(){

@@ -7,13 +7,10 @@
 /*page flags*/
 #define PAGE_AVAILABLE		0x00
 #define PAGE_DIRTY			0x01
-#define PAGE_PROTECT		0x02
-#define PAGE_BUDDY_BUSY		0x04
-#define PAGE_IN_CACHE		0x08
+#define PAGE_BUDDY_BUSY		0x02
 
-/*memory for dynamic allocation 8MB from 0x00010000 ~ 0x00810000*/
-#define _MEM_END	HIGH_MEMORY //modify
-#define _MEM_START	LOW_MEMORY //modify
+#define _MEM_END	HIGH_MEMORY 
+#define _MEM_START	LOW_MEMORY 
 
 /*MASK is 0xfffff000*/
 #define PAGE_MASK	(~(PAGE_SIZE-1))

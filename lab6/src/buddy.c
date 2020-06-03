@@ -91,7 +91,7 @@ struct list_head page_buddy[MAX_BUDDY_PAGE_NUM];
 
 void init_page_buddy(void){
 	int i;
-    uart_puts("init_page_buddy\n");
+    uart_puts("Init_page_buddy\n");
 	for(i=0;i<MAX_BUDDY_PAGE_NUM;i++){
 		INIT_LIST_HEAD(&page_buddy[i]);
 	}
@@ -101,7 +101,6 @@ struct page {
 	unsigned long addr;
 	unsigned int flags;
 	int order;
-	unsigned int counter;
     unsigned int number;
 	struct list_head list;//to string the buddy member
 };
@@ -126,7 +125,6 @@ void init_page_map(void){
         /*fill struct page first*/
 		pg->addr=KERNEL_PAGING_START+i*PAGE_SIZE;	
 		pg->flags=PAGE_AVAILABLE;
-		pg->counter=0;
         pg->number=i;
 		INIT_LIST_HEAD(&(pg->list));
 
@@ -147,7 +145,7 @@ void init_page_map(void){
 		}
 
 	}
-    //look_page_buddy();
+   //print_buddy_status();
 }
 
 
@@ -156,10 +154,12 @@ struct page *get_pages_from_list(int order){
 	int neworder=order;
 	struct page *pg,*ret;
 	struct list_head *tlst,*tlst1;
-    //look_page_buddy();
-    uart_puts("***Required order:");
+
+    print_buddy_status();
+    uart_puts("[Required order:");
     uart_hex(neworder);
-    uart_puts("\n");
+    uart_puts("]\n");
+
 	for(;neworder<MAX_BUDDY_PAGE_NUM;neworder++){
 		if(list_empty(&page_buddy[neworder])){
 			continue;
@@ -173,10 +173,9 @@ struct page *get_pages_from_list(int order){
 	}
 	return NULL;
 OUT_OK:
-    uart_puts("[Release redundant memory block]\n");
 	for(neworder--;neworder>=order;neworder--){
         if(neworder != order){
-	        uart_puts("cut off the bottom half the block from ");
+	        uart_puts("Cut off the bottom half the block from ");
             uart_hex(neworder);
             uart_puts(" to ");
             uart_hex(neworder-1);
@@ -190,18 +189,21 @@ OUT_OK:
 
 		list_add_chain_tail(tlst,tlst1,&page_buddy[neworder]);
 	}
+
+    print_buddy_status();
+    uart_getc();
+
 	pg->flags|=PAGE_BUDDY_BUSY;
 	pg->order=order;
 	return pg;
 }
 
-void look_page_buddy(){
+void print_buddy_status(){
     int i = 0;
+    uart_puts("**************** BUDDY STATUS *************** \n");
     for(; i < MAX_BUDDY_PAGE_NUM; i++){
         uart_hex(i);
-        uart_puts(" order: ");
-        uart_hex(&page_buddy[i]);
-        uart_puts("\n");
+        uart_puts("th order: ");
         if(list_empty(&page_buddy[i])){
             uart_puts("empty");
         }else{
@@ -210,45 +212,28 @@ void look_page_buddy(){
             int num = pg->number;
             int j = 0;
             do{
-                //uart_hex(ptr);
-                //uart_send('\n');
-                //uart_hex(&page_buddy[i]);
-                //uart_send('\n');
-                //if((j&(~(1<<i)))==0){
-                //    pg = list_entry(ptr, struct page, list);
-                //    uart_hex(pg->number);
-                //    uart_puts(" -> ");
-                //}
                 pg = list_entry(ptr, struct page, list);
-                if(pg->order != -1 && i != 0){
-                    j = pg->number;
+                if(pg->order != -1){
                     uart_hex(pg->number);
                     uart_puts(" -> ");
+                    j++;
                 }
                 ptr = ptr->next;
-                if(i==0){
-                /*   uart_send('[');
-                    uart_hex(ptr);
-                    uart_send(']');
-                */
-                    uart_hex(pg->number);
-                    uart_puts(" -> ");
-                }
-            } while(ptr != &page_buddy[i]);
+            } while(j < 10 && ptr != &page_buddy[i]);
         }
         uart_puts("\n");
-     }
+    }
+    uart_puts("******************************************** \n");
 }
 
 void put_pages_to_list(struct page *pg,int order){
-    uart_puts("***put_pages_to_list***\n");
-    uart_puts("page frame number: ");
+    
+    print_buddy_status();
+    uart_puts("[Put_pages_to_list: page number ");
     uart_hex(pg->number);
     uart_puts(" in order ");
     uart_hex(order);
-    uart_puts("\n");
-	uart_getc();
-    look_page_buddy();
+    uart_puts("]\n");
 
 	struct page *tprev,*tnext;
 	if(!(pg->flags&PAGE_BUDDY_BUSY)){
@@ -260,60 +245,47 @@ void put_pages_to_list(struct page *pg,int order){
 		tnext=NEXT_BUDDY_START(pg,order);
 		tprev=PREV_BUDDY_START(pg,order);
 		if((!(tnext->flags&PAGE_BUDDY_BUSY))&&(tnext->order==order)){
-/*            uart_puts("Merge ");
+            uart_puts("Merge ");
             uart_hex(pg->number);
             uart_puts(" with ");
             uart_hex(tnext->number);
             uart_puts("\n");
-*/			pg->order++;
+		
+        	pg->order++;
 			tnext->order=-1;
 			list_remove_chain(&(tnext->list),&(BUDDY_END(tnext,order)->list));
-/*	        uart_getc();
-            look_page_buddy();
-	        uart_getc();
-*/			BUDDY_END(pg,order)->list.next=&(tnext->list);
+			BUDDY_END(pg,order)->list.next=&(tnext->list);
 			tnext->list.prev=&(BUDDY_END(pg,order)->list);
+         
             if(order+1 == MAX_BUDDY_PAGE_NUM)
                  break;
 			else
                 continue;
 		}else if((!(tprev->flags&PAGE_BUDDY_BUSY))&&(tprev->order==order)){
-            uart_puts("Merge \n");
+            uart_puts("Merge ");
             uart_hex(pg->number);
             uart_puts(" with ");
             uart_hex(tprev->number);
             uart_puts("\n");
-	        uart_getc();
-            look_page_buddy();
-	        uart_getc();
 			
             pg->order=-1;			
 			list_remove_chain(&(tprev->list),&(BUDDY_END(tprev,order)->list));
-	        uart_getc();
-            look_page_buddy();
-	        uart_getc();
 			BUDDY_END(tprev,order)->list.next=&(pg->list);
 			pg->list.prev=&(BUDDY_END(tprev,order)->list);
 			pg=tprev;
 			pg->order++; 
+            
             if(order+1 == MAX_BUDDY_PAGE_NUM)
                  break;
             else
 			    continue;
 		}else{
-            uart_puts("ELSE");
-            uart_hex(pg->number);
-            uart_puts("in");
-            uart_hex(order);
-            uart_puts("\n");
 			break;
 		}
 	}
-	uart_getc();
 	list_add_chain(&(pg->list),&(BUDDY_END(pg,order)->list),&page_buddy[order]);
-    look_page_buddy();
+    print_buddy_status();
 	uart_getc();
-
 }
 
 

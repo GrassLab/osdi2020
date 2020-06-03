@@ -11,7 +11,6 @@
 #define SECTION_SIZE        (1 << SECTION_SHIFT)    
 
 #define LOW_MEMORY              (2 * SECTION_SIZE)
-//#define HIGH_MEMORY             0x100000                   
 #define HIGH_MEMORY             0x3F000000  /*device*/
 
 #define PAGING_MEMORY           (HIGH_MEMORY - LOW_MEMORY)
