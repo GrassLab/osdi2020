@@ -15,11 +15,13 @@ int schedule_zombie_count = 0;
 
 void scheduler_init(void)
 {
-  schedule_run_queue = (uint64_t_pqueue *)slab_allocate(slab_regist(sizeof(uint64_t_pqueue)));
-  schedule_wait_queue = (uint64_t_queue *)slab_allocate(slab_regist(sizeof(uint64_t_queue)));
+  uart_puts("Schedule init started\n");
+  schedule_run_queue = (uint64_t_pqueue *)slab_malloc(sizeof(uint64_t_pqueue));
+  schedule_wait_queue = (uint64_t_queue *)slab_malloc(sizeof(uint64_t_queue));
 
   pqueue_uint64_t_init(schedule_run_queue);
   QUEUE_INIT(*schedule_wait_queue);
+  uart_puts("Schedule init complete\n");
 
   task_init();
 
@@ -125,29 +127,22 @@ int schedule_check_self_reschedule(void)
 
 void schedule_enqueue(uint64_t id, unsigned priority)
 {
-  task_guard_section();
   pqueue_uint64_t_push(schedule_run_queue, priority, id);
-  task_unguard_section();
   return;
 }
 
 void schedule_enqueue_wait(uint64_t id)
 {
-  task_guard_section();
   QUEUE_PUSH(*schedule_wait_queue, id);
-  task_unguard_section();
 }
 
 uint64_t schedule_dequeue_wait(void)
 {
-  task_guard_section();
   if(QUEUE_EMPTY(*schedule_wait_queue))
   {
-    task_unguard_section();
     return 0;
   }
   uint64_t id = QUEUE_POP(*schedule_wait_queue);
-  task_unguard_section();
   return id;
 }
 

@@ -16,8 +16,10 @@ uint16_t * task_kernel_stack_pool;
 
 void task_init()
 {
+  uart_puts("Task init started\n");
   kernel_task_pool = (struct task_struct *)slab_malloc(sizeof(struct task_struct) * TASK_POOL_SIZE);
   task_kernel_stack_pool = (uint16_t *)slab_malloc(sizeof(uint16_t) * TASK_POOL_SIZE * TASK_KERNEL_STACK_SIZE);
+  uart_puts("Task init complete\n");
   return;
 }
 
@@ -147,10 +149,11 @@ void task_start_waiting(void)
   uint64_t current_task_id = task_get_current_task_id();
 
   task_guard_section();
+
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 2);
+  schedule_enqueue_wait(current_task_id);
   task_unguard_section();
 
-  schedule_enqueue_wait(current_task_id);
   schedule_yield();
   return;
 }
@@ -170,7 +173,6 @@ void task_end_waiting(void)
     task_id = schedule_dequeue_wait();
   }
 
-  task_guard_section();
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].flag, 2);
   schedule_enqueue(task_id, (unsigned)kernel_task_pool[TASK_ID_TO_IDX(task_id)].priority);
   task_unguard_section();
