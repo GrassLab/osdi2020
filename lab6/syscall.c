@@ -50,3 +50,17 @@ int syscall_signal(int task_id, int signalno)
   return 0;
 }
 
+int syscall_malloc(unsigned bytes)
+{
+  asm volatile("mov x1, %0" : : "r"(bytes));
+  asm volatile("svc #9");
+  return 0;
+}
+
+int syscall_free(uint64_t * va)
+{
+  asm volatile("mov x1, %0" : : "r"(va));
+  asm volatile("svc #10");
+  return 0;
+}
+

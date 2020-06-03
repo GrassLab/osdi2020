@@ -7,6 +7,7 @@
 #include "task.h"
 #include "schedule.h"
 #include "mmu.h"
+#include "slab.h"
 
 int sys_exc(uint64_t ELR_EL1, uint8_t exception_class, uint32_t exception_iss)
 {
@@ -156,6 +157,18 @@ int sys_signal(int task_id, int signalno)
   task_guard_section();
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].signal, signalno);
   task_unguard_section();
+  return 0;
+}
+
+int sys_malloc(unsigned bytes)
+{
+  slab_malloc(bytes);
+  return 0;
+}
+
+int sys_free(uint64_t * va)
+{
+  slab_malloc_free(va);
   return 0;
 }
 

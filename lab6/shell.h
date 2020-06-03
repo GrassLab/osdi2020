@@ -6,6 +6,8 @@ void _shell_parser();
 int shell_hello(char * string_buffer);
 int shell_help(char * string_buffer);
 int shell_exit(char * string_buffer);
+int shell_malloc(char * string_buffer);
+int shell_free(char * string_buffer);
 
 #endif
 

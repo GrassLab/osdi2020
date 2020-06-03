@@ -7,6 +7,8 @@ const char * shell_command_list[] = {
   "hello",
   "help",
   "exit",
+  "malloc",
+  "free",
   0x0
 };
 
@@ -14,6 +16,8 @@ const char * shell_command_descriptions[] = {
   "Print Hello World!",
   "Help",
   "Exit",
+  "Malloc",
+  "Free",
   0x0
 };
 
@@ -27,6 +31,8 @@ int (*shell_command_function_ptr[])(char *) = {
   shell_hello,
   shell_help,
   shell_exit,
+  shell_malloc,
+  shell_free,
   0x0
 };
 
@@ -97,6 +103,28 @@ int shell_exit(char * string_buffer)
 {
   UNUSED(string_buffer);
   syscall_exit(0);
+  return 0;
+}
+
+int shell_malloc(char * string_buffer)
+{
+  unsigned bytes;
+  syscall_uart_puts("Enter order in hex > ");
+  syscall_uart_gets(string_buffer, '\n', 0x100 - 1);
+  string_strip(string_buffer, '\n');
+  bytes = (unsigned)string_hex_char_to_longlong(string_buffer);
+  syscall_malloc(bytes);
+  return 0;
+}
+
+int shell_free(char * string_buffer)
+{
+  uint64_t * va;
+  syscall_uart_puts("Enter VA in hex > ");
+  syscall_uart_gets(string_buffer, '\n', 0x100 - 1);
+  string_strip(string_buffer, '\n');
+  va = (uint64_t *)string_hex_char_to_longlong(string_buffer);
+  syscall_free(va);
   return 0;
 }
 

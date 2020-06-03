@@ -8,6 +8,8 @@ int syscall_exec(void(*start_func)());
 int syscall_fork(void);
 int syscall_exit(int status);
 int syscall_signal(int task_id, int signalno);
+int syscall_malloc(unsigned bytes);
+int syscall_free(uint64_t * va);
 
 #endif
 
