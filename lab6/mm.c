@@ -76,6 +76,7 @@ unsigned int merge_left_block(free_area_t *p, unsigned int addr, int slot) {
     uart_puts("==========MERGE LEFT BLOCK==========\r\n");
     free_area_t *target = p->next;
     remove_from_slot(target, slot);
+    
     unsigned int block_size = (0x1<<slot)*PAGE_SIZE;
 
     uart_puts("merge block: 0x");
@@ -88,14 +89,19 @@ unsigned int merge_left_block(free_area_t *p, unsigned int addr, int slot) {
     uart_hex(slot+1);
     uart_puts("\r\n");
 
+    free_area_t *tmp_addr = (unsigned int)addr + sizeof(free_area_t);
+    remove_from_slot(tmp_addr, slot);
+
     free_area_t *tmp = (unsigned int)target->map + sizeof(free_area_t);
-    remove_from_slot(tmp, slot);
     tmp->next = 0;
     tmp->map = (unsigned int)target->map;
 
     free_area_t *slot_p = &free_block[slot+1];
-    tmp->next = slot_p->next;
+    while(slot_p->next != 0) {
+        slot_p = slot_p->next;
+    }
     slot_p->next = tmp;
+
     return tmp->map;
 }
 
@@ -145,9 +151,6 @@ int merge_block(unsigned int addr, int slot){
             merge = 1;
         } else if(next_addr - block_size == base) {
             tmp_addr = merge_right_block(free_area_t_p, base, slot);
-            uart_puts("point at 0x");
-            uart_hex(&free_area_t_p);
-            uart_puts("\r\n");
             merge = 1;
         }
         
@@ -186,6 +189,7 @@ void recycle(unsigned int addr, unsigned int page_n) {
                 uart_puts("insert block...");
                 uart_print_int(page_n_tmp);
                 uart_puts("\r\n");
+
                 // init next free_area
                 free_area_t *tmp = base + sizeof(free_area_t);
                 tmp->next = free_area_t_p->next;
@@ -199,11 +203,12 @@ void recycle(unsigned int addr, unsigned int page_n) {
     print_memory_pool();
 }
 
-free_area_t * allocate_page(free_area_t *p, int i, unsigned int page_n) {
+free_area_t *allocate_page(free_area_t *p, int i, unsigned int page_n) {
     uart_puts("Allocate at slot: ");
     uart_print_int(i);
     free_area_t *target = p->next;
     p->next = target->next;
+    remove_from_slot(target, i);
     target->next = 0;
 
     unsigned int block_size = (unsigned int)((0x1 << i));
@@ -217,6 +222,7 @@ free_area_t * allocate_page(free_area_t *p, int i, unsigned int page_n) {
     unsigned int remain = block_size - page_n;
     uart_puts("remain page: ");
     uart_print_int(remain);
+    uart_puts("\r\n");
 
     unsigned int b = target->map;
     unsigned int s = page_n*PAGE_SIZE;
