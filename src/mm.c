@@ -1,5 +1,6 @@
 #include "mm.h"
 #include "mmu.h"
+#include "mbox.h"
 
 #include "peripherals/mmio.h"
 #include "schedule.h"
@@ -8,8 +9,6 @@
 struct pool_t obj_allocator[MAX_OBJ_ALLOCTOR_NUM];
 struct buddy_t free_area[MAX_BUDDY_ORDER];
 struct page_t page[PAGE_FRAMES_NUM];
-int first_aval_page, last_aval_page;
-uint64_t remain_page = 0;
 
 void* kmalloc(uint64_t size) {
     // size too large
@@ -28,7 +27,7 @@ void* kmalloc(uint64_t size) {
         uart_printf("kmalloc using object allocator\n");
         // check exist object allocator
         for (int i = 0; i < MAX_OBJ_ALLOCTOR_NUM; i++) {
-            if (obj_allocator[i].obj_size == size) {
+            if ((uint64_t)obj_allocator[i].obj_size == size) {
                 return (void*) obj_alloc_kernel(i);
             }
         }
@@ -233,7 +232,7 @@ void mm_init() {
     extern uint8_t __kernel_end;  // defined in linker
     uint8_t* kernel_end = &__kernel_end;
     int kernel_end_page = (uint64_t)kernel_end / PAGE_SIZE;
-    int mmio_base_page = MMIO_PHYSICAL / PAGE_SIZE;
+    int arm_memory_end_page = arm_memory_end / PAGE_SIZE;
 
     int i = 0;
     for (; i <= kernel_end_page; i++) {
@@ -242,10 +241,9 @@ void mm_init() {
 
     int order = MAX_BUDDY_ORDER - 1;
     int counter = 0;
-    for (; i < mmio_base_page; i++) {
+    for (; i < arm_memory_end_page; i++) {
         // init page counter times
         if (counter) {
-            remain_page++;
             page[i].idx = i;
             page[i].used = AVAL;
             page[i].order = -1;
@@ -254,8 +252,7 @@ void mm_init() {
             counter--;
         }
         // page i can fill current order
-        else if (i + (1 << order) - 1 < mmio_base_page) {
-            remain_page++;
+        else if (i + (1 << order) - 1 < arm_memory_end_page) {
             page[i].idx = i;
             page[i].used = AVAL;
             page[i].order = order;
@@ -269,44 +266,15 @@ void mm_init() {
         }
     }
 
-    for (; i < PAGE_FRAMES_NUM; i++) {
-        page[i].used = USED;
-    }
-
-    first_aval_page = kernel_end_page + 1;
-    last_aval_page = mmio_base_page - 1;
     buddy_info();
-    void* addr1 = kmalloc(0x100);
-    uart_printf("%x\n", (uint64_t)addr1);
-    void* addr2 = kmalloc(4096);
-    uart_printf("%x\n", (uint64_t)addr2);
-    void* addr3 = kmalloc(4097);
-    uart_printf("%x\n", (uint64_t)addr3);
-}
-
-
-uint64_t get_free_page() {  // return page physical address
-    for (int i = first_aval_page; i < last_aval_page; i++) {
-        if (page[i].used == AVAL) {
-            page[i].used = USED;
-            uint64_t page_virt_addr = i * PAGE_SIZE + KERNEL_VIRT_BASE;
-            uint64_t page_phy_addr = i * PAGE_SIZE;
-            memzero((uint8_t*)page_virt_addr, PAGE_SIZE);
-            return page_phy_addr;
-        }
-    }
-    return 0;
-}
-
-// get one page for kernel space
-void* page_alloc() {
-    uint64_t page_phy_addr = get_free_page();
-    if (page_phy_addr == 0) {
-        return NULL;
-    }
-    uint64_t page_virt_addr = page_phy_addr | KERNEL_VIRT_BASE;
-    remain_page--;
-    return (void*)page_virt_addr;
+    // void* addr1 = kmalloc(0x100);
+    // uart_printf("%x\n", (uint64_t)addr1);
+    // void* addr2 = kmalloc(4096);
+    // uart_printf("%x\n", (uint64_t)addr2);
+    // void* addr3 = kmalloc(4097);
+    // uart_printf("%x\n", (uint64_t)addr3);
+    uart_printf("%x %x\n", arm_memory_start, arm_memory_end);
+    uart_printf("%x %x", vc_memory_start, vc_memory_end);
 }
 
 // create pgd, return pgd address
@@ -405,13 +373,6 @@ void fork_pgd(struct task_t* target, struct task_t* dest) {
  *  Page reclaim related function 
  *  Need to be called before exit
  */
-
-void page_free(void* page_virt_addr) {
-    uint64_t pfn = phy_to_pfn(virtual_to_physical((uint64_t)page_virt_addr));
-    page[pfn].used = AVAL;
-    remain_page++;
-}
-
 void page_reclaim_pte(uint64_t pte_phy) {
     uint64_t* pte = (uint64_t*)(pte_phy | KERNEL_VIRT_BASE);
     for (int i = 0; i < 512; i++) {

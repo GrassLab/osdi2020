@@ -86,6 +86,14 @@ void sys_exit(struct trapframe* trapframe) {
     do_exit(trapframe->x[0]);
 }
 
+void sys_remain_page(struct trapframe* trapframe) {
+    int remain_page = 0;
+    for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
+        remain_page += free_area[i].nr_free * (1 << i);
+    }
+    trapframe->x[0] = remain_page;
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_TASK_ID:
@@ -113,7 +121,7 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
             break;
 
         case SYS_REMAIN_PAGE:
-            trapframe->x[0] = remain_page;
+            sys_remain_page(trapframe);
             break;
     }
 }

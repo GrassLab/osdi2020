@@ -26,9 +26,9 @@ void delay(int period) {
 //     }
 // }
 
-// void test_command3() {                                          // test page reclaim.
-//     printf("Remaining page frames : %d\n", remain_page_num());  // get number of remaining page frames from kernel by system call.
-// }
+void test_command3() {                                          // test page reclaim.
+    printf("Remaining page frames : %d\n", remain_page_num());  // get number of remaining page frames from kernel by system call.
+}
 
 void shell_input(char* cmd) {
     printf("\r# ");
@@ -68,9 +68,9 @@ void shell_controller(char* cmd) {
     // else if (!strcmp(cmd, "test2")) {
     //     test_command2();
     // }
-    // else if (!strcmp(cmd, "test3")) {
-    //     test_command3();
-    // }
+    else if (!strcmp(cmd, "test3")) {
+        test_command3();
+    }
     else {
         printf("shell: command not found: %s\r\n", cmd);
     }

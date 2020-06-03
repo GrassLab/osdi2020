@@ -6,6 +6,9 @@
 #include "mm.h"
 
 void boot_init() {
+    mbox_vc_memory();
+    mbox_arm_memory();
+
     mm_init();
     task_init();
 
@@ -25,8 +28,8 @@ void boot_init() {
     uart_printf("| .` | (__  | | | |_| | (_) \\__ \\ |) | | \n");
     uart_printf("|_|\\_|\\___| |_|  \\___/ \\___/|___/___/___|\n\n");
     mbox_board_revision();
-    mbox_vc_memory();
-    mbox_arm_memory();
+    uart_printf("VC Core base addr: 0x%x size: 0x%x\n", vc_memory_start, vc_memory_end - vc_memory_start);
+    uart_printf("ARM memory base addr: 0x%x size: 0x%x\n", arm_memory_start, arm_memory_end - arm_memory_start);
     uart_printf("\n");
 
     schedule_init();

@@ -36,3 +36,9 @@ exit:
     mov x8, SYS_EXIT
     svc #0
     ret
+
+.global remain_page_num
+remain_page_num:
+    mov x8, SYS_REMAIN_PAGE
+    svc #0
+    ret

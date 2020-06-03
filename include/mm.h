@@ -66,7 +66,6 @@ void* obj_alloc_kernel(int token);
 void obj_free(int token, uint64_t virt_addr);
 
 void mm_init();
-void* page_alloc();
 void fork_pgd(struct task_t* target, struct task_t* dest);
 void* map_page(struct task_t* task, uint64_t user_addr);
 void page_reclaim(uint64_t pgd_phy);
