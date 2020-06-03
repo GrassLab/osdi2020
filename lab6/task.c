@@ -58,6 +58,9 @@ uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
   /* set priority */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].priority = (uint64_t)priority;
 
+  /* Enable interrupt by default */
+  SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.spsr_el1, 7);
+
   /* assign context */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.lr = (uint64_t)start_func;
 
@@ -84,6 +87,7 @@ void task_shell(void)
   char ann[] = ANSI_BG_GREEN ANSI_BLACK"[Kernel mode shell]"ANSI_RESET" ";
   char string_buff[0x80];
   uint64_t current_task_id = task_get_current_task_id();
+  irq_int_enable();
 
   uart_puts(ann);
   uart_puts("ID: ");
