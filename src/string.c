@@ -54,6 +54,9 @@ void itoa ( int x, char str[], int d )
     while ( i < d )
         str[i++] = '0';
 
+    if ( i == 0 )
+        str[i++] = '0';
+
     str[i] = '\0';
     reverse ( str );
 }

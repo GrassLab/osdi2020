@@ -7,10 +7,11 @@ typedef struct allocator
 {
     int size;
     uint64_t allocate_status;
-    void * start_addr;
+    intptr_t start_addr;
 
 } allocator_t;
 
 allocator_t * register_fixed_size_allocator ( int size );
+void * alloc ( allocator_t * );
 
 #endif

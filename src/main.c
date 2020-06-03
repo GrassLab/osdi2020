@@ -23,7 +23,16 @@ int main ( )
     free_mem ( c );
     free_mem ( d );
 
-    /*allocator_t * bytes_30_allocator = */ register_fixed_size_allocator ( 30 );
+    allocator_t * bytes_30_allocator = register_fixed_size_allocator ( 30 );
+    alloc ( bytes_30_allocator );
+
+    allocator_t * bytes_60_allocator = register_fixed_size_allocator ( 60 );
+    alloc ( bytes_60_allocator );
+
+    alloc ( bytes_30_allocator );
+
+    allocator_t * bytes_90_allocator = register_fixed_size_allocator ( 90 );
+    alloc ( bytes_90_allocator );
 
     // start shell
     shell_start ( );
