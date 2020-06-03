@@ -14,11 +14,23 @@ void main()
 {
     uart_init();
     init_memory();
-    void *test = malloc(sizeof(free_area_t));
+    void *test1 = malloc(sizeof(free_area_t));
+    // print_memory_pool();
+    // void *test2 = malloc(sizeof(free_area_t));
+    // print_memory_pool();
+    // void *test3 = malloc(sizeof(free_area_t));
+    // // print_memory_pool();
+    // void *test4 = malloc(sizeof(free_area_t));
+    // // print_memory_pool();
+    // void *test5 = malloc(sizeof(free_area_t));
+    // print_memory_pool();
     // uart_hex(test);
-    free_memory(test);
-    malloc(1);
-    malloc(1);
+    free_memory(test1);
+    // free_memory(test2);
+    // free_memory(test3);
+    // free_memory(test4);
+    // free_memory(test5);
+
     // print_memory_pool();
     // char *welcome = " _ _ _   _   __  ___   __  _ _  _  _ _ \n| | | | / \\ |
     // \\| __| / _|| U || || U |\n| V V || o || o ) _|  \\_ \\|   || ||   |\n
