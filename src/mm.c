@@ -10,27 +10,12 @@ struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
 uint64_t remain_page = 0;
 
-void list_add(struct list_head* elmt, struct list_head* prev, struct list_head* next) {
-	next->prev = elmt;
-	elmt->next = next;
-	elmt->prev = prev;
-	prev->next = elmt;
-}
-
 void buddy_push(struct buddy_t* bd, struct list_head* elmt) {
-    list_add(elmt, bd->head.prev, &bd->head);
     bd->nr_free++;
-}
-
-struct page_t* buddy_pop(struct buddy_t* bd) {
-    if (bd->head.next == &bd->head) return NULL;
-    bd->nr_free--;
-    struct list_head* target = bd->head.next;
-    target->next->prev = target->prev;
-    target->prev->next = target->next;
-    target->next = NULL;
-    target->prev = NULL;
-    return (struct page_t*)target; // list_head is the first member of the structure
+    elmt->next = &(bd->head);
+    elmt->prev = bd->head.prev;
+    bd->head.prev->next = elmt;
+    bd->head.prev = elmt;
 }
 
 void buddy_remove(struct buddy_t* bd, struct list_head* elmt) {
@@ -53,29 +38,36 @@ struct page_t* buddy_release_redundant(struct page_t* p, int target_order) {
     // recursive release if not reach to target_order
     if (cur_order > target_order) {
         int prev_order = cur_order - 1;
-        int prev_order_pages = 1 << prev_order;
         struct page_t* bottom = p;
-        struct page_t* top = p + prev_order_pages;
-        // push bottom half back to buddy system
-        for (int i = 0; i < (1 << cur_order); i++) {
-            (p + i)->order = prev_order;
-        }
+        struct page_t* top = p + (1 << prev_order);
+        bottom->order = prev_order;
+        top->order = prev_order;
         buddy_push(&(free_area[prev_order]), &(bottom->list));
         return buddy_release_redundant(top, target_order);
     }
     // book keeping
-    for (int i = 0; i < (1 << cur_order); i++) {
+    for (int i = 0; i < (1 << target_order); i++) {
         (p + i)->used = USED;
     }
     return p;
 }
 
+struct page_t* buddy_pop(struct buddy_t* bd, int target_order) {
+    if (bd->head.next == &bd->head) return NULL;
+    bd->nr_free--;
+    struct list_head* target = bd->head.next;
+    target->next->prev = target->prev;
+    target->prev->next = target->next;
+    target->next = NULL;
+    target->prev = NULL;
+    return buddy_release_redundant((struct page_t*)target, target_order); // list_head is the first member of the structure
+}
+
 void* buddy_alloc(int order) {
     for (int i = order; i < MAX_BUDDY_ORDER; i++) {
         if (free_area[i].nr_free > 0) {
-            struct page_t* p = buddy_pop(&free_area[i]);
-            struct page_t* target_p = buddy_release_redundant(p, order);
-            uint64_t page_virt_addr = (target_p->idx * PAGE_SIZE) | KERNEL_VIRT_BASE;
+            struct page_t* p = buddy_pop(&free_area[i], order);
+            uint64_t page_virt_addr = (p->idx * PAGE_SIZE) | KERNEL_VIRT_BASE;
             return (void*)page_virt_addr;
         }
     }
@@ -160,7 +152,7 @@ void mm_init() {
             remain_page++;
             page[i].idx = i;
             page[i].used = AVAL;
-            page[i].order = order;
+            page[i].order = -1;
             page[i].list.next = NULL;
             page[i].list.prev = NULL;
             counter--;
