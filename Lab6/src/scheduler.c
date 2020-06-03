@@ -115,13 +115,13 @@ void exit_process(){
 	}
 
 	//reclaim user task page
-	for(int i=0;i<current->mm.user_pages_count;i++){
+	for(unsigned int i=0;i<current->mm.user_pages_count;i++){
 		free_page(current->mm.user_pages[i].phy_addr);
 		//printf("Free pid: %d, phy: %x/vir: %x\r\n",current->pid, current->mm.user_pages[i].phy_addr,current->mm.user_pages[i].vir_addr);
 	}
 
 	//reclaim page table
-	for(int i=0;i<current->mm.kernel_pages_count;i++){
+	for(unsigned int i=0;i<current->mm.kernel_pages_count;i++){
 		free_page(current->mm.kernel_pages[i]);
 		//printf("Free pid: %d, phy: %x\r\n",current->pid, current->mm.kernel_pages[i]);
 	}

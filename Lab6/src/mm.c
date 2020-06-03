@@ -300,22 +300,21 @@ void clean_entry(unsigned long *pte, unsigned long vir_addr) {
 // 1. relative vm_struct
 // 2. page entry of virtual address
 // 3. physical page which the virtual page mapping
-int free_user_page(unsigned long vir_addr){
-	vir_addr = (vir_addr>>12)<<12;
+int free_user_page(unsigned long vir_addr){	
 	
+	vir_addr = (vir_addr>>12)<<12;
+
 	// Step 1. If the vir_addr map to a vm_struct, clean it
 	// this is for reuse of virtual address
-	
-	// vm_end is used for check if we need to free not only one user page
-	// by default one page
-	unsigned long vm_end = vir_addr + PAGE_SIZE; 
-	for(int i=0;i<current->mm.vm_area_count;i++){	
+	int count = current->mm.vm_area_count;
+	unsigned long vm_end = vir_addr + PAGE_SIZE;
+	for(int i=0;i<count;i++){	
 		if(vir_addr >= current->mm.mmap[i].vm_start &&\
 			vir_addr < current->mm.mmap[i].vm_end){
 			
-			vm_end = current->mm.mmap[i].vm_end;	
+			vm_end = current->mm.mmap[i].vm_end;
 			// moving array
-			for(int n=i;n<current->mm.vm_area_count-1;n++){
+			for(int n=i;n<count-1;n++){
 				current->mm.mmap[n] = current->mm.mmap[n+1];
 			}	
 			current->mm.vm_area_count--;		
@@ -326,15 +325,14 @@ int free_user_page(unsigned long vir_addr){
 	// Step 2+3. free "all" user pages and its page table
 	// For user, all using page will be order 0
 	// but note that the vir_addr may use more than one page
-	
-	int count = current->mm.user_pages_count;
+	count = current->mm.user_pages_count;
 	for(int i=0;i<count;i++){
 		if(current->mm.user_pages[i].vir_addr >= vir_addr &&\
 			current->mm.user_pages[i].vir_addr < vm_end){
 			printf("+++ free page vir addr 0x%x, phy addr 0x%x\r\n",current->mm.user_pages[i].vir_addr,current->mm.user_pages[i].phy_addr);
 			free_page(current->mm.user_pages[i].phy_addr);
 			// moving array
-			for(int n=i;n<current->mm.user_pages_count-1;n++){
+			for(unsigned int n=i;n<current->mm.user_pages_count-1;n++){
 				current->mm.user_pages[n] = current->mm.user_pages[n+1];
 			}	
 			current->mm.user_pages_count--;
@@ -349,12 +347,12 @@ int free_user_page(unsigned long vir_addr){
 				shift-=9;
 			}
 			clean_entry((unsigned long *)(table+VA_START),target_va);
-		 }
+		}
 	}
-
+	
+	
 	set_pgd(current->mm.pgd); // after clean, setup pgd 
-			
-	return 0;	      
+	return 0; 
 }
 /**************************************************************************************/
 
@@ -458,7 +456,7 @@ void dump_mem(void *src,unsigned long len){
 int copy_virt_memory(struct task_struct *dst){
 	// copy virtual memory
 
-	for(int i=0;i<current->mm.user_pages_count;i++){
+	for(unsigned int i=0;i<current->mm.user_pages_count;i++){
 		struct user_page src = current->mm.user_pages[i];
 		unsigned long page = allocate_user_page(dst, src.vir_addr);
 		if(!page)
@@ -469,7 +467,7 @@ int copy_virt_memory(struct task_struct *dst){
 
 	// copy vm area struct
 	dst->mm.vm_area_count = current->mm.vm_area_count;
-	for(int i=0;i<dst->mm.vm_area_count;i++)
+	for(unsigned int i=0;i<dst->mm.vm_area_count;i++)
 		dst->mm.mmap[i] = current->mm.mmap[i];
 	return 0;
 }
@@ -490,7 +488,7 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 
 	// Else check if user access a map region
 	struct mm_struct mm = current->mm;
-	for(int i=0;i< mm.vm_area_count;i++){
+	for(unsigned int i=0;i< mm.vm_area_count;i++){
 		if( (addr >= mm.mmap[i].vm_start) && (addr < mm.mmap[i].vm_end)){	
 			unsigned long page = get_free_page(0);
 			if (page == 0) 
@@ -533,7 +531,6 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
  void* mmap(void* addr, unsigned long len, int prot, int flags, void* file_start, int file_offset){
  	
 	unsigned long vir_addr;
-
 	if(file_start!=NULL && file_offset!=0){
 		printf("Map to file: not implement yet");
 		while(1);
@@ -554,7 +551,7 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 	while(1){		
 		// kernel decides the new region’s start address if addr is invalid				 // First, make sure new region not overlap exist region
 		flag = 0;	
-		for(int i=0;i< mm.vm_area_count;i++){
+		for(unsigned int i=0;i< mm.vm_area_count;i++){
 			if(vir_addr >= mm.mmap[i].vm_start && vir_addr < mm.mmap[i].vm_end){
 				flag = 1;
 				vir_addr = mm.mmap[i].vm_end;
@@ -563,7 +560,7 @@ int page_fault_handler(unsigned long addr,unsigned long esr){
 		}
 		
 		// Next, make sure new region not overlap exist page
-		for(int i=0;i<current->mm.user_pages_count;i++){
+		for(unsigned int i=0;i<current->mm.user_pages_count;i++){
 			if(vir_addr == current->mm.user_pages[i].vir_addr){
 				flag = 1;
 				vir_addr+=PAGE_SIZE;

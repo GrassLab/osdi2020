@@ -4,8 +4,7 @@
 #include "include/uart.h"
 #include "include/scheduler.h"
 
-void init_default_allocator(int pid){
-	
+void init_default_allocator(int pid){	
 	// init default allocator for IDLE task
 	for(int i=0;i<DEFAULT_ALLOCATOR_NUM;i++){
 		pool_init(&default_allocator[pid][i],MIN_DEFAULT_ALLOCATOR_SIZE*(i+1));
@@ -130,7 +129,7 @@ unsigned long pool_alloc_user(pool *p){
 			
 			while(1){		
 				flag = 0;	
-				for(int i=0;i< mm.vm_area_count;i++){
+				for(unsigned int i=0;i< mm.vm_area_count;i++){
 					if(vir_addr >= mm.mmap[i].vm_start && \
 						vir_addr < mm.mmap[i].vm_end){
 						
@@ -141,7 +140,7 @@ unsigned long pool_alloc_user(pool *p){
 				}
 		
 		
-				for(int i=0;i<current->mm.user_pages_count;i++){
+				for(unsigned int i=0;i<current->mm.user_pages_count;i++){
 					if(vir_addr == current->mm.user_pages[i].vir_addr){
 						flag = 1;
 						vir_addr+=PAGE_SIZE;
