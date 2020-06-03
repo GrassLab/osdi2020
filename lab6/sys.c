@@ -54,6 +54,7 @@ int sys_timer_int(void)
 
 int sys_uart_puts(char * string)
 {
+  irq_int_enable();
   uart_puts(string);
   return 0;
 }
@@ -162,12 +163,14 @@ int sys_signal(int task_id, int signalno)
 
 int sys_malloc(unsigned bytes)
 {
+  irq_int_enable();
   slab_malloc(bytes);
   return 0;
 }
 
 int sys_free(uint64_t * va)
 {
+  irq_int_enable();
   slab_malloc_free(va);
   return 0;
 }

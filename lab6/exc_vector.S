@@ -45,6 +45,7 @@ EL_dispatcher:
   mov x1, sp
 
   bl exc_dispatcher
+  bl irq_int_enable
 
 .global __sys_fork_child_entry
 __sys_fork_child_entry:

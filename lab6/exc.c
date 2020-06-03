@@ -120,6 +120,8 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
     exc_not_implemented(0x18);
   }
 
+  irq_int_enable();
+
   switch(exception_imm)
   {
   case 1:

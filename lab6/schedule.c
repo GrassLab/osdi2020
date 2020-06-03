@@ -175,6 +175,7 @@ void schedule_zombie_reaper(void)
   uart_puts("\n");
   while(1)
   {
+    irq_int_enable();
     if(schedule_zombie_count == 0)
     {
       /* nothing to do, yield */
