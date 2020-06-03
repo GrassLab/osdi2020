@@ -14,12 +14,13 @@ SECTIONS
   . = ALIGN(0x10);
   __bss_start = .;
   .bss : { *(.bss) }
+  . = ALIGN(0x1000);
   __bss_end = .;
 
-  . = ALIGN(0x1000);
   page_table_start = .;
   . += ((1 + 1 + 2 + 1024) * 4096);
 
+  . = ALIGN(0x1000); /* Just for caution */
   __kernel_end = .;
 
   ENTRY(_start)

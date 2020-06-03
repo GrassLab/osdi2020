@@ -47,7 +47,7 @@ el2_to_el1:
 
 el1_entry:
   adr x0, __bss_start
-  adr x1, __bss_end
+  adrp x1, __bss_end
   sub x1, x1, x0
   lsr x1, x1, #3
 1:
