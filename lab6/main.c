@@ -14,12 +14,11 @@ void main()
 {
     uart_init();
     init_memory();
-    malloc(sizeof(free_area_t));
+    void *test = malloc(sizeof(free_area_t));
+    // uart_hex(test);
+    free_memory(test);
     malloc(1);
-    malloc((unsigned int)(0x1 << 14));
-    malloc((unsigned int)(0x1 << 14));
-    malloc(4);
-    malloc(4);
+    malloc(1);
     // char *welcome = " _ _ _   _   __  ___   __  _ _  _  _ _ \n| | | | / \\ |
     // \\| __| / _|| U || || U |\n| V V || o || o ) _|  \\_ \\|   || ||   |\n
     // \\_n_/ |_n_||__/|___| |__/|_n_||_||_n_|\n\n";

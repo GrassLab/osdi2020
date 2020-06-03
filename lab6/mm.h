@@ -22,7 +22,7 @@ typedef struct free_area {
 } free_area_t;
 
 void *malloc(unsigned int size);
-void free(void *ptr);
+void free_memory(unsigned long addr);
 void init_memory();
 
 #endif
