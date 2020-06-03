@@ -17,6 +17,11 @@ typedef enum {
     USED,
 } STATUS;
 
+typedef enum {
+    FIXED,
+    VARIED,
+} TYPE;
+
 struct block {
   unsigned long addr_start;
   unsigned long addr_end;
@@ -41,6 +46,10 @@ struct obj_alloc {
   unsigned long id;
   struct chunk* chunk_list;
   STATUS status;
+  TYPE type;
+
+  // For varied sized allocator
+  int token;
 };
 
 extern struct buddy buddy_system;
@@ -56,10 +65,13 @@ struct block* get_free_descriptor();
 void free_space(struct block* free_block);
 void print_buddy();
 
-int register_obj_allocator(int size);
+int register_obj_allocator(int size, TYPE type);
 struct block* block_allocate(struct chunk** chunk_list, int size);
 void* fixed_obj_allocate(int token);
-void* fixed_obj_free(void* obj, int token);
+void fixed_obj_free(void* obj, int token);
+void* varied_obj_allocate(int token);
+void varied_obj_free(void* obj, int token);
+
 struct obj_alloc* get_free_allocator();
 struct chunk* get_free_chunk();
 void free_chunk(struct chunk** chunk_list, unsigned long addr);
