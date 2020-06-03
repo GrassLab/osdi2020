@@ -39,7 +39,17 @@ int main ( )
     fixed_free ( bytes_30_allocator, byte_30_fixed_b );
     fixed_free ( bytes_90_allocator, byte_90_fixed_a );
 
-    register_varied_size_allocator ( );
+    dynamic_allocator_t * dynamic_allocator = register_varied_size_allocator ( );
+
+    void * byte_60   = dynamic_alloc ( dynamic_allocator, 60 );
+    void * byte_100  = dynamic_alloc ( dynamic_allocator, 100 );
+    void * byte_250  = dynamic_alloc ( dynamic_allocator, 250 );
+    void * byte_1024 = dynamic_alloc ( dynamic_allocator, 1024 );
+
+    dynamic_free ( dynamic_allocator, byte_60 );
+    dynamic_free ( dynamic_allocator, byte_100 );
+    dynamic_free ( dynamic_allocator, byte_250 );
+    dynamic_free ( dynamic_allocator, byte_1024 );
 
     // start shell
     shell_start ( );

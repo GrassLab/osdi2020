@@ -112,7 +112,7 @@ void * allocate_free_mem ( int size_in_byte )
 
     temp->used = 1;
 
-    uart_printf ( "\033[0;32m[Allocated]\033[0m Request %d, Get %d | address: %d\n", size_in_byte, temp->pages * PAGE_SIZE, temp->addr );
+    uart_printf ( "\033[0;32m[Allocate Contunuous Pages]\033[0m\t\tRequest %d, Get %d | address: %d\n", size_in_byte, temp->pages * PAGE_SIZE, temp->addr );
 
     return (void *) ( temp->addr );
 }

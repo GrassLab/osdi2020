@@ -3,6 +3,8 @@
 
 #include "type.h"
 
+#define MAX_FIXED_ALLOCATOR_ENTITY 64
+
 typedef struct fixed_allocator
 {
     int size;
@@ -13,9 +15,9 @@ typedef struct fixed_allocator
 
 typedef struct dynamic_allocator_page_alloc_record
 {
-    intptr_t pade_addr;
-
+    intptr_t page_addr;
     struct dynamic_allocator_page_alloc_record * next;
+
 } page_alloc_record_t;
 
 typedef struct dynamic_allocator
@@ -32,5 +34,7 @@ fixed_allocator_t * register_fixed_size_allocator ( int size );
 dynamic_allocator_t * register_varied_size_allocator ( );
 void * fixed_alloc ( fixed_allocator_t * );
 void fixed_free ( fixed_allocator_t *, void * );
+void * dynamic_alloc ( dynamic_allocator_t *, int size );
+void dynamic_free ( dynamic_allocator_t * allocator, void * addr );
 
 #endif
