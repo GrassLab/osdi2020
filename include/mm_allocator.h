@@ -59,8 +59,11 @@ void print_buddy();
 int register_obj_allocator(int size);
 struct block* block_allocate(struct chunk** chunk_list, int size);
 void* fixed_obj_allocate(int token);
+void* fixed_obj_free(void* obj, int token);
 struct obj_alloc* get_free_allocator();
 struct chunk* get_free_chunk();
+void free_chunk(struct chunk** chunk_list, unsigned long addr);
+int find_chunk(struct chunk* chunk_list, unsigned long addr);
 void print_chunk(struct chunk* chunk_list);
 
 #endif

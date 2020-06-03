@@ -33,6 +33,9 @@ void main() {
     uart_hex(obj[i]);
     uart_puts("\n");
   }
+  for(int i = 0; i < 7; i++){
+    fixed_obj_free(obj[i], token);
+  }
 
   for(;;) {
     put_shell();

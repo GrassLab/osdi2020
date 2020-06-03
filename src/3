@@ -81,11 +81,6 @@ void free_space(struct block* free_block) {
   new_block->addr_start = free_block->addr_start;
   new_block->addr_end = free_block->addr_end;
   new_block->next = free_block->next;
-  uart_puts("free space from: ");
-  uart_hex(free_block->addr_start);
-  uart_puts(" to ");
-  uart_hex(free_block->addr_end);
-  uart_puts("\n");
   while (flag == 1) {
     flag = 0;
     struct block* current_block = buddy_system.block_list[current_level];
@@ -112,8 +107,6 @@ void free_space(struct block* free_block) {
       if (previous_block != current_block)
         previous_block = previous_block->next;
       current_block = current_block->next;
-      uart_hex(current_block);
-      uart_puts("\n");
     }
   current_level++;
   }
@@ -123,6 +116,7 @@ void free_space(struct block* free_block) {
   buddy_system.block_list[current_level] = new_block;
 
   print_buddy();
+  uart_puts("\n");
   uart_puts("\n");
 }
 
@@ -180,6 +174,7 @@ void* fixed_obj_allocate(int token) {
   allocator->chunk_list = allocator->chunk_list->next;
   uart_puts("after allocate:\n");
   print_chunk(allocator->chunk_list);
+  uart_puts("\n");
   return addr;
 }
 
@@ -187,19 +182,23 @@ void* fixed_obj_free(void* obj, int token) {
   struct obj_alloc* allocator = &(allocator_pool[token]);
   struct chunk* new_chunk = get_free_chunk();
   int obj_size = allocator->obj_size;
-  uart_puts("before free:\n");
-  print_chunk(allocator->chunk_list);
   new_chunk->addr = obj;
   new_chunk->next = allocator->chunk_list;
   allocator->chunk_list = new_chunk;
-  uart_puts("before free block:\n");
+  uart_puts("after free:\n");
   print_chunk(allocator->chunk_list);
 
   //check if the block need to be free
   struct block* current_block = allocator->block_list;
   struct block* parent_block = allocator->block_list;
   while (current_block != NULL) {
+    uart_puts("current block start: ");
+    uart_hex(current_block->addr_start);
+    uart_puts("\ncurrent obj: ");
+    uart_hex(obj);
+    uart_puts("\n");
     if (current_block->addr_start <= obj && current_block->addr_end >= obj) {
+      uart_puts("free block\n");
       unsigned long current_addr = current_block->addr_start;
       int free_flag = 1;
       while (current_addr < current_block->addr_end) {
@@ -207,21 +206,13 @@ void* fixed_obj_free(void* obj, int token) {
           free_flag = 0;
           break;
         }
-        current_addr += obj_size;
       }
-
       if (free_flag == 1) {
         if (parent_block == current_block)
           allocator->block_list = current_block->next;
         else
           parent_block->next = current_block->next;
         free_space(current_block);
-
-        unsigned long current_addr = current_block->addr_start;
-        while (current_addr < current_block->addr_end) {
-          free_chunk(&(allocator->chunk_list), current_addr);
-          current_addr += obj_size;
-        }
       }
       break;
     }
@@ -229,9 +220,6 @@ void* fixed_obj_free(void* obj, int token) {
       parent_block = parent_block->next;
     current_block = current_block->next;
   }
-  uart_puts("after free:\n");
-  print_chunk(allocator->chunk_list);
-  uart_puts("\n");
 
 }
 
@@ -253,34 +241,12 @@ struct chunk* get_free_chunk() {
     }
   return NULL;
 }
-void free_chunk(struct chunk** chunk_list, unsigned long addr) {
-  struct chunk* current_chunk = *chunk_list;
-  struct chunk* parent_chunk = *chunk_list;
-  while (current_chunk != NULL) {
-    if (current_chunk->addr == addr) {
-      if (current_chunk == parent_chunk)
-        *chunk_list = current_chunk->next;
-      else
-        parent_chunk->next = current_chunk->next;
-      break;
-    }
-      if (current_chunk != parent_chunk)
-        parent_chunk = parent_chunk->next;
-      current_chunk = current_chunk->next;
-  }
-}
 
 int find_chunk(struct chunk* chunk_list, unsigned long addr) {
-  struct chunk* list = chunk_list;
-  int flag = 0;
-  while (list != NULL) {
-    if (list->addr == addr) {
-      flag = 1;
-      break;
-    }
-    list = list->next;
-  }
-  return flag;
+  while (chunk_list != NULL)
+    if (chunk_list->addr == addr)
+      return 1;
+  return 0;
 }
 
 void print_chunk(struct chunk* chunk_list) {
