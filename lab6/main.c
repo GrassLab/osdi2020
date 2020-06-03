@@ -453,17 +453,25 @@ void object_logout(int pgnum)
     free(obj_dec);
 }
 
-/*void* varied_allocate(unsigned long long size)
+void* varied_allocate(unsigned long long size)
 {
     if(size < REAL_OBJ_PAGE_SIZE)
     {
-       
+        obj_struct *tmp = obj_list_start;
+        while(tmp != 0)
+        {
+            if(tmp->obj_size == size)
+            {
+                int pgnum = ((unsigned long long)tmp - (unsigned long long)page_frame)>>12;
+                return object_allocate(pgnum);
+            }
+        }
     }
     else
     {
         return (void*)mmap(size);
     }
-}*/
+}
 
 void main()
 {
