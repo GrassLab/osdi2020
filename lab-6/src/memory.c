@@ -113,8 +113,8 @@ void free_page(Page *page) {
         buddy_page_index = page->index ^ (1 << order);
         buddy_page = &pagePool[buddy_page_index];
         printf("[merge buddy] check page order: %d\n", page->order);
-        printf("[merge buddy] check page index: %d - %d\n", page->index, page->index + (1<< order));
-        printf("[merge buddy] check buddy index: %d - %d\n", buddy_page_index, buddy_page_index+ (1<< order));
+        printf("[merge buddy] check page index: %d - %d\n", page->index, page->index + (1<< order) - 1);
+        printf("[merge buddy] check buddy index: %d - %d\n", buddy_page_index, buddy_page_index+ (1<< order) - 1);
         printf("[merge buddy] check buddy used: %d\n", pagePool[buddy_page_index].used);
         if (buddy_page->used == PAGE_NOT_USED && buddy_page->order == page->order) {
             list_remove_chain(&(buddy_page->list), &(BUDDY_END(buddy_page, order)->list));
