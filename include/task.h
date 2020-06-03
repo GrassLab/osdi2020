@@ -1,3 +1,7 @@
+#ifndef _TASK_H
+#define _TASK_H
+
+#include "uart.h"
 #include "tool.h"
 #include "gpio.h"
 
@@ -38,6 +42,10 @@ struct task {
   long preempt_count;
   long status;
   int task_id;
+  long user_page;
+  long pages[30];
+  long pages_num;
+  unsigned long* pgd;
 };
 
 #define INIT_TASK \
@@ -71,3 +79,7 @@ void create_tasks();
 void switch_to_user();
 void switch_to_new_user();
 extern void switch_to(struct task* prev, struct task* next, unsigned long spsr);
+void do_exec(void (*func)());
+void do_fork();
+
+#endif

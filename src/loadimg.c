@@ -32,7 +32,6 @@ void copyjump() {
   if (overlap(old_start, old_end, new_start, new_end) == 1) { //Overlap
     uart_puts("overlap!!\n");
     char *tmp_addr = (char *)(TMP_KERNEL_ADDR);
-    char buf[30];
     for (int i = 0; i < old_end - old_start; i++) {
       *(tmp_addr + i) = *(char *)(old_start + i);
     }

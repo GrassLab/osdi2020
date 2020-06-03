@@ -1,3 +1,9 @@
+#ifndef _MM_H
+#define _MM_H
+
+#include "mmu.h"
+#include "task.h"
+
 #define PBASE 0x3F000000
 #define PAGE_SHIFT	 	12
 #define TABLE_SHIFT 		9
@@ -13,14 +19,27 @@
 #define PAGING_PAGES            (PAGING_MEMORY/PAGE_SIZE)
 
 #define PAGE_MAP_SIZE 0x10000
+
+typedef enum {
+    FREE,
+    ALLOCATED,
+} PAGE_STATUS;
+
 struct page {
-  int is_used;
+  unsigned long id;
+  unsigned long virtual_addr;
+  PAGE_STATUS status;
 };
 
-struct page* page_map[PAGE_MAP_SIZE];
+extern struct page page_map[PAGE_MAP_SIZE];
 
 unsigned long get_free_page();
 void free_page(unsigned long p);
 
-void *page_alloc();
-void page_free(void *page_addr);
+void page_init();
+struct page* page_alloc();
+void page_free(struct page* p);
+void page_mapping(struct task* task, struct page* user_page);
+void move_ttbr(unsigned long* pgd);
+
+#endif
