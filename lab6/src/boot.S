@@ -86,7 +86,7 @@ el1_entry:
     orr x5, x3, x4 // combine the physical address of next level page with attribute.
     str x5, [x1, #8]
 
-#if 0 /* all device */
+#if 1 /* all device */
     ldr x4, =LV3_PMD_ATTR
     mov x5, #512        // physical addr boundary
     mov x6, xzr         // physical addr counter 0 to 1023

@@ -12,6 +12,7 @@ Zone buddy_zone = 0;
 #define STARTUP_ARRAY_SIZE 4
 unsigned startup_array_size = STARTUP_ARRAY_SIZE;
 unsigned startup_cur = 0;
+char startup_have_allocated = 0;
 unsigned long *startup_addrs = (unsigned long []){[0 ... STARTUP_ARRAY_SIZE - 1] = 0};
 unsigned long *startup_sizes = (unsigned long []){[0 ... STARTUP_ARRAY_SIZE - 1] = 0};
 
@@ -30,6 +31,20 @@ unsigned long startup_allocate(unsigned long size, unsigned long mask){
   unsigned long addr = LOW_MEMORY;
   if(startup_cur >= startup_array_size){
     // reallocate array dynamically
+    unsigned long *addrs = (unsigned long*)kmalloc(sizeof(unsigned long) * (startup_array_size << 1));
+    unsigned long *sizes = (unsigned long*)kmalloc(sizeof(unsigned long) * (startup_array_size << 1));
+    for(int i = 0; i < startup_array_size; i++){
+      addrs[i] = startup_addrs[i];
+      sizes[i] = startup_sizes[i];
+    }
+    if(startup_have_allocated){
+      kfree((unsigned long)startup_addrs);
+      kfree((unsigned long)startup_sizes);
+    }
+    startup_addrs = addrs;
+    startup_sizes = sizes;
+    startup_array_size <<= 1;
+    startup_have_allocated |= 1;
   }
   addr = search_addr(addr, size, mask);
   printfmt("allocate addr = %x end = %x", addr, addr + size);
@@ -574,8 +589,12 @@ void varied_free(unsigned long token, unsigned long addr){
   }
 }
 
-unsigned long kalloc(unsigned long size){
-  static unsigned long token = 0;
-  if(!token) token = varied_get_token();
-  return varied_alloc(token, size);
+unsigned long ktoken = 0;
+unsigned long kmalloc(unsigned long size){
+  if(!ktoken) ktoken = varied_get_token();
+  return varied_alloc(ktoken, size);
+}
+
+void kfree(unsigned long addr){
+  varied_free(ktoken, addr);
 }

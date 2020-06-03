@@ -19,15 +19,15 @@ Task **tasks = 0, **read_tasks = 0;
 
 void task_init(){
   show_task_msg("task init");
-  init_task = (Task*)kalloc(sizeof(Task));
+  init_task = (Task*)kmalloc(sizeof(Task));
   *init_task = (Task){
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none, {0,}
   };
-  tasks = (Task**)kalloc(sizeof(Task*) * TASK_SIZE);
+  tasks = (Task**)kmalloc(sizeof(Task*) * TASK_SIZE);
   tasks[0] = current_task = init_task;
   for(int i = 1; i < TASK_SIZE; i++) tasks[i] = 0;
-  read_tasks = (Task**)kalloc(sizeof(Task*) * TASK_SIZE);
+  read_tasks = (Task**)kmalloc(sizeof(Task*) * TASK_SIZE);
   for(int i = 0; i < TASK_SIZE; i++) read_tasks[i] = 0;
   show_task_msg("task init done");
 }

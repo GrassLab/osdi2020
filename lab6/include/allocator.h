@@ -102,7 +102,8 @@ unsigned long varied_alloc(unsigned long token, unsigned long size);
 void varied_free(unsigned long token, unsigned long addr);
 void varied_show(VariedAllocator varied, unsigned limit);
 
-unsigned long kalloc(unsigned long size);
+unsigned long kmalloc(unsigned long size);
+void kfree(unsigned long addr);
 unsigned long startup_max_cont_space_left();
 
 #endif
