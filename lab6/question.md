@@ -1,11 +1,11 @@
-# Lab4 Questions
+# Lab6 Questions
 
-> Q: Without indirect branch, the code might still work fine, why it’s the case and why it’s mandatory to use indirect branch.
-A: ttbr0_el1 and ttbr1_el1 points to the same page frame. All map to 0x00000000 to 0x3fffffff, which is the same as physical address.  We need to switch to virtual address otherwise otherwise ldr won't work well. Because PC is still in physical address space.
+> Q: Is buddy allocator perfectly eliminate external fragmentation? If yes, prove it? If no, give an external fragmentation example.
+A: No. Allocate 4 order 0 block size. Free the two of them. They won't be able to merge because the remaining two buddy is not currently free.
 
-> Q: For mapping 1GB memory region, how many page frames are used by page tables(PGD, PUD, PMD, and PTE) in four level translation?
-A: GPD: 1, PUD: 1, PMD: 512(262144/512), PTE: 262144(1GB/4KB)
+> Q: If the registered object size is 2049 byte, one page frame can only fit in one object. Hence the internal fragmentation is around 50%. How to decrease the percentage of the internal fragmentation in this case?
+A: Use larger order size block for continuous allocation.
 
-> Q: If a page frame is allocated and to be mapped at user space. Is it necessary to initialize it into 0?
-A: Depends on the use of the user mode program. If it's for .bss segment then yes. Others may not be necessary.
+> Q: What’s the benefit to prevent static allocation?
+A: Smaller executable size. Ability to dynamic decide the space needed
 
