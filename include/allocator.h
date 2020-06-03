@@ -13,5 +13,6 @@ typedef struct allocator
 
 allocator_t * register_fixed_size_allocator ( int size );
 void * alloc ( allocator_t * );
+void free ( allocator_t *, void * );
 
 #endif
