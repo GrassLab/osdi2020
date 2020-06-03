@@ -55,10 +55,10 @@
 #define PT_DESC_PXN                   (0b1 << 53)// Privileged eXecute Never 
 #define PT_DESC_UXN                   (0b1 << 54)// Uprivileged eXecute Never
 
-#define PT_PMD_DEV_LOWER_ATTR         (PT_DESC_AF | MAIR_DEVICE_nGnRnE_IDX<<2 | PT_DESC_AP_PRIVI_RW)
-#define PT_PMD_NOR_LOWER_ATTR         (PT_DESC_AF | MAIR_NORMAL_NCACHE_IDX<<2 | PT_DESC_AP_PRIVI_RW)
-#define PT_PMD_DEV_UPPER_ATTR         (PT_DESC_UXN | PT_DESC_PXN)
-#define PT_PMD_NOR_UPPER_ATTR         (0x0)
+#define PT_DEV_LOWER_ATTR             (PT_DESC_AF | MAIR_DEVICE_nGnRnE_IDX<<2)
+#define PT_NOR_LOWER_ATTR             (PT_DESC_AF | MAIR_NORMAL_NCACHE_IDX<<2)
+#define PT_DEV_UPPER_ATTR             (PT_DESC_UXN | PT_DESC_PXN)
+#define PT_NOR_UPPER_ATTR             (0x0)
 
 
 #endif//_MMU_H

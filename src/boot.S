@@ -44,22 +44,27 @@ el1_entry:
     mov     x1, PUD_BASE
     mov     x2, PMD_BASE
     
-    mov     x7, (2*PAGE_TABLE_SIZE)
-    mov     x6, x0
-clear_table: //invalidate non used PGD, PUD entry
-    str     xzr, [x0], #8
-    subs    x7, x7, #8
-    bgt     clear_table
+//    mov     x7, (2*PAGE_TABLE_SIZE)
+//    mov     x6, x0
+//clear_table: //invalidate non used PGD, PUD entry
+//    str     xzr, [x6], #8
+//    subs    x7, x7, #8
+//    bgt     clear_table
     
+    // setup first PGD entry(pointer to PUD)    
     ldr     x7, =PT_DESC_TO_TABLE
-    orr     x7, x1, x7            // get descriptor(entry)
-    str     x7, [x0]              // setup first PGD entry(pointer to PUD)
-
+    orr     x7, x7, x1
+    str     x7, [x0]
+    // setup first PUD entry(pointer to PMD)
     ldr     x7, =PT_DESC_TO_TABLE
-    orr     x7, x2, x7            // get descriptor(entry)
-    str     x7, [x1]              // setup first PUD entry(pointer to PMD)
+    orr     x7, x7, x2
+    str     x7, [x1]
+    // setup second PUD entry(pointer to local device)
+    ldr     x7, =(PT_DEV_UPPER_ATTR | PT_DEV_LOWER_ATTR | PT_DESC_TO_BLOCK)
+    orr     x7, x7, #LOCAL_DEV_BASE
+    str     x7, [x1, #8]
 
-    ldr     x7, =(PT_PMD_NOR_UPPER_ATTR | PT_PMD_NOR_LOWER_ATTR | PT_DESC_TO_BLOCK)
+    ldr     x7, =(PT_NOR_UPPER_ATTR | PT_NOR_LOWER_ATTR | PT_DESC_TO_BLOCK)
     mov     x6, xzr               // PMD idx conter
 nor_pmd:                          // 0x000 00000 to 0x3ef fffff
     mov     x5, x6, lsl #BLOCK_SHIFT// block basis
@@ -69,7 +74,7 @@ nor_pmd:                          // 0x000 00000 to 0x3ef fffff
     cmp     x6, #(HIGH_MEMORY>>BLOCK_SHIFT)
     blo     nor_pmd
 
-    ldr     x7, =(PT_PMD_DEV_UPPER_ATTR | PT_PMD_DEV_LOWER_ATTR | PT_DESC_TO_BLOCK)
+    ldr     x7, =(PT_DEV_UPPER_ATTR | PT_DEV_LOWER_ATTR | PT_DESC_TO_BLOCK)
 dev_pmd:                          // 0x3F0 00000 to 0x3FF FFFFF
     mov     x5, x6, lsl #BLOCK_SHIFT// block basis
     orr     x5, x5, x7            // combine block address and attribute to a descriptor
