@@ -57,6 +57,7 @@ extern uint64_t remain_page;
 
 /* Function in mm.c */
 void mm_init();
+void kfree(void* addr);
 void* kmalloc(uint64_t size);
 void fork_pgd(struct task_t* target, struct task_t* dest);
 void* map_page(struct task_t* task, uint64_t user_addr);
@@ -65,9 +66,10 @@ void page_reclaim(uint64_t pgd_phy);
 // object allocator
 int obj_alloc_register(uint64_t size);
 void* obj_alloc_kernel(int token);
-void obj_free(int token, uint64_t virt_addr);
+void obj_free(int token, void* virt_addr);
 
 // buddy system
+void buddy_info();
 void buddy_init();
 void buddy_push(struct buddy_t* bd, struct list_head* elmt);
 void* buddy_alloc(int order);

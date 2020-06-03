@@ -26,6 +26,11 @@ void page_struct_init(int first_avail_page, int memory_end_page) {
         page[i].used = USED;
         i++;
     }
+
+    // alignment
+    int remainder = i % (1 << MAX_BUDDY_ORDER);
+    i += (1 << MAX_BUDDY_ORDER) - remainder;
+
     // page booking for normal region
     int order = MAX_BUDDY_ORDER - 1;
     int counter = 0;
@@ -235,6 +240,23 @@ void* kmalloc(uint64_t size) {
     }
 }
 
+void kfree(void* addr) {
+    for (int i = 0; i < MAX_OBJ_ALLOCTOR_NUM; i++) {
+        struct pool_t pool = obj_allocator[i];
+        for (int j = 0; j < pool.page_used; j++) {
+            int addr_pfn = phy_to_pfn(virtual_to_physical((uint64_t)addr));
+            int page_pfn = phy_to_pfn(virtual_to_physical(pool.page_addr[j]));
+            if (addr_pfn == page_pfn) {
+                uart_printf("free using obj allocator\n");
+                obj_free(i, addr);
+                return;
+            }
+        }
+    }
+    uart_printf("free using buddy\n");
+    buddy_free(addr);
+}
+
 /*
  *  Obj allocator
  */
@@ -287,7 +309,7 @@ void* obj_alloc_kernel(int token) {
     return (void*) addr;
 }
 
-void obj_free(int token, uint64_t virt_addr) {
+void obj_free(int token, void* virt_addr) {
     int pool_num = token;
     struct pool_t* pool = &obj_allocator[pool_num];
     struct free_list* free_head = pool->free;

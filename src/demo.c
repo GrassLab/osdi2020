@@ -116,3 +116,20 @@ void delay(int period) {
 //     }
 // }
 
+// Lab6
+
+void demo_lab6() {
+    // buddy_info();
+    // void* addr1 = kmalloc(4097);
+    // uart_printf("%x\n", addr1);
+    // buddy_info();
+    // kfree(addr1);
+    // buddy_info();
+    buddy_info();
+    void* addr1 = buddy_alloc(2);
+    uart_printf("%x\n", addr1);
+    buddy_info();
+    kfree(addr1);
+    buddy_info();
+    while(1);
+}
