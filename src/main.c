@@ -6,9 +6,11 @@
 #include "mm.h"
 
 void boot_init() {
+    // Get the amount of RAM
     mbox_vc_memory();
     mbox_arm_memory();
 
+    // Initialize Memory
     mm_init();
     task_init();
 

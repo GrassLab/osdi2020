@@ -52,7 +52,7 @@ struct pool_t {
 /* Variables init in mm.c */
 extern struct pool_t obj_allocator[MAX_OBJ_ALLOCTOR_NUM];
 extern struct buddy_t free_area[MAX_BUDDY_ORDER];
-extern struct page_t page[PAGE_FRAMES_NUM];
+extern struct page_t *page;
 extern uint64_t remain_page;
 
 /* Function in mm.c */

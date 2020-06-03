@@ -8,7 +8,7 @@
 
 struct pool_t obj_allocator[MAX_OBJ_ALLOCTOR_NUM];
 struct buddy_t free_area[MAX_BUDDY_ORDER];
-struct page_t page[PAGE_FRAMES_NUM];
+struct page_t *page;
 
 void* kmalloc(uint64_t size) {
     // size too large
@@ -226,22 +226,24 @@ void buddy_init() {
     }
 }
 
-void mm_init() {
-    buddy_init();
+// return page_structure end address
+void page_struct_init(int first_avail_page, int memory_end_page) {
+    int bytes = sizeof(struct page_t) * memory_end_page;
+    int page_need = (bytes % PAGE_SIZE) ? bytes / PAGE_SIZE + 1 : bytes / PAGE_SIZE;
+    uint64_t page_addr = (first_avail_page * PAGE_SIZE) | KERNEL_VIRT_BASE;
+    page = (struct page_t*) page_addr;
+    first_avail_page += page_need;
 
-    extern uint8_t __kernel_end;  // defined in linker
-    uint8_t* kernel_end = &__kernel_end;
-    int kernel_end_page = (uint64_t)kernel_end / PAGE_SIZE;
-    int arm_memory_end_page = arm_memory_end / PAGE_SIZE;
-
+    // page booking for kernel
     int i = 0;
-    for (; i <= kernel_end_page; i++) {
+    while (i < first_avail_page) {
         page[i].used = USED;
+        i++;
     }
-
+    // page booking for normal region
     int order = MAX_BUDDY_ORDER - 1;
     int counter = 0;
-    for (; i < arm_memory_end_page; i++) {
+    while (i < memory_end_page) {
         // init page counter times
         if (counter) {
             page[i].idx = i;
@@ -250,31 +252,31 @@ void mm_init() {
             page[i].list.next = NULL;
             page[i].list.prev = NULL;
             counter--;
+            i++;
         }
         // page i can fill current order
-        else if (i + (1 << order) - 1 < arm_memory_end_page) {
+        else if (i + (1 << order) - 1 < memory_end_page) {
             page[i].idx = i;
             page[i].used = AVAL;
             page[i].order = order;
             buddy_push(&(free_area[order]), &(page[i].list));
             counter = (1 << order) - 1;
+            i++;
         }
         // reduce order, try again
         else {
             order--;
-            i--;
         }
     }
+}
 
-    buddy_info();
-    // void* addr1 = kmalloc(0x100);
-    // uart_printf("%x\n", (uint64_t)addr1);
-    // void* addr2 = kmalloc(4096);
-    // uart_printf("%x\n", (uint64_t)addr2);
-    // void* addr3 = kmalloc(4097);
-    // uart_printf("%x\n", (uint64_t)addr3);
-    uart_printf("%x %x\n", arm_memory_start, arm_memory_end);
-    uart_printf("%x %x", vc_memory_start, vc_memory_end);
+void mm_init() {
+    extern uint8_t __kernel_end;  // defined in linker
+    uint8_t* kernel_end = &__kernel_end;
+    int first_avail_page = ((uint64_t)kernel_end / PAGE_SIZE) + 1;
+    int arm_memory_end_page = arm_memory_end / PAGE_SIZE;
+    buddy_init();
+    page_struct_init(first_avail_page, arm_memory_end_page);
 }
 
 // create pgd, return pgd address
