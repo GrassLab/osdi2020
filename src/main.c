@@ -26,6 +26,7 @@ void boot_init() {
     uart_printf("|_|\\_|\\___| |_|  \\___/ \\___/|___/___/___|\n\n");
     mbox_board_revision();
     mbox_vc_memory();
+    mbox_arm_memory();
     uart_printf("\n");
 
     schedule_init();
