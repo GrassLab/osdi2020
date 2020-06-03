@@ -19,7 +19,6 @@ void kernel_process(){
 
 	asm volatile ("adrp x0, idmap_dir");
 	asm volatile ("msr ttbr0_el1, x0");
-	// printf("Kernel process started. EL %d\r\n", get_el());
 	unsigned long begin = (unsigned long)&user_begin;
 	unsigned long end = (unsigned long)&user_end;
 	unsigned long process = (unsigned long)&user_process;
@@ -39,21 +38,23 @@ void kernel_main()
 
 	init_obj_allocator();
 
-	struct kmem_cache *kmem_cache_16 = kmem_cache_create(sizeof(int) * 2);
-	int *test = kmem_cache_alloc(kmem_cache_16);
-	test[0] = 1;
-	test[1] = 4;
-	printf("test[0] 0x%x: %d\r\n", &test[0], test[0]);
-	printf("test[1] 0x%x: %d\r\n", &test[1], test[1]);
-	slab_put_obj(test);
-	int *test2 = kmem_cache_alloc(kmem_cache_16);
-	
-	printf("test[0] 0x%x: %d\r\n", &test2[0], test2[0]);
-	printf("test[1] 0x%x: %d\r\n", &test2[1], test2[1]);
+	// struct kmem_cache *kmem_cache_16 = kmem_cache_create(sizeof(int) * 2);
+	// int *test = kmem_cache_alloc(kmem_cache_16);
+	// test[0] = 1;
+	// test[1] = 4;
+	// printf("test[0] 0x%x: %d\r\n", &test[0], test[0]);
+	// printf("test[1] 0x%x: %d\r\n", &test[1], test[1]);
+	// slab_put_obj(test);
+
 	int *test3 = obj_allocate(sizeof(int) * 4096);
 	test3[4000] = 50;
 	printf("test3[4000] 0x%x: %d\r\n", &test3[4000], test3[4000]);
 	
+	int *test4 = obj_allocate(sizeof(int) * 2);
+	test4[0] = 1;
+	test4[1] = 2;
+	printf("test4[0] 0x%x: %d\r\n", &test4[0], test4[0]);
+	printf("test4[1] 0x%x: %d\r\n", &test4[1], test4[1]);
 	enable_core_timer();
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
 	

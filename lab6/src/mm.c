@@ -1,7 +1,7 @@
 #include "mm.h"
 #include "arm/mmu.h"
 #include "printf.h"
-#define DEBUG 0
+#define DEBUG 1
 #define phy_to_vir(page) page + VA_START
 #define pfn_to_phy(pfn) LOW_MEMORY + (pfn)*PAGE_SIZE
 #define pfn_to_vir(pfn) LOW_MEMORY + (pfn)*PAGE_SIZE + VA_START
@@ -91,10 +91,10 @@ void init_buddy_system() {
     }
 }
 
-
 void div_block(int alloc_order, int order) {
     //div alloc_order
     struct block *div_block = buddy_entry[alloc_order].head;
+    debug_print_1("(divide block pfn: %d)\r\n", div_block->pfn);
     for (int i = alloc_order - 1 ; i >= order ; i--) {
         if (i != order) {
             int block_index;
@@ -136,9 +136,7 @@ struct block *alloc_block(int num_page) {
         div_block(alloc_order, order);
     }
     ret_block = pop_block(order, 1);
-    debug_print_1("allocate page pfn: %d\r\n", ret_block->pfn);
-    //printf("allocate page pfn: %d\r\n", ret_block->pfn);
-    //print_buddy_entry(order);
+    debug_print_2("allocate page pfn: %d page size: %d\r\n", ret_block->pfn, ret_block->page_nums);
     return ret_block;
 }
 
@@ -150,10 +148,12 @@ void print_buddy_entry(int order) {
     struct  block *ptr = buddy_entry[order].head;
     debug_print_1("[order %d]:", order);
     while(ptr != 0) {
-        debug_print_1(" %d", ptr->pfn);
+        debug_print(" |");
+        debug_print_1(" %d...", ptr->pfn);
+        debug_print_1("%d", ptr->pfn + (1<<order) - 1);
         ptr = ptr->next;
     }
-    debug_print("\r\n");
+    debug_print(" |\r\n");
     return;
 }
 
@@ -201,6 +201,7 @@ int del_buddy_block(int order, int buddy_pfn) {
 
 // free block and alloc and combine
 void put_back_block(struct block *free_block) {
+    debug_print_1("put back block pfn: %d\r\n", free_block->pfn);
     // block's order free_block->record_index
     int block_order = free_block->order;
     int pfn = free_block->pfn;

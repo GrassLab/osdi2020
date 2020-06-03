@@ -141,7 +141,8 @@ unsigned long kmem_cache_alloc(struct kmem_cache *kmemche)
 unsigned long obj_allocate(int size) 
 {
     if(size >= 2049) {
-        get_free_pages(1 + (size/PAGE_SIZE));
+        unsigned long new_block = get_free_pages(1 + (size/PAGE_SIZE));
+        return new_block;
     }
     struct kmem_cache *kmemche_ptr = kmemche_l.head;
     while((kmemche_ptr != 0) && (size != kmemche_ptr->obj_size)) {
