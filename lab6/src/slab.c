@@ -1,13 +1,10 @@
 #include "slab.h"
 #include "tools.h"
-
 void init_all_allocator(){
     for(int i=0;i<NUM_ALLOCATOR;i++){
         allocator_used[i]=0;
     }    
 }
-
-
 int init_allocator(int size){
     for(int i=0;i<NUM_ALLOCATOR;i++){
         if(allocator_used[i]==0){            
@@ -18,23 +15,17 @@ int init_allocator(int size){
             return i;
         }        
     }
-    uart_puts("[Slab]Init Allocator fail!");           
-    uart_puts("\n");
+    uart_puts("[Slab]Init Allocator fail!\n");           
     return -1;
 }
-
 void show_allocator(int allocator_id){
-    uart_puts("\n");
-    uart_puts("[Slab]Show Allocator!");           
-    uart_puts("\n");
+    uart_puts("\n[Slab]Show Allocator!\n");           
     if(allocator_used[allocator_id]==0){
-        uart_puts("[Slab]Unuse Allocator!");           
-        uart_puts("\n");
+        uart_puts("[Slab]Unuse Allocator!\n");           
         return;
     }
     if(allocator_pool[allocator_id].len==0){
-        uart_puts("[Slab]Allocator null!");           
-        uart_puts("\n");
+        uart_puts("[Slab]Allocator null!\n");           
         return;
     }
     uart_puts("[Slab]Allocator Number: ");  
@@ -57,8 +48,7 @@ void show_allocator(int allocator_id){
 
 int alloc(int allocator_id){
     if(allocator_used[allocator_id]==0){
-        uart_puts("[Slab]Unuse Allocator!");           
-        uart_puts("\n");
+        uart_puts("[Slab]Unuse Allocator!\n");           
         return -1;
     }
     //alloc from buddy system
@@ -92,29 +82,34 @@ int alloc(int allocator_id){
         allocator_pool[allocator_id].len--;
         return ret;
     }
-    
-    uart_puts("[Slab]Unknown error!");           
-    uart_puts("\n");
+    uart_puts("[Slab]Unknown error!\n");           
     return -1;
-    
 }
+
 void free_alloc(int allocator_id, int addr){
     if(allocator_used[allocator_id]==0){
-        uart_puts("[Slab]Unuse Allocator!");           
-        uart_puts("\n");
+        uart_puts("[Slab]Unuse Allocator!\n");           
         return -1;
     }
+    if(addr==-1){
+        uart_puts("[Slab]Invalid address!\n");           
+        return -1;
+    }
+    uart_puts("\n[Slab]Free Allocator at: ");   
+    uart_hex(addr);        
+    uart_puts("\n");
     chunk* temp = (chunk*)addr;
     temp->addr = addr;
     temp->size = allocator_pool[allocator_id].size;
     temp->next = 0;
 
     if(allocator_pool[allocator_id].len!=0)
-        return;
-        // temp->next = allocator_pool[allocator_id].chunk_head->next;
-
-    // allocator_pool[allocator_id].chunk_head = temp;
-    
-
+        temp->next = allocator_pool[allocator_id].chunk_head;
+    allocator_pool[allocator_id].chunk_head = temp;
+    allocator_pool[allocator_id].len++;
 }
 
+// void print123(){
+//     uart_puts("\n[Slab]print123");   
+//     uart_puts("\n");
+// }
