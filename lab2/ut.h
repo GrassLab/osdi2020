@@ -1,1 +1,1 @@
-void branchAddr(void *addr);
+void branchAddr(void* addr);

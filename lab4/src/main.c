@@ -1,123 +1,130 @@
-#include "system.h"
-#include "util.h"
-#include "uart.h"
-#include "mbox.h"
-#include "loadimg.h"
-#include "timer.h"
-#include "irq.h"
 #include "asm.h"
+#include "irq.h"
+#include "loadimg.h"
+#include "mbox.h"
 #include "shed.h"
 #include "sys.h"
+#include "system.h"
+#include "timer.h"
+#include "uart.h"
 #include "unistd.h"
+#include "util.h"
 
-#define	CMD_HELP	"help"
-#define	CMD_HELLO	"hello"
-#define	CMD_TIME	"timestamp"
-#define	CMD_REBOOT	"reboot"
-#define CMD_LOADIMG	"loadimg"
+#define CMD_HELP "help"
+#define CMD_HELLO "hello"
+#define CMD_TIME "timestamp"
+#define CMD_REBOOT "reboot"
+#define CMD_LOADIMG "loadimg"
 #define CMD_PICTURE "picture"
-#define CMD_EXC		"exc"
-#define CMD_IRQ		"irq"
-#define CMD_BRK		"brk"
+#define CMD_EXC "exc"
+#define CMD_IRQ "irq"
+#define CMD_BRK "brk"
 
 void get_timestamp();
 
-void foo(){
-  int tmp = 5;
-  uart_puts("Task ");
-  uart_print_int(get_taskid());
-  uart_puts(" after exec, tmp address 0x");
-  uart_print_int(&tmp);
-  uart_puts(", tmp value ");
-  uart_print_int(tmp);
-  uart_puts("\r\n");
-//   printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
-  exit(0);
+void foo()
+{
+    int tmp = 5;
+    uart_puts("Task ");
+    uart_print_int(get_taskid());
+    uart_puts(" after exec, tmp address 0x");
+    uart_print_int(&tmp);
+    uart_puts(", tmp value ");
+    uart_print_int(tmp);
+    uart_puts("\r\n");
+    //   printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
+    exit(0);
 }
 
-void test() {
-	// while(1) {
-	// 	uart_puts("hihi\r\n");
-	// 	delay(100000000000000);
-	// }
-	
-  int cnt = 1;
-  int f;
-  f = fork();
-  // uart_puts("fork ret: ");
-  // uart_print_int(f);
-  // uart_puts(" #run: ");
-  // uart_print_int(num_runnable_tasks());
-  // uart_puts("\r\n");
-  if (f == 0) {
-    fork();
-    delay(100);
-    fork();
-    uart_puts("CNT value: ");
-    uart_print_int(cnt);
-    uart_puts("\r\n");
-    while(cnt < 10) {
-		uart_puts("Task id: ");
-		uart_print_int(get_taskid());
-		uart_puts(", cnt: ");
-		uart_print_int(cnt);
-		uart_puts("\r\n");
-		// printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
-		delay(100000);
-		++cnt;
+void test()
+{
+    // while(1) {
+    // 	uart_puts("hihi\r\n");
+    // 	delay(100000000000000);
+    // }
+
+    int cnt = 1;
+    int f;
+    f = fork();
+    // uart_puts("fork ret: ");
+    // uart_print_int(f);
+    // uart_puts(" #run: ");
+    // uart_print_int(num_runnable_tasks());
+    // uart_puts("\r\n");
+    if (f == 0) {
+        fork();
+        delay(100);
+        fork();
+        uart_puts("CNT value: ");
+        uart_print_int(cnt);
+        uart_puts("\r\n");
+        while (cnt < 10) {
+            uart_puts("Task id: ");
+            uart_print_int(get_taskid());
+            uart_puts(", cnt: ");
+            uart_print_int(cnt);
+            uart_puts("\r\n");
+            // printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
+            delay(100000);
+            ++cnt;
+        }
+        exit(0);
+        uart_puts("Should not be printed\r\n");
+        // printf("Should not be printed\n");
+    } else {
+        uart_puts("Task ");
+        uart_print_int(get_taskid());
+        uart_puts(" before exec, cnt address 0x");
+        uart_print_int(&cnt);
+        uart_puts(", cnt value ");
+        uart_print_int(cnt);
+        uart_puts("\r\n");
+        // printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
+        exec(foo);
     }
-    exit(0);
-	uart_puts("Should not be printed\r\n");
-    // printf("Should not be printed\n");
-  } else {
-	  	uart_puts("Task ");
-		uart_print_int(get_taskid());
-		uart_puts(" before exec, cnt address 0x");
-		uart_print_int(&cnt);
-		uart_puts(", cnt value ");
-		uart_print_int(cnt);
-		uart_puts("\r\n");
-		// printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
-		exec(foo);
-  }
 }
 
 // -----------above is user code-------------
 // -----------below is kernel code-------------
 
-void user_test(){
-  do_exec(test);
+void user_test()
+{
+    do_exec(test);
 }
 
-void idle(){
-	// uart_puts("idle\r\n");
-  while(1){
-    uart_puts("#run tasks: ");
-    uart_print_int(num_runnable_tasks());
-    uart_puts("\r\n");
-    if(num_runnable_tasks() == 1) {
-		// uart_puts("idle\r\n");
-      break;
+void idle()
+{
+    // uart_puts("idle\r\n");
+    while (1) {
+        uart_puts("#run tasks: ");
+        uart_print_int(num_runnable_tasks());
+        uart_puts("\r\n");
+        if (num_runnable_tasks() == 1) {
+            // uart_puts("idle\r\n");
+            break;
+        }
+        schedule();
+        uart_puts("schedule\r\n");
+        delay(1000000000);
     }
-    schedule();
-	  uart_puts("schedule\r\n");
-    delay(1000000000);
-  }
-  uart_puts("Test finished\n");
-  while(1);
+    uart_puts("Test finished\n");
+    while (1)
+        ;
 }
 
-void main() {
-  // ...
-  // boot setup
-  // ...
-  uart_init();
-  asm volatile ("mov x0, #0\n" "svc #0\n");
+void main()
+{
+    // ...
+    // boot setup
+    // ...
+    uart_init();
+    asm volatile("mov x0, #0\n"
+                 "svc #0\n");
 
-  privilege_task_create(user_test);
-//   privilege_task_create(user_test);
+    privilege_task_create(user_test);
+    //   privilege_task_create(user_test);
 
-  // idle();
+    // idle();
 }
 
 // void main()
@@ -165,7 +172,7 @@ void main() {
 // 				input_addr[20] = "80000";
 // 			}
 // 			char res_str[100];
-			
+
 // 			load_image(input_addr);
 // 		}  else if(strcmp(command, CMD_TIME)) {
 // 			get_timestamp();
@@ -204,10 +211,12 @@ void main() {
 
 void get_timestamp()
 {
-	register unsigned long f, c;
-	asm volatile ("mrs %0, cntfrq_el0" : "=r"(f));
-	asm volatile ("mrs %0, cntpct_el0" : "=r"(c));
-	char res[30];
-	ftoa(((float)c/(float)f), res, 10);
-	uart_puts(res);
+    register unsigned long f, c;
+    asm volatile("mrs %0, cntfrq_el0"
+                 : "=r"(f));
+    asm volatile("mrs %0, cntpct_el0"
+                 : "=r"(c));
+    char res[30];
+    ftoa(((float)c / (float)f), res, 10);
+    uart_puts(res);
 }

@@ -14,6 +14,7 @@ void main()
 {
     uart_init();
     init_memory();
+
     void* test1 = malloc(sizeof(free_area_t));
     void* test2 = malloc(sizeof(free_area_t));
     void* test3 = malloc(sizeof(free_area_t));
@@ -33,11 +34,11 @@ void main()
     void* test8 = malloc((0x1 << 23) + 1000);
     free_memory(test8);
 
-    // print_variable_memory_pool();
-    // void *test9 = variable_malloc(4);
-    // print_variable_memory_pool();
-    // variable_free(test9);
-    // print_variable_memory_pool();
+    print_variable_memory_pool();
+    void* test9 = variable_malloc(4);
+    print_variable_memory_pool();
+    variable_free(test9);
+    print_variable_memory_pool();
 }
 
 void get_timestamp()
