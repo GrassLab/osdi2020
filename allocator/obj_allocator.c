@@ -161,6 +161,7 @@ int varied_free(unsigned long addr)
     if (buddy_free(addr) == 0) {
         return 0;
     }
+    printf("varied_free error\n");
     if (fixed_free(addr) == 0) {
         return 0;
     }

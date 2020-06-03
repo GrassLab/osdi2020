@@ -65,7 +65,7 @@ int buddy_free(unsigned long addr)
     // traverse the same order, and find out the the same addr
     struct buddy_chunk* chunk;
     int order, chunk_idx;
-    for (order=BUDDY_MAX_ORDER; order>=0; order--) {
+    for (order=BUDDY_MAX_ORDER; order>0; order--) {
         if (((BuddyManager.allocate_bitmap >> order) & 1) == 1) {
             // printf("order:  %d\n", order);
             for (chunk_idx=0; chunk_idx<BuddyManager.list[order-1].number; chunk_idx++) {

@@ -34,16 +34,21 @@ void testcase3()
     buddy_view();
     buddy_alloc(0x100);
     buddy_view();
+    
 }
 
 void testcase4()
 {
     buddy_init();
-    buddy_view();
+    // buddy_view();
     unsigned long addr1 = buddy_alloc(0x100);
-    buddy_view();
-    printf("addr: 0x%lx\n", addr1);
+    unsigned long addr2 = buddy_alloc(0x100);
+    // buddy_view();
+    printf("addr1: 0x%lx\n", addr1);
+    printf("addr2: 0x%lx\n", addr2);
+    
     buddy_free(addr1);
+    buddy_free(addr2);
     buddy_view();
 }
 /*
@@ -69,8 +74,12 @@ void testcase6()
 {
     buddy_init();
     init_allocator();
-    varied_alloc(0x4000);
-    varied_alloc(0x4000);
+    unsigned long addr1 = varied_alloc(0x4000);
+    unsigned long addr2 = varied_alloc(0x4000);
+    printf("addr1 = 0x%lx\n", addr1);
+    printf("addr2 = 0x%lx\n", addr2);
+    varied_free(addr1);
+    varied_free(addr2);
     buddy_view();
     allocator_view();
 
@@ -81,11 +90,11 @@ void testcase6()
  */
 int main()
 {
-    // printf("This is demo of buddy system\n");
+    printf("This is demo of buddy system\n");
     // testcase1();
     // testcase2();
     // testcase3();
-    // testcase4();
+    testcase4();
 
     // printf("This is demo of Fixed-size object allocator\n");
     // testcase5();
