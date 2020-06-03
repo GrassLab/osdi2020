@@ -383,16 +383,17 @@ int fixed_free_token_by(FixedAllocator aloctor){
 #endif
 
   /* release all book memory */
-  while(book){
 
+  if(book) fixed_log("release books 0x%x", book);
+  while(book){
     book->free_nr = 0;
     if(book->page_addr){
-      fixed_log("free page 0x%x", book->page_addr);
+      fixed_log("  free page 0x%x", book->page_addr);
       free_page(book->page_addr);
     }
     if(book->table){
       if(!((unsigned long)book->table & (~PAGE_MASK))){
-        fixed_log("free page 0x%x", book->table);
+        fixed_log("  free tables 0x%x", book->table);
         free_page((unsigned long)book->table);
       }
     }
@@ -495,7 +496,7 @@ int fixed_free_by(unsigned long addr, FixedAllocator aloctor, char test){
 
   /* release the page */
   if(fixed_is_book_full(aloctor, bookiter)){
-    fixed_log("free page 0x%x", bookiter->page_addr);
+    fixed_log("book 0x%x empty, free page 0x%x", bookiter, bookiter->page_addr);
     free_page(bookiter->page_addr);
     bookiter->page_addr = 0;
   }
