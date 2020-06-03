@@ -136,6 +136,21 @@ static Page **getIndirectNextPage(Page *page) {
     return &page->next;
 }
 
+static uint64_t getPFN(uint64_t addr) {
+    // max PFN << 12 for masking
+    // 0x3ffff000 == 1GB / 4KB == # of pages
+    const uint64_t kMaxPFN = 0x3ffff000;
+    return (addr & kMaxPFN) >> 12;
+}
+
+__attribute__((const))
+static bool inPage(Page *page, uint64_t addr) {
+    uint64_t pfn_of_page_low = getPFN(page->block.lower);
+    uint64_t pfn_of_page_high = getPFN(page->block.upper);
+    uint64_t pfn_of_addr = getPFN(addr);
+    return (pfn_of_page_low <= pfn_of_addr) && (pfn_of_addr < pfn_of_page_high);
+}
+
 PageType gPage = {
     .init = initPages,
     .pushFront = pushFrontPage,
@@ -145,6 +160,7 @@ PageType gPage = {
     .showList = showPageList,
     .allocate = allocatePage,
     .deallocate = deallocatePage,
+    .inPage = inPage,
     .getBlock = getBlockFromPage,
     .getNext = getNextPage,
     .getIndirectNext = getIndirectNextPage

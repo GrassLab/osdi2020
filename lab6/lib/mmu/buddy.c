@@ -28,7 +28,7 @@ static Buddy main_buddy;
 
 static size_t getIndex(size_t size) {
     if (size > 0xffffffff || size == 0) {
-        sendStringUART("Shouldn't reach here! size shouldn't > 32bits or == 0\n");
+        sendStringUART("[Buddy] Shouldn't reach here! size shouldn't > 32bits or == 0\n");
         return 0;
     }
     const size_t kTotalBits = sizeof(unsigned int) * 8;
@@ -118,11 +118,15 @@ static Page *allocPageFromBuddy(size_t page_order) {
         }
     }
 
-    sendStringUART("Out of memory!!!\n");
+    sendStringUART("[Buddy] Out of memory!!!\n");
     return NULL;
 }
 
 static Page *allocateFromBuddy(size_t block_size) {
+    sendStringUART("[Buddy] Allocate size: ");
+    sendHexUART(block_size);
+    sendUART('\n');
+
     if (block_size == 0) {
         return NULL;
     }
@@ -130,7 +134,7 @@ static Page *allocateFromBuddy(size_t block_size) {
     size_t bit_index = getIndex(block_size);
     bit_index = (block_size & ((1 << bit_index) - 1)) ? bit_index + 1 : bit_index;
     if (bit_index > main_buddy.order10_bit_index) {
-        sendStringUART("Over size! Maximum is 4MB!\n");
+        sendStringUART("[Buddy] Over size! Maximum is 4MB!\n");
         return NULL;
     }
 
@@ -146,8 +150,12 @@ static void deallocateFromBuddy(Page *page) {
     size_t block_size = gPage.getBlock(page)->upper - gPage.getBlock(page)->lower;
     size_t bit_index = getIndex(block_size);
 
+    sendStringUART("[Buddy] Deallocate size: ");
+    sendHexUART(block_size);
+    sendUART('\n');
+
     if (block_size & ((1 << bit_index) - 1)) {
-        sendStringUART("Weird block_size!\n");
+        sendStringUART("[Buddy] Weird block_size!\n");
         return;
     }
 

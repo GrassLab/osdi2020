@@ -1,6 +1,7 @@
 #ifndef __MMU_PAGE_H
 #define __MMU_PAGE_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct __Block {
@@ -21,6 +22,8 @@ typedef struct __PageType {
 
     Page *(*allocate)(Page **indirect_head);
     void (*deallocate)(Page *page);
+
+    bool (*inPage)(Page *page, uint64_t addr);
 
     Block *(*getBlock)(Page *page) __attribute__((const));
     Page *(*getNext)(Page *page) __attribute__((const));

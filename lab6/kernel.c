@@ -6,6 +6,7 @@
 #include "schedule/schedule.h"
 #include "mmu/vma.h"
 #include "mmu/buddy.h"
+#include "mmu/slab.h"
 
 void kernel_main(void) {
     initUART();
@@ -21,10 +22,25 @@ void kernel_main(void) {
 
     gBuddy.construct();
     gBuddy.show();
+    gSlab.init();
+
     Page *page1 = gBuddy.allocate(0xe4000);
     Page *page2 = gBuddy.allocate(0xe40);
     gBuddy.deallocate(page1);
     gBuddy.deallocate(page2);
+    
+    uint64_t token1 = gSlab.regist(56);
+    void *obj1 = gSlab.allocate(token1);
+    void *obj2 = gSlab.allocate(token1);
+
+    uint64_t token2 = gSlab.regist(36);
+    void *obj3 = gSlab.allocate(token2);
+    void *obj4 = gSlab.allocate(token2);
+
+    gSlab.deallocate(obj2);
+    gSlab.deallocate(obj3);
+    gSlab.deallocate(obj1);
+    gSlab.deallocate(obj4);
 
     sendStringUART("Press enter to continue...");
     sendUART(recvUART());
