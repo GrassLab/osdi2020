@@ -35,23 +35,23 @@ void test_lab6() {
     print_buddy();
     printf("------\n");
 
-    free_page(p2->physicalAddr);
+    free_page(p2);
     print_buddy();
     printf("------\n");
 
-    free_page(p3->physicalAddr);
+    free_page(p3);
     print_buddy();
     printf("------\n");
 
-    free_page(p4->physicalAddr);
+    free_page(p4);
     print_buddy();
     printf("------\n");
 
-    free_page(p5->physicalAddr);
+    free_page(p5);
     print_buddy();
     printf("------\n");
 
-    free_page(p->physicalAddr);
+    free_page(p);
     print_buddy();
     printf("------\n");
 }

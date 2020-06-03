@@ -31,7 +31,7 @@
 // Lab-6 Page
 #define TOTAL_PAGE_NUMBER       2048
 #define BUDDY_MAX_ORDER         11
-#define MAX_BUDDY_PAGE_NUMBER   (1 << (BUDDY_MAX_ORDER-1))
+#define MAX_BUDDY_PAGE_NUMBER   (1 << (BUDDY_MAX_ORDER))
 #define LOW_PAGE_POOL_MEMORY    0xf00000
 #define HIGH_PAGE_POOL_MEMORY   LOW_PAGE_POOL_MEMORY + TOTAL_PAGE_NUMBER * PAGE_SIZE
 
@@ -54,12 +54,8 @@ typedef struct page {
 void page_sys_init();
 void print_buddy();
 Page* get_page();
-Page* release_redundant_memory(Page *alloc_page, int get_page_level, int req_page_level);
-void free_page(unsigned long physical_addr);
-void give_back_pages(Page *page , int order);
-Page* min(Page *a, Page *b);
-Page* max(Page *a, Page *b);
-unsigned long physical_to_pfn(unsigned long physical_addr);
+Page* release_redundant_memory(Page *alloc_page, int get_page_order, int req_page_order);
+void free_page(Page *page);
 
 #endif
 #endif

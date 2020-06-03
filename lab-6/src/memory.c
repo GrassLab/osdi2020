@@ -4,7 +4,6 @@
 #include "uart.h"
 #define NULL 0
 
-static int free_page_number = TOTAL_PAGE_NUMBER;
 Page pagePool[TOTAL_PAGE_NUMBER];
 List pageBuddy[BUDDY_MAX_ORDER+1];
 
@@ -19,7 +18,7 @@ void page_sys_init() {
 		pagePool[p].physicalAddr = LOW_PAGE_POOL_MEMORY + p * PAGE_SIZE;
 		LIST_INIT(&(pagePool[p].list));
         if (p == 0) pagePool[p].order = BUDDY_MAX_ORDER;
-        list_add_tail(&(pagePool[p].list),&pageBuddy[BUDDY_MAX_ORDER]);
+        list_add_tail(&(pagePool[p].list), &pageBuddy[BUDDY_MAX_ORDER]);
 	}
 }
 
@@ -29,10 +28,10 @@ void print_buddy() {
             List *tmp = pageBuddy[order].next;
             Page *page = list_entry(tmp, Page ,list);
             while(1) {
-                printf("[buddy info] order: %d\n", page->order);
-                printf("[buddy info] used: %d\n", page->used);
-                printf("[buddy info] addr: %x\n", page->physicalAddr);
-                printf("[buddy info] index: %d\n\n", page->index);
+                printf("[buddy info] buddy order: %d\n", page->order);
+                printf("[buddy info] buddy used: %d\n", page->used);
+                printf("[buddy info] buddy addr: %x\n", page->physicalAddr);
+                printf("[buddy info] buddy index: %d\n\n", page->index);
                 Page *page_next = list_entry((&(BUDDY_END(page, order))->list)->next, Page ,list);
 				if((&(BUDDY_END(page, order))->list)->next == (&pageBuddy[order])) {
                     break;
@@ -58,7 +57,7 @@ Page* get_page(int order) {
             printf("[request info] plan to allocate addr: 0x%x\n",alloc_page->physicalAddr);
             printf("[request info] plan to allocate index: %d\n",alloc_page->index);
             printf("[request info] plan to allocate page numbers: %d\n\n",(1 << alloc_page->order));
-            next_buddy->prev = (&pageBuddy[o]);
+            next_buddy->prev = &pageBuddy[o];
             pageBuddy[o].next = next_buddy;
             break;
         }
@@ -68,7 +67,7 @@ Page* get_page(int order) {
         return NULL;
     }
 
-    alloc_page->order = order;
+    // alloc_page->order = order;
     if (o != order) {
         alloc_page = release_redundant_memory(alloc_page, o, order);
     }
@@ -79,8 +78,8 @@ Page* get_page(int order) {
     return alloc_page;
 }
 
-Page* release_redundant_memory(Page *alloc_page, int get_page_level, int req_page_level){
-    for(int r = get_page_level-1 ; r >= req_page_level; r--){
+Page* release_redundant_memory(Page *alloc_page, int get_page_order, int req_page_order) {
+    for (int r = get_page_order - 1 ; r >= req_page_order; r--){
         Page* next_buddy_start_page = NEXT_BUDDY_START(alloc_page, r); 
         Page* next_buddy_end_page = BUDDY_END(next_buddy_start_page, r);
         next_buddy_start_page->order = r;
@@ -94,78 +93,51 @@ Page* release_redundant_memory(Page *alloc_page, int get_page_level, int req_pag
 
         list_add_chain_tail(next_buddy_start, next_buddy_end, &pageBuddy[r]);
     }
-    alloc_page->order = req_page_level;
+    alloc_page->order = req_page_order;
     return alloc_page;
 }
 
-void free_page(unsigned long physical_addr){ 
-	unsigned long page_frame_number = physical_to_pfn(physical_addr);
-	
-	for(unsigned int i = page_frame_number; i < (page_frame_number + (1 << pagePool[page_frame_number].order)); i++){
-		pagePool[i].used = PAGE_NOT_USED;
-		free_page_number++;
-	}
-	
-	give_back_pages(&pagePool[page_frame_number], pagePool[page_frame_number].order);	
-}
 
-void give_back_pages(Page *page, int order) {
+void free_page(Page *page) {
+    int order = page->order; 
+    for (int i = page->index; i < (page->index + (1 << order)); i++) {
+		pagePool[i].used = PAGE_NOT_USED;
+	}
+    // buddy_page_index: plan to be merged page
     int buddy_page_index = page->index ^ (1 << order);
-    int is_buddy_bigger_than_self = 0;
     Page *head_page = page;
     Page *end_page = NULL;
     Page *buddy_page = NULL;
 
-    for(;order < BUDDY_MAX_ORDER - 1; order++) {
+    for (;order < BUDDY_MAX_ORDER - 1; order++) {
         buddy_page_index = page->index ^ (1 << order);
         buddy_page = &pagePool[buddy_page_index];
-        printf("receive number is %d - %d\n", page->index, page->index + (1<< order));
-        printf("now buddy number is %d - %d\n", buddy_page_index, buddy_page_index+ (1<< order));
-        printf("now buddy number is used %d\n", pagePool[buddy_page_index].used);
-        if(buddy_page->used == PAGE_NOT_USED && buddy_page->order == page->order){
+        printf("[merge buddy] check page index: %d - %d\n", page->index, page->index + (1<< order));
+        printf("[merge buddy] check buddy index: %d - %d\n", buddy_page_index, buddy_page_index+ (1<< order));
+        printf("[merge buddy] check buddy used: %d\n", pagePool[buddy_page_index].used);
+        if (buddy_page->used == PAGE_NOT_USED && buddy_page->order == page->order) {
             list_remove_chain(&(buddy_page->list), &(BUDDY_END(buddy_page, order)->list));
-            head_page = min(buddy_page, page);
-            end_page = max(buddy_page, page);
+            
+            head_page = (buddy_page->index < page->index) ? buddy_page : page; // min
+            end_page = (buddy_page->index < page->index) ? page : buddy_page;  // max
 
             buddy_page->order = -1;
-            head_page->order = -1;
-            
             head_page->order = order + 1;
-            printf(">>> merge %d to %d\r\n", head_page->index, BUDDY_END(end_page, order)->index);
-            printf(">>> head page order is %d \r\n", head_page->order);
 
-            //link between the same order buddy, tail of ahead page link head of behind page
+            printf("[merge buddy] %d to %d\r\n", head_page->index, BUDDY_END(end_page, order)->index);
+            printf("[merge buddy] merged page order is %d \r\n", head_page->order);
+
+            // link between the same order buddy, tail of ahead page link head of behind page
             BUDDY_END(head_page, order)->list.next = &(end_page->list);
             end_page->list.prev = &(BUDDY_END(head_page, order)->list);
 
             page = head_page;
-            if (order + 1 == BUDDY_MAX_ORDER) {
-                break;
-            }
-        }
-        else{
+            if (order + 1 == BUDDY_MAX_ORDER + 1) break;
+        } else {
             break;
         }
     } 
-    printf("---------------merge into order%d \n", order);
-    //merge into link list
+    printf("[merge buddy] finished merged order %d \n", order);
+    // merge into buddy list
     list_add_chain(&(page->list), &(BUDDY_END(page, order)->list), &pageBuddy[order]);
-}
-
-Page* min(Page *a, Page *b) {
-    if(a->index < b->index){
-        return a;
-    }
-    return b;
-}
-
-Page* max(Page *a, Page *b) {
-    if(a->index < b->index){
-        return b;
-    }
-    return a;
-}
-
-unsigned long physical_to_pfn(unsigned long physical_addr){
-	return (physical_addr - LOW_PAGE_POOL_MEMORY) >> 12;	
 }

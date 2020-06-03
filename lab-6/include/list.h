@@ -66,7 +66,7 @@ static inline void list_add_chain_tail(List *add_head, \
 
 //link between (node which ahead chain) and (node which behind chain)
 static inline void list_remove_chain(List *chain_head, \
-                                    List *chain_end){
+                                    List *chain_end) {
 	chain_head->prev->next = chain_end->next;
 	chain_end->next->prev = chain_head->prev;
 }
