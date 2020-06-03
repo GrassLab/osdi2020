@@ -21,16 +21,16 @@
 #define VARIABLE_LOW_MEMORY (LOW_MEMORY + PAGING_MEMORY)
 
 typedef struct free_area {
-    struct free_area *next;
-    unsigned long *map;
+    struct free_area* next;
+    unsigned long* map;
 } free_area_t;
 
-void *malloc(unsigned int size);
+void* malloc(unsigned int size);
 void free_memory(unsigned long addr);
 void init_memory();
 void print_memory_pool();
 void variable_free(unsigned int addr);
-void *variable_malloc(unsigned int size);
+void* variable_malloc(unsigned int size);
 void print_variable_memory_pool();
 
 #endif

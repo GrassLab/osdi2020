@@ -1,7 +1,7 @@
+#include "mm.h"
 #include "system.h"
 #include "uart.h"
 #include "util.h"
-#include "mm.h"
 
 #define CMD_HELP "help"
 #define CMD_HELLO "hello"
@@ -14,9 +14,9 @@ void main()
 {
     uart_init();
     init_memory();
-    void *test1 = malloc(sizeof(free_area_t));
-    void *test2 = malloc(sizeof(free_area_t));
-    void *test3 = malloc(sizeof(free_area_t));
+    void* test1 = malloc(sizeof(free_area_t));
+    void* test2 = malloc(sizeof(free_area_t));
+    void* test3 = malloc(sizeof(free_area_t));
     // void *test4 = malloc(sizeof(free_area_t));
     // void *test5 = malloc(sizeof(free_area_t));
     // void *test6 = malloc(sizeof(free_area_t));
@@ -30,7 +30,7 @@ void main()
     // free_memory(test6);
     // free_memory(test7);
 
-    void *test8 = malloc((0x1 << 23) + 1000);
+    void* test8 = malloc((0x1 << 23) + 1000);
     free_memory(test8);
 
     // print_variable_memory_pool();
