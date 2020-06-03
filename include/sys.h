@@ -9,5 +9,6 @@
 #define SYS_EXIT            5
 #define SYS_REMAIN_PAGE     6
 #define SYS_OBJ_ALLOC_INIT  7
+#define SYS_OBJ_ALLOC       8
 
 #endif

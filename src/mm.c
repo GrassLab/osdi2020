@@ -5,15 +5,17 @@
 #include "schedule.h"
 #include "uart0.h"
 
-struct pool_t obj_allocator[MAX_POOL_NUM];
+struct pool_t obj_allocator[MAX_OBJ_ALLOCTOR_NUM];
 struct buddy_t free_area[MAX_BUDDY_ORDER];
 struct page_t page[PAGE_FRAMES_NUM];
 int first_aval_page, last_aval_page;
 uint64_t remain_page = 0;
 
 void pool_init(struct pool_t* pool, uint64_t size) {
-    pool->elmt_size = size;
+    pool->obj_size = size;
     pool->obj_per_page = PAGE_SIZE / size;
+    pool->page_used = 0;
+    pool->obj_used = 0;
 }
 
 int obj_alloc_register(uint64_t size) {
@@ -22,7 +24,7 @@ int obj_alloc_register(uint64_t size) {
         return -1;
     }
 
-    for (int i = 0; i < MAX_POOL_NUM; i++) {
+    for (int i = 0; i < MAX_OBJ_ALLOCTOR_NUM; i++) {
         if (obj_allocator[i].used == AVAL) {
             obj_allocator[i].used = USED;
             pool_init(&obj_allocator[i], size);
@@ -32,6 +34,30 @@ int obj_alloc_register(uint64_t size) {
 
     uart_printf("No avaliable pool for current request\n");
     return -1;
+}
+
+uint64_t obj_alloc_kernel(int token) {
+    int pool_num = token;
+    struct pool_t* pool = &obj_allocator[pool_num];
+
+    // reused free obj
+
+    // need new page
+    if (pool->obj_used >= pool->page_used * pool->obj_per_page) {
+        pool->page_addr[pool->page_used] = (uint64_t) buddy_alloc(0);
+        pool->page_used++;
+    }
+
+    // allocate new obj
+    uint64_t addr = pool->page_addr[pool->page_used - 1] + pool->obj_used * pool->obj_size;
+    pool->obj_used++;
+    return addr;
+}
+
+uint64_t obj_alloc_user(int token) {
+    int pool_num = token;
+    struct pool_t* pool = &obj_allocator[pool_num];
+    return 0;
 }
 
 /*
@@ -210,14 +236,21 @@ void mm_init() {
     first_aval_page = kernel_end_page + 1;
     last_aval_page = mmio_base_page - 1;
     buddy_info();
-    void* addr1 = buddy_alloc(0);
-    buddy_info();
-    void* addr2 = buddy_alloc(0);
-    buddy_info();
-    buddy_free(addr1);
-    buddy_info();
-    buddy_free(addr2);
-    buddy_info();
+    // void* addr1 = buddy_alloc(0);
+    // buddy_info();
+    // void* addr2 = buddy_alloc(0);
+    // buddy_info();
+    // buddy_free(addr1);
+    // buddy_info();
+    // buddy_free(addr2);
+    // buddy_info();
+    int token = obj_alloc_register(0x100);
+    uint64_t addr = obj_alloc_kernel(token);
+    uart_printf("obj alloc: %x\n", addr);
+    addr = obj_alloc_kernel(token);
+    uart_printf("obj alloc: %x\n", addr);
+    addr = obj_alloc_kernel(token);
+    uart_printf("obj alloc: %x\n", addr);
 }
 
 

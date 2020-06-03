@@ -6,7 +6,8 @@
 #define PAGE_FRAMES_NUM         (0x40000000 / PAGE_SIZE)
 #define PAGE_MASK               ~0xFFF
 #define MAX_BUDDY_ORDER         9 // 2^0 ~ 2^8 => 4k to 1MB
-#define MAX_POOL_NUM            32
+#define MAX_OBJ_ALLOCTOR_NUM    32
+#define MAX_POOL_PAGES          16
 
 #ifndef __ASSEMBLY__
 
@@ -36,18 +37,26 @@ struct page_t {
 
 struct pool_t {
     enum booking_status used;
-    int elmt_size;
+    int obj_size;
     int obj_per_page;
+    int obj_used;
+    int page_used;
+    uint64_t page_addr[MAX_POOL_PAGES];
 };
 
 /* Variables init in mm.c */
-extern struct pool_t obj_allocator[MAX_POOL_NUM];
+extern struct pool_t obj_allocator[MAX_OBJ_ALLOCTOR_NUM];
 extern struct buddy_t free_area[MAX_BUDDY_ORDER];
 extern struct page_t page[PAGE_FRAMES_NUM];
 extern uint64_t remain_page;
 
 /* Function in mm.c */
+void* buddy_alloc(int order);
+void buddy_free(void* virt_addr);
+
 int obj_alloc_register(uint64_t size);
+uint64_t obj_alloc_kernel(int token);
+uint64_t obj_alloc_user(int token);
 
 void mm_init();
 void* page_alloc();

@@ -92,6 +92,12 @@ void sys_obj_alloc_init(struct trapframe* trapframe) {
     trapframe->x[0] = token;
 }
 
+void sys_obj_alloc(struct trapframe* trapframe) {
+    int token = trapframe->x[0];
+    int addr = obj_alloc_user(token);
+    trapframe->x[0] = addr;
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_TASK_ID:
@@ -124,6 +130,10 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_OBJ_ALLOC_INIT:
             sys_obj_alloc_init(trapframe);
+            break;
+
+        case SYS_OBJ_ALLOC:
+            sys_obj_alloc(trapframe);
             break;
     }
 }
