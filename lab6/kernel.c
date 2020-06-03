@@ -42,6 +42,8 @@ void kernel_main(void) {
     gSlab.deallocate(obj1);
     gSlab.deallocate(obj4);
 
+    gSlab.fini();
+
     sendStringUART("Press enter to continue...");
     sendUART(recvUART());
 

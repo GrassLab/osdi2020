@@ -14,6 +14,7 @@ typedef struct __Slab {
 typedef struct __SlabManager {
     Page *slab_obj_page;
     Slab *free_list_head;
+    Slab **indirect_free_list_head;
     Slab *inuse_list_head;
     Slab **indirect_inuse_list_head;
 } SlabManager;
@@ -26,6 +27,7 @@ static const size_t kDefaultSlabObjectNum = 40;
 static void initSlab(void) {
     manager.slab_obj_page = gBuddy.allocate(kDefaultSlabObjectNum * sizeof(Slab));
     manager.free_list_head = (Slab *)gPage.getBlock(manager.slab_obj_page)->lower;
+    manager.indirect_free_list_head = &manager.free_list_head;
 
     // initialize slab object list
     for (size_t i = 0; i < kDefaultSlabObjectNum - 1; ++i) {
@@ -66,8 +68,48 @@ static uint64_t registSlab(size_t object_size) {
     sendStringUART(", give it slab of object size ");
     sendHexUART(slab->obj_size);
     sendUART('\n');
+    sendStringUART("[Slab] token ");
+    sendHexUART((uint64_t)slab);
+    sendUART('\n');
 
     return (uint64_t)slab;
+}
+
+static void deleteSlab(uint64_t token) {
+    Slab *inuse_slab = manager.inuse_list_head;
+    Slab **indirect_prev_slab_next = manager.indirect_inuse_list_head;
+
+    while (inuse_slab) {
+        if (inuse_slab == (Slab *)token) {
+            gBuddy.deallocate(inuse_slab->obj_page);
+
+            // remove inuse_slab node
+            *indirect_prev_slab_next = inuse_slab->next;
+
+            // place inuse_slab back to free list
+            inuse_slab->next = *manager.indirect_free_list_head;
+            *manager.indirect_free_list_head = inuse_slab;
+
+            sendStringUART("[Slab] delete token ");
+            sendHexUART(token);
+            sendUART('\n');
+
+            break;
+        }
+        indirect_prev_slab_next = &inuse_slab->next;
+        inuse_slab = inuse_slab->next;
+    }
+}
+
+static void finiSlab(void) {
+    Slab *inuse_slab = manager.inuse_list_head;
+
+    while (inuse_slab) {
+        gBuddy.deallocate(inuse_slab->obj_page);
+        inuse_slab = inuse_slab->next;
+    }
+
+    gBuddy.deallocate(manager.slab_obj_page);
 }
 
 static void bookkeepObjPage(Page *page, size_t obj_size) {
@@ -140,7 +182,9 @@ static void deallocateObjectSpace(void *ptr) {
 
 SlabType gSlab = {
     .init = initSlab,
+    .fini = finiSlab,
     .regist = registSlab,
+    .delete = deleteSlab,
     .allocate = allocateObjectSpace,
     .deallocate = deallocateObjectSpace
 };
