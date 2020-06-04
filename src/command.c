@@ -3,7 +3,6 @@
 #include "time.h"
 #include "uart.h"
 
-
 void input_buffer_overflow_message ( char cmd[] )
 {
     uart_puts ( "Follow command: \"" );
