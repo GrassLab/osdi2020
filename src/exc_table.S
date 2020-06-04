@@ -52,11 +52,6 @@
 .align 11 // vector table should be aligned to 0x800
 .global exception_table
 exception_table:
-    ventry undefined_handler
-    ventry undefined_handler
-    ventry undefined_handler
-    ventry undefined_handler
-
     ventry el2_exc
     ventry el2_irq
     ventry undefined_handler
@@ -67,8 +62,13 @@ exception_table:
     ventry undefined_handler
     ventry undefined_handler
 
+    ventry el2_exc
+    ventry el2_irq
     ventry undefined_handler
     ventry undefined_handler
+
+    ventry el2_exc
+    ventry el2_irq
     ventry undefined_handler
     ventry undefined_handler
 

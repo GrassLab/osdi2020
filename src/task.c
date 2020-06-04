@@ -68,7 +68,6 @@ void foo(){
 
 void idle(){
   while(1){
-    delay(10000000);
     schedule();
   }
 }
@@ -158,7 +157,13 @@ void set_aux() { *(ENABLE_IRQS_1) = AUX_IRQ; }
 
 void do_exec(void (*func)()) {
     struct task* task = get_current();
-    task->user_task.cpu_context.x19 = func;
+    struct page* user_page = page_alloc();
+    //for (int i = 0; i < 4 << 13; i++) {
+     //   *((unsigned long*)user_page->virtual_addr + i) = *(func + i);
+    //}
+    page_mapping(task, user_page);
+
+    task->user_task.cpu_context.x19 = *func;
     task->user_task.cpu_context.sp = (unsigned long)ustack_pool[task->task_id];
     unsigned long utask_addr = (unsigned long)&task->user_task;
     uaddr = utask_addr;
@@ -222,7 +227,7 @@ void do_fork() {
 int N = 3;
 void create_tasks() {
   task_init();
-  for (int num = 0; num < N; num++)
-    privilege_task_create(foo);
+  //for (int num = 0; num < N; num++)
+    //privilege_task_create(foo);
   idle();
 }

@@ -1,3 +1,6 @@
+#ifndef _UART_H
+#define _UART_H
+
 #include "gpio.h"
 #include "mbox.h"
 
@@ -8,3 +11,5 @@ char uart_getb();
 void uart_puts(char *s);
 void uart_hex(unsigned int d);
 void uart_flush();
+
+#endif
