@@ -13,10 +13,11 @@ enum SPECIAL_CHARACTER
     NEW_LINE      = 1001,
 
     UNKNOWN = -1,
+
 };
 
 void shell_start ( );
-enum SPECIAL_CHARACTER parse ( signed char );
+enum SPECIAL_CHARACTER parse ( char );
 void command_controller ( enum SPECIAL_CHARACTER, char c, char[], int * );
 
 #endif

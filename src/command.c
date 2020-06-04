@@ -1,130 +1,174 @@
-#include "lib/io.h"
-#include "lib/string.h"
-#include "lib/sys.h"
-#include "lib/time.h"
+#include "mailbox.h"
+#include "string.h"
+#include "time.h"
+#include "uart.h"
 
 void input_buffer_overflow_message ( char cmd[] )
 {
-    printf ( "Follow Command: \"%s\"... is too long to process.\n", cmd );
-    printf ( "The maximum length of input is 64." );
+    uart_puts ( "Follow command: \"" );
+    uart_puts ( cmd );
+    uart_puts ( "\"... is too long to process.\n" );
+
+    uart_puts ( "The maximum length of input is 64." );
 }
 
 void command_help ( )
 {
-    printf ( "\n" );
-    printf ( "Valid Command:\n" );
-    printf ( "\thelp:\t\tprint this help.\n" );
-    printf ( "\thello:\t\tprint \"Hello World!\".\n" );
-    printf ( "\ttimestamp:\tprint current timestamp.\n" );
-    printf ( "\tvc_base_addr:\tprint the VC core base address\n" );
-    printf ( "\tboard_revision:\tprint the board revision.\n" );
-    printf ( "\texc:\t\tTrap into EL1.\n" );
-    printf ( "\thvc:\t\tTrap into EL2.\n" );
-    printf ( "\ttimer:\t\tEnable timer interrupt of core timer and local timer.\n" );
-    printf ( "\ttimer-stp:\tDisable timer interrupt of core timer and local timer.\n" );
-    printf ( "\tirq:\tEnable interrupt.\n" );
-    printf ( "\tirq:\tDisable interrupt.\n" );
-
-    printf ( "\treboot:\t\treboot the raspi3.\n" );
-    printf ( "\n" );
+    uart_puts ( "\n" );
+    uart_puts ( "Valid Command:\n" );
+    uart_puts ( "\thelp:\t\tprint this help.\n" );
+    uart_puts ( "\thello:\t\tprint \"Hello World!\".\n" );
+    uart_puts ( "\ttimestamp:\tprint current timestamp.\n" );
+    uart_puts ( "\tvc_base_addr:\tprint the VC core base address\n" );
+    uart_puts ( "\tboard_revision:\tprint the board revision.\n" );
+    uart_puts ( "\treboot:\t\treboot the raspi3.\n" );
+    uart_puts ( "\n" );
 }
 
 void command_hello ( )
 {
-    printf ( "Hello World!\n" );
+    uart_puts ( "Hello World!\n" );
 }
 
 void command_timestamp ( )
 {
-    double timestamp = get_time_stamp ( );
-    printf ( "[%f]\n", timestamp );
+    float timestamp;
+    char str[20];
+
+    timestamp = get_current_timestamp ( );
+
+    ftoa ( timestamp, str, 6 );
+
+    uart_send ( '[' );
+    uart_puts ( str );
+    uart_puts ( "]\n" );
 }
 
 void command_not_found ( char * s )
 {
-    printf ( "Err: command %s not found, try <help>\n", s );
+    uart_puts ( "Err: command " );
+    uart_puts ( s );
+    uart_puts ( " not found, try <help>\n" );
 }
-/*
+
 void command_reboot ( )
 {
-    printf("Start Rebooting...\n");
+    uart_puts ( "Start Rebooting...\n" );
 
     *PM_WDOG = PM_PASSWORD | 0x20;
     *PM_RSTC = PM_PASSWORD | 100;
 
-    while(1);
+    while ( 1 )
+        ;
 }
-*/
 
 void command_board_revision ( )
 {
-    uint32_t board_revision = get_board_revision ( );
+    char str[20];
+    uint32_t board_revision = mbox_get_board_revision ( );
 
-    printf ( "Board Revision: " );
+    uart_puts ( "Board Revision: " );
     if ( board_revision )
     {
-        printf ( "%x\n", board_revision );
+        itohex_str ( board_revision, sizeof ( uint32_t ), str );
+        uart_puts ( str );
+        uart_puts ( "\n" );
     }
     else
     {
-        printf ( "Unable to query serial!\n" );
+        uart_puts ( "Unable to query serial!\n" );
     }
 }
 
 void command_vc_base_addr ( )
 {
-    uint64_t vc_base_addr = get_vc_base_addr ( );
+    char str[20];
+    uint64_t vc_base_addr = mbox_get_VC_base_addr ( );
 
-    printf ( "VC Core Memory:\n" );
+    uart_puts ( "VC Core Memory:\n" );
     if ( vc_base_addr )
     {
-        printf ( "    - Base Address: %x (in bytes)\n", ( uint32_t ) ( vc_base_addr >> 32 ) );
-        printf ( "    - Size: %x (in bytes)\n", ( uint32_t ) ( vc_base_addr & 0xffffffff ) );
+        uart_puts ( "    - Base Address: " );
+        itohex_str ( ( uint32_t ) ( vc_base_addr >> 32 ), sizeof ( uint32_t ), str );
+        uart_puts ( str );
+        uart_puts ( " (in bytes)\n" );
+
+        uart_puts ( "    - Size: " );
+        itohex_str ( ( uint32_t ) ( vc_base_addr & 0xffffffff ), sizeof ( uint32_t ), str );
+        uart_puts ( str );
+        uart_puts ( " (in bytes)\n" );
     }
     else
     {
-        printf ( "Unable to query serial!\n" );
+        uart_puts ( "Unable to query serial!\n" );
     }
 }
 
-void command_svc_exception_trap ( )
+void command_load_image ( )
 {
-    svc_test ( );
-}
+    int32_t size               = 0;
+    int32_t is_receive_success = 0;
+    char output_buffer[20];
+    char * load_address;
+    char * address_counter;
 
-void command_timer_exception_enable ( )
-{
-    // enable irq in el1
-    irq_enable ( );
-    printf ( "[IRQ Enable]\n" );
+    uart_puts ( "Start Loading Kernel Image...\n" );
+    uart_puts ( "Please input kernel load address in decimal.(defualt: 0x80000): " );
+    load_address = (char *) ( (unsigned long) uart_getint ( ) );
+    uart_puts ( "Please send kernel image from UART now:\n" );
 
-    // enable core timer in el1
-    core_timer_enable ( );
-    printf ( "[Core Timer Enable]\n" );
+    wait_cycles ( 5000 );
 
-    // enable local timer
-    local_timer_enable ( );
-    printf ( "[Local Timer Enable]\n" );
-}
+    if ( load_address == 0 )
+        load_address = (char *) 0x80000;
 
-void command_timer_exception_disable ( )
-{
-    // core timer disable need to be done in el1
-    core_timer_disable ( );
-    printf ( "[Core Timer Disable]\n" );
+    do
+    {
+        // start signal to receive image
+        uart_send ( 3 );
+        uart_send ( 3 );
+        uart_send ( 3 );
 
-    local_timer_disable ( );
-    printf ( "[Local Timer Disable]\n" );
-}
+        // read the kernel's size
+        size = uart_getc ( );
+        size |= uart_getc ( ) << 8;
+        size |= uart_getc ( ) << 16;
+        size |= uart_getc ( ) << 24;
 
-void command_irq_exception_enable ( )
-{
-    irq_enable ( );
-    printf ( "[IRQ Enable]\n" );
-}
+        // send negative or positive acknowledge
+        if ( size < 64 || size > 1024 * 1024 )
+        {
+            // size error
+            uart_send ( 'S' );
+            uart_send ( 'E' );
 
-void command_irq_exception_disable ( )
-{
-    irq_disable ( );
-    printf ( "[IRQ Disable]\n" );
+            continue;
+        }
+        uart_send ( 'O' );
+        uart_send ( 'K' );
+
+        address_counter = load_address;
+
+        // 從0x80000開始放
+        while ( size-- )
+        {
+            *address_counter++ = uart_getc ( );
+        }
+
+        is_receive_success = 1;
+
+        uart_puts ( "Kernel Loaded address: " );
+        itohex_str ( (uint64_t) load_address, sizeof ( char * ), output_buffer );
+        uart_puts ( output_buffer );
+        uart_send ( '\n' );
+
+        wait_cycles ( 5000 );
+
+    } while ( !is_receive_success );
+
+    // restore arguments and jump to the new kernel.
+    asm volatile(
+        // we must force an absolute address to branch to
+        "mov x30, 0x80000;"
+        "ret" );
 }
