@@ -197,7 +197,7 @@ void print_slub_info(){
         printf("now slub size is: %d\n", SLUB_INDEX_TO_SIZE(i));
         slub_t* init_ptr = kmem_cache_arr[i].cache_cpu.free_list;
         while(init_ptr != NULL){
-            printf("now addr is: %x\n", init_ptr->next);
+            printf("now addr is: %x\n", init_ptr);
             init_ptr = init_ptr->next;
         }
     }
@@ -207,6 +207,7 @@ void split_page_to_slub(page_t* page, int slub_index){
     int size = SLUB_INDEX_TO_SIZE(slub_index);
     unsigned long start_addr = page->phy_addr;
     page->slub_next = (slub_t *)(start_addr);
+    page->slub_index = slub_index;
     kmem_cache_arr[slub_index].cache_cpu.free_list = page->slub_next;
 
     slub_t * tmp;
@@ -225,12 +226,14 @@ void split_page_to_slub(page_t* page, int slub_index){
 }
 
 void init_kmalloc_caches(){
+    printf("________________________________\n");
     for(int s = 0; s < SLUB_NUMBER; s++){
         kmem_cache_arr[s].cache_cpu.free_list = NULL;
         kmem_cache_arr[s].cache_cpu.free_list->next = NULL;
         kmem_cache_arr[s].cache_cpu.page = NULL;
         kmem_cache_arr[s].cache_cpu.partial = NULL;
     }
+    printf("________________________________\n");
 }
 
 unsigned long get_one_slub(int slub_index){
@@ -238,8 +241,13 @@ unsigned long get_one_slub(int slub_index){
     printf("######################\n");
     // printf("allocate slub addr is: %x\n", slub->phy_addr);
     printf("allocate slub addr is: %x\n", slub);
+    kmem_cache_arr[slub_index].cache_cpu.page->slub_next = slub->next;
     kmem_cache_arr[slub_index].cache_cpu.free_list = slub->next;
+    
     kmem_cache_arr[slub_index].cache_cpu.page->slub_num--;
+    if(kmem_cache_arr[slub_index].cache_cpu.page->slub_num == 0){
+        list_add_tail(&(kmem_cache_arr[slub_index].cache_cpu.page->list),&kmem_cache_arr[slub_index].cache_cpu.partial);
+    }
     return slub;
 }
 
@@ -247,7 +255,6 @@ unsigned long get_slub(int size){
     int slub_index = slub_size_to_index(size);
     printf("slub index is %d\n",slub_index);
     if(kmem_cache_arr[slub_index].cache_cpu.free_list == NULL){
-        list_add_tail(&(kmem_cache_arr[slub_index].cache_cpu.page->list),&kmem_cache_arr[slub_index].cache_cpu.partial);
         printf("%d slub is empty!\n", SLUB_INDEX_TO_SIZE(slub_index));
         page_t* p = get_pages_from_list(1);
         kmem_cache_arr[slub_index].cache_cpu.page = p;
@@ -255,6 +262,25 @@ unsigned long get_slub(int size){
         split_page_to_slub(p, slub_index);
     }
     return get_one_slub(slub_index);
+}
+
+void receive_slub(unsigned long physical_addr){
+    unsigned long page_frame_number = physical_to_pfn(physical_addr);
+    printf("page number is %d\n", page_frame_number);
+    printf("page addr is %x\n", page_t_pool[page_frame_number].phy_addr);
+    printf("page slub index is %d\n", page_t_pool[page_frame_number].slub_index);
+
+    slub_t* tmp = page_t_pool[page_frame_number].slub_next;
+    page_t_pool[page_frame_number].slub_next = (slub_t *)(physical_addr);
+    slub_t* new = (slub_t *)(physical_addr);
+    new->next = tmp;
+    
+    kmem_cache_arr[page_t_pool[page_frame_number].slub_index].cache_cpu.free_list = page_t_pool[page_frame_number].slub_next;
+    page_t_pool[page_frame_number].slub_num++;
+    if(page_t_pool[page_frame_number].slub_num == PAGE_SIZE/SLUB_INDEX_TO_SIZE(page_t_pool[page_frame_number].slub_index)){
+        printf("/////////////back to buddy!\n");
+        free_page(page_t_pool[page_frame_number].phy_addr);
+    }
 }
 
 void test(){
@@ -314,19 +340,40 @@ void test(){
 
     init_kmalloc_caches();
 
-    printf("get addr is %x\n",get_slub(256));
+    unsigned long a = get_slub(256);
 
-    printf("get addr is %x\n",get_slub(257));
-    printf("get addr is %x\n",get_slub(320));
-    printf("get addr is %x\n",get_slub(300));
-    printf("get addr is %x\n",get_slub(259));
-    printf("get addr is %x\n",get_slub(512));
+    unsigned long a2 = get_slub(257);
+    unsigned long a3 = get_slub(320);
+    unsigned long a4 = get_slub(300);
+    unsigned long a5 = get_slub(259);
+    unsigned long a6 = get_slub(512);
+
+    unsigned long a7 = get_slub(513);
+    unsigned long a8 = get_slub(513);
+    unsigned long a9 = get_slub(513);
+    unsigned long a10 = get_slub(513);
+    unsigned long a11 = get_slub(513);
+
+
+    receive_slub(a5);
+    receive_slub(a3);
+    receive_slub(a4);
+    receive_slub(a6);
+    receive_slub(a2);
+
+    receive_slub(a8);
+    receive_slub(a7);
+    receive_slub(a9);
+    receive_slub(a10);
+
+    receive_slub(a11);
     
-    printf("get addr is %x\n",get_slub(513));
-    printf("get addr is %x\n",get_slub(513));
-    printf("get addr is %x\n",get_slub(513));
-    printf("get addr is %x\n",get_slub(513));
-    printf("get addr is %x\n",get_slub(513));
+    receive_slub(a);
+
+    printf(" 7777 %x\n", a5);
+    print_buddy_info();
+
+    
 }
 
 void init_page_sys(){
@@ -343,6 +390,7 @@ void init_page_sys(){
         page_t_pool[p].phy_addr = LOW_PAGE_POOL_MEMORY + p * PAGE_SIZE;
         page_t_pool[p].slub_next = NULL;
         page_t_pool[p].slub_num = 0;
+        page_t_pool[p].slub_index = 0;
         INIT_LIST_POINTER(&(page_t_pool[p].list));
 
         if(remain_counter == 0){

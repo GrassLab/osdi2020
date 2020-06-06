@@ -50,6 +50,7 @@
         list_ptr_t list;
         struct slub* slub_next;
         int slub_num;
+        int slub_index;
     };
 
     struct slub {
