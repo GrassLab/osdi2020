@@ -29,11 +29,14 @@
 #define NEXT_BUDDY_START(now,order)	((now)+(1<<(order)))
 #define PREV_BUDDY_START(now,order)	((now)-(1<<(order)))
 #define BUDDY_END(now,order)	((now)+(1<<(order))-1)
+#define SLUB_INDEX_TO_SIZE(slub_index)	(1 << (slub_index+3))
+#define SLUB_NUMBER             9 // 8,16,32,64...2048
 
 #ifndef __ASSEMBLER__
     void memzero(unsigned long src, unsigned long n);
     void init_buddy_sys();
     void init_page_sys();
+    unsigned long get_slub(int size);
     enum {
         NOT_USED,
         USED,
@@ -45,10 +48,32 @@
         int page_index;
         unsigned long phy_addr;
         list_ptr_t list;
+        struct slub* slub_next;
+        int slub_num;
     };
+
+    struct slub {
+        struct slub* next;
+    };
+
+    struct kmem_cache_cpu{
+        struct slub* free_list;
+        struct page* page;
+        struct page* partial;
+    };
+
+    struct kmem_cache{
+        struct kmem_cache_cpu cache_cpu;
+    };
+
     typedef struct page page_t;
+    typedef struct slub slub_t;
+    typedef struct kmem_cache kmem_cache_t;
+    typedef struct kmem_cache_cpu kmem_cache_cpu_t;
     page_t page_t_pool[TOTAL_PAGE_NUMBER];
     list_ptr_t page_buddy[MAX_ORDER];
+    // slub_t kmem_cache[SLUB_NUMBER];
+    kmem_cache_t kmem_cache_arr[SLUB_NUMBER]; 
 
 #endif
 

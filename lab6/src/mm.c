@@ -98,23 +98,7 @@ unsigned long physical_to_pfn(unsigned long physical_addr){
 	return (physical_addr - LOW_PAGE_POOL_MEMORY) >> 12;	
 }
 
-page_t* min(page_t* a, page_t* b){
-    if(a->page_index < b->page_index){
-        return a;
-    }
-    return b;
-}
-
-page_t* max(page_t* a, page_t* b){
-    if(a->page_index < b->page_index){
-        return b;
-    }
-    return a;
-}
-
 void give_back_pages(page_t* page , int order){
-    // page_t* prev_page;
-    // page_t* next_page;
     int buddy_page_index = page->page_index ^ (1 << order);
     int is_buddy_bigger_than_self = 0;
     page_t* head_page = page;
@@ -129,10 +113,10 @@ void give_back_pages(page_t* page , int order){
         printf("now buddy number is used %d\n", page_t_pool[buddy_page_index].used);
         if(buddy_page->used == NOT_USED && buddy_page->order == page->order){
             list_remove_chain(&(buddy_page->list), &(BUDDY_END(buddy_page, order)->list));
-            head_page = min(buddy_page, page);
+            head_page = (buddy_page->page_index < page->page_index)?buddy_page:page;
             // printf(">>> head page index is %d \r\n", page->page_index);
             // printf(">>> end page index is %d \r\n", buddy_page->page_index);
-            end_page = max(buddy_page, page);
+            end_page = (buddy_page->page_index < page->page_index)?page:buddy_page;
             // printf(">>> head page index is %d \r\n", page->page_index);
             // printf(">>> end page index is %d \r\n", buddy_page->page_index);
 
@@ -178,7 +162,6 @@ page_t *alloc_pages(int order){
 	if(page == (page_t*)NULL){
 		return (page_t*)NULL;
     }
-
 	
 	for(int i = 0; i < (1<<order); i++){
 		(page + i)->used = USED;
@@ -186,6 +169,156 @@ page_t *alloc_pages(int order){
 		free_page_number--;
 	}
 	return page;
+}
+
+int slub_size_to_index(int size){
+    int i = 0;
+    int s = size;
+    while (s >>= 1){
+        i++;
+    }
+    i = (size == (1 << (i)))?(i):i+1;
+    return i - 3;
+}
+
+
+unsigned long allocate_memory(int size){
+    if(size > 4096){
+        int page_num = size >> 12;
+        page_t* p = get_pages_from_list(5);
+        return p->phy_addr;
+    }
+    return get_slub(size);
+}
+
+void print_slub_info(){
+    for(int i = 0 ; i < SLUB_NUMBER; i++){
+        printf("--------------------\n");
+        printf("now slub size is: %d\n", SLUB_INDEX_TO_SIZE(i));
+        slub_t* init_ptr = kmem_cache_arr[i].cache_cpu.free_list;
+        while(init_ptr != NULL){
+            printf("now addr is: %x\n", init_ptr->next);
+            init_ptr = init_ptr->next;
+        }
+    }
+}
+
+void split_page_to_slub(page_t* page, int slub_index){
+    int size = SLUB_INDEX_TO_SIZE(slub_index);
+    unsigned long start_addr = page->phy_addr;
+    page->slub_next = (slub_t *)(start_addr);
+    kmem_cache_arr[slub_index].cache_cpu.free_list = page->slub_next;
+
+    slub_t * tmp;
+    int slub_num = PAGE_SIZE/size;
+    page->slub_num = slub_num;
+    for(int i = 0; i < slub_num -1; i++){
+        tmp = (slub_t *)(start_addr + i*size);
+        printf("######################\n");
+        printf("split page addr is:%x\n", tmp);
+        tmp->next = (slub_t *)(start_addr + (i+1)*size);
+    }
+    tmp = (slub_t *)(start_addr + slub_num*size);
+    tmp->next = NULL;
+}
+
+void init_kmalloc_caches(){
+    for(int s = 0; s < SLUB_NUMBER; s++){
+        kmem_cache_arr[s].cache_cpu.free_list = NULL;
+        kmem_cache_arr[s].cache_cpu.free_list->next = NULL;
+        kmem_cache_arr[s].cache_cpu.page = NULL;
+        kmem_cache_arr[s].cache_cpu.partial = NULL;
+    }
+}
+
+unsigned long get_one_slub(int slub_index){
+    slub_t* slub = kmem_cache_arr[slub_index].cache_cpu.free_list;
+    printf("######################\n");
+    // printf("allocate slub addr is: %x\n", slub->phy_addr);
+    printf("allocate slub addr is: %x\n", slub);
+    kmem_cache_arr[slub_index].cache_cpu.free_list->next = slub->next;
+    return slub;
+}
+
+unsigned long get_slub(int size){
+    int slub_index = slub_size_to_index(size);
+    printf("slub index is %d\n",slub_index);
+    if(kmem_cache_arr[slub_index].cache_cpu.free_list->next == NULL){
+        printf("%d slub is empty!\n", SLUB_INDEX_TO_SIZE(slub_index));
+        page_t* p = get_pages_from_list(1);
+        kmem_cache_arr[slub_index].cache_cpu.page = p;
+        print_buddy_info();
+        split_page_to_slub(p, slub_index);
+    }
+    return get_one_slub(slub_index);
+}
+
+void test(){
+    // page_t* p = get_pages_from_list(5);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // page_t* p2 = get_pages_from_list(3);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // page_t* p3 = get_pages_from_list(2);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // page_t* p4 = get_pages_from_list(2);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // page_t* p5 = get_pages_from_list(2);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // free_page(p2->phy_addr);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // free_page(p3->phy_addr);
+    // print_buddy_info();
+    // printf("------\n");
+
+
+    // free_page(p4->phy_addr);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // free_page(p5->phy_addr);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // free_page(p->phy_addr);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // page_t* p = get_pages_from_list(1);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // page_t* p2 = get_pages_from_list(1);
+    // print_buddy_info();
+    // printf("------\n");
+
+    // split_page_to_slub(p, 6);
+    // split_page_to_slub(p2, 8);
+
+    // print_slub_info();
+
+    init_kmalloc_caches();
+
+    printf("get addr is %x\n",get_slub(256));
+
+    printf("get addr is %x\n",get_slub(257));
+    printf("get addr is %x\n",get_slub(320));
+    printf("get addr is %x\n",get_slub(300));
+    printf("get addr is %x\n",get_slub(259));
+    printf("get addr is %x\n",get_slub(512));
+    
+    printf("get addr is %x\n",get_slub(513));
 }
 
 void init_page_sys(){
@@ -200,6 +333,8 @@ void init_page_sys(){
         page_t_pool[p].order = 0;
         page_t_pool[p].page_index = p;
         page_t_pool[p].phy_addr = LOW_PAGE_POOL_MEMORY + p * PAGE_SIZE;
+        page_t_pool[p].slub_next = NULL;
+        page_t_pool[p].slub_num = 0;
         INIT_LIST_POINTER(&(page_t_pool[p].list));
 
         if(remain_counter == 0){
@@ -225,50 +360,7 @@ void init_page_sys(){
             remain_counter--;
         }
     }
-
     print_buddy_info();
     printf("------\n");
-
-    page_t* p = get_pages_from_list(5);
-    print_buddy_info();
-    printf("------\n");
-
-    page_t* p2 = get_pages_from_list(3);
-    print_buddy_info();
-    printf("------\n");
-
-    page_t* p3 = get_pages_from_list(2);
-    print_buddy_info();
-    printf("------\n");
-
-    page_t* p4 = get_pages_from_list(2);
-    print_buddy_info();
-    printf("------\n");
-
-    page_t* p5 = get_pages_from_list(2);
-    print_buddy_info();
-    printf("------\n");
-
-    free_page(p2->phy_addr);
-    print_buddy_info();
-    printf("------\n");
-
-    free_page(p3->phy_addr);
-    print_buddy_info();
-    printf("------\n");
-
-
-    free_page(p4->phy_addr);
-    print_buddy_info();
-    printf("------\n");
-
-    free_page(p5->phy_addr);
-    print_buddy_info();
-    printf("------\n");
-
-    free_page(p->phy_addr);
-    print_buddy_info();
-    printf("------\n");
-    // get_pages_from_list(5);
-    // print_buddy_info();
+    test();
 }

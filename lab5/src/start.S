@@ -108,6 +108,10 @@ dev_pmd:                          // 0x3F0 00000 to 0x3FF FFFFF(0x3f80 to 0x3ff8
 	orr x2 , x2, 1
 	msr sctlr_el1, x2 // enable MMU, cache remains disabled
 
+	ldr x2, boot_rest // indirect branch to the virtual address
+	br x2
+
+boot_rest:
 	adr	x0, __bss_begin
 	adr	x1, __bss_end
 	sub	x1, x1, x0
@@ -119,6 +123,8 @@ dev_pmd:                          // 0x3F0 00000 to 0x3FF FFFFF(0x3f80 to 0x3ff8
 
 	bl	main
 	b 	proc_hang		// should never come here
+
+
 
 /* 
 	bl uart_init
