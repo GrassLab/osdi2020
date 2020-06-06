@@ -218,7 +218,9 @@ void split_page_to_slub(page_t* page, int slub_index){
         printf("split page addr is:%x\n", tmp);
         tmp->next = (slub_t *)(start_addr + (i+1)*size);
     }
-    tmp = (slub_t *)(start_addr + slub_num*size);
+    tmp = (slub_t *)(start_addr + (slub_num-1)*size);
+    printf("######################\n");
+    printf("split page addr is:%x\n", tmp);
     tmp->next = NULL;
 }
 
@@ -236,14 +238,16 @@ unsigned long get_one_slub(int slub_index){
     printf("######################\n");
     // printf("allocate slub addr is: %x\n", slub->phy_addr);
     printf("allocate slub addr is: %x\n", slub);
-    kmem_cache_arr[slub_index].cache_cpu.free_list->next = slub->next;
+    kmem_cache_arr[slub_index].cache_cpu.free_list = slub->next;
+    kmem_cache_arr[slub_index].cache_cpu.page->slub_num--;
     return slub;
 }
 
 unsigned long get_slub(int size){
     int slub_index = slub_size_to_index(size);
     printf("slub index is %d\n",slub_index);
-    if(kmem_cache_arr[slub_index].cache_cpu.free_list->next == NULL){
+    if(kmem_cache_arr[slub_index].cache_cpu.free_list == NULL){
+        list_add_tail(&(kmem_cache_arr[slub_index].cache_cpu.page->list),&kmem_cache_arr[slub_index].cache_cpu.partial);
         printf("%d slub is empty!\n", SLUB_INDEX_TO_SIZE(slub_index));
         page_t* p = get_pages_from_list(1);
         kmem_cache_arr[slub_index].cache_cpu.page = p;
@@ -318,6 +322,10 @@ void test(){
     printf("get addr is %x\n",get_slub(259));
     printf("get addr is %x\n",get_slub(512));
     
+    printf("get addr is %x\n",get_slub(513));
+    printf("get addr is %x\n",get_slub(513));
+    printf("get addr is %x\n",get_slub(513));
+    printf("get addr is %x\n",get_slub(513));
     printf("get addr is %x\n",get_slub(513));
 }
 
