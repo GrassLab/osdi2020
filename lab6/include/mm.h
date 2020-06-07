@@ -36,7 +36,7 @@
     void memzero(unsigned long src, unsigned long n);
     void init_buddy_sys();
     void init_page_sys();
-    unsigned long get_slub(int size);
+    unsigned long give_slab(int size);
     enum {
         NOT_USED,
         USED,
