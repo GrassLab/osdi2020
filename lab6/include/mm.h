@@ -47,10 +47,10 @@
         int order;
         int page_index;
         unsigned long phy_addr;
-        list_ptr_t list;
         struct slub* slub_next;
         int slub_num;
         int slub_index;
+        list_ptr_t list;
     };
 
     struct slub {
@@ -60,7 +60,7 @@
     struct kmem_cache_cpu{
         struct slub* free_list;
         struct page* page;
-        struct page* partial;
+        list_ptr_t partial;
     };
 
     struct kmem_cache{
