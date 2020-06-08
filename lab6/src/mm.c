@@ -303,7 +303,7 @@ unsigned long give_slab(int size){
         // request a new page from buddy
         else{
             printf("%d slub is empty!\n", SLUB_INDEX_TO_SIZE(slub_index));
-            page_t* p = get_pages_from_list(1);
+            page_t* p = get_pages_from_list(0);
             kmem_cache_arr[slub_index].cache_cpu.page = p;
             print_buddy_info();
             split_page_to_slub(p, slub_index);
@@ -339,6 +339,13 @@ void receive_slub(unsigned long physical_addr){
     page_t_pool[page_frame_number].slub_num++;
     if(page_t_pool[page_frame_number].slub_num == PAGE_SIZE/SLUB_INDEX_TO_SIZE(page_t_pool[page_frame_number].slub_index)){
         printf("/////////////back to buddy!\n");
+        if(page_frame_number !=  kmem_cache_arr[page_t_pool[page_frame_number].slub_index].cache_cpu.page->page_index){
+            list_remove_chain(&(page_t_pool[page_frame_number].list),&(page_t_pool[page_frame_number].list));
+        }
+        else{
+            kmem_cache_arr[page_t_pool[page_frame_number].slub_index].cache_cpu.free_list = NULL;
+            kmem_cache_arr[page_t_pool[page_frame_number].slub_index].cache_cpu.page = NULL;
+        }
         init_page(page_frame_number);
         free_page(page_t_pool[page_frame_number].phy_addr);
     }
@@ -477,6 +484,26 @@ void test(int test_all){
         receive_memory(c6);
 }
 
+void test2(){
+    unsigned long b3 = allocate_memory(513);
+    receive_memory(b3);
+
+    unsigned long a7 = allocate_memory(513);
+    receive_memory(a7);
+
+
+    unsigned long a8 = allocate_memory(513);
+    unsigned long a9 = allocate_memory(513);
+    unsigned long a10 = allocate_memory(513);
+    unsigned long a11 = allocate_memory(513);
+
+    receive_memory(a8);
+    receive_memory(a9);
+    receive_memory(a10);
+    receive_memory(a11);
+
+}
+
 void init_page_sys(){
     printf("total page number is: %d\n", TOTAL_PAGE_NUMBER);
     printf("total page number is: %x\n", HIGH_PAGE_POOL_MEMORY);
@@ -520,6 +547,7 @@ void init_page_sys(){
     print_buddy_info();
     printf("------\n");
     init_kmalloc_caches();
+    // test(1);
     test(0);
     print_buddy_info();
 }
