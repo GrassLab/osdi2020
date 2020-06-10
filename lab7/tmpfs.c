@@ -21,7 +21,27 @@ int tmpfs_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mou
   struct vfs_vnode_struct * root_dir_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
 
   root_dir_vnode -> mount = mount;
+  root_dir_vnode -> internal = (void *)tmpfs_create_dir_node("/");
   mount -> root = root_dir_vnode;
   return 0;
+}
+
+struct tmpfs_dir_node * tmpfs_create_dir_node(char * dir_name)
+{
+  struct tmpfs_dir_node * dir_node = (struct tmpfs_dir_node *)slab_malloc(sizeof(struct tmpfs_dir_node));
+
+  dir_node -> name = dir_name;
+
+  /* no subdir and files when created */
+  for(unsigned idx = 0; idx < TMPFS_MAX_SUB_DIR; ++idx)
+  {
+    (dir_node -> subdir_node)[idx] = 0;
+  }
+  for(unsigned idx = 0; idx < TMPFS_MAX_FILE_IN_DIR; ++idx)
+  {
+    (dir_node -> files)[idx] = 0;
+  }
+
+  return dir_node;
 }
 
