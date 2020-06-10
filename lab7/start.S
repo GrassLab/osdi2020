@@ -85,6 +85,10 @@ boot_rest:
   bl uart_init
   bl buddy_init
   bl mmu_user_page_table_init
+  bl tmpfs_init
+  // tmpfs_init will return a vfs_filesystem_struct
+  bl vfs_regist_fs
+
   bl scheduler_init
 
   // In case return, enter low power mode

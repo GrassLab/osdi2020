@@ -2,6 +2,8 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
+#define MAX_REGISTERED_FS 8
+
 struct vfs_vnode_struct
 {
   struct vfs_mount_struct * mount;
@@ -43,7 +45,8 @@ struct vfs_vnode_operations_struct
 };
 
 
-int vfs_regist_ffs(struct vfs_filesystem_struct * fs);
+int vfs_regist_fs(struct vfs_filesystem_struct * fs);
+void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs);
 struct vfs_file_struct * vfs_open(const char * pathname, int flags);
 int vfs_close(struct vfs_file_struct * file);
 int vfs_write(struct vfs_file_struct * file, const void * buf, size_t len);

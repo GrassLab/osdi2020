@@ -1,14 +1,45 @@
 #include "vfs.h"
+#include "string_util.h"
+#include "slab.h"
+#include "uart.h"
 
 static struct vfs_mount_struct * rootfs;
+static struct vfs_filesystem_struct * fs_list[MAX_REGISTERED_FS];
 
 int vfs_regist_fs(struct vfs_filesystem_struct * fs)
 {
-  /* register the file system to the kernel.
-   * you can also initialize memory pool of the file system here.
-   */
-  /* TODO */
+  /* put fs into list */
+  for(unsigned idx = 0; idx < MAX_REGISTERED_FS; ++idx)
+  {
+    if(fs_list[idx] == 0)
+    {
+      fs_list[idx] = fs;
+    }
+  }
+
+  uart_puts(fs -> name);
+  uart_puts(" registered\n");
+
+  /* point to rootfs if tmpfs */
+  if(string_cmp(fs -> name, "tmpfs", 8) != 0)
+  {
+    vfs_set_tmpfs_to_rootfs(fs);
+  }
+
   return 0;
+}
+
+void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs)
+{
+  /* WARNING: Currently this function should be called once */
+
+  /* allocate vfs_mount_struct then call tmpfs mount setup */
+  struct vfs_mount_struct * mount = (struct vfs_mount_struct *)slab_malloc(sizeof(struct vfs_mount_struct));
+  mount -> fs = fs;
+  (fs -> setup_mount)(fs, mount);
+
+  rootfs = mount;
+  return;
 }
 
 struct vfs_file_struct * vfs_open(const char * pathname, int flags)
