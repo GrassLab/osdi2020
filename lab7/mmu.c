@@ -80,6 +80,7 @@ uint64_t * mmu_startup_page_allocate(int zero)
       }
       SET_BIT(startup_page_table_base[current_pfn].flag, PAGE_USED);
 
+#ifdef DEBUG
       /* print allocation message */
       char string_buff[0x20];
 
@@ -87,6 +88,7 @@ uint64_t * mmu_startup_page_allocate(int zero)
       string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
       uart_puts(string_buff);
       uart_puts("\n");
+#endif
       return pa;
     }
   }
@@ -99,12 +101,14 @@ void mmu_startup_page_free(uint64_t * va)
 
   CLEAR_BIT(startup_page_table_base[MMU_VA_TO_PFN(((uint64_t)va))].flag, PAGE_USED);
 
+#ifdef DEBUG
   /* free message */
   char string_buff[0x20];
   uart_puts(ANSI_MAGENTA"[Startup page allocator] "ANSI_RESET"Free: ");
   string_ulonglong_to_hex_char(string_buff, (unsigned long long)va);
   uart_puts(string_buff);
   uart_puts("\n");
+#endif
   return;
 }
 
@@ -140,26 +144,6 @@ void mmu_user_page_table_init(void)
    *         6 page descriptor[0:5]; 2 page descriptor[509:510]
    */
   /* total frame: 1PGD, 1PUD, 1PMD, 64 * 2 PTE */
-
-  // For testing
-  //uart_puts("===\n");
-  //uint64_t * a = slab_malloc(64);
-  //uart_puts("===\n");
-  //uint64_t * b = slab_malloc(23);
-  //uart_puts("===\n");
-  //uint64_t * c = slab_malloc(0x1000);
-  //uart_puts("===\n");
-  //uint64_t * d = slab_malloc(0x2001);
-  //uart_puts("===\n");
-  //slab_malloc_free(a);
-  //uart_puts("===\n");
-  //slab_malloc_free(c);
-  //uart_puts("===\n");
-  //slab_malloc_free(b);
-  //uart_puts("===\n");
-  //slab_malloc_free(d);
-  //uart_puts("===\n");
-  //while(1);
 
   /* setup 1 PGD */
   user_space_mm.pgd_base = buddy_allocate(0, 1, BUDDY_ALLOCATE_TO_PA);

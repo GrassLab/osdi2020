@@ -9,8 +9,10 @@ static struct malloc_struct * malloc_list;
 
 uint64_t slab_regist(unsigned bytes)
 {
-  char string_buff[0x20];
   uint64_t token = (uint64_t)slab_find_or_create_slab(bytes);
+
+#ifdef DEBUG
+  char string_buff[0x20];
 
   uart_puts(ANSI_YELLOW"[Slab]"ANSI_RESET" Regist size: ");
   string_longlong_to_char(string_buff, bytes);
@@ -19,6 +21,7 @@ uint64_t slab_regist(unsigned bytes)
   string_ulonglong_to_hex_char(string_buff, token);
   uart_puts(string_buff);
   uart_putc('\n');
+#endif
 
   return token;
 }
@@ -27,7 +30,6 @@ uint64_t * slab_allocate(uint64_t token)
 {
   for(unsigned bit_array_idx = 0; bit_array_idx < SLAB_USED_BIT_ARRAY_SIZE; ++bit_array_idx)
   {
-    char string_buff[0x20];
     uint64_t * ret_ptr;
 
     /* see buddy_node_allocate for info */
@@ -39,6 +41,9 @@ uint64_t * slab_allocate(uint64_t token)
     /* Change pointer to uint64_t to prevent offset multiplier */
     ret_ptr = (uint64_t *)((uint64_t)(((struct slab_struct *)token) -> va) + ((struct slab_struct *)token) -> object_size * (bit_array_idx * 32 + (unsigned)bit_array_bit));
 
+#ifdef DEBUG
+    char string_buff[0x20];
+
     uart_puts(ANSI_YELLOW"[Slab]"ANSI_RESET" Allocate size: ");
     string_longlong_to_char(string_buff, (long)(((struct slab_struct *)token) -> object_size));
     uart_puts(string_buff);
@@ -46,6 +51,7 @@ uint64_t * slab_allocate(uint64_t token)
     string_ulonglong_to_hex_char(string_buff, (uint64_t)ret_ptr);
     uart_puts(string_buff);
     uart_putc('\n');
+#endif
 
     return ret_ptr;
   }
@@ -55,13 +61,14 @@ uint64_t * slab_allocate(uint64_t token)
 
 void slab_free(uint64_t token, uint64_t * va)
 {
-  char string_buff[0x20];
-
   uint64_t offset = ((uint64_t)va - (uint64_t)(((struct slab_struct *)token) -> va)) / (((struct slab_struct *)token) -> object_size);
   unsigned bit_array_idx = (unsigned)(offset / 32);
   unsigned bit_array_bit = (unsigned)(offset - (bit_array_idx * 32));
 
   CLEAR_BIT(((struct slab_struct *)token) -> used_bit_array[bit_array_idx], bit_array_bit);
+
+#ifdef DEBUG
+  char string_buff[0x20];
 
   uart_puts(ANSI_YELLOW"[Slab]"ANSI_RESET" Free size: ");
   string_longlong_to_char(string_buff, (long)(((struct slab_struct *)token) -> object_size));
@@ -70,6 +77,7 @@ void slab_free(uint64_t token, uint64_t * va)
   string_ulonglong_to_hex_char(string_buff, (uint64_t)va);
   uart_puts(string_buff);
   uart_putc('\n');
+#endif
   return;
 }
 
@@ -161,7 +169,6 @@ void slab_insert_slab(struct slab_struct * node)
 
 uint64_t * slab_malloc(unsigned bytes)
 {
-  char string_buff[0x20];
   uint64_t * ret_ptr;
   /*Use buddy system for higher volume
    *kmalloc-2k
@@ -236,6 +243,9 @@ uint64_t * slab_malloc(unsigned bytes)
 
   new_node -> va = (uint64_t *)ret_ptr;
 
+#ifdef DEBUG
+  char string_buff[0x20];
+
   uart_puts(ANSI_BLUE"[Malloc]"ANSI_RESET" Allocate Size: ");
   string_ulonglong_to_hex_char(string_buff, bytes);
   uart_puts(string_buff);
@@ -246,14 +256,13 @@ uint64_t * slab_malloc(unsigned bytes)
   string_ulonglong_to_hex_char(string_buff, (uint64_t)ret_ptr);
   uart_puts(string_buff);
   uart_putc('\n');
+#endif
 
   return ret_ptr;
 }
 
 void slab_malloc_free(uint64_t * va)
 {
-  char string_buff[0x20];
-
   struct malloc_struct * cur_node = malloc_list;
   struct malloc_struct * prev_node = 0x0;
 
@@ -280,10 +289,14 @@ void slab_malloc_free(uint64_t * va)
       }
       slab_free(slab_regist(sizeof(struct malloc_struct)), (uint64_t *)cur_node);
 
+#ifdef DEBUG
+      char string_buff[0x20];
+
       uart_puts(ANSI_BLUE"[Malloc]"ANSI_RESET" Free VA: ");
       string_ulonglong_to_hex_char(string_buff, (uint64_t)va);
       uart_puts(string_buff);
       uart_putc('\n');
+#endif
 
       return;
     }
