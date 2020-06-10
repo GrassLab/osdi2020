@@ -6,7 +6,7 @@ COPS += -DON_QEMU
 ASMOPS += -DON_QEMU
 
 USER_SRC_DIR = .
-USER_BUILD_DIR = ../user_build
+USER_BUILD_DIR = ../usrbuild
 USER_C_FILES = $(wildcard $(USER_SRC_DIR)/*.c)
 USER_ASM_FILES = $(wildcard $(USER_SRC_DIR)/*.S)
 USER_OBJ_FILES = $(USER_C_FILES:$(USER_SRC_DIR)/%.c=$(USER_BUILD_DIR)/%_c.o)

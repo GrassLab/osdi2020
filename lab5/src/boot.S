@@ -1,6 +1,5 @@
 #include "mm.h"
 #include "mmu.h"
-#include "armmmu.h"
 #include "sysregs.h"
 
 .section ".text.boot"

@@ -23,7 +23,8 @@ void test_command2() { // test page fault
 }
 
 void test_command3() { // test page reclaim.
-  printf("Remaining page frames : %d\n", remain_page_num()); // get number of remaining page frames from kernel by system call.
+  printf("[%d] Remaining page frames : %d\n", get_taskid(), remain_page_num()); // get number of remaining page frames from kernel by system call.
+  while(1);
 }
 
 void read_beyond_boundary(){

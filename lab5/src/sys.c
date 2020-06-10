@@ -30,13 +30,13 @@ void sys_write(char *buf) {
   uart_puts(buf);
 }
 
-extern unsigned long _binary____user_build_user_img_start;
-extern unsigned long _binary____user_build_user_img_end;
+extern unsigned long _binary____usrbuild_user_img_start;
+extern unsigned long _binary____usrbuild_user_img_end;
 
 void sys_exec(unsigned long func){
   free_task_pages(current_task);
-  unsigned long begin = (unsigned long)&_binary____user_build_user_img_start;
-  unsigned long end = (unsigned long)&_binary____user_build_user_img_end;
+  unsigned long begin = (unsigned long)&_binary____usrbuild_user_img_start;
+  unsigned long end = (unsigned long)&_binary____usrbuild_user_img_end;
   move_to_user_mode(begin, end - begin, func);
 }
 
@@ -138,7 +138,7 @@ void sys_pages(unsigned long pid) {
   }
 }
 
-int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
+long int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     long x5) {
 
   switch (code) {
@@ -172,7 +172,7 @@ int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
       return sys_page_num();
       break;
     case SYSNUM_MMAP:
-      return (int)sys_mmap((void*)x0, (unsigned long)x1,
+      return (long int)sys_mmap((void*)x0, (unsigned long)x1,
           (int)x2, (int)x3, (int)x4, (int)x5);
       break;
     case SYSNUM_PAGES:

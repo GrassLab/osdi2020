@@ -7,7 +7,7 @@
 /* 0 for 2 lv translation */
 /* 1 for 3 lv translation */
 /* 2 for 4 lv translation */
-#include "armmmu.h"
+#include "mmu.h"
 
 #define MLV 1
 
