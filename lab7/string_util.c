@@ -215,6 +215,16 @@ unsigned long long string_hex_char_to_longlong(char * string)
   return value;
 }
 
+unsigned string_split(const char * string, char split_char)
+{
+  /* start and end is inclusive */
+  /* caller should know the length of the string to prevent oob */
+  /* return the length */
+  unsigned idx;
+  for(idx = 0; string[idx] != '\0' && string[idx] != split_char; ++idx);
+  return idx;
+}
+
 void memcopy(const char * src, char * dst, unsigned length)
 {
   for(unsigned i = 0; i < length; ++i)
