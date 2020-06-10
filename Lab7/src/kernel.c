@@ -14,6 +14,7 @@
 #include "include/kernel.h"
 #include "include/elf.h"
 #include "include/pool.h"
+#include "include/vfs.h"
 
 void get_board_revision_info(){
   mbox[0] = 7 * 4; // buffer size in bytes
@@ -103,6 +104,26 @@ void kernel_process(){
 }
 
 
+void test1(){
+	struct file* a = vfs_open("hello", O_CREAT);
+	struct file* b = vfs_open("world", O_CREAT);
+	vfs_write(a, "Hello ", 6);
+	vfs_write(b, "World!", 6);
+	vfs_close(a);
+	vfs_close(b);
+	b = vfs_open("hello", 0);
+	a = vfs_open("world", 0);
+	char buf[100];
+	int sz;
+	sz = vfs_read(b, buf, 100);
+	sz += vfs_read(a, buf + sz, 100);
+	buf[sz] = '\0';
+	printf("%s\n", buf); // should be Hello World!
+
+	struct file* root = vfs_open("/", 0);
+	printf("%x\r\n",root);
+}
+
 void kernel_main(void)
 {	
     irq_vector_init(); 
@@ -122,10 +143,12 @@ void kernel_main(void)
     core_timer_enable(); //enable core timer
     
     allocator_init(); 
-     
+    rootfs_init();
+
+    test1();
     // Here init a task being zombie reaper
-    privilege_task_create(zombie_reaper,1);
-    privilege_task_create(kernel_process, 1); 
+    //privilege_task_create(zombie_reaper,1);
+    //privilege_task_create(kernel_process, 1); 
 
     idle();  
 }

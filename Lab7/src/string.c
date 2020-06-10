@@ -58,4 +58,14 @@ int strcmp (const char *p1, const char *p2){
  }
 
 
-
+int strcpy(char *dest, const char *src)
+{
+	int c = 0;
+  	while (src[c] != '\0'){
+    		dest[c]	= src[c];
+		c++;
+	}
+  
+  	dest[c] = '\0';
+	return c;
+}
