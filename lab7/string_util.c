@@ -215,7 +215,7 @@ unsigned long long string_hex_char_to_longlong(char * string)
   return value;
 }
 
-void memcopy(char * src, char * dst, unsigned length)
+void memcopy(const char * src, char * dst, unsigned length)
 {
   for(unsigned i = 0; i < length; ++i)
   {
