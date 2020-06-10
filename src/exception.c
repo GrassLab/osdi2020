@@ -6,8 +6,9 @@
 #include "exception.h"
 #include "schedule.h"
 #include "sys.h"
+#include "mm.h"
 
-char intr_stack[INTR_STK_SIZE];
+char *intr_stack;
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
 uint64_t cntfrq_el0, cntpct_el0;
 
@@ -17,6 +18,10 @@ void irq_enable() {
 
 void irq_disable() {
     asm volatile("msr daifset, #2");
+}
+
+void exc_init() {
+    intr_stack = (char*) kmalloc(INTR_STK_SIZE);
 }
 
 /*
@@ -72,12 +77,7 @@ void sys_fork(struct trapframe* trapframe) {
     child_task->cpu_context.sp = (uint64_t)child_kstack - kstack_offset;
 
     // copy all user pages
-    for (uint64_t i = 0; i < parent_task->mm.user_pages_count; i++) {
-        uint64_t user_addr = parent_task->mm.user_pages[i];
-        uint64_t page_addr = user_addr_to_page_addr(user_addr, parent_task->mm.pgd);
-        void* page = get_page_user(child_task, user_addr);
-        memcpy(page, (void*)page_addr, PAGE_SIZE);
-    }
+    fork_pgd(current_task, child_task);
 
     // place child's user stack to right place
     struct trapframe* child_trapframe = (struct trapframe*) child_task->cpu_context.sp;
@@ -89,6 +89,14 @@ void sys_fork(struct trapframe* trapframe) {
 
 void sys_exit(struct trapframe* trapframe) {
     do_exit(trapframe->x[0]);
+}
+
+void sys_remain_page(struct trapframe* trapframe) {
+    int remain_page = 0;
+    for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
+        remain_page += free_area[i].nr_free * (1 << i);
+    }
+    trapframe->x[0] = remain_page;
 }
 
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
@@ -118,7 +126,7 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
             break;
 
         case SYS_REMAIN_PAGE:
-            trapframe->x[0] = remain_page;
+            sys_remain_page(trapframe);
             break;
     }
 }
@@ -127,11 +135,11 @@ void page_fault_handler() {
     register uint64_t fault_addr;
     asm volatile("mrs %0, FAR_EL1": "=r"(fault_addr));
     uart_printf("Page fault address at 0x%x, killed\n", fault_addr);
-    exit(0);
+    do_exit(0);
 }
 
 void sync_exc_router(unsigned long esr, unsigned long elr, struct trapframe* trapframe) {
-    irq_enable();
+    // irq_enable();
 
     int ec = (esr >> 26) & 0b111111;
     int iss = esr & 0x1FFFFFF;

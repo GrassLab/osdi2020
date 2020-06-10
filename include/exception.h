@@ -16,7 +16,7 @@ struct trapframe {
 #endif
 
 /* Variables init in exception.c */
-extern char intr_stack[INTR_STK_SIZE];
+extern char *intr_stack;
 extern uint64_t arm_core_timer_jiffies, arm_local_timer_jiffies;
 extern uint64_t cntfrq_el0, cntpct_el0;
 
@@ -24,6 +24,7 @@ extern uint64_t cntfrq_el0, cntpct_el0;
 void return_from_fork();
 
 /* Function in exception.c */
+void exc_init();
 void irq_enable();
 void irq_disable();
 void arm_core_timer_enable();

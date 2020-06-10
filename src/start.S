@@ -88,21 +88,6 @@ el1_start:
 1:
     b       1b
 
-    adr     x1, el0_start
-    msr     elr_el1, x1
-
-    eret
-
-el0_start:
-    // set stack pointer
-    ldr     x1, =0x40000
-    mov     sp, x1
-
-    // jump to main function in C
-    bl      main
-    // halt this core if return
-    b       1b
-
 /* ------- */
 
 page_table_create:

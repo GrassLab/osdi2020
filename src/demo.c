@@ -116,11 +116,20 @@ void delay(int period) {
 //     }
 // }
 
-void demo_lab5_req3(){
-    extern uint64_t _binary_user_img_start;
-    extern uint64_t _binary_user_img_end;
-    uint64_t begin = (uint64_t)&_binary_user_img_start;
-    uint64_t end = (uint64_t)&_binary_user_img_end;
+// Lab6
 
-    do_exec(begin, end - begin, 0x2000);
+void demo_lab6() {
+    // buddy_info();
+    // void* addr1 = kmalloc(4097);
+    // uart_printf("%x\n", addr1);
+    // buddy_info();
+    // kfree(addr1);
+    // buddy_info();
+    buddy_info();
+    void* addr1 = buddy_alloc(2);
+    uart_printf("%x\n", addr1);
+    buddy_info();
+    kfree(addr1);
+    buddy_info();
+    while(1);
 }

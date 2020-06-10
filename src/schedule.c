@@ -5,7 +5,7 @@
 #include "sysregs.h"
 #include "mm.h"
 
-struct task_t task_pool[TASK_POOL_SIZE];
+struct task_t *task_pool;
 char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
 struct task_queue_elmt_t runqueue_elmt_pool[TASK_POOL_SIZE];
 struct task_queue_t runqueue;
@@ -106,11 +106,11 @@ struct task_queue_elmt_t* get_runqueue_elmt(struct task_t* task) {
 
 void mm_struct_init(struct mm_struct *m) {
     m->pgd = 0;
-    m->user_pages_count = 0;
-    m->kernel_pages_count = 0;
 }
 
 void task_init() {
+    task_pool = (struct task_t*) kmalloc(sizeof(struct task_t) * TASK_POOL_SIZE);
+
     for (int i = 0; i < TASK_POOL_SIZE; i++) {
         task_pool[i].id = i;
         task_pool[i].state = EXIT;
@@ -136,14 +136,20 @@ void zombie_reaper() {
     }
 }
 
+void user_program(){
+    extern uint64_t _binary_user_img_start;
+    extern uint64_t _binary_user_img_end;
+    uint64_t begin = (uint64_t)&_binary_user_img_start;
+    uint64_t end = (uint64_t)&_binary_user_img_end;
+
+    do_exec(begin, end - begin, 0x1000);
+}
+
 void schedule_init() {
     runqueue_init();
-    // privilege_task_create(zombie_reaper, 10);
-
-    privilege_task_create(demo_lab5_req3, 10);
-    // privilege_task_create(demo_lab5_req3, 10);
-    // privilege_task_create(demo_lab5_req3, 10);
-
+    privilege_task_create(zombie_reaper, 10);
+    // privilege_task_create(user_program, 10);
+    privilege_task_create(demo_lab6, 10);
     arm_core_timer_enable();
     schedule();
 }
@@ -187,8 +193,8 @@ void schedule() {
 }
 
 int do_exec(uint64_t start, uint64_t size, uint64_t pc) {
-    void* code_page = get_page_user(current_task, pc);
-    void* stack_page = get_page_user(current_task, USTACK_ADDR);
+    void* code_page = map_page(current_task, pc);
+    void* stack_page = map_page(current_task, USTACK_ADDR);
     if (!code_page || !stack_page) return -1;
 
     // copy code to pc
