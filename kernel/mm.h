@@ -54,6 +54,7 @@
 #define GET_FRAME(pte, va) (((KERNEL_VA_BASE + pte[PTE_INDEX((uint64_t)va)]) >> 12) << 12)
 
 #define KVIRT_TO_PFN(addr) (uint64_t)((addr >> 12) & ((1ULL << 36) - 1))
+#define PFN_TO_KVIRT(pfn) ((pfn << 12) | KERNEL_VA_BASE)
 #define PA_TO_KVA(pa) (pa + KERNEL_VA_BASE)
 #define PTBENT_TO_KVA(ent) ((uint64_t *)(KERNEL_VA_BASE | ((uint64_t)ent >> 12 << 12)))
 
@@ -63,12 +64,19 @@
 #ifndef __ASSEMBLER__
 
 #include "kernel/lib/types.h"
+#include "kernel/lib/list.h"
 
 struct page {
   bool inuse;
+
+  /* Used in buddy allocator, only need to initialize in allocatable range. */
+  uint64_t pfn;
+  struct list_head free_list;
+  int order;
 };
 
 extern uint64_t free_page_nums;
+extern struct page pages[];
 
 void page_init(void);
 uint64_t page_alloc(void);
@@ -80,6 +88,20 @@ void vmmap_copy(uint64_t *dst, uint64_t *src, uint8_t level);
 void vmmap_reclaim(uint64_t *ptb, uint8_t level);
 
 void page_fault_handler(void);
+
+#define MAX_ORDER 10
+
+struct free_area {
+  struct list_head free_list;
+  uint64_t nr_free;
+};
+
+struct free_area free_areas[MAX_ORDER];
+
+void buddy_init(void);
+struct page *buddy_alloc(int order);
+void buddy_free(struct page *page, int order);
+struct page *buddy_merge(struct page *page, struct page *buddy);
 
 #endif // __ASSEMBLER__
 

@@ -76,13 +76,32 @@ int main(void) {
 //  el1_to_el0();
 //  shell();
 
+  char buf[16];
+  mini_uart_getn(true, buf, 2);
+  buddy_init();
+  for (int i = 0; i < MAX_ORDER; ++i) {
+    printk("Order %u: %u\n", i, free_areas[i].nr_free);
+    if (list_empty(&free_areas[i].free_list)) {
+      continue;
+    }
+    for (struct list_head *iter = free_areas[i].free_list.next; iter != &free_areas[i].free_list; iter = iter->next) {
+      printk("%#x\n", PFN_TO_KVIRT(list_entry(iter, struct page, free_list)->pfn));
+    }
+  }
+  //struct page *a = buddy_alloc(1);
+  // struct page *b = buddy_alloc(0);
+  //buddy_free(a, 1);
+  // buddy_free(b, 0);
+  //for (;;) {}
+
   idle_task_create();
   privilege_task_create(reaper);
+  privilege_task_create(shell);
 //  privilege_task_create(print1);
 //  privilege_task_create(print2);
-  for (int i = 0; i < 1; ++i) {
-    privilege_task_create(user_test);
-  }
+  // for (int i = 0; i < 1; ++i) {
+  //   privilege_task_create(user_test);
+  // }
 // 
 // privilege_task_create(signal_test_sender);
 

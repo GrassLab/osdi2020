@@ -124,3 +124,66 @@ void page_fault_handler(void) {
   printk("task id: %u, page fault occured at %#x\n", do_get_taskid(), faulting_va);
   do_exit(-1);
 }
+
+void buddy_init(void) {
+  uint64_t pfn_start = KVIRT_TO_PFN((uint64_t)__kernel_end);
+  pfn_start = (pfn_start >> (MAX_ORDER - 1) << (MAX_ORDER - 1));
+  uint64_t pfn_end = KVIRT_TO_PFN(0xffff00003f000000);
+
+  for (uint64_t pfn = pfn_start; pfn < pfn_end; ++pfn) {
+    pages[pfn] = (struct page){.inuse = false, .pfn = pfn, .order = -1};
+    init_list_head(&pages[pfn].free_list);
+  }
+
+  for (int order = MAX_ORDER - 1; order >= 0; --order) {
+    uint64_t pages_per_block = 1 << order;
+    uint64_t block_nums = (pfn_end - pfn_start) / pages_per_block;
+
+    init_list_head(&free_areas[order].free_list);
+    for (uint64_t i = 0; i < block_nums; ++i, pfn_start += pages_per_block) {
+      list_add_tail(&pages[pfn_start].free_list, &free_areas[order].free_list);
+      free_areas[order].nr_free += 1;
+    }
+  }
+}
+
+struct page *buddy_alloc(int order) {
+  if (order < 0 || order >= MAX_ORDER) {
+    printk("[Error] buddy_alloc: Invalid order %u\n", order);
+    return NULL;
+  }
+
+  int orig_order = order;
+  for (; order < MAX_ORDER && list_empty(&free_areas[order].free_list); ++order) {}
+  if (order >= MAX_ORDER) {
+    printk("[Error] buddy_alloc: Can't allocate memory\n");
+    return NULL;
+  }
+
+  struct page *victim = list_entry(list_del_head(&free_areas[order].free_list), struct page, free_list);
+  victim->order = -1;
+  printk("[Info] buddy_alloc: Allocate %#x\n", PFN_TO_KVIRT(victim->pfn));
+  for (--order; order >= orig_order; --order) {
+    struct page *buddy = victim + (1 << order);
+    list_add_head(&buddy->free_list, &free_areas[order].free_list);
+    buddy->order = order;
+    printk("[Info] buddy_alloc: Release %#x to order %u\n", PFN_TO_KVIRT(buddy->pfn), order);
+  }
+  return victim;
+}
+
+void buddy_free(struct page *page, int order) {
+  printk("[Info] buddy_free: Free %#x\n", PFN_TO_KVIRT(page->pfn));
+  for (; order < MAX_ORDER; ++order) {
+    page->order = order;
+    struct page *buddy = &pages[page->pfn ^ (1 << order)];
+    if (buddy->order == order) {
+      printk("[Info] buddy_free: Merge %#x and %#x\n", PFN_TO_KVIRT(page->pfn), PFN_TO_KVIRT(buddy->pfn));
+      list_del(&buddy->free_list);
+      page = page < buddy ? page : buddy;
+    } else {
+      break;
+    }
+  }
+  list_add_head(&page->free_list, &free_areas[order].free_list);
+}

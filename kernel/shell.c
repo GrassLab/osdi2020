@@ -4,6 +4,7 @@
 #include "kernel/shell.h"
 #include "kernel/lib/string.h"
 #include "kernel/lib/utils.h"
+#include "kernel/mm.h"
 
 void help(void) {
   mini_uart_puts("hello: print Hello World!" EOL);
@@ -98,7 +99,7 @@ void shell(void) {
     char buf[MAX_CMD_LEN];
     mini_uart_gets(buf);
 
-    char *cmd = strtrim(buf);
+    char *cmd = strtok(buf, " \n");
     if (strlen(cmd) != 0) {
       if (!strcmp(cmd, "help")) {
         help();
@@ -116,6 +117,14 @@ void shell(void) {
         reboot();
       } else if (!strcmp(cmd, "timestamp")) {
         timestamp();
+      } else if (!strcmp(cmd, "balloc")) {
+        char *order = strtok(NULL, " \n");
+        buddy_alloc(stoui(order, 10));
+      } else if (!strcmp(cmd, "bfree")) {
+        uint64_t mem = stoui(strtok(NULL, " \n"), 16);
+        struct page *page = &pages[KVIRT_TO_PFN(mem)];
+        char *order = strtok(NULL, " \n");
+        buddy_free(page, stoui(order, 10));
       } else {
         printk("Error: command %s not found, try <help>" EOL, cmd);
       }
