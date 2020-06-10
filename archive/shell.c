@@ -149,7 +149,7 @@ void cmd_loadimg()
 		uart_puts("Please send kernel image by UART!\n\n");
 		// copy kernel_reciver
 		void (*reciver_start)(unsigned int size, void *load_addr) = kernel_recv;
-		memncpy((char *)reciver_start, load_addr-60, 60);
+		memcpy(load_addr-60, reciver_start, 60);
 		// start load kernel
 		reciver_start = load_addr-60;
 		reciver_start(size, load_addr);

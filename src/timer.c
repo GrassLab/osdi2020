@@ -29,7 +29,6 @@ void local_timer_disable(){
     *LOCAL_TIMER_CTRL_REG &= ~(LOCAL_TIMER_CTRL_FLAG);
 }
 
-
 void local_timer_handler(){
     *LOCAL_TIMER_IRQ_CLR_REG = 0xc0000000; // clear interrupt and reload.
 }

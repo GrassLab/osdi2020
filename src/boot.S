@@ -25,16 +25,17 @@ master:
     adr     x0, el1_entry         // eret return address
     msr     elr_el2, x0
 
-    ldr     x0, =EL1_LOW_MEMORY
+    ldr     x0, =LOW_MEMORY
     msr     sp_el1, x0
 
     eret                          // from el2 to el1
-
+// void *memset(void *s, int c, size_t n)
 el1_entry:
-    ldr     w1, =__bss_size       // clear_bss
-    cbz     w1, main_entry
+    ldr     x2, =__bss_size       // clear_bss
+    cbz     x2, main_entry
     ldr     x0, =__bss_start
-    bl      memzero
+    mov     w1, #0
+    bl      memset
 
     ldr     x0, =exception_table  // set up el1 exception table
     msr     vbar_el1, x0

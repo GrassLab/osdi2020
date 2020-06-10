@@ -1,7 +1,7 @@
 #ifndef	_TIMER_H
 #define	_TIMER_H
 
-#include "peri_base.h"
+// #include "base.h"
 
 // #define SYSTEM_TIMER_CS        ((volatile unsigned int*)(SYS_TIM_REG_BASE+0x00)) //System Timer Control and Status
 // #define SYSTEM_TIMER_CLO       ((volatile unsigned int*)(SYS_TIM_REG_BASE+0x04)) //System Timer Counter Lower 32 bits

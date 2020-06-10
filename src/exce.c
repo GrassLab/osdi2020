@@ -2,80 +2,63 @@
 
 #include "printf.h"
 #include "schedule.h"
-#include "string.h"
+#include "svc.h"
 #include "timer.h"
 #include "uart.h"
-// https://developer.arm.com/docs/100933/0100/example-exception-handlers
-/*
- * Default 
- */
 
+/*
+ * Default Handler
+ */
 void show_invalid_entry_message(unsigned long esr, unsigned long address)
 {
-	printf("ESR: %x, address: %x\n", esr, address);
+	printf("[Invalid Exception]\tESR: %x, address: %x\n", esr, address);
+}
+
+static void sync_svc64_handler(unsigned long esr, unsigned long elr, struct trapframe *tf)
+{
+    switch(tf->Xn[8]) {
+        case SYS_UART_READ: tf->Xn[0] = uart_getc(); break;
+        case SYS_UART_WRITE: uart_puts((char *)tf->Xn[0]); break;
+        case SYS_GET_TASKID: tf->Xn[0] = do_get_taskid(); break;
+        case SYS_EXEC: do_exec((void*)tf->Xn[0]); break;
+        case SYS_FORK: do_fork(tf); break;
+        case SYS_EXIT: do_exit(tf->Xn[0]); break;
+        case SYS_SCHED_YIELD: schedule();  break;
+        default:
+            printf("Unknown system call ID: %d\n", tf->Xn[8]);
+            break;
+    }
 }
 
 /*
  * Synchronous
  */
-// we directly discart the significand reserved bits of esr
-void sync_router(unsigned long esr, unsigned long elr, unsigned long spsr, unsigned long far){
+void sync_router(unsigned long esr, unsigned long elr, struct trapframe *tf){
     // read exception source
     switch(esr>>26) {
-        case 0b010101: 
-            sync_svc_handler(esr, elr); 
+        case 0b010101: sync_svc64_handler(esr, elr, tf); break;
+        default:
+            printf("Unknown sync. EC: 0x%X", esr>>26);
+            while(1);
             break;
-        default: 
-            uart_puts("Unknown sync. "); 
-            break;
-    }
-}
-
-void sync_svc_handler(unsigned long esr, unsigned long elr)
-{
-    unsigned int time, time_count, time_freq;
-    switch(esr&0xFFFFFF) {
-        case 1: //exc
-            printf("Exception (ELR): 0x%016X\n", elr);
-            printf("Exception (EC) : 0x%02X\n", esr>>26);
-            printf("Exception (ISS): 0x%06X\n", esr&0xFFFFFF);
-            break;
-        case 2: //irq
-            local_timer_enable();
-            core_timer_enable();
-            uart_puts("timer interrupt enabled\n");
-            break;
-        case 3: //disable irq
-            local_timer_disable();
-            core_timer_disable();
-            uart_puts("timer interrupt disabled\n");
-            break;
-        case 4: //timestamp
-            asm volatile("mrs %0, cntpct_el0": "=r"(time_count)::); // read counts of core timer
-            asm volatile("mrs %0, cntfrq_el0": "=r"(time_freq)::);  // read frequency of core timer
-            time = time_count / (time_freq / 100000);
-            printf("[ %d.%ds ]\n",time/100000, time%100000);
-            break;
-        default: uart_puts("Unknown SVC\n"); break;
     }
 }
 
 /*
  * IRQ
+ * https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2836/QA7_rev3.4.pdf
  */
-// https://github.com/raspberrypi/documentation/blob/master/hardware/raspberrypi/bcm2836/QA7_rev3.4.pdf
-unsigned int core_cnt = 0;
-unsigned int local_cnt = 0;
 void irq_router(){
-    // readirq source
+    // static unsigned int core_cnt = 0;
+    static unsigned int local_cnt = 0;
     unsigned int src = *CORE0_IRQ_SRC;
-    if (src & (1<<1)){
+    if (src & IRQ_SRC_CNTPNS){
         printf("[Irq router] core timer interrupt trigerred!\n");
         core_timer_handler();
         timer_tick();
         // printf("\nCore timer interrupt, jiffies %d", core_cnt++);
         // core_cnt ++;
-    } else if (src & (1<<11)){
+    } else if (src & IRQ_SRC_LOCAL_TIMER){
         local_timer_handler();
         printf("\nLocal timer interrupt, jiffies %d", local_cnt++);
         local_cnt ++;

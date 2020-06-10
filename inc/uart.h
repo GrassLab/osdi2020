@@ -1,6 +1,8 @@
 #ifndef	_UART_H
 #define	_UART_H
 
+#include "base.h"
+
 // http://infocenter.arm.com/help/topic/com.arm.doc.ddi0183g/DDI0183G_uart_pl011_r1p5_trm.pdf
 //  Separate 32×8 transmit and 32×12 receive First-In, First-Out (FIFO) memory buffers to reduce CPU interrupts.
 
