@@ -18,7 +18,7 @@ struct tmpfs_dir_node
 struct tmpfs_file_node
 {
   char name[TMPFS_MAX_FILENAME];
-  uint8_t file_size;
+  unsigned file_size;
   uint64_t * location;
 };
 
@@ -29,6 +29,7 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
 int tmpfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name);
 int tmpfs_write(struct vfs_file_struct * file, const void * buf, size_t len);
 int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len);
+int tmpfs_list(struct vfs_vnode_struct * dir_node);
 struct tmpfs_dir_node * tmpfs_create_dir_node(char * dir_name);
 
 #endif

@@ -24,6 +24,11 @@ void tmpfs_demo_test(void)
   buf[sz] = '\0';
   uart_puts(buf);
   uart_putc('\n');
+
+  /* ls */
+  struct vfs_file_struct * root = vfs_open("/", 0);
+  vfs_list(root);
+  vfs_close(root);
   while(1);
 }
 
@@ -40,6 +45,7 @@ struct vfs_filesystem_struct * tmpfs_init(void)
 
   tmpfs_vnode_ops -> lookup = tmpfs_lookup;
   tmpfs_vnode_ops -> create = tmpfs_create;
+  tmpfs_vnode_ops -> list = tmpfs_list;
   tmpfs_file_ops -> write = tmpfs_write;
   tmpfs_file_ops -> read = tmpfs_read;
 
@@ -59,12 +65,24 @@ int tmpfs_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mou
   root_dir_vnode -> internal = (void *)tmpfs_create_dir_node("/");
   root_dir_vnode -> v_ops = tmpfs_vnode_ops;
   root_dir_vnode -> f_ops = tmpfs_file_ops;
+  root_dir_vnode -> is_dir = 1;
   mount -> root = root_dir_vnode;
   return 0;
 }
 
 int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name)
 {
+  if(component_name[0] == '/')
+  {
+    struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
+    target_vnode -> mount = dir_node -> mount;
+    target_vnode -> v_ops = tmpfs_vnode_ops;
+    target_vnode -> f_ops = tmpfs_file_ops;
+    target_vnode -> internal = dir_node -> internal;
+    target_vnode -> is_dir = 1;
+    *target = target_vnode;
+    return 0;
+  }
   /* TODO: Support for multi level search */
   for(int idx = 0; idx < TMPFS_MAX_FILE_IN_DIR; ++idx)
   {
@@ -80,6 +98,7 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
       target_vnode -> v_ops = tmpfs_vnode_ops;
       target_vnode -> f_ops = tmpfs_file_ops;
       target_vnode -> internal = (((struct tmpfs_dir_node *)(dir_node -> internal)) -> files)[idx];
+      target_vnode -> is_dir = 0;
       *target = target_vnode;
       break;
     }
@@ -107,6 +126,7 @@ int tmpfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     target_vnode -> v_ops = tmpfs_vnode_ops;
     target_vnode -> f_ops = tmpfs_file_ops;
     target_vnode -> internal = file_node;
+    target_vnode -> is_dir = 0;
 
     (((struct tmpfs_dir_node *)(dir_node -> internal)) -> files)[idx] = file_node;
 
@@ -128,7 +148,7 @@ int tmpfs_write(struct vfs_file_struct * file, const void * buf, size_t len)
   }
   memcopy((const char *)buf, (char *)(location + write_offset), (unsigned)len);
 
-  file_node -> file_size += len;
+  file_node -> file_size += (unsigned)len;
 
   return (int)len;
 }
@@ -141,7 +161,7 @@ int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len)
   int read_length;
   if(len > (file_node -> file_size - read_offset - 1))
   {
-    read_length = (file_node -> file_size - (signed)read_offset);
+    read_length = (signed)(file_node -> file_size - read_offset);
   }
   else
   {
@@ -149,6 +169,25 @@ int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len)
   }
   memcopy((const char *)(location + read_offset), (char *)(buf), (unsigned)read_length);
   return read_length;
+}
+
+int tmpfs_list(struct vfs_vnode_struct * dir_node)
+{
+  struct tmpfs_dir_node * internal_dir_node = (struct tmpfs_dir_node *)(dir_node -> internal);
+  uart_puts("Files inside ");
+  uart_puts(internal_dir_node -> name);
+  uart_puts(" :\n");
+  for(int i = 0; i < TMPFS_MAX_FILE_IN_DIR; ++i)
+  {
+    if((internal_dir_node -> files)[i] == 0)
+    {
+      break;
+    }
+    uart_puts("- ");
+    uart_puts(((internal_dir_node -> files)[i]) -> name);
+    uart_putc('\n');
+  }
+  return 0;
 }
 
 struct tmpfs_dir_node * tmpfs_create_dir_node(char * dir_name)

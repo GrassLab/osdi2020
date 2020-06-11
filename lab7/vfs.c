@@ -44,12 +44,6 @@ void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs)
 
 struct vfs_file_struct * vfs_open(const char * pathname, int flags)
 {
-  /*
-   * 1. Lookup pathname from the root vnode.
-   * 2. Create a new file descriptor for this vnode if found.
-   * 3. Create a new file if O_CREAT is specified in flags.
-   */
-  /*TODO */
   struct vfs_vnode_struct * file_vnode = vfs_traverse(pathname);
   struct vfs_file_struct * file;
 
@@ -107,8 +101,11 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname)
   unsigned path_length = (unsigned)string_length(pathname);
   unsigned search_start = 0;
 
-  /* if(path_length == 1 && pathname[0] == '/') */
-  /* pathname == "/", which impossible to open */
+  if(path_length == 1 && pathname[0] == '/')
+  {
+    (rootfs -> root -> v_ops -> lookup)(rootfs -> root, &target, "/");
+    return target;
+  }
   if(pathname[0] == '/')
   {
     /* absolute path */
@@ -131,5 +128,11 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname)
   }
 
   return target;
+}
+
+int vfs_list(struct vfs_file_struct * file)
+{
+  (rootfs -> root -> v_ops -> list)(file -> vnode);
+  return 0;
 }
 
