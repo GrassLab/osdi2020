@@ -78,6 +78,11 @@ void exc_not_implemented(uint64_t code)
   return;
 }
 
+void exc_set_x0(uint64_t retval, struct trapframe_struct * trapframe)
+{
+  *((uint64_t *)(((uint64_t)trapframe) + X0_TRAPFRAME_OFFSET)) = retval;
+}
+
 void exc_EL1_same_level_EL_SP_EL1_irq(void)
 {
   irq_el1_handler();
