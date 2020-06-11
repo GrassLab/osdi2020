@@ -85,8 +85,6 @@ boot_rest:
   bl uart_init
   bl buddy_init
   bl mmu_user_page_table_init
-  bl tmpfs_init
-  bl tmpfs_demo_test
 
   bl scheduler_init
 

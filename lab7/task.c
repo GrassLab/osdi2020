@@ -6,7 +6,6 @@
 #include "string_util.h"
 #include "syscall.h"
 #include "sys.h"
-#include "shell.h"
 #include "signal.h"
 #include "mmu.h"
 #include "slab.h"
@@ -82,9 +81,9 @@ uint64_t task_get_current_task_id(void)
   return current_task_id;
 }
 
-void task_shell(void)
+void task_test(void)
 {
-  char ann[] = ANSI_BG_GREEN ANSI_BLACK"[Kernel mode shell]"ANSI_RESET" ";
+  char ann[] = ANSI_BG_GREEN ANSI_BLACK"[Kernel mode test]"ANSI_RESET" ";
   char string_buff[0x80];
   uint64_t current_task_id = task_get_current_task_id();
   irq_int_enable();
@@ -93,9 +92,9 @@ void task_shell(void)
   uart_puts("ID: ");
   string_longlong_to_char(string_buff, (int64_t)current_task_id);
   uart_puts(string_buff);
-  uart_puts(" Entering user mode shell\n");
+  uart_puts(" Entering user mode test\n");
   uart_puts(ann);
-  task_do_exec((uint64_t *)&_binary_shell_bin_start, (uint64_t)&_binary_shell_bin_end - (uint64_t)&_binary_shell_bin_start);
+  task_do_exec((uint64_t *)&_binary_test_bin_start, (uint64_t)&_binary_test_bin_end - (uint64_t)&_binary_test_bin_start);
 }
 
 void task_do_exec(uint64_t * start, uint64_t size)

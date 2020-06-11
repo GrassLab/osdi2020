@@ -11,18 +11,18 @@ KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
 KERNEL_ASSEMBLY_SOURCE_FILES = start.S exc_vector.S timer.S schedule.S mmu.S
 KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.S=.asmo)
 
-SHELL_C_SOURCE_FILES = shell.c string_util.c syscall.c c_routine.c
-SHELL_C_OBJECT_FILES = $(SHELL_C_SOURCE_FILES:.c=.o)
+TEST_C_SOURCE_FILES = test.c string_util.c syscall.c c_routine.c
+TEST_C_OBJECT_FILES = $(TEST_C_SOURCE_FILES:.c=.o)
 
 all: kernel8.img
 
 kernel8.img: kernel8.elf
 	${OBJCOPY} -O binary kernel8.elf kernel8.img
 
-kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} shell.rd
+kernel8.elf: ${KERNEL_ASSEMBLY_OBJECT_FILES} ${KERNEL_C_OBJECT_FILES} test.rd
 	${LD} -T kernel.ld $^ -o $@
 
-shell.elf: ${SHELL_C_OBJECT_FILES}
+test.elf: ${TEST_C_OBJECT_FILES}
 	${LD} -T user.ld $^ -o $@
 
 %.rd: %.bin
