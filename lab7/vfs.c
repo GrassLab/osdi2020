@@ -66,7 +66,8 @@ struct vfs_file_struct * vfs_open(const char * pathname, int flags)
 
   file = (struct vfs_file_struct *)slab_malloc(sizeof(struct vfs_file_struct));
   file -> vnode = file_vnode;
-  file -> f_pos = 0;
+  file -> read_pos = 0;
+  file -> write_pos = 0;
   file -> f_ops = file_vnode -> f_ops;
   file -> flags = flags;
 
@@ -82,12 +83,9 @@ int vfs_close(struct vfs_file_struct * file)
 
 int vfs_write(struct vfs_file_struct * file, const void * buf, size_t len)
 {
-  /* 1. write len byte from buf to the opened file.
-   * 2. return written size or error code if an error occurs.
-   */
-
-  /* TODO */
-  return 0;
+  int write_bytes = (file -> f_ops -> write)(file, buf, len);
+  file -> write_pos += (unsigned)write_bytes;
+  return write_bytes;
 }
 
 int vfs_read(struct vfs_file_struct * file, void * buf, size_t len)
@@ -95,8 +93,9 @@ int vfs_read(struct vfs_file_struct * file, void * buf, size_t len)
   /* 1. read min(len, readable file data size) byte to buf from the opened file.
    * 2. return read size or error code if an error occurs.
    */
-  /* TODO */
-  return 0;
+  int read_bytes = (file -> f_ops -> read)(file, buf, len);
+  file -> read_pos += (unsigned)read_bytes;
+  return read_bytes;
 }
 
 struct vfs_vnode_struct * vfs_traverse(const char * pathname)

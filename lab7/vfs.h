@@ -19,7 +19,8 @@ struct vfs_vnode_struct
 struct vfs_file_struct
 {
   struct vfs_vnode_struct * vnode;
-  size_t f_pos; /* The next read/write position of this file descriptor */
+  size_t read_pos;
+  size_t write_pos;
   struct vfs_file_operations_struct * f_ops;
   int flags;
 };

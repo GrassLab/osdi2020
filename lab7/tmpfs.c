@@ -9,26 +9,21 @@ static struct vfs_file_operations_struct * tmpfs_file_ops;
 
 void tmpfs_demo_test(void)
 {
-  struct vfs_file_struct * a = vfs_open("/hello", 0);
-  if(a != 0)
-  {
-    uart_puts("ASSERT a != 0\n");
-    while(1);
-  }
-  a = vfs_open("/hello", O_CREAT);
-  if(a == 0)
-  {
-    uart_puts("ASSERT a == 0\n");
-    while(1);
-  }
+  char buf[0x20];
+  struct vfs_file_struct * a = vfs_open("/hello", O_CREAT);
+  struct vfs_file_struct * b = vfs_open("/world", O_CREAT);
+  vfs_write(a, "Hello ", 6);
+  vfs_write(b, "World!", 6);
   vfs_close(a);
-  struct vfs_file_struct * b = vfs_open("/hello", 0);
-  if(b == 0)
-  {
-    uart_puts("ASSERT b == 0\n");
-    while(1);
-  }
-  uart_puts("Test pass\n");
+  vfs_close(b);
+  b = vfs_open("/hello", 0);
+  a = vfs_open("/world", 0);
+  int sz;
+  sz = vfs_read(b, buf, 100);
+  sz += vfs_read(a, buf + sz, 100);
+  buf[sz] = '\0';
+  uart_puts(buf);
+  uart_putc('\n');
   while(1);
 }
 
@@ -43,9 +38,10 @@ struct vfs_filesystem_struct * tmpfs_init(void)
   tmpfs_vnode_ops = (struct vfs_vnode_operations_struct *)slab_malloc(sizeof(struct vfs_vnode_operations_struct));
   tmpfs_file_ops = (struct vfs_file_operations_struct *)slab_malloc(sizeof(struct vfs_file_operations_struct));
 
-  /* TODO: Fillin all functions */
   tmpfs_vnode_ops -> lookup = tmpfs_lookup;
   tmpfs_vnode_ops -> create = tmpfs_create;
+  tmpfs_file_ops -> write = tmpfs_write;
+  tmpfs_file_ops -> read = tmpfs_read;
 
   vfs_regist_fs(fs);
 
@@ -118,6 +114,41 @@ int tmpfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     return 0;
   }
   return 0;
+}
+
+int tmpfs_write(struct vfs_file_struct * file, const void * buf, size_t len)
+{
+  struct tmpfs_file_node * file_node = (struct tmpfs_file_node *)(file -> vnode -> internal);
+  uint64_t * location = file_node -> location;
+  unsigned write_offset = (unsigned)(file -> write_pos);
+  if(location == 0)
+  {
+    location = (uint64_t *)slab_malloc(TMPFS_MAX_FILE_SIZE);
+    file_node -> location = location;
+  }
+  memcopy((const char *)buf, (char *)(location + write_offset), (unsigned)len);
+
+  file_node -> file_size += len;
+
+  return (int)len;
+}
+
+int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len)
+{
+  struct tmpfs_file_node * file_node = (struct tmpfs_file_node *)(file -> vnode -> internal);
+  uint64_t * location = file_node -> location;
+  unsigned read_offset = (unsigned)(file -> write_pos);
+  int read_length;
+  if(len > (file_node -> file_size - read_offset - 1))
+  {
+    read_length = (file_node -> file_size - (signed)read_offset);
+  }
+  else
+  {
+    read_length = (int)len;
+  }
+  memcopy((const char *)(location + read_offset), (char *)(buf), (unsigned)read_length);
+  return read_length;
 }
 
 struct tmpfs_dir_node * tmpfs_create_dir_node(char * dir_name)
