@@ -86,8 +86,7 @@ boot_rest:
   bl buddy_init
   bl mmu_user_page_table_init
   bl tmpfs_init
-  // tmpfs_init will return a vfs_filesystem_struct
-  bl vfs_regist_fs
+  bl tmpfs_demo_test
 
   bl scheduler_init
 

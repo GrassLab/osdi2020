@@ -2,7 +2,11 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
-#define MAX_REGISTERED_FS 8
+#define VFS_MAX_REGISTERED_FS 8
+#define VFS_MAX_MOUNT_POINT 8
+#define VFS_MAX_COMPONENET_NAME_LENGTH 0x20
+
+#define O_CREAT 00000100
 
 struct vfs_vnode_struct
 {
@@ -51,6 +55,8 @@ struct vfs_file_struct * vfs_open(const char * pathname, int flags);
 int vfs_close(struct vfs_file_struct * file);
 int vfs_write(struct vfs_file_struct * file, const void * buf, size_t len);
 int vfs_read(struct vfs_file_struct * file, void * buf, size_t len);
+
+struct vfs_vnode_struct * vfs_traverse(const char * pathname);
 
 #endif
 
