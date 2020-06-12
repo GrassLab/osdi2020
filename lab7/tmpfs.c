@@ -7,31 +7,6 @@
 static struct vfs_vnode_operations_struct * tmpfs_vnode_ops;
 static struct vfs_file_operations_struct * tmpfs_file_ops;
 
-void tmpfs_demo_test(void)
-{
-  char buf[0x20];
-  struct vfs_file_struct * a = vfs_open("/hello", O_CREAT);
-  struct vfs_file_struct * b = vfs_open("/world", O_CREAT);
-  vfs_write(a, "Hello ", 6);
-  vfs_write(b, "World!", 6);
-  vfs_close(a);
-  vfs_close(b);
-  b = vfs_open("/hello", 0);
-  a = vfs_open("/world", 0);
-  int sz;
-  sz = vfs_read(b, buf, 100);
-  sz += vfs_read(a, buf + sz, 100);
-  buf[sz] = '\0';
-  uart_puts(buf);
-  uart_putc('\n');
-
-  /* ls */
-  struct vfs_file_struct * root = vfs_open("/", 0);
-  vfs_list(root);
-  vfs_close(root);
-  while(1);
-}
-
 struct vfs_filesystem_struct * tmpfs_init(void)
 {
   /* should be called only once */
