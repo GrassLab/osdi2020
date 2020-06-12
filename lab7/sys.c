@@ -108,6 +108,9 @@ int sys_fork(struct trapframe_struct * trapframe)
     kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].fd[i] = kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].fd[i];
   }
 
+  /* copy current_dir_vnode */
+    kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].current_dir_vnode = kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].current_dir_vnode;
+
   /* copy kernel stack */
   /* task_kernel_stack_size is uint16_t (2 bytes) */
   memcopy((char *)(task_kernel_stack_pool + TASK_ID_TO_IDX(current_task_id) * TASK_KERNEL_STACK_SIZE), (char *)(task_kernel_stack_pool + TASK_ID_TO_IDX(new_task_id) * TASK_KERNEL_STACK_SIZE), TASK_KERNEL_STACK_SIZE * 2);
