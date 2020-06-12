@@ -1,10 +1,12 @@
 #include "mmu.h"
+#include "vfs.h"
 #ifndef __TASK_H__
 #define __TASK_H__
 
 #define TASK_POOL_SIZE 64
 #define TASK_KERNEL_STACK_SIZE 0x1000
 #define TASK_USER_STACK_SIZE 0x1000
+#define TASK_MAX_FD 4
 
 #define TASK_STATE_RESCHEDULE 0
 #define TASK_STATE_ZOMBIE 1
@@ -53,6 +55,7 @@ struct task_struct
   uint64_t priority;
   struct user_space_mm_struct user_space_mm;
   struct cpu_context_struct cpu_context;
+  struct vfs_file_struct * fd[TASK_MAX_FD];
 };
 
 void task_init();
@@ -67,6 +70,9 @@ void task_end_waiting(void);
 void task_guard_section(void);
 void task_unguard_section(void);
 int task_is_guarded(void);
+int task_set_fd(struct vfs_file_struct * file);
+struct vfs_file_struct * task_get_vfs_file(int fd);
+void task_unset_fd(int fd);
 
 extern char _binary_test_bin_start;
 extern char _binary_test_bin_end;

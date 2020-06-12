@@ -63,6 +63,12 @@ uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
   /* assign context */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.lr = (uint64_t)start_func;
 
+  /* clear fd table */
+  for(int i = 0; i < TASK_MAX_FD; ++i)
+  {
+    kernel_task_pool[TASK_ID_TO_IDX(new_id)].fd[i] = 0;
+  }
+
   /* stack grow from high to low */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(task_kernel_stack_pool + new_id * TASK_KERNEL_STACK_SIZE);
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool + new_id * TASK_KERNEL_STACK_SIZE);
@@ -200,5 +206,34 @@ int task_is_guarded(void)
 {
   uint64_t current_task_id = task_get_current_task_id();
   return CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_GUARD);
+}
+
+int task_set_fd(struct vfs_file_struct * file)
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  for(int idx = 0; idx < TASK_MAX_FD; ++idx)
+  {
+    if(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].fd[idx] == 0)
+    {
+      kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].fd[idx] = file;
+      return idx;
+    }
+  }
+  uart_puts("Exceed maximum fd. Entering busy loop\n");
+  while(1);
+  return 0;
+}
+
+struct vfs_file_struct * task_get_vfs_file(int fd)
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  return kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].fd[fd];
+}
+
+void task_unset_fd(int fd)
+{
+  uint64_t current_task_id = task_get_current_task_id();
+  kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].fd[fd] = 0;
+  return;
 }
 
