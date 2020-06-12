@@ -96,7 +96,7 @@ uint64_t allocDynamic(uint64_t size)
         if (size < pool[i].slot_size)
         {
             uint64_t addr = allocSlot(i);
-            if (!addr)
+            if (addr > 0)
                 return addr;
             else 
                 continue;
@@ -152,5 +152,11 @@ void initMemPool()
         pool[i].init_addr = allocFreePage(0);
         for (uint64_t j = 0; j < 4096; ++j)
             pool[i].slot_used[j] = false;
+
+        uartPuts("allocate free page with init address: ");
+        uartHex(pool[i].init_addr);
+        uartPuts(" for pool ");
+        uartInt(i);
+        uartPuts("\n");
     }
 }

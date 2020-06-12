@@ -6,6 +6,7 @@
 #include "memory/memManager.h"
 #include "memory/buddy.h"
 #include "memory/memPool.h"
+#include "filesystem/filesystem.h"
 
 extern uint64_t _binary_user_img_start;
 extern uint64_t _binary_user_img_end;
@@ -165,4 +166,22 @@ void memTestTask()
     freeDynamic(addr4);
 
     busyloop();
+}
+
+void vfsTask()
+{
+    char buf[512];
+    struct file* a = vfsOpen("hello", O_CREAT);
+    struct file* b = vfsOpen("world", O_CREAT);
+    // vfs_write(a, "Hello ", 6);
+    // vfs_write(b, "World!", 6);
+    // vfs_close(a);
+    // vfs_close(b);
+    // b = vfs_open("hello", 0);
+    // a = vfs_open("world", 0);
+    // int sz;
+    // sz = vfs_read(b, buf, 100);
+    // sz += vfs_read(a, buf + sz, 100);
+    // buf[sz] = '\0';
+    // printf("%s\n", buf); // should be Hello World!
 }

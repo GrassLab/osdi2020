@@ -1,6 +1,14 @@
 #include "type.h"
 #include "device/uart.h"
 
+void copystr(const char *src, char *dst)
+{
+    char *p;
+    for (p = src; *p != '\0'; ++p, ++dst)
+        *dst = *p;
+    *dst = *p;
+}
+
 bool strcmp(const char *s1, const char *s2)
 {
     for (; *s1 != '\0' && *s2 != '\0'; s1++, s2++)
