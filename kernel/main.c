@@ -4,6 +4,7 @@
 #include <string.h>
 #include <timer.h>
 #include <syscall.h>
+#include <vfs.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -62,6 +63,7 @@ main (int error, char *argv[])
       uart_puts ("-----------------------------\n");
     }
 
+  rootfs_init ();
   task_init ();
   privilege_task_create (idle);
   privilege_task_create (user_shell);

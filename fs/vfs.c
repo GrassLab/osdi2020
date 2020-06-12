@@ -49,3 +49,18 @@ vfs_read (struct file *file, void *buf, size_t len)
   // 1. read min(len, readable file data size) byte to buf from the opened file.
   // 2. return read size or error code if an error occurs.
 }
+
+void
+rootfs_init ()
+{
+  int i;
+  struct mount *mount;
+  // simply init rootfs's filesystem
+  extern void tmpfs_init ();
+  tmpfs_init ();
+  for (i = 0; i < FS_NUM; ++i)
+    if (!strcmp ("tmpfs", registed_fs[i].name))
+      break;
+  rootfs = varied_malloc (sizeof (mount));
+  registed_fs[i].setup_mount (&registed_fs[i], rootfs);
+}
