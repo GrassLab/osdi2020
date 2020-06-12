@@ -93,6 +93,7 @@ void main(){
             void *obj1[128];
             for(int i=0; i<128; i++){
                 obj0[i] = obj_allocate(obj_64);
+                obj1[i] = obj_allocate(obj_128);
             }
             
             for(int i=32; i<128; i++){

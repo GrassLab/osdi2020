@@ -322,8 +322,8 @@ void obj_free(void *obj, int token)
 
     struct page* page = alloc->used_page;
     while(pfn != page->page_frame_number){
-        if(alloc->used_page->page_frame_number == 0) break;
-        page = alloc->used_page->next;
+        if(alloc->used_page->next == 0) break;
+        page = page->next;
     }
 
     // add to freelist
