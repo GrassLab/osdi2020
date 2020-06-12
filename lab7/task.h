@@ -56,6 +56,7 @@ struct task_struct
   struct user_space_mm_struct user_space_mm;
   struct cpu_context_struct cpu_context;
   struct vfs_file_struct * fd[TASK_MAX_FD];
+  struct vfs_vnode_struct * current_dir_vnode;
 };
 
 void task_init();
@@ -73,6 +74,7 @@ int task_is_guarded(void);
 int task_set_fd(struct vfs_file_struct * file);
 struct vfs_file_struct * task_get_vfs_file(int fd);
 void task_unset_fd(int fd);
+struct vfs_vnode_struct * task_get_current_vnode(void);
 
 extern char _binary_test_bin_start;
 extern char _binary_test_bin_end;

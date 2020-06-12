@@ -69,6 +69,9 @@ uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
     kernel_task_pool[TASK_ID_TO_IDX(new_id)].fd[i] = 0;
   }
 
+  /* set default working dir to / */
+  kernel_task_pool[TASK_ID_TO_IDX(new_id)].current_dir_vnode = vfs_get_root_vnode();
+
   /* stack grow from high to low */
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.fp = (uint64_t)(task_kernel_stack_pool + new_id * TASK_KERNEL_STACK_SIZE);
   kernel_task_pool[TASK_ID_TO_IDX(new_id)].cpu_context.sp = (uint64_t)(task_kernel_stack_pool + new_id * TASK_KERNEL_STACK_SIZE);
@@ -235,5 +238,10 @@ void task_unset_fd(int fd)
   uint64_t current_task_id = task_get_current_task_id();
   kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].fd[fd] = 0;
   return;
+}
+
+struct vfs_vnode_struct * task_get_current_vnode(void)
+{
+  return kernel_task_pool[TASK_ID_TO_IDX(task_get_current_task_id())].current_dir_vnode;
 }
 
