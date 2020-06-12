@@ -312,7 +312,10 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 			return -1;  
 		}
 		case SYS_MKDIR:{
-			vfs_mkdir((char *)arg0);	       
+			return vfs_mkdir((char *)arg0);	       
+		}
+		case SYS_CHDIR:{
+			return vfs_chdir((char *)arg0);	       
 		} 
 	}
 	// Not here if no bug happened!

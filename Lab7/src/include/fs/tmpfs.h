@@ -6,6 +6,8 @@
 #define TMP_FILE_SIZE 512
 #define REGULAR_FILE 0 
 #define DIRECTORY 1
+#define ROOT_DIR 2
+
 struct tmpfs_node{
 	int flag;
 	char buffer[TMP_FILE_SIZE];

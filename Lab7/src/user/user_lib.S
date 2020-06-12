@@ -31,6 +31,7 @@ _user_entry:
 .set SYS_FILE_WRITE, 23
 .set SYS_FILE_READ, 24
 .set SYS_MKDIR,25 
+.set SYS_CHDIR,26
 
 .global call_core_timer
 call_core_timer:
@@ -186,5 +187,11 @@ read:
 .global mkdir
 mkdir:
 	mov x8, SYS_MKDIR
+	svc #0
+	ret
+
+.global chdir
+chdir:
+	mov x8, SYS_CHDIR
 	svc #0
 	ret

@@ -27,5 +27,6 @@
 #define SYS_FILE_WRITE 23
 #define SYS_FILE_READ 24
 #define SYS_MKDIR 25
+#define SYS_CHDIR 26
 
 #endif

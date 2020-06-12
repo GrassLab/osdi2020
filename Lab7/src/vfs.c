@@ -27,6 +27,7 @@ void rootfs_init(){
 
   	struct dentry *dentry=(struct dentry*)kmalloc(sizeof(struct dentry));
   	set_dentry(dentry,vnode,"/");
+	dentry->flag = ROOT_DIR;
 
   	// setup root file sysystem
   	struct mount *mt = (struct mount*)kmalloc(sizeof(struct mount));
@@ -68,29 +69,49 @@ int parsing(char* component_name, struct dentry** dent,const char* pathname){
 	strcpy(component_name,"/");
 	return 1;
   }
+
+
   // brute force parsing the pathname
   int pathname_count=0;
   int name_count = 0;
 
   while(pathname[pathname_count]!='\0'){
-  	if(pathname[pathname_count]=='/'){
+
+	if(pathname[pathname_count]=='/'){
 		if(pathname_count!=0){
 			component_name[name_count] = '\0';
 			name_count = 0;
 			int i = 0;
 			int child_count = (*dent)->child_count;
-			for(;i<child_count;i++){
-                  		if(strcmp((*dent)->child_dentry[i]->dname, component_name)==0){
-                          		*dent = (*dent)->child_dentry[i];
-					break;
+			
+			if(strcmp(component_name,".")==0){
+				//do nothing	
+			}
+			else if(strcmp(component_name,"..")==0){
+				if((*dent)->flag == DIRECTORY)
+					*dent = (*dent)->parent_dentry;
+				else
+					printf("INVALID PATHNAME!!\r\n");
+			}
+			else{
+				for(;i<child_count;i++){
+                  			if(strcmp((*dent)->child_dentry[i]->dname, component_name)==0){
+                          			*dent = (*dent)->child_dentry[i];
+						break;
+					}
+				}
+				// if can't find
+				if(i>=child_count){
+			 		printf("### DIRECTORY '%s' NOT FOUND!!\r\n",component_name);
+					return -1;
 				}
 			}
-			// if can't find
-			if(i>=child_count){
-			 	printf("### DIRECTORY '%s' NOT FOUND!!\r\n",component_name);
-				return -1;
-			}
+
                   }
+		  else{ // If path start with '/', then look up starts at root directory 
+		  	printf("!!! parsing start from root\r\n");
+			*dent = rootfs->dentry;
+		  }
         }
 	else{
 		component_name[name_count++] = pathname[pathname_count];
@@ -112,6 +133,12 @@ struct file* vfs_open(const char* pathname, int flags) {
   	 return (struct file*)NULL;
   }
   
+  if(strcmp(component_name,".")==0 || strcmp(component_name,"..")==0){
+  	printf("INVALID FILE NAME!\r\n");
+	return (struct file*)NULL;
+  }
+
+
   // Then open the file 
   if(flags == O_CREAT){
 	struct vnode* target;
@@ -175,6 +202,11 @@ int vfs_mkdir(const char* pathname){
 	 rootfs->root->v_ops->ls(dent);
   	 return -1;
   }
+  
+  if(strcmp(component_name,".")==0 || strcmp(component_name,"..")==0){
+  	printf("INVALID DIRECTORY NAME\r\n");
+  	return -1;
+  }
 
   struct vnode* target;
   int ret = rootfs->root->v_ops->lookup(dent,&target,component_name);
@@ -188,4 +220,40 @@ int vfs_mkdir(const char* pathname){
   }
 }
 
+int vfs_chdir(const char* pathname){
+	char component_name[DNAME_LEN];
+	struct dentry *dent = current_dent; //start from root dentry
 
+	int parse_ret = parsing(component_name,&dent,pathname);
+	
+	if(parse_ret ==-1) //directory not found
+		return -1;
+	
+  	if(strcmp(component_name,".")==0){
+		return 0; //stay
+	}  
+	else if(strcmp(component_name,"..")==0){
+		if(current_dent->flag==DIRECTORY){
+			current_dent = dent->parent_dentry;
+			return 0;
+		}
+		else{
+			printf("CHANGE DIRECTORY FAILED!!\r\n");
+			return -1;
+		}
+	}
+	
+		
+	int child_count = dent->child_count;
+	for(int i=0;i<child_count;i++){
+                if(strcmp(dent->child_dentry[i]->dname, component_name)==0 &&\
+				dent->child_dentry[i]->flag==DIRECTORY){
+			current_dent = dent->child_dentry[i];
+			printf("### Now current directory %s\r\n",current_dent->dname);
+			return 0;
+		}
+	}
+	
+	printf("CHANGE DIRECTORY FAILED!!\r\n");
+	return -1;
+}

@@ -48,10 +48,11 @@ int create_tmpfs(struct dentry* dir, struct vnode** target, \
         tmpfs_node->flag = REGULAR_FILE;
 	vnode->internal = (void *)tmpfs_node;	
 
-	struct dentry* child = (struct dentry*)kmalloc(sizeof(struct dentry));
-	
+	struct dentry* child = (struct dentry*)kmalloc(sizeof(struct dentry));	
 	set_dentry(child,vnode,component_name);
-	
+	child->parent_dentry = dir;
+	child->flag = REGULAR_FILE;
+
 	if(dir->child_count<MAX_CHILD)
 		dir->child_dentry[dir->child_count++] = child;
 	else{
@@ -74,9 +75,10 @@ int mkdir_tmpfs(struct dentry* dir, struct vnode** target, const char *component
         tmpfs_node->flag = DIRECTORY;
 	vnode->internal = (void *)tmpfs_node;	
 
-	struct dentry* child = (struct dentry*)kmalloc(sizeof(struct dentry));
-	
+	struct dentry* child = (struct dentry*)kmalloc(sizeof(struct dentry));	
 	set_dentry(child,vnode,component_name);
+	child->parent_dentry = dir;
+	child->flag = DIRECTORY;
 	
 	if(dir->child_count<MAX_CHILD)
 		dir->child_dentry[dir->child_count++] = child;
@@ -93,10 +95,16 @@ int mkdir_tmpfs(struct dentry* dir, struct vnode** target, const char *component
 
 int write_tmpfs(struct file* file, const void* buf, size_t len){
 	  struct vnode* vnode = file->vnode;
-	  
+	   
           char *buffer = (char *)buf;
           struct tmpfs_node *file_node = (struct tmpfs_node *)vnode->internal;
-  	  char	*file_text = file_node->buffer;
+  	  
+	  if(file_node->flag != REGULAR_FILE){
+	  	  printf("ERROR! TRY TO WRITE SOMETHING NOT A FILE\r\n");
+		  return -1;
+	  }
+
+	  char	*file_text = file_node->buffer;
           unsigned int i=0;
   
           for(;i<len;i++){
@@ -112,6 +120,12 @@ int read_tmpfs(struct file* file, void* buf, size_t len){
 
         struct tmpfs_node *file_node = (struct tmpfs_node *)vnode->internal;
   	char *file_text = file_node->buffer;
+	
+	if(file_node->flag != REGULAR_FILE){
+		printf("ERROR! TRY TO WRITE SOMETHING NOT A FILE\r\n");
+		return -1;
+	}
+
 	char *buffer = (char *)buf;
 	unsigned int i=0;	
 	for(;i<len;i++){

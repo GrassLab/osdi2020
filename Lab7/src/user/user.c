@@ -65,18 +65,23 @@ void test2(){
 void test3(){
 	char buf[8];
 	mkdir("mnt");
-	mkdir("mnt/a");
-        int fd = open("/mnt/a/a.txt", O_CREAT);
+        int fd = open("/mnt/a.txt", O_CREAT);
 	write(fd, "Hi", 2);
 	close(fd);
 	
-	int sz;
-	fd = open("mnt/a/a.txt", 0);
-	sz = read(fd, buf, 100);
-	close(fd);
-	buf[sz] = '\0';
-	printf("%s\r\n",buf);
+	chdir("mnt");
 
+	int sz;
+	fd = open("./a.txt", 0);
+	sz = read(fd, buf, 2);
+	buf[sz] = '\0';
+	printf("buf: %s\r\n",buf);
+	
+	chdir("..");
+	fd = open("mnt/a.txt", 0);
+	sz = read(fd, buf, 2);
+	buf[sz] = '\0';
+	printf("buf: %s\r\n",buf);
 }
 
 void main()

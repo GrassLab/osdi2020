@@ -8,12 +8,15 @@
 
 #define DNAME_LEN 32
 #define MAX_CHILD 8
+
 struct dentry {
            /* Pointer to the inode this entry refers to. */
-           char dname[DNAME_LEN];
+           int flag;
+	   char dname[DNAME_LEN];
            struct vnode* vnode;
            int child_count;
-           struct dentry *child_dentry[MAX_CHILD];
+           struct dentry *parent_dentry;
+	   struct dentry *child_dentry[MAX_CHILD];
 }dentry;   
 
 
@@ -65,5 +68,6 @@ int vfs_close(struct file* file);
 int vfs_write(struct file* file, const void* buf, size_t len);
 int vfs_read(struct file* file, void* buf, size_t len);
 int vfs_mkdir(const char* pathname);
+int vfs_chdir(const char* pathname);
 
 #endif
