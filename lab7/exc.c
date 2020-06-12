@@ -159,7 +159,23 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
   case SYS_FREE:
     sys_free((uint64_t *)trapframe -> x1);
     break;
+  case SYS_OPEN:
+    exc_set_x0((uint64_t)sys_open((const char *)trapframe -> x1, (int)trapframe -> x2), trapframe);
+    break;
+  case SYS_CLOSE:
+    exc_set_x0((uint64_t)sys_close((int)trapframe -> x1), trapframe);
+    break;
+  case SYS_WRITE:
+    exc_set_x0((uint64_t)sys_write((int)trapframe -> x1, (const void *)trapframe -> x2, (size_t)trapframe -> x3), trapframe);
+    break;
+  case SYS_READ:
+    exc_set_x0((uint64_t)sys_read((int)trapframe -> x1, (void *)trapframe -> x2, (size_t)trapframe -> x3), trapframe);
+    break;
+  case SYS_LIST:
+    exc_set_x0((uint64_t)sys_list((int)trapframe -> x1), trapframe);
+    break;
   default:
+    break;
     uart_puts("Unhandled svc immediate value\n");
     break;
   }

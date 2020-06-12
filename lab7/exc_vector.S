@@ -16,7 +16,7 @@
 
 .text
 EL_dispatcher:
-  // WARNING: FORK is highly depend on the implementation of this section
+  // WARNING: All systemcall is highly depend on the implementation of this section
   sub	sp, sp, #272
 
   stp	x1, x2,   [sp, #16 * 0]

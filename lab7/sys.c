@@ -102,6 +102,12 @@ int sys_fork(struct trapframe_struct * trapframe)
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.spsr_el1 = trapframe -> spsr_el1;
   kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].cpu_context.elr_el1 = trapframe -> elr_el1;
 
+  /* copy fd table */
+  for(int i = 0; i < TASK_MAX_FD; ++i)
+  {
+    kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].fd[i] = kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].fd[i];
+  }
+
   /* copy kernel stack */
   /* task_kernel_stack_size is uint16_t (2 bytes) */
   memcopy((char *)(task_kernel_stack_pool + TASK_ID_TO_IDX(current_task_id) * TASK_KERNEL_STACK_SIZE), (char *)(task_kernel_stack_pool + TASK_ID_TO_IDX(new_task_id) * TASK_KERNEL_STACK_SIZE), TASK_KERNEL_STACK_SIZE * 2);
@@ -173,5 +179,33 @@ int sys_free(uint64_t * va)
   irq_int_enable();
   slab_malloc_free(va);
   return 0;
+}
+
+int sys_open(const char * pathname, int flags)
+{
+  struct vfs_file_struct * file = vfs_open(pathname, flags);
+  return (int)task_set_fd(file);
+}
+
+int sys_close(int fd)
+{
+  vfs_close(task_get_vfs_file(fd));
+  task_unset_fd(fd);
+  return 0;
+}
+
+int sys_write(int fd, const void * buf, size_t len)
+{
+  return vfs_write(task_get_vfs_file(fd), buf, len);
+}
+
+int sys_read(int fd, void * buf, size_t len)
+{
+  return vfs_read(task_get_vfs_file(fd), buf, len);
+}
+
+int sys_list(int fd)
+{
+  return vfs_list(task_get_vfs_file(fd));
 }
 
