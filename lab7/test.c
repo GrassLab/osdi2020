@@ -7,17 +7,22 @@ int main(void)
   char buf[0x20];
   syscall_uart_puts("Hi I'm test in user mode\n");
 
-  /* ls */
-  int root = syscall_open("/", 0);
-  syscall_list(root);
-  syscall_close(root);
-
   int a = syscall_open("/hello", O_CREAT);
   int b = syscall_open("/world", O_CREAT);
   syscall_write(a, "Hello ", 6);
   syscall_write(b, "World!", 6);
   syscall_close(a);
   syscall_close(b);
+
+  syscall_mkdir("mnt");
+  int fd = syscall_open("/mnt/a.txt", O_CREAT);
+  syscall_write(fd, "Hi", 2);
+  syscall_close(fd);
+
+  /* ls */
+  int root = syscall_open("/", 0);
+  syscall_list(root);
+  syscall_close(root);
 
   if(syscall_fork() == 0)
   {

@@ -114,3 +114,12 @@ int syscall_list(int fd)
   return retval;
 }
 
+int syscall_mkdir(const char * pathname)
+{
+  int retval;
+  asm volatile("mov x1, %0" : : "r"(pathname));
+  asm volatile("svc #16");
+  asm volatile("mov %0, x0" : "=r"(retval));
+  return retval;
+}
+

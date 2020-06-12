@@ -17,6 +17,7 @@
 #define SYS_WRITE 13
 #define SYS_READ 14
 #define SYS_LIST 15
+#define SYS_MKDIR 16
 
 int sys_exc(uint64_t ELR_EL1, uint8_t exception_class, uint32_t exception_iss);
 int sys_timer_int(void);
@@ -33,6 +34,7 @@ int sys_close(int fd);
 int sys_write(int fd, const void * buf, size_t len);
 int sys_read(int fd, void * buf, size_t len);
 int sys_list(int fd);
+int sys_mkdir(const char * pathname);
 
 extern struct task_struct * kernel_task_pool;
 extern uint16_t * task_kernel_stack_pool;

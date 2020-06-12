@@ -174,6 +174,9 @@ void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe)
   case SYS_LIST:
     exc_set_x0((uint64_t)sys_list((int)trapframe -> x1), trapframe);
     break;
+  case SYS_MKDIR:
+    exc_set_x0((uint64_t)sys_mkdir((const char *)trapframe -> x1), trapframe);
+    break;
   default:
     break;
     uart_puts("Unhandled svc immediate value\n");

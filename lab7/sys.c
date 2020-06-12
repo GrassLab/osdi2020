@@ -212,3 +212,9 @@ int sys_list(int fd)
   return vfs_list(task_get_vfs_file(fd));
 }
 
+int sys_mkdir(const char * pathname)
+{
+  vfs_mkdir(vfs_traverse(pathname, VFS_TRAVERSE_RETURN_NEAREST), pathname);
+  return 0;
+}
+

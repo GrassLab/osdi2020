@@ -2,8 +2,10 @@
 #include "string_util.h"
 #include "slab.h"
 #include "uart.h"
+#include "task.h"
 
 static struct vfs_mount_struct * rootfs;
+static struct vfs_vnode_struct * root_vnode;
 static struct vfs_filesystem_struct * fs_list[VFS_MAX_REGISTERED_FS];
 
 int vfs_regist_fs(struct vfs_filesystem_struct * fs)
@@ -39,12 +41,14 @@ void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs)
   (fs -> setup_mount)(fs, mount);
 
   rootfs = mount;
+  root_vnode = mount -> root;
   return;
 }
 
 struct vfs_file_struct * vfs_open(const char * pathname, int flags)
 {
-  struct vfs_vnode_struct * file_vnode = vfs_traverse(pathname);
+  char file_dir_name[0x40];
+  struct vfs_vnode_struct * file_vnode = vfs_traverse(pathname, VFS_TRAVERSE_NO_RETURN_NEAREST);
   struct vfs_file_struct * file;
 
   if(file_vnode == 0)
@@ -54,8 +58,9 @@ struct vfs_file_struct * vfs_open(const char * pathname, int flags)
       return 0;
     }
     /* create file */
-    /* todo: hierachical */
-    (rootfs -> root -> v_ops -> create)(rootfs -> root, &file_vnode, pathname + 1);
+    string_copy(pathname, file_dir_name);
+    vfs_last_token_in_path(file_dir_name);
+    (rootfs -> root -> v_ops -> create)(vfs_traverse(pathname, VFS_TRAVERSE_RETURN_NEAREST), &file_vnode, file_dir_name);
   }
 
   file = (struct vfs_file_struct *)slab_malloc(sizeof(struct vfs_file_struct));
@@ -92,11 +97,12 @@ int vfs_read(struct vfs_file_struct * file, void * buf, size_t len)
   return read_bytes;
 }
 
-struct vfs_vnode_struct * vfs_traverse(const char * pathname)
+struct vfs_vnode_struct * vfs_traverse(const char * pathname, int return_closest_node)
 {
-  /* return 0 if none found */
-  /* TODO: Now, Single file system with no mount point */
+  /* return the closest node if none found if return_closest_node is set*/
+  /* otherwise return 0 if none found */
 
+  struct vfs_vnode_struct * search_vnode;
   struct vfs_vnode_struct * target;
   unsigned path_length = (unsigned)string_length(pathname);
   unsigned search_start = 0;
@@ -110,6 +116,12 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname)
   {
     /* absolute path */
     search_start = 1;
+    search_vnode = root_vnode;
+  }
+  else
+  {
+    /* relative path */
+    search_vnode = task_get_current_vnode();
   }
 
   while(search_start < path_length)
@@ -124,7 +136,25 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname)
     search_start += component_length + 1;
 
     /* search componenet in the current directory */
-    (rootfs -> root -> v_ops -> lookup)(rootfs -> root, &target, component_name);
+    (rootfs -> root -> v_ops -> lookup)(search_vnode, &target, component_name);
+
+    if(target == 0)
+    {
+      if(return_closest_node)
+      {
+        return search_vnode;
+      }
+      else
+      {
+        vfs_free_vnode(search_vnode);
+        return 0;
+      }
+    }
+    else
+    {
+      vfs_free_vnode(search_vnode);
+      search_vnode = target;
+    }
   }
 
   return target;
@@ -134,5 +164,52 @@ int vfs_list(struct vfs_file_struct * file)
 {
   (rootfs -> root -> v_ops -> list)(file -> vnode);
   return 0;
+}
+
+int vfs_mkdir(struct vfs_vnode_struct * current_dir_vnode, const char * pathname)
+{
+  char dir_name[0x40];
+  string_copy(pathname, dir_name);
+  vfs_last_token_in_path(dir_name);
+  (current_dir_vnode -> v_ops -> mkdir)(current_dir_vnode, dir_name);
+  return 0;
+}
+
+struct vfs_vnode_struct * vfs_get_root_vnode(void)
+{
+  return root_vnode;
+}
+
+void vfs_last_token_in_path(char * string)
+{
+  int length = string_length(string);
+  int last_token_start;
+  int write_idx;
+
+  for(last_token_start = length - 1; last_token_start >= 0 && string[last_token_start] != '/'; --last_token_start);
+
+  /* the entire string is last token */
+  if(last_token_start == -1)
+  {
+    return;
+  }
+
+  ++last_token_start;
+
+  for(write_idx = 0; write_idx + last_token_start < length; ++write_idx)
+  {
+    string[write_idx] = string[write_idx + last_token_start];
+  }
+  string[write_idx] = '\0';
+  return;
+}
+
+void vfs_free_vnode(struct vfs_vnode_struct * vnode)
+{
+  if(vnode != root_vnode)
+  {
+    slab_malloc_free((uint64_t *)vnode);
+  }
+  return;
 }
 
