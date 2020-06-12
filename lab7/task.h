@@ -75,6 +75,7 @@ int task_set_fd(struct vfs_file_struct * file);
 struct vfs_file_struct * task_get_vfs_file(int fd);
 void task_unset_fd(int fd);
 struct vfs_vnode_struct * task_get_current_vnode(void);
+void task_set_current_vnode(struct vfs_vnode_struct * vnode);
 
 extern char _binary_test_bin_start;
 extern char _binary_test_bin_end;

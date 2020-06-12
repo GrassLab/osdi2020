@@ -175,6 +175,13 @@ int vfs_mkdir(struct vfs_vnode_struct * current_dir_vnode, const char * pathname
   return 0;
 }
 
+int vfs_chdir(struct vfs_vnode_struct * target_dir_vnode)
+{
+  vfs_free_vnode(task_get_current_vnode());
+  task_set_current_vnode(target_dir_vnode);
+  return 0;
+}
+
 struct vfs_vnode_struct * vfs_get_root_vnode(void)
 {
   return root_vnode;

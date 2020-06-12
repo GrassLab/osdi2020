@@ -64,6 +64,7 @@ int vfs_write(struct vfs_file_struct * file, const void * buf, size_t len);
 int vfs_read(struct vfs_file_struct * file, void * buf, size_t len);
 int vfs_list(struct vfs_file_struct * file);
 int vfs_mkdir(struct vfs_vnode_struct * current_dir_vnode, const char * dir_name);
+int vfs_chdir(struct vfs_vnode_struct * target_dir_vnode);
 
 struct vfs_vnode_struct * vfs_traverse(const char * pathname, int return_closest_node);
 

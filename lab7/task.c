@@ -245,3 +245,9 @@ struct vfs_vnode_struct * task_get_current_vnode(void)
   return kernel_task_pool[TASK_ID_TO_IDX(task_get_current_task_id())].current_dir_vnode;
 }
 
+void task_set_current_vnode(struct vfs_vnode_struct * vnode)
+{
+  kernel_task_pool[TASK_ID_TO_IDX(task_get_current_task_id())].current_dir_vnode = vnode;
+  return;
+}
+

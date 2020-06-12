@@ -218,3 +218,9 @@ int sys_mkdir(const char * pathname)
   return 0;
 }
 
+int sys_chdir(const char * pathname)
+{
+  vfs_chdir(vfs_traverse(pathname, VFS_TRAVERSE_NO_RETURN_NEAREST));
+  return 0;
+}
+

@@ -24,6 +24,13 @@ int main(void)
   syscall_list(root);
   syscall_close(root);
 
+  syscall_chdir("mnt");
+  fd = syscall_open("a.txt", 0);
+  syscall_read(fd, buf, 2);
+  buf[3] = '\0';
+  syscall_uart_puts(buf);
+  syscall_uart_puts("\n");
+
   if(syscall_fork() == 0)
   {
     syscall_uart_puts("Hi I'm child\n");

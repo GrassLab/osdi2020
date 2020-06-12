@@ -17,6 +17,7 @@ int syscall_write(int fd, const void * buf, size_t len);
 int syscall_read(int fd, void * buf, size_t len);
 int syscall_list(int fd);
 int syscall_mkdir(const char * pathname);
+int syscall_chdir(const char * pathname);
 
 #endif
 
