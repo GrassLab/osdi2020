@@ -31,13 +31,13 @@ void buddy_init(int num_pages){
         if(page_in_order>0){
             buddy_pool[order].len = page_in_order;
             for(int j=0;j<page_in_order;j++){           
-                struct buddy* temp = (struct buddy*)addr;
+                struct page* temp = (struct page*)addr;
                 temp->page_frame_number = page_order;
                 temp->next = 0;
                 if(j==0)
                     buddy_pool[order].page = temp;
                 else{
-                    struct buddy* head = buddy_pool[order].page;
+                    struct page* head = buddy_pool[order].page;
                     while(head->next)head = head->next;
                     head->next = temp;
                 }
@@ -47,6 +47,7 @@ void buddy_init(int num_pages){
         }
         num_pages = num_pages%(1<<order);
     }
+
 }
 
 void buddy_show(){
@@ -56,7 +57,7 @@ void buddy_show(){
     for(int order=0;order<MAX_ORDER;order++){
         printf("Order: %d (page num: %d)", order, (1<<order));
         printf(", Length: %d\n", buddy_pool[order].len);
-        struct buddy* head = buddy_pool[order].page;
+        struct page* head = buddy_pool[order].page;
 
         if(head==0){
                 continue;
@@ -70,11 +71,11 @@ void buddy_show(){
     uart_puts("\n");
 }
 
-int buddy_alloc(int size){
-    if(size > (1<<MAX_ORDER-1)){
+struct page *buddy_alloc(int size){
+    if(size > (1<<(MAX_ORDER-1))){
         uart_puts("[ Allocate Fail! ]\n");
         uart_puts("Can't handle more than 1024 pages!\n");
-        return -1;
+        return 0;
     }
 
     int order = cal_order(size);
@@ -86,22 +87,22 @@ int buddy_alloc(int size){
         while(buddy_pool[remain_order].len==0 && remain_order<MAX_ORDER)remain_order++;
         if(remain_order==MAX_ORDER){
                 uart_puts("Allocate fail!\n");
-                return -1;
+                return 0;
         }
         
-        // Split one buddy into two
-        struct buddy* head = buddy_pool[remain_order].page;
+        // Split one page into two
+        struct page* head = buddy_pool[remain_order].page;
         buddy_pool[remain_order].page = head->next;
         buddy_pool[remain_order].len--;
 
         int addr = head;
         addr+= (1 << (remain_order-1 + PAGE_SHIFT));     
-        int big_page_size = (1<<remain_order-1);
+        int big_page_size = (1<<(remain_order-1));
         int big_page_num = head->page_frame_number;
 
         buddy_pool[remain_order-1].page = head;
         buddy_pool[remain_order-1].len += 2;
-        struct buddy* temp = (struct buddy*)addr;
+        struct page* temp = (struct page*)addr;
         temp->page_frame_number = big_page_num+big_page_size;
         temp->next = 0;
         head->next = temp;
@@ -111,41 +112,55 @@ int buddy_alloc(int size){
     }
 
     if(order<MAX_ORDER && buddy_pool[order].len>0){
-        struct buddy* head = buddy_pool[order].page;
+        struct page* head = buddy_pool[order].page;
         int ret_page = head->page_frame_number;
+        head->physical_addr = pfn2phy(ret_page);
         
         buddy_pool[order].page = head->next;
         buddy_pool[order].len--;
         printf("Allocate success in page frame number: %d", ret_page);
-        printf(", physical address: %d", pfn2phy(ret_page));
-        return ret_page;
+        printf(", physical address: %d\n", head->physical_addr);
+        return head;
     }
     uart_puts("Unknown error!");
     uart_puts("\n");
     return -1;
 }
 
+int buddy_alloc_ret_pfn(int size){
+    struct page *head;
+    head = buddy_alloc(size);
+    if (head == 0){
+        return -1;
+    }
+    return head->page_frame_number;
+}
+
 int pfn2phy(int page_frame_number){
     return LOW_MEMORY + (page_frame_number * PAGE_SIZE);
+}
+
+int phy2pfn(int physical_addr){
+    return (((((unsigned long)(physical_addr)) - LOW_MEMORY) & 0x0000FFFFFFFFF000) >> PAGE_SHIFT);
 }
 
 void check_merge(){
     for(int order=0; order<MAX_ORDER-1; order++){
         if(buddy_pool[order].len==0) continue;
 
-        struct buddy* head = buddy_pool[order].page;
+        struct page* head = buddy_pool[order].page;
         while(head!=0 && head->next!=0){
             int buddy_num = (head->page_frame_number ^ (1<<order));
 
             if(buddy_num==head->next->page_frame_number){
-                printf("Merge buddy: %d and %d\n", head->page_frame_number, head->next->page_frame_number);
+                printf("Merge page: %d and %d\n", head->page_frame_number, head->next->page_frame_number);
                 
-                struct buddy* next_head = head->next->next;                
+                struct page* next_head = head->next->next;                
                 // remove node for current order
                 if(buddy_pool[order].page->page_frame_number == head->page_frame_number){
                     buddy_pool[order].page = next_head;
                 }else{
-                    struct buddy* pre_head = buddy_pool[order].page;
+                    struct page* pre_head = buddy_pool[order].page;
                     while(pre_head->next->page_frame_number != head->page_frame_number)pre_head = pre_head->next;                    
                     pre_head->next = next_head;
                 }
@@ -160,7 +175,7 @@ void check_merge(){
                         buddy_pool[order+1].page = head;                        
                     }
                     else{
-                        struct buddy* next_order_head = buddy_pool[order+1].page;
+                        struct page* next_order_head = buddy_pool[order+1].page;
                         while(next_order_head->next!=0 && next_order_head->next->page_frame_number < head->page_frame_number)next_order_head = next_order_head->next;                        
                         head->next = next_order_head->next;
                         next_order_head->next = head;
@@ -183,14 +198,14 @@ void buddy_free(int page_frame_number, int page_frame_size){
     printf("Size: %d, Page num: %d\n", page_frame_size, (1<<order));
     printf("Page Frame number: %d\n", page_frame_number);
 
-    struct buddy* temp = (struct buddy*)pfn2phy(page_frame_number);
+    struct page* temp = (struct page*)pfn2phy(page_frame_number);
     temp->page_frame_number = page_frame_number;
     temp->next = 0;
 
     if(buddy_pool[order].len==0){
         buddy_pool[order].page = temp;
     }else{
-        struct buddy* head = buddy_pool[order].page;
+        struct page* head = buddy_pool[order].page;
         if(page_frame_number < head->page_frame_number){
             temp->next = head;
             buddy_pool[order].page = temp;            
@@ -202,4 +217,121 @@ void buddy_free(int page_frame_number, int page_frame_size){
     }
     buddy_pool[order].len++;
     check_merge();
+}
+
+/////////////////////// obj allocate ///////////////////////
+
+void __init_obj_alloc(struct obj_alloc *alloc, unsigned int size){
+    alloc->curr_page = 0; // NULL
+    alloc->used_page = 0; // NULL
+    alloc->obj_size = size;
+    alloc->used = 1;
+}
+
+int register_obj_allocator(unsigned int obj_size){
+    if(obj_size<MIN_ALLOCATOR_SIZE){
+        obj_size = MIN_ALLOCATOR_SIZE;
+        uart_puts("[register_obj_allocator] reset objsize to MIN_ALLOCATOR_SIZE\n");
+    }
+    for(int index=0; index<MAX_ALLOCATOR_NUMBER; index++){
+        if(allocator_pool[index].used)
+            continue;
+        
+        __init_obj_alloc(&allocator_pool[index], obj_size);
+        return index;
+    }
+    uart_puts("[register_obj_allocator] Allocator pool has fulled\n");
+    return -1;
+}
+
+void *obj_allocate(int token){
+    if(token < 0 || token >= MAX_ALLOCATOR_NUMBER){
+        uart_puts("[obj allocator] invalid token\n");
+        return 0;
+    }
+
+    struct obj_alloc* alloc = &allocator_pool[token];
+
+    if(alloc->curr_page == 0){
+        struct page *page;
+        int check = 0;
+        if(alloc->used_page != 0){
+            page = alloc->used_page;
+            while(page->unused_obj == 0){
+                if(page->next == 0) break;
+                page = page->next;
+            }
+            if(page->unused_obj > 0){
+                check = 1;
+                printf("pfn: %d, unused_obj: %d\n", page->page_frame_number, page->unused_obj);
+            }
+        }
+        
+        if(check == 1){
+            alloc->curr_page = page;
+        }else{// demamd new page
+            page = buddy_alloc(1);
+            __init_obj_page(page, alloc->obj_size);
+            page->obj_alloc = alloc;
+
+            alloc->curr_page = page;
+            page->next = alloc->used_page;
+            alloc->used_page = page;
+            // printf("phy of next page: %d\n", page->next);
+        }
+        
+        printf("[obj allocator] pfn: %d, phy: %d\n", alloc->curr_page->page_frame_number, alloc->curr_page->physical_addr);
+    }
+    //allocate object
+    struct page *curr_page = alloc->curr_page;
+    void *obj = (void *)curr_page->obj_freelist;
+    curr_page->obj_freelist = *curr_page->obj_freelist;
+    printf("[allocate obj] size: %d, physical addr: %d\n", alloc->obj_size, obj);
+
+    // check full
+    (curr_page->unused_obj)--;
+    if(curr_page->unused_obj == 0){
+        alloc->curr_page = 0;   
+    }
+    return obj;
+}
+
+void __init_obj_page(struct page* page, unsigned size)
+{
+    page->unused_obj = page->num_of_obj = PAGE_SIZE / size;
+
+    unsigned long chunk_header = page->physical_addr + size*(page->num_of_obj-1);
+    page->obj_freelist = (void **)chunk_header;
+    while(chunk_header > page->physical_addr){
+        *(void **)chunk_header = (void *)(chunk_header - size);
+        chunk_header -= size;
+    }
+    *(void **)chunk_header = 0;
+    return;
+}
+
+void obj_free(void *obj, int token)
+{   
+    if(token < 0 || token >= MAX_ALLOCATOR_NUMBER){
+        uart_puts("[obj allocator] invalid token\n");
+        return;
+    }
+
+    struct obj_alloc* alloc = &allocator_pool[token];
+    int pfn = phy2pfn((int *)obj);
+
+    struct page* page = alloc->used_page;
+    while(pfn != page->page_frame_number){
+        if(alloc->used_page->page_frame_number == 0) break;
+        page = alloc->used_page->next;
+    }
+
+    // add to freelist
+    void **header = (void **)obj;
+    *header = (void *)page->obj_freelist;
+    page->obj_freelist = header;
+    page->unused_obj++;
+
+    printf("[free obj] pfn: %d, unused num: %d\n", page->page_frame_number, page->unused_obj);
+    return;
 }

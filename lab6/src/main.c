@@ -66,12 +66,12 @@ void main(){
             buddy_init(3000);
             buddy_show();
 
-            int alloc_num = 3;
-            int alloc_size[] = {7, 530, 1030};
+            int alloc_num = 4;
+            int alloc_size[] = {1, 7, 530, 1030};
             
             int alloced_pool[alloc_num];
             for(int i=0;i<alloc_num;i++){
-                alloced_pool[i] = buddy_alloc(alloc_size[i]);
+                alloced_pool[i] = buddy_alloc_ret_pfn(alloc_size[i]);
                 buddy_show();
             }
 
@@ -80,8 +80,29 @@ void main(){
                 buddy_free(alloced_pool[i], alloc_size[i]);
                 buddy_show();
             }
-
             
+        }else if(strcmp(str,"obj")==0){
+            buddy_init(100);
+            buddy_show();
+
+            int obj_32 = register_obj_allocator(32);
+            int obj_64 = register_obj_allocator(64);
+            int obj_128 = register_obj_allocator(128);
+
+            void *obj0[128];
+            void *obj1[128];
+            for(int i=0; i<128; i++){
+                obj0[i] = obj_allocate(obj_64);
+            }
+            
+            for(int i=32; i<128; i++){
+                obj_free(obj0[i], obj_64);
+            }
+
+            for(int i=32; i<128; i++){
+                obj0[i] = obj_allocate(obj_64);
+            }
+
         }else{
             printf("Err: command %s not found, try <help>\n", str);
         }

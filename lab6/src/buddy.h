@@ -1,25 +1,53 @@
 #pragma once
 
-#include "list.h"
 
 #define MAX_ORDER 11
+#define MAX_ALLOCATOR_NUMBER 16
+#define MIN_ALLOCATOR_SIZE 8
 
-struct buddy{
-    int page_frame_number;
-    struct buddy* next;
-};
 
 struct buddy_head{
     int len;
-    struct buddy* page;
+    struct page* page;
 };
 
 struct buddy_head buddy_pool[MAX_ORDER];
 
+struct page{
+    long long block;
+    int page_frame_number;
+    unsigned long physical_addr;
+    struct page* next;
+
+    struct obj_alloc *obj_alloc;
+    unsigned int obj_size;
+    unsigned int num_of_obj;
+    unsigned int unused_obj;
+    void **obj_freelist;
+    void **obj_usedlist;
+};
+
+struct obj_alloc{
+    struct page* curr_page;
+    struct page* used_page;
+    unsigned int obj_size;
+    unsigned int used;    
+};
+
+struct obj_alloc allocator_pool[MAX_ALLOCATOR_NUMBER];
+
 int cal_order(int size);
 void buddy_init(int num_pages);
 void buddy_show();
-int buddy_alloc(int size);
+struct page *buddy_alloc(int size);
+int buddy_alloc_ret_pfn(int size);
 int pfn2phy(int page_frame_number);
+int phy2pfn(int physical_addr);
 void check_merge();
 void buddy_free(int page_frame_number, int page_frame_size);
+
+void __init_obj_alloc(struct obj_alloc *alloc, unsigned int size);
+int register_obj_allocator(unsigned int obj_size);
+void *obj_allocate(int token);
+void __init_obj_page(struct page* page, unsigned size);
+void obj_free(void *obj, int token);
