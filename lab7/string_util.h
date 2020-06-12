@@ -4,6 +4,7 @@
 
 #include "meta_macro.h"
 
+void string_copy(const char * src, char * dst);
 int string_cmp(const char * string_a, const char * string_b, const int length);
 void string_reverse_sequence(const char * src, char * dst, int size);
 void string_strip(char * string, char c);

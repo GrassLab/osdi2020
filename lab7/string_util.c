@@ -1,6 +1,14 @@
 #include <stdint.h>
 #include "string_util.h"
 
+void string_copy(const char * src, char * dst)
+{
+  unsigned length = (unsigned)string_length(src);
+  memcopy(src, dst, length);
+  dst[length] = '\0';
+  return;
+}
+
 int string_cmp(const char * string_a, const char * string_b, const int length)
 {
   /* Return 0 if not the same, idx if the same */
