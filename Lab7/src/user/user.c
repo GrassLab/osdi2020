@@ -33,9 +33,62 @@ int check_string(char * str){
 	return 0;
 }
 
+void test1(){
+	int a = open("hello", O_CREAT);
+	int b = open("world", O_CREAT);
+	write(a, "Hello ", 6);
+	write(b, "World!", 6);
+	close(a);
+	close(b);
+	b = open("hello", 0);
+	a = open("world", 0);
+
+	char buf[100];	
+	int sz;
+	sz = read(b, buf, 100);
+	sz += read(a, buf + sz, 100);
+	buf[sz] = '\0';
+	printf("%s\n", buf); // should be Hello World!
+	close(a);
+	close(b);
+
+
+}
+
+void test2(){
+	int root = open("/", 0);
+        if(root==-1){
+		printf("ls end\r\n");
+	}
+}
+
+void test3(){
+	char buf[8];
+	mkdir("mnt");
+	mkdir("mnt/a");
+        int fd = open("/mnt/a/a.txt", O_CREAT);
+	write(fd, "Hi", 2);
+	close(fd);
+	
+	int sz;
+	fd = open("mnt/a/a.txt", 0);
+	sz = read(fd, buf, 100);
+	close(fd);
+	buf[sz] = '\0';
+	printf("%s\r\n",buf);
+
+}
+
 void main()
 {
-	printf("Hello for user %d\r\n",get_taskid());
+	printf("\r\n@@@ Hello for user %d @@@\r\n",get_taskid());
+	
+	printf("\r\n====== Test1 ======\r\n");
+	test1();
+	printf("\r\n====== Test2 ======\r\n");
+	test2();
+	printf("\r\n====== Test3 ======\r\n");
+	test3();
 
 	char buffer[128];
 	while(1){	

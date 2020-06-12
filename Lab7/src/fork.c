@@ -39,6 +39,7 @@ int privilege_task_create(void(* fn),int priority){
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
 	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
+	memzero((unsigned long)&p->fd_table,sizeof(struct fd_table));
 	
 	p->cpu_context.x19 = (unsigned long)fn;
 	
@@ -75,7 +76,8 @@ int user_task_create()
 	memzero((unsigned long)childregs, sizeof(struct trapframe));
 	memzero((unsigned long)&p->cpu_context, sizeof(struct cpu_context));
 	memzero((unsigned long)&p->mm, sizeof(struct mm_struct));
-	
+	memzero((unsigned long)&p->fd_table,sizeof(struct fd_table));
+
 	struct trapframe * cur_regs = get_task_trapframe(current);
 	*childregs = *cur_regs; //copy content of parent register
 	childregs->regs[0] = 0; //x0 in the new state is set to 0, because x0 will be interpreted by the caller as a return value of the syscall.

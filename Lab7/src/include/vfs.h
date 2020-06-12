@@ -13,7 +13,7 @@ struct dentry {
            char dname[DNAME_LEN];
            struct vnode* vnode;
            int child_count;
-           struct dentry *child_dentry;
+           struct dentry *child_dentry[MAX_CHILD];
 }dentry;   
 
 
@@ -48,11 +48,14 @@ struct file_operations {
 };
 
 struct vnode_operations {
+  void (*ls)(struct dentry* dir);
   int (*lookup)(struct dentry* dir, struct vnode** target, const char* component_name);
   int (*create)(struct dentry* dir, struct vnode** target, const char* component_name);
+  int (*mkdir)(struct dentry* dir, struct vnode** target, const char *component_name);
 };
 
 struct mount* rootfs;
+struct dentry* current_dent;
 
 void set_dentry(struct dentry *dentry,struct vnode* vnode,const char* str);
 void rootfs_init();
@@ -61,5 +64,6 @@ struct file* vfs_open(const char* pathname, int flags);
 int vfs_close(struct file* file);
 int vfs_write(struct file* file, const void* buf, size_t len);
 int vfs_read(struct file* file, void* buf, size_t len);
+int vfs_mkdir(const char* pathname);
 
 #endif

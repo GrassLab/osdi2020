@@ -252,6 +252,67 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 		case SYS_OBJ_ALLOCATOR_FREE:{
 			allocator_user_unregister(arg0);
 			return 0;	
+		}
+		case SYS_FILE_OPEN:{
+     			unsigned int i=0;
+			for(;i<MAX_FILE;i++){
+				if(current->fd_table.file_used[i]==0){
+					struct file *f = vfs_open((char *)arg0,arg1);
+					if(f!=(struct file*)NULL){
+						current->fd_table.file_used[i] = 1;
+						current->fd_table.file[i] = f;
+						break;
+					}
+					else{
+						if(strcmp((char*)arg0,"/")!=0)
+							printf("### FILE CAN'T OPEN!\r\n");
+						return -1;
+					}
+				}
+			}
+		        
+			if(i<MAX_FILE)	
+				return i;
+			else{
+				printf("NOT HANDLE THIS!\r\n");
+				while(1);
+			}		
+		} 
+		case SYS_FILE_CLOSE:{	   
+     			unsigned int i=0;
+			for(;i<MAX_FILE;i++){
+				if(arg0 == i && current->fd_table.file_used[i]==1){
+					current->fd_table.file_used[i] = 0;
+					int ret = vfs_close(current->fd_table.file[i]);
+					current->fd_table.file[i] = (struct file*)NULL;
+					return ret;
+				}
+			}
+			printf("WRONG FILE DESCRIPTOR!\r\n");
+			return -1;
+		} 
+		case SYS_FILE_WRITE:{	
+     			unsigned int i=0;
+			for(;i<MAX_FILE;i++){
+				if(arg0 == i && current->fd_table.file_used[i]==1){
+					return vfs_write(current->fd_table.file[i],(void *)arg1,arg2);
+				}
+			}
+			printf("WRONG FILE DESCRIPTOR!\r\n");
+			return -1;
+		}
+		case SYS_FILE_READ:{
+     			unsigned int i=0;
+			for(;i<MAX_FILE;i++){
+				if(arg0 == i && current->fd_table.file_used[i]==1){
+					return vfs_read(current->fd_table.file[i],(void *)arg1,arg2);
+				}
+			}
+			printf("WRONG FILE DESCRIPTOR!\r\n");
+			return -1;  
+		}
+		case SYS_MKDIR:{
+			vfs_mkdir((char *)arg0);	       
 		} 
 	}
 	// Not here if no bug happened!

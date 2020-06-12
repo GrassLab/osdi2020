@@ -26,7 +26,11 @@ _user_entry:
 .set SYS_OBJ_ALLOC, 18
 .set SYS_OBJ_FREE, 19
 .set SYS_OBJ_ALLOCATOR_FREE, 20
-
+.set SYS_FILE_OPEN, 21
+.set SYS_FILE_CLOSE, 22
+.set SYS_FILE_WRITE, 23
+.set SYS_FILE_READ, 24
+.set SYS_MKDIR,25 
 
 .global call_core_timer
 call_core_timer:
@@ -155,3 +159,32 @@ allocator_unregister:
 	svc #0
 	ret
 
+.global open
+open:
+	mov x8, SYS_FILE_OPEN
+	svc #0
+	ret
+
+.global close
+close:
+	mov x8, SYS_FILE_CLOSE
+	svc #0
+	ret
+
+.global write
+write:
+	mov x8, SYS_FILE_WRITE
+	svc #0
+	ret
+
+.global read
+read:
+	mov x8, SYS_FILE_READ
+	svc #0
+	ret
+
+.global mkdir
+mkdir:
+	mov x8, SYS_MKDIR
+	svc #0
+	ret

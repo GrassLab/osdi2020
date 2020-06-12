@@ -3,6 +3,8 @@
 
 #ifndef __ASSEMBLER__
 
+#include "vfs.h"
+
 #define NR_TASKS 64 
 #define THREAD_SIZE  4096
 
@@ -77,6 +79,13 @@ struct signal_struct{
 	int block;
 };
 
+#define MAX_FILE 8
+
+struct fd_table{
+	short file_used[MAX_FILE];
+	struct file *file[MAX_FILE];
+};
+
 struct task_struct{
 	struct cpu_context cpu_context;
 	struct signal_struct signal;
@@ -88,6 +97,7 @@ struct task_struct{
 	long preempt_lock;	
 	
 	struct mm_struct mm;
+	struct fd_table fd_table;
 };
 
 extern void switch_to(struct task_struct* prev, struct task_struct* next);
@@ -105,7 +115,8 @@ extern void exit_process();
 #define IDLE_TASK { {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
 	{0,0}, \
 	0,0,1,0,0, \
-	{0,0,{{0,}},0,{0},0,{{0,}}},\
+	{0,0,{{0}},0,{0},0,{{0}}},\
+	{{0},{0}} \
 }
 
 #endif

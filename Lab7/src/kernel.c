@@ -118,10 +118,30 @@ void test1(){
 	sz = vfs_read(b, buf, 100);
 	sz += vfs_read(a, buf + sz, 100);
 	buf[sz] = '\0';
-	printf("%s\n", buf); // should be Hello World!
+	printf("%s\r\n", buf); // should be Hello World!
+	vfs_close(a);
+	vfs_close(b);
 
 	struct file* root = vfs_open("/", 0);
 	printf("%x\r\n",root);
+}
+
+void test2(){
+	vfs_mkdir("mnt");
+	struct file* a = vfs_open("/mnt/a.txt", O_CREAT);
+	vfs_write(a, "Hi", 2);
+	vfs_close(a);
+	
+	char buf[100];
+	a = vfs_open("mnt/a.txt", 0);
+	vfs_read(a, buf, 100);
+	vfs_close(a);
+ 	printf("%s\r\n",buf);
+}
+
+void test3(){
+        struct file* root = vfs_open("/", 0); 
+	printf("%d\r\n",root);
 }
 
 void kernel_main(void)
@@ -145,10 +165,16 @@ void kernel_main(void)
     allocator_init(); 
     rootfs_init();
 
+    /*printf("====== Kernel Test1 ======\r\n");
     test1();
+    printf("====== Kernel Test2 ======\r\n");
+    test2();
+    printf("====== Kernel Test3 ======\r\n");
+    test3();*/
+    
     // Here init a task being zombie reaper
-    //privilege_task_create(zombie_reaper,1);
-    //privilege_task_create(kernel_process, 1); 
+    privilege_task_create(zombie_reaper,1);
+    privilege_task_create(kernel_process, 1); 
 
     idle();  
 }

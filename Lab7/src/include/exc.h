@@ -22,5 +22,10 @@
 #define SYS_OBJ_ALLOC 18
 #define SYS_OBJ_FREE 19
 #define SYS_OBJ_ALLOCATOR_FREE 20
+#define SYS_FILE_OPEN 21
+#define SYS_FILE_CLOSE 22
+#define SYS_FILE_WRITE 23
+#define SYS_FILE_READ 24
+#define SYS_MKDIR 25
 
 #endif

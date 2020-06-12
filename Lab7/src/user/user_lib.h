@@ -1,6 +1,7 @@
 #ifndef	_USER_LIB_H
 #define	_USER_LIB_H
 
+typedef unsigned long size_t;
 #define NULL ((char *)0)
 //prot
 #define PROT_NONE 0b000  // non-executable page frame for EL0
@@ -11,6 +12,7 @@
 #define MAP_FIXED 0
 #define MAP_ANONYMOUS 1
 
+#define O_CREAT 1
 
 int call_core_timer();
 void call_daif();
@@ -35,5 +37,10 @@ unsigned long allocator_alloc(int allocator_num);
 void allocator_free(int allocator_num,unsigned long ptr);
 void allocator_unregister(int allocator_num);
 
+int open(const char *pathname,int flag);
+int close(int file);
+int write(int file, const void* buf, size_t len);
+int read(int file, void* buf, size_t len);
+int mkdir(const char* pathname);
 
 #endif  
