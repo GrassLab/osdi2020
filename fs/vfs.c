@@ -12,13 +12,13 @@ register_filesystem (struct filesystem *fs)
   // you can also initialize memory pool of the file system here.
   int i;
   for (i = 0; i < FS_NUM; ++i)
-  {
-    if (registed_fs[i].name == NULL)
-      {
-	registed_fs[i] = *fs;
-	break;
-      }
-  }
+    {
+      if (registed_fs[i].name == NULL)
+	{
+	  registed_fs[i] = *fs;
+	  break;
+	}
+    }
   return i == FS_NUM;
 }
 
