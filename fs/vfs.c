@@ -10,6 +10,16 @@ register_filesystem (struct filesystem *fs)
 {
   // register the file system to the kernel.
   // you can also initialize memory pool of the file system here.
+  int i;
+  for (i = 0; i < FS_NUM; ++i)
+  {
+    if (registed_fs[i].name == NULL)
+      {
+	registed_fs[i] = *fs;
+	break;
+      }
+  }
+  return i == FS_NUM;
 }
 
 struct file *
