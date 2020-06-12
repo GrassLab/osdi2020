@@ -5,19 +5,19 @@
 
 #define TMPFS_MAX_SUB_DIR 4
 #define TMPFS_MAX_FILE_IN_DIR 4
-#define TMPFS_MAX_FILENAME 0x20
+#define TMPFS_MAX_NAME 0x20
 #define TMPFS_MAX_FILE_SIZE 0x100
 
 struct tmpfs_dir_node
 {
-  char * name;
+  char name[TMPFS_MAX_NAME];
   struct tmpfs_dir_node * subdir_node[TMPFS_MAX_SUB_DIR];
   struct tmpfs_file_node * files[TMPFS_MAX_FILE_IN_DIR];
 };
 
 struct tmpfs_file_node
 {
-  char name[TMPFS_MAX_FILENAME];
+  char name[TMPFS_MAX_NAME];
   unsigned file_size;
   uint64_t * location;
 };
@@ -29,7 +29,7 @@ int tmpfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
 int tmpfs_write(struct vfs_file_struct * file, const void * buf, size_t len);
 int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len);
 int tmpfs_list(struct vfs_vnode_struct * dir_node);
-struct tmpfs_dir_node * tmpfs_create_dir_node(char * dir_name);
+struct tmpfs_dir_node * tmpfs_create_dir_node(const char * dir_name);
 
 #endif
 

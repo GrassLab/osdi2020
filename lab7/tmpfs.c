@@ -165,11 +165,11 @@ int tmpfs_list(struct vfs_vnode_struct * dir_node)
   return 0;
 }
 
-struct tmpfs_dir_node * tmpfs_create_dir_node(char * dir_name)
+struct tmpfs_dir_node * tmpfs_create_dir_node(const char * dir_name)
 {
   struct tmpfs_dir_node * dir_node = (struct tmpfs_dir_node *)slab_malloc(sizeof(struct tmpfs_dir_node));
 
-  dir_node -> name = dir_name;
+  string_copy(dir_name, dir_node -> name);
 
   /* no subdir and files when created */
   for(unsigned idx = 0; idx < TMPFS_MAX_SUB_DIR; ++idx)
