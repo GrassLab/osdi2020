@@ -48,8 +48,24 @@ int tmpfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct
 int tmpfs_mount(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_struct * mount)
 {
   struct tmpfs_dir_node * dir_node = (struct tmpfs_dir_node *)(mountpoint_vnode -> internal);
-  dir_node -> mountpoint = mount;
-  ((struct tmpfs_dir_node *)(mount -> root -> internal)) -> parent_node = dir_node;
+
+  /* setup mountoint in parent's list */
+  struct tmpfs_dir_node * parent_dir_node = dir_node -> parent_node;
+
+  for(int i = 0; i < TMPFS_MAX_SUB_DIR; ++i)
+  {
+    if(parent_dir_node -> subdir_node[i] == 0)
+    {
+      break;
+    }
+    if(string_cmp(parent_dir_node -> subdir_node[i] -> name, dir_node -> name, 999) != 0)
+    {
+      parent_dir_node -> mountpoints[i] = mount;
+      break;
+    }
+  }
+
+  ((struct tmpfs_dir_node *)(mount -> root -> internal)) -> parent_node = parent_dir_node;
   return 0;
 }
 
@@ -92,6 +108,13 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     }
     if(string_cmp(component_name, ((internal_dir_node -> subdir_node)[idx]) -> name, 999))
     {
+      /* check mountpoint */
+      if(((internal_dir_node -> mountpoints)[idx]) != 0)
+      {
+        *target = ((internal_dir_node -> mountpoints)[idx]) -> root;
+        return 0;
+      }
+
       *target = tmpfs_create_vnode(dir_node -> mount, (internal_dir_node -> subdir_node)[idx], 1);
       return 0;
     }
@@ -210,18 +233,16 @@ struct tmpfs_dir_node * tmpfs_create_dir_node(const char * dir_name)
 
   string_copy(dir_name, dir_node -> name);
 
-  /* no subdir and files when created */
+  /* no subdir, files, mountpoints when created */
   for(unsigned idx = 0; idx < TMPFS_MAX_SUB_DIR; ++idx)
   {
     (dir_node -> subdir_node)[idx] = 0;
+    (dir_node -> mountpoints)[idx] = 0;
   }
   for(unsigned idx = 0; idx < TMPFS_MAX_FILE_IN_DIR; ++idx)
   {
     (dir_node -> files)[idx] = 0;
   }
-
-  /* no mountpoint when created */
-  dir_node -> mountpoint = 0;
 
   return dir_node;
 }

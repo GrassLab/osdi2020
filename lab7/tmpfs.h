@@ -11,9 +11,9 @@
 struct tmpfs_dir_node
 {
   char name[TMPFS_MAX_NAME];
-  struct vfs_mount_struct * mountpoint;
   struct tmpfs_dir_node * parent_node;
   struct tmpfs_dir_node * subdir_node[TMPFS_MAX_SUB_DIR];
+  struct vfs_mount_struct * mountpoints[TMPFS_MAX_SUB_DIR];
   struct tmpfs_file_node * files[TMPFS_MAX_FILE_IN_DIR];
 };
 
