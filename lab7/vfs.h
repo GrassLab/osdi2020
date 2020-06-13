@@ -53,11 +53,14 @@ struct vfs_vnode_operations_struct
   int (*create)(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name);
   int (*list)(struct vfs_vnode_struct * dir_node);
   int (*mkdir)(struct vfs_vnode_struct * dir_node, const char * new_dir_name);
+  int (*mount)(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_struct * mount);
 };
 
 
 int vfs_regist_fs(struct vfs_filesystem_struct * fs);
+void vfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct ** mount);
 void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs);
+void vfs_mount(struct vfs_vnode_struct * mountpoint, struct vfs_mount_struct * mount);
 struct vfs_file_struct * vfs_open(const char * pathname, int flags);
 int vfs_close(struct vfs_file_struct * file);
 int vfs_write(struct vfs_file_struct * file, const void * buf, size_t len);

@@ -31,17 +31,27 @@ int vfs_regist_fs(struct vfs_filesystem_struct * fs)
   return 0;
 }
 
+void vfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct ** mount)
+{
+  /* allocate vfs_mount_struct then call tmpfs mount setup */
+  *mount = (struct vfs_mount_struct *)slab_malloc(sizeof(struct vfs_mount_struct));
+  (*mount) -> fs = fs;
+  (fs -> setup_mount)(fs, *mount);
+  return;
+}
+
 void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs)
 {
   /* WARNING: Currently this function should be called once */
 
-  /* allocate vfs_mount_struct then call tmpfs mount setup */
-  struct vfs_mount_struct * mount = (struct vfs_mount_struct *)slab_malloc(sizeof(struct vfs_mount_struct));
-  mount -> fs = fs;
-  (fs -> setup_mount)(fs, mount);
+  vfs_setup_mount(fs, &rootfs);
+  root_vnode = rootfs -> root;
+  return;
+}
 
-  rootfs = mount;
-  root_vnode = mount -> root;
+void vfs_mount(struct vfs_vnode_struct * mountpoint, struct vfs_mount_struct * mount)
+{
+  (mountpoint -> v_ops -> mount)(mountpoint, mount);
   return;
 }
 

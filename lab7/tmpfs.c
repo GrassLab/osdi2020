@@ -13,7 +13,7 @@ struct vfs_filesystem_struct * tmpfs_init(void)
   struct vfs_filesystem_struct * fs = (struct vfs_filesystem_struct *)slab_malloc(sizeof(struct vfs_filesystem_struct));
 
   fs -> name = "tmpfs";
-  fs -> setup_mount = tmpfs_mount;
+  fs -> setup_mount = tmpfs_setup_mount;
 
   tmpfs_vnode_ops = (struct vfs_vnode_operations_struct *)slab_malloc(sizeof(struct vfs_vnode_operations_struct));
   tmpfs_file_ops = (struct vfs_file_operations_struct *)slab_malloc(sizeof(struct vfs_file_operations_struct));
@@ -22,6 +22,7 @@ struct vfs_filesystem_struct * tmpfs_init(void)
   tmpfs_vnode_ops -> create = tmpfs_create;
   tmpfs_vnode_ops -> list = tmpfs_list;
   tmpfs_vnode_ops -> mkdir = tmpfs_mkdir;
+  tmpfs_vnode_ops -> mount = tmpfs_mount;
   tmpfs_file_ops -> write = tmpfs_write;
   tmpfs_file_ops -> read = tmpfs_read;
 
@@ -30,7 +31,7 @@ struct vfs_filesystem_struct * tmpfs_init(void)
   return fs;
 }
 
-int tmpfs_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mount)
+int tmpfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mount)
 {
   UNUSED(fs);
 
@@ -44,6 +45,13 @@ int tmpfs_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mou
   root_dir_vnode -> f_ops = tmpfs_file_ops;
   root_dir_vnode -> is_dir = 1;
   mount -> root = root_dir_vnode;
+  return 0;
+}
+
+int tmpfs_mount(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_struct * mount)
+{
+  struct tmpfs_dir_node * dir_node = (struct tmpfs_dir_node *)(mountpoint_vnode -> internal);
+  dir_node -> mountpoint = mount;
   return 0;
 }
 
@@ -245,6 +253,9 @@ struct tmpfs_dir_node * tmpfs_create_dir_node(const char * dir_name)
   {
     (dir_node -> files)[idx] = 0;
   }
+
+  /* no mountpoint when created */
+  dir_node -> mountpoint = 0;
 
   return dir_node;
 }
