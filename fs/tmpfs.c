@@ -43,7 +43,7 @@ vnode_create (struct mount *mount)
   new_node->mount = mount;
   new_node->f_ops = f_ops;
   new_node->v_ops = v_ops;
-  // new_node->internal =
+  new_node->internal = varied_malloc (sizeof (struct tmpfs_block));
   return new_node;
 }
 
