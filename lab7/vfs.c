@@ -55,6 +55,12 @@ void vfs_mount(struct vfs_vnode_struct * mountpoint, struct vfs_mount_struct * m
   return;
 }
 
+void vfs_umount(struct vfs_vnode_struct * mountpoint_parent, const char * mountpoint_token)
+{
+  (mountpoint_parent -> v_ops -> umount)(mountpoint_parent, mountpoint_token);
+  return;
+}
+
 struct vfs_file_struct * vfs_open(const char * pathname, int flags)
 {
   char file_dir_name[0x40];
@@ -157,7 +163,7 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname, int return_closest
     */
 
     /* search componenet in the current directory */
-    (rootfs -> root -> v_ops -> lookup)(search_vnode, &target, component_name);
+    int lookup_return = (rootfs -> root -> v_ops -> lookup)(search_vnode, &target, component_name);
 
     if(target == 0)
     {
@@ -173,7 +179,10 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname, int return_closest
     }
     else
     {
-      vfs_free_vnode(search_vnode);
+      if(!lookup_return)
+      {
+        vfs_free_vnode(search_vnode);
+      }
       search_vnode = target;
     }
   }

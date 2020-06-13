@@ -143,3 +143,12 @@ int syscall_mount(const char * device, const char * mountpoint, const char * fil
   return retval;
 }
 
+int syscall_umount(const char * mountpoint)
+{
+  int retval;
+  asm volatile("mov x1, %0" : : "r"(mountpoint));
+  asm volatile("svc #19");
+  asm volatile("mov %0, x0" : "=r"(retval));
+  return retval;
+}
+

@@ -27,6 +27,7 @@ struct tmpfs_file_node
 struct vfs_filesystem_struct * tmpfs_init(void);
 int tmpfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mount);
 int tmpfs_mount(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_struct * mount);
+int tmpfs_umount(struct vfs_vnode_struct * mountpoint_parent, const char * mountpoint_token);
 int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name);
 int tmpfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name);
 int tmpfs_write(struct vfs_file_struct * file, const void * buf, size_t len);

@@ -20,6 +20,7 @@
 #define SYS_MKDIR 16
 #define SYS_CHDIR 17
 #define SYS_MOUNT 18
+#define SYS_UMOUNT 19
 
 int sys_exc(uint64_t ELR_EL1, uint8_t exception_class, uint32_t exception_iss);
 int sys_timer_int(void);
@@ -39,6 +40,7 @@ int sys_list(int fd);
 int sys_mkdir(const char * pathname);
 int sys_chdir(const char * pathname);
 int sys_mount(const char * device, const char * mountpoint, const char * filesystem);
+int sys_umount(const char * mountpoint);
 
 extern struct task_struct * kernel_task_pool;
 extern uint16_t * task_kernel_stack_pool;

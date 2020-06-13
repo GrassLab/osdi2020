@@ -30,15 +30,26 @@ int main(void)
   buf[3] = '\0';
   syscall_uart_puts(buf);
   syscall_uart_puts("\n");
+  syscall_close(fd);
 
   syscall_chdir("..");
   syscall_mount("tmpfs", "mnt", "tmpfs");
   fd = syscall_open("mnt/a.txt", 0);
+
   if(fd >= 0)
   {
     syscall_uart_puts("Assertion syscall_open(\"mnt/a.txt\", 0) >= 0");
     while(1);
   }
+
+  syscall_umount("/mnt");
+  fd = syscall_open("mnt/a.txt", 0);
+  if(fd < 0)
+  {
+    syscall_uart_puts("Assertion syscall_open(\"mnt/a.txt\", 0) < 0");
+    while(1);
+  }
+  syscall_close(fd);
 
   if(syscall_fork() == 0)
   {

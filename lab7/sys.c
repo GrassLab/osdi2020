@@ -187,8 +187,7 @@ int sys_free(uint64_t * va)
 int sys_open(const char * pathname, int flags)
 {
   struct vfs_file_struct * file = vfs_open(pathname, flags);
-  if(file == 0)
-  {
+  if(file == 0) {
     return -1;
   }
   else
@@ -271,3 +270,14 @@ int sys_mount(const char * device, const char * mountpoint, const char * filesys
   return 0;
 }
 
+int sys_umount(const char * mountpoint)
+{
+  char dir_name[0x80];
+  char parent_dir_name[0x80];
+  string_copy(mountpoint, dir_name);
+  string_copy(mountpoint, parent_dir_name);
+  string_concat(parent_dir_name, "/..");
+  vfs_last_token_in_path(dir_name);
+  vfs_umount(vfs_traverse(parent_dir_name, VFS_TRAVERSE_NO_RETURN_NEAREST), dir_name);
+  return 0;
+}

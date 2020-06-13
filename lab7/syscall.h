@@ -19,6 +19,7 @@ int syscall_list(int fd);
 int syscall_mkdir(const char * pathname);
 int syscall_chdir(const char * pathname);
 int syscall_mount(const char * device, const char * mountpoint, const char * filesystem);
+int syscall_umount(const char * mountpoint);
 
 #endif
 

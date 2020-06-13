@@ -23,6 +23,7 @@ struct vfs_filesystem_struct * tmpfs_init(void)
   tmpfs_vnode_ops -> list = tmpfs_list;
   tmpfs_vnode_ops -> mkdir = tmpfs_mkdir;
   tmpfs_vnode_ops -> mount = tmpfs_mount;
+  tmpfs_vnode_ops -> umount = tmpfs_umount;
   tmpfs_file_ops -> write = tmpfs_write;
   tmpfs_file_ops -> read = tmpfs_read;
 
@@ -69,8 +70,24 @@ int tmpfs_mount(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_str
   return 0;
 }
 
+int tmpfs_umount(struct vfs_vnode_struct * mountpoint_parent, const char * mountpoint_token)
+{
+  struct tmpfs_dir_node * parent_dir_node = (struct tmpfs_dir_node *)(mountpoint_parent -> internal);
+
+  for(int i = 0; i < TMPFS_MAX_SUB_DIR; ++i)
+  {
+    if(string_cmp(((parent_dir_node -> subdir_node)[i]) -> name, mountpoint_token, 999) != 0)
+    {
+      (parent_dir_node -> mountpoints)[i] = 0;
+      break;
+    }
+  }
+  return 0;
+}
+
 int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name)
 {
+  /* return 0 if node should be free after use, 1 if not */
   struct tmpfs_dir_node * internal_dir_node = (struct tmpfs_dir_node *)(dir_node -> internal);
   if(component_name[0] == '/')
   {
@@ -112,14 +129,14 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
       if(((internal_dir_node -> mountpoints)[idx]) != 0)
       {
         *target = ((internal_dir_node -> mountpoints)[idx]) -> root;
-        return 0;
+        return 1;
       }
 
       *target = tmpfs_create_vnode(dir_node -> mount, (internal_dir_node -> subdir_node)[idx], 1);
       return 0;
     }
   }
-  return 0;
+  return 1;
 }
 
 int tmpfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name)
