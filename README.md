@@ -1,4 +1,4 @@
-# My OSDI 2020 - LAB 06
+# My OSDI 2020 - LAB 07
 
 ## Author
 
@@ -6,7 +6,7 @@
 | -----------| -------------- | ---- | -------------------------- |
 | 0856009    | JingWangTW     | 王靖  | jingwang.cs08g@nctu.edu.tw |
 
-## LAB 6 Project
+## LAB 7 Project
 
 ### Build
 ```bash
@@ -32,43 +32,42 @@ aarch64-linux-gnu-gdb
 file build/kernel8.elf
 directory .
 target remote localhost:1234
-
 ```
 
 ## Directory structure
 ```
 .
 ├── LICENSE
-├── Makefile                # make file
+├── Makefile                
 ├── README.md
-├── include                 # header files
-│   ├── allocator.h         # header file for allocator.c
+├── include                 
+│   ├── allocator.h         
 │   ├── command.h
 │   ├── ctype.h
 │   ├── framebuffer.h
 │   ├── gpio.h
 │   ├── img_data.h
 │   ├── mailbox.h
-│   ├── math.h              # header file for math.c
-│   ├── mem.h               # header file for mem.c
+│   ├── math.h              
+│   ├── mem.h               
 │   ├── shell.h
-│   ├── stdarg.h            # define stdarg
+│   ├── stdarg.h            
 │   ├── string.h
 │   ├── time.h
-│   ├── type.h              # define some common type
+│   ├── type.h              
 │   └── uart.h
 ├── link.ld
-└── src                     # source files
-    ├── allocator.c         # register for fixed-size, vaired-size allocator, allocate and free memory from the both allocator
+└── src                     
+    ├── allocator.c         
     ├── command.c
     ├── ctype.c
     ├── framebuffer.c
     ├── mailbox.c
     ├── main.c
     ├── math.c
-    ├── mem.c               # buddy system
+    ├── mem.c               
     ├── shell.c
-    ├── start.S             # startup booting process
+    ├── start.S             
     ├── string.c
     ├── time.c
     └── uart.c

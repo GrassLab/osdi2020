@@ -1,10 +1,8 @@
 #ifndef MAILBOX_H
 #define MAILBOX_H
 
-#include "framebuffer.h"
 #include "gpio.h"
 #include "type.h"
-
 
 #define MAILBOX_BASE ( MMIO_BASE + 0x0000B880 )
 
@@ -66,56 +64,8 @@
 #define TAGS_GET_CLOCK 0x00030002
 #define TAGS_SET_CLOCK 0x00038002
 
-/** framebuffer tages operator */
-#define FB_ALLOC_BUFFER 0x00040001
-#define FB_FREE_BUFFER  0x00048001
-
-#define FB_BLANK_SCREEN 0x00040002
-
-#define FB_PHY_WID_HEIGHT_GET  0x00040003
-#define FB_PHY_WID_HEIGHT_TEST 0x00044003
-#define FB_PHY_WID_HEIGHT_SET  0x00048003
-
-#define FB_VIR_WID_HEIGHT_GET  0x00040004
-#define FB_VIR_WID_HEIGHT_TEST 0x00044004
-#define FB_VIR_WID_HEIGHT_SET  0x00048004
-
-#define FB_DEPTH_GET  0x00040005
-#define FB_DEPTH_TEST 0x00044005
-#define FB_DEPTH_SET  0x00048005
-
-#define FB_DEPTH_GET  0x00040005
-#define FB_DEPTH_TEST 0x00044005
-#define FB_DEPTH_SET  0x00048005
-
-#define FB_PIXEL_ORDER_GET  0x00040006
-#define FB_PIXEL_ORDER_TEST 0x00044006
-#define FB_PIXEL_ORDER_SET  0x00048006
-
-#define FB_ALPHA_MODE_GET  0x00040007
-#define FB_ALPHA_MODE_TEST 0x00044007
-#define FB_ALPHA_MODE_SET  0x00048007
-
-#define FB_PITCH_GET 0x00040008
-
-#define FB_VIR_OFFSET_GET  0x00040009
-#define FB_VIR_OFFSET_TEST 0x00044009
-#define FB_VIR_OFFSET_SET  0x00048009
-
-#define FB_OVERSCAN_GET  0x0004000A
-#define FB_OVERSCAN_TEST 0x0004400A
-#define FB_OVERSCAN_SET  0x0004800A
-
-#define FB_PALETTE_GET  0x0004000B
-#define FB_PALETTE_TEST 0x0004400B
-#define FB_PALETTE_SET  0x0004800B
-
-#define FB_CURSOR_INFO_SET  0x00008010
-#define FB_CURSOR_STATE_SET 0x00008011
-
 uint32_t mbox_get_board_revision ( );
 uint64_t mbox_get_VC_base_addr ( );
 void mbox_set_clock_to_PL011 ( );
-int mbox_framebuffer_init ( uint32_t width, uint32_t height, FRAME_BUFFER * fb );
 
 #endif
