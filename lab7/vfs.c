@@ -205,6 +205,22 @@ int vfs_chdir(struct vfs_vnode_struct * target_dir_vnode)
   return 0;
 }
 
+struct vfs_filesystem_struct * vfs_get_fs(const char * name)
+{
+  for(unsigned idx = 0; idx < VFS_MAX_REGISTERED_FS; ++idx)
+  {
+    if(fs_list[idx] == 0)
+    {
+      return 0;
+    }
+    if(string_cmp(fs_list[idx] -> name, name, 999) != 0)
+    {
+      return fs_list[idx];
+    }
+  }
+  return 0;
+}
+
 struct vfs_vnode_struct * vfs_get_root_vnode(void)
 {
   return root_vnode;
