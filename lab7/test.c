@@ -32,6 +32,13 @@ int main(void)
   syscall_uart_puts("\n");
 
   syscall_chdir("..");
+  syscall_mount("tmpfs", "mnt", "tmpfs");
+  fd = syscall_open("mnt/a.txt", 0);
+  if(fd >= 0)
+  {
+    syscall_uart_puts("Assertion syscall_open(\"mnt/a.txt\", 0) >= 0");
+    while(1);
+  }
 
   if(syscall_fork() == 0)
   {
