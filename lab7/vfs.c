@@ -177,8 +177,10 @@ int vfs_mkdir(struct vfs_vnode_struct * current_dir_vnode, const char * pathname
 
 int vfs_chdir(struct vfs_vnode_struct * target_dir_vnode)
 {
-  vfs_free_vnode(task_get_current_vnode());
+  /* vfs_free_vnode will ignore vnode return by task_get_current_vnode() */
+  struct vfs_vnode_struct * current_dir_vnode = task_get_current_vnode();
   task_set_current_vnode(target_dir_vnode);
+  vfs_free_vnode(current_dir_vnode);
   return 0;
 }
 
@@ -213,7 +215,7 @@ void vfs_last_token_in_path(char * string)
 
 void vfs_free_vnode(struct vfs_vnode_struct * vnode)
 {
-  if(vnode != root_vnode)
+  if(vnode != root_vnode && vnode != task_get_current_vnode())
   {
     slab_malloc_free((uint64_t *)vnode);
   }
