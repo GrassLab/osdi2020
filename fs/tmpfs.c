@@ -12,11 +12,43 @@ static struct vnode *vnode_create (struct mount *mount, enum tmpfs_type type);
 static int
 write (struct file *file, const void *buf, size_t len)
 {
+  struct tmpfs_node *node;
+  size_t valid_len;
+  node = file->vnode->internal;
+  // type error
+  if (node->type != file_t)
+    return -1;
+  // block full
+  if (file->f_pos >= DATA_SIZE)
+    return 0;
+  valid_len = DATA_SIZE - file->f_pos;
+  if (len < valid_len)
+    valid_len = len;
+  memcpy (&node->block->data.content[file->f_pos], buf, valid_len);
+  file->f_pos += valid_len;
+  if (node->block->size < file->f_pos)
+    node->block->size = file->f_pos;
+  return valid_len;
 }
 
 static int
 read (struct file *file, void *buf, size_t len)
 {
+  struct tmpfs_node *node;
+  size_t valid_len;
+  node = file->vnode->internal;
+  // type error
+  if (node->type != file_t)
+    return -1;
+  // f_pos at EOF
+  if (file->f_pos >= node->block->size)
+    return 0;
+  valid_len = node->block->size - file->f_pos;
+  if (len < valid_len)
+    valid_len = len;
+  memcpy (buf, &node->block->data.content[file->f_pos], valid_len);
+  file->f_pos += valid_len;
+  return valid_len;
 }
 
 static int
