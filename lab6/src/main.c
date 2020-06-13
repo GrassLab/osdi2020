@@ -84,7 +84,7 @@ void main(){
         }else if(strcmp(str,"obj")==0){
             buddy_init(100);
             buddy_show();
-
+            
             int obj_32 = register_obj_allocator(32);
             int obj_64 = register_obj_allocator(64);
             int obj_128 = register_obj_allocator(128);
@@ -103,7 +103,26 @@ void main(){
             for(int i=32; i<128; i++){
                 obj0[i] = obj_allocate(obj_64);
             }
+        }else if(strcmp(str,"kmalloc")==0){
+            buddy_init(100);
+            buddy_show();
 
+            __init_kmalloc();
+
+            void *obj0[256];
+            
+            for(int i=0; i<128; i++){
+                obj0[i] = kmalloc(i*10);
+            }
+            for(int i=0; i<128; i++){
+                kfree(obj0[i]);
+            }
+
+            buddy_show();
+            obj0[0] = kmalloc(15000);
+            kfree(obj0[0]);
+            buddy_show();
+            
         }else{
             printf("Err: command %s not found, try <help>\n", str);
         }

@@ -115,6 +115,7 @@ struct page *buddy_alloc(int size){
         struct page* head = buddy_pool[order].page;
         int ret_page = head->page_frame_number;
         head->physical_addr = pfn2phy(ret_page);
+        head->size = (1<<order);
         
         buddy_pool[order].page = head->next;
         buddy_pool[order].len--;
@@ -219,6 +220,11 @@ void buddy_free(int page_frame_number, int page_frame_size){
     check_merge();
 }
 
+void _buddy_free(int page_frame_number, void *block){
+    struct page *p = (struct page*)block;
+    buddy_free(page_frame_number, p->size);
+}
+
 /////////////////////// obj allocate ///////////////////////
 
 void __init_obj_alloc(struct obj_alloc *alloc, unsigned int size){
@@ -298,9 +304,9 @@ void *obj_allocate(int token){
 
 void __init_obj_page(struct page* page, unsigned size)
 {
-    page->unused_obj = page->num_of_obj = PAGE_SIZE / size;
+    page->unused_obj = PAGE_SIZE / size;
 
-    unsigned long chunk_header = page->physical_addr + size*(page->num_of_obj-1);
+    unsigned long chunk_header = page->physical_addr + size*(page->unused_obj-1);
     page->obj_freelist = (void **)chunk_header;
     while(chunk_header > page->physical_addr){
         *(void **)chunk_header = (void *)(chunk_header - size);
@@ -310,8 +316,20 @@ void __init_obj_page(struct page* page, unsigned size)
     return;
 }
 
-void obj_free(void *obj, int token)
+void _obj_free(void *obj, struct page *page)
 {   
+    // add to freelist
+    void **header = (void **)obj;
+    *header = (void *)page->obj_freelist;
+    page->obj_freelist = header;
+    page->unused_obj++;
+
+    printf("[free obj] pfn: %d, unused num: %d\n", page->page_frame_number, page->unused_obj);
+    return;
+}
+
+void obj_free(void *obj, int token)
+{
     if(token < 0 || token >= MAX_ALLOCATOR_NUMBER){
         uart_puts("[obj allocator] invalid token\n");
         return;
@@ -322,16 +340,72 @@ void obj_free(void *obj, int token)
 
     struct page* page = alloc->used_page;
     while(pfn != page->page_frame_number){
-        if(alloc->used_page->next == 0) break;
+        if(page->next == 0) break;
         page = page->next;
     }
 
-    // add to freelist
-    void **header = (void **)obj;
-    *header = (void *)page->obj_freelist;
-    page->obj_freelist = header;
-    page->unused_obj++;
+    _obj_free(obj, page);
+}
 
-    printf("[free obj] pfn: %d, unused num: %d\n", page->page_frame_number, page->unused_obj);
+/////////////////////// kmalloc ///////////////////////
+void __init_kmalloc()
+{
+    for (unsigned int i=MIN_KMALLOC_ORDER; i<=MAX_KMALLOC_ORDER; i++){
+        register_obj_allocator(1<<i);
+    }
+}
+
+void *kmalloc(unsigned int size)
+{
+    void *block;
+    // size <= 2048 bytes
+    for(unsigned int i=MIN_KMALLOC_ORDER; i<MAX_KMALLOC_ORDER; i++){
+        if(size <= (1<<i)){
+            block = obj_allocate(i-MIN_KMALLOC_ORDER);
+            return block;
+        }
+    }
+
+    // size <= 1024 pages
+    int x = (size / (1<<PAGE_SHIFT))+1;
+    if(x<(1<<MAX_ORDER)){
+        block = (void *)(buddy_alloc(x)->physical_addr);
+        return block;
+    }
+
+    uart_puts("[kmalloc] too large!\n");
+    return 0;
+}
+
+void kfree(void *block)
+{
+    int pfn = phy2pfn(block);
+    struct page* page = find_page(pfn);
+    if(page == 0){
+        _buddy_free(pfn, block);
+    }else{
+        _obj_free(block, page);
+    }
     return;
+}
+
+struct page *find_page(int pfn)
+{
+    struct obj_alloc* alloc;
+    struct page* page;
+    for(int token=0; token<MAX_ALLOCATOR_NUMBER-MIN_ALLOCATOR_SIZE+1; token++){
+        alloc = &allocator_pool[token];
+        if(alloc->used_page!=0){
+            page = alloc->used_page;
+            while(pfn != page->page_frame_number){
+                if(page->next == 0) break;
+                page = page->next;
+            }
+            if (pfn == page->page_frame_number){
+                // printf("%d\n", page->page_frame_number);
+                return page;
+            }
+        }
+    }
+    return 0;
 }
