@@ -234,7 +234,7 @@ void *kmalloc(varied_size_allocator_t *allocator, unsigned long size)
             uart_send_hex(address >> 32);
             uart_send_hex(address);
             printf(" size %d\n", size);
-            return address;
+            return (void *)address;
         }
         free_head = free_head->next;
     }
