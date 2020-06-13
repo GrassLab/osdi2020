@@ -31,7 +31,7 @@ lookup (struct vnode *dir_node, struct vnode **target,
     return 1;
   if (component_name[0] == '\0')
     return 1;
-  for (i = 0; i < SUBNODE_LEN; ++i)
+  for (i = 0; i < node->block->size; ++i)
     {
       sub_node = node->block->data.nodes[i];
       if (sub_node && !strcmp (component_name, sub_node->block->name))
@@ -55,22 +55,20 @@ create (struct vnode *dir_node, struct vnode **target,
     return 1;
   if (component_name[0] == '\0')
     return 1;
-  for (i = 0; i < SUBNODE_LEN; ++i)
-    {
-      if (node->block->data.nodes[i] == NULL)
-	{
-	  new_vnode = vnode_create (dir_node->mount, file_t);
-	  if (new_vnode == NULL)
-	    return 1;
-	  node->block->data.nodes[i] = new_vnode->internal;
-	  node = new_vnode->internal;
-	  memcpy (node->block->name, component_name,
-		  strlen (component_name) + 1);
-	  *target = new_vnode;
-	  return 0;
-	}
-    }
-  return 1;
+  if (node->block->size >= SUBNODE_LEN)
+    return 1;
+  i = node->block->size;
+  new_vnode = vnode_create (dir_node->mount, file_t);
+  if (new_vnode == NULL)
+    return 1;
+  node->block->data.nodes[i] = new_vnode->internal;
+  // TODO: retrieve deleted slot
+  ++node->block->size;
+  node = new_vnode->internal;
+  memcpy (node->block->name, component_name,
+	  strlen (component_name) + 1);
+  *target = new_vnode;
+  return 0;
 }
 
 static struct vnode *

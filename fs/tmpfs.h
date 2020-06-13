@@ -5,7 +5,7 @@
 
 #define BLOCK_SIZE 512
 #define NAME_LEN 16
-#define DATA_SIZE (BLOCK_SIZE - NAME_LEN)
+#define DATA_SIZE (BLOCK_SIZE - NAME_LEN - sizeof (size_t))
 #define SUBNODE_LEN (DATA_SIZE / sizeof (struct tmpfs_node *))
 
 enum tmpfs_type
@@ -23,6 +23,7 @@ union tmpfs_data
 struct tmpfs_block
 {
   char name[NAME_LEN];
+  size_t size;
   union tmpfs_data data;
 };
 
