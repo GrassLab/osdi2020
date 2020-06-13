@@ -227,6 +227,24 @@ int sys_chdir(const char * pathname)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 int sys_mount(const char * device, const char * mountpoint, const char * filesystem)
 {
+  /* check if the filesystem is registered */
+  struct vfs_filesystem_struct * fs = vfs_get_fs(filesystem);
+  if(fs == 0)
+  {
+    uart_puts("FS not found\n");
+    return 1;
+  }
+
+  /* find mountpoint */
+  struct vfs_vnode_struct * mountpoint_vnode = vfs_traverse(mountpoint, VFS_TRAVERSE_NO_RETURN_NEAREST);
+
+  /* setup new mount */
+  struct vfs_mount_struct * mount;
+  vfs_setup_mount(fs, &mount);
+
+  /* mount onto mountoint */
+  vfs_mount(mountpoint_vnode, mount);
+
   return 0;
 }
 
