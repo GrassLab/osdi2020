@@ -76,7 +76,13 @@ int find_mem_pool(unsigned long long *pool){
 void* fix_alloc(fix_allocator *self){
 	int PFN_id = self->PFN_num-1;
 	int offset = find_mem_pool(&self->mem_pool[PFN_id]);
+	if(offset == -1){
+		fix_allocator_request_page(self);
+		void* retAddr = fix_alloc(self);
+		return retAddr;
+	}
 	offset *= self->obj_size;
+
 
 	unsigned long long retAddr = PFN2ADDR(self->PFN[PFN_id]) + offset;
 	show_allocator_alloc_message(retAddr, self->obj_size);
