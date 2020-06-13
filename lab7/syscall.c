@@ -132,3 +132,14 @@ int syscall_chdir(const char * pathname)
   return retval;
 }
 
+int syscall_mount(const char * device, const char * mountpoint, const char * filesystem)
+{
+  int retval;
+  asm volatile("mov x1, %0" : : "r"(device));
+  asm volatile("mov x2, %0" : : "r"(mountpoint));
+  asm volatile("mov x3, %0" : : "r"(filesystem));
+  asm volatile("svc #18");
+  asm volatile("mov %0, x0" : "=r"(retval));
+  return retval;
+}
+

@@ -224,3 +224,9 @@ int sys_chdir(const char * pathname)
   return 0;
 }
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+int sys_mount(const char * device, const char * mountpoint, const char * filesystem)
+{
+  return 0;
+}
+
