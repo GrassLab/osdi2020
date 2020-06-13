@@ -33,7 +33,9 @@ int tmpfs_write(struct vfs_file_struct * file, const void * buf, size_t len);
 int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len);
 int tmpfs_list(struct vfs_vnode_struct * dir_node);
 int tmpfs_mkdir(struct vfs_vnode_struct * dir_node, const char * new_dir_name);
+
 struct tmpfs_dir_node * tmpfs_create_dir_node(const char * dir_name);
+struct vfs_vnode_struct * tmpfs_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir);
 
 #endif
 

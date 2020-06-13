@@ -36,15 +36,12 @@ int tmpfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct
   UNUSED(fs);
 
   /* create root directory */
-  struct vfs_vnode_struct * root_dir_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
+  struct vfs_vnode_struct * root_dir_vnode = tmpfs_create_vnode(mount, (void *)tmpfs_create_dir_node("/"), 1);
 
-  root_dir_vnode -> mount = mount;
-  root_dir_vnode -> internal = (void *)tmpfs_create_dir_node("/");
   ((struct tmpfs_dir_node *)(root_dir_vnode -> internal)) -> parent_node = (struct tmpfs_dir_node *)(root_dir_vnode -> internal);
-  root_dir_vnode -> v_ops = tmpfs_vnode_ops;
-  root_dir_vnode -> f_ops = tmpfs_file_ops;
-  root_dir_vnode -> is_dir = 1;
+
   mount -> root = root_dir_vnode;
+
   return 0;
 }
 
@@ -52,6 +49,7 @@ int tmpfs_mount(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_str
 {
   struct tmpfs_dir_node * dir_node = (struct tmpfs_dir_node *)(mountpoint_vnode -> internal);
   dir_node -> mountpoint = mount;
+  ((struct tmpfs_dir_node *)(mount -> root -> internal)) -> parent_node = dir_node;
   return 0;
 }
 
@@ -60,25 +58,12 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
   struct tmpfs_dir_node * internal_dir_node = (struct tmpfs_dir_node *)(dir_node -> internal);
   if(component_name[0] == '/')
   {
-    struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
-    target_vnode -> mount = dir_node -> mount;
-    target_vnode -> v_ops = tmpfs_vnode_ops;
-    target_vnode -> f_ops = tmpfs_file_ops;
-    target_vnode -> internal = dir_node -> internal;
-    target_vnode -> is_dir = 1;
-    *target = target_vnode;
+    *target = tmpfs_create_vnode(dir_node -> mount, dir_node -> internal, 1);
     return 0;
   }
   if(string_length(component_name) == 2 && component_name[0] == '.' && component_name[1] == '.')
   {
-
-    struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
-    target_vnode -> mount = dir_node -> mount;
-    target_vnode -> v_ops = tmpfs_vnode_ops;
-    target_vnode -> f_ops = tmpfs_file_ops;
-    target_vnode -> internal = internal_dir_node -> parent_node;
-    target_vnode -> is_dir = 1;
-    *target = target_vnode;
+    *target = tmpfs_create_vnode(dir_node -> mount, internal_dir_node -> parent_node, 1);
     return 0;
   }
 
@@ -92,13 +77,7 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     }
     if(string_cmp(component_name, ((internal_dir_node -> files)[idx]) -> name, 999))
     {
-      struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
-      target_vnode -> mount = dir_node -> mount;
-      target_vnode -> v_ops = tmpfs_vnode_ops;
-      target_vnode -> f_ops = tmpfs_file_ops;
-      target_vnode -> internal = (internal_dir_node -> files)[idx];
-      target_vnode -> is_dir = 0;
-      *target = target_vnode;
+      *target = tmpfs_create_vnode(dir_node -> mount, (internal_dir_node -> files)[idx], 0);
       return 0;
     }
   }
@@ -113,13 +92,7 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     }
     if(string_cmp(component_name, ((internal_dir_node -> subdir_node)[idx]) -> name, 999))
     {
-      struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
-      target_vnode -> mount = dir_node -> mount;
-      target_vnode -> v_ops = tmpfs_vnode_ops;
-      target_vnode -> f_ops = tmpfs_file_ops;
-      target_vnode -> internal = (internal_dir_node -> subdir_node)[idx];
-      target_vnode -> is_dir = 1;
-      *target = target_vnode;
+      *target = tmpfs_create_vnode(dir_node -> mount, (internal_dir_node -> subdir_node)[idx], 1);
       return 0;
     }
   }
@@ -135,22 +108,15 @@ int tmpfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     {
       continue;
     }
-    struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
     struct tmpfs_file_node * file_node = (struct tmpfs_file_node *)slab_malloc(sizeof(struct tmpfs_file_node));
 
     string_copy(component_name, file_node -> name);
     file_node -> file_size = 0;
     file_node -> location = 0;
 
-    target_vnode -> mount = dir_node -> mount;
-    target_vnode -> v_ops = tmpfs_vnode_ops;
-    target_vnode -> f_ops = tmpfs_file_ops;
-    target_vnode -> internal = file_node;
-    target_vnode -> is_dir = 0;
-
     (((struct tmpfs_dir_node *)(dir_node -> internal)) -> files)[idx] = file_node;
 
-    *target = target_vnode;
+    *target = tmpfs_create_vnode(dir_node -> mount, (void *)file_node, 0);
     return 0;
   }
   return 0;
@@ -258,5 +224,16 @@ struct tmpfs_dir_node * tmpfs_create_dir_node(const char * dir_name)
   dir_node -> mountpoint = 0;
 
   return dir_node;
+}
+
+struct vfs_vnode_struct * tmpfs_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir)
+{
+  struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
+  target_vnode -> mount = mount;
+  target_vnode -> v_ops = tmpfs_vnode_ops;
+  target_vnode -> f_ops = tmpfs_file_ops;
+  target_vnode -> internal = internal;
+  target_vnode -> is_dir = is_dir;
+  return target_vnode;
 }
 
