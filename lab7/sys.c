@@ -187,11 +187,22 @@ int sys_free(uint64_t * va)
 int sys_open(const char * pathname, int flags)
 {
   struct vfs_file_struct * file = vfs_open(pathname, flags);
-  return (int)task_set_fd(file);
+  if(file == 0)
+  {
+    return -1;
+  }
+  else
+  {
+    return (int)task_set_fd(file);
+  }
 }
 
 int sys_close(int fd)
 {
+  if(fd < 0)
+  {
+    return fd;
+  }
   vfs_close(task_get_vfs_file(fd));
   task_unset_fd(fd);
   return 0;
@@ -199,16 +210,28 @@ int sys_close(int fd)
 
 int sys_write(int fd, const void * buf, size_t len)
 {
+  if(fd < 0)
+  {
+    return fd;
+  }
   return vfs_write(task_get_vfs_file(fd), buf, len);
 }
 
 int sys_read(int fd, void * buf, size_t len)
 {
+  if(fd < 0)
+  {
+    return fd;
+  }
   return vfs_read(task_get_vfs_file(fd), buf, len);
 }
 
 int sys_list(int fd)
 {
+  if(fd < 0)
+  {
+    return fd;
+  }
   return vfs_list(task_get_vfs_file(fd));
 }
 
