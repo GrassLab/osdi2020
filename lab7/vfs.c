@@ -135,6 +135,17 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname, int return_closest
     /* ignore '/' */
     search_start += component_length + 1;
 
+    if(string_length(component_name) == 1 && component_name[0] == '.')
+    {
+      /* do nothing */
+      continue;
+    }
+    /* else if(string_length(component_name) == 2 && component_name[1] == '.')
+    {
+      // Let the actual fs handle it
+    }
+    */
+
     /* search componenet in the current directory */
     (rootfs -> root -> v_ops -> lookup)(search_vnode, &target, component_name);
 

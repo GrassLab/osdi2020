@@ -39,6 +39,7 @@ int tmpfs_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mou
 
   root_dir_vnode -> mount = mount;
   root_dir_vnode -> internal = (void *)tmpfs_create_dir_node("/");
+  ((struct tmpfs_dir_node *)(root_dir_vnode -> internal)) -> parent_node = (struct tmpfs_dir_node *)(root_dir_vnode -> internal);
   root_dir_vnode -> v_ops = tmpfs_vnode_ops;
   root_dir_vnode -> f_ops = tmpfs_file_ops;
   root_dir_vnode -> is_dir = 1;
@@ -60,6 +61,19 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     *target = target_vnode;
     return 0;
   }
+  if(string_length(component_name) == 2 && component_name[0] == '.' && component_name[1] == '.')
+  {
+
+    struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
+    target_vnode -> mount = dir_node -> mount;
+    target_vnode -> v_ops = tmpfs_vnode_ops;
+    target_vnode -> f_ops = tmpfs_file_ops;
+    target_vnode -> internal = internal_dir_node -> parent_node;
+    target_vnode -> is_dir = 1;
+    *target = target_vnode;
+    return 0;
+  }
+
   /* search file */
   for(int idx = 0; idx < TMPFS_MAX_FILE_IN_DIR; ++idx)
   {
@@ -202,6 +216,8 @@ int tmpfs_mkdir(struct vfs_vnode_struct * dir_node, const char * new_dir_name)
 {
   struct tmpfs_dir_node * current_dir_node = (struct tmpfs_dir_node *)(dir_node -> internal);
   struct tmpfs_dir_node * new_dir_node = tmpfs_create_dir_node(new_dir_name);
+
+  new_dir_node -> parent_node = current_dir_node;
 
   for(int i = 0; i < TMPFS_MAX_SUB_DIR; ++i)
   {

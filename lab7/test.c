@@ -25,17 +25,19 @@ int main(void)
   syscall_close(root);
 
   syscall_chdir("mnt");
-  fd = syscall_open("a.txt", 0);
+  fd = syscall_open("./a.txt", 0);
   syscall_read(fd, buf, 2);
   buf[3] = '\0';
   syscall_uart_puts(buf);
   syscall_uart_puts("\n");
 
+  syscall_chdir("..");
+
   if(syscall_fork() == 0)
   {
     syscall_uart_puts("Hi I'm child\n");
-    a = syscall_open("/world", 0);
-    b = syscall_open("/hello", 0);
+    a = syscall_open("./world", 0);
+    b = syscall_open("./hello", 0);
     int sz;
     sz = syscall_read(a, buf, 100);
     sz += syscall_read(b, buf + sz, 100);
@@ -46,8 +48,8 @@ int main(void)
   else
   {
     syscall_uart_puts("Hi I'm parent\n");
-    b = syscall_open("/hello", 0);
-    a = syscall_open("/world", 0);
+    b = syscall_open("hello", 0);
+    a = syscall_open("world", 0);
     int sz;
     sz = syscall_read(b, buf, 100);
     sz += syscall_read(a, buf + sz, 100);
