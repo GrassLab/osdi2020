@@ -2,6 +2,9 @@
 #define VFS
 
 #include <stddef.h>
+
+#define O_CREAT 1
+
 struct vnode
 {
   struct mount *mount;
