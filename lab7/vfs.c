@@ -164,7 +164,7 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname, int return_closest
     */
 
     /* search componenet in the current directory */
-    int lookup_return = (rootfs -> root -> v_ops -> lookup)(search_vnode, &target, component_name);
+    int lookup_return = (search_vnode -> v_ops -> lookup)(search_vnode, &target, component_name);
 
     if(target == 0)
     {
