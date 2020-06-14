@@ -2,6 +2,11 @@
 
 mount_t *rootfs;
 
+#define FILE_ARR_SIZE 16
+
+file_t file_arr[FILE_ARR_SIZE];
+int file_arr_head = 0;
+
 int register_filesystem(filesystem_t *fs)
 {
     // register the file system to the kernel.
@@ -16,24 +21,67 @@ file_t *vfs_open(const char *pathname, int flags)
     // 1. Lookup pathname from the root vnode.
     // 2. Create a new file descriptor for this vnode if found.
     // 3. Create a new file if O_CREAT is specified in flags.
-    vnode_t *vnode;
+    vnode_t *target;
+    file_t *file = NULL;
     int ret_val;
 
-    if (flags & O_CREAT)
+    printf("vfs open\n");
+    if (flags == O_CREAT)
     {
-        file_t *file;
-        ret_val = rootfs->root->v_ops->lookup(rootfs->root, &vnode, pathname);
+        ret_val = rootfs->root->v_ops->lookup(rootfs->root, &target, pathname);
 
-        return file;
+        if (ret_val != -1)
+        {
+            printf("File exist, can't create file\n");
+        }
+        else
+        {
+            file = &file_arr[file_arr_head++];
+
+            ret_val = rootfs->root->v_ops->create(rootfs->root, &target, pathname);
+            file->vnode = target;
+            file->f_ops = target->f_ops;
+            file->f_pos = 0;
+        }
+
+        return;
     }
     else
     {
-        return NULL;
+        ret_val = rootfs->root->v_ops->lookup(rootfs->root, &target, pathname);
+        if (ret_val >= 0)
+        {
+            for (int i = 0; i < FILE_ARR_SIZE; i++)
+            {
+                if (file_arr[i].vnode == NULL)
+                {
+                    file = &file_arr[i];
+                    file->vnode = target;
+                    file->f_ops = target->f_ops;
+                    file->f_pos = 0;
+                    break;
+                }
+            }
+        }
+
+        return file;
     }
 }
 int vfs_close(file_t *file)
 {
     // 1. release the file descriptor
+    printf("vfs close ");
+    for (int i = 0; i < FILE_ARR_SIZE; i++)
+    {
+        if (file == &file_arr[i])
+        {
+            file->vnode = NULL;
+            printf("succeeded\n");
+            return 0;
+        }
+    }
+    printf("fail\n");
+    return -1;
 }
 int vfs_write(file_t *file, const void *buf, size_t len)
 {

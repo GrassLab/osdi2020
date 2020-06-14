@@ -27,7 +27,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 7.0.1\n");
+    uart_print("Version : 7.2.2\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
