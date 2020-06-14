@@ -79,11 +79,27 @@ int main(void)
   /* procfs */
   syscall_mkdir("proc");
   syscall_mount("procfs", "proc", "procfs");
+
   fd = syscall_open("/proc/switch", 0);
-  if(fd < 0)
-  {
-    syscall_uart_puts("Assertion syscall_open(\"/proc/switch\", 0) < 0");
-    while(1);
-  }
+  syscall_write(fd, "0", 1);
+  syscall_close(fd);
+
+  fd = syscall_open("/proc/hello", 0);
+  sz = syscall_read(fd, buf, 16);
+  buf[sz++] = '\n';
+  buf[sz] = '\0';
+  syscall_uart_puts(buf);
+  syscall_close(fd);
+
+  fd = syscall_open("/proc/switch", 0);
+  syscall_write(fd, "1", 1);
+  syscall_close(fd);
+
+  fd = syscall_open("/proc/hello", 0);
+  sz = syscall_read(fd, buf, 16);
+  buf[sz++] = '\n';
+  buf[sz] = '\0';
+  syscall_uart_puts(buf);
+  syscall_close(fd);
 }
 

@@ -2,6 +2,7 @@
 #include "slab.h"
 #include "meta_macro.h"
 #include "uart.h"
+#include "string_util.h"
 
 static struct vfs_vnode_operations_struct * procfs_vnode_ops;
 static struct vfs_file_operations_struct * procfs_file_ops;
@@ -101,12 +102,46 @@ int procfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct **
 
 int procfs_write(struct vfs_file_struct * file, const void * buf, size_t len)
 {
-  return 0;
+  int type = (int)(unsigned long long)(file -> vnode -> internal);
+
+  switch(type)
+  {
+  case PROCFS_TYPE_SWITCH:
+    procfs_root.switch_ = (int)string_char_to_ulonglong(buf);
+    break;
+  /* case PROCFS_TYPE_HELLO: */
+    /* ignored write request */
+  default:
+    /* ignored write request for task id*/
+    break;
+  }
+
+  return (int)len;
 }
 
 int procfs_read(struct vfs_file_struct * file, void * buf, size_t len)
 {
-  return 0;
+  UNUSED(len); /* ignore read length for now */
+  int type = (int)(unsigned long long)(file -> vnode -> internal);
+  switch(type)
+  {
+  case PROCFS_TYPE_SWITCH:
+    string_longlong_to_char((char *)buf, procfs_root.switch_);
+    return string_length((char *)buf);
+  case PROCFS_TYPE_HELLO:
+    if(procfs_root.switch_ == 0)
+    {
+      string_copy("hello", (char *)buf);
+    }
+    else
+    {
+      string_copy("HELLO", (char *)buf);
+    }
+    return 5;
+  default:
+    /* TODO */
+    return 0;
+  }
 }
 
 int procfs_list(struct vfs_vnode_struct * dir_node)
