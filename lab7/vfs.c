@@ -7,6 +7,7 @@
 static struct vfs_mount_struct * rootfs;
 static struct vfs_vnode_struct * root_vnode;
 static struct vfs_filesystem_struct * fs_list[VFS_MAX_REGISTERED_FS];
+static struct vfs_vnode_struct * mountpoints_vnode[VFS_MAX_MOUNT];
 
 int vfs_regist_fs(struct vfs_filesystem_struct * fs)
 {
@@ -53,12 +54,29 @@ void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs)
 void vfs_mount(struct vfs_vnode_struct * mountpoint, struct vfs_mount_struct * mount)
 {
   (mountpoint -> v_ops -> mount)(mountpoint, mount);
+  for(int i = 0; i < VFS_MAX_MOUNT; ++i)
+  {
+    if(mountpoints_vnode[i] == 0)
+    {
+      mountpoints_vnode[i] = mount -> root;
+    }
+  }
   return;
 }
 
 void vfs_umount(struct vfs_vnode_struct * mountpoint_parent, const char * mountpoint_token)
 {
+  struct vfs_vnode_struct * mount_vnode;
+  (mountpoint_parent -> v_ops -> lookup)(mountpoint_parent, &mount_vnode, mountpoint_token);
   (mountpoint_parent -> v_ops -> umount)(mountpoint_parent, mountpoint_token);
+  for(int i = 0; i < VFS_MAX_MOUNT; ++i)
+  {
+    if(mountpoints_vnode[i] == mount_vnode)
+    {
+      mountpoints_vnode[i] = 0;
+    }
+  }
+  vfs_free_vnode(mount_vnode);
   return;
 }
 
@@ -262,6 +280,13 @@ void vfs_last_token_in_path(char * string)
 
 void vfs_free_vnode(struct vfs_vnode_struct * vnode)
 {
+  for(int i = 0; i < VFS_MAX_MOUNT; ++i)
+  {
+    if(mountpoints_vnode[i] == vnode)
+    {
+      return;
+    }
+  }
   if(vnode != root_vnode && vnode != task_get_current_vnode())
   {
     slab_malloc_free((uint64_t *)vnode);
