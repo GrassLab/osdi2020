@@ -36,15 +36,23 @@ file_t *vfs_open(const char *pathname, int flags)
         }
         else
         {
-            file = &file_arr[file_arr_head++];
-
             ret_val = rootfs->root->v_ops->create(rootfs->root, &target, pathname);
-            file->vnode = target;
-            file->f_ops = target->f_ops;
-            file->f_pos = 0;
+            for (int i = 0; i < FILE_ARR_SIZE; i++)
+            {
+                if (file_arr[i].vnode == NULL)
+                {
+                    file = &file_arr[i];
+                    file->vnode = target;
+                    file->f_ops = target->f_ops;
+                    file->f_pos = 0;
+
+                    printf("file vnode %x\n", file->vnode);
+                    break;
+                }
+            }
         }
 
-        return;
+        return file;
     }
     else
     {
@@ -70,26 +78,48 @@ file_t *vfs_open(const char *pathname, int flags)
 int vfs_close(file_t *file)
 {
     // 1. release the file descriptor
-    printf("vfs close ");
+    printf("vfs close\n");
     for (int i = 0; i < FILE_ARR_SIZE; i++)
     {
         if (file == &file_arr[i])
         {
             file->vnode = NULL;
-            printf("succeeded\n");
+            printf("vfs close succeeded\n");
             return 0;
         }
     }
-    printf("fail\n");
+    printf("vfs close failed\n");
     return -1;
 }
 int vfs_write(file_t *file, const void *buf, size_t len)
 {
     // 1. write len byte from buf to the opened file.
     // 2. return written size or error code if an error occurs.
+    printf("vfs write\n");
+    int ret_val = file->vnode->f_ops->write(file, buf, len);
+    if (ret_val >= 0)
+    {
+        printf("vfs write succeeded\n");
+    }
+    else
+    {
+        printf("vfs write failed\n");
+    }
+    return ret_val;
 }
 int vfs_read(file_t *file, void *buf, size_t len)
 {
     // 1. read min(len, readable file data size) byte to buf from the opened file.
     // 2. return read size or error code if an error occurs.
+    printf("vfs read\n");
+    int ret_val = file->f_ops->read(file, buf, len);
+    if (ret_val >= 0)
+    {
+        printf("vfs read succeeded\n");
+    }
+    else
+    {
+        printf("vfs read failed\n");
+    }
+    return ret_val;
 }

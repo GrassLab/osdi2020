@@ -6,7 +6,8 @@
 
 enum
 {
-    O_CREAT = 1
+    O_OPEN,
+    O_CREAT
 };
 
 typedef struct vnode_t
@@ -21,6 +22,7 @@ typedef struct file_t
 {
     struct vnode_t *vnode;
     size_t f_pos; // The next read/write position of this file descriptor
+    size_t f_size;
     struct file_operations_t *f_ops;
     int flags;
 } file_t;

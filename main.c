@@ -27,7 +27,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 7.2.2\n");
+    uart_print("Version : 7.3.2\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -293,18 +293,40 @@ int kernel_main()
     init_printf(0, putc);
     system_start();
 
+    printf("required 1, 2 test\n");
     filesystem_t fs = tmpfs_filesystem();
     register_filesystem(&fs);
 
-    file_t *a = vfs_open("hello", 0);
+    file_t *a = vfs_open("hello", O_OPEN);
     assert(a == NULL);
     a = vfs_open("hello", O_CREAT);
     assert(a != NULL);
     vfs_close(a);
-    file_t *b = vfs_open("hello", 0);
+    file_t *b = vfs_open("hello", O_OPEN);
     assert(b != NULL);
     vfs_close(b);
 
+    printf("================================\n");
+    printf("required 3 test\n");
+    char buf[32];
+    a = vfs_open("hello", O_OPEN);
+    b = vfs_open("world", O_CREAT);
+
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World!", 6);
+    vfs_close(a);
+    vfs_close(b);
+    b = vfs_open("hello", O_OPEN);
+    a = vfs_open("world", O_OPEN);
+
+    int sz;
+    sz = vfs_read(b, buf, 100);
+    sz += vfs_read(a, buf + sz, 100);
+    buf[sz] = '\0';
+    printf("buf: %s\n", buf); // should be Hello World!
+
+    printf("================================\n");
+    printf("test finished\nhalt\n");
     while (1)
     {
     }
