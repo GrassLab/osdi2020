@@ -54,6 +54,8 @@ uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa)
     if(buddy_split(block_size + 1) == 0)
     {
       /* Failed to split memory */
+      uart_puts_blocking(ANSI_MAGENTA"[Buddy system]"ANSI_RESET" Failed to split memory");
+      while(1);
       return 0x0;
     }
   }

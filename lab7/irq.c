@@ -96,7 +96,7 @@ void irq_el1_handler(void)
         }
         else
         {
-          uart_puts("RX QUEUE EXPLODE\n");
+          uart_puts_blocking("RX QUEUE EXPLODE\n");
           while(1);
           /* There's nothing we can do for now, the program will hang. Try enlarge the queue */
         }

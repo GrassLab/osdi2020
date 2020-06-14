@@ -59,6 +59,8 @@ uint64_t * slab_allocate(uint64_t token)
     return ret_ptr;
   }
   /* failed to allocate space */
+  uart_puts_blocking(ANSI_YELLOW"[Slab]"ANSI_RESET" Failed to allocate space\n");
+  while(1);
   return 0x0;
 }
 
