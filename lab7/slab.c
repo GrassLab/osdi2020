@@ -37,26 +37,29 @@ uint64_t * slab_allocate(uint64_t token)
     /* see buddy_node_allocate for info */
     int bit_array_bit = __builtin_ffsl((int32_t)~(((struct slab_struct *)token) -> used_bit_array[bit_array_idx]));
     /* convert from 1 based to 0 based */
-    --bit_array_bit;
-    SET_BIT(((struct slab_struct *)token) -> used_bit_array[bit_array_idx], bit_array_bit);
+    if(bit_array_bit != 0)
+    {
+      --bit_array_bit;
+      SET_BIT(((struct slab_struct *)token) -> used_bit_array[bit_array_idx], bit_array_bit);
 
-    /* Change pointer to uint64_t to prevent offset multiplier */
-    ret_ptr = (uint64_t *)((uint64_t)(((struct slab_struct *)token) -> va) + ((struct slab_struct *)token) -> object_size * (bit_array_idx * 32 + (unsigned)bit_array_bit));
+      /* Change pointer to uint64_t to prevent offset multiplier */
+      ret_ptr = (uint64_t *)((uint64_t)(((struct slab_struct *)token) -> va) + ((struct slab_struct *)token) -> object_size * (bit_array_idx * 32 + (unsigned)bit_array_bit));
 
 #ifdef DEBUG
-    char string_buff[0x20];
+      char string_buff[0x20];
 
-    uart_puts(ANSI_YELLOW"[Slab]"ANSI_RESET" Allocate size: ");
-    string_longlong_to_char(string_buff, (long)(((struct slab_struct *)token) -> object_size));
-    uart_puts(string_buff);
-    uart_puts(" VA: ");
-    string_ulonglong_to_hex_char(string_buff, (uint64_t)ret_ptr);
-    uart_puts(string_buff);
-    uart_putc('\n');
+      uart_puts(ANSI_YELLOW"[Slab]"ANSI_RESET" Allocate size: ");
+      string_longlong_to_char(string_buff, (long)(((struct slab_struct *)token) -> object_size));
+      uart_puts(string_buff);
+      uart_puts(" VA: ");
+      string_ulonglong_to_hex_char(string_buff, (uint64_t)ret_ptr);
+      uart_puts(string_buff);
+      uart_putc('\n');
 #endif
 
-    TASK_UNGUARD();
-    return ret_ptr;
+      TASK_UNGUARD();
+      return ret_ptr;
+    }
   }
   /* failed to allocate space */
   uart_puts_blocking(ANSI_YELLOW"[Slab]"ANSI_RESET" Failed to allocate space\n");
