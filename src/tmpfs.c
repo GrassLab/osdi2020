@@ -107,11 +107,26 @@ int tmpfs_create ( dentry_t * dir_node, dentry_t ** target, const char * compone
 
     return 0;
 }
-//
-// int tmpfs_write ( file_t * file, const void * buf, size_t len )
-// {
-// }
-//
-// int tmpfs_read ( file_t * file, void * buf, size_t len )
-// {
-// }
+
+int tmpfs_write ( file_t * file, const void * buf, size_t len )
+{
+    if ( len + file->f_pos > TMPFS_FIEL_BUFFER_MAX_LEN )
+        return -1;
+
+    strncpy ( ( (tmpfs_node_t *) ( file->dentry->internal ) )->buffer + file->f_pos, buf, len );
+
+    ( file->f_pos ) += len;
+
+    return 0;
+}
+
+int tmpfs_read ( file_t * file, void * buf, size_t len )
+{
+    int readlen;
+
+    readlen = file->f_pos > len ? len : file->f_pos;
+
+    strncpy ( buf, ( (tmpfs_node_t *) ( file->dentry->internal ) )->buffer, readlen );
+
+    return readlen;
+}

@@ -10,7 +10,7 @@ mount_t * rootfs;
 // function used in this file only.
 int parsing_last_component ( dentry_t ** dentry, char ** component_name, const char * pathname );
 
-int register_filesystem ( struct filesystem * fs )
+int register_filesystem ( file_sys_t * fs )
 {
     if ( !strcmp ( fs->name, "tmpfs" ) )
     {
@@ -63,22 +63,27 @@ file_t * vfs_open ( const char * pathname, file_op_flag_t flags )
 
     return file;
 }
-int vfs_close ( struct file * file )
+int vfs_close ( file_t * file )
 {
     kfree ( file );
     return 0;
 }
 
-// int vfs_write ( struct file * file, const void * buf, size_t len )
-// {
-//     // 1. write len byte from buf to the opened file.
-//     // 2. return written size or error code if an error occurs.
-// }
-// int vfs_read ( struct file * file, void * buf, size_t len )
-// {
-//     // 1. read min(len, readable file data size) byte to buf from the opened file.
-//     // 2. return read size or error code if an error occurs.
-// }
+int vfs_write ( file_t * file, const void * buf, size_t len )
+{
+    int res;
+    res = file->dentry->vnode->f_ops->write ( file, buf, len );
+
+    if ( res == -1 )
+        uart_printf ( "Exceed MAX len of the file." );
+
+    return res;
+}
+
+int vfs_read ( struct file * file, void * buf, size_t len )
+{
+    return file->dentry->vnode->f_ops->read ( file, buf, len );
+}
 
 int parsing_last_component ( dentry_t ** dentry, char ** component_name, const char * pathname )
 {

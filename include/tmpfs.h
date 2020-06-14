@@ -3,7 +3,7 @@
 
 #include "vfs.h"
 
-#define TMPFS_FIEL_BUFFER_MAX_LEN = 64;
+#define TMPFS_FIEL_BUFFER_MAX_LEN 64
 
 typedef struct tmpfs_node
 {
