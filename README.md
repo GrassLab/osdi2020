@@ -1,4 +1,4 @@
-# My OSDI 2020 - LAB 07
+# My OSDI 2020 - LAB 08
 
 ## Author
 
@@ -6,7 +6,7 @@
 | -----------| -------------- | ---- | -------------------------- |
 | 0856009    | JingWangTW     | 王靖  | jingwang.cs08g@nctu.edu.tw |
 
-## LAB 7 Project
+## LAB 8 Project
 
 ### Build
 ```bash
@@ -41,35 +41,35 @@ target remote localhost:1234
 ├── Makefile
 ├── README.md
 ├── include
-│   ├── allocator.h     # allocator management
+│   ├── allocator.h     
 │   ├── command.h
 │   ├── ctype.h
 │   ├── gpio.h
 │   ├── mailbox.h
 │   ├── math.h
-│   ├── mem.h           # memory management
+│   ├── mem.h           
 │   ├── shell.h
 │   ├── stdarg.h
 │   ├── string.h
 │   ├── time.h
-│   ├── tmpfs.h         # memory-based file system
+│   ├── tmpfs.h         
 │   ├── type.h
 │   ├── uart.h
-│   └── vfs.h           # virtual file system
+│   └── vfs.h           
 ├── link.ld
 └── src
     ├── allocator.c
     ├── command.c
     ├── ctype.c
     ├── mailbox.c
-    ├── main.c          # kernel entry
+    ├── main.c          
     ├── math.c
     ├── mem.c
     ├── shell.c
     ├── start.S
-    ├── string.c        # string related utility function
+    ├── string.c        
     ├── time.c
-    ├── tmpfs.c         # implement of tmpfs
+    ├── tmpfs.c         
     ├── uart.c
-    └── vfs.c           # implement of VFS
+    └── vfs.c           
 ```
