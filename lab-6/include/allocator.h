@@ -8,7 +8,11 @@
 #define ALLOCATOR_NUMBER_MAX 128
 #define ALLOCATOR_PAGE_NUMBER_MAX 128
 
+#define SLUB_NOT_USED 0
+#define SLUB_USED 1
+
 typedef struct slub {
+    int used;
     int objectSize;
     unsigned long address;
     struct slub *prev;
@@ -26,9 +30,12 @@ Slub slubs[SLUB_NUMBER_MAX];
 Allocator allocators[ALLOCATOR_NUMBER_MAX];
 
 void allocator_init();
+void varied_size_init();
 void allocator_register(int size);
 Allocator* find_allocator(int size);
 Slub* allocate_object(int size);
 void free_object(Slub *slub);
+unsigned long allocate_memory(int size);
+void free_memory();
 
 #endif

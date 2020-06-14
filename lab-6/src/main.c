@@ -64,19 +64,42 @@ void test_lab6_req2() {
     allocator_register(1200);
     allocator_register(40);
 
-    allocate_object(40);
-    allocate_object(1200);
-    allocate_object(1200);
-    allocate_object(40);
-    allocate_object(40);
-    allocate_object(40);
-    allocate_object(40);
-    allocate_object(1200);   
-    allocate_object(1200);
+    Slub *s1 = allocate_object(40);
+    Slub *s2 = allocate_object(1200);
+    Slub *s3 = allocate_object(1200);
+    Slub *s4 = allocate_object(40);
+    Slub *s5 = allocate_object(1200);
+    Slub *s6 = allocate_object(40);
+    Slub *s7 = allocate_object(1200);
+
+    free_object(s3);
+    free_object(s1);
+    free_object(s2);
+    free_object(s4);
+    free_object(s5);
+    free_object(s6);
+    free_object(s7);
+
+    allocator_register(128);
+    Slub *s8 = allocate_object(128);
+    free_object(s8);
 }
 
 void test_lab6_req3() {
-    
+    page_sys_init();
+    allocator_init();
+    varied_size_init();
+    unsigned long m1 = allocate_memory(1023);
+    unsigned long m2 = allocate_memory(1024);
+    unsigned long m3 = allocate_memory(1025);
+    unsigned long m4 = allocate_memory(1);
+    unsigned long m5 = allocate_memory(0);
+    unsigned long m6 = allocate_memory(9999);
+    free_memory(m1);
+    free_memory(m2);
+    free_memory(m3);
+    free_memory(m4);
+    free_memory(m5);
 }
 
 int main()
@@ -85,4 +108,5 @@ int main()
     init_printf(0, putc);
     // test_lab6_req1();
     test_lab6_req2();
+    // test_lab6_req3();
 }
