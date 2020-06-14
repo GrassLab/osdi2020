@@ -86,6 +86,7 @@ boot_rest:
   bl buddy_init
   bl mmu_user_page_table_init
   bl tmpfs_init
+  bl procfs_init
 
   bl scheduler_init
 

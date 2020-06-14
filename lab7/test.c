@@ -75,5 +75,9 @@ int main(void)
     while(1);
   }
   syscall_close(fd);
+
+  /* procfs */
+  syscall_mkdir("proc");
+  //syscall_mount("procfs", "proc", "procfs");
 }
 
