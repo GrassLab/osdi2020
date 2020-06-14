@@ -3,6 +3,23 @@
 #include "math.h"
 #include "type.h"
 
+char * strcpy ( char * s1, const char * s2 )
+{
+    return strncpy ( s1, s2, strlen ( s2 ) );
+}
+
+char * strncpy ( char * s1, const char * s2, size_t n )
+{
+    size_t i;
+
+    for ( i = 0; i < n; i++ )
+    {
+        s1[i] = s2[i];
+    }
+
+    return s1;
+}
+
 int strcmp ( const char * s1, const char * s2 )
 {
     int i;
