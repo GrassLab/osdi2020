@@ -38,37 +38,38 @@ target remote localhost:1234
 ```
 .
 ├── LICENSE
-├── Makefile                
+├── Makefile
 ├── README.md
-├── include                 
-│   ├── allocator.h         
+├── include
+│   ├── allocator.h     # allocator management
 │   ├── command.h
 │   ├── ctype.h
-│   ├── framebuffer.h
 │   ├── gpio.h
-│   ├── img_data.h
 │   ├── mailbox.h
-│   ├── math.h              
-│   ├── mem.h               
+│   ├── math.h
+│   ├── mem.h           # memory management
 │   ├── shell.h
-│   ├── stdarg.h            
+│   ├── stdarg.h
 │   ├── string.h
 │   ├── time.h
-│   ├── type.h              
-│   └── uart.h
+│   ├── tmpfs.h         # memory-based file system
+│   ├── type.h
+│   ├── uart.h
+│   └── vfs.h           # virtual file system
 ├── link.ld
-└── src                     
-    ├── allocator.c         
+└── src
+    ├── allocator.c
     ├── command.c
     ├── ctype.c
-    ├── framebuffer.c
     ├── mailbox.c
-    ├── main.c
+    ├── main.c          # kernel entry
     ├── math.c
-    ├── mem.c               
+    ├── mem.c
     ├── shell.c
-    ├── start.S             
-    ├── string.c
+    ├── start.S
+    ├── string.c        # string related utility function
     ├── time.c
-    └── uart.c
+    ├── tmpfs.c         # implement of tmpfs
+    ├── uart.c
+    └── vfs.c           # implement of VFS
 ```
