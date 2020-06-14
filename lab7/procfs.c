@@ -71,6 +71,21 @@ int procfs_umount(struct vfs_vnode_struct * mountpoint_parent, const char * moun
 
 int procfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name)
 {
+  /* return 0 if node should be free after use, 1 if not */
+  if(dir_node -> internal == (void *)&procfs_root)
+  {
+    if(string_cmp("switch", component_name, 999) != 0)
+    {
+      *target = procfs_create_vnode(dir_node -> mount, (void *)PROCFS_TYPE_SWITCH, 0);
+    }
+    else if(string_cmp("hello", component_name, 999) != 0)
+    {
+      *target = procfs_create_vnode(dir_node -> mount, (void *)PROCFS_TYPE_HELLO, 0);
+    }
+    else /* task */
+    {
+    }
+  }
   return 0;
 }
 

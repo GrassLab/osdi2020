@@ -11,6 +11,10 @@ struct procfs_root_struct
   /* hello and task info are queried on demand */
 };
 
+#define PROCFS_TYPE_SWITCH 0
+#define PROCFS_TYPE_HELLO -1
+/* the rest are task id */
+
 struct vfs_filesystem_struct * procfs_init(void);
 int procfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mount);
 int procfs_post_mount(struct vfs_vnode_struct * mountpoint_parent, struct vfs_mount_struct * mount);
