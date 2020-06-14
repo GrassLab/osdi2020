@@ -1,4 +1,4 @@
-#include "tmpfs.h"
+#include "fs/tmpfs.h"
 
 #include "allocator.h"
 #include "string.h"

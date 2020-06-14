@@ -13,7 +13,7 @@ DEBUG_DIR   		= debug
 LINKER_FILE	= link.ld
 ELF_FILE	= $(BUILD_DIR)/kernel8.elf
 
-SRCS		= $(wildcard src/*.c)
+SRCS		= $(wildcard src/*.c) $(wildcard src/*/*.c)
 ASMS   		= $(wildcard src/*.S)
 SRC_OBJS	= $(patsubst %.c, $(BUILD_DIR)/%.o, $(SRCS))
 ASM_OBJS 	= $(patsubst %.S, $(BUILD_DIR)/%.S.o, $(ASMS))
@@ -43,7 +43,7 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDE_FLG) -c $< -o $@
 
 run: kernel8.img
-	$(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio
+	sudo $(EMULATOR) -M raspi3 -kernel kernel8.img -serial stdio -drive if=sd,file=/dev/loop0p1,format=raw
 
 generate_symbol_asm:
 	@rm -rf $(DEBUG_DIR)

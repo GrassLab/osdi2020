@@ -48,6 +48,7 @@ dynamic_allocator_t * register_varied_size_allocator ( )
     allocator->byte_64_fixed  = register_fixed_size_allocator ( 64 );
     allocator->byte_128_fixed = register_fixed_size_allocator ( 128 );
     allocator->byte_256_fixed = register_fixed_size_allocator ( 256 );
+    allocator->byte_512_fixed = register_fixed_size_allocator ( 512 );
 
     allocator->page_alloc_list            = (page_alloc_record_t *) ( ( intptr_t ) ( allocator ) + sizeof ( dynamic_allocator_t ) );
     allocator->page_alloc_list->page_addr = (intptr_t) NULL;
@@ -132,6 +133,10 @@ void * dynamic_alloc ( dynamic_allocator_t * allocator, int size )
     {
         return fixed_alloc ( allocator->byte_256_fixed );
     }
+    else if ( size <= 512 )
+    {
+        return fixed_alloc ( allocator->byte_512_fixed );
+    }
     else
     {
         temp = allocator->page_alloc_list;
@@ -174,6 +179,10 @@ void dynamic_free ( dynamic_allocator_t * allocator, void * addr )
     else if ( check_addr_belong_fixed_allocator ( allocator->byte_256_fixed, addr ) )
     {
         fixed_free ( allocator->byte_256_fixed, addr );
+    }
+    else if ( check_addr_belong_fixed_allocator ( allocator->byte_512_fixed, addr ) )
+    {
+        fixed_free ( allocator->byte_512_fixed, addr );
     }
     else
     {
