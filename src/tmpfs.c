@@ -3,6 +3,7 @@
 #include "allocator.h"
 #include "string.h"
 #include "type.h"
+#include "uart.h"
 #include "vfs.h"
 
 // function that would be used in this file only.
@@ -103,7 +104,7 @@ int tmpfs_create ( dentry_t * dir_node, dentry_t ** target, const char * compone
     dir_node->child_dentry[dir_node->child_amount] = new_d;
     ( dir_node->child_amount )++;
 
-    *target = dir_node;
+    *target = new_d;
 
     return 0;
 }
@@ -116,6 +117,7 @@ int tmpfs_write ( file_t * file, const void * buf, size_t len )
     strncpy ( ( (tmpfs_node_t *) ( file->dentry->internal ) )->buffer + file->f_pos, buf, len );
 
     ( file->f_pos ) += len;
+    ( ( (tmpfs_node_t *) ( file->dentry->internal ) )->file_length ) += len;
 
     return 0;
 }
@@ -123,8 +125,9 @@ int tmpfs_write ( file_t * file, const void * buf, size_t len )
 int tmpfs_read ( file_t * file, void * buf, size_t len )
 {
     int readlen;
+    size_t filelen = ( ( (tmpfs_node_t *) ( file->dentry->internal ) )->file_length );
 
-    readlen = file->f_pos > len ? len : file->f_pos;
+    readlen = filelen > len ? len : filelen;
 
     strncpy ( buf, ( (tmpfs_node_t *) ( file->dentry->internal ) )->buffer, readlen );
 

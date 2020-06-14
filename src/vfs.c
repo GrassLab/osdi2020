@@ -32,36 +32,53 @@ file_t * vfs_open ( const char * pathname, file_op_flag_t flags )
     file_t * file;
 
     char * component_name;
-    int parsing_res;
-    int create_res;
+    int res;
 
+    res = parsing_last_component ( &dentry, &component_name, pathname );
+
+    if ( res == -1 )
+    {
+        uart_printf ( "dir not found.\n" );
+        return NULL;
+    }
+
+    // create and open file
     if ( flags & O_CREAT )
     {
-        parsing_res = parsing_last_component ( &dentry, &component_name, pathname );
+        res = dentry->vnode->v_ops->create ( dentry, &new_d, component_name );
 
-        if ( parsing_res == -1 )
-        {
-            uart_printf ( "dir not found.\n" );
-            return NULL;
-        }
-
-        create_res = dentry->vnode->v_ops->create ( dentry, &new_d, component_name );
-
-        if ( create_res == -1 )
+        if ( res == -1 )
         {
             uart_printf ( "dir is exist.\n" );
         }
-        else if ( create_res == -2 )
+        else if ( res == -2 )
         {
             uart_printf ( "MAX child dir is exceed.\n" );
         }
+
+        file         = (file_t *) kmalloc ( sizeof ( file_t ) );
+        file->dentry = new_d;
+        file->f_pos  = 0;
+
+        return file;
     }
+    // just open a file
+    else
+    {
+        res = dentry->vnode->v_ops->lookup ( dentry, &new_d, component_name );
 
-    file         = (file_t *) kmalloc ( sizeof ( file_t ) );
-    file->dentry = new_d;
-    file->f_pos  = 0;
+        if ( res == -1 )
+        {
+            uart_printf ( "file not found.\n" );
+            return NULL;
+        }
 
-    return file;
+        file         = (file_t *) kmalloc ( sizeof ( file_t ) );
+        file->dentry = new_d;
+        file->f_pos  = 0;
+
+        return file;
+    }
 }
 int vfs_close ( file_t * file )
 {
@@ -104,7 +121,7 @@ int parsing_last_component ( dentry_t ** dentry, char ** component_name, const c
         if ( pathname[path_name_count] != '/' )
         {
             // this is last component
-            if ( path_name_count == path_len )
+            if ( path_name_count == path_len - 1 )
             {
                 temp_component_name = (char *) kmalloc ( sizeof ( path_name_count - component_name_start_index + 1 ) );
                 strncpy ( temp_component_name, pathname + component_name_start_index, path_name_count - component_name_start_index );
@@ -117,6 +134,7 @@ int parsing_last_component ( dentry_t ** dentry, char ** component_name, const c
             // just go through the component name
             else
             {
+                path_name_count++;
                 continue;
             }
         }
@@ -157,11 +175,10 @@ int parsing_last_component ( dentry_t ** dentry, char ** component_name, const c
             {
                 current_dentry = temp_dentry;
                 kfree ( temp_component_name );
-                component_name_start_index = path_name_count + 1;
+                path_name_count++;
+                component_name_start_index = path_name_count;
             }
         }
-
-        path_name_count++;
     }
 
     return -1;

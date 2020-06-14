@@ -8,6 +8,7 @@
 typedef struct tmpfs_node
 {
     char * name;
+    size_t file_length;
     char buffer[TMPFS_FIEL_BUFFER_MAX_LEN];
 
 } tmpfs_node_t;

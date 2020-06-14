@@ -12,10 +12,11 @@ char * strncpy ( char * s1, const char * s2, size_t n )
 {
     size_t i;
 
-    for ( i = 0; i < n; i++ )
+    for ( i = 0; i <= n; i++ )
     {
         s1[i] = s2[i];
     }
+    s1[i] = '\0';
 
     return s1;
 }
