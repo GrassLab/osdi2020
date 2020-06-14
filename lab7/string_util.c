@@ -223,6 +223,21 @@ unsigned long long string_hex_char_to_longlong(char * string)
   return value;
 }
 
+unsigned long long string_char_to_ulonglong(const char * string)
+{
+  unsigned long long value = 0;
+
+  for(int string_idx = 0; string[string_idx] != '\0'; ++string_idx)
+  {
+    value *= 10;
+    if(string[string_idx] >= '0' && string[string_idx] <= '9')
+    {
+      value += (unsigned)(string[string_idx] - '0');
+    }
+  }
+  return value;
+}
+
 unsigned string_split(const char * string, char split_char)
 {
   /* start and end is inclusive */
