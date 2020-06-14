@@ -14,6 +14,29 @@ int main(void)
   syscall_close(a);
   syscall_close(b);
 
+  if(syscall_fork() == 0)
+  {
+    syscall_uart_puts("Hi I'm child\n");
+    a = syscall_open("./world", 0);
+    b = syscall_open("./hello", 0);
+    int sz;
+    sz = syscall_read(a, buf, 100);
+    sz += syscall_read(b, buf + sz, 100);
+    buf[sz] = '\0';
+    syscall_uart_puts(buf);
+    syscall_uart_puts("\n");
+    syscall_exit(1);
+  }
+  syscall_uart_puts("Hi I'm parent\n");
+  b = syscall_open("hello", 0);
+  a = syscall_open("world", 0);
+  int sz;
+  sz = syscall_read(b, buf, 100);
+  sz += syscall_read(a, buf + sz, 100);
+  buf[sz] = '\0';
+  syscall_uart_puts(buf);
+  syscall_uart_puts("\n");
+
   syscall_mkdir("mnt");
   int fd = syscall_open("/mnt/a.txt", O_CREAT);
   syscall_write(fd, "Hi", 2);
@@ -50,31 +73,5 @@ int main(void)
     while(1);
   }
   syscall_close(fd);
-
-  if(syscall_fork() == 0)
-  {
-    syscall_uart_puts("Hi I'm child\n");
-    a = syscall_open("./world", 0);
-    b = syscall_open("./hello", 0);
-    int sz;
-    sz = syscall_read(a, buf, 100);
-    sz += syscall_read(b, buf + sz, 100);
-    buf[sz] = '\0';
-    syscall_uart_puts(buf);
-    syscall_uart_puts("\n");
-  }
-  else
-  {
-    syscall_uart_puts("Hi I'm parent\n");
-    b = syscall_open("hello", 0);
-    a = syscall_open("world", 0);
-    int sz;
-    sz = syscall_read(b, buf, 100);
-    sz += syscall_read(a, buf + sz, 100);
-    buf[sz] = '\0';
-    syscall_uart_puts(buf);
-    syscall_uart_puts("\n");
-  }
-
 }
 
