@@ -358,9 +358,7 @@ struct page_t* buddy_release_redundant(struct page_t* p, int target_order) {
         return buddy_release_redundant(top, target_order);
     }
     // book keeping
-    for (int i = 0; i < (1 << target_order); i++) {
-        (p + i)->used = USED;
-    }
+    p->used = USED;
     return p;
 }
 
@@ -389,9 +387,7 @@ void buddy_merge(struct page_t *bottom, struct page_t *top, int order) {
     }
     // merge bottom and top to same block
     else {
-        for (int i = 0; i < (1 << new_order); i++) {
-            (bottom + i)->used = AVAL;
-        }
+        bottom->used = AVAL;
         bottom->order = new_order;
         top->order = -1;
         buddy_push(&(free_area[new_order]), &(bottom->list));
@@ -417,9 +413,7 @@ void buddy_free(void* virt_addr) {
     // can not merge, just free current order's pages
     if (buddy->used == USED || buddy->order != order) {
         uart_printf("free but no merge\n");
-        for (int i = 0; i < (1 << order); i++) {
-            (p + i)->used = AVAL;
-        }
+        p->used = AVAL;
         buddy_push(&(free_area[order]), &(p->list));
     }
     // merge buddy iteratively
