@@ -77,7 +77,7 @@ int sys_fork(struct trapframe_struct * trapframe)
 {
   uint64_t current_task_id = task_get_current_task_id();
 
-  task_guard_section();
+  TASK_GUARD();
   /* new task should return to exception handler context restoration */
   uint64_t new_task_id = task_privilege_task_create(__sys_fork_child_entry, (unsigned)kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].priority);
 
@@ -112,7 +112,7 @@ int sys_fork(struct trapframe_struct * trapframe)
     kernel_task_pool[TASK_ID_TO_IDX(new_task_id)].current_dir_vnode = kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].current_dir_vnode;
 
   /* copy kernel stack */
-  /* task_kernel_stack_size is uint16_t (2 bytes) */
+/* task_kernel_stack_size is uint16_t (2 bytes) */
   memcopy((char *)(task_kernel_stack_pool + TASK_ID_TO_IDX(current_task_id) * TASK_KERNEL_STACK_SIZE), (char *)(task_kernel_stack_pool + TASK_ID_TO_IDX(new_task_id) * TASK_KERNEL_STACK_SIZE), TASK_KERNEL_STACK_SIZE * 2);
 
   /* setup kernel stack sp */
@@ -138,7 +138,7 @@ int sys_fork(struct trapframe_struct * trapframe)
 
   /* child's sp_el0 (sp + 256) and fp (ignored) in trapframe remains the same */
 
-  task_unguard_section();
+  TASK_UNGUARD();
 
   return 0;
 }
@@ -148,7 +148,7 @@ int sys_exit(int status)
   UNUSED(status);
   uint64_t current_task_id = task_get_current_task_id();
   irq_int_enable();
-  task_guard_section();
+  TASK_GUARD();
 
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_ZOMBIE);
   ++schedule_zombie_count;
@@ -157,16 +157,16 @@ int sys_exit(int status)
   mmu_reclaim_user_pages(&(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].user_space_mm));
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_USER_SPACE);
 
-  task_unguard_section();
+  TASK_UNGUARD();
   schedule_yield();
   return 0;
 }
 
 int sys_signal(int task_id, int signalno)
 {
-  task_guard_section();
+  TASK_GUARD();
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].signal, signalno);
-  task_unguard_section();
+  TASK_UNGUARD();
   return 0;
 }
 

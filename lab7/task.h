@@ -19,6 +19,15 @@
 
 #define TASK_ID_TO_IDX(x) ((x - 1))
 
+#define TASK_GUARD(x) int __hier_guard = task_guard_section()
+#define TASK_UNGUARD(x)         \
+  ({                           \
+     if(__hier_guard)          \
+     {                         \
+       task_unguard_section(); \
+     }                         \
+  })
+
 struct cpu_context_struct
 {
   /* callee-saved registers */
@@ -68,8 +77,8 @@ void task_do_exec(uint64_t * start, uint64_t size);
 uint64_t task_get_current_task_signal(void);
 void task_start_waiting(void);
 void task_end_waiting(void);
-void task_guard_section(void);
-void task_unguard_section(void);
+int task_guard_section(void);
+int task_unguard_section(void);
 int task_is_guarded(void);
 int task_set_fd(struct vfs_file_struct * file);
 struct vfs_file_struct * task_get_vfs_file(int fd);

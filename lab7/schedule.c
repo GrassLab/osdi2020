@@ -11,7 +11,13 @@
 
 static uint64_t_pqueue * schedule_run_queue;
 static uint64_t_queue * schedule_wait_queue;
+static int scheduler_init_complete = 0;
 int schedule_zombie_count = 0;
+
+int scheduler_is_init(void)
+{
+  return scheduler_init_complete;
+}
 
 void scheduler_init(void)
 {
@@ -21,12 +27,12 @@ void scheduler_init(void)
 
   pqueue_uint64_t_init(schedule_run_queue);
   QUEUE_INIT(*schedule_wait_queue);
-  uart_puts("Schedule init complete\n");
 
   task_init();
 
   asm volatile("mov x0, xzr\n"
                "msr tpidr_el1, x0\n");
+
   task_privilege_task_create(schedule_idle, TASK_PRIORITY_LOW);
   task_privilege_task_create(schedule_zombie_reaper, TASK_PRIORITY_HIGH);
   task_privilege_task_create(task_test, TASK_PRIORITY_HIGH);
@@ -58,11 +64,15 @@ void scheduler(void)
     /* Call schedule_idle_task */
     asm volatile("mov x0, %0\n"
                  "msr tpidr_el1, x0\n" : : "I"(1));
+
+    scheduler_init_complete = 1;
+    uart_puts("Schedule init complete\n");
+
     schedule_idle();
   }
   else
   {
-    task_guard_section();
+    TASK_GUARD();
 
     /* start from high priority */
     unsigned priority = QUEUE_TOTAL_PRIORITIES - 1;
@@ -88,7 +98,7 @@ void scheduler(void)
     }
     pqueue_uint64_t_push(schedule_run_queue, priority, next_id);
     schedule_context_switch(current_privilege_task_id, next_id);
-    task_unguard_section();
+    TASK_UNGUARD();
   }
 
   return;
@@ -99,10 +109,10 @@ void schedule_update_quantum_count(void)
   uint64_t current_task_id = task_get_current_task_id();
   uint64_t current_task_idx = TASK_ID_TO_IDX(current_task_id);
 
-  task_guard_section();
+  TASK_GUARD();
   if(CHECK_BIT(kernel_task_pool[current_task_idx].flag, TASK_STATE_RESCHEDULE))
   {
-    task_unguard_section();
+    TASK_UNGUARD();
     return;
   }
 
@@ -116,7 +126,7 @@ void schedule_update_quantum_count(void)
   {
     ++kernel_task_pool[current_task_idx].quantum_count;
   }
-  task_unguard_section();
+  TASK_UNGUARD();
 }
 
 int schedule_check_self_reschedule(void)
@@ -127,13 +137,17 @@ int schedule_check_self_reschedule(void)
 
 void schedule_enqueue(uint64_t id, unsigned priority)
 {
+  TASK_GUARD();
   pqueue_uint64_t_push(schedule_run_queue, priority, id);
+  TASK_UNGUARD();
   return;
 }
 
 void schedule_enqueue_wait(uint64_t id)
 {
+  TASK_GUARD();
   QUEUE_PUSH(*schedule_wait_queue, id);
+  TASK_UNGUARD();
 }
 
 uint64_t schedule_dequeue_wait(void)
@@ -142,7 +156,9 @@ uint64_t schedule_dequeue_wait(void)
   {
     return 0;
   }
+  TASK_GUARD();
   uint64_t id = QUEUE_POP(*schedule_wait_queue);
+  TASK_UNGUARD();
   return id;
 }
 
@@ -154,10 +170,10 @@ int schedule_check_queue_empty(unsigned priority)
 void schedule_yield(void)
 {
   uint64_t current_task_id = task_get_current_task_id();
-  task_guard_section();
+  TASK_GUARD();
   kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].quantum_count = 0;
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_RESCHEDULE);
-  task_unguard_section();
+  TASK_UNGUARD();
   scheduler();
   return;
 }
@@ -182,7 +198,7 @@ void schedule_zombie_reaper(void)
       schedule_yield();
       continue;
     }
-    task_guard_section();
+    TASK_GUARD();
     for(unsigned task_idx = 0; task_idx < TASK_POOL_SIZE - 1; ++task_idx)
     {
       if(schedule_zombie_count == 0)
@@ -233,7 +249,7 @@ void schedule_zombie_reaper(void)
         --schedule_zombie_count;
       }
     }
-    task_unguard_section();
+    TASK_UNGUARD();
     schedule_yield();
   }
 }

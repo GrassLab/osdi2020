@@ -17,6 +17,10 @@ void task_init()
 {
   uart_puts("Task init started\n");
   kernel_task_pool = (struct task_struct *)slab_malloc(sizeof(struct task_struct) * TASK_POOL_SIZE);
+  for(unsigned idx = 0; idx < TASK_POOL_SIZE; ++idx)
+  {
+    kernel_task_pool[idx].id = 0;
+  }
   task_kernel_stack_pool = (uint16_t *)slab_malloc(sizeof(uint16_t) * TASK_POOL_SIZE * TASK_KERNEL_STACK_SIZE);
   uart_puts("Task init complete\n");
   return;
@@ -24,7 +28,7 @@ void task_init()
 
 uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
 {
-  task_guard_section();
+  TASK_GUARD();
   unsigned new_id = 0;
 
   /* find usable position in task_pool */
@@ -78,7 +82,7 @@ uint64_t task_privilege_task_create(void(*start_func)(), unsigned priority)
 
   /* push into queue */
   schedule_enqueue(new_id, (unsigned)priority);
-  task_guard_section();
+  TASK_UNGUARD();
   return new_id;
 }
 
@@ -160,11 +164,11 @@ void task_start_waiting(void)
 {
   uint64_t current_task_id = task_get_current_task_id();
 
-  task_guard_section();
+  TASK_GUARD();
 
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, 2);
   schedule_enqueue_wait(current_task_id);
-  task_unguard_section();
+  TASK_UNGUARD();
 
   schedule_yield();
   return;
@@ -172,6 +176,7 @@ void task_start_waiting(void)
 
 void task_end_waiting(void)
 {
+  TASK_GUARD();
   /* put the first task in the wait queue back to running queue */
   uint64_t task_id = schedule_dequeue_wait();
   if(task_id == 0)
@@ -187,22 +192,42 @@ void task_end_waiting(void)
 
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(task_id)].flag, 2);
   schedule_enqueue(task_id, (unsigned)kernel_task_pool[TASK_ID_TO_IDX(task_id)].priority);
-  task_unguard_section();
+  TASK_UNGUARD();
   return;
 }
 
-void task_guard_section(void)
+int task_guard_section(void)
 {
+  if(!scheduler_is_init())
+  {
+    /* make sure task_pool is set */
+    return 0;
+  }
+  /* return 1 if already guard, return 0 if not guarded yet and guarded */
   uint64_t current_task_id = task_get_current_task_id();
+  if(CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_GUARD))
+  {
+    return 1;
+  }
   SET_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_GUARD);
-  return;
+  return 0;
 }
 
-void task_unguard_section(void)
+int task_unguard_section(void)
 {
+  if(!scheduler_is_init())
+  {
+    /* make sure task_pool is set */
+    return 0;
+  }
+  /* return 1 if already unguard, return 0 if guarded and unguard */
   uint64_t current_task_id = task_get_current_task_id();
+  if(CHECK_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_GUARD) == 0)
+  {
+    return 1;
+  }
   CLEAR_BIT(kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].flag, TASK_STATE_GUARD);
-  return;
+  return 0;
 }
 
 int task_is_guarded(void)

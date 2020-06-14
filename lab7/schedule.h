@@ -10,6 +10,7 @@
 extern struct task_struct * kernel_task_pool;
 extern uint16_t * task_kernel_stack_pool;
 
+int scheduler_is_init(void);
 void scheduler_init(void);
 void schedule_context_switch(uint64_t current_id, uint64_t next_id);
 void scheduler(void);

@@ -47,6 +47,7 @@ uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa)
   struct buddy_page_node_struct * ret_node;
   uint64_t * ret_ptr;
 
+  TASK_GUARD();
   /* Check if list contains availible block */
   if(buddy_table_list[block_size] == 0)
   {
@@ -85,11 +86,13 @@ uint64_t * buddy_allocate(unsigned block_size, int zero, int to_pa)
   {
     ret_ptr = MMU_VA_TO_PA(ret_ptr);
   }
+  TASK_UNGUARD();
   return ret_ptr;
 }
 
 void buddy_free(uint64_t * va)
 {
+  TASK_GUARD();
   struct buddy_page_node_struct * node_to_free;
 
   /* traverse buddy_used_table_list to find the node */
@@ -130,6 +133,7 @@ void buddy_free(uint64_t * va)
 
     /* Perform merge */
     buddy_merge(block_size_idx);
+    TASK_UNGUARD();
     return;
   }
 
