@@ -43,10 +43,6 @@ struct cpu_context {
 
 struct mm_struct {
     uint64_t pgd;
-    uint64_t user_pages_count;
-    uint64_t user_pages[MAX_USER_PAGES];
-    uint64_t kernel_pages_count;
-    uint64_t kernel_pages[MAX_KERNEL_PAGES];
 };
 
 #define current_task        get_current_task()
@@ -69,7 +65,7 @@ struct task_t {
 };
 
 /* Variables init in schedule.c */
-extern struct task_t task_pool[TASK_POOL_SIZE];
+extern struct task_t *task_pool;
 extern char kstack_pool[TASK_POOL_SIZE][KSTACK_SIZE];
 
 /* Function in schedule.S */
