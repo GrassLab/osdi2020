@@ -16,6 +16,7 @@ int vfs_regist_fs(struct vfs_filesystem_struct * fs)
     if(fs_list[idx] == 0)
     {
       fs_list[idx] = fs;
+      break;
     }
   }
 
