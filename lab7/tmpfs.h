@@ -8,10 +8,17 @@
 #define TMPFS_MAX_NAME 0x20
 #define TMPFS_MAX_FILE_SIZE 0x100
 
+union tmpfs_dir_node_or_vnode
+{
+  struct tmpfs_dir_node * tmpfs_node;
+  struct vfs_vnode_struct * vnode;
+};
+
 struct tmpfs_dir_node
 {
   char name[TMPFS_MAX_NAME];
-  struct tmpfs_dir_node * parent_node; /* TODO: parent_node may not be in the same fs, should use another field */
+  int parent_vnode_or_tmpfs_dir_node; /* 0 if tmpfs_node, 1 if vnode */
+  union tmpfs_dir_node_or_vnode parent;
   struct tmpfs_dir_node * subdir_node[TMPFS_MAX_SUB_DIR];
   struct vfs_mount_struct * mountpoints[TMPFS_MAX_SUB_DIR];
   struct tmpfs_file_node * files[TMPFS_MAX_FILE_IN_DIR];
@@ -35,6 +42,7 @@ int tmpfs_write(struct vfs_file_struct * file, const void * buf, size_t len);
 int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len);
 int tmpfs_list(struct vfs_vnode_struct * dir_node);
 int tmpfs_mkdir(struct vfs_vnode_struct * dir_node, const char * new_dir_name);
+int tmpfs_post_mount(struct vfs_vnode_struct * mountpoint_parent, struct vfs_mount_struct * mount);
 
 struct tmpfs_dir_node * tmpfs_create_dir_node(const char * dir_name);
 struct vfs_vnode_struct * tmpfs_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir);

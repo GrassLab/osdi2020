@@ -55,6 +55,7 @@ struct vfs_vnode_operations_struct
   int (*mkdir)(struct vfs_vnode_struct * dir_node, const char * new_dir_name);
   int (*mount)(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_struct * mount);
   int (*umount)(struct vfs_vnode_struct * mountpoint_parent, const char * mountpoint_token);
+  int (*post_mount)(struct vfs_vnode_struct * mountpoint_parent, struct vfs_mount_struct * mount);
 };
 
 

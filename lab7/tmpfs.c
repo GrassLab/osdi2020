@@ -24,6 +24,8 @@ struct vfs_filesystem_struct * tmpfs_init(void)
   tmpfs_vnode_ops -> mkdir = tmpfs_mkdir;
   tmpfs_vnode_ops -> mount = tmpfs_mount;
   tmpfs_vnode_ops -> umount = tmpfs_umount;
+  tmpfs_vnode_ops -> post_mount = tmpfs_post_mount;
+
   tmpfs_file_ops -> write = tmpfs_write;
   tmpfs_file_ops -> read = tmpfs_read;
 
@@ -39,7 +41,8 @@ int tmpfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct
   /* create root directory */
   struct vfs_vnode_struct * root_dir_vnode = tmpfs_create_vnode(mount, (void *)tmpfs_create_dir_node("/"), 1);
 
-  ((struct tmpfs_dir_node *)(root_dir_vnode -> internal)) -> parent_node = (struct tmpfs_dir_node *)(root_dir_vnode -> internal);
+  ((struct tmpfs_dir_node *)(root_dir_vnode -> internal)) -> parent_vnode_or_tmpfs_dir_node = 0;
+  ((struct tmpfs_dir_node *)(root_dir_vnode -> internal)) -> parent.tmpfs_node = (struct tmpfs_dir_node *)(root_dir_vnode -> internal);
 
   mount -> root = root_dir_vnode;
 
@@ -51,7 +54,7 @@ int tmpfs_mount(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_str
   struct tmpfs_dir_node * dir_node = (struct tmpfs_dir_node *)(mountpoint_vnode -> internal);
 
   /* setup mountoint in parent's list */
-  struct tmpfs_dir_node * parent_dir_node = dir_node -> parent_node;
+  struct tmpfs_dir_node * parent_dir_node = dir_node -> parent.tmpfs_node;
 
   for(int i = 0; i < TMPFS_MAX_SUB_DIR; ++i)
   {
@@ -66,7 +69,8 @@ int tmpfs_mount(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_str
     }
   }
 
-  ((struct tmpfs_dir_node *)(mount -> root -> internal)) -> parent_node = parent_dir_node;
+  /* inform the fs to be mount the vnode of its parent */
+  (mount -> root -> v_ops -> post_mount)(tmpfs_create_vnode(mountpoint_vnode -> mount, (void *)parent_dir_node, 1), mount);
   return 0;
 }
 
@@ -96,7 +100,14 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
   }
   if(string_length(component_name) == 2 && component_name[0] == '.' && component_name[1] == '.')
   {
-    *target = tmpfs_create_vnode(dir_node -> mount, internal_dir_node -> parent_node, 1);
+    if(internal_dir_node -> parent_vnode_or_tmpfs_dir_node)
+    {
+      *target = internal_dir_node -> parent.vnode;
+    }
+    else
+    {
+      *target = tmpfs_create_vnode(dir_node -> mount, internal_dir_node -> parent.tmpfs_node, 1);
+    }
     return 0;
   }
 
@@ -231,7 +242,8 @@ int tmpfs_mkdir(struct vfs_vnode_struct * dir_node, const char * new_dir_name)
   struct tmpfs_dir_node * current_dir_node = (struct tmpfs_dir_node *)(dir_node -> internal);
   struct tmpfs_dir_node * new_dir_node = tmpfs_create_dir_node(new_dir_name);
 
-  new_dir_node -> parent_node = current_dir_node;
+  new_dir_node -> parent_vnode_or_tmpfs_dir_node = 0;
+  new_dir_node -> parent.tmpfs_node = current_dir_node;
 
   for(int i = 0; i < TMPFS_MAX_SUB_DIR; ++i)
   {
@@ -241,6 +253,14 @@ int tmpfs_mkdir(struct vfs_vnode_struct * dir_node, const char * new_dir_name)
       break;
     }
   }
+  return 0;
+}
+
+int tmpfs_post_mount(struct vfs_vnode_struct * mountpoint_parent, struct vfs_mount_struct * mount)
+{
+  struct tmpfs_dir_node * mountpoint_parent_dir_node = ((struct tmpfs_dir_node *)(mount -> root -> internal));
+  mountpoint_parent_dir_node -> parent_vnode_or_tmpfs_dir_node = 1;
+  mountpoint_parent_dir_node -> parent.vnode = mountpoint_parent;
   return 0;
 }
 
