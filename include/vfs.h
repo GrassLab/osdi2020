@@ -22,7 +22,6 @@ typedef struct vnode
     struct mount * mount;
     struct vnode_operations * v_ops;
     struct file_operations * f_ops;
-    void * internal;
 
 } vnode_t;
 
@@ -43,6 +42,8 @@ typedef struct dentry
     int child_amount;
     struct dentry * parent_dentry;
     struct dentry * child_dentry[MAX_CHILD_DIR];
+
+    void * internal;
 
 } dentry_t;
 

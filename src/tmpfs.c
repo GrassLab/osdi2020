@@ -98,6 +98,7 @@ int tmpfs_create ( dentry_t * dir_node, dentry_t ** target, const char * compone
     tmpfs_setup_vnode ( new_d->vnode, NULL );
 
     new_d->parent_dentry = dir_node;
+    new_d->internal      = (void *) kmalloc ( sizeof ( tmpfs_node_t ) );
 
     dir_node->child_dentry[dir_node->child_amount] = new_d;
     ( dir_node->child_amount )++;

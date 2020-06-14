@@ -63,10 +63,12 @@ file_t * vfs_open ( const char * pathname, file_op_flag_t flags )
 
     return file;
 }
-// int vfs_close ( struct file * file )
-// {
-//     // 1. release the file descriptor
-// }
+int vfs_close ( struct file * file )
+{
+    kfree ( file );
+    return 0;
+}
+
 // int vfs_write ( struct file * file, const void * buf, size_t len )
 // {
 //     // 1. write len byte from buf to the opened file.
