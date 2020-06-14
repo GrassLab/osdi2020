@@ -36,6 +36,8 @@ int main(void)
   buf[sz] = '\0';
   syscall_uart_puts(buf);
   syscall_uart_puts("\n");
+  syscall_close(a);
+  syscall_close(b);
 
   syscall_mkdir("mnt");
   int fd = syscall_open("/mnt/a.txt", O_CREAT);
@@ -50,7 +52,7 @@ int main(void)
   syscall_chdir("mnt");
   fd = syscall_open("./a.txt", 0);
   syscall_read(fd, buf, 2);
-  buf[3] = '\0';
+  buf[2] = '\0';
   syscall_uart_puts(buf);
   syscall_uart_puts("\n");
   syscall_close(fd);
