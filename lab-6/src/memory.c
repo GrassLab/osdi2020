@@ -4,9 +4,6 @@
 #include "uart.h"
 #define NULL 0
 
-Page pagePool[TOTAL_PAGE_NUMBER];
-List pageBuddy[BUDDY_MAX_ORDER+1];
-
 void page_sys_init() {
 	for(int i = 0; i <= BUDDY_MAX_ORDER; i++) {
 		LIST_INIT(&pageBuddy[i]);
@@ -28,10 +25,10 @@ void print_buddy() {
             List *tmp = pageBuddy[order].next;
             Page *page = list_entry(tmp, Page ,list);
             while(1) {
-                printf("[buddy info] buddy order: %d\n", page->order);
-                printf("[buddy info] buddy used: %d\n", page->used);
-                printf("[buddy info] buddy addr: %x\n", page->physicalAddr);
-                printf("[buddy info] buddy index: %d\n\n", page->index);
+                // printf("[buddy info] buddy order: %d\n", page->order);
+                // printf("[buddy info] buddy used: %d\n", page->used);
+                // printf("[buddy info] buddy addr: %x\n", page->physicalAddr);
+                // printf("[buddy info] buddy index: %d\n\n", page->index);
                 Page *page_next = list_entry((&(BUDDY_END(page, order))->list)->next, Page ,list);
 				if((&(BUDDY_END(page, order))->list)->next == (&pageBuddy[order])) {
                     break;
@@ -39,7 +36,7 @@ void print_buddy() {
                 page = page_next;
             }
         } else {
-            printf("[buddy info] order %d list is empty\n", order);
+            // printf("[buddy info] order %d list is empty\n", order);
         }
 	}
 }
@@ -51,19 +48,19 @@ Page* get_page(int order) {
         if (!is_list_empty(&pageBuddy[o])) {
             alloc_page = list_entry(pageBuddy[o].next, Page, list);
             List *next_buddy =  (&(BUDDY_END(alloc_page, o)->list))->next;
-            printf("[request info] request order: %d\n", order);
-            printf("[request info] plan to allocate order: %d\n",alloc_page->order);
-            printf("[request info] plan to allocate used info: %d\n",alloc_page->used);
-            printf("[request info] plan to allocate addr: 0x%x\n",alloc_page->physicalAddr);
-            printf("[request info] plan to allocate index: %d\n",alloc_page->index);
-            printf("[request info] plan to allocate page numbers: %d\n\n",(1 << alloc_page->order));
+            // printf("[request info] request order: %d\n", order);
+            // printf("[request info] plan to allocate order: %d\n",alloc_page->order);
+            // printf("[request info] plan to allocate used info: %d\n",alloc_page->used);
+            // printf("[request info] plan to allocate addr: 0x%x\n",alloc_page->physicalAddr);
+            // printf("[request info] plan to allocate index: %d\n",alloc_page->index);
+            // printf("[request info] plan to allocate page numbers: %d\n\n",(1 << alloc_page->order));
             next_buddy->prev = &pageBuddy[o];
             pageBuddy[o].next = next_buddy;
             break;
         }
     }
 	if (o == BUDDY_MAX_ORDER + 1) {
-        printf("[buddy error] do not enough memory to allocate!\n");
+        // printf("[buddy error] do not enough memory to allocate!\n");
         return NULL;
     }
 
@@ -72,9 +69,9 @@ Page* get_page(int order) {
         alloc_page = release_redundant_memory(alloc_page, o, order);
     }
     alloc_page->used = PAGE_USED;
-    printf("[allocate] index: %d - %d\n", alloc_page->index, alloc_page->index + (1 << order) - 1);
-    printf("[allocate] used: %d \n", alloc_page->used);
-    printf("[allocate] order: %d \n", alloc_page->order);
+    // printf("[allocate] index: %d - %d\n", alloc_page->index, alloc_page->index + (1 << order) - 1);
+    // printf("[allocate] used: %d \n", alloc_page->used);
+    // printf("[allocate] order: %d \n", alloc_page->order);
     return alloc_page;
 }
 
@@ -87,9 +84,9 @@ Page* release_redundant_memory(Page *alloc_page, int get_page_order, int req_pag
         List* next_buddy_start =  &(next_buddy_start_page->list);    
 		List* next_buddy_end = &(next_buddy_end_page->list);
 
-        printf("[release redundant] from index %d to %d (totally %d page) in order %d list\r\n",\
-				next_buddy_start_page->index, next_buddy_end_page->index, \
-				next_buddy_end_page->index - next_buddy_start_page->index+1, r);
+        // printf("[release redundant] from index %d to %d (totally %d page) in order %d list\r\n",\
+		// 		next_buddy_start_page->index, next_buddy_end_page->index, \
+		// 		next_buddy_end_page->index - next_buddy_start_page->index+1, r);
 
         list_add_chain_tail(next_buddy_start, next_buddy_end, &pageBuddy[r]);
     }
@@ -112,10 +109,10 @@ void free_page(Page *page) {
     for (;order < BUDDY_MAX_ORDER; order++) {
         buddy_page_index = page->index ^ (1 << order);
         buddy_page = &pagePool[buddy_page_index];
-        printf("[merge buddy] check page order: %d\n", page->order);
-        printf("[merge buddy] check page index: %d - %d\n", page->index, page->index + (1<< order) - 1);
-        printf("[merge buddy] check buddy index: %d - %d\n", buddy_page_index, buddy_page_index+ (1<< order) - 1);
-        printf("[merge buddy] check buddy used: %d\n", pagePool[buddy_page_index].used);
+        // printf("[merge buddy] check page order: %d\n", page->order);
+        // printf("[merge buddy] check page index: %d - %d\n", page->index, page->index + (1<< order) - 1);
+        // printf("[merge buddy] check buddy index: %d - %d\n", buddy_page_index, buddy_page_index+ (1<< order) - 1);
+        // printf("[merge buddy] check buddy used: %d\n", pagePool[buddy_page_index].used);
         if (buddy_page->used == PAGE_NOT_USED && buddy_page->order == page->order) {
             list_remove_chain(&(buddy_page->list), &(BUDDY_END(buddy_page, order)->list));
             
@@ -125,8 +122,8 @@ void free_page(Page *page) {
             buddy_page->order = -1;
             head_page->order = order + 1;
 
-            printf("[merge buddy] %d to %d\r\n", head_page->index, BUDDY_END(end_page, order)->index);
-            printf("[merge buddy] merged page order is %d \r\n", head_page->order);
+            // printf("[merge buddy] %d to %d\r\n", head_page->index, BUDDY_END(end_page, order)->index);
+            // printf("[merge buddy] merged page order is %d \r\n", head_page->order);
 
             // link between the same order buddy, tail of ahead page link head of behind page
             BUDDY_END(head_page, order)->list.next = &(end_page->list);
@@ -138,7 +135,7 @@ void free_page(Page *page) {
             break;
         }
     } 
-    printf("[merge buddy] finished merged order %d \n", order);
+    // printf("[merge buddy] finished merged order %d \n", order);
     // merge into buddy list
     list_add_chain(&(page->list), &(BUDDY_END(page, order)->list), &pageBuddy[order]);
 }

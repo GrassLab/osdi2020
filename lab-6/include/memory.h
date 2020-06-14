@@ -51,6 +51,9 @@ typedef struct page {
     List list;
 } Page;
 
+Page pagePool[TOTAL_PAGE_NUMBER];
+List pageBuddy[BUDDY_MAX_ORDER+1];
+
 void page_sys_init();
 void print_buddy();
 Page* get_page();
