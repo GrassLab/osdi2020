@@ -5,6 +5,7 @@
 
 static struct vfs_vnode_operations_struct * procfs_vnode_ops;
 static struct vfs_file_operations_struct * procfs_file_ops;
+static struct procfs_root_struct procfs_root;
 
 struct vfs_filesystem_struct * procfs_init(void)
 {
@@ -23,6 +24,7 @@ struct vfs_filesystem_struct * procfs_init(void)
   procfs_vnode_ops -> mkdir = procfs_mkdir;
   procfs_vnode_ops -> mount = procfs_mount;
   procfs_vnode_ops -> umount = procfs_umount;
+  procfs_vnode_ops -> post_mount = procfs_post_mount;
   procfs_file_ops -> write = procfs_write;
   procfs_file_ops -> read = procfs_read;
 
@@ -35,12 +37,18 @@ int procfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struc
 {
   UNUSED(fs);
 
-  struct vfs_vnode_struct * root_dir_vnode = 0;
-
+  struct vfs_vnode_struct * root_dir_vnode = procfs_create_vnode(mount, (void *)&procfs_root, 1);
+  procfs_root.switch_ = 0;
   mount -> root = root_dir_vnode;
 
   return 0;
 
+}
+
+int procfs_post_mount(struct vfs_vnode_struct * mountpoint_parent, struct vfs_mount_struct * mount)
+{
+  ((struct procfs_root_struct *)(mount -> root -> internal)) -> parent = mountpoint_parent;
+  return 0;
 }
 
 int procfs_mount(struct vfs_vnode_struct * mountpoint_vnode, struct vfs_mount_struct * mount)
@@ -101,5 +109,16 @@ int procfs_mkdir(struct vfs_vnode_struct * dir_node, const char * new_dir_name)
   uart_puts_blocking("procfs_mkdir not implemented");
   while(1);
   return 0;
+}
+
+struct vfs_vnode_struct * procfs_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir)
+{
+  struct vfs_vnode_struct * target_vnode = (struct vfs_vnode_struct *)slab_malloc(sizeof(struct vfs_vnode_struct));
+  target_vnode -> mount = mount;
+  target_vnode -> v_ops = procfs_vnode_ops;
+  target_vnode -> f_ops = procfs_file_ops;
+  target_vnode -> internal = internal;
+  target_vnode -> is_dir = is_dir;
+  return target_vnode;
 }
 

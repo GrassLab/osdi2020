@@ -78,6 +78,6 @@ int main(void)
 
   /* procfs */
   syscall_mkdir("proc");
-  //syscall_mount("procfs", "proc", "procfs");
+  syscall_mount("procfs", "proc", "procfs");
 }
 
