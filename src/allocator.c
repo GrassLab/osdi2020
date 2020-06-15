@@ -64,7 +64,7 @@ void * fixed_alloc ( fixed_allocator_t * allocator )
 
     index = find_first_0_in_bit ( allocator->allocate_status );
 
-    if ( index == -1 || index * allocator->size >= PAGE_SIZE )
+    if ( index == -1 || index * allocator->size + sizeof ( fixed_allocator_t ) >= PAGE_SIZE )
     {
         if ( allocator->next == NULL )
         {
@@ -162,11 +162,11 @@ void dynamic_free ( dynamic_allocator_t * allocator, void * addr )
 
     if ( check_addr_belong_fixed_allocator ( allocator->byte_16_fixed, addr ) )
     {
-        fixed_free ( allocator->byte_64_fixed, addr );
+        fixed_free ( allocator->byte_16_fixed, addr );
     }
     else if ( check_addr_belong_fixed_allocator ( allocator->byte_32_fixed, addr ) )
     {
-        fixed_free ( allocator->byte_64_fixed, addr );
+        fixed_free ( allocator->byte_32_fixed, addr );
     }
     else if ( check_addr_belong_fixed_allocator ( allocator->byte_64_fixed, addr ) )
     {

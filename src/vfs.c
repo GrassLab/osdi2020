@@ -69,7 +69,7 @@ file_t * vfs_open ( const char * pathname, file_op_flag_t flags )
 
         if ( res == -1 )
         {
-            uart_printf ( "file not found.\n" );
+            uart_printf ( "%s: file not found.\n", pathname );
             return NULL;
         }
 

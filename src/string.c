@@ -37,6 +37,21 @@ int strcmp ( const char * s1, const char * s2 )
     return s1[i] - s2[i];
 }
 
+int strncmp ( const char * s1, const char * s2, size_t n )
+{
+    size_t i;
+
+    for ( i = 0; i < n; i++ )
+    {
+        if ( s1[i] != s2[i] )
+        {
+            return s1[i] - s2[i];
+        }
+    }
+
+    return 0;
+}
+
 int strcasecmp ( const char * s1, const char * s2 )
 {
     int i;

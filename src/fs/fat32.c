@@ -9,12 +9,13 @@
 // global variable used in this file
 fat32_partition_t * sd_root_partition;
 fat32_boot_sector_t * sd_root_bst;
+fat32_node_t * ROOT_DIR_NODE;
 
 // funciton used in this file only.
 int fat32_setup_mount ( file_sys_t * fs, mount_t * mount );
 void fat32_setup_vnode ( vnode_t * vnode, mount_t * mount );
 int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * component_name );
-// int fat32_write ( file_t * file, const void * buf, size_t len );
+int fat32_write ( file_t * file, const void * buf, size_t len );
 int fat32_read ( file_t * file, void * buf, size_t len );
 void fat32_print_info ( );
 
@@ -24,8 +25,6 @@ void fat32_init ( )
 {
     int i;
     uint8_t * sector;
-    // uint16_t tmp_1, tmp_2;
-    // uint32_t tmp_3;
     file_sys_t * fs;
 
     sd_init ( );
@@ -82,13 +81,18 @@ int fat32_setup_mount ( file_sys_t * fs, mount_t * mount )
     node               = (fat32_node_t *) kmalloc ( sizeof ( fat32_node_t ) );
     node->name[0]      = '/';
     node->name[1]      = '\0';
+    node->cluster      = 2;
     root_dir->internal = (void *) node;
+    ROOT_DIR_NODE      = node;
 
     // appned child
     sector = (uint8_t *) kmalloc ( sizeof ( uint8_t ) * 512 );
     dir    = (fat32_dir_t *) sector;
 
     readblock ( sd_root_partition->root_sector_abs + sd_root_partition->starting_sector, sector );
+
+    uart_printf ( "SD Mounted\n" );
+    uart_printf ( "File under root directory.\n" );
 
     for ( i = 0; dir[i].name[0] != '\0'; i++ )
     {
@@ -102,6 +106,7 @@ int fat32_setup_mount ( file_sys_t * fs, mount_t * mount )
         // update child
         child->flag  = dir[i].attr[0] & 16 ? DIRECTORY : FILE;
         child->vnode = (vnode_t *) kmalloc ( sizeof ( vnode_t ) );
+
         fat32_setup_vnode ( child->vnode, NULL );
         child->child_amount  = 0;
         child->parent_dentry = root_dir;
@@ -113,7 +118,11 @@ int fat32_setup_mount ( file_sys_t * fs, mount_t * mount )
         node->name[8] = '\0';
         strncpy ( node->ext, dir[i].ext, 3 );
         node->ext[3] = '\0';
+
+        uart_printf ( "%s %s\n", node->name, node->ext );
     }
+
+    uart_printf ( "============\n" );
 
     kfree ( sector );
 
@@ -128,7 +137,7 @@ void fat32_setup_vnode ( vnode_t * vnode, mount_t * mount )
 
     vnode->v_ops->lookup = fat32_lookup;
     vnode->v_ops->create = NULL;
-    vnode->f_ops->write  = NULL;
+    vnode->f_ops->write  = fat32_write;
     vnode->f_ops->read   = fat32_read;
 }
 
@@ -177,6 +186,9 @@ int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * compone
             if ( !strcasecmp ( cmp_ext, node->ext ) )
             {
                 *target = dir_node->child_dentry[i];
+
+                uart_printf ( "File founded: %s, size: %d\n", component_name, node->size );
+
                 kfree ( cpy_name );
                 return 1;
             }
@@ -190,9 +202,46 @@ int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * compone
     return -1;
 }
 
-// int fat32_write ( file_t * file, const void * buf, size_t len )
-// {
-// }
+// don't implement clustrer chain
+int fat32_write ( file_t * file, const void * buf, size_t len )
+{
+    fat32_dir_t * parent_dir;
+    fat32_node_t * file_node;
+    fat32_node_t * dir_node;
+    uint8_t dir_entrty[512];
+    char write_sector_buf[512];
+
+    int i;
+
+    file_node = (fat32_node_t *) ( file->dentry->internal );
+
+    strncpy ( write_sector_buf, buf, len );
+
+    // write sector
+    writeblock ( ( file_node->cluster - 2 ) * sd_root_bst->logic_sector_per_cluster + sd_root_partition->starting_sector + sd_root_partition->root_sector_abs, write_sector_buf );
+
+    // udpate size in directory entry
+    dir_node = (fat32_node_t *) ROOT_DIR_NODE;  // file->dentry->parent_dentry->internal;
+
+    readblock ( ( dir_node->cluster - 2 ) * sd_root_bst->logic_sector_per_cluster + sd_root_partition->starting_sector + sd_root_partition->root_sector_abs, dir_entrty );
+
+    parent_dir = (fat32_dir_t *) dir_entrty;
+
+    for ( i = 0; i < file->dentry->parent_dentry->child_amount; i++ )
+    {
+        if ( !strncmp ( parent_dir[i].name, file_node->name, 8 ) && !strncmp ( parent_dir[i].ext, file_node->ext, 3 ) )
+        {
+            parent_dir[i].size = len;
+            break;
+        }
+    }
+
+    writeblock ( ( dir_node->cluster - 2 ) * sd_root_bst->logic_sector_per_cluster + sd_root_partition->starting_sector + sd_root_partition->root_sector_abs, dir_entrty );
+
+    uart_printf ( "Write to file: %s, size: %d\n", file_node->name, len );
+
+    return len;
+}
 
 // don't implement clustrer chain
 int fat32_read ( file_t * file, void * buf, size_t len )
@@ -212,6 +261,8 @@ int fat32_read ( file_t * file, void * buf, size_t len )
     ( (char *) buf )[len] = '\0';
 
     ( file->f_pos ) += len;
+
+    uart_printf ( "Read from file: %s, read_size: %d\n", node->name, len );
 
     return len;
 }

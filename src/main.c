@@ -10,8 +10,7 @@ int main ( )
     // set up serial console
     uart_init ( );
 
-    uart_printf ( "Hello World\n" );
-    uart_printf ( "\n\n\n" );
+    uart_printf ( "\n\n\n===================\n" );
 
     buddy_init ( );
     allocator_init ( );
@@ -19,20 +18,24 @@ int main ( )
     fat32_init ( );
 
     struct file * a = vfs_open ( "hello", 0 );
-    uart_printf ( "%d\n", a );
+    uart_printf ( ">> %d\n", a );
 
     struct file * b = vfs_open ( "test.txt", 0 );
-    uart_printf ( "%d\n", b );
+    uart_printf ( ">> %d\n", b );
 
-    int sz;
     char buf[100];
-    sz = vfs_read ( b, buf, 7 );
-    uart_printf ( "%d\n", sz );
-    uart_printf ( "%s\n", buf );
-    sz = vfs_read ( b, buf, 100 );
-    uart_printf ( "%d\n", sz );
-    uart_printf ( "%s\n", buf );
+    vfs_read ( b, buf, 7 );
+    uart_printf ( ">> %s\n", buf );
+
+    vfs_read ( b, buf, 100 );
+    uart_printf ( ">> %s\n", buf );
+
+    vfs_write ( b, "Hello World\n", 12 );
     vfs_close ( b );
+
+    b = vfs_open ( "test.txt", 0 );
+    vfs_read ( b, buf, 100 );
+    uart_printf ( ">> %s\n", buf );
 
     // start shell
     shell_start ( );
