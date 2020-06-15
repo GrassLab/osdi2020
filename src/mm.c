@@ -216,7 +216,6 @@ void page_reclaim(uint64_t pgd_phy) {
 void* kmalloc(uint64_t size) {
     // size too large
     if (size >= PAGE_SIZE) {
-        uart_printf("kmalloc using buddy\n");
         int order;
         for (int i = 0; i < MAX_BUDDY_ORDER; i++) {
             if (size <= (uint64_t)((1 << i) * PAGE_SIZE)) {
@@ -227,7 +226,6 @@ void* kmalloc(uint64_t size) {
         return buddy_alloc(order);
     }
     else {
-        uart_printf("kmalloc using object allocator\n");
         // check exist object allocator
         for (int i = 0; i < MAX_OBJ_ALLOCTOR_NUM; i++) {
             if ((uint64_t)obj_allocator[i].obj_size == size) {
@@ -247,13 +245,11 @@ void kfree(void* addr) {
             int addr_pfn = phy_to_pfn(virtual_to_physical((uint64_t)addr));
             int page_pfn = phy_to_pfn(virtual_to_physical(pool.page_addr[j]));
             if (addr_pfn == page_pfn) {
-                uart_printf("free using obj allocator\n");
                 obj_free(i, addr);
                 return;
             }
         }
     }
-    uart_printf("free using buddy\n");
     buddy_free(addr);
 }
 
@@ -277,7 +273,7 @@ int obj_alloc_register(uint64_t size) {
     for (int i = 0; i < MAX_OBJ_ALLOCTOR_NUM; i++) {
         if (obj_allocator[i].used == AVAL) {
             obj_allocator[i].used = USED;
-            pool_init(&obj_allocator[i], size);
+            pool_init(&obj_allocator[i], size); // TODO: Normalize size
             return i;
         }
     }
@@ -345,7 +341,6 @@ void buddy_info() {
 }
 
 struct page_t* buddy_release_redundant(struct page_t* p, int target_order) {
-    uart_printf("release order: %d targer: %d\n", p->order, target_order);
     int cur_order = p->order;
     // recursive release if not reach to target_order
     if (cur_order > target_order) {
@@ -374,7 +369,6 @@ struct page_t* buddy_pop(struct buddy_t* bd, int target_order) {
 }
 
 void buddy_merge(struct page_t *bottom, struct page_t *top, int order) {
-    uart_printf("merge buddy from order %d to %d (%d %d)\n", order, order+1, bottom->idx, top->idx);
     int new_order = order + 1;
     struct page_t *buddy = find_buddy(bottom->idx, new_order);
     // check buddy exist in new order, if exist => recursively merge
@@ -412,7 +406,6 @@ void buddy_free(void* virt_addr) {
     struct page_t *buddy = find_buddy(pfn, order);
     // can not merge, just free current order's pages
     if (buddy->used == USED || buddy->order != order) {
-        uart_printf("free but no merge\n");
         p->used = AVAL;
         buddy_push(&(free_area[order]), &(p->list));
     }

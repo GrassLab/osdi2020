@@ -133,3 +133,9 @@ void demo_lab6() {
     buddy_info();
     while(1);
 }
+
+// Lab7
+
+void demo_lab7() {
+
+}

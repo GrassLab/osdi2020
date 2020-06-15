@@ -149,7 +149,7 @@ void schedule_init() {
     runqueue_init();
     privilege_task_create(zombie_reaper, 10);
     // privilege_task_create(user_program, 10);
-    privilege_task_create(demo_lab6, 10);
+    privilege_task_create(demo_lab7, 10);
     arm_core_timer_enable();
     schedule();
 }
