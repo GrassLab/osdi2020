@@ -5,4 +5,6 @@
 *.out
 *.bin
 *.rd
+*.cpio
+*.cpio_bin
 
