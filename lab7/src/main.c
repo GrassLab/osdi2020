@@ -141,20 +141,39 @@ void main(){
     //uart_puts("# ");
     //shell();
 
-    uart_puts("LOW_MEMORY: ");
-    uart_hex(LOW_MEMORY);
-    uart_puts("\n");
-    uart_puts("HIGH_MEMORY: ");
-    uart_hex(HIGH_MEMORY);
-    uart_puts("\n");
-    uart_puts("PAGING_MEMORY: ");
-    uart_send_int(PAGING_MEMORY);
-    uart_puts("\n");
-    uart_puts("PAGING_PAGES: ");
-    uart_send_int(PAGING_PAGES);
-    uart_puts("\n");
+    // uart_puts("LOW_MEMORY: ");
+    // uart_hex(LOW_MEMORY);
+    // uart_puts("\n");
+    // uart_puts("HIGH_MEMORY: ");
+    // uart_hex(HIGH_MEMORY);
+    // uart_puts("\n");
+    // uart_puts("PAGING_MEMORY: ");
+    // uart_send_int(PAGING_MEMORY);
+    // uart_puts("\n");
+    // uart_puts("PAGING_PAGES: ");
+    // uart_send_int(PAGING_PAGES);
+    // uart_puts("\n");
 
-    test_buddy();
+
+    // buddy_init(PAGING_PAGES);
+
+    uart_puts("R1 R2 test\n\n");
+
+    filesystem fs = tmpfs_filesystem();
+    register_filesystem(&fs);
+
+    file* a = vfs_open("hello", 0);
+    // assert(a == NULL);
+    // a = vfs_open("hello", O_CREAT);
+    // assert(a != NULL);
+    // vfs_close(a);
+    // file* b = vfs_open("hello", 0);
+    // assert(b != NULL);
+    // vfs_close(b);
+
+    uart_puts("=======================\n");
+
+    // test_buddy();
     // test_slab();
     shell();
 }	

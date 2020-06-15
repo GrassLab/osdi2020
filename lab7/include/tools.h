@@ -6,9 +6,17 @@
 #include "mmu.h"
 #include "buddy.h"
 #include "slab.h"
+#include "tmpfs.h"
+#include "vfs.h"
 
 #define size_t unsigned int
+#define NULL ((void *)0)
 
+#define assert(expr) \
+    if (!(expr))     \
+    a_failed(__FILE__, __LINE__)
+
+void a_failed(char *file, int line);
 
 int my_strcmp(char * str1, char * str2);
 char *itoa(int num, char *str, int base);

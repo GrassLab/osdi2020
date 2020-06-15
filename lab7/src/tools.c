@@ -2,6 +2,18 @@
 #include "sys.h"
 #include "shed.h"
 
+void a_failed(char *file, int line)
+{
+    uart_puts("Error in ");
+    uart_puts(file);
+    uart_puts(" ");
+    uart_send_int(line);
+    uart_puts("\n");
+    while (1)
+    {
+    }
+} 
+
 int my_strcmp(char * str1, char * str2){
     int i=0;    
     while(str1[i]!='\0'){        

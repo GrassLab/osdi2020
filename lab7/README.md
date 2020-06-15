@@ -1,28 +1,33 @@
-# Lab 6 : Allocator
+# Lab 7 : Virtual File System
 
-## Buddy System
+## Requirement 1
 
-- [x] `required 1` Implement the buddy system for contiguous pages allocation.
-- [x] `question 1` Is buddy allocator perfectly eliminate external fragmentation? If yes, prove it? If no, give an external fragmentation example.
-如果很多小物件宣告、但是都沒有連續歸還，會讓上面的一直找不到buddy，還是會有exteral
-50%
+### File system registration
+### Create a root file system
+- [ ] `required 1` Set up tmpfs as the root file system.
 
-## Object Allocator
+## Requirement 2
 
-- [x] `required 2-1` Implement the API for register a fixed-size allocator.
-- [x] `required 2-2` Implement the API for allocate and free for fixed-size object.
+### vfs_open
+### Component name lookup
+- [ ] `question 1` Is it possible that a file exists in a file system, but there is no vnode object of it?
 
-- [x] `question 2` If the registered object size is 2049 byte, one page frame can only fit in one object. Hence the internal fragmentation is around 50%. How to decrease the percentage of the internal fragmentation in this case?
+### Create a file
+### Open a file
+- [ ] `required 2-1` implement `struct file* vfs_open(const char *pathname, int flags)`
+- [ ] `required 2-2` implement `int vfs_close(struct file* file)`
 
-1.可以有機制去搜尋內部有多少是不會用到的 可以拿去分配
-2.不要用page_frame限定一個object 而是用allocator
+## Requirement 3
 
-a: 多要幾塊連續的page 一多要幾塊
+### vfs_write
+- [ ] `required 3-1` Implement `int vfs_write(struct file* file, const void* buf, size_t len)`
+### vfs_read
+- [ ] `required 3-2` Implement `int vfs_read(struct file* file, void* buf, size_t len)`
 
-## Varied-sized allocator
+- [ ] `question 2` Is EOF pass to the reader by a special character in the reader’s buffer?
 
-- [x] `required 3` Implement a varied-sized allocator.
+### Task’s VFS information
 
-- [x] `question 3` What’s the benefit to prevent static allocation?
-如果很少使用的一個固定size 跟page_allocator拿了一些page，可能會很少用到而閒置。
-a:卡在bss 所以能掌握的就是固定的 無法讓別人使用
+- [ ] `question 3` Should each task owns its current working directory and the root directory?
+
+
