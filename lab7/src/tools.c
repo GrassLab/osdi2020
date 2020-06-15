@@ -13,7 +13,6 @@ void a_failed(char *file, int line)
     {
     }
 } 
-
 int my_strcmp(char * str1, char * str2){
     int i=0;    
     while(str1[i]!='\0'){        

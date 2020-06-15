@@ -4,13 +4,14 @@
 
 ### File system registration
 ### Create a root file system
-- [ ] `required 1` Set up tmpfs as the root file system.
+- [x] `required 1` Set up tmpfs as the root file system.
 
 ## Requirement 2
 
 ### vfs_open
 ### Component name lookup
 - [ ] `question 1` Is it possible that a file exists in a file system, but there is no vnode object of it?
+in my case no, my vnode is bind by component and file
 
 ### Create a file
 ### Open a file

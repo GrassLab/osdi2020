@@ -14,7 +14,7 @@
 
 #define assert(expr) \
     if (!(expr))     \
-    a_failed(__FILE__, __LINE__)
+    a_failed(__FILE__, __LINE__)    \
 
 void a_failed(char *file, int line);
 
