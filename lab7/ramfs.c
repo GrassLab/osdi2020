@@ -2,6 +2,8 @@
 #include "ramfs.h"
 #include "cpio.h"
 #include "uart.h"
+#include "sys.h"
+#include "vfs.h"
 #include "string_util.h"
 
 void ramfs_init(void)
@@ -20,24 +22,23 @@ void ramfs_init(void)
   while(1)
   {
     cpio_get_header(header_base, &header);
-    uint64_t file_content_start = cpio_get_name_without_root(string_buffer, &header, header_base, RAMFS_INITRAMFS_SLASH_LENGTH);
+    uint64_t file_content_start = cpio_get_name_without_root(string_buffer, &header, header_base, RAMFS_INITRAMFS_LENGTH);
     if(file_content_start == 0)
     {
       /* get TRAILER!!! */
       break;
     }
 
-    uart_puts(string_buffer);
-
-    uart_puts(": ");
-
-    if(!cpio_is_dir(header.c_mode))
+    /* pre scheduling/there is no relative directory */
+    if(cpio_is_dir(header.c_mode))
     {
-      memcopy((char *)file_content_start, string_buffer, (unsigned)header.c_filesize);
-      string_buffer[(unsigned)header.c_filesize] = '\0';
-      uart_puts(string_buffer);
+      sys_mkdir(string_buffer);
     }
-    uart_putc('\n');
+    else
+    {
+      vfs_write(vfs_open(string_buffer, O_CREAT), (char *)file_content_start, header.c_filesize);
+      //memcopy((char *)file_content_start, string_buffer, (unsigned)header.c_filesize);
+    }
 
     /* calculate offset of next header */
     header_base += cpio_round_to_4x(CPIO_HEADER_SIZE + header.c_namesize);
