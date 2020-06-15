@@ -23,6 +23,15 @@ int main ( )
 
     struct file * b = vfs_open ( "test.txt", 0 );
     uart_printf ( "%d\n", b );
+
+    int sz;
+    char buf[100];
+    sz = vfs_read ( b, buf, 7 );
+    uart_printf ( "%d\n", sz );
+    uart_printf ( "%s\n", buf );
+    sz = vfs_read ( b, buf, 100 );
+    uart_printf ( "%d\n", sz );
+    uart_printf ( "%s\n", buf );
     vfs_close ( b );
 
     // start shell

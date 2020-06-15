@@ -15,7 +15,7 @@ int fat32_setup_mount ( file_sys_t * fs, mount_t * mount );
 void fat32_setup_vnode ( vnode_t * vnode, mount_t * mount );
 int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * component_name );
 // int fat32_write ( file_t * file, const void * buf, size_t len );
-// int fat32_read ( file_t * file, void * buf, size_t len );
+int fat32_read ( file_t * file, void * buf, size_t len );
 void fat32_print_info ( );
 
 #define CONCATE_8( a, b ) ( ( a ) | ( ( ( uint16_t ) ( b ) ) << 8 ) )
@@ -129,7 +129,7 @@ void fat32_setup_vnode ( vnode_t * vnode, mount_t * mount )
     vnode->v_ops->lookup = fat32_lookup;
     vnode->v_ops->create = NULL;
     vnode->f_ops->write  = NULL;
-    vnode->f_ops->read   = NULL;
+    vnode->f_ops->read   = fat32_read;
 }
 
 int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * component_name )
@@ -194,9 +194,27 @@ int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * compone
 // {
 // }
 
-// int fat32_read ( file_t * file, void * buf, size_t len )
-// {
-// }
+// don't implement clustrer chain
+int fat32_read ( file_t * file, void * buf, size_t len )
+{
+    fat32_node_t * node;
+    char read_sector_buf[512];
+
+    node = (fat32_node_t *) ( file->dentry->internal );
+
+    readblock ( ( node->cluster - 2 ) * sd_root_bst->logic_sector_per_cluster + sd_root_partition->starting_sector + sd_root_partition->root_sector_abs, read_sector_buf );
+
+    if ( len > ( node->size - file->f_pos ) )
+        len = node->size - file->f_pos;
+
+    strncpy ( buf, read_sector_buf + file->f_pos, len );
+
+    ( (char *) buf )[len] = '\0';
+
+    ( file->f_pos ) += len;
+
+    return len;
+}
 
 void fat32_print_info ( )
 {
