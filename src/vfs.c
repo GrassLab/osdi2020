@@ -12,7 +12,7 @@ int parsing_last_component ( dentry_t ** dentry, char ** component_name, const c
 
 int register_filesystem ( file_sys_t * fs )
 {
-    if ( !strcmp ( fs->name, "tmpfs" ) )
+    if ( !strcmp ( fs->name, "fat32" ) )
     {
         rootfs = (mount_t *) kmalloc ( sizeof ( mount_t ) );
 

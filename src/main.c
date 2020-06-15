@@ -10,7 +10,7 @@ int main ( )
     uart_init ( );
 
     uart_printf ( "Hello World\n" );
-    uart_printf ( "\n" );
+    uart_printf ( "\n\n\n" );
 
     buddy_init ( );
     allocator_init ( );
