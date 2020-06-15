@@ -6,7 +6,7 @@ GENERAL_FLAGS =
 C_FLAGS = -Wall -Wextra -Wshadow -Wconversion -nostdlib -nostartfiles -mstrict-align
 ASM_FLAGS =
 
-KERNEL_C_SOURCE_FILES = string_util.c mailbox.c uart.c exc.c irq.c syscall.c timer.c schedule.c task.c sys.c queue.c mmu.c buddy.c slab.c vfs.c tmpfs.c procfs.c ramfs.c
+KERNEL_C_SOURCE_FILES = string_util.c mailbox.c uart.c exc.c irq.c syscall.c timer.c schedule.c task.c sys.c queue.c mmu.c buddy.c slab.c vfs.c tmpfs.c procfs.c ramfs.c cpio.c
 KERNEL_C_OBJECT_FILES = $(KERNEL_C_SOURCE_FILES:.c=.o)
 KERNEL_ASSEMBLY_SOURCE_FILES = start.S exc_vector.S timer.S schedule.S mmu.S
 KERNEL_ASSEMBLY_OBJECT_FILES = $(KERNEL_ASSEMBLY_SOURCE_FILES:.S=.asmo)
@@ -41,7 +41,6 @@ initramfs.cpio_bin: initramfs.cpio
 	${LD} -r -b binary $^ -o $@
 
 initramfs.cpio:
-	echo "WARNING: Git does not keep track of empty folder. Make sure the folder exist"
 	mkdir -p initramfs/mnt
 	mkdir -p initramfs/proc
 	find 'initramfs' | cpio -o -H newc > initramfs.cpio
