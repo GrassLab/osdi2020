@@ -39,21 +39,32 @@ struct file *vfsOpen(const char* pathname, int flags)
     // 3. Create a new file if O_CREAT is specified in flags.
 
     struct vnode **target;
-    if (rootfs->root->v_ops->lookup(rootfs->root, target, pathname) == -1)
+    target = (struct vnode **)allocDynamic(sizeof(struct vnode *));
+
+    int32_t err = rootfs->root->v_ops->lookup(rootfs->root, target, pathname);
+    if (err == -2)
+        goto error;
+    else if (err == -1)
     {
         if (flags == O_CREAT)
-            rootfs->root->v_ops->create(*target, target, pathname);
+            if (rootfs->root->v_ops->create(*target, target, pathname) != 0)
+                goto error;
         else
-            return (struct file *)0;
+            goto error;
     }
-        
+
     struct file *f = (struct file *)allocSlot(rootfs->fs->file_token);
     f->flags = flags;
     f->f_pos = 0;
     f->f_ops = rootfs->root->f_ops;
-    f->vnode = target;
+    f->vnode = *target;
 
+    freeDynamic(target);
     return f;
+
+error:
+    freeDynamic(target);
+    return (struct file *)0;
 }
 int32_t vfsClose(struct file *file) {
      // 1. release the file descriptor

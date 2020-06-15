@@ -5,13 +5,19 @@
 
 #define O_CREAT   00000100
 
+typedef enum
+{
+    dir = 0,
+    file = 1
+} vnode_t;
+
 struct vnode 
 {
     char name[256];
     struct mount *mount;
     struct vnodeOperations *v_ops;
     struct fileOperations *f_ops;
-    bool is_dir;
+    vnode_t type;
     void *internal;
 };
 

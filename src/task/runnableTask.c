@@ -173,6 +173,9 @@ void vfsTask()
     char buf[512];
     struct file* a = vfsOpen("hello", O_CREAT);
     struct file* b = vfsOpen("world", O_CREAT);
+    struct file* c = vfsOpen("hello", 0);
+    struct file* d = vfsOpen("test/hello", O_CREAT);
+    struct file* e = vfsOpen("test/hello", 0);
     // vfs_write(a, "Hello ", 6);
     // vfs_write(b, "World!", 6);
     // vfs_close(a);
