@@ -4,8 +4,6 @@
 
 #include "type.h"
 
-extern unsigned char _end;
-
 typedef struct fat32_partition
 {
     uint8_t status_flag;

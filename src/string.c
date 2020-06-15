@@ -5,18 +5,19 @@
 
 char * strcpy ( char * s1, const char * s2 )
 {
-    return strncpy ( s1, s2, strlen ( s2 ) );
+    char * tmp        = strncpy ( s1, s2, strlen ( s2 ) );
+    s1[strlen ( s2 )] = '\0';
+    return tmp;
 }
 
 char * strncpy ( char * s1, const char * s2, size_t n )
 {
     size_t i;
 
-    for ( i = 0; i < n; i++ )
+    for ( i = 0; i < ( n < (size_t) strlen ( s2 ) ? n : (size_t) strlen ( s2 ) ); i++ )
     {
         s1[i] = s2[i];
     }
-    s1[i] = '\0';
 
     return s1;
 }
@@ -34,6 +35,29 @@ int strcmp ( const char * s1, const char * s2 )
     }
 
     return s1[i] - s2[i];
+}
+
+int strcasecmp ( const char * s1, const char * s2 )
+{
+    int i;
+    char a;
+    char b;
+
+    for ( i = 0; i < strlen ( s1 ); i++ )
+    {
+        a = s1[i] >= 'A' && s1[i] <= 'Z' ? s1[i] : s1[i] - 'a' + 'A';
+        b = s2[i] >= 'A' && s2[i] <= 'Z' ? s2[i] : s2[i] - 'a' + 'A';
+
+        if ( a != b )
+        {
+            return a - b;
+        }
+    }
+
+    if ( s1[i] == s2[i] )
+        return 0;
+    else
+        return s1[i] - s2[i];
 }
 
 void strset ( char * s1, int c, int size )
@@ -56,7 +80,21 @@ int strlen ( const char * s )
 
     return i;
 }
-#include "uart.h"
+
+char * strchr ( char * str, int character )
+{
+    int i;
+    for ( i = 0; i < strlen ( str ); i++ )
+    {
+        if ( str[i] == character )
+        {
+            return &str[i];
+        }
+    }
+
+    return NULL;
+}
+
 // https://www.geeksforgeeks.org/convert-floating-point-number-string/
 void itoa ( int x, char str[], int d )
 {

@@ -107,6 +107,7 @@ int parsing_last_component ( dentry_t ** dentry, char ** component_name, const c
     int path_len        = strlen ( pathname );
     int path_name_count = 0;
     int component_name_start_index;
+    int len;
 
     char * temp_component_name;
     int look_up_res;
@@ -123,8 +124,11 @@ int parsing_last_component ( dentry_t ** dentry, char ** component_name, const c
             // this is last component
             if ( path_name_count == path_len - 1 )
             {
-                temp_component_name = (char *) kmalloc ( sizeof ( path_name_count - component_name_start_index + 1 ) );
-                strncpy ( temp_component_name, pathname + component_name_start_index, path_name_count - component_name_start_index );
+                len                 = path_name_count - component_name_start_index + 2;
+                temp_component_name = (char *) kmalloc ( sizeof ( char ) * len );
+                strncpy ( temp_component_name, pathname + component_name_start_index, len - 1 );
+
+                temp_component_name[len - 1] = '\0';
 
                 *component_name = temp_component_name;
                 *dentry         = current_dentry;
@@ -141,8 +145,11 @@ int parsing_last_component ( dentry_t ** dentry, char ** component_name, const c
         // a break point of the path name
         else
         {
-            temp_component_name = (char *) kmalloc ( sizeof ( path_name_count - component_name_start_index ) );
-            strncpy ( temp_component_name, pathname + component_name_start_index, path_name_count - component_name_start_index );
+            len                 = path_name_count - component_name_start_index + 2;
+            temp_component_name = (char *) kmalloc ( sizeof ( char ) * len );
+            strncpy ( temp_component_name, pathname + component_name_start_index, len - 1 );
+
+            temp_component_name[len - 1] = '\0';
 
             look_up_res = current_dentry->vnode->v_ops->lookup ( current_dentry, &temp_dentry, temp_component_name );
 

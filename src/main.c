@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "shell.h"
 #include "uart.h"
+#include "vfs.h"
 
 int main ( )
 {
@@ -16,6 +17,13 @@ int main ( )
     allocator_init ( );
 
     fat32_init ( );
+
+    struct file * a = vfs_open ( "hello", 0 );
+    uart_printf ( "%d\n", a );
+
+    struct file * b = vfs_open ( "test.txt", 0 );
+    uart_printf ( "%d\n", b );
+    vfs_close ( b );
 
     // start shell
     shell_start ( );

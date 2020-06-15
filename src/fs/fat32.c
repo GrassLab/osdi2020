@@ -14,8 +14,8 @@ fat32_boot_sector_t * sd_root_bst;
 int fat32_setup_mount ( file_sys_t * fs, mount_t * mount );
 void fat32_setup_vnode ( vnode_t * vnode, mount_t * mount );
 int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * component_name );
-int fat32_write ( file_t * file, const void * buf, size_t len );
-int fat32_read ( file_t * file, void * buf, size_t len );
+// int fat32_write ( file_t * file, const void * buf, size_t len );
+// int fat32_read ( file_t * file, void * buf, size_t len );
 void fat32_print_info ( );
 
 #define CONCATE_8( a, b ) ( ( a ) | ( ( ( uint16_t ) ( b ) ) << 8 ) )
@@ -110,9 +110,9 @@ int fat32_setup_mount ( file_sys_t * fs, mount_t * mount )
         node->cluster = ( ( ( uint32_t ) ( dir[i].cluster_high ) ) << 16 ) | ( dir[i].cluster_low );
         node->size    = dir[i].size;
         strncpy ( node->name, dir[i].name, 8 );
+        node->name[8] = '\0';
         strncpy ( node->ext, dir[i].ext, 3 );
-
-        uart_printf ( "%s  %s\n", node->name, node->ext );
+        node->ext[3] = '\0';
     }
 
     kfree ( sector );
@@ -126,15 +126,69 @@ void fat32_setup_vnode ( vnode_t * vnode, mount_t * mount )
     vnode->f_ops = (file_op_t *) kmalloc ( sizeof ( file_op_t ) );
     vnode->mount = mount;
 
-    vnode->v_ops->lookup = NULL;
+    vnode->v_ops->lookup = fat32_lookup;
     vnode->v_ops->create = NULL;
     vnode->f_ops->write  = NULL;
     vnode->f_ops->read   = NULL;
 }
 
-// int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * component_name )
-// {
-// }
+int fat32_lookup ( dentry_t * dir_node, dentry_t ** target, const char * component_name )
+{
+    fat32_node_t * node;
+    int i, j;
+    char * dot;
+    char * cpy_name;
+    char cmp_name[9];
+    char cmp_ext[4];
+
+    cpy_name = (char *) kmalloc ( sizeof ( char ) * strlen ( component_name ) );
+    strcpy ( cpy_name, component_name );
+
+    dot = strchr ( cpy_name, '.' );
+
+    if ( dot != NULL )
+        *dot = '\0';
+
+    // pad name with space
+    strcpy ( cmp_name, cpy_name );
+    for ( i = strlen ( cmp_name ); i < 8; i++ )
+        cmp_name[i] = ' ';
+    cmp_name[i] = '\0';
+
+    for ( i = 0; i < dir_node->child_amount; i++ )
+    {
+        node = (fat32_node_t *) ( dir_node->child_dentry[i]->internal );
+
+        // check file name is the same
+        if ( !strcasecmp ( cmp_name, node->name ) )
+        {
+            // check file ext is the same
+            if ( dot != NULL )
+                dot += 1;
+            else
+                dot = cpy_name + strlen ( cpy_name );
+
+            // pad with space
+            strcpy ( cmp_ext, dot );
+            for ( j = strlen ( cmp_ext ); j < 3; j++ )
+                cmp_ext[j] = ' ';
+            cmp_ext[j] = '\0';
+
+            if ( !strcasecmp ( cmp_ext, node->ext ) )
+            {
+                *target = dir_node->child_dentry[i];
+                kfree ( cpy_name );
+                return 1;
+            }
+        }
+    }
+
+    kfree ( cpy_name );
+
+    *target = NULL;
+
+    return -1;
+}
 
 // int fat32_write ( file_t * file, const void * buf, size_t len )
 // {
