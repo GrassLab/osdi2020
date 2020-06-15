@@ -191,12 +191,17 @@ void string_float_to_char(char * string, const float f)
 unsigned long long string_hex_char_to_longlong(char * string)
 {
   unsigned long long value = 0;
+  int string_idx;
   /* string does not have preceeding 0x */
   if(string_cmp(string, "0x", 2) == 0)
   {
-    return (unsigned long long)-1;
+    string_idx = 0;
   }
-  for(int string_idx = 2; string[string_idx] != '\0'; ++string_idx)
+  else
+  {
+    string_idx = 2;
+  }
+  for(; string[string_idx] != '\0'; ++string_idx)
   {
     if(value != 0)
     {
