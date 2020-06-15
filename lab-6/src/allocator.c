@@ -163,25 +163,32 @@ unsigned long allocate_memory(int size) {
         if ((size >> i) <= 0) {
             allocateObjectSize = (1 << i);
             Slub *slub = allocate_object(allocateObjectSize);
+            printf("[memory allocator] allocate an object, size: %d\n", allocateObjectSize);
             return slub->address;
         }
     }
 
-    printf("[memory allocator] allocate a page\n");
-    Page *page = get_page(0);
-    return page->physicalAddr;
+    for (int i = 0; i <= 12; i++) {
+        if ((size >> 12 >> i) <= 0) {
+            Page *page = get_page(i);
+            printf("[memory allocator] allocate a page, index: %d, order: %d\n", page->index, i);
+            return page->physicalAddr;
+        }
+    }
 }
 
 void free_memory(unsigned long address) {
     for (int i = 0; i < SLUB_NUMBER_MAX; i++) {
         if (slubs[i].address == address) {
             free_object(&slubs[i]);
+            printf("[memory free] free an object, size: %d\n", slubs[i].objectSize);
         }
     }   
     for (int i = 0; i < ALLOCATOR_NUMBER_MAX; i++) {
         for (int j = 0; j < ALLOCATOR_PAGE_NUMBER_MAX; j++) {
             if (allocators[i].pages[j]->physicalAddr == address) {
                 free_page(allocators[i].pages[j]);
+                printf("[memory free] free an page, index: %d, order: %d\n", (allocators[i].pages[j])->index, (allocators[i].pages[j])->order);
             }
         }
     }

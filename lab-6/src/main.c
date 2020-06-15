@@ -92,14 +92,18 @@ void test_lab6_req3() {
     unsigned long m1 = allocate_memory(1023);
     unsigned long m2 = allocate_memory(1024);
     unsigned long m3 = allocate_memory(1025);
-    unsigned long m4 = allocate_memory(1);
-    unsigned long m5 = allocate_memory(0);
+    unsigned long m4 = allocate_memory(3);
+    unsigned long m5 = allocate_memory(1);
     unsigned long m6 = allocate_memory(9999);
     free_memory(m1);
     free_memory(m2);
     free_memory(m3);
     free_memory(m4);
     free_memory(m5);
+    free_memory(m6);
+
+    unsigned long m7 = allocate_memory(1023);
+    free_memory(m7);
 }
 
 int main()
@@ -107,6 +111,6 @@ int main()
     uart_init();
     init_printf(0, putc);
     // test_lab6_req1();
-    test_lab6_req2();
-    // test_lab6_req3();
+    // test_lab6_req2();
+    test_lab6_req3();
 }
