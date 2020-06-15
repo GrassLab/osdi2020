@@ -19,26 +19,30 @@ volatile unsigned int __attribute__((aligned(16))) mbox[36];
 /**
  * Make a mailbox call. Returns 0 on failure, non-zero on success
  */
-int mbox_call(unsigned char ch) {
-  unsigned int r = (((unsigned int)((unsigned long)&mbox) & ~0xF) | (ch & 0xF));
-  /* wait until we can write to the mailbox */
-  do {
-    asm volatile("nop");
-  } while (*MBOX_STATUS & MBOX_FULL);
-  /* write the address of our message to the mailbox with channel identifier */
-  *MBOX_WRITE = r;
-  /* now wait for the response */
-  while (1) {
-    /* is there a response? */
-    do {
-      asm volatile("nop");
-    } while (*MBOX_STATUS & MBOX_EMPTY);
-    /* is it a response to our message? */
-    if (r == *MBOX_READ)
-      /* is it a valid successful response? */
-      return mbox[1] == MBOX_RESPONSE;
-  }
-  return 0;
+int mbox_call(unsigned char ch)
+{
+	unsigned int r = (((unsigned int)((unsigned long)&mbox) & ~0xF) | (ch & 0xF));
+	/* wait until we can write to the mailbox */
+	do
+	{
+		asm volatile("nop");
+	} while (*MBOX_STATUS & MBOX_FULL);
+	/* write the address of our message to the mailbox with channel identifier */
+	*MBOX_WRITE = r;
+	/* now wait for the response */
+	while (1)
+	{
+		/* is there a response? */
+		do
+		{
+			asm volatile("nop");
+		} while (*MBOX_STATUS & MBOX_EMPTY);
+		/* is it a response to our message? */
+		if (r == *MBOX_READ)
+			/* is it a valid successful response? */
+			return mbox[1] == MBOX_RESPONSE;
+	}
+	return 0;
 }
 
 /*
@@ -51,18 +55,19 @@ Length: 4
 Value:
 u32: board revision
 */
-void board_revision() {
-  mbox[0] = 7 * 4;        // length of the message
-  mbox[1] = MBOX_REQUEST; // this is a request message
+void board_revision()
+{
+	mbox[0] = 7 * 4;		// length of the message
+	mbox[1] = MBOX_REQUEST; // this is a request message
 
-  mbox[2] = MBOX_TAG_BOARD_REVISION;
-  mbox[3] = 4; // maximum of request and response value buffer's length.
-  mbox[4] = MBOX_TAG_REQUEST_CODE;
-  mbox[5] = 0; // value buffer
-  // tags end
-  mbox[6] = MBOX_TAG_LAST;
-  mbox_call(MBOX_CH_PROP);
-  printf("board revision : 0x%8x\n", mbox[5]);
+	mbox[2] = MBOX_TAG_BOARD_REVISION;
+	mbox[3] = 4; // maximum of request and response value buffer's length.
+	mbox[4] = MBOX_TAG_REQUEST_CODE;
+	mbox[5] = 0; // value buffer
+	// tags end
+	mbox[6] = MBOX_TAG_LAST;
+	mbox_call(MBOX_CH_PROP);
+	printf("board revision : 0x%8x\n", mbox[5]);
 }
 /*
 Tag: 0x00010005
@@ -74,18 +79,19 @@ Value:
 u32: base address in bytes
 u32: size in bytes
 */
-void vc_base_address() {
-  mbox[0] = 8 * 4;        // length of the message
-  mbox[1] = MBOX_REQUEST; // this is a request message
+void vc_base_address()
+{
+	mbox[0] = 8 * 4;		// length of the message
+	mbox[1] = MBOX_REQUEST; // this is a request message
 
-  mbox[2] = MBOX_TAG_VC_MEMORY;
-  mbox[3] = 8; // maximum of request and response value buffer's length.
-  mbox[4] = MBOX_TAG_REQUEST_CODE;
-  mbox[5] = 0; // value buffer
-  mbox[6] = 0; // value buffer
-  // tags end
-  mbox[7] = MBOX_TAG_LAST;
-  mbox_call(MBOX_CH_PROP);
-  printf("VC base address : 0x%8x\n", mbox[5]);
-  printf("VC size : 0x%8x\n", mbox[6]);
+	mbox[2] = MBOX_TAG_VC_MEMORY;
+	mbox[3] = 8; // maximum of request and response value buffer's length.
+	mbox[4] = MBOX_TAG_REQUEST_CODE;
+	mbox[5] = 0; // value buffer
+	mbox[6] = 0; // value buffer
+	// tags end
+	mbox[7] = MBOX_TAG_LAST;
+	mbox_call(MBOX_CH_PROP);
+	printf("VC base address : 0x%8x\n", mbox[5]);
+	printf("VC size : 0x%8x\n", mbox[6]);
 }

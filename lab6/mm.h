@@ -7,10 +7,10 @@ int get_free_page(int order);
 void init_buddy();
 struct page_struct
 {
-    int used;
-    int order;
-    struct page_struct *next;
-    char *pad;
+	int used;
+	int order;
+	struct page_struct *next;
+	char *pad;
 };
 
 char page[1024][page_size];

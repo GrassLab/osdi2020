@@ -1,13 +1,13 @@
 struct obj1
 {
-    char a[0x2000];
+	char a[0x2000];
 };
 
 struct fix_object
 {
-    int is_use;
-    int sequence;
-    struct page_struct *obj;
+	int is_use;
+	int sequence;
+	struct page_struct *obj;
 };
 
 int fix_object_count;
