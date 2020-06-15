@@ -14,6 +14,9 @@ struct procfs_root_struct
 #define PROCFS_TYPE_SWITCH 0
 #define PROCFS_TYPE_HELLO -1
 /* the rest are task id */
+/* /proc/1 -> internal == 1 */
+/* /proc/1/status -> internal == 1 & PROCFS_TYPE_TASK_STATUS */
+#define PROCFS_TYPE_TASK_STATUS 0x1000u
 
 struct vfs_filesystem_struct * procfs_init(void);
 int procfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mount);
@@ -28,6 +31,10 @@ int procfs_list(struct vfs_vnode_struct * dir_node);
 int procfs_mkdir(struct vfs_vnode_struct * dir_node, const char * new_dir_name);
 
 struct vfs_vnode_struct * procfs_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir);
+
+int procfs_task_status(char * string, int id);
+
+extern struct task_struct * kernel_task_pool;
 
 #endif
 

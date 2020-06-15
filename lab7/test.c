@@ -4,7 +4,7 @@
 
 int main(void)
 {
-  char buf[0x20];
+  char buf[0x80];
   syscall_uart_puts("Hi I'm test in user mode\n");
 
   int a = syscall_open("/hello", O_CREAT);
@@ -101,5 +101,19 @@ int main(void)
   buf[sz] = '\0';
   syscall_uart_puts(buf);
   syscall_close(fd);
+
+  fd = syscall_open("/proc/3/status", 0);
+  sz = syscall_read(fd, buf, 16);
+  buf[sz++] = '\n';
+  buf[sz] = '\0';
+  syscall_uart_puts(buf);
+  syscall_close(fd);
+
+  fd = syscall_open("/proc/999/status", 0);
+  if(fd >= 0)
+  {
+    syscall_uart_puts("Assertion syscall_open(\"/proc/999/status\", 0) >= 0");
+    while(1);
+  }
 }
 

@@ -3,6 +3,7 @@
 #include "meta_macro.h"
 #include "uart.h"
 #include "string_util.h"
+#include "task.h"
 
 static struct vfs_vnode_operations_struct * procfs_vnode_ops;
 static struct vfs_file_operations_struct * procfs_file_ops;
@@ -85,7 +86,21 @@ int procfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct **
     }
     else /* task */
     {
+      int task_id = (int)string_char_to_ulonglong(component_name);
+      int task_idx = TASK_ID_TO_IDX(task_id);
+      /* check if task exist */
+      if(task_id > TASK_POOL_SIZE || kernel_task_pool[task_idx].id != (unsigned)task_idx + 1u)
+      {
+        *target = 0;
+        return 0;
+      }
+      *target = procfs_create_vnode(dir_node -> mount, (void *)(unsigned long long)task_id, 1);
     }
+  }
+  /* /proc/<id>/status */
+  else if(string_cmp(component_name, "status", 999) != 0)
+  {
+    *target = procfs_create_vnode(dir_node -> mount, (void *)((unsigned long long)(dir_node -> internal) & (~PROCFS_TYPE_TASK_STATUS)), 0);
   }
   return 0;
 }
@@ -139,8 +154,7 @@ int procfs_read(struct vfs_file_struct * file, void * buf, size_t len)
     }
     return 5;
   default:
-    /* TODO */
-    return 0;
+    return procfs_task_status(buf, (int)(type & ~(int)PROCFS_TYPE_TASK_STATUS));
   }
 }
 
@@ -170,5 +184,27 @@ struct vfs_vnode_struct * procfs_create_vnode(struct vfs_mount_struct * mount, v
   target_vnode -> internal = internal;
   target_vnode -> is_dir = is_dir;
   return target_vnode;
+}
+
+int procfs_task_status(char * string, int id)
+{
+  char buffer [0x20];
+  int task_idx = TASK_ID_TO_IDX(id);
+  string[0] = '\0';
+  string_concat(string, "ID: ");
+  string_longlong_to_char(buffer, id);
+  string_concat(string, buffer);
+  string_concat(string, "\n");
+  string_concat(string, "FD:\n");
+  for(int i = 0; i < TASK_MAX_FD; ++i)
+  {
+    string_longlong_to_char(buffer, i);
+    string_concat(string, buffer);
+    string_concat(string, ": ");
+    string_ulonglong_to_hex_char(buffer, (unsigned long long)kernel_task_pool[task_idx].fd[i]);
+    string_concat(string, buffer);
+    string_concat(string, "\n");
+  }
+  return string_length(string);
 }
 
