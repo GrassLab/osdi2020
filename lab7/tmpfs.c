@@ -11,13 +11,6 @@ void set_tmpfs_vnode(struct vnode *vnode)
     vnode->f_ops = tmpfs_f_ops;
 }
 
-int setup_mount_tmpfs(struct filesystem *fs, struct mount *mount)
-{
-    printf("%s\n", fs->name);
-    printf("%x\n", mount);
-    return 0;
-}
-
 int lookup_tmpfs(struct dentry *dir, struct vnode **target,
                  char *component_name)
 {

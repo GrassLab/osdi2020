@@ -41,7 +41,6 @@ struct mount
 struct filesystem
 {
     char *name;
-    int (*setup_mount)(struct filesystem *fs, struct mount *mount);
     int objid;
 };
 

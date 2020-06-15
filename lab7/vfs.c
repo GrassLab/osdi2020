@@ -25,7 +25,6 @@ void rootfs_init()
     struct filesystem *fs = (struct filesystem *)fix_object_array[get].obj;
     fs->objid = get;
     fs->name = "tmpfs";
-    fs->setup_mount = setup_mount_tmpfs;
 
     register_filesystem(fs);
 }
@@ -34,6 +33,7 @@ int register_filesystem(struct filesystem *fs)
 {
     // register the file system to the kernel.
     // you can also initialize memory pool of the file system here.
+
     if (strcmp(fs->name, "tmpfs") != 0)
     {
 
@@ -67,7 +67,7 @@ int register_filesystem(struct filesystem *fs)
         rootfs = mt;
         return 0;
     }
-    return -1;
+    return 0;
 }
 
 struct file *vfs_open(const char *pathname, int flags)
