@@ -110,6 +110,7 @@ struct file *vfs_open(const char *pathname, int flags)
 
 int vfs_close(struct file *file)
 {
+    file->vnode = NULL;
     obj_free(file->objid);
     return 0;
 }

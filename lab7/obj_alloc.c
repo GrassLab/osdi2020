@@ -93,10 +93,10 @@ int obj_free(int free_index)
 	if (fix_object_array[free_index].is_use == 1)
 	{
 		printf("free %d obj\n", fix_object_array[free_index].sequence);
-		for (int i = 0; i < fix_object_array[free_index].sequence; i++)
+		for (int i = free_index; i < fix_object_array[free_index].sequence; i++)
 		{
-			fix_object_array[free_index].is_use = 0;
-			fix_object_array[free_index].sequence = 0;
+			fix_object_array[i].is_use = 0;
+			fix_object_array[i].sequence = 0;
 		}
 		return 1;
 	}

@@ -66,10 +66,41 @@ int create_tmpfs(struct dentry *dir, struct vnode **target,
 
 int write_tmpfs(struct file *file, void *buf, unsigned long len)
 {
-    return 0;
+    printf("write %s \n", (char *)buf);
+    struct vnode *vnode = file->vnode;
+    struct tmpfs_node *file_node = (struct tmpfs_node *)vnode->internal;
+    char *write_buffer = (char *)buf;
+    char *file_buffer = file_node->buffer;
+
+    int write_count = 0;
+    for (int i = 0; i < len; i++)
+    {
+        file_buffer[file->f_pos + i] = write_buffer[i];
+        write_count++;
+    }
+
+    file_buffer[write_count] = (unsigned char)EOF;
+    return write_count;
 }
 
 int read_tmpfs(struct file *file, void *buf, unsigned long len)
 {
-    return 0;
+    printf("read\n");
+    struct vnode *vnode = file->vnode;
+    struct tmpfs_node *file_node = (struct tmpfs_node *)vnode->internal;
+    char *read_buffer = (char *)buf;
+    char *file_buffer = file_node->buffer;
+
+    int i;
+    for (i = 0; i < len; i++)
+    {
+        if (file_buffer[i] != (unsigned char)EOF)
+            read_buffer[i] = file_buffer[i];
+        else
+        {
+            printf("get EOF!!\n");
+            break;
+        }
+    }
+    return i;
 }
