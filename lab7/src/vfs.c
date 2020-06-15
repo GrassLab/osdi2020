@@ -27,9 +27,10 @@ file *vfs_open(const char *pathname, int flags)
     file *filee = NULL;
     int ret_val;
 
-    uart_puts("vfs open\n");
+    
     if (flags == O_CREAT)
     {
+        uart_puts("vfs open O_CREAT\n");
         ret_val = rootfs->root->v_ops->lookup(rootfs->root, &target, pathname);
 
         if (ret_val != -1)
@@ -60,6 +61,7 @@ file *vfs_open(const char *pathname, int flags)
     }
     else
     {
+        uart_puts("vfs open O_OPEN\n");
         ret_val = rootfs->root->v_ops->lookup(rootfs->root, &target, pathname);
         if (ret_val >= 0)
         {
@@ -79,7 +81,8 @@ file *vfs_open(const char *pathname, int flags)
                 }
             }
         }
-
+        uart_puts("return NULL\n");
+        
         return filee;
     }
 }

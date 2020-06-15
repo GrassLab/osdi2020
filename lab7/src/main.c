@@ -162,14 +162,22 @@ void main(){
     filesystem fs = tmpfs_filesystem();
     register_filesystem(&fs);
 
+    uart_puts("-----------------------\n");
+
     file* a = vfs_open("hello", 0);
-    // assert(a == NULL);
-    // a = vfs_open("hello", O_CREAT);
-    // assert(a != NULL);
-    // vfs_close(a);
-    // file* b = vfs_open("hello", 0);
-    // assert(b != NULL);
-    // vfs_close(b);
+    assert(a == NULL);
+
+    uart_puts("-----------------------\n");
+
+    a = vfs_open("hello", O_CREAT);
+    assert(a != NULL);
+    vfs_close(a);
+
+    uart_puts("-----------------------\n");
+    
+    file* b = vfs_open("hello", 0);
+    assert(b != NULL);
+    vfs_close(b);
 
     uart_puts("=======================\n");
 
