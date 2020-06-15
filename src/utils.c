@@ -1,12 +1,19 @@
 #include "type.h"
 #include "device/uart.h"
 
-void copystr(const char *src, char *dst)
+size_t copynstr(const char *src, char *dst, size_t len)
 {
-    char *p;
-    for (p = src; *p != '\0'; ++p, ++dst)
-        *dst = *p;
-    *dst = *p;
+    size_t i;
+    for (i = 0; i < len; ++i)
+    {
+        if (*(src+i) == '\0')
+            break;
+        *(dst+i) = *(src+i);
+    }
+        
+    *(dst+i) = '\0';
+
+    return i;
 }
 
 bool strcmp(const char *s1, const char *s2)

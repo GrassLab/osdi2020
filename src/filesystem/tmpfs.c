@@ -34,7 +34,7 @@ int32_t __vnodeLookup(struct vnode **target, const char *component, vnode_t type
 int32_t mkvnode(struct vnode *parent, struct vnode **target, const char *name, vnode_t type)
 {
     struct vnode *vn = (struct vnode *)allocSlot(parent->mount->fs->vnode_token);
-    copystr(name, vn->name);
+    copynstr(name, vn->name, 256);
 
     uartPuts("mkvnode: ");
     uartPuts(name);
@@ -53,6 +53,13 @@ int32_t mkvnode(struct vnode *parent, struct vnode **target, const char *name, v
         de->child = (struct dentry **)allocDynamic(sizeof(struct dentry *) * MAX_DIR_CHILD);
         vn->internal = de;
     }  
+    else if (type == file)
+    {
+        struct fcontent *fc = (struct fcontent *)allocSlot(parent->mount->fs->fcontent_token);
+        fc->content = (char *)allocDynamic(1024);
+        fc->fsize = 1024;
+        vn->internal = fc;
+    }
 
     struct dentry *parent_de = (struct dentry *)parent->internal;
     parent_de->child[parent_de->child_num++] = vn;
@@ -66,7 +73,7 @@ int32_t tmpfsVnodeCreate(struct vnode *root, struct vnode **target, const char *
 {
     char component[256];
     char *p, *cur;
-    copystr(pathname, component); 
+    copynstr(pathname, component, 256); 
     p = component;
     cur = component;
 
@@ -111,7 +118,7 @@ int32_t tmpfsVnodeLookup(struct vnode *root, struct vnode **target, const char *
 {
     char component[256];
     char *p, *cur;
-    copystr(pathname, component); 
+    copynstr(pathname, component, 256); 
     p = component;
     cur = component;
 
@@ -151,12 +158,32 @@ int32_t tmpfsVnodeLookup(struct vnode *root, struct vnode **target, const char *
 
 int32_t tmpfsFileWrite(struct file *file, const void *buf, size_t len)
 {
+    struct fcontent *file_content = (struct fcontent *)file->vnode->internal;
+    char *cur_pos = file_content->content + file->f_pos;
 
+    if ((1024 - file->f_pos) < len)
+        len = 1024 - file->f_pos;
+
+    size_t written = copynstr((char *)buf, cur_pos, len);
+
+    file->f_pos += written;
+
+    return written;
 }
 
 int32_t tmpfsFileRead(struct file *file, void *buf, size_t len)
 {
+    struct fcontent *file_content = (struct fcontent *)file->vnode->internal;
+    char *cur_pos = file_content->content + sizeof(char) * file->f_pos;
 
+    if ((1024 - file->f_pos) < len)
+        len = 1024 - file->f_pos;
+
+    size_t read = copynstr(cur_pos, (char *)buf, len);
+
+    file->f_pos += read;
+
+    return read;
 }
 
 int32_t tmpfsSetupMount(struct filesystem* fs, struct mount* mount)
@@ -167,11 +194,13 @@ int32_t tmpfsSetupMount(struct filesystem* fs, struct mount* mount)
     vn->v_ops->create = tmpfsVnodeCreate;
     vn->v_ops->lookup = tmpfsVnodeLookup;
     vn->f_ops = (struct fileOperations *)allocDynamic(sizeof(struct fileOperations));
-    vn->f_ops->read = tmpfsFileWrite;
-    vn->f_ops->write = tmpfsFileRead;
+    vn->f_ops->write = tmpfsFileWrite;
+    vn->f_ops->read = tmpfsFileRead;
     vn->type = dir;
 
-    fs->dentry_token = getFreePool(sizeof(struct dentry));;
+    fs->dentry_token = getFreePool(sizeof(struct dentry));
+    fs->fcontent_token = getFreePool(sizeof(struct fcontent));
+
     struct dentry *de = (struct dentry *)allocSlot(fs->dentry_token);
     de->vnode = vn;
     de->child_num = 0;

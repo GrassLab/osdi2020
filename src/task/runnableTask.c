@@ -176,15 +176,30 @@ void vfsTask()
     struct file* c = vfsOpen("hello", 0);
     struct file* d = vfsOpen("test/hello", O_CREAT);
     struct file* e = vfsOpen("test/hello", 0);
-    // vfs_write(a, "Hello ", 6);
-    // vfs_write(b, "World!", 6);
-    // vfs_close(a);
-    // vfs_close(b);
-    // b = vfs_open("hello", 0);
-    // a = vfs_open("world", 0);
-    // int sz;
-    // sz = vfs_read(b, buf, 100);
-    // sz += vfs_read(a, buf + sz, 100);
-    // buf[sz] = '\0';
-    // printf("%s\n", buf); // should be Hello World!
+
+    vfsWrite(a, "Hello ", 6);
+    vfsWrite(b, "World!", 6);
+
+    vfsClose(a);
+    vfsClose(b);
+    vfsClose(c);
+    vfsClose(d);
+    vfsClose(e);
+
+    b = vfsOpen("hello", 0);
+    a = vfsOpen("world", 0);
+    int sz;
+    sz = vfsRead(b, buf, 100);
+    sz += vfsRead(a, buf + sz, 100);
+    buf[sz] = '\0';
+
+    uartPuts("read: ");
+    uartPuts(buf);
+    uartPuts("\n");
+
+    uartPuts("read size: ");
+    uartInt(sz);
+    uartPuts("\n");
+
+    busyloop();
 }

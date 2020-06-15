@@ -13,6 +13,12 @@ struct dentry
     size_t child_num;
 };
 
+struct fcontent
+{
+    char *content;
+    size_t fsize;
+};
+
 int32_t tmpfsSetupMount(struct filesystem* fs, struct mount* mount);
 
 #endif
