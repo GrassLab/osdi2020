@@ -63,3 +63,12 @@ int vfs_chdir(const char *pathname);
 int vfs_mount(const char *device, const char *mountpoint,
               const char *filesystem);
 int vfs_umount(const char *mountpoint);
+
+/* path name solver */
+struct path {
+  const char *name;
+  struct path *next;
+};
+
+
+struct path *path_name_solver(const char *pathname);

@@ -116,9 +116,8 @@ int tmpfs_file_read(struct file *file, void *buf, size_t len) {
 
   unsigned long addr = bid2addr(bid) + file->f_pos;
 
-  unsigned long max_addr = file->f_pos + len > BLOCK_SIZE
-                               ? bid2addr(bid) + BLOCK_SIZE
-                               : addr + len;
+  unsigned long max_addr =
+      file->f_pos + len > BLOCK_SIZE ? bid2addr(bid) + BLOCK_SIZE : addr + len;
 
   uart_println("  read from %x to %x", addr, max_addr);
 
@@ -194,7 +193,6 @@ int setup_mount(struct filesystem *fs, struct mount *mount) {
     uart_println("error while constructing the tmpfs system");
     return -1;
   }
-
   /* create vnode */
   struct vnode *v = kalloc(sizeof(struct vnode));
   v->mount = mount;
