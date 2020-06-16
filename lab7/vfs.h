@@ -1,28 +1,33 @@
 #ifndef _VFS_H
 #define _VFS_H
 
+#define FILE_TABLE_SIZE 16
+#define SUCCESS 0
+#define FAIL -1
+
 typedef struct vnode {
-    mount_t* mount;
-    vnode_operation_t* v_ops;
-    file_operations_t* f_ops;
+    struct mount* mount;
+    struct vnode_operations* v_ops;
+    struct file_operations* f_ops;
     void* internal;
 } vnode_t;
 
 typedef struct file {
     vnode_t* vnode;
-    unsigned long f_ops;
-    file_operations_t* f_ops;
+    unsigned long f_pos;
+    unsigned long file_size;
+    struct file_operations* f_ops;
     int flags;
 } file_t;
 
 typedef struct mount {
-    vnode_t* root;
-    filesystem_t* fs;
+    struct vnode* root;
+    struct filesystem* fs;
 } mount_t;
 
 typedef struct filesystem {
     const char* name;
-    int (*setup_mount)(filesystem_t* fs, mount_t* mount);
+    int (*setup_mount)(struct filesystem* fs, mount_t* mount);
 } filesystem_t;
 
 typedef struct file_operations {
@@ -35,7 +40,8 @@ typedef struct vnode_operations {
     int (*create)(vnode_t* dir_node, vnode_t** target, const char* component_name);
 } vnode_operations_t;
 
-mount_t* rootfs;
+enum mode {O_OPEN, O_CREAT};
+extern mount_t* rootfs;
 
 int register_filesystem(filesystem_t* fs);
 file_t* vfs_open(const char* pathname, int flags);
