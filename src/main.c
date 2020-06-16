@@ -8,6 +8,7 @@
 #include "task.h"
 #include "tests.h"
 #include "uart.h"
+#include "vfs.h"
 
 extern volatile unsigned int _boot_start;
 extern uint64_t _end;
@@ -39,21 +40,23 @@ void zombie_killer() {
 }
 
 void foo_kernel() {
-    print_s("\n\n");
-    uint8_t* p8 = kmalloc(sizeof(uint8_t));
-    kfree(p8);
-    uint8_t* p8_2 = kmalloc(sizeof(uint8_t));
-    kfree(p8_2);
+    init_rootfs();
+    char buf[100];
+    struct file* a = vfs_open("hello", O_CREAT);
+    struct file* b = vfs_open("world", O_CREAT);
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World!", 6);
+    vfs_close(a);
+    vfs_close(b);
+    b = vfs_open("hello", 0);
+    a = vfs_open("world", 0);
+    int sz;
+    sz = vfs_read(b, buf, 100);
+    sz += vfs_read(a, buf + sz, 100);
+    asm volatile("mai:");
+    buf[sz] = '\0';
+    print_s(buf);
 
-    print_s("\n\n");
-
-    uint32_t* p32 = kmalloc(sizeof(uint32_t) * 1024);
-    kfree(p32);
-    uint32_t* p32_2 = kmalloc(sizeof(uint32_t) * 1024);
-    kfree(p32_2);
-    /* do_exec((uint8_t*)&_binary_user_img_start, */
-    /* ((uint64_t)(&_binary_user_img_end) - */
-    /* (uint64_t)(&_binary_user_img_start))); */
     while (1)
         ;
 }
