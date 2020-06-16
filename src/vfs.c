@@ -1,7 +1,8 @@
 #include "vfs.h"
-#include "tmpfs.h"
+
 #include "mm.h"
 #include "my_string.h"
+#include "tmpfs.h"
 #include "uart0.h"
 #include "util.h"
 
@@ -28,10 +29,32 @@ int register_filesystem(struct filesystem* fs) {
     return -1;
 }
 
+struct file* create_fd(struct vnode* target) {
+    struct file* fd = (struct file*)kmalloc(sizeof(struct file));
+    fd->f_ops = target->f_ops;
+    fd->vnode = target;
+    fd->f_pos = 0;
+    return fd;
+}
+
 struct file* vfs_open(const char* pathname, int flags) {
     // 1. Lookup pathname from the root vnode.
+    struct vnode* dir = rootfs->root->vnode;
+    struct vnode* target;
     // 2. Create a new file descriptor for this vnode if found.
+    if (rootfs->root->vnode->v_ops->lookup(dir, &target, pathname) == 0) {
+        return create_fd(target);
+    }
     // 3. Create a new file if O_CREAT is specified in flags.
+    else {
+        if (flags & O_CREAT) {
+            rootfs->root->vnode->v_ops->create(dir, &target, pathname);
+            return create_fd(target);
+        }
+        else {
+            return NULL;
+        }
+    }
 }
 
 int vfs_close(struct file* file) {

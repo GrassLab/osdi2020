@@ -2,6 +2,9 @@
 #define __VFS__
 
 #include "typedef.h"
+#include "list.h"
+
+#define O_CREAT 1
 
 struct mount {
     struct dentry* root;  // root directory
@@ -9,7 +12,7 @@ struct mount {
 };
 
 struct filesystem {
-    const char* name;
+    char* name;
     int (*setup_mount)(struct filesystem* fs, struct mount* mount);
 };
 
@@ -21,8 +24,10 @@ struct vnode {
 };
 
 struct dentry {
-    char* name;
+    char name[32];
     struct dentry* parent;
+    struct list_head list;
+    struct list_head childs;
     struct vnode* vnode;
 };
 
@@ -39,8 +44,8 @@ struct file_operations {
 };
 
 struct vnode_operations {
-    struct dentry* (*lookup)(struct vnode* dir, struct dentry* dentry);
-    int (*create)(struct vnode* dir, struct dentry* dentry);
+    int (*lookup)(struct vnode* dir, struct vnode** target, const char* component_name);
+    int (*create)(struct vnode* dir, struct vnode** target, const char* component_name);
 };
 
 extern struct mount* rootfs;

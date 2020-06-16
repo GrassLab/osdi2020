@@ -3,6 +3,7 @@
 #include "uart0.h"
 #include "sys.h"
 #include "mm.h"
+#include "vfs.h"
 
 void delay(int period) {
     while (period--);
@@ -137,11 +138,11 @@ void demo_lab6() {
 // Lab7
 
 void demo_lab7() {
-    void* addr1 = kmalloc(1);
-    void* addr2 = kmalloc(2);
-    void* addr3 = kmalloc(3);
-    uart_printf("%x\n", addr1);
-    uart_printf("%x\n", addr2);
-    uart_printf("%x\n", addr3);
-    while(1);
+    struct file* a = vfs_open("hello", 0);
+    uart_printf("addr: %x\n", a);
+    a = vfs_open("hello", O_CREAT);
+    uart_printf("addr: %x\n", a);
+    struct file* b = vfs_open("hello", 0);
+    uart_printf("addr: %x\n", b);
+    while (1);
 }
