@@ -26,7 +26,7 @@ void buddy_view()
 void buddy_init()
 {
     unsigned long init_chunk_addr;
-    init_chunk_addr = malloc(INIT_BITMAP); // the malloc should be replace to get_free_page
+    init_chunk_addr = 0x10000; // the malloc should be replace to get_free_page
     // for (int i=0; i<BUDDY_MAX_ORDER; i++) {
     //     BuddyManager.list[i].number = 0;
     // }

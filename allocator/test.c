@@ -46,6 +46,7 @@ void testcase4()
     // buddy_view();
     printf("addr1: 0x%lx\n", addr1);
     printf("addr2: 0x%lx\n", addr2);
+    buddy_view();
     
     buddy_free(addr1);
     buddy_free(addr2);
@@ -99,7 +100,7 @@ int main()
     // printf("This is demo of Fixed-size object allocator\n");
     // testcase5();
     
-    printf("This is demo of Varied-size object allocator\n");
+    // printf("This is demo of Varied-size object allocator\n");
     // testcase6();
     
 
