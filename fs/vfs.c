@@ -64,6 +64,7 @@ struct file* vfs_open(const char* pathname, int flags)
     log("create fd.\n");
     struct file* fd = malloc(sizeof(struct file));
     fd->vnode = target;
+    // printf("0x%x\n", target->f_ops->write);
     fd->f_ops = target->f_ops;
     fd->f_pos = 0;
     return fd;
@@ -80,6 +81,7 @@ int vfs_write(struct file* file, const void* buf, int len)
     // 1. write len byte from buf to the opened file.
     // 2. return written size or error code if an error occurs.
     log("vfs write.\n");
+    // printf("0x%x\n", file->f_ops->write);
     return file->f_ops->write(file, buf, len);
 }
 int vfs_read(struct file* file, void* buf, int len) 

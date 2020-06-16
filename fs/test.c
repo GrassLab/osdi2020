@@ -44,7 +44,7 @@ int main()
 
     setup_tmpfs_filesystem();
     
-    // testcase1();
+    testcase1();
     testcase2();
      
     return 0;

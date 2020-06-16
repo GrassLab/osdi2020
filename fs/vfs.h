@@ -2,7 +2,7 @@
 #define DENTRY_MAX_CHILD 0x10
 #define NAME_LENGTH 0x100
 
-#define LOG_MODE 1
+#define LOG_MODE 0
 #define log(msg) if(LOG_MODE==1){printf(msg);}
 
 // typedef int size_t;

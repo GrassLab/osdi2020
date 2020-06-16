@@ -12,6 +12,11 @@ int setup_tmpfs_filesystem()
     register_filesystem(fs); 
 }
 
+// int init_tmpfs_vnode()
+// {
+
+// }
+
 int setup_tmpfs_mount(struct filesystem* fs, struct mount* mount)
 {
     log("setup tmpfs mount\n");
@@ -44,18 +49,18 @@ int tmpfs_write(struct file* file, const void* buf, int len)
     log("tmpfs write.\n");
     struct vnode* vnode = file->vnode;
     struct tmpfs_internal* internal = vnode->internal;
-    
     if (internal->type != FILE) {
         printf("ERROR: write non-FILE\n");
         return -1;
     }
-    char* dst = buf;
-    char* src = internal->content;
+    char* dst = internal->content;
+    char* src = buf;
     while (len > 0) {
         *dst++ = *src++;
         len--;
         internal->content_size++;
     }
+    // printf("internal->content: %s\n", internal->content);
     return internal->content_size;
 }
 
@@ -69,14 +74,17 @@ int tmpfs_read(struct file* file, void* buf, int len)
         printf("ERROR: read non-FILE\n");
         return -1;
     }
-    char* dst = internal->content;
-    char* src = buf;
-    while (len > 0) {
+    char* dst = buf;
+    char* src = internal->content;
+    int i = -1;
+    for (i=0; i<len; i++) {
+        if (*src == 0) {
+            break;
+        }
         *dst++ = *src++;
-        len--;
-        internal->content_size++;
     }
-    return internal->content_size;
+    // printf("buf: %s, ret: %d\n", buf, i);
+    return i;
 }
 
 int tmpfs_lookup(struct dentry* dentry, struct vnode** target, const char* component_name)
@@ -98,8 +106,14 @@ int tmpfs_create(struct dentry* parent, struct vnode** target, const char* compo
 {
     log("tmpfs create.\n");
     struct vnode* vnode = malloc(sizeof(struct vnode));
+
     vnode->v_ops = malloc(sizeof(struct vnode_operations));
+    vnode->v_ops->lookup = tmpfs_lookup;
+    vnode->v_ops->create = tmpfs_create;
     vnode->f_ops = malloc(sizeof(struct file_operations));
+    vnode->f_ops->write = tmpfs_write;
+    vnode->f_ops->read = tmpfs_read;
+
     struct tmpfs_internal* internal = malloc(sizeof(struct tmpfs_internal));
     internal->type = FILE;
     internal->content_size = 0;
@@ -111,4 +125,6 @@ int tmpfs_create(struct dentry* parent, struct vnode** target, const char* compo
     parent->child[parent->child_num++] = child;
     child->child_num = 0;
     strcpy(child->name, component_name);
+
+    *target = vnode;
 }
