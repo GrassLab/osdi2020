@@ -7,11 +7,16 @@ file_t file_table[FILE_TABLE_SIZE];
 int register_filesystem(filesystem_t* fs) {
     // register the file system to the kernel.
     // you can also initialize memory pool of the file system here.
-    uart_puts("mount fs");
+    uart_puts("mount fs ");
     uart_puts(fs->name);
     uart_puts("\r\n");
 
-    return fs->setup_mount(fs, rootfs);
+    // initialize file table
+    for (int i = 0; i < FILE_TABLE_SIZE; i++) {
+        file_table[i].vnode = 0;
+    }
+
+    return fs->setup_mount(fs, &rootfs);
 }
 
 file_t* vfs_open(const char* pathname, int flags) {
@@ -62,7 +67,6 @@ file_t* vfs_open(const char* pathname, int flags) {
             uart_puts("file does not exist.\r\n");
         }
     }
-
     return file;
 }
 
