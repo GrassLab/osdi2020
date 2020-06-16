@@ -142,7 +142,9 @@ void demo_lab7() {
     uart_printf("addr: %x\n", a);
     a = vfs_open("hello", O_CREAT);
     uart_printf("addr: %x\n", a);
+    vfs_close(a);
     struct file* b = vfs_open("hello", 0);
     uart_printf("addr: %x\n", b);
+    vfs_close(b);
     while (1);
 }

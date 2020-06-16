@@ -59,6 +59,8 @@ struct file* vfs_open(const char* pathname, int flags) {
 
 int vfs_close(struct file* file) {
     // 1. release the file descriptor
+    kfree((void*)file);
+    return 0;
 }
 
 int vfs_write(struct file* file, const void* buf, uint64_t len) {
