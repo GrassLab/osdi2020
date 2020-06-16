@@ -48,7 +48,6 @@ static Slab *getFreeSlab(void) {
     slab->free_list_head = NULL;
     slab->next = *(manager.indirect_inuse_list_head);
     *(manager.indirect_inuse_list_head) = slab;
-    manager.indirect_inuse_list_head = &(slab->next);
 
     return slab;
 }
