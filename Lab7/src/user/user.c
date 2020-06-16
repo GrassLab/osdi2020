@@ -78,6 +78,12 @@ void test3(){
 	printf("buf: %s\r\n",buf);
 	
 	chdir("..");
+	mount("tmpfs", "mnt", "tmpfs");
+	fd = open("mnt/a.txt", 0);
+	if(fd==-1)
+		printf("file can't open!!\r\n");
+	umount("/mnt");
+
 	fd = open("mnt/a.txt", 0);
 	sz = read(fd, buf, 2);
 	buf[sz] = '\0';

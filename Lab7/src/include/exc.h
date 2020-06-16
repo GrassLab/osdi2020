@@ -28,5 +28,7 @@
 #define SYS_FILE_READ 24
 #define SYS_MKDIR 25
 #define SYS_CHDIR 26
+#define SYS_MOUNT 27
+#define SYS_UNMOUNT 28
 
 #endif

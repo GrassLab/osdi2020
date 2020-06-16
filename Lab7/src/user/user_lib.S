@@ -30,8 +30,10 @@ _user_entry:
 .set SYS_FILE_CLOSE, 22
 .set SYS_FILE_WRITE, 23
 .set SYS_FILE_READ, 24
-.set SYS_MKDIR,25 
-.set SYS_CHDIR,26
+.set SYS_MKDIR, 25 
+.set SYS_CHDIR, 26
+.set SYS_MOUNT, 27
+.set SYS_UNMOUNT, 28
 
 .global call_core_timer
 call_core_timer:
@@ -193,5 +195,18 @@ mkdir:
 .global chdir
 chdir:
 	mov x8, SYS_CHDIR
+	svc #0
+	ret
+
+.global mount
+mount:
+	mov x8, SYS_MOUNT
+	svc #0
+	ret
+
+
+.global umount
+umount:
+	mov x8, SYS_UNMOUNT
 	svc #0
 	ret

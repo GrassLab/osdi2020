@@ -10,9 +10,18 @@ void set_tmpfs_vnode(struct vnode* vnode){
          vnode->f_ops = tmpfs_f_ops;
 }
 
-int setup_mount_tmpfs(struct filesystem* fs, struct mount* mount){
-	printf("%s\r\n",fs->name);
-	printf("%x\r\n",mount);
+int setup_mount_tmpfs(struct filesystem* fs, struct mount* mt){	
+	struct vnode *vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
+ 	set_tmpfs_vnode(vnode);
+
+	struct dentry *dentry=(struct dentry*)kmalloc(sizeof(struct dentry));
+ 	set_dentry(dentry,vnode,"/");
+ 	dentry->flag = ROOT_DIR;
+
+	mt->fs= fs;
+	mt->root = vnode;
+	mt->dentry = dentry;
+	
 	return 0;
 }
 

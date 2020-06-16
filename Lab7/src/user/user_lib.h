@@ -43,5 +43,7 @@ int write(int file, const void* buf, size_t len);
 int read(int file, void* buf, size_t len);
 int mkdir(const char* pathname);
 int chdir(const char* pathname);
+int mount(const char* device, const char* mountpoint, const char* filesystem);
+int umount(const char* mountpoint);
 
 #endif  

@@ -2,6 +2,7 @@
 #define _TMPFS_H
 
 #define EOF (-1)
+#include "../vfs.h"
 
 #define TMP_FILE_SIZE 512
 #define REGULAR_FILE 0 
@@ -12,6 +13,8 @@ struct tmpfs_node{
 	int flag;
 	char buffer[TMP_FILE_SIZE];
 };
+
+struct filesystem *tmpfs; 
 
 struct vnode_operations* tmpfs_v_ops;
 struct file_operations* tmpfs_f_ops;

@@ -316,7 +316,14 @@ unsigned long el0_svc_handler(size_t arg0,size_t arg1,size_t arg2,size_t arg3,\
 		}
 		case SYS_CHDIR:{
 			return vfs_chdir((char *)arg0);	       
-		} 
+		}
+		case SYS_MOUNT:{
+			return vfs_mount((char *)arg0,(char *)arg1,(char *)arg2);	       
+		}
+		case SYS_UNMOUNT:{
+			return vfs_umount((char*)arg0);		 
+		}
+
 	}
 	// Not here if no bug happened!
 	return -1;

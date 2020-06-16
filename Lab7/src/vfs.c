@@ -9,6 +9,7 @@ void set_dentry(struct dentry *dentry,struct vnode* vnode,\
                  const char* str){
          
 	 dentry->child_count = 0; 
+	 dentry->is_mount = -1;
 	 dentry->vnode = vnode; 
          strcpy(dentry->dname , str);
 }
@@ -16,28 +17,24 @@ void set_dentry(struct dentry *dentry,struct vnode* vnode,\
 
 void rootfs_init(){
   // setting file system for root fs
-  	struct filesystem *fs = (struct filesystem*)kmalloc(sizeof(struct filesystem));
-  	fs->name = "tmpfs";
-  	fs->setup_mount = setup_mount_tmpfs;
+  	tmpfs = (struct filesystem*)kmalloc(sizeof(struct filesystem));
+  	tmpfs->name = "tmpfs";
+  	tmpfs->setup_mount = setup_mount_tmpfs;
+  	register_filesystem(tmpfs);  
   
-  	register_filesystem(fs);  
-  
-  	struct vnode *vnode = (struct vnode*)kmalloc(sizeof(struct vnode));	
-  	set_tmpfs_vnode(vnode);
-
-  	struct dentry *dentry=(struct dentry*)kmalloc(sizeof(struct dentry));
-  	set_dentry(dentry,vnode,"/");
-	dentry->flag = ROOT_DIR;
-
   	// setup root file sysystem
   	struct mount *mt = (struct mount*)kmalloc(sizeof(struct mount));
-  	mt->fs= fs;
-  	mt->root = vnode;
-  	mt->dentry = dentry;
-  	rootfs= mt; 
+	tmpfs->setup_mount(tmpfs,mt);
 
+	//setting rootfs
+  	rootfs= mt; 
         //setting current working directory	
-	current_dent = dentry;
+	current_dent = mt->dentry;
+	
+        for(int i=0;i<MOUNT_TABLE_SIZE;i++){
+        	mt_table_map[i] = 0;
+		mount_fs_table[i] = (struct mount*)NULL;
+	}
 }
 
 
@@ -76,7 +73,6 @@ int parsing(char* component_name, struct dentry** dent,const char* pathname){
   int name_count = 0;
 
   while(pathname[pathname_count]!='\0'){
-
 	if(pathname[pathname_count]=='/'){
 		if(pathname_count!=0){
 			component_name[name_count] = '\0';
@@ -96,8 +92,14 @@ int parsing(char* component_name, struct dentry** dent,const char* pathname){
 			else{
 				for(;i<child_count;i++){
                   			if(strcmp((*dent)->child_dentry[i]->dname, component_name)==0){
-                          			*dent = (*dent)->child_dentry[i];
-						break;
+						int is_mount = (*dent)->child_dentry[i]->is_mount;
+                          			if(is_mount == -1){
+							*dent = (*dent)->child_dentry[i];
+							break;
+						}
+						else{ //mount on this directory
+							*dent = mount_fs_table[is_mount]->dentry;
+						}
 					}
 				}
 				// if can't find
@@ -109,7 +111,7 @@ int parsing(char* component_name, struct dentry** dent,const char* pathname){
 
                   }
 		  else{ // If path start with '/', then look up starts at root directory 
-		  	printf("!!! parsing start from root\r\n");
+		  	printf("(Hint: parsing start from root)\r\n");
 			*dent = rootfs->dentry;
 		  }
         }
@@ -235,6 +237,7 @@ int vfs_chdir(const char* pathname){
 	else if(strcmp(component_name,"..")==0){
 		if(current_dent->flag==DIRECTORY){
 			current_dent = dent->parent_dentry;
+			printf("### Now current directory %s\r\n",current_dent->dname);
 			return 0;
 		}
 		else{
@@ -248,12 +251,110 @@ int vfs_chdir(const char* pathname){
 	for(int i=0;i<child_count;i++){
                 if(strcmp(dent->child_dentry[i]->dname, component_name)==0 &&\
 				dent->child_dentry[i]->flag==DIRECTORY){
-			current_dent = dent->child_dentry[i];
-			printf("### Now current directory %s\r\n",current_dent->dname);
+			if(dent->child_dentry[i]->is_mount == -1){
+				current_dent = dent->child_dentry[i];
+				printf("### Now current directory %s\r\n",current_dent->dname);
+			}
+			 
+			else{ //mount on this directory
+				current_dent = mount_fs_table[dent->is_mount]->dentry;
+				printf("### Now current directory %s (mount on %s)\r\n",\
+						current_dent->dname,dent->child_dentry[i]);
+			}
 			return 0;
 		}
 	}
 	
 	printf("CHANGE DIRECTORY FAILED!!\r\n");
+	return -1;
+}
+
+int vfs_mount(const char* device, const char* mountpoint, const char* filesystem){
+	struct mount *mt = (struct mount*)kmalloc(sizeof(struct mount));
+	if(strcmp(filesystem,"tmpfs")==0){
+		// since tmpfs was init at begin, so we don't need to do it again
+		tmpfs->setup_mount(tmpfs,mt);	
+		strcpy(mt->dentry->dname, device); //change the default name by device name
+	}
+	
+	char component_name[DNAME_LEN];
+        struct dentry *dent = current_dent; //start from root dentry
+
+        int parse_ret = parsing(component_name,&dent,mountpoint);
+	// for the case that we just dont't handle right now
+        if(parse_ret ==-1 && \
+		strcmp(component_name,".")==0 && \
+		strcmp(component_name,"..")==0) //directory not found
+        		return -1;
+	
+	// find the target dentry
+	int child_count = dent->child_count;
+	int i=0;
+	for(;i<child_count;i++){
+                if(strcmp(dent->child_dentry[i]->dname, component_name)==0 &&\
+				dent->child_dentry[i]->flag==DIRECTORY){
+			dent = dent->child_dentry[i];
+			break;
+		}
+	}
+	
+	if(i>=child_count) // can't find target directory
+		return -1;
+	
+	printf("### Mount '%s' on dir %s\r\n",device,dent->dname);
+	
+	for(i=0;i<MOUNT_TABLE_SIZE;i++){
+		if(mt_table_map[i] == 0){
+			mt_table_map[i] = 1;
+			mount_fs_table[i] = mt;
+			dent->is_mount = i;
+			return 0;
+		}
+	}
+
+	printf("ERROR: NOT HANDLE THIS\r\n");
+	return -1;
+	
+}
+
+int vfs_umount(const char* mountpoint){
+	char component_name[DNAME_LEN];
+        struct dentry *dent = current_dent; //start from root dentry
+
+        int parse_ret = parsing(component_name,&dent,mountpoint);
+	// for the case that we just dont't handle right now
+        if(parse_ret ==-1 && \
+		strcmp(component_name,".")==0 && \
+		strcmp(component_name,"..")==0) //directory not found
+        		return -1;
+	
+	// find the target dentry
+	int child_count = dent->child_count;
+	int i=0;
+	for(;i<child_count;i++){
+                if(strcmp(dent->child_dentry[i]->dname, component_name)==0 &&\
+				dent->child_dentry[i]->flag==DIRECTORY){
+			dent = dent->child_dentry[i];
+			break;
+		}
+	}
+	
+	if(i>=child_count) // can't find target directory
+		return -1;
+
+	if(dent->is_mount != -1){ //the directory is mounted for sure	
+		int i = dent->is_mount;
+		struct mount *mt = mount_fs_table[i];
+		// free all thing allocate by this mount point
+		kfree((unsigned long)mt->root);
+		kfree((unsigned long)mt->dentry);
+		kfree((unsigned long)mt);
+		mount_fs_table[i] = (struct mount*)NULL;
+		mt_table_map[i] = 0; 
+		
+		printf("### Mountpoint on dent %s is unmounted\r\n",dent->dname);
+		dent->is_mount = -1;
+		return 0;
+	}
 	return -1;
 }
