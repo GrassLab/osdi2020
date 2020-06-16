@@ -137,5 +137,11 @@ void demo_lab6() {
 // Lab7
 
 void demo_lab7() {
-
+    void* addr1 = kmalloc(1);
+    void* addr2 = kmalloc(2);
+    void* addr3 = kmalloc(3);
+    uart_printf("%x\n", addr1);
+    uart_printf("%x\n", addr2);
+    uart_printf("%x\n", addr3);
+    while(1);
 }

@@ -265,15 +265,26 @@ void pool_init(struct pool_t* pool, uint64_t size) {
 }
 
 int obj_alloc_register(uint64_t size) {
-    if (size > PAGE_SIZE) {
+    if (size >= PAGE_SIZE) {
         uart_printf("Object too large\n");
         return -1;
     }
 
+    // normalize size
+    uint64_t size_per_allocator = PAGE_SIZE / MAX_OBJ_ALLOCTOR_NUM;
+    uint64_t normalize_block = size / size_per_allocator;
+    if (size % size_per_allocator) {
+        normalize_block++;
+    }
+    int normalize_size = normalize_block * size_per_allocator;
+
     for (int i = 0; i < MAX_OBJ_ALLOCTOR_NUM; i++) {
-        if (obj_allocator[i].used == AVAL) {
+        if (obj_allocator[i].used == USED && obj_allocator[i].obj_size == normalize_size) {
+            return i;
+        }
+        else if (obj_allocator[i].used == AVAL) {
             obj_allocator[i].used = USED;
-            pool_init(&obj_allocator[i], size); // TODO: Normalize size
+            pool_init(&obj_allocator[i], normalize_size);
             return i;
         }
     }
