@@ -4,4 +4,5 @@ void demo_lab4_do_exec();
 void demo_lab5_req2();
 void demo_lab5_req3();
 void demo_lab6();
-void demo_lab7();
+void demo_lab7_req2();
+void demo_lab7_req3();

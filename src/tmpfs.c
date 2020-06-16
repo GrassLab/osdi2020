@@ -44,6 +44,7 @@ int tmpfs_register() {
 int tmpfs_setup_mount(struct filesystem* fs, struct mount* mount) {
     mount->fs = fs;
     mount->root = tmpfs_create_dentry(NULL, "/");
+    return 0;
 }
 
 // vnode operations
@@ -61,13 +62,13 @@ int tmpfs_lookup(struct vnode* dir, struct vnode** target, const char* component
 }
 
 int tmpfs_create(struct vnode* dir, struct vnode** target, const char* component_name) {
-    // create tmpfs node structure
-    struct tmpfs_node* tmpfs_node = (struct tmpfs_node*)kmalloc(sizeof(struct tmpfs_node));
-    tmpfs_node->flag = REGULAR_FILE;
+    // create tmpfs internal structure
+    struct tmpfs_internal* file_node = (struct tmpfs_internal*)kmalloc(sizeof(struct tmpfs_internal));
+    file_node->flag = REGULAR_FILE;
 
     // create child dentry
     struct dentry* d_child = tmpfs_create_dentry(dir->dentry, component_name);
-    d_child->vnode->internal = (void*)tmpfs_node;
+    d_child->vnode->internal = (void*)file_node;
 
     *target = d_child->vnode;
     return 0;
@@ -75,7 +76,34 @@ int tmpfs_create(struct vnode* dir, struct vnode** target, const char* component
 
 // file operations
 int tmpfs_read(struct file* file, void* buf, uint64_t len) {
+    struct tmpfs_internal* file_node = (struct tmpfs_internal*)file->vnode->internal;
+    if (file_node->flag != REGULAR_FILE) {
+        uart_printf("Write to non regular file\n");
+        return -1;
+    }
+
+    char* dest = (char*)buf;
+    char* src = &file_node->buf[file->f_pos];
+    uint64_t i = 0;
+    for (; i < len && src[i] != (uint8_t)EOF; i++) {
+        dest[i] = src[i];
+    }
+    return i;
 }
 
 int tmpfs_write(struct file* file, const void* buf, uint64_t len) {
+    struct tmpfs_internal* file_node = (struct tmpfs_internal*)file->vnode->internal;
+    if (file_node->flag != REGULAR_FILE) {
+        uart_printf("Write to non regular file\n");
+        return -1;
+    }
+
+    char* dest = &file_node->buf[file->f_pos];
+    char* src = (char*)buf;
+    uint64_t i = 0;
+    for (; i < len && src[i] != '\0'; i++) {
+        dest[i] = src[i];
+    }
+    dest[i] = EOF;
+    return i;
 }

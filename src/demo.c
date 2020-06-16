@@ -137,7 +137,7 @@ void demo_lab6() {
 
 // Lab7
 
-void demo_lab7() {
+void demo_lab7_req2() {
     struct file* a = vfs_open("hello", 0);
     uart_printf("addr: %x\n", a);
     a = vfs_open("hello", O_CREAT);
@@ -146,5 +146,24 @@ void demo_lab7() {
     struct file* b = vfs_open("hello", 0);
     uart_printf("addr: %x\n", b);
     vfs_close(b);
+    while (1);
+}
+
+void demo_lab7_req3() {
+    struct file* a = vfs_open("hello", O_CREAT);
+    struct file* b = vfs_open("world", O_CREAT);
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World!", 6);
+    vfs_close(a);
+    vfs_close(b);
+
+    char buf[512];
+    b = vfs_open("hello", 0);
+    a = vfs_open("world", 0);
+    int sz;
+    sz = vfs_read(b, buf, 100);
+    sz += vfs_read(a, buf + sz, 100);
+    buf[sz] = '\0';
+    uart_printf("%s\n", buf); // should be Hello World!
     while (1);
 }
