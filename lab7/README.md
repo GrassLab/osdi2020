@@ -10,25 +10,27 @@
 
 ### vfs_open
 ### Component name lookup
-- [ ] `question 1` Is it possible that a file exists in a file system, but there is no vnode object of it?
+- [x] `question 1` Is it possible that a file exists in a file system, but there is no vnode object of it?
 in my case no, my vnode is bind by component and file
 
 ### Create a file
 ### Open a file
-- [ ] `required 2-1` implement `struct file* vfs_open(const char *pathname, int flags)`
-- [ ] `required 2-2` implement `int vfs_close(struct file* file)`
+- [x] `required 2-1` implement `struct file* vfs_open(const char *pathname, int flags)`
+- [x] `required 2-2` implement `int vfs_close(struct file* file)`
 
 ## Requirement 3
 
 ### vfs_write
-- [ ] `required 3-1` Implement `int vfs_write(struct file* file, const void* buf, size_t len)`
+- [x] `required 3-1` Implement `int vfs_write(struct file* file, const void* buf, size_t len)`
 ### vfs_read
-- [ ] `required 3-2` Implement `int vfs_read(struct file* file, void* buf, size_t len)`
+- [x] `required 3-2` Implement `int vfs_read(struct file* file, void* buf, size_t len)`
 
 - [ ] `question 2` Is EOF pass to the reader by a special character in the reader’s buffer?
+I use f_size to make sure reader will not  
 
 ### Task’s VFS information
 
-- [ ] `question 3` Should each task owns its current working directory and the root directory?
-
+- [x] `question 3` Should each task owns its current working directory and the root directory?
+Yes, sometime we need to access file by absolute addressing and relative addressing.
+So we need both on each task.
 
