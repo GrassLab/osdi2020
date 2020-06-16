@@ -26,7 +26,7 @@ void *memset(void *s, int c, unsigned long n) {
   return s;
 }
 
-int strbeg(char *str, char *beg){
+int strbeg(const char *str, char *beg){
   while(*beg){
     if(*str == *beg) str++, beg++;
     else return 0;

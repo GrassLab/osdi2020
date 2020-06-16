@@ -38,8 +38,8 @@ unsigned long startup_allocate(unsigned long size, unsigned long mask){
       sizes[i] = startup_sizes[i];
     }
     if(startup_have_allocated){
-      kfree((unsigned long)startup_addrs);
-      kfree((unsigned long)startup_sizes);
+      kfree(startup_addrs);
+      kfree(startup_sizes);
     }
     startup_addrs = addrs;
     startup_sizes = sizes;
@@ -609,6 +609,6 @@ unsigned long kmalloc(unsigned long size){
   return varied_alloc(ktoken, size);
 }
 
-void kfree(unsigned long addr){
-  varied_free(ktoken, addr);
+void kfree(void *addr){
+  varied_free(ktoken, (unsigned long)addr);
 }

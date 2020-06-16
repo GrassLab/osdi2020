@@ -59,4 +59,9 @@ void show_addr(unsigned long addr);
 #define EL 1
 #endif
 
+ #define xstr(s) str(s)
+ #define str(s) #s
+
+#define assert(expr) if(!(expr)){ printfmt(xstr(expr) " assertion failed!"); }
+
 #endif

@@ -39,10 +39,10 @@ void zone_show(Zone zone, unsigned limit);
 
 #define addr2pgidx(_addr, _zone) ((_addr - (_zone->addr)) / PAGE_SIZE)
 
-#define enable_startup_log 1
-#define enable_buddy_log 1
-#define enable_fixed_log 1
-#define enable_varied_log 1
+#define enable_startup_log 0
+#define enable_buddy_log 0
+#define enable_fixed_log 0
+#define enable_varied_log 0
 
 #if enable_startup_log
 #define startup_log(...) printfmt(__VA_ARGS__)
@@ -112,7 +112,7 @@ void varied_free(unsigned long token, unsigned long addr);
 void varied_show(VariedAllocator varied, unsigned limit);
 
 unsigned long kmalloc(unsigned long size);
-void kfree(unsigned long addr);
+void kfree(void *addr);
 unsigned long startup_max_cont_space_left();
 
 #endif

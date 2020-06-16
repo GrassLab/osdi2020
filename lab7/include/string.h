@@ -5,6 +5,6 @@ char *strchr(const char *s, int c);
 unsigned int strlen(const char *s);
 void strncpy(void *dest, const void *src, unsigned long num);
 void *memset(void *s, int c, unsigned long n);
-int strbeg(char *str, char *beg);
+int strbeg(const char *str, char *beg);
 void strcpy(char *dest, char *src);
 #endif

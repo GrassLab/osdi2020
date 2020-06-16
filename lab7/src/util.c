@@ -24,5 +24,3 @@ int *show_sp(){
 void show_addr(unsigned long addr){
   printfmt("addr = 0x%x", addr);
 }
-
-

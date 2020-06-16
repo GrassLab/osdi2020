@@ -5,6 +5,8 @@
 #include "shell.h"
 #include "string.h"
 #include "allocator.h"
+#include "type.h"
+#include "fs.h"
 
 void zombie_reaper(){
   char msg[20];
@@ -134,6 +136,44 @@ void task_varied_aloc(int ret) {
   if(!ret) exit();
 }
 
+void task_vnode_op(int ret){
+  struct file* a = vfs_open("hello", 0);
+  assert(a == NULL);
+  a = vfs_open("hello", O_CREAT);
+  assert(a != NULL);
+  vfs_close(a);
+  struct file* b = vfs_open("hello", 0);
+  assert(b != NULL);
+  vfs_close(b);
+  if(!ret) exit();
+}
+
+void task_file_op(int ret){
+  char buf[128];
+  struct file* a = vfs_open("hello", O_CREAT);
+  struct file* b = vfs_open("world", O_CREAT);
+  vfs_write(a, "Hello ", 6);
+  vfs_write(b, "World!", 6);
+  vfs_close(a);
+  vfs_close(b);
+  b = vfs_open("hello", 0);
+  a = vfs_open("world", 0);
+  int sz = vfs_read(b, buf, 100);
+  sz += vfs_read(a, buf + sz, 100);
+  buf[sz] = '\0';
+  puts(buf); // should be Hello World!
+  if(!ret) exit();
+}
+
+void task_read_dir(int ret){
+  // create some regular files at root directory
+  struct file* root = vfs_open("/", 0);
+  // your read directory function
+  // iterate all directory entries and print each file's name.
+  if(!ret) exit();
+}
+
+
 void kernel_process(){
   puts("kernel process begin...");
   //privilege_task_create(task_1, 0, current_task->priority);
@@ -144,6 +184,8 @@ void kernel_process(){
   //privilege_task_create(task_fixed_aloc, 0, current_task->priority);
   //privilege_task_create(task_varied_aloc, 0, current_task->priority);
   //privilege_task_create(zombie_reaper, 0, current_task->priority);
-  privilege_task_create(irq_shell_loop, EL, current_task->priority);
+  //privilege_task_create(task_vnode_op, 0, current_task->priority);
+  privilege_task_create(task_file_op, 0, current_task->priority);
+  //privilege_task_create(irq_shell_loop, EL, current_task->priority);
   while(1){ delay(500000); schedule(); }
 }

@@ -10,6 +10,7 @@
 #include "util.h"
 #include "allocator.h"
 #include "process.h"
+#include "fs.h"
 
 #ifdef TEST
 #include "test.h"
@@ -75,6 +76,7 @@ int main(void) {
 
 #if zonealoc
     zone_init(page_allocate(&buddy_zone, 0ul));
+    fs_init();
 #elif ! defined(zonealoc)
 #endif
 
