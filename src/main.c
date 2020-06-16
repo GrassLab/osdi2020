@@ -14,6 +14,7 @@ void main() {
   page_free(p0);
   p0 = page_alloc();
   */
+  uart_getc();
 
   init_buddy_system();
   struct block* m1 = get_space(3 << 12);
@@ -42,7 +43,7 @@ void main() {
   int token_1 = register_obj_allocator(3, VARIED);
   int token_2 = register_obj_allocator(127, VARIED);
   void* obj_1[7], *obj_2[7];
-  /*
+
   for(int i = 0; i < 7; i++){
     obj_1[i] = varied_obj_allocate(token_1);
     uart_puts("memory allocate at: ");
@@ -52,7 +53,6 @@ void main() {
   for(int i = 0; i < 7; i++){
     varied_obj_free(obj_1[i], token_1);
   }
-  */
 
   for(int i = 0; i < 7; i++){
     obj_2[i] = varied_obj_allocate(token_2);
