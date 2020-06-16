@@ -23,8 +23,10 @@ struct vnode* tmpfs_create_vnode(struct dentry* dentry) {
 }
 
 int tmpfs_register() {
+    tmpfs_v_ops = (struct vnode_operations*)kmalloc(sizeof(struct vnode_operations));
     tmpfs_v_ops->create = tmpfs_create;
     tmpfs_v_ops->lookup = tmpfs_lookup;
+    tmpfs_f_ops = (struct file_operations*)kmalloc(sizeof(struct file_operations));
     tmpfs_f_ops->read = tmpfs_read;
     tmpfs_f_ops->write = tmpfs_write;
     return 0;
