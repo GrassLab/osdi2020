@@ -3,6 +3,7 @@
 #include "irq.h"
 #include "sys.h"
 #include "timer.h"
+#include "exc.h"
 
 void exc_dispatcher(uint64_t identifier, struct trapframe_struct * trapframe)
 {
@@ -22,6 +23,9 @@ void exc_dispatcher(uint64_t identifier, struct trapframe_struct * trapframe)
   case 1:
     switch(type)
     {
+    case 4:
+      exc_EL1_same_level_EL_SP_EL1_sync();
+      return;
     case 5:
       exc_EL1_same_level_EL_SP_EL1_irq();
       return;
@@ -81,6 +85,84 @@ void exc_not_implemented(uint64_t code)
 void exc_set_x0(uint64_t retval, struct trapframe_struct * trapframe)
 {
   *((uint64_t *)(((uint64_t)trapframe) + X0_TRAPFRAME_OFFSET)) = retval;
+}
+
+void exc_EL1_same_level_EL_SP_EL1_sync(void)
+{
+  char string_buff[0x20];
+  uint8_t exception_class;
+  uint64_t ELR_EL1, ESR_EL1, FAR_EL1, TPIDR_EL1;
+  asm volatile("mrs %0, elr_el1\n"
+               "mrs %1, esr_el1\n"
+               "mrs %2, far_el1\n"
+               "mrs %3, tpidr_el1\n":
+               "=r"(ELR_EL1), "=r"(ESR_EL1), "=r"(FAR_EL1), "=r"(TPIDR_EL1));
+  exception_class = (uint8_t)(ESR_EL1 >> 26);
+  uart_puts_blocking("\nException return address: ");
+  string_ulonglong_to_hex_char(string_buff, ELR_EL1);
+  uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
+  uart_puts_blocking("ESR_EL1: ");
+  string_ulonglong_to_hex_char(string_buff, ESR_EL1);
+  uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
+  uart_puts_blocking("FAR_EL1: ");
+  string_ulonglong_to_hex_char(string_buff, FAR_EL1);
+  uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
+  uart_puts_blocking("TPIDR_EL1: ");
+  string_ulonglong_to_hex_char(string_buff, TPIDR_EL1);
+  uart_puts_blocking(string_buff);
+  uart_puts_blocking("\n");
+
+  if(exception_class == 33)
+  {
+    uint64_t TTBR0_EL1;
+    uint64_t PMD0, PMD511;
+    uint64_t text_pte_base, stack_pte_base;
+
+    uart_puts_blocking("Instruction abort. dumping TTBR0\n");
+    asm volatile("mrs %0, ttbr0_el1": "=r"(TTBR0_EL1));
+    string_ulonglong_to_hex_char(string_buff, TTBR0_EL1);
+    uart_puts_blocking(string_buff);
+
+    uart_puts_blocking("\nPGD 0 & 511: ");
+
+    PMD0 = *MMU_PA_TO_VA(TTBR0_EL1);
+    PMD511 = *MMU_PA_TO_VA((TTBR0_EL1 + 511 * 8));
+    string_ulonglong_to_hex_char(string_buff, PMD0);
+    uart_puts_blocking(string_buff);
+     uart_puts_blocking(" ");
+    string_ulonglong_to_hex_char(string_buff, PMD511);
+    uart_puts_blocking(string_buff);
+
+    uart_puts_blocking("\nuser_space_mm_struct:\n");
+    uart_puts_blocking("pte_text_base: ");
+    text_pte_base = (uint64_t)kernel_task_pool[TPIDR_EL1 - 1].user_space_mm.pte_text_base;
+    stack_pte_base = (uint64_t)kernel_task_pool[TPIDR_EL1 - 1].user_space_mm.pte_stack_base;
+    string_ulonglong_to_hex_char(string_buff, text_pte_base);
+    uart_puts_blocking(string_buff);
+    uart_puts_blocking("\npte_stack_base: ");
+    string_ulonglong_to_hex_char(string_buff, stack_pte_base);
+    uart_puts_blocking(string_buff);
+
+    uart_puts_blocking("\nText PTE 0 ~ 6\n");
+    for(unsigned pd_idx = 0; pd_idx < 6; ++pd_idx)
+    {
+      string_ulonglong_to_hex_char(string_buff, *(MMU_PA_TO_VA(text_pte_base + pd_idx * 8)));
+      uart_puts_blocking(string_buff);
+      uart_puts_blocking(" ");
+    }
+    uart_puts_blocking("\nStack PTE 509, 510\n");
+    string_ulonglong_to_hex_char(string_buff, *(MMU_PA_TO_VA(text_pte_base + 509 * 8)));
+    uart_puts_blocking(string_buff);
+    uart_puts_blocking(" ");
+    string_ulonglong_to_hex_char(string_buff, *(MMU_PA_TO_VA(stack_pte_base + 510 * 8)));
+    uart_puts_blocking(string_buff);
+
+    uart_puts_blocking("\nEnter busy infinite loop for debug purpose\n");
+    while(1);
+  }
 }
 
 void exc_EL1_same_level_EL_SP_EL1_irq(void)

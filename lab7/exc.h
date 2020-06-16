@@ -23,6 +23,7 @@ struct trapframe_struct
 void exc_dispatcher(uint64_t identifier, struct trapframe_struct * trapframe);
 void exc_not_implemented(uint64_t code);
 void exc_set_x0(uint64_t retval, struct trapframe_struct * trapframe);
+void exc_EL1_same_level_EL_SP_EL1_sync(void);
 void exc_EL1_same_level_EL_SP_EL1_irq(void);
 void exc_EL1_lower_aa64_EL_SP_EL1_sync(struct trapframe_struct * trapframe);
 void exc_EL1_lower_aa64_EL_SP_EL1_irq(void);

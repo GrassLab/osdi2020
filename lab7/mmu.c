@@ -179,11 +179,35 @@ void mmu_create_user_pmd_pte(struct user_space_mm_struct * mm_struct)
 
   for(unsigned pd_idx = 0; pd_idx < 6; ++pd_idx)
   {
-   *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+    *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
   }
 
   *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
   *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))) = (uint64_t)buddy_allocate(0, 0, BUDDY_ALLOCATE_TO_PA) | PD_ACCESS | PD_USER_ACCESS | PD_NORMAL | PD_PTE_BLOCK;
+
+#ifdef DEBUG
+  char string_buff[0x80];
+  string_ulonglong_to_hex_char(string_buff, (uint64_t)(mm_struct -> pte_text_base));
+  uart_puts("Text PTE: ");
+  uart_puts(string_buff);
+  string_ulonglong_to_hex_char(string_buff, (uint64_t)(mm_struct -> pte_stack_base));
+  uart_puts("\nStack PTE: ");
+  uart_puts(string_buff);
+  uart_puts("\nText PTE 0 ~ 6:\n");
+  for(unsigned pd_idx = 0; pd_idx < 6; ++pd_idx)
+  {
+    string_ulonglong_to_hex_char(string_buff, *(MMU_PA_TO_VA(((mm_struct -> pte_text_base) + pd_idx))));
+    uart_puts(string_buff);
+    uart_putc(' ');
+  }
+  uart_puts("\nStack PTE 509, 510:\n");
+  string_ulonglong_to_hex_char(string_buff, *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 509u))));
+  uart_puts(string_buff);
+  uart_putc(' ');
+  string_ulonglong_to_hex_char(string_buff, *(MMU_PA_TO_VA(((mm_struct -> pte_stack_base) + 510u))));
+  uart_puts(string_buff);
+  uart_putc('\n');
+#endif
 }
 
 void mmu_user_task_set_pmd(struct user_space_mm_struct * mm_struct)
