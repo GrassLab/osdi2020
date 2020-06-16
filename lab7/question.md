@@ -1,11 +1,11 @@
-# Lab6 Questions
+# Lab7 Questions
 
-> Q: Is buddy allocator perfectly eliminate external fragmentation? If yes, prove it? If no, give an external fragmentation example.
-A: No. Allocate 4 order 0 block size. Free the two of them. They won't be able to merge because the remaining two buddy is not currently free.
+> Q: Is it possible that a file exists in a file system, but there is no vnode object of it?
+A: Possible. If it is not opened or being point at. Then it resides in file system. vnode is created only when it is referenced.
 
-> Q: If the registered object size is 2049 byte, one page frame can only fit in one object. Hence the internal fragmentation is around 50%. How to decrease the percentage of the internal fragmentation in this case?
-A: Use larger order size block for continuous allocation.
+> Q: Is EOF pass to the reader by a special character in the reader’s buffer?
+A: No. When read system call detect the length requested is larger than the size recorded in file system. Function call will return the number of bytes actually read. There won't be character denoted as EOF. At least in raw system call.
 
-> Q: What’s the benefit to prevent static allocation?
-A: Smaller executable size. Ability to dynamic decide the space needed
+> Q: Should each task owns its current working directory and the root directory?
+A: Yes. Otherwise we cannot use relative pathname or chroot
 
