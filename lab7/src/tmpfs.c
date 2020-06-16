@@ -5,14 +5,9 @@
 #include "allocator.h"
 
 
-enum tmpfs_type;
-
 typedef struct TmpfsfdTag{
   const char *name;
-  enum tmpfs_type{
-    tmpfs_file,
-    tmpfs_dir,
-  } type;
+  enum dirent_type type;
   struct vnode *parent;
   union{
     char *text; 
@@ -25,7 +20,7 @@ Tmpfsfd newTmpfsFile(const char *name, struct vnode *parent){
   Tmpfsfd new = (Tmpfsfd)kmalloc(sizeof(TmpfsfdStr));
   new->name = name;
   new->parent = parent;
-  new->type = tmpfs_file;
+  new->type = dirent_file;
   new->text = (char*)kmalloc(512);
   new->next = NULL;
   return new;
@@ -40,7 +35,7 @@ Tmpfsfd newTmpfsDir(
   Tmpfsfd new = (Tmpfsfd)kmalloc(sizeof(TmpfsfdStr));
   new->name = name;
   new->parent = parent;
-  new->type = tmpfs_dir;
+  new->type = dirent_dir;
   new->child = child;
   new->next = next;
   return new;
@@ -49,14 +44,14 @@ Tmpfsfd newTmpfsDir(
 #define Tmpfsfd(x) ((Tmpfsfd)(x)->internal)
 
 #define TmpfsfdChild(x) \
-  (((Tmpfsfd)(x)->internal)->type == tmpfs_dir ? \
+  (((Tmpfsfd)(x)->internal)->type == dirent_dir ? \
    ((Tmpfsfd)(x)->internal)->child : NULL)
 
 #define TmpfsIsFile(n) \
-  (Tmpfsfd(n) && Tmpfsfd(n)->type == tmpfs_file)
+  (Tmpfsfd(n) && Tmpfsfd(n)->type == dirent_file)
 
 #define TmpfsIsDir(n) \
-  (Tmpfsfd(n) && Tmpfsfd(n)->type == tmpfs_dir)
+  (Tmpfsfd(n) && Tmpfsfd(n)->type == dirent_dir)
 
 typedef struct TmpfsFileTag{
   char *name;
@@ -68,8 +63,15 @@ int tmpfs_setup_mount(struct filesystem *fs, struct mount *mount);
 
 int tmpfs_write(struct file *file, const void *buf, size_t len);
 int tmpfs_read(struct file *file, void *buf, size_t len);
+
+DIR *tmpfs_opendir(struct vnode *node,
+    DIR *dir, const char *pathname);
+
+dirent *tmpfs_readdir(DIR *directory);
+
 int tmpfs_lookup(struct vnode *dir_node, struct vnode **target, const char *component_name);
 int tmpfs_create(struct vnode *dir_node, struct vnode **target, const char *component_name);
+enum dirent_type tmpfs_typeof(struct vnode *node);
 
 struct filesystem *tmpfs = &(struct filesystem){
   .name = "tmpfs",
@@ -77,21 +79,34 @@ struct filesystem *tmpfs = &(struct filesystem){
     .nextfs = NULL, 
 };
 
-struct file_operations *tmpfs_fop = &(struct file_operations){
+struct file_operations *tmpfs_fop =
+&(struct file_operations){
   .write = tmpfs_write,
-    .read = tmpfs_read,
+  .read = tmpfs_read,
 };
 
-struct vnode_operations *tmpfs_vop = &(struct vnode_operations){
+struct directory_operations *tmpfs_dop =
+&(struct directory_operations){
+  .opendir = tmpfs_opendir,
+  .readdir = tmpfs_readdir,
+};
+
+
+struct vnode_operations *tmpfs_vop =
+&(struct vnode_operations){
   .lookup = tmpfs_lookup,
-    .create = tmpfs_create,
+  .create = tmpfs_create,
+  .typeof = tmpfs_typeof,
 };
 
 int tmpfs_setup_mount(
     struct filesystem *fs, struct mount *mount){
   mount->fs = fs;
   mount->root = newVnode(
-      NULL, tmpfs_vop, tmpfs_fop, 
+      NULL,
+      tmpfs_vop,
+      tmpfs_fop,
+      tmpfs_dop,
       newTmpfsDir("", NULL, NULL, NULL));
   return 0;
 }
@@ -107,7 +122,7 @@ void tmpfs_show_tree(
   printf("{%s}" NEWLINE,
       *Tmpfsfd(dir_node)->name ?
       Tmpfsfd(dir_node)->name : "/");
-  
+
   struct vnode *child = TmpfsfdChild(dir_node);
   while(child){
     if(TmpfsIsDir(child)){
@@ -180,7 +195,11 @@ int tmpfs_create(
   if(exist_slash(component_name)) return 0;
 
   *childptr =
-    newVnode(NULL, dir_node->v_ops, dir_node->f_ops, newTmpfsFile(component_name, dir_node));
+    newVnode(NULL,
+        dir_node->v_ops,
+        dir_node->f_ops,
+        dir_node->d_ops,
+        newTmpfsFile(component_name, dir_node));
 
   *target = *childptr;
   return 1;
@@ -189,7 +208,7 @@ int tmpfs_create(
 int tmpfs_write(struct file *file, const void *buf, size_t len){
   char *ctx = Tmpfsfd(file->vnode)->text;
   char *pos = ctx + file->f_pos, *ptr = (char*)buf;
-  
+
   while(len--){
     *pos = *ptr;
     pos++, ptr++;
@@ -211,3 +230,32 @@ int tmpfs_read(struct file *file, void *buf, size_t len){
   return rlen;
 }
 
+DIR *tmpfs_opendir(
+    struct vnode *node,
+    DIR *dir, const char *pathname){
+  dir->path = pathname; // should use strdup
+  dir->entry.name = NULL;
+  dir->entry.type = dirent_none;
+  dir->child = NULL;
+  dir->dops = tmpfs_dop;
+  struct vnode *target;
+  if(tmpfs_lookup(node, &target, pathname)){
+    dir->root = target;
+    dir->child = TmpfsfdChild(target);
+    return dir;
+  }
+  return NULL;
+}
+
+dirent *tmpfs_readdir(DIR *dir){
+  if(!dir->child) return NULL;
+  Tmpfsfd p = Tmpfsfd(dir->child);
+  dir->entry.name = p->name;
+  dir->entry.type = p->type;
+  dir->child = p->next;
+  return &(dir->entry);
+}
+
+enum dirent_type tmpfs_typeof(struct vnode *node){
+  return Tmpfsfd(node)->type;
+}

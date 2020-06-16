@@ -8,7 +8,7 @@ target remote :1234
 #b src/timer.c:96
 #b src/task.c:231
 #b src/shell.c:72
-b src/process.c:140
+b src/process.c:190
 #b src/mm.c:365
 #b src/mm.c:88 if va == 0 && task == 0xffff000000610000
 #b src/task.c:145

@@ -25,10 +25,12 @@ struct vnode *newVnode(
     struct mount *mount,
     struct vnode_operations *vops,
     struct file_operations *fops, 
+    struct directory_operations *dops, 
     void *internal){
   struct vnode *node = (struct vnode *)kmalloc(sizeof(struct vnode));
   node->v_ops = vops;
   node->f_ops = fops;
+  node->d_ops = dops;
   node->internal = internal;
   return node;
 }
@@ -46,6 +48,7 @@ struct file *vfs_open(const char *pathname, int flags) {
   // 1. Lookup pathname from the root vnode.
   struct vnode *target = 0;
   rootfs->root->v_ops->lookup(rootfs->root, &target, pathname);
+  if(target && target->v_ops->typeof(target) != dirent_file) return NULL;
   // 2. Create a new file descriptor for this vnode if found.
   if(!target && flags & O_CREAT)
     rootfs->root->v_ops->create(rootfs->root, &target, pathname);
@@ -76,12 +79,25 @@ void vfs_show(){
   tmpfs_show_tree(rootfs->root, 0);
 }
 
-//void vfs_readdir(struct file *file){
-//  file->vnode->
-//  tmpfs_show_tree(rootfs->root, 0);
-//}
+DIR *vfs_opendir(const char *pathname){
+  DIR *dir = (DIR*)kmalloc(sizeof(DIR));
+  if(pwd->d_ops->opendir(pwd, dir, pathname))
+    return dir;
+  kfree(dir);
+  return NULL;
+}
+
+dirent *vfs_readdir(DIR *dir){
+  return dir->dops->readdir(dir);
+}
+
+
+void vfs_closedir(DIR *dir){
+  kfree(dir);
+}
 
 void fs_init(){
   register_filesystem(tmpfs);
   tmpfs->setup_mount(tmpfs, rootfs = newMnt());
+  pwd = rootfs->root;
 }

@@ -137,7 +137,7 @@ void task_varied_aloc(int ret) {
 }
 
 void task_vnode_op(int ret){
-  struct file* a = vfs_open("hello", 0);
+  struct file* a = vfs_open("non_exist", 0);
   assert(a == NULL);
   a = vfs_open("hello", O_CREAT);
   assert(a != NULL);
@@ -165,11 +165,35 @@ void task_file_op(int ret){
   if(!ret) exit();
 }
 
+void indent(int n){
+  for(int i = 0; i < n * 2; i ++){
+    printf(" ");
+  }
+}
+
+void list_dir(DIR *dir, int lv){
+  dirent *entry;
+  if(!lv) printfmt("{%s}", dir->path);
+  indent(lv);
+  while((entry = vfs_readdir(dir))){
+    indent(lv + 1);
+    printfmt(entry->type == dirent_dir ?
+        "{%s}" : "<%s>", entry->name);
+    //if(entry->type == dirent_dir){
+    //  list_dir(dir, lv + 1);
+    //}
+  }
+}
+
 void task_read_dir(int ret){
   // create some regular files at root directory
-  struct file* root = vfs_open("/", 0);
+  struct file* root = vfs_open("read_dir_test_file", O_CREAT);
   // your read directory function
+  DIR *dir = vfs_opendir("/");
+  if(dir) list_dir(dir, 0);
   // iterate all directory entries and print each file's name.
+  vfs_closedir(dir);
+  vfs_close(root);
   if(!ret) exit();
 }
 
@@ -185,7 +209,8 @@ void kernel_process(){
   //privilege_task_create(task_varied_aloc, 0, current_task->priority);
   //privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_vnode_op, 0, current_task->priority);
-  privilege_task_create(task_file_op, 0, current_task->priority);
-  //privilege_task_create(irq_shell_loop, EL, current_task->priority);
+  //privilege_task_create(task_file_op, 0, current_task->priority);
+  //privilege_task_create(task_read_dir, 0, current_task->priority);
+  privilege_task_create(irq_shell_loop, EL, current_task->priority);
   while(1){ delay(500000); schedule(); }
 }

@@ -7,16 +7,36 @@ struct vnode {
   struct mount *mount;
   struct vnode_operations *v_ops;
   struct file_operations *f_ops;
+  struct directory_operations *d_ops;
   void *internal;
 };
 
-struct file {
+typedef struct file {
   struct vnode *vnode;
   size_t f_pos;
   // The next read/write position of this file descriptor
   struct file_operations *f_ops;
   int flags;
+} FILE;
+
+enum dirent_type{
+  dirent_none,
+  dirent_file,
+  dirent_dir,
 };
+
+typedef struct dirent {
+  const char *name;
+  enum dirent_type type;
+} dirent;
+
+typedef struct dir{
+  const char *path;
+  struct vnode *root;
+  struct vnode *child;
+  dirent entry;  
+  struct directory_operations *dops;
+} DIR;
 
 struct mount {
   struct vnode *root;
@@ -32,17 +52,25 @@ struct filesystem {
 struct file_operations {
   int (*write) (struct file *file, const void *buf, size_t len);
   int (*read) (struct file *file, void *buf, size_t len);
-  int (*readdir) (struct file *file, void *buf, size_t len);
+};
+
+struct directory_operations{
+  DIR *(*opendir) (struct vnode *node, DIR *directory, const char *pathname);
+  dirent *(*readdir) (DIR *directory);
 };
 
 struct vnode_operations {
-  int (*lookup)(struct vnode *dir_node, struct vnode **target, const char *component_name);
-  int (*create)(struct vnode *dir_node, struct vnode **target, const char *component_name);
+  int (*lookup)(struct vnode *node, struct vnode **target, const char *component_name);
+  int (*create)(struct vnode *node, struct vnode **target, const char *component_name);
+  enum dirent_type (*typeof)(struct vnode *node);
 };
 
 extern struct mount *rootfs;
 int register_filesystem(struct filesystem *fs);
 struct file *vfs_open(const char *pathname, int flags);
+DIR *vfs_opendir(const char *pathname);
+dirent *vfs_readdir(DIR *dir);
+void vfs_closedir(DIR *dir);
 int vfs_close(struct file *file);
 int vfs_write(struct file *file, const void *buf, size_t len);
 int vfs_read(struct file *file, void *buf, size_t len);
@@ -55,6 +83,7 @@ struct vnode *newVnode(
     struct mount *mount,
     struct vnode_operations *vops,
     struct file_operations *fops, 
+    struct directory_operations *dops, 
     void *internal);
 
 #define O_CREAT 0b1

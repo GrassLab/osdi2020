@@ -11,6 +11,7 @@
 #include "task.h"
 #include "sys.h"
 #include "process.h"
+#include "fs.h"
 
 #ifndef WITHOUT_LOADER
 #include "loadimg.h"
@@ -69,9 +70,22 @@ char *shell_read_line(char *ptr, char *buffer) {
 
 #define EQS(xs, ys) (!strcmp(xs, ys))
 int shell_execute(char *cmd, int el) {
-  if (EQS("hello", cmd)) {
+  if(EQS("file", cmd)){
+    task_file_op(1);
+  }
+  else if(EQS("vnode", cmd)){
+    task_vnode_op(1);
+  }
+  else if(EQS("dir", cmd)){
+    task_read_dir(1);
+  }
+  else if(EQS("hello", cmd)) {
     println("Hello World!");
-  } else if (EQS("help", cmd)) {
+  }
+  else if(EQS("ls", cmd)){
+    vfs_show();
+  }
+  else if (EQS("help", cmd)) {
     println("hello : print Hello World!");
     println("clear : clean the screen");
     println("timestamp : show timestamp");
@@ -82,17 +96,21 @@ int shell_execute(char *cmd, int el) {
 #define str(a) #a
     println("BUILD @ ", xstr(BUILD_STAMP));
 #endif
-  } else if (EQS("timestamp", cmd)) {
+  } 
+  else if (EQS("timestamp", cmd)) {
     if(el) timestamp();
     else puts("not support timestamp on el0 currently");
-  } else if (EQS("sleep", cmd)) {
+  } 
+  else if (EQS("sleep", cmd)) {
     if(el) sleep(6);
     else puts("not support sleep on el0 currently");
-  } else if (EQS("reboot", cmd)) {
+  } 
+  else if (EQS("reboot", cmd)) {
     puts("rebooting...");
     reboot();
     return -1;
-  } else if (EQS("exit", cmd) || cmd[0] == 4) {
+  }
+  else if (EQS("exit", cmd) || cmd[0] == 4) {
     //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
     //__asm__ volatile ("msr daifset, #0xf":::"memory");
     //__asm__ volatile("stp x8, x9, [sp, #-16]!");
@@ -100,7 +118,8 @@ int shell_execute(char *cmd, int el) {
     //__asm__ volatile("svc #0");
     //__asm__ volatile("ldp x8, x9, [sp], #16");
     return -1;
-  } else if (EQS("clear", cmd)) {
+  }
+  else if (EQS("clear", cmd)) {
     print("\e[1;1H\e[2J");
   }
 #ifndef WITHOUT_LOADER
@@ -124,7 +143,8 @@ int shell_execute(char *cmd, int el) {
 #endif
       __asm__ volatile("svc #1");
     }
-  } else if (EQS("brk", cmd)) {
+  }
+  else if (EQS("brk", cmd)) {
     if(!el) puts("cannot do exc on el0 currently");
     else{
 #if 1
@@ -135,19 +155,22 @@ int shell_execute(char *cmd, int el) {
       __asm__ volatile("brk #1");
       puts("ret from brk");
     }
-  } else if (EQS("irq", cmd)) {
+  }
+  else if (EQS("irq", cmd)) {
     if(el){
       sys_timer_init();
       local_timer_init();
       core_timer_init();
     }
     else puts("not support timer on el0 currently");
-  } else if (EQS("board", cmd)) {
+  }
+  else if (EQS("board", cmd)) {
     if (get_board_revision())
       printf("0x%x" NEWLINE, mbox[5]);
     else
       puts("get_board_reversion() failed");
-  } else if (EQS("vcaddr", cmd)) {
+  } 
+  else if (EQS("vcaddr", cmd)) {
     if (get_vc_memaddr())
       printf("0x%x\n", mbox[5]); // it should be 0xa020d3 for rpi3 b+
     else
@@ -238,7 +261,8 @@ char *shell_stuff_line(char c, char **ptr, char *buffer) {
     while (p < (*ptr) && strchr(" \r\t\n", *p))
       p++;
     (*ptr) = buffer - 1;
-  } else if ((*ptr) >= buffer + BUFFER_SIZE) {
+  } 
+  else if ((*ptr) >= buffer + BUFFER_SIZE) {
     puts("buffer size isn't enough... cleared.");
     (*ptr) = buffer - 1;
   }
