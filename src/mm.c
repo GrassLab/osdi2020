@@ -40,8 +40,7 @@ void page_struct_init(int first_avail_page, int memory_end_page) {
             page[i].idx = i;
             page[i].used = AVAL;
             page[i].order = -1;
-            page[i].list.next = NULL;
-            page[i].list.prev = NULL;
+            list_head_init(&(page[i].list));
             counter--;
             i++;
         }
@@ -331,18 +330,12 @@ void obj_free(int token, void* virt_addr) {
 
 void buddy_push(struct buddy_t* bd, struct list_head* elmt) {
     bd->nr_free++;
-    elmt->next = &(bd->head);
-    elmt->prev = bd->head.prev;
-    bd->head.prev->next = elmt;
-    bd->head.prev = elmt;
+    list_add_tail(elmt, &(bd->head));
 }
 
 void buddy_remove(struct buddy_t* bd, struct list_head* elmt) {
     bd->nr_free--;
-    elmt->prev->next = elmt->next;
-    elmt->next->prev = elmt->prev;
-    elmt->prev = NULL;
-    elmt->next = NULL;
+    list_del(elmt);
 }
 
 void buddy_info() {
@@ -369,14 +362,12 @@ struct page_t* buddy_release_redundant(struct page_t* p, int target_order) {
 }
 
 struct page_t* buddy_pop(struct buddy_t* bd, int target_order) {
-    if (bd->head.next == &bd->head) return NULL;
+    if (list_empty(&(bd->head))) return NULL;
     bd->nr_free--;
     struct list_head* target = bd->head.next;
-    target->next->prev = target->prev;
-    target->prev->next = target->next;
-    target->next = NULL;
-    target->prev = NULL;
-    return buddy_release_redundant((struct page_t*)target, target_order); // list_head is the first member of the structure
+    list_del(target);
+    struct page_t* target_page = list_entry(target, struct page_t, list);
+    return buddy_release_redundant(target_page, target_order);
 }
 
 void buddy_merge(struct page_t *bottom, struct page_t *top, int order) {
