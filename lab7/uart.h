@@ -36,6 +36,7 @@ void uart_puts(const char * string);
 void uart_puts_blocking(const char * string);
 void uart_gets(char * string, char delimiter, unsigned length);
 void uart_getn(char * buffer, unsigned length);
+void uart_tx_flush(void);
 
 #endif
 

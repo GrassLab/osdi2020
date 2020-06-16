@@ -221,3 +221,18 @@ void uart_gets(char * string, char delimiter, unsigned length)
   string[idx + 1] = '\0';
 }
 
+void uart_tx_flush(void)
+{
+  /* keep waiting until all contents are flushed */
+  while(!QUEUE_EMPTY(uart_tx_queue))
+  {
+    /* keep waiting until fifo is empty */
+    while(!CHECK_BIT(*UART_FR, 7));
+    /* flush a character */
+    char queue_c = QUEUE_POP(uart_tx_queue);
+    *UART_DR = (uint32_t)queue_c;
+  }
+  return;
+}
+
+
