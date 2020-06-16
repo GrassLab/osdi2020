@@ -115,7 +115,6 @@ buddy_malloc (size_t size)
       buddy_bitmap_set (target, order);
       bzero (target, BUDDY_BLOCK_MIN * (1 << order));
     }
-  buddy_status ();
   return target;
 }
 
@@ -195,7 +194,6 @@ buddy_free (void *addr)
   order = buddy_bitmap_reset (addr);
   ind = (size_t) (addr - buddy_info.start) / BUDDY_BLOCK_MIN;
   buddy_merge (ind, order);
-  buddy_status ();
 }
 
 void *

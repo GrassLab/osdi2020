@@ -6,7 +6,7 @@ HEADER := $(wildcard */*.h)
 SRC := $(wildcard */*.c)
 ASM := $(wildcard asm/*/*.S)
 OBJECTS := $(patsubst %.S,%.o,$(ASM)) $(patsubst %.c,%.o,$(SRC))
-CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched -Ikernel -Imm -Wextra -Wall
+CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched -Ikernel -Imm -Wextra -Wall -Ifs
 ASFLAGS =
 
 .PHONY: all clean qemu debug indent
@@ -40,7 +40,7 @@ sd: kernel8.img
 	sudo umount rootfs
 
 indent:
-	indent $(SRC) $(HEADER) -Tsize_t
+	indent $(SRC) $(HEADER) -Tsize_t -Tfilesystem -Tmount -Tvnode -Tfile
 
 user_shell:
 	make -C user/
