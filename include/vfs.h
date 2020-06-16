@@ -16,7 +16,7 @@ struct filesystem {
 struct vnode {
     struct vnode_operations* v_ops;
     struct file_operations* f_ops;
-    struct dentry* dentry;  // TODO: list of dentry
+    struct dentry* dentry;  // TODO: list of dentry (link)
     void* internal;         // internal representation of a vnode
 };
 

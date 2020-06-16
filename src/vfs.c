@@ -14,8 +14,8 @@ void rootfs_init() {
     tmpfs->setup_mount = tmpfs_setup_mount;
     register_filesystem(tmpfs);
 
-    // rootfs = (struct mount*)kmalloc(sizeof(struct mount));
-    // tmpfs->setup_mount(tmpfs, rootfs);
+    rootfs = (struct mount*)kmalloc(sizeof(struct mount));
+    tmpfs->setup_mount(tmpfs, rootfs);
 }
 
 int register_filesystem(struct filesystem* fs) {
