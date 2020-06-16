@@ -267,11 +267,15 @@ void schedule_idle(void)
   while(1)
   {
     uart_puts(ANSI_GREEN"[Idle] Idling\n"ANSI_RESET);
-    while(!schedule_check_self_reschedule())
+    if(pqueue_uint64_t_empty(schedule_run_queue, QUEUE_TOTAL_PRIORITIES - 1))
+      while(!schedule_check_self_reschedule())
+      {
+        asm volatile("wfi");
+      }
+    else
     {
-      asm volatile("wfi");
+      schedule_yield();
     }
-    schedule_yield();
   }
 }
 
