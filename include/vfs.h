@@ -1,3 +1,6 @@
+#ifndef __VFS__
+#define __VFS__
+
 #include "typedef.h"
 
 struct mount {
@@ -42,8 +45,11 @@ struct vnode_operations {
 
 extern struct mount* rootfs;
 
+void rootfs_init();
 int register_filesystem(struct filesystem* fs);
 struct file* vfs_open(const char* pathname, int flags);
 int vfs_close(struct file* file);
 int vfs_write(struct file* file, const void* buf, uint64_t len);
 int vfs_read(struct file* file, void* buf, uint64_t len);
+
+#endif // __VFS__

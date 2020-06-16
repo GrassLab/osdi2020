@@ -1,6 +1,11 @@
 #include "vfs.h"
+#include "tmpfs.h"
 
 struct mount* rootfs;
+
+void rootfs_init() {
+    
+}
 
 int register_filesystem(struct filesystem* fs) {
     // register the file system to the kernel.

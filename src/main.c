@@ -5,6 +5,7 @@
 #include "schedule.h"
 #include "mm.h"
 #include "exception.h"
+#include "vfs.h"
 
 void boot_init() {
     // Get the amount of RAM
@@ -24,6 +25,10 @@ void boot_init() {
     // Initialize Frame Buffer
     fb_init();
     uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
+
+    // Initialize File System
+    rootfs_init();
+    uart_printf("\n[%f] Init RootFS done", get_timestamp());
 
     // Welcome Messages
     // fb_splash();
