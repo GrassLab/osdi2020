@@ -9,7 +9,7 @@ static uint64_t token_array[PAGE_SIZE / 8];
 static Page *large_size_page_list;
 static Page **indirect_large_size_page_list = &large_size_page_list;
 
-static const size_t kMetaDataSlots = 2;
+static const size_t kMetaDataSlots = 1;
 
 void kmalloc_init(void) {
     for (size_t i = 0; i < PAGE_SIZE / 8; ++i) {
@@ -31,7 +31,7 @@ void *kmalloc(size_t size) {
     }
 
     // +8 for placing meta data for kmalloc
-    // chunk ptr ->    | nothing | chunk size |
+    // chunk ptr ->    |      chunk size      |
     // returned ptr -> |      user data       |
     //                 |         ...          |
     size_t aligned_size = alignSize(size) + 8;    
@@ -52,7 +52,7 @@ void *kmalloc(size_t size) {
         chunk = (uint64_t *)gPage.getBlock(page)->lower;
     }
 
-    chunk[1] = aligned_size;
+    chunk[0] = aligned_size;
 
     sendStringUART("[kmalloc] malloc size ");
     sendHexUART(size);
@@ -66,10 +66,10 @@ void *kmalloc(size_t size) {
 void kfree(void *ptr) {
     uint64_t *chunk = (uint64_t *)((uint64_t)ptr - kMetaDataSlots * 8);
     sendStringUART("[kmalloc] free size ");
-    sendHexUART(chunk[1] - 8);
+    sendHexUART(chunk[0] - 8);
     sendUART('\n');
 
-    if (chunk[1] < PAGE_SIZE) {
+    if (chunk[0] < PAGE_SIZE) {
         gSlab.deallocate(chunk);
     } else {
         Page **indirect_next = indirect_large_size_page_list;
