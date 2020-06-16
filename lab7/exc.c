@@ -89,6 +89,7 @@ void exc_set_x0(uint64_t retval, struct trapframe_struct * trapframe)
 
 void exc_EL1_same_level_EL_SP_EL1_sync(void)
 {
+  uart_tx_flush();
   char string_buff[0x20];
   uint8_t exception_class;
   uint64_t ELR_EL1, ESR_EL1, FAR_EL1, TPIDR_EL1;
