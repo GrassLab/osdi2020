@@ -1,10 +1,26 @@
 #include "typedef.h"
 
+struct mount {
+    struct dentry* root;  // root directory
+    struct filesystem* fs;
+};
+
+struct filesystem {
+    const char* name;
+    int (*setup_mount)(struct filesystem* fs, struct mount* mount);
+};
+
 struct vnode {
-    struct mount* mount;
     struct vnode_operations* v_ops;
     struct file_operations* f_ops;
-    void* internal; // internal representation of a vnode
+    struct dentry* dentry;  // TODO: list of dentry
+    void* internal;         // internal representation of a vnode
+};
+
+struct dentry {
+    char* name;
+    struct dentry* parent;
+    struct vnode* vnode;
 };
 
 struct file {
@@ -14,24 +30,14 @@ struct file {
     int flags;
 };
 
-struct mount {
-    struct vnode* root;  // root directory
-    struct filesystem* fs;
-};
-
-struct filesystem {
-    const char* name;
-    int (*setup_mount)(struct filesystem* fs, struct mount* mount);
-};
-
 struct file_operations {
     int (*write)(struct file* file, const void* buf, uint64_t len);
     int (*read)(struct file* file, void* buf, uint64_t len);
 };
 
 struct vnode_operations {
-    int (*lookup)(struct vnode* dir_node, struct vnode** target, const char* component_name);
-    int (*create)(struct vnode* dir_node, struct vnode** target, const char* component_name);
+    struct dentry* (*lookup)(struct vnode* dir, struct dentry* dentry);
+    int (*create)(struct vnode* dir, struct dentry* dentry);
 };
 
 extern struct mount* rootfs;
