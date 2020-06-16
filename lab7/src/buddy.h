@@ -55,6 +55,7 @@ void __init_obj_page(struct page* page, unsigned size);
 void _obj_free(void *obj, struct page *page);
 void obj_free(void *obj, int token);
 
+void __init_kmalloc();
 void *kmalloc(unsigned int size);
 void kfree(void *block);
 struct page *find_page(int pfn);

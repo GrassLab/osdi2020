@@ -109,7 +109,6 @@ void schedule() {
 }
 
 void timer_tick() {
-    struct task_struct *p = current;
     --current->counter;
     if (current->counter > 0 || current->preempt_count > 0) {
         return;

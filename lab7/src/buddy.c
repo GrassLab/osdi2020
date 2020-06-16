@@ -125,7 +125,7 @@ struct page *buddy_alloc(int size){
     }
     uart_puts("Unknown error!");
     uart_puts("\n");
-    return -1;
+    return 0;
 }
 
 int buddy_alloc_ret_pfn(int size){

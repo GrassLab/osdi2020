@@ -5,6 +5,9 @@
 #include "irq.h"
 #include "timer.h"
 #include "sched.h"
+#include "mm.h"
+#include "buddy.h"
+#include "string.h"
 #define S_MAX 1000
 
 void read_string(char *buf){
@@ -27,15 +30,6 @@ void read_string(char *buf){
     buf[i] = '\0';  // Add termination
     uart_puts("\n");
     return;
-}
-
-int strcmp(char *s1, char *s2){
-    int i;
-    for (i = 0; s1[i] == s2[i]; i++){
-        if (s1[i] == '\0')
-            return 0;
-    }
-    return s1[i] - s2[i];
 }
 
 unsigned long get_cpu_time(){
@@ -149,7 +143,6 @@ void shell(){
             buddy_init(100);
             buddy_show();
             
-            int obj_32 = register_obj_allocator(32);
             int obj_64 = register_obj_allocator(64);
             int obj_128 = register_obj_allocator(128);
 
