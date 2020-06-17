@@ -5,5 +5,4 @@ Debug/*
 *build
 *.img
 *.elf
-linker.ld
 out
