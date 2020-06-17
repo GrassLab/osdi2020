@@ -37,6 +37,6 @@ static void __list_del(struct list_head *prev,
 
 void list_del(struct list_head *entry) {
     __list_del(entry->prev, entry->next);
-    entry->next = NULL;
-    entry->prev = NULL;
+    entry->next = entry;
+    entry->prev = entry;
 }

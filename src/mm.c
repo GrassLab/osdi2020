@@ -330,7 +330,7 @@ void obj_free(int token, void* virt_addr) {
 
 void buddy_push(struct buddy_t* bd, struct list_head* elmt) {
     bd->nr_free++;
-    list_add_tail(elmt, &(bd->head));
+    list_add_tail(elmt, &bd->head);
 }
 
 void buddy_remove(struct buddy_t* bd, struct list_head* elmt) {
