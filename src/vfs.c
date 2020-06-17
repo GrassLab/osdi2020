@@ -26,6 +26,7 @@ int register_filesystem(struct filesystem* fs) {
         tmpfs_f_ops = kmalloc(sizeof(struct file_operations));
         tmpfs_v_ops->lookup = tmpfs_lookup;
         tmpfs_v_ops->create = tmpfs_create;
+        tmpfs_v_ops->chdir = tmpfs_chdir;
         tmpfs_f_ops->write = tmpfs_write;
         tmpfs_f_ops->read = tmpfs_read;
         tmpfs_f_ops->list = tmpfs_list;
@@ -53,9 +54,10 @@ struct file* vfs_open(const char* pathname, int flags) {
         fd->f_ops = target->f_ops;
         fd->f_pos = 0;
     } else if (flags == O_CREAT) {
-        int ret = currentdir->v_ops->lookup(rootfs->root, &target, pathname);
+        asm volatile("cre:");
+        int ret = currentdir->v_ops->lookup(currentdir, &target, pathname);
         if (ret == -1) {
-            currentdir->v_ops->create(rootfs->root, &target, pathname);
+            currentdir->v_ops->create(currentdir, &target, pathname);
             fd = (struct file*)kmalloc(sizeof(struct file));
             fd->vnode = target;
             fd->f_ops = target->f_ops;
@@ -64,7 +66,8 @@ struct file* vfs_open(const char* pathname, int flags) {
             print_s("File exist!!\n");
         }
     } else {
-        int ret = currentdir->v_ops->lookup(rootfs->root, &target, pathname);
+        int ret = currentdir->v_ops->lookup(currentdir, &target, pathname);
+        asm volatile("op:");
         if (ret == -1) {
             print_s("File not found!!\n");
         } else {
@@ -105,12 +108,7 @@ int mkdir(const char* pathname) { return tmpfs_mkdir(currentdir, pathname); }
 
 int chdir(const char* pathname) {
     struct vnode* target;
-    int ret = currentdir->v_ops->lookup(rootfs->root, &target, pathname);
-    if (ret == -1 && ((struct fentry*)target->internal)->type != FILE_TYPE_D) {
-        print_s("Dir not found!!\n");
-        return -1;
-    } else {
-        currentdir = target;
-        return 1;
-    }
+    int ret = currentdir->v_ops->chdir(currentdir, &target, pathname);
+    currentdir = target;
+    return ret;
 }

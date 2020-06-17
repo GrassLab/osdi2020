@@ -56,15 +56,26 @@ void foo_kernel() {
     buf[sz] = '\0';
     print_s(buf);
     mkdir("dir1");
+    vfs_close(a);
+    vfs_close(b);
 
-    struct file* root = vfs_open("/", 0);
-    vfs_list(root);
+    struct file* dir = vfs_open("/", 0);
+    vfs_list(dir);
+    vfs_close(dir);
 
     chdir("dir1");
     mkdir("dir2");
 
-    struct file* dir = vfs_open(".", 0);
+    dir = vfs_open(".", 0);
     vfs_list(dir);
+    vfs_close(dir);
+
+    chdir("..");
+
+    dir = vfs_open(".", 0);
+    asm volatile("gg:");
+    vfs_list(dir);
+    vfs_close(dir);
 
     while (1)
         ;

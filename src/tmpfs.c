@@ -18,21 +18,20 @@ int tmpfs_mount(struct filesystem* fs, struct mount* mount) {
     struct vnode* vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
     vnode->v_ops = tmpfs_v_ops;
     vnode->f_ops = tmpfs_f_ops;
+    vnode->internal = fentry;
 
-    /* vnode->f_ops = tmpfs_f_ops; */
     fentry->type = FILE_TYPE_D;
-    fentry->vnode = vnode;
 
     init_fentry(fentry, vnode, "/");
     for (int i = 0; i < DIR_MAX; i++) {
         fentry->list[i] = (struct fentry*)kmalloc(sizeof(struct fentry));
         fentry->list[i]->type = FILE_TYPE_N;
         fentry->list[i]->name[0] = 0;
+        fentry->list[i]->parent = fentry;
     }
 
-    mount->root->v_ops = tmpfs_v_ops;
-    mount->root->f_ops = tmpfs_f_ops;
-    mount->root->internal = (void*)fentry;
+    mount->root = vnode;
+    /* mount->root->internal = (void*)fentry; */
     return 1;
 }
 
@@ -92,12 +91,31 @@ int tmpfs_mkdir(struct vnode* dir_node, const char* component_name) {
                     (struct fentry*)kmalloc(sizeof(struct fentry));
                 fentry->list[i]->type = FILE_TYPE_N;
                 fentry->list[i]->name[0] = 0;
+                fentry->list[i]->parent = fentry;
             }
 
             return 1;
         }
     }
     return -1;
+}
+
+int tmpfs_chdir(struct vnode* dir_node, struct vnode** target,
+                const char* component_name) {
+    if (!strcmp(component_name, "..")) {
+        *target = ((struct fentry*)dir_node->internal)->parent->vnode;
+        asm volatile("ji:");
+        return 1;
+    } else {
+        int ret = dir_node->v_ops->lookup(rootfs->root, target, component_name);
+        if (ret == -1 ||
+            ((struct fentry*)(*target)->internal)->type != FILE_TYPE_D) {
+            print_s("Dir not found!!\n");
+            return -1;
+        } else {
+            return 1;
+        }
+    }
 }
 
 int tmpfs_list(struct file* file) {

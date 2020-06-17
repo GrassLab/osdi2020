@@ -10,6 +10,7 @@ struct vnode {
 };
 
 struct file {
+  int tmp;
   struct vnode* vnode;
   size_t f_pos; // The next read/write position of this file descriptor
   struct file_operations* f_ops;
@@ -35,6 +36,7 @@ struct file_operations {
 struct vnode_operations {
   int (*lookup)(struct vnode* dir_node, struct vnode** target, const char* component_name);
   int (*create)(struct vnode* dir_node, struct vnode** target, const char* component_name);
+  int (*chdir)(struct vnode* dir_node, struct vnode** target, const char* component_name);
 };
 
 extern struct mount* rootfs;
