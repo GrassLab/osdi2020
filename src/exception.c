@@ -99,6 +99,26 @@ void sys_remain_page(struct trapframe* trapframe) {
     trapframe->x[0] = remain_page;
 }
 
+void sys_open(struct trapframe* trapframe) {
+
+}
+
+void sys_close(struct trapframe* trapframe) {
+
+}
+
+void sys_write(struct trapframe* trapframe) {
+
+}
+
+void sys_read(struct trapframe* trapframe) {
+
+}
+
+void sys_readdir(struct trapframe* trapframe) {
+
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_TASK_ID:
@@ -127,6 +147,26 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_REMAIN_PAGE:
             sys_remain_page(trapframe);
+            break;
+
+        case SYS_OPEN:
+            sys_open(trapframe);
+            break;
+
+        case SYS_CLOSE:
+            sys_close(trapframe);
+            break;
+
+        case SYS_WRITE:
+            sys_write(trapframe);
+            break;
+
+        case SYS_READ:
+            sys_read(trapframe);
+            break;
+
+        case SYS_READDIR:
+            sys_readdir(trapframe);
             break;
     }
 }

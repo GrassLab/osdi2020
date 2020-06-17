@@ -181,6 +181,3 @@ void demo_lab7_ele1() {
     while (1);
 }
 
-void demo_lab7_ele2() {
-    
-}

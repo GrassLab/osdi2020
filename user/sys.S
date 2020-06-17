@@ -42,3 +42,33 @@ remain_page_num:
     mov x8, SYS_REMAIN_PAGE
     svc #0
     ret
+
+.global open
+open:
+    mov x8, SYS_OPEN
+    svc #0
+    ret
+
+.global close
+close:
+    mov x8, SYS_CLOSE
+    svc #0
+    ret
+
+.global write
+write:
+    mov x8, SYS_WRITE
+    svc #0
+    ret
+
+.global read
+read:
+    mov x8, SYS_READ
+    svc #0
+    ret
+
+.global readdir
+readdir:
+    mov x8, SYS_READDIR
+    svc #0
+    ret
