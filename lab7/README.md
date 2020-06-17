@@ -1,7 +1,7 @@
-OSDI LAB7
+Lab7
 ===
 #### `Q1` Is it possible that a file exists in a file system, but there is no vnode object of it?
-可能。在硬碟剛被插到電腦上的時候，file 存在硬碟中，但沒有對應的 vnode。
+可能。在硬碟剛被插到電腦上的時候，此時 file 存在硬碟中，但卻沒有對應的 vnode。
 
 #### `Q2` Is EOF pass to the reader by a special character in the reader’s buffer?
 reader 可以透過 f_pos 得知 file 的 EOF，在讀完後回傳一個值通知 user 已經讀完了。
