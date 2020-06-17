@@ -11,7 +11,8 @@ struct filesystem tmpfs = {
 
 struct file_operations tmpfs_file_operations = {
   .read = tmpfs_read,
-  .write = tmpfs_write
+  .write = tmpfs_write,
+  .readdir = tmpfs_readdir
 };
 
 struct vnode_operations tmpfs_vnode_operations = {
@@ -27,6 +28,8 @@ int tmpfs_setup_mount(struct filesystem* fs, struct mount* mount) {
   vn->type = VNODE_TYPE_DIR;
   struct tmpfs_dir *dir = (struct tmpfs_dir *)PFN_TO_KVIRT(buddy_alloc(0)->pfn);
   dir->file_nums = 0;
+  dir->d_pos = 0;
+  dir->vn = vn;
   vn->internal = dir;
 
   mount->fs = fs;
@@ -96,4 +99,18 @@ int tmpfs_write(struct file* file, const void* buf, size_t len) {
 
   file->f_pos = pos;
   return nwritten;
+}
+
+int tmpfs_readdir(struct file* dir, char* buf, size_t len) {
+  if (dir->vnode->type != VNODE_TYPE_DIR) {
+    return -1;
+  }
+
+  struct tmpfs_dir *d = (struct tmpfs_dir *)dir->vnode->internal;
+  if (d->d_pos >= d->file_nums) {
+    return -1;
+  }
+  strcpy(buf, d->files[d->d_pos].name);
+  d->d_pos += 1;
+  return 0;
 }

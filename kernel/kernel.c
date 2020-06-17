@@ -127,6 +127,15 @@ int main(void) {
   sz += vfs_read(a, buf + sz, 100);
   buf[sz] = '\0';
   printk("%s\n", buf); // should be Hello World!
+  vfs_close(a);
+  vfs_close(b);
+
+  /* Test cases for vfs_readdir() */
+  a = vfs_open("/", O_CREAT);
+  while (vfs_readdir(a, buf, sizeof(buf)) == 0) {
+    printk("/%s\n", buf);
+  }
+  vfs_close(a);
 
   idle_task_create();
   privilege_task_create(reaper);

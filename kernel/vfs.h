@@ -25,8 +25,8 @@ struct file {
   size_t f_pos; // The next read/write position of this file descriptor
   struct file_operations* f_ops;
   int flags;
-};
 
+};
 struct mount {
   struct filesystem* fs;
   struct vnode* root;
@@ -40,6 +40,7 @@ struct filesystem {
 struct file_operations {
   int (*read) (struct file* file, void* buf, size_t len);
   int (*write) (struct file* file, const void* buf, size_t len);
+  int (*readdir) (struct file* dir, char* buf, size_t len);
 };
 
 struct vnode_operations {
@@ -58,5 +59,6 @@ struct file* vfs_open(const char* pathname, int flags);
 int vfs_close(struct file* file);
 int vfs_read(struct file* file, void* buf, size_t len);
 int vfs_write(struct file* file, const void* buf, size_t len);
+int vfs_readdir(struct file* dir, char* buf, size_t len);
 
 #endif // KERNEL_VFS_H_

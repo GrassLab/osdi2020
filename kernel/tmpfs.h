@@ -23,6 +23,7 @@ struct tmpfs_dir {
   struct vnode *vn;
   size_t file_nums;
   struct tmpfs_file files[MAX_FILE_PER_DIR];
+  size_t d_pos; // The index of next file information to be read
 };
 
 int tmpfs_setup_mount(struct filesystem* fs, struct mount* mount);
@@ -32,5 +33,6 @@ int tmpfs_create(struct vnode* dir_node, struct vnode** target, const char* comp
 
 int tmpfs_write(struct file* file, const void* buf, size_t len);
 int tmpfs_read(struct file* file, void* buf, size_t len);
+int tmpfs_readdir(struct file* dir, char* buf, size_t len);
 
 #endif // KERNEL_TMPFS_H_

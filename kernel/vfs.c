@@ -12,7 +12,7 @@ int register_filesystem(struct filesystem* fs) {
 struct file* vfs_open(const char* pathname, int flags) {
   char path[MAX_PATHNAME_LEN];
   strcpy(path, pathname);
-  struct vnode *cur_node = rootfs->root, *prev_node;
+  struct vnode *cur_node = rootfs->root, *prev_node = rootfs->root;
   char *cur_comp = strtok(path, "/ \n"), *prev_comp;
 
   while (cur_comp != NULL) {
@@ -48,4 +48,8 @@ int vfs_read(struct file* file, void* buf, size_t len) {
 
 int vfs_write(struct file* file, const void* buf, size_t len) {
   file->f_ops->write(file, buf, len);
+}
+
+int vfs_readdir(struct file* dir, char* buf, size_t len) {
+  dir->f_ops->readdir(dir, buf, len);
 }
