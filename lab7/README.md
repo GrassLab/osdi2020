@@ -1,9 +1,9 @@
-# NCTU OSDI LAB6
+# NCTU OSDI LAB7
 ## 
 
 | student id  | name  | lab  |
 |---|---|---|
-|  0510507 | 吳政緯  | 6  |
+|  0510507 | 吳政緯  | 7  |
 
 ### Directory Tree
 
