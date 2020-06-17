@@ -14,6 +14,9 @@ int register_filesystem(filesystem *fs)
     uart_puts(fs->name);
     uart_puts("\n");
 
+    for(int i=0;i<FILE_ARR_SIZE;i++){
+        file_arr[i].vnode = NULL;
+    }
     return fs->setup_mount(fs, &rootfs);
 }
 void find_null(file** ptr, vnode *target){
@@ -54,7 +57,7 @@ file *vfs_open(const char *pathname, int flags)
         else{
             ret_val = rootfs->root->v_ops->create(rootfs->root, &target, pathname);
             find_null(&filee, target);
-            assert(filee!=NULL);
+            // assert(filee!=NULL);
         }
         
         return filee;
