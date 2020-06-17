@@ -6,5 +6,6 @@ void idleTask();
 void execTask();
 void kernelTask();
 void memTestTask();
+void vfsTask();
 
 #endif

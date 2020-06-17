@@ -32,6 +32,7 @@
 #include "memory/memManager.h"
 #include "memory/buddy.h"
 #include "memory/memPool.h"
+#include "filesystem/filesystem.h"
 
 void kernelMain()
 {
@@ -40,7 +41,8 @@ void kernelMain()
     initBuddy();
     initMemPool();
     initTaskPool();
-    memTestTask();
+    createFilesystem("tmpfs");
+    vfsTask();
 
 
     // for (int i = 0; i < 3; ++i)

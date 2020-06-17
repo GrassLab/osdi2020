@@ -29,13 +29,18 @@ MM       = $(wildcard $(MMDIR)/*.c)
 ASMMM    = $(wildcard $(MMDIR)/*.S)
 MMOBJS   = $(patsubst $(MMDIR)/%.c,%_c.o,$(MM)) \
 		   $(patsubst $(MMDIR)/%.S,%.o,$(ASMMM))
+FSDIR	 = src/filesystem
+FS       = $(wildcard $(FSDIR)/*.c)
+ASMFS    = $(wildcard $(FSDIR)/*.S)
+FSOBJS   = $(patsubst $(FSDIR)/%.c,%_c.o,$(FS)) \
+		   $(patsubst $(FSDIR)/%.S,%.o,$(ASMFS))
 
-OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS) $(TASKOBJS) $(MMOBJS)
+OBJS = $(SRCOBJS) $(IRQOBJS) $(DVOBJS) $(TASKOBJS) $(MMOBJS) $(FSOBJS)
 
 LSCRIPT  = linker.ld
 KERNEL   = kernel8
 
-VPATH    = $(SRCDIR) $(IRQDIR) $(DVDIR) $(TASKDIR) $(MMDIR)
+VPATH    = $(SRCDIR) $(IRQDIR) $(DVDIR) $(TASKDIR) $(MMDIR) $(FSDIR)
 
 all: $(KERNEL).img
 
