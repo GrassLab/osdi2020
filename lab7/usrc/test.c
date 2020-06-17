@@ -106,9 +106,28 @@ void write_text() {
   if(fork() == 0){
     int* pc;
     __asm__ volatile(
-      "adr %0, ."
-      :"=r"(pc)
-    );
+        "adr %0, ."
+        :"=r"(pc)
+        );
     *pc = 0; // seg fault
   }
+}
+
+#define O_CREAT 0b1
+
+void test_fs(){
+  char buf[128];
+  int a = fopen("hello", O_CREAT);
+  int b = fopen("world", O_CREAT);
+  fwrite(a, "Hello ", 6);
+  fwrite(b, "World!", 6);
+  fclose(a);
+  fclose(b);
+  b = fopen("hello", 0);
+  a = fopen("world", 0);
+  int sz;
+  sz = fread(b, buf, 100);
+  sz += fread(a, buf + sz, 100);
+  buf[sz] = '\0';
+  printf("%s\n", buf); // should be Hello World!
 }

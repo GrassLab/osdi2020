@@ -38,7 +38,8 @@ void uart_read_enqueue(Task *task){
 
 int uart_read_front(){
   int s = rtbeg;
-  for(int i = rtbeg + 1; i < rtend; i++){
+  for(int i = (rtbeg + 1) % TASK_SIZE;
+      i != rtend; i = (i + 1) % TASK_SIZE){
     if(read_tasks[s]->priority < read_tasks[i]->priority){
       s = i;
     }
@@ -47,12 +48,13 @@ int uart_read_front(){
 }
 
 void uart_read_dequeue(int s){
-  if(s == rtbeg) rtbeg++;
+  if(s == rtbeg) rtbeg = (rtbeg + 1) % TASK_SIZE;
   else{
-    for(int i = s; i < rtend - 1; i++){
+    int end = (rtend + TASK_SIZE - 1) % TASK_SIZE;
+    for(int i = s; i != end; i = (i + 1) % TASK_SIZE){
       read_tasks[i] = read_tasks[i + 1];
     }
-    rtend--;
+    rtend = rtend + (TASK_SIZE - 1) % TASK_SIZE;
   }
 }
 

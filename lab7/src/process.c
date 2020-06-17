@@ -8,11 +8,11 @@
 #include "type.h"
 #include "fs.h"
 
-void zombie_reaper(){
+void zombie_reaper(int show){
   char msg[20];
   show_task_msg("zombie reaper");
   while(1){
-    show_task_msg("zreaper running");
+    if(show) show_task_msg("zreaper running");
     for(int i = 0; i < TASK_SIZE; i++){
       if(tasks[i] && tasks[i]->status == zombie){
         sprintf(msg, "reaper kill zombie %d", tasks[i]->pid);
@@ -78,7 +78,7 @@ void task_buddy_aloc(int ret) {
 
   for(unsigned s = 0; s < size; s++)
     for(int i = 0; i < times; i++)
-      pages[s][i] = zone_get_free_pages(buddy_zone, s);
+      pages[s][i] = VA_START | zone_get_free_pages(buddy_zone, s);
 
   for(unsigned s = 0; s < size; s++)
     for(int i = 0; i < times; i++)
@@ -177,11 +177,11 @@ void list_dir(DIR *dir, int lv){
   indent(lv);
   while((entry = vfs_readdir(dir))){
     indent(lv + 1);
-    printfmt(entry->type == dirent_dir ?
-        "{%s}" : "<%s>", entry->name);
-    //if(entry->type == dirent_dir){
-    //  list_dir(dir, lv + 1);
-    //}
+    printf(entry->type == dirent_dir ?
+        "{%s}" NEWLINE : "<%s>" NEWLINE, entry->name);
+    if(entry->type == dirent_dir){
+      list_dir(dir, lv + 1);
+    }
   }
 }
 
@@ -197,7 +197,6 @@ void task_read_dir(int ret){
   if(!ret) exit();
 }
 
-
 void kernel_process(){
   puts("kernel process begin...");
   //privilege_task_create(task_1, 0, current_task->priority);
@@ -207,10 +206,11 @@ void kernel_process(){
   //privilege_task_create(task_buddy_aloc, 0, current_task->priority);
   //privilege_task_create(task_fixed_aloc, 0, current_task->priority);
   //privilege_task_create(task_varied_aloc, 0, current_task->priority);
-  //privilege_task_create(zombie_reaper, 0, current_task->priority);
+  privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_vnode_op, 0, current_task->priority);
   //privilege_task_create(task_file_op, 0, current_task->priority);
   //privilege_task_create(task_read_dir, 0, current_task->priority);
+  privilege_task_create(kexec_user_main, 0, current_task->priority);
   privilege_task_create(irq_shell_loop, EL, current_task->priority);
   while(1){ delay(500000); schedule(); }
 }

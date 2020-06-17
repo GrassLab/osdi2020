@@ -19,10 +19,12 @@ Task **tasks = 0, **read_tasks = 0;
 
 void task_init(){
   show_task_msg("task init");
+  if(!rootfs->root) puts("warning, no root directory");
   init_task = (Task*)kmalloc(sizeof(Task));
   *init_task = (Task){
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0, 0, none, {0,}
+    {[0 ... TASK_BUFFER_SIZE - 1] = 0}, 0, 0, 0, 0, 0, 0,
+    {[0 ... fdtab_size - 1] = 0}, rootfs->root, 0, none, {0,}
   };
   tasks = (Task**)kmalloc(sizeof(Task*) * TASK_SIZE);
   tasks[0] = current_task = init_task;
@@ -88,6 +90,10 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
   p->priority = priority;
   p->preempt_count = 1; // disable preemtion until schedule_tail
   p->status = idle;
+  p->pwd = rootfs->root;
+
+  for(int i = 0; i < fdtab_size; i++)
+    p->fdtab[i] = NULL;
 
   if(func){
 

@@ -71,3 +71,27 @@ call_sys_pages:
     mov w8, #SYSNUM_PAGES
     svc #0
     ret
+
+.globl call_sys_fopen
+call_sys_fopen:
+    mov w8, #SYSNUM_FOPEN
+    svc #0
+    ret
+
+.globl call_sys_fclose
+call_sys_fclose:
+    mov w8, #SYSNUM_FCLOSE
+    svc #0
+    ret
+
+.globl call_sys_fread
+call_sys_fread:
+    mov w8, #SYSNUM_FREAD
+    svc #0
+    ret
+
+.globl call_sys_fwrite
+call_sys_fwrite:
+    mov w8, #SYSNUM_FWRITE
+    svc #0
+    ret

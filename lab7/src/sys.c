@@ -1,6 +1,7 @@
 #include "io.h"
 #include "irq.h"
 #include "mm.h"
+#include "fs.h"
 #include "sched.h"
 #include "task.h"
 #include "util.h"
@@ -135,6 +136,39 @@ void sys_pages(unsigned long pid) {
   }
 }
 
+int sys_fopen(char *path, int flags){
+  for(int i = 0; i < fdtab_size; i++){
+    if(!current_task->fdtab[i]){
+      if((current_task->fdtab[i] = vfs_open(path, flags))){
+        return i;
+      }
+      else return -1;
+    }
+  }
+  return -1;
+}
+
+int sys_fclose(int fd){
+  if(current_task->fdtab[fd]){
+    int ret = vfs_close(current_task->fdtab[fd]);
+    current_task->fdtab[fd] = NULL;
+    return ret;
+  }
+  else return 0;
+}
+
+int sys_fread(int fd, char *buf, size_t len){
+  if(current_task->fdtab[fd])
+    return vfs_read(current_task->fdtab[fd], buf, len);
+  return 0;
+}
+
+int sys_fwrite(int fd, char *buf, size_t len){
+  if(current_task->fdtab[fd])
+    return vfs_write(current_task->fdtab[fd], buf, len);
+  return 0;
+}
+
 long int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     long x5) {
 
@@ -175,6 +209,18 @@ long int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
     case SYSNUM_PAGES:
       sys_pages(x0);
       break;
+    case SYSNUM_FOPEN:
+      return sys_fopen((char*)x0, x1);
+      break;
+    case SYSNUM_FCLOSE:
+      return sys_fclose(x0);
+      break;
+    case SYSNUM_FREAD:
+      return sys_fread(x0, (char*)x1, x2);
+      break;
+    case SYSNUM_FWRITE:
+      return sys_fwrite(x0, (char*)x1, x2);
+      break;
     default:
       printf("syscall failed with code number: %d" NEWLINE, code);
       return -1;
@@ -182,4 +228,4 @@ long int syscall(unsigned int code, long x0, long x1, long x2, long x3, long x4,
   return 0;
 }
 
-void *const sys_call_table[] = {sys_read, sys_write, sys_exec, sys_fork, sys_exit, sys_signal, sys_mutex_lock, sys_mutex_unlock};
+//void *const sys_call_table[] = {sys_read, sys_write, sys_exec, sys_fork, sys_exit, sys_signal, sys_mutex_lock, sys_mutex_unlock};

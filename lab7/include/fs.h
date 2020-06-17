@@ -31,7 +31,7 @@ typedef struct dirent {
 } dirent;
 
 typedef struct dir{
-  const char *path;
+  char *path;
   struct vnode *root;
   struct vnode *child;
   dirent entry;  
@@ -57,12 +57,16 @@ struct file_operations {
 struct directory_operations{
   DIR *(*opendir) (struct vnode *node, DIR *directory, const char *pathname);
   dirent *(*readdir) (DIR *directory);
+  int (*mkdir) (struct vnode *node, const char *pathname);
+  int (*chdir) (struct vnode *node, const char *pathname);
 };
 
 struct vnode_operations {
   int (*lookup)(struct vnode *node, struct vnode **target, const char *component_name);
   int (*create)(struct vnode *node, struct vnode **target, const char *component_name);
   enum dirent_type (*typeof)(struct vnode *node);
+  int (*mount)(struct vnode *node, const char *dev, const char *fs, const char *mp);
+  int (*umount)(struct vnode *node, const char *mp);
 };
 
 extern struct mount *rootfs;
@@ -71,11 +75,16 @@ struct file *vfs_open(const char *pathname, int flags);
 DIR *vfs_opendir(const char *pathname);
 dirent *vfs_readdir(DIR *dir);
 void vfs_closedir(DIR *dir);
+int vfs_mkdir(const char *path);
+int vfs_chdir(const char *path);
 int vfs_close(struct file *file);
 int vfs_write(struct file *file, const void *buf, size_t len);
 int vfs_read(struct file *file, void *buf, size_t len);
 void vfs_setup();
 void vfs_show();
+int vfs_mount(
+    const char *dev, const char *mp, const char *fs);
+int vfs_umount(const char *mp);
 
 struct mount *newMnt();
 

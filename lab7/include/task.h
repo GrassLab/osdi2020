@@ -14,6 +14,7 @@
 
 #ifndef __ASSEMBLER__
 
+#include "fs.h"
 #include "mutex.h"
 
 struct cpu_ctx {
@@ -60,6 +61,8 @@ struct mm_struct {
 	unsigned long kernel_pages[MAX_PROCESS_PAGES];
 };
 
+#define fdtab_size 16
+
 typedef struct task_tag {
   struct cpu_ctx cpu_ctx;
   char buffer[TASK_BUFFER_SIZE];
@@ -69,6 +72,8 @@ typedef struct task_tag {
   unsigned long counter;
   unsigned long priority;
   unsigned long preempt_count;
+  FILE *fdtab[fdtab_size];
+  struct vnode *pwd;
   Mutex* mtx;
   enum {
     none,

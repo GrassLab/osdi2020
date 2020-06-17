@@ -82,8 +82,50 @@ int shell_execute(char *cmd, int el) {
   else if(EQS("hello", cmd)) {
     println("Hello World!");
   }
-  else if(EQS("ls", cmd)){
+  else if(EQS("fs", cmd)){
     vfs_show();
+  }
+  else if(EQS("ls", cmd)){
+    int i = 0;
+    dirent *entry;
+    DIR *dir = vfs_opendir(".");
+    if(dir){
+      while((entry = vfs_readdir(dir))){
+        printf(entry->type == dirent_dir ?
+            "%d. {%s}" NEWLINE : "%d. <%s>" NEWLINE,
+            i++, entry->name);
+      } 
+    }
+    vfs_closedir(dir);
+  }
+  else if(strbeg(cmd, "cat")){
+    char *p = cmd + 3, buf[128];
+    while(*p == ' ') p++;
+    FILE *fd = vfs_open(p, 0);
+    if(fd){
+      vfs_read(fd, buf, 100);
+      puts(buf);
+      vfs_close(fd);
+    }
+    else{
+      puts("no such file or directory");
+    }
+  }
+  else if(strbeg(cmd, "touch")){
+    char *p = cmd + 5;
+    while(*p == ' ') p++;
+    FILE *fd = vfs_open(p, O_CREAT);
+    vfs_close(fd);
+  }
+  else if(strbeg(cmd, "mkdir")){
+    char *p = cmd + 5;
+    while(*p == ' ') p++;
+    vfs_mkdir(p);
+  }
+  else if(strbeg(cmd, "cd")){
+    char *p = cmd + 2;
+    while(*p == ' ') p++;
+    vfs_chdir(p);
   }
   else if (EQS("help", cmd)) {
     println("hello : print Hello World!");

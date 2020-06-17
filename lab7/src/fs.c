@@ -2,8 +2,13 @@
 #include "tmpfs.h"
 #include "allocator.h"
 
+#define xp_func(_path, opset, op, ...) \
+  *_path == '/' ? rootfs->root->opset->op( \
+      rootfs->root, ## __VA_ARGS__, _path + 1) : \
+    current_task->pwd->opset->op( \
+      current_task->pwd, ## __VA_ARGS__, _path)
+
 struct mount *rootfs = NULL;
-struct vnode *pwd = NULL;
 
 struct filesystem *regedfs = NULL;
 
@@ -81,8 +86,9 @@ void vfs_show(){
 
 DIR *vfs_opendir(const char *pathname){
   DIR *dir = (DIR*)kmalloc(sizeof(DIR));
-  if(pwd->d_ops->opendir(pwd, dir, pathname))
+  if(xp_func(pathname, d_ops, opendir, dir)){
     return dir;
+  }
   kfree(dir);
   return NULL;
 }
@@ -91,13 +97,35 @@ dirent *vfs_readdir(DIR *dir){
   return dir->dops->readdir(dir);
 }
 
-
 void vfs_closedir(DIR *dir){
+  if(dir->path) kfree(dir->path);
   kfree(dir);
+}
+
+int vfs_mkdir(const char *path){
+  return xp_func(path, d_ops, mkdir);
+  //if(*path == '/')
+  //  return rootfs->root->d_ops->mkdir(
+  //      rootfs->root, path + 1);
+  //return current_task->pwd->d_ops->mkdir(
+  //    current_task->pwd, path);
+}
+
+int vfs_chdir(const char *path){
+  return xp_func(path, d_ops, chdir);
+}
+
+
+int vfs_mount(
+    const char *dev, const char *mp, const char *fs){
+  return 0;
+}
+
+int vfs_umount(const char *mp){
+  return 0;
 }
 
 void fs_init(){
   register_filesystem(tmpfs);
   tmpfs->setup_mount(tmpfs, rootfs = newMnt());
-  pwd = rootfs->root;
 }

@@ -11,4 +11,5 @@ void test_stack_overflow();
 void mmaps();
 void mmap_unalign();
 void write_text() ;
+void test_fs();
 #endif

@@ -1,3 +1,4 @@
+#include "allocator.h"
 
 int strcmp(const char *s1, const char *s2) {
   while (*s1 && (*s1 == *s2))
@@ -34,8 +35,9 @@ int strbeg(const char *str, char *beg){
   return 1;
 }
 
-void strcpy(char *dest, char *src) {
+void strcpy(char *dest, const char *src) {
   while(*src) *dest = *src, dest++, src++;
+  *dest = 0;
 }
 
 void strncpy(void *dest, const void *src, unsigned long num) {
@@ -44,4 +46,11 @@ void strncpy(void *dest, const void *src, unsigned long num) {
   while (num--) {
     *dest8++ = *src8++;
   }
+}
+
+char *strdup(const char *str){
+  char *s = (char*)kmalloc(strlen(str) + 5);
+  for(int i = 0; i < strlen(str); i++)
+    s[i] = str[i];
+  return s;
 }

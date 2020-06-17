@@ -268,7 +268,7 @@ FixedBook newFixedBook(FixedBook new,
 }
 
 FixedBook prependFixedBooks(FixedBook next){
-  unsigned long addr = get_free_page();
+  unsigned long addr = VA_START | get_free_page();
   unsigned nr = PAGE_SIZE / sizeof(FixedBookStr);
   FixedBook iter = (FixedBook)addr;
   fixed_log("add fixed book %x", iter);
@@ -283,7 +283,7 @@ FixedBook prependFixedBooks(FixedBook next){
 }
 
 unsigned long dispatch_tables(FixedBook book){
-  unsigned long tables = get_free_page();
+  unsigned long tables = VA_START | get_free_page();
   unsigned nr = PAGE_SIZE / FixedBookTableSzie;
   for(int i = 0; i < nr && book && tables; i++, book = book->next){
     book->table = (char*)(tables + i * FixedBookTableSzie);
@@ -335,6 +335,8 @@ unsigned long fixed_get_token_by(unsigned long size, FixedAllocator *fixedptr){
     unsigned long addr;
     if(!(addr = get_free_page()))
       goto fixed_get_token_failed;
+
+    addr |= VA_START;
 
     unsigned nr = PAGE_SIZE / sizeof(FixedAllocatorStr);
     for(unsigned i = 0; i < nr; i++)
@@ -433,12 +435,12 @@ unsigned long fixed_alloc_by(FixedAllocator aloctor){
     if(aloctor->rs > PAGE_SIZE){
       unsigned ord = 0;
       while((PAGE_SIZE << ord) < aloctor->rs) ord++;
-      book->page_addr = zone_get_free_pages(buddy_zone, ord);
+      book->page_addr = VA_START | zone_get_free_pages(buddy_zone, ord);
       book->free_nr = 1;
       fixed_log("book 0x%x bind %d pages 0x%x", book, 1 << ord, book->page_addr);
     }
     else{
-      book->page_addr = get_free_page();
+      book->page_addr = VA_START | get_free_page();
       book->free_nr = PAGE_SIZE / aloctor->rs;
       fixed_log("book 0x%x bind page 0x%x", book, book->page_addr);
     }

@@ -62,6 +62,7 @@ void test_mmaps(){ // test multiple mmaps
 }
 
 int main(){
+  printf("welcome to user space, here's the user main." NEWLINE);
   //test_command1();
   //test_command2();
   //if(fork() == 0) test_command3();
@@ -74,5 +75,6 @@ int main(){
   //mmap_unalign();
   //write_text();
   //test_mmaps();
+  test_fs();
   return 0;
 }

@@ -85,7 +85,7 @@ unsigned long allocate_kernel_page() {
   if (page == 0) {
     return 0;
   }
-  return page + VA_START;
+  return page | VA_START;
 }
 
 unsigned long allocate_user_page_with_attr(
@@ -98,7 +98,7 @@ unsigned long allocate_user_page_with_attr(
     return 0;
   }
   map_page(task, va, page, attr);
-  return page + VA_START;
+  return page | VA_START;
 }
 
 unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long va, int* new_table) {
