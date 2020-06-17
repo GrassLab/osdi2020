@@ -4,7 +4,7 @@
 
 int remain_page = PAGING_PAGES;
 
-static unsigned short mem_map[PAGING_PAGES] = {
+static unsigned short mem_map[1] = {
     0,
 };
 
@@ -149,12 +149,6 @@ int do_mem_abort(unsigned long addr, unsigned long esr) {
   /* return 0; */
 
   unsigned long dfs = (esr & 0b111111); /* 0x3F */
-
-  if ((dfs & 0b0101) == 0b101) {
-     println("[mem abort] Segmentation fault @ 0x%X kill the process", addr);
-     exit_process();
-     return 0;
-  }
 
   if ((dfs & 0b111100) == 0b100) {
     unsigned long page = get_free_page();

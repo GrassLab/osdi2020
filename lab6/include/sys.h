@@ -1,0 +1,14 @@
+#ifndef	_SYS_H
+#define	_SYS_H
+
+#define __NR_syscalls	 7
+
+#ifndef __ASSEMBLER__
+
+void sys_write(char * buf);
+char sys_read();
+int sys_fork();
+
+#endif
+
+#endif  /*_SYS_H */
