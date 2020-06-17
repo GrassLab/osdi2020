@@ -6,6 +6,8 @@ struct mount* rootfs;
 struct filesystem *all_file_sys[NUM_OF_FILESYS];
 int tmpfs_vnode_lookup(struct vnode* dir_node, struct vnode** target, const char* component_name);
 int tmpfs_vnode_creat(struct vnode* dir_node, struct vnode** target, const char* component_name);
+int tmpfs_write(struct file* file, const void* buf, int len);
+int tmpfs_read(struct file* file, void* buf, int len);
 struct vnode *user_default_vnode;
 
 
@@ -23,9 +25,12 @@ void set_init_vnode(struct vnode *root_vnode, struct mount *mount)
   }
   root_vnode->v_ops->lookup = tmpfs_vnode_lookup;
   root_vnode->v_ops->create = tmpfs_vnode_creat;
-  /*root_vnode->f_ops->write = //TO_DO
-  root_vnode->f_ops->read =
-  */
+  /*TO_DO*/
+  root_vnode->internal = (struct tmpfs_filenode*)varied_allocate(sizeof(struct tmpfs_filenode));
+  ((struct tmpfs_filenode*)root_vnode->internal)->file_size = 0;
+  root_vnode->f_ops->write = tmpfs_write;
+  root_vnode->f_ops->read = tmpfs_read;
+  
 }
 
 int tmpfs_mount_setup(struct filesystem* fs, struct mount* mount)
@@ -209,10 +214,18 @@ int vfs_close(struct file* file) {
 int vfs_write(struct file* file, const void* buf, int len) {
   // 1. write len byte from buf to the opened file.
   // 2. return written size or error code if an error occurs.
+  if(file->f_ops->write(file, buf, len))
+  {
+    return 1;
+  }
+  uart_puts("vfs_write file fops write faild\r\n");
+  return 0;
 }
 int vfs_read(struct file* file, void* buf, int len) {
   // 1. read min(len, readable file data size) byte to buf from the opened file.
   // 2. return read size or error code if an error occurs.
+  return file->f_ops->read(file, buf, len);
+
 }
 
 void filesystem_init()
@@ -283,6 +296,44 @@ int tmpfs_vnode_creat(struct vnode* dir_node, struct vnode** target, const char*
   dir_node->child[index]->parent = dir_node;
   dir_node->num_of_child+=1;
   return 1;
+}
+
+int tmpfs_write(struct file* file, const void* buf, int len)
+{
+  if(file->f_pos + len > BUFFER_MAX_LEN)
+  {
+    uart_puts("tmpfs_write: too many write bytes\r\n");
+    return 0;
+  }
+  struct tmpfs_filenode* tmp_file_node = file->vnode->internal;
+  if ( my_strcpy ((tmp_file_node->buffer + file->f_pos), (char*)buf, len) )
+  {
+    //my_printf("in tmpfs write %s\r\n", tmp_file_node->buffer + file->f_pos);
+    file->f_pos += len;
+    tmp_file_node->file_size += len;
+    return 1;
+  }
+  uart_puts("tmpfs_write: strcpy faild\r\n");
+  return 0;
+}
+
+int tmpfs_read(struct file* file, void* buf, int len)
+{
+  struct tmpfs_filenode* tmp_file_node = file->vnode->internal;
+  if(len > tmp_file_node->file_size)
+  {
+    len = tmp_file_node->file_size;
+    //uart_puts("tmpfs_read: too many read bytes\r\n");
+    //return 0;
+  }
+  //my_printf("in tmpfs read %d : %s\r\n", len ,tmp_file_node->buffer);
+  if ( my_strcpy ((char*)buf, (tmp_file_node->buffer), len) )
+  {
+    //my_printf("in tmpfs read 2222 %d : %s\r\n", len ,buf);
+    return len;
+  }
+  uart_puts("tmpfs_read: strcpy faild\r\n");
+  return 0;
 }
 
 void rootfs_init() {

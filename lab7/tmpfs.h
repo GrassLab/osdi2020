@@ -2,7 +2,7 @@
 #define DENTRY_MAX_CHILD 10
 #define DIR_NAME_LEN 20
 #define O_CREAT 2
-
+#define BUFFER_MAX_LEN 200
 
 struct dentry {
   char *name;
@@ -45,6 +45,12 @@ struct file_operations {
 struct vnode_operations {
   int (*lookup)(struct vnode* dir_node, struct vnode** target, const char* component_name);
   int (*create)(struct vnode* dir_node, struct vnode** target, const char* component_name);
+};
+
+struct tmpfs_filenode
+{
+    int file_size;
+    char buffer[BUFFER_MAX_LEN];
 };
 
 void filesystem_init();

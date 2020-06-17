@@ -98,7 +98,7 @@ long my_atoi(const char* S)
 	return num;
 }
 
-char *my_strcpy(char *s1, const char *s2, int size)
+int my_strcpy(char *s1, const char *s2, int size)
 {
     char *tmp = s1;
     int count=0;
@@ -107,14 +107,15 @@ char *my_strcpy(char *s1, const char *s2, int size)
 		return 0;
 	}
 
-	for (; *s2 != '\0', count < size; tmp++, s2++)
+	for (; *s2 != '\0'; tmp++, s2++)
 	{
+        if(count >= size) break;
         //uart_send(*s2);
 		*tmp = *s2;
         count++;
 	}
     *tmp=0;
 
-	return tmp;
+	return 1;
 
 }

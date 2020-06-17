@@ -57,13 +57,32 @@ void require2_testcase()
     uart_puts("require 2 test finish\r\n");
 }
 
+void require3_testcase()
+{
+    char buf[100]={0};
+    struct file* a = vfs_open("hello", O_CREAT);
+    struct file* b = vfs_open("world", O_CREAT);
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World!", 6);
+    vfs_close(a);
+    vfs_close(b);
+    b = vfs_open("hello", 0);
+    a = vfs_open("world", 0);
+    int sz;
+    sz = vfs_read(b, buf, 100);
+    //my_printf("len: %d", sz);
+    sz += vfs_read(a, buf + sz, 100);
+    buf[sz] = '\0';
+    my_printf("%s\n", buf); // should be Hello World!
+}
+
 
 void main()
 {
     uart_init();
     link_init();
     rootfs_init();
-    require2_testcase();
+    require3_testcase();
 	while(1);
 	
 }

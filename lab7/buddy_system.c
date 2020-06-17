@@ -113,7 +113,7 @@ char* mmap(unsigned long long size)
 
 int merge_check(link_list* chunk_check)
 {
-    uart_puts("in merge check\r\n");
+    //uart_puts("in merge check\r\n");
     int now_ppow = chunk_check->ppow, gap, merged=0;
     link_list *now, *low, *prev=0, *next_level_tail; //*high
     now = all_link[now_ppow];
