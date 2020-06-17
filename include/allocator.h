@@ -24,6 +24,8 @@ typedef struct dynamic_allocator_page_alloc_record
 
 typedef struct dynamic_allocator
 {
+    fixed_allocator_t * byte_16_fixed;
+    fixed_allocator_t * byte_32_fixed;
     fixed_allocator_t * byte_64_fixed;
     fixed_allocator_t * byte_128_fixed;
     fixed_allocator_t * byte_256_fixed;
@@ -32,6 +34,9 @@ typedef struct dynamic_allocator
 
 } dynamic_allocator_t;
 
+void allocator_init ( );
+void * kmalloc ( int size );
+void kfree ( void * addr );
 fixed_allocator_t * register_fixed_size_allocator ( int size );
 dynamic_allocator_t * register_varied_size_allocator ( );
 void * fixed_alloc ( fixed_allocator_t * );

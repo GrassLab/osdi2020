@@ -3,7 +3,25 @@
 #include "math.h"
 #include "type.h"
 
-int strcmp ( char * s1, char * s2 )
+char * strcpy ( char * s1, const char * s2 )
+{
+    return strncpy ( s1, s2, strlen ( s2 ) );
+}
+
+char * strncpy ( char * s1, const char * s2, size_t n )
+{
+    size_t i;
+
+    for ( i = 0; i <= n; i++ )
+    {
+        s1[i] = s2[i];
+    }
+    s1[i] = '\0';
+
+    return s1;
+}
+
+int strcmp ( const char * s1, const char * s2 )
 {
     int i;
 
@@ -26,7 +44,7 @@ void strset ( char * s1, int c, int size )
         s1[i] = c;
 }
 
-int strlen ( char * s )
+int strlen ( const char * s )
 {
     int i = 0;
     while ( 1 )

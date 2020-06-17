@@ -1,7 +1,12 @@
 #include "allocator.h"
 #include "mem.h"
 #include "shell.h"
+#include "tmpfs.h"
 #include "uart.h"
+#include "vfs.h"
+
+void test1 ( );
+void test2 ( );
 
 int main ( )
 {
@@ -9,82 +14,56 @@ int main ( )
     uart_init ( );
 
     buddy_init ( );
+    allocator_init ( );
 
-    // say hello
-    uart_puts ( "Hello World!\n" );
+    tmpfs_init ( );
 
-    uart_printf ( "\033[0;35m" );
-    uart_printf ( "==========================================\n" );
-    uart_printf ( "             Buddy System Test             \n" );
-    uart_printf ( "==========================================\n" );
-    uart_printf ( "\033[0;33" );
+    uart_printf ( "###################\n" );
+    uart_printf ( "### TEST_CASE 1 ###\n" );
+    uart_printf ( "###################\n" );
+    test1 ( );
 
-    void * a = allocate_free_mem ( 5960 );
-    void * b = allocate_free_mem ( 568 );
-    void * c = allocate_free_mem ( 4097 );
-    void * d = allocate_free_mem ( 1024 );
-
-    free_mem ( a );
-    free_mem ( b );
-    free_mem ( c );
-    free_mem ( d );
-
-    uart_printf ( "\033[0;35m" );
-    uart_printf ( "==========================================\n" );
-    uart_printf ( "           Fixed Allocator Test           \n" );
-    uart_printf ( "==========================================\n" );
-    uart_printf ( "\033[0;33" );
-
-    fixed_allocator_t * bytes_30_allocator = register_fixed_size_allocator ( 30 );
-    void * byte_30_fixed_a                 = fixed_alloc ( bytes_30_allocator );
-    void * byte_30_fixed_b                 = fixed_alloc ( bytes_30_allocator );
-
-    int i;
-    void * byte_30_ptrs[65];
-    for ( i = 0; i < 65; i++ )
-    {
-        uart_printf ( "%d:\t", i );
-        byte_30_ptrs[i] = fixed_alloc ( bytes_30_allocator );
-    }
-
-    fixed_free ( bytes_30_allocator, byte_30_fixed_a );
-    fixed_free ( bytes_30_allocator, byte_30_fixed_b );
-    for ( i = 0; i < 65; i++ )
-    {
-        uart_printf ( "%d:\t", i );
-        fixed_free ( bytes_30_allocator, byte_30_ptrs[i] );
-    }
-
-    uart_printf ( "\033[0;35m" );
-    uart_printf ( "==========================================\n" );
-    uart_printf ( "          Dynamic Allocator Test          \n" );
-    uart_printf ( "==========================================\n" );
-    uart_printf ( "\033[0;33" );
-
-    dynamic_allocator_t * dynamic_allocator = register_varied_size_allocator ( );
-
-    void * byte_60_a   = dynamic_alloc ( dynamic_allocator, 60 );
-    void * byte_60_b   = dynamic_alloc ( dynamic_allocator, 60 );
-    void * byte_100    = dynamic_alloc ( dynamic_allocator, 100 );
-    void * byte_250    = dynamic_alloc ( dynamic_allocator, 250 );
-    void * byte_1024_a = dynamic_alloc ( dynamic_allocator, 1024 );
-    void * byte_2048   = dynamic_alloc ( dynamic_allocator, 2048 );
-
-    dynamic_free ( dynamic_allocator, byte_60_a );
-    dynamic_free ( dynamic_allocator, byte_1024_a );
-
-    void * byte_60_c   = dynamic_alloc ( dynamic_allocator, 60 );
-    void * byte_1024_b = dynamic_alloc ( dynamic_allocator, 1024 );
-
-    dynamic_free ( dynamic_allocator, byte_60_b );
-    dynamic_free ( dynamic_allocator, byte_60_c );
-    dynamic_free ( dynamic_allocator, byte_100 );
-    dynamic_free ( dynamic_allocator, byte_250 );
-    dynamic_free ( dynamic_allocator, byte_1024_b );
-    dynamic_free ( dynamic_allocator, byte_2048 );
+    uart_printf ( "###################\n" );
+    uart_printf ( "### TEST_CASE 2 ###\n" );
+    uart_printf ( "###################\n" );
+    test2 ( );
 
     // start shell
     shell_start ( );
 
     return 0;
+}
+
+void test1 ( )
+{
+    // first test case
+    file_t * a = vfs_open ( "hello1", 0 );
+    uart_printf ( "> file desriptor try to open file hello1: %d\n", a );
+
+    a = vfs_open ( "hello1", O_CREAT );
+    uart_printf ( "> file desriptor try to create file hello1: %d\n", a->dentry );
+    vfs_close ( a );
+
+    struct file * b = vfs_open ( "hello1", 0 );
+    uart_printf ( "> file desriptor try to open file hello1: %d\n", b->dentry );
+    vfs_close ( b );
+}
+
+void test2 ( )
+{
+    char buf[100];
+    file_t * a = vfs_open ( "hello", O_CREAT );
+    file_t * b = vfs_open ( "world", O_CREAT );
+    vfs_write ( a, "Hello ", 6 );
+    vfs_write ( b, "World!", 6 );
+    vfs_close ( a );
+    vfs_close ( b );
+    a = vfs_open ( "hello", 0 );
+    b = vfs_open ( "world", 0 );
+    int sz;
+    sz = vfs_read ( a, buf, 3 );
+    sz += vfs_read ( a, buf + sz, sz );
+    sz += vfs_read ( b, buf + sz, 100 );
+    buf[sz] = '\0';
+    uart_printf ( "> %s\n", buf );  // should be Hello World!
 }
