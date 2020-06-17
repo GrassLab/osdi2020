@@ -4,66 +4,27 @@ void main() {
   // set up serial console
   uart_init();
   uart_flush();
+  init_buddy_system();
   char *osdi = "OSDI Welcome\n";
   uart_puts(osdi);
 
-  /*
-  struct page* p0, *p1;
-  p0 = page_alloc();
-  p1 = page_alloc();
-  page_free(p0);
-  p0 = page_alloc();
-  */
+  init_rootfs();
 
-  init_buddy_system();
-  struct block* m1 = get_space(3 << 12);
-  struct block* m2 = get_space(5 << 12);
-  struct block* m3 = get_space(5 << 12);
-  struct block* m4 = get_space(5 << 12);
-  struct block* m5 = get_space(5 << 12);
-
-  free_space(m1);
-  free_space(m5);
-
-  int token = register_obj_allocator(4, FIXED);
-  void* obj[7];
-  for(int i = 0; i < 7; i++){
-    obj[i] = fixed_obj_allocate(token);
-    uart_puts("memory allocate at: ");
-    uart_hex(obj[i]);
-    uart_puts("\n");
-  }
-  for(int i = 0; i < 7; i++){
-    fixed_obj_free(obj[i], token);
-  }
-
-  uart_puts("\n\n varied size allocate\n");
-
-  int token_1 = register_obj_allocator(3, VARIED);
-  int token_2 = register_obj_allocator(127, VARIED);
-  void* obj_1[7], *obj_2[7];
-  /*
-  for(int i = 0; i < 7; i++){
-    obj_1[i] = varied_obj_allocate(token_1);
-    uart_puts("memory allocate at: ");
-    uart_hex(obj_1[i]);
-    uart_puts("\n");
-  }
-  for(int i = 0; i < 7; i++){
-    varied_obj_free(obj_1[i], token_1);
-  }
-  */
-
-  for(int i = 0; i < 7; i++){
-    obj_2[i] = varied_obj_allocate(token_2);
-    uart_puts("memory allocate at: ");
-    uart_hex(obj_2[i]);
-    uart_puts("\n");
-  }
-  for(int i = 0; i < 7; i++){
-    varied_obj_free(obj_2[i], token_2);
-  }
-
+  char buf[100];
+  struct file* a = vfs_open("hello", O_CREAT);
+  struct file* b = vfs_open("world", O_CREAT);
+  vfs_write(a, "Hello ", 6);
+  vfs_write(b, "World!", 6);
+  vfs_close(a);
+  vfs_close(b);
+  b = vfs_open("hello", 0);
+  a = vfs_open("world", 0);
+  int sz;
+  sz = vfs_read(b, buf, 100);
+  sz += vfs_read(a, buf + sz, 100);
+  buf[sz] = '\0';
+  uart_puts(buf);
+  uart_puts("\n");
 
   for(;;) {
     put_shell();
