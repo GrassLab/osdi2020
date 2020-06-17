@@ -43,7 +43,7 @@ char *strtok(char *s, const char delim){
     char* ret;
     if(s) pos = s;
     
-    if(*pos == '\0') return NULL;
+    if(*pos == '\0') return 0;
     // skip leading
     while(*pos == delim){
         pos ++;
