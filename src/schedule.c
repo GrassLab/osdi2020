@@ -168,6 +168,8 @@ int privilege_task_create(void (*func)(), int priority) {
     new_task->counter = TASK_EPOCH;
     new_task->need_resched = 0;
     mm_struct_init(&new_task->mm);
+    new_task->files.count = 0;
+    new_task->pwd = rootfs->root;
     new_task->cpu_context.lr = (uint64_t)func;
     new_task->cpu_context.fp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_TOP_IDX]);
     new_task->cpu_context.sp = (uint64_t)(&kstack_pool[new_task->id][KSTACK_TOP_IDX]);

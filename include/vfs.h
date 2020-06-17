@@ -5,6 +5,7 @@
 #include "list.h"
 
 #define O_CREAT 1
+#define NR_OPEN_DEFAULT 32
 
 struct mount {
     struct dentry* root;  // root directory
@@ -49,7 +50,11 @@ struct vnode_operations {
     int (*create)(struct vnode* dir, struct vnode** target, const char* component_name);
 };
 
-extern struct dentry* cur_dent;
+struct files_struct {
+    int count;
+    struct file* fd_array[NR_OPEN_DEFAULT];
+};
+
 extern struct mount* rootfs;
 
 void rootfs_init();

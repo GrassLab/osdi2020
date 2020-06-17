@@ -180,3 +180,7 @@ void demo_lab7_ele1() {
     vfs_readdir(root);
     while (1);
 }
+
+void demo_lab7_ele2() {
+    
+}

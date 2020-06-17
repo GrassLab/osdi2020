@@ -3,6 +3,8 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
+#include "vfs.h"
+
 struct task_queue_elmt_t {  /* priority queue */
     struct task_t* task;
     struct task_queue_elmt_t* prev;
@@ -62,6 +64,8 @@ struct task_t {
     int exit_status;
     struct cpu_context cpu_context;
     struct mm_struct mm;
+    struct files_struct files;
+    struct dentry* pwd;
 };
 
 /* Variables init in schedule.c */

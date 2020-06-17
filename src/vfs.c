@@ -5,9 +5,9 @@
 #include "tmpfs.h"
 #include "uart0.h"
 #include "util.h"
+#include "schedule.h"
 
 struct mount* rootfs;
-struct dentry* cur_dent;
 
 void rootfs_init() {
     struct filesystem* tmpfs = (struct filesystem*)kmalloc(sizeof(struct filesystem));
@@ -18,8 +18,6 @@ void rootfs_init() {
 
     rootfs = (struct mount*)kmalloc(sizeof(struct mount));
     tmpfs->setup_mount(tmpfs, rootfs);
-
-    cur_dent = rootfs->root;
 }
 
 int register_filesystem(struct filesystem* fs) {
@@ -49,7 +47,7 @@ struct file* vfs_open(const char* pathname, int flags) {
         strcpy(path, pathname + 1);
     }
     else {  // relative path
-        dir = cur_dent->vnode;
+        dir = current_task->pwd->vnode;
         strcpy(path, pathname);
     }
     struct vnode* target;
