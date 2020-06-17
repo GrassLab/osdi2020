@@ -64,6 +64,10 @@ void *kmalloc(size_t size) {
 }
 
 void kfree(void *ptr) {
+    if (!ptr) {
+        return;
+    }
+
     uint64_t *chunk = (uint64_t *)((uint64_t)ptr - kMetaDataSlots * 8);
     sendStringUART("[kmalloc] free size ");
     sendHexUART(chunk[0] - 8);

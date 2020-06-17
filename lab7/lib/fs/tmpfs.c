@@ -13,6 +13,9 @@ typedef struct __Node {
     struct vnode **components;
     size_t capacity_of_component;
     size_t num_of_component;
+
+    uint8_t *content;
+    size_t file_size;
 } Node;
 
 static const size_t kDefaultComponentNum = 16;
@@ -79,6 +82,9 @@ Node *newNode(const char *name, bool is_dir) {
         node->components[node->num_of_component] = NULL;
     }
 
+    node->content = NULL;
+    node->file_size = 0;
+
     return node;
 }
 
@@ -90,6 +96,7 @@ void deleteNode(Node *node) {
     if (node->is_dir) {
         kfree(node->components);
     }
+    kfree(node->content);
     kfree(node);
 }
 
@@ -117,3 +124,36 @@ struct filesystem *newTmpFs(void) {
     fs->unset_mount = unsetMount;
     return fs;
 }
+
+// FIXME: haven't handle error code
+int write(struct file *file, const void *buf, size_t len) {
+    Node *internal_node = file->vnode->internal;
+
+    if (internal_node->file_size <= file->f_pos + len) {
+        // +1 for EOF
+        uint8_t *new_content = kmalloc(file->f_pos + len + 1);
+        memcpy(new_content, internal_node->content, internal_node->file_size);
+        kfree(internal_node->content);
+
+        internal_node->content = new_content;
+        internal_node->file_size = file->f_pos + len + 1;
+    }
+
+    memcpy(internal_node->content + file->f_pos, buf, len);
+    file->f_pos += len;
+
+    return len;
+}
+
+// FIXME: haven't handle error code
+int read(struct file *file, void *buf, size_t len) {
+    Node *internal_node = file->vnode->internal;
+    size_t min = (len > internal_node->file_size - file->f_pos - 1) ? internal_node->file_size - file->f_pos - 1 : len;
+
+    memcpy(buf, internal_node->content + file->f_pos, min);
+    file->f_pos += min;
+
+    return min;
+}
+
+struct file_operations tmpfs_f_ops = { write, read };

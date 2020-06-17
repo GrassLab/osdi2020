@@ -1,4 +1,5 @@
 #include "fs/vfs.h"
+#include "fs/tmpfs.h"
 #include "mmu/kmalloc.h"
 #include "StringUtils.h"
 
@@ -65,7 +66,7 @@ struct file* vfs_open(const char* pathname, int flags) {
     struct file *opened_file = kmalloc(sizeof(struct file));
     opened_file->vnode = target;
     opened_file->f_pos = 0;
-    // TODO: f_ops
+    opened_file->f_ops = &tmpfs_f_ops;
     opened_file->flags = flags;
 
     // 3. Create a new file if O_CREAT is specified in flags.
@@ -84,10 +85,9 @@ int vfs_close(struct file* file) {
     return 0;
 }
 int vfs_write(struct file* file, const void* buf, size_t len) {
-    // 1. write len byte from buf to the opened file.
-    // 2. return written size or error code if an error occurs.
+    return file->f_ops->write(file, buf, len);
 }
+
 int vfs_read(struct file* file, void* buf, size_t len) {
-    // 1. read min(len, readable file data size) byte to buf from the opened file.
-    // 2. return read size or error code if an error occurs.
+    return file->f_ops->read(file, buf, len);
 }

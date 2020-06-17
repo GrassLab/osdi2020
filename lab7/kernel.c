@@ -52,16 +52,32 @@ void kernel_main(void) {
         return;
     }
     vfs_close(b);
+
+    char buf[200];
+    a = vfs_open("hello", O_CREAT);
+    b = vfs_open("world", O_CREAT);
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World!", 6);
+    vfs_close(a);
+    vfs_close(b);
+    b = vfs_open("hello", 0);
+    a = vfs_open("world", 0);
+    int sz;
+    sz = vfs_read(b, buf, 100);
+    sz += vfs_read(a, buf + sz, 100);
+    buf[sz] = '\0';
+    sendStringUART(buf);
+    sendUART('\n');
     // end TODO
+
+    sendStringUART("Press enter to continue...");
+    sendUART(recvUART());
 
     rootfs->fs->unset_mount(rootfs);
     kfree(rootfs);
     unregister_filesystem();
     kmalloc_fini();
     gSlab.fini();
-
-    sendStringUART("Press enter to continue...");
-    sendUART(recvUART());
 
     while (1)
         ;
