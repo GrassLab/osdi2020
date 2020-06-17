@@ -170,3 +170,11 @@ int strcpy(char *dest, const char *src) {
     dest[i] = '\0';
     return i;
 }
+
+int strlen(const char *str) {
+    const char *s;
+
+    for (s = str; *s; ++s)
+        ;
+    return (s - str);
+}

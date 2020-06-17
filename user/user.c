@@ -16,9 +16,6 @@
 //     sz += read(a, buf + sz, 100);
 //     buf[sz] = '\0';
 //     printf("%s\n", buf); // should be Hello World!
-
-//     int root = open("/", 0);
-//     readdir(root);
 // }
 
 void demo_lab7_ele3() {
