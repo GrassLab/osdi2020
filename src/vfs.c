@@ -7,6 +7,7 @@
 #include "util.h"
 
 struct mount* rootfs;
+struct dentry* cur_dent;
 
 void rootfs_init() {
     struct filesystem* tmpfs = (struct filesystem*)kmalloc(sizeof(struct filesystem));
@@ -17,6 +18,8 @@ void rootfs_init() {
 
     rootfs = (struct mount*)kmalloc(sizeof(struct mount));
     tmpfs->setup_mount(tmpfs, rootfs);
+
+    cur_dent = rootfs->root;
 }
 
 int register_filesystem(struct filesystem* fs) {
@@ -39,16 +42,25 @@ struct file* create_fd(struct vnode* target) {
 
 struct file* vfs_open(const char* pathname, int flags) {
     // 1. Lookup pathname from the root vnode.
-    struct vnode* dir = rootfs->root->vnode;
+    struct vnode* dir;
+    char path[128];
+    if (pathname[0] == '/') {  // absolute path
+        dir = rootfs->root->vnode;
+        strcpy(path, pathname + 1);
+    }
+    else {  // relative path
+        dir = cur_dent->vnode;
+        strcpy(path, pathname);
+    }
     struct vnode* target;
     // 2. Create a new file descriptor for this vnode if found.
-    if (rootfs->root->vnode->v_ops->lookup(dir, &target, pathname) == 0) {
+    if (rootfs->root->vnode->v_ops->lookup(dir, &target, path) == 0) {
         return create_fd(target);
     }
     // 3. Create a new file if O_CREAT is specified in flags.
     else {
         if (flags & O_CREAT) {
-            rootfs->root->vnode->v_ops->create(dir, &target, pathname);
+            rootfs->root->vnode->v_ops->create(dir, &target, path);
             return create_fd(target);
         }
         else {
@@ -73,4 +85,8 @@ int vfs_read(struct file* file, void* buf, uint64_t len) {
     // 1. read min(len, readable file data size) byte to buf from the opened file.
     // 2. return read size or error code if an error occurs.
     return file->f_ops->read(file, buf, len);
+}
+
+int vfs_readdir(struct file* fd) {
+    return fd->vnode->v_ops->ls(fd->vnode);
 }

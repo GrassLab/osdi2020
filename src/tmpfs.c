@@ -35,6 +35,7 @@ int tmpfs_register() {
     tmpfs_v_ops = (struct vnode_operations*)kmalloc(sizeof(struct vnode_operations));
     tmpfs_v_ops->create = tmpfs_create;
     tmpfs_v_ops->lookup = tmpfs_lookup;
+    tmpfs_v_ops->ls = tmpfs_ls;
     tmpfs_f_ops = (struct file_operations*)kmalloc(sizeof(struct file_operations));
     tmpfs_f_ops->read = tmpfs_read;
     tmpfs_f_ops->write = tmpfs_write;
@@ -49,6 +50,12 @@ int tmpfs_setup_mount(struct filesystem* fs, struct mount* mount) {
 
 // vnode operations
 int tmpfs_lookup(struct vnode* dir, struct vnode** target, const char* component_name) {
+    // component_name is empty, return dir vnode
+    if (!strcmp(component_name, "")) {
+        *target = dir;
+        return 0;
+    }
+    // search component_name in dir
     struct list_head* p = &dir->dentry->childs;
     list_for_each(p, &dir->dentry->childs) {
         struct dentry* dentry = list_entry(p, struct dentry, list);
@@ -71,6 +78,16 @@ int tmpfs_create(struct vnode* dir, struct vnode** target, const char* component
     d_child->vnode->internal = (void*)file_node;
 
     *target = d_child->vnode;
+    return 0;
+}
+
+int tmpfs_ls(struct vnode* dir) {
+    struct list_head* p = &dir->dentry->childs;
+    list_for_each(p, &dir->dentry->childs) {
+        struct dentry* dentry = list_entry(p, struct dentry, list);
+        uart_printf("%s ", dentry->name);
+    }
+    uart_printf("\n");
     return 0;
 }
 

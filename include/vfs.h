@@ -44,10 +44,12 @@ struct file_operations {
 };
 
 struct vnode_operations {
+    int (*ls)(struct vnode* dir);
     int (*lookup)(struct vnode* dir, struct vnode** target, const char* component_name);
     int (*create)(struct vnode* dir, struct vnode** target, const char* component_name);
 };
 
+extern struct dentry* cur_dent;
 extern struct mount* rootfs;
 
 void rootfs_init();
@@ -56,5 +58,6 @@ struct file* vfs_open(const char* pathname, int flags);
 int vfs_close(struct file* file);
 int vfs_write(struct file* file, const void* buf, uint64_t len);
 int vfs_read(struct file* file, void* buf, uint64_t len);
+int vfs_readdir(struct file* file);
 
 #endif // __VFS__

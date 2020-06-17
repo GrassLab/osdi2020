@@ -167,3 +167,16 @@ void demo_lab7_req3() {
     uart_printf("%s\n", buf); // should be Hello World!
     while (1);
 }
+
+void demo_lab7_ele1() {
+    struct file* a = vfs_open("hello", O_CREAT);
+    struct file* b = vfs_open("world", O_CREAT);
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World!", 6);
+    vfs_close(a);
+    vfs_close(b);
+
+    struct file* root = vfs_open("/", 0);
+    vfs_readdir(root);
+    while (1);
+}
