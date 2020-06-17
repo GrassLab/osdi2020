@@ -16,6 +16,9 @@
 #include "mm.h"
 #include "mm_allocator.h"
 
+#include "vfs.h"
+#include "tmpfs.h"
+
 #define INPUT_BUFFER_SIZE 64
 
 void system_start()
@@ -24,7 +27,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 6.3.1\n");
+    uart_print("Version : 7.3.2\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -225,13 +228,8 @@ void task_program_2()
     }
 }
 
-/* from lab6 to lab8, just in one thread without VM and interrupt */
-int kernel_main()
+void test_memory_allocation()
 {
-    uart_init();
-    init_printf(0, putc);
-    system_start();
-
     init_buddy_system();
 
     unsigned long m1 = get_free_space(2048);
@@ -261,32 +259,74 @@ int kernel_main()
 
     fixed_size_allocator_t o_allocator = register_fixed_size_allocator();
     unsigned long o1, o2, o3;
-    o1 = kmalloc_8(&o_allocator);
+    o1 = (unsigned long)kmalloc_8(&o_allocator);
     free_fixed_memory(&o_allocator, o1);
-    o1 = kmalloc_8(&o_allocator);
-    o2 = kmalloc_8(&o_allocator);
+    o1 = (unsigned long)kmalloc_8(&o_allocator);
+    o2 = (unsigned long)kmalloc_8(&o_allocator);
     free_fixed_memory(&o_allocator, o1);
     free_fixed_memory(&o_allocator, o2);
-    o1 = kmalloc_256(&o_allocator);
-    o2 = kmalloc_256(&o_allocator);
-    o3 = kmalloc_32(&o_allocator);
+    o1 = (unsigned long)kmalloc_256(&o_allocator);
+    o2 = (unsigned long)kmalloc_256(&o_allocator);
+    o3 = (unsigned long)kmalloc_32(&o_allocator);
     free_fixed_memory(&o_allocator, o1);
     free_fixed_memory(&o_allocator, o2);
     free_fixed_memory(&o_allocator, o3);
 
     varied_size_allocator_t v_allocator = register_varied_size_allocator();
     unsigned long v1, v2, v3;
-    v1 = kmalloc(&v_allocator, 32);
-    v2 = kmalloc(&v_allocator, 64);
+    v1 = (unsigned long)kmalloc(&v_allocator, 32);
+    v2 = (unsigned long)kmalloc(&v_allocator, 64);
     free_varied_memory(&v_allocator, v1);
     free_varied_memory(&v_allocator, v2);
-    v1 = kmalloc(&v_allocator, 32);
-    v2 = kmalloc(&v_allocator, 128);
+    v1 = (unsigned long)kmalloc(&v_allocator, 32);
+    v2 = (unsigned long)kmalloc(&v_allocator, 128);
     free_varied_memory(&v_allocator, v1);
-    v3 = kmalloc(&v_allocator, 128);
+    v3 = (unsigned long)kmalloc(&v_allocator, 128);
     free_varied_memory(&v_allocator, v2);
     free_varied_memory(&v_allocator, v3);
+}
 
+/* from lab6 to lab8, just in one thread without VM and interrupt */
+int kernel_main()
+{
+    uart_init();
+    init_printf(0, putc);
+    system_start();
+
+    printf("required 1, 2 test\n");
+    filesystem_t fs = tmpfs_filesystem();
+    register_filesystem(&fs);
+
+    file_t *a = vfs_open("hello", O_OPEN);
+    assert(a == NULL);
+    a = vfs_open("hello", O_CREAT);
+    assert(a != NULL);
+    vfs_close(a);
+    file_t *b = vfs_open("hello", O_OPEN);
+    assert(b != NULL);
+    vfs_close(b);
+
+    printf("================================\n");
+    printf("required 3 test\n");
+    char buf[32];
+    a = vfs_open("hello", O_OPEN);
+    b = vfs_open("world", O_CREAT);
+
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World!", 6);
+    vfs_close(a);
+    vfs_close(b);
+    b = vfs_open("hello", O_OPEN);
+    a = vfs_open("world", O_OPEN);
+
+    int sz;
+    sz = vfs_read(b, buf, 100);
+    sz += vfs_read(a, buf + sz, 100);
+    buf[sz] = '\0';
+    printf("buf: %s\n", buf); // should be Hello World!
+
+    printf("================================\n");
+    printf("test finished\nhalt\n");
     while (1)
     {
     }
