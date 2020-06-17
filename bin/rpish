@@ -106,5 +106,5 @@ while [[ $# -gt 0 ]];do
 done
 
 if [ $INTERATIVE -eq 1 -o $FILEoCMD -eq 0 ]; then
-    sudo screen -L $DEVICE 115200
+    sudo screen $DEVICE 115200
 fi
