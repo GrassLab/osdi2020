@@ -40,19 +40,19 @@ struct block* get_space(unsigned long bytes) {
     current_block->addr_end = new_block->addr_start - 1;
     current_level--;
   }
-  print_buddy();
-  uart_puts("free space from: ");
-  uart_hex(current_block->addr_start);
-  uart_puts(" to ");
-  uart_hex(current_block->addr_end);
-  uart_puts("\n");
+  //print_buddy();
+  //uart_puts("free space from: ");
+  //uart_hex(current_block->addr_start);
+  //uart_puts(" to ");
+  //uart_hex(current_block->addr_end);
+  //uart_puts("\n");
   return current_block;
 }
 
 int get_free_level(unsigned long bytes) {
   int level;
   for (level = 0; level < MAXMIMUM_LEVEL; level++)
-    if (bytes <= (1 << level << 12))
+    if (bytes <= (1 << level))
       break;
   return level;
 }
@@ -76,11 +76,11 @@ void free_space(struct block* free_block) {
   new_block->addr_start = free_block->addr_start;
   new_block->addr_end = free_block->addr_end;
   new_block->next = free_block->next;
-  uart_puts("free space from: ");
-  uart_hex(free_block->addr_start);
-  uart_puts(" to ");
-  uart_hex(free_block->addr_end);
-  uart_puts("\n");
+  //uart_puts("free space from: ");
+  //uart_hex(free_block->addr_start);
+  //uart_puts(" to ");
+  //uart_hex(free_block->addr_end);
+  //uart_puts("\n");
   while (flag == 1) {
     flag = 0;
     struct block* current_block = buddy_system.block_list[current_level];
@@ -97,18 +97,18 @@ void free_space(struct block* free_block) {
         if (current_block->addr_end == new_block->addr_start - 1)
           new_block->addr_start = current_block->addr_start;
         flag = 1;
-        uart_puts("merge space from: ");
-        uart_hex(new_block->addr_start);
-        uart_puts(" to ");
-        uart_hex(new_block->addr_end);
-        uart_puts("\n");
+        //uart_puts("merge space from: ");
+        //uart_hex(new_block->addr_start);
+        //uart_puts(" to ");
+        //uart_hex(new_block->addr_end);
+        //uart_puts("\n");
         break;
       }
       if (previous_block != current_block)
         previous_block = previous_block->next;
       current_block = current_block->next;
-      uart_hex(current_block);
-      uart_puts("\n");
+      //uart_hex(current_block);
+      //uart_puts("\n");
     }
   current_level++;
   }
@@ -117,8 +117,8 @@ void free_space(struct block* free_block) {
   new_block->next = buddy_system.block_list[current_level];
   buddy_system.block_list[current_level] = new_block;
 
-  print_buddy();
-  uart_puts("\n");
+  //print_buddy();
+  //uart_puts("\n");
 }
 
 
@@ -146,7 +146,7 @@ int register_obj_allocator(int size, TYPE type) {
   allocator->block_list = NULL; //block_allocate(&(allocator->chunk_list), allocator->obj_size);
   allocator->token = -1;
   allocator->type = type;
-  print_chunk(allocator->chunk_list);
+  //print_chunk(allocator->chunk_list);
   return allocator->id;
 }
 
@@ -172,11 +172,11 @@ void* fixed_obj_allocate(int token) {
     allocator->block_list = new_block;
   }
   void* addr = allocator->chunk_list->addr;
-  uart_puts("before allocate:\n");
-  print_chunk(allocator->chunk_list);
+  //uart_puts("before allocate:\n");
+  //print_chunk(allocator->chunk_list);
   allocator->chunk_list = allocator->chunk_list->next;
-  uart_puts("after allocate:\n");
-  print_chunk(allocator->chunk_list);
+  //uart_puts("after allocate:\n");
+  //print_chunk(allocator->chunk_list);
   return addr;
 }
 
@@ -184,13 +184,13 @@ void fixed_obj_free(void* obj, int token) {
   struct obj_alloc* allocator = &(allocator_pool[token]);
   struct chunk* new_chunk = get_free_chunk();
   int obj_size = allocator->obj_size;
-  uart_puts("before free:\n");
-  print_chunk(allocator->chunk_list);
+  //uart_puts("before free:\n");
+  //print_chunk(allocator->chunk_list);
   new_chunk->addr = obj;
   new_chunk->next = allocator->chunk_list;
   allocator->chunk_list = new_chunk;
-  uart_puts("before free block:\n");
-  print_chunk(allocator->chunk_list);
+  //uart_puts("before free block:\n");
+  //print_chunk(allocator->chunk_list);
 
   //check if the block need to be free
   struct block* current_block = allocator->block_list;
@@ -226,9 +226,9 @@ void fixed_obj_free(void* obj, int token) {
       parent_block = parent_block->next;
     current_block = current_block->next;
   }
-  uart_puts("after free:\n");
-  print_chunk(allocator->chunk_list);
-  uart_puts("\n");
+  //uart_puts("after free:\n");
+  //print_chunk(allocator->chunk_list);
+  //uart_puts("\n");
 
 }
 
@@ -252,7 +252,7 @@ void* varied_obj_allocate(int token) {
     struct block* new_block = get_space(allocator->obj_size << 12);
     new_block->next = allocator->block_list;
     allocator->block_list = new_block;
-    print_block(allocator->block_list);
+    //print_block(allocator->block_list);
     return new_block->addr_start;
   }
 }
