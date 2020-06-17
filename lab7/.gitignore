@@ -1,0 +1,7 @@
+*.img
+*.elf
+*.o
+*.d
+.vscode
+venv
+build/

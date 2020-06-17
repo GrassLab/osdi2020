@@ -141,20 +141,87 @@ void main(){
     //uart_puts("# ");
     //shell();
 
-    uart_puts("LOW_MEMORY: ");
-    uart_hex(LOW_MEMORY);
-    uart_puts("\n");
-    uart_puts("HIGH_MEMORY: ");
-    uart_hex(HIGH_MEMORY);
-    uart_puts("\n");
-    uart_puts("PAGING_MEMORY: ");
-    uart_send_int(PAGING_MEMORY);
-    uart_puts("\n");
-    uart_puts("PAGING_PAGES: ");
-    uart_send_int(PAGING_PAGES);
-    uart_puts("\n");
+    // uart_puts("LOW_MEMORY: ");
+    // uart_hex(LOW_MEMORY);
+    // uart_puts("\n");
+    // uart_puts("HIGH_MEMORY: ");
+    // uart_hex(HIGH_MEMORY);
+    // uart_puts("\n");
+    // uart_puts("PAGING_MEMORY: ");
+    // uart_send_int(PAGING_MEMORY);
+    // uart_puts("\n");
+    // uart_puts("PAGING_PAGES: ");
+    // uart_send_int(PAGING_PAGES);
+    // uart_puts("\n");
 
-    test_buddy();
-    // test_slab();
+
+    // buddy_init(PAGING_PAGES);
+
+    uart_puts("R1 R2 test\n\n");
+
+    filesystem fs = tmpfs_filesystem();
+    register_filesystem(&fs);
+
+    uart_puts("-----------------------\n");
+
+    file* a = vfs_open("hello", O_OPEN);
+    // assert(a == NULL);
+
+    uart_puts("-----------------------\n");
+
+    a = vfs_open("hello", O_CREAT);
+    // assert(a != NULL);
+    vfs_close(a);
+
+    uart_puts("-----------------------\n");
+    
+    file* b = vfs_open("hello", O_OPEN);
+    file* c = vfs_open("hello", O_OPEN);
+    // assert(b != NULL);
+    vfs_close(b);
+    vfs_close(c);
+
+    uart_puts("=======================\n");
+
+    uart_puts("R3 test\n\n");
+
+    file* e = vfs_open("hello", O_OPEN);
+
+    uart_puts("-----------------------\n");
+
+    file* f = vfs_open("world", O_CREAT);
+
+    uart_puts("-----------------------\n");
+    vfs_write(e, "H", 1);
+    uart_puts("-----------------------\n");
+    vfs_write(e, "e", 1);
+    uart_puts("-----------------------\n");
+    vfs_write(e, "ll", 2);
+    uart_puts("-----------------------\n");
+    vfs_write(e, "o ", 2);
+    uart_puts("-----------------------\n");
+
+    vfs_write(f, "Wor", 3);
+    uart_puts("-----------------------\n");
+    vfs_write(f, "ld!", 3);
+
+    uart_puts("=======================\n");
+    vfs_close(e);
+    vfs_close(f);
+    uart_puts("-----------------------\n");
+    f = vfs_open("hello", 0);
+    uart_puts("-----------------------\n");
+    e = vfs_open("world", 0);
+    uart_puts("-----------------------\n");
+    char buf[32];
+    int sz;
+    sz = vfs_read(f, buf, 100);
+    uart_puts("-----------------------\n");
+    sz += vfs_read(e, buf + sz, 100);
+    uart_puts("-----------------------\n");
+    uart_puts("buf: ");
+    uart_puts(buf);
+    uart_puts("\n");
+        
     shell();
 }	
