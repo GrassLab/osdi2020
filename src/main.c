@@ -38,14 +38,14 @@ void test1 ( )
 {
     // first test case
     file_t * a = vfs_open ( "hello1", 0 );
-    uart_printf ( "%d\n", a );
+    uart_printf ( "> file desriptor try to open file hello1: %d\n", a );
 
     a = vfs_open ( "hello1", O_CREAT );
-    uart_printf ( "%d\n", a->dentry );
+    uart_printf ( "> file desriptor try to create file hello1: %d\n", a->dentry );
     vfs_close ( a );
 
     struct file * b = vfs_open ( "hello1", 0 );
-    uart_printf ( "%d\n", b->dentry );
+    uart_printf ( "> file desriptor try to open file hello1: %d\n", b->dentry );
     vfs_close ( b );
 }
 
@@ -58,11 +58,12 @@ void test2 ( )
     vfs_write ( b, "World!", 6 );
     vfs_close ( a );
     vfs_close ( b );
-    b = vfs_open ( "hello", 0 );
-    a = vfs_open ( "world", 0 );
+    a = vfs_open ( "hello", 0 );
+    b = vfs_open ( "world", 0 );
     int sz;
-    sz = vfs_read ( b, buf, 100 );
-    sz += vfs_read ( a, buf + sz, 100 );
+    sz = vfs_read ( a, buf, 3 );
+    sz += vfs_read ( a, buf + sz, sz );
+    sz += vfs_read ( b, buf + sz, 100 );
     buf[sz] = '\0';
-    uart_printf ( "%s\n", buf );  // should be Hello World!
+    uart_printf ( "> %s\n", buf );  // should be Hello World!
 }

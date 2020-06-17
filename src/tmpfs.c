@@ -25,6 +25,7 @@ void tmpfs_init ( )
 
 int tmpfs_setup_mount ( file_sys_t * fs, mount_t * mount )
 {
+    uart_printf ( "Mount File System: %d\n", fs->name );
     mount->fs = fs;
 
     mount->root = (vnode_t *) kmalloc ( sizeof ( vnode_t ) );
@@ -121,6 +122,8 @@ int tmpfs_write ( file_t * file, const void * buf, size_t len )
     ( file->f_pos ) += len;
     ( ( (tmpfs_node_t *) ( file->dentry->internal ) )->file_length ) += len;
 
+    uart_printf ( "Write to file %s. Current length of file: %d\n", file->dentry->name, file->f_pos );
+
     return 0;
 }
 
@@ -129,9 +132,13 @@ int tmpfs_read ( file_t * file, void * buf, size_t len )
     int readlen;
     size_t filelen = ( ( (tmpfs_node_t *) ( file->dentry->internal ) )->file_length );
 
-    readlen = filelen > len ? len : filelen;
+    readlen = filelen > file->f_pos + len ? file->f_pos + len : filelen - file->f_pos;
 
-    strncpy ( buf, ( (tmpfs_node_t *) ( file->dentry->internal ) )->buffer, readlen );
+    strncpy ( buf, ( (tmpfs_node_t *) ( file->dentry->internal ) )->buffer + file->f_pos, readlen );
+
+    ( file->f_pos ) += readlen;
+
+    uart_printf ( "Read from file %s. Current position: %d\n", file->dentry->name, file->f_pos );
 
     return readlen;
 }

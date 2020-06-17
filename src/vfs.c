@@ -60,6 +60,8 @@ file_t * vfs_open ( const char * pathname, file_op_flag_t flags )
         file->dentry = new_d;
         file->f_pos  = 0;
 
+        uart_printf ( "Create and open file %s\n", file->dentry->name );
+
         return file;
     }
     // just open a file
@@ -77,11 +79,14 @@ file_t * vfs_open ( const char * pathname, file_op_flag_t flags )
         file->dentry = new_d;
         file->f_pos  = 0;
 
+        uart_printf ( "Open file %s\n", file->dentry->name );
+
         return file;
     }
 }
 int vfs_close ( file_t * file )
 {
+    uart_printf ( "Close file %s\n", file->dentry->name );
     kfree ( file );
     return 0;
 }
