@@ -4,7 +4,15 @@
 #include "filesystem/tmpfs.h"
 #include "device/uart.h"
 
-int32_t __vnodeLookup(struct vnode **target, const char *component, vnode_t type)
+int32_t checkPath(const char *pathname)
+{
+    if (*pathname == '\0')
+        return -1;
+
+    return 0;
+}
+
+int32_t __vnodeLookup(struct vnode **target, const char *component)
 {
     struct dentry *de = (struct dentry *)(*target)->internal;
 
@@ -12,13 +20,15 @@ int32_t __vnodeLookup(struct vnode **target, const char *component, vnode_t type
     uartPuts(component);
     uartPuts("\n");
 
+    if (strcmp(component, "/"))
+    {
+        return 0;
+    }
+
     for (int32_t i = 0, end = de->child_num; i < end; ++i)
     {
         if (strcmp(de->child[i]->name, component))
         {   
-            if (de->child[i]->type != type)
-                return -2;
-
             uartPuts("match: ");
             uartPuts(de->child[i]->name);
             uartPuts("\n");
@@ -34,7 +44,7 @@ int32_t __vnodeLookup(struct vnode **target, const char *component, vnode_t type
 int32_t mkvnode(struct vnode *parent, struct vnode **target, const char *name, vnode_t type)
 {
     struct vnode *vn = (struct vnode *)allocSlot(parent->mount->fs->vnode_token);
-    vn->name = (char *)allocDynamic(NAME_BUFFER_SIZE);
+    vn->name = (char *)allocSlot(parent->mount->fs->vnode_token);
     copynstr(name, vn->name, NAME_BUFFER_SIZE);
 
     uartPuts("mkvnode: ");
@@ -70,12 +80,15 @@ int32_t mkvnode(struct vnode *parent, struct vnode **target, const char *name, v
     return 0;
 }
 
-int32_t tmpfsVnodeCreate(struct vnode *root, struct vnode **target, const char *pathname)
+int32_t tmpfsVnodeCreate(struct vnode *root, struct vnode **target, const char *pathname, vnode_t type)
 {
+    if (checkPath(pathname) != 0)
+        return -1;
+
     char component[NAME_BUFFER_SIZE];
     char *p, *cur;
     copynstr(pathname, component, NAME_BUFFER_SIZE); 
-    p = component;
+    p = component + 1;
     cur = component;
 
     uartPuts("tmpfs create: ");
@@ -88,11 +101,13 @@ int32_t tmpfsVnodeCreate(struct vnode *root, struct vnode **target, const char *
     {
         if (*p == '\0')
         {
-            int32_t err = __vnodeLookup(target, cur, file);
-            if(err == -1)
-                mkvnode(*target, target, cur, file);
-            else if (err == -2)
-                return -2;
+            int32_t err = __vnodeLookup(target, cur);
+
+            if (err == -1)
+                mkvnode(*target, target, cur, type);
+            else if ((*target)->type != type)
+                return -1; 
+
             break;
         }
 
@@ -100,11 +115,11 @@ int32_t tmpfsVnodeCreate(struct vnode *root, struct vnode **target, const char *
         {
             *p = '\0';
 
-            int32_t err = __vnodeLookup(target, cur, dir);
-            if(err == -1)
+            int32_t err = __vnodeLookup(target, cur);
+            if (err == -1)
                 mkvnode(*target, target, cur, dir);
-            else if (err == -2)
-                return -2;
+            else if ((*target)->type != dir)
+                return -1;
 
             cur = p + 1;
         }
@@ -117,10 +132,13 @@ int32_t tmpfsVnodeCreate(struct vnode *root, struct vnode **target, const char *
 
 int32_t tmpfsVnodeLookup(struct vnode *root, struct vnode **target, const char *pathname)
 {
+    if (checkPath(pathname) != 0)
+        return -1;
+
     char component[NAME_BUFFER_SIZE];
     char *p, *cur;
     copynstr(pathname, component, NAME_BUFFER_SIZE); 
-    p = component;
+    p = component + 1;
     cur = component;
 
     *target = root;
@@ -133,8 +151,8 @@ int32_t tmpfsVnodeLookup(struct vnode *root, struct vnode **target, const char *
     {
         if (*p == '\0')
         {
-            int32_t err = __vnodeLookup(target, cur, file);
-            if(err != 0)
+            int32_t err = __vnodeLookup(target, cur);
+            if (err != 0)
                 return err;
 
             break;
@@ -144,14 +162,82 @@ int32_t tmpfsVnodeLookup(struct vnode *root, struct vnode **target, const char *
         {
             *p = '\0';
 
-            int32_t err = __vnodeLookup(target, cur, dir);
-            if(err != 0)
+            int32_t err = __vnodeLookup(target, cur);
+            if (err != 0)
                 return err;
 
             cur = p + 1;
         }
 
         p++;
+    }
+
+    return 0;
+}
+
+int32_t tmpfsListDir(struct vnode *root, const char *pathname)
+{
+    if (checkPath(pathname) != 0)
+        return -1;
+
+    struct vnode **target;
+    char component[NAME_BUFFER_SIZE];
+    char *p, *cur;
+    copynstr(pathname, component, NAME_BUFFER_SIZE); 
+    p = component + 1;
+    cur = component;
+    
+    target = (struct vnode **)allocDynamic(sizeof(struct vnode *));
+    *target = root;
+
+    uartPuts("tmpfs listdir: ");
+    uartPuts(pathname);
+    uartPuts("\n");
+
+    while(1)
+    {
+        if (*p == '\0')
+        {
+            int32_t err = __vnodeLookup(target, cur);
+            if (err != 0)
+                return err;
+
+            break;
+        }
+
+        if (*p == '/')
+        {
+            *p = '\0';
+
+            int32_t err = __vnodeLookup(target, cur);
+            if (err != 0)
+                return err;
+
+            cur = p + 1;
+        }
+
+        p++;
+    }
+
+    if ((*target)->type != dir)
+        return -1;
+
+    struct dentry *de = (struct dentry *)(*target)->internal;
+
+    uartPuts("list nodes under ");
+    uartPuts(pathname);
+    uartPuts("\n");
+    uartPuts("name    type\n");
+    
+    for (int32_t i = 0, end = de->child_num; i < end; ++i)
+    {
+        uartPuts(de->child[i]->name);
+        uartPuts("   ");
+        if (de->child[i]->type == file)
+            uartPuts("file");
+        else if (de->child[i]->type == dir)
+            uartPuts("directory");
+        uartPuts("\n");
     }
 
     return 0;
@@ -194,10 +280,13 @@ int32_t tmpfsFileRead(struct file *file, void *buf, size_t len)
 int32_t tmpfsSetupMount(struct filesystem* fs, struct mount* mount)
 {
     struct vnode *vn = (struct vnode *)allocSlot(fs->vnode_token);
+    vn->name = (char *)allocSlot(fs->name_token);
+    copynstr("/", vn->name, NAME_BUFFER_SIZE);
     vn->mount = mount;
     vn->v_ops = (struct vnodeOperations *)allocDynamic(sizeof(struct vnodeOperations));
     vn->v_ops->create = tmpfsVnodeCreate;
     vn->v_ops->lookup = tmpfsVnodeLookup;
+    vn->v_ops->listdir = tmpfsListDir;
     vn->f_ops = (struct fileOperations *)allocDynamic(sizeof(struct fileOperations));
     vn->f_ops->write = tmpfsFileWrite;
     vn->f_ops->read = tmpfsFileRead;
@@ -214,4 +303,6 @@ int32_t tmpfsSetupMount(struct filesystem* fs, struct mount* mount)
 
     mount->fs = fs;
     mount->root = vn;
+
+    return 0;
 }

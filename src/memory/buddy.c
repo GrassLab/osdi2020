@@ -17,11 +17,11 @@ struct page* _allocFreePage(uint32_t order)
     free_page->next = (struct page* )0;
     buddy[order].size--;
 
-    uartPuts("allocate page: ");
-    uartInt(free_page->pfn);
-    uartPuts(" with order ");
-    uartInt(order);
-    uartPuts("\n");
+    // uartPuts("allocate page: ");
+    // uartInt(free_page->pfn);
+    // uartPuts(" with order ");
+    // uartInt(order);
+    // uartPuts("\n");
 
     return free_page;
 }
@@ -45,13 +45,13 @@ void _dividePage(uint32_t srcOrder, uint32_t dstOrder)
         buddy[i-1].head = new_fp;
         buddy[i-1].size = 2;
 
-        uartPuts("divide page ");
-        uartInt(free_page->pfn);
-        uartPuts(" with new page ");
-        uartInt(new_fp->pfn);
-        uartPuts(" to order ");
-        uartInt(new_fp->order);
-        uartPuts("\n");
+        // uartPuts("divide page ");
+        // uartInt(free_page->pfn);
+        // uartPuts(" with new page ");
+        // uartInt(new_fp->pfn);
+        // uartPuts(" to order ");
+        // uartInt(new_fp->order);
+        // uartPuts("\n");
     }
 }
 
@@ -60,10 +60,10 @@ void _mergePage(struct page* freed_page)
     struct page* buddy_page = &pages[freed_page->pfn ^ (1 << freed_page->order)];
     if ((buddy_page->order == freed_page->order) && buddy_page->used == false && buddy_page->order < 9)
     {
-        uartPuts("merge page ");
-        uartInt(freed_page->pfn);
-        uartPuts(" and page ");
-        uartInt(buddy_page->pfn);
+        // uartPuts("merge page ");
+        // uartInt(freed_page->pfn);
+        // uartPuts(" and page ");
+        // uartInt(buddy_page->pfn);
 
         buddy[buddy_page->order].size--;
 
@@ -90,11 +90,11 @@ void _mergePage(struct page* freed_page)
 
         new_page->order = freed_page->order + 1;
 
-        uartPuts(" to page ");
-        uartInt(new_page->pfn);
-        uartPuts(" of order ");
-        uartInt(new_page->order);
-        uartPuts("\n");
+        // uartPuts(" to page ");
+        // uartInt(new_page->pfn);
+        // uartPuts(" of order ");
+        // uartInt(new_page->order);
+        // uartPuts("\n");
         
         _mergePage(new_page);
     }
@@ -115,9 +115,9 @@ void _mergePage(struct page* freed_page)
 
 uint64_t allocFreePage(uint32_t order)
 {
-    uartPuts("try to allocate page with order ");
-    uartInt(order);
-    uartPuts("\n");
+    // uartPuts("try to allocate page with order ");
+    // uartInt(order);
+    // uartPuts("\n");
 
     struct page* free_page = (struct page* )0;
     if (buddy[order].size != 0)
@@ -153,9 +153,9 @@ void freePage(uint64_t addr)
     struct page* freed_page = &pages[(addr - LOW_MEMORY - used_mem) / PAGE_SIZE];
     freed_page->used = false;
 
-    uartPuts("free page ");
-    uartInt(freed_page->pfn);
-    uartPuts("\n");
+    // uartPuts("free page ");
+    // uartInt(freed_page->pfn);
+    // uartPuts("\n");
 
     _mergePage(freed_page);
 }

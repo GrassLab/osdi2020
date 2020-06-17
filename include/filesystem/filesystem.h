@@ -43,6 +43,7 @@ struct filesystem
     int32_t file_token;
     int32_t dentry_token;
     int32_t fcontent_token;
+    int32_t name_token;
     int32_t (*setup_mount)(struct filesystem *fs, struct mount *mount);
 };
 
@@ -55,7 +56,8 @@ struct fileOperations
 struct vnodeOperations 
 {
     int32_t (*lookup)(struct vnode *root, struct vnode *target, const char *pathname);
-    int32_t (*create)(struct vnode *root, struct vnode *target, const char *pathname);
+    int32_t (*create)(struct vnode *root, struct vnode *target, const char *pathname, vnode_t type);
+    int32_t (*listdir)(struct vnode *root, const char *pathname);
 };
 
 int32_t createFilesystem(const char *fsname);
@@ -63,5 +65,7 @@ struct file *vfsOpen(const char* pathname, int flags);
 int32_t vfsClose(struct file *file);
 int32_t vfsWrite(struct file *file, const void *buf, size_t len) ;
 int32_t vfsRead(struct file *file, void *buf, size_t len);
+int32_t mkdir(const char* pathname);
+int32_t lsdir(const char* pathname);
 
 #endif

@@ -201,5 +201,12 @@ void vfsTask()
     uartInt(sz);
     uartPuts("\n");
 
+    mkdir("test2");
+    d = vfsOpen("test2/hello", O_CREAT);
+    vfsClose(d);
+    
+    lsdir("test2");
+    lsdir("/");
+
     busyloop();
 }

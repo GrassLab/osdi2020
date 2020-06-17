@@ -15,11 +15,11 @@ uint64_t allocSlot(uint32_t token)
     {
         pool[token].init_addr = allocFreePage(0);
 
-        uartPuts("allocate free page with init address: ");
-        uartHex(pool[token].init_addr);
-        uartPuts(" for pool ");
-        uartInt(token);
-        uartPuts("\n");
+        // uartPuts("allocate free page with init address: ");
+        // uartHex(pool[token].init_addr);
+        // uartPuts(" for pool ");
+        // uartInt(token);
+        // uartPuts("\n");
     }
 
     for (uint32_t i = 0, end = pool[token].max_slot_num; i < end; ++i)
@@ -28,11 +28,11 @@ uint64_t allocSlot(uint32_t token)
         {
             pool[token].slot_used[i] = true;
 
-            uartPuts("allocate slot ");
-            uartInt(i);
-            uartPuts(" of pool ");
-            uartInt(token);
-            uartPuts("\n");
+            // uartPuts("allocate slot ");
+            // uartInt(i);
+            // uartPuts(" of pool ");
+            // uartInt(token);
+            // uartPuts("\n");
 
             return pool[token].init_addr + i * pool[token].slot_size;
         }
@@ -51,13 +51,13 @@ int32_t getFreePool(uint64_t size)
             pool[i].max_slot_num = PAGE_SIZE / size;
             pool[i].pool_used = true;
 
-            uartPuts("allocate free pool with token ");
-            uartInt(i);
-            uartPuts("\nslot size: ");
-            uartInt(pool[i].slot_size);
-            uartPuts("\nmax slot number: ");
-            uartInt(pool[i].max_slot_num);
-            uartPuts("\n");
+            // uartPuts("allocate free pool with token ");
+            // uartInt(i);
+            // uartPuts("\nslot size: ");
+            // uartInt(pool[i].slot_size);
+            // uartPuts("\nmax slot number: ");
+            // uartInt(pool[i].max_slot_num);
+            // uartPuts("\n");
 
             return i;
         }
@@ -70,20 +70,20 @@ void freeSlot(uint32_t token, uint64_t addr)
 {
     uint32_t index = (addr - pool[token].init_addr) / pool[token].slot_size;
 
-    uartPuts("free slot ");
-    uartInt(index);
-    uartPuts(" of pool ");
-    uartInt(token);
-    uartPuts("\n");
+    // uartPuts("free slot ");
+    // uartInt(index);
+    // uartPuts(" of pool ");
+    // uartInt(token);
+    // uartPuts("\n");
 
     pool[token].slot_used[index] = false;
 }
 
 void freePool(uint32_t token)
 {
-    uartPuts("free pool ");
-    uartInt(token);
-    uartPuts("\n");
+    // uartPuts("free pool ");
+    // uartInt(token);
+    // uartPuts("\n");
 
     pool[token].pool_used = false;
     freePage(pool[token].init_addr);
@@ -153,10 +153,10 @@ void initMemPool()
         for (uint64_t j = 0; j < 4096; ++j)
             pool[i].slot_used[j] = false;
 
-        uartPuts("allocate free page with init address: ");
-        uartHex(pool[i].init_addr);
-        uartPuts(" for pool ");
-        uartInt(i);
-        uartPuts("\n");
+        // uartPuts("allocate free page with init address: ");
+        // uartHex(pool[i].init_addr);
+        // uartPuts(" for pool ");
+        // uartInt(i);
+        // uartPuts("\n");
     }
 }
