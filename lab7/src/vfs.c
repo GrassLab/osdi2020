@@ -183,7 +183,6 @@ struct file* vfs_open(const char* pathname, int flags) {
             return 0;
         }
         else if (find_vnode == 0 && (flags & O_CREAT) > 0) {
-            printf("%s\r\n", pathname);
             create_file_vnode(ret_file);
             // insert vnode to dir
             insert_vnode(start_dir, ret_file->vnode, pathname);
@@ -208,7 +207,9 @@ int vfs_write(struct file* file, const void* buf, int len) {
     int *file_size = (int *)(file->vnode->internal);
     memcpy((unsigned long)buf, (unsigned long)file->vnode->internal + sizeof(int) + f_pos, len);
     file->f_pos += len;
-    *file_size += len;
+    if(*file_size < file->f_pos) {
+        *file_size = file->f_pos;
+    }
     return 1;
 }
 

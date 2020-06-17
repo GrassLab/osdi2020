@@ -67,7 +67,6 @@ int sys_file_read(int file_index,void* buf, int len) {
 	char *buff = 0xffff000030000000;
 	memzero(buff, 100);
 	ret = user_read(file_index, buff, len);
-	printf("%d %s\r\n", file_index, buff);
 	set_pgd(current->mm.pgd);
 	strcpy(buf, buff);
 	return ret;

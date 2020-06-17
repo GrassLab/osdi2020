@@ -28,7 +28,6 @@ void kernel_process(){
 	} 
 }
 
-
 void kernel_main()
 {
 	uart_init();
@@ -39,20 +38,22 @@ void kernel_main()
 	
 	init_root_filesystem();
 	mkdir("mnt");
-	struct file* a = vfs_open("hello", REG_FILE | O_CREAT);
-	struct file* b = vfs_open("world", REG_FILE | O_CREAT); 
+	struct file* a = vfs_open("hello_k", REG_FILE | O_CREAT);
+	struct file* b = vfs_open("world_k", REG_FILE | O_CREAT); 
 	vfs_write(a, "Hello ", 6);
 	vfs_write(b, "World!", 6);
 	vfs_close(a);
 	vfs_close(b);
-	b = vfs_open("hello", REG_FILE);
-	a = vfs_open("world", REG_FILE);
+	b = vfs_open("hello_k", REG_FILE);
+	a = vfs_open("world_k", REG_FILE);
 	int sz;
 	char buf[100];
 	sz  = vfs_read(b, buf, 100);
 	sz += vfs_read(a, buf + sz, 100);
 	buf[sz] = '\0';
-	printf("%s\n", buf);
+	vfs_close(a);
+	vfs_close(b);
+	printf("%s\r\n", buf);
 	vfs_open("/", REG_DIR);
 	enable_core_timer();
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);

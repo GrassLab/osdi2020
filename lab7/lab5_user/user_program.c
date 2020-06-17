@@ -54,8 +54,10 @@ void test_command6() {
 	int sz;
 	sz =  fread(b, buf, 100);
 	sz += fread(a, buf + sz, 100);
+	fclose(a);
+	fclose(b);
 	buf[sz] = '\0';
-	printf("%s\n", buf); // should be Hello World!
+	printf("%s\r\n", buf); // should be Hello World!
 }
 
 void user_main() {
