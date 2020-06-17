@@ -70,19 +70,21 @@ void schedule()
 {
     Task *current = get_current();
     int nextTaskId = (current->id + 1) % 64;
-    while(nextTaskId != current->id) {
-        if (taskManager.taskPool[nextTaskId].state != ZOMBIE) {
+    for(int i = 0; i < 64; i++) {
+        if (taskManager.taskPool[nextTaskId].state != ZOMBIE && nextTaskId != 0 ) {
             taskManager.runningTaskId = nextTaskId;
             context_switch(&taskManager.taskPool[nextTaskId]);
             return;
         }
-        nextTaskId = (nextTaskId + 1) % taskManager.taskCount;
+        nextTaskId = (nextTaskId + 1) % 64;
     }
+    taskManager.runningTaskId = 0;
+    context_switch(&taskManager.taskPool[0]);
 }
 
 void print_task_context(Task *task)
 {    
-    for(int i= 0; i<64; i++) {
+    for(int i = 0; i < 64; i++) {
         if (taskManager.taskPool[i].state != ZOMBIE) {
             uart_puts("Task id = ");
             uart_print_int(taskManager.taskPool[i].id);
@@ -115,7 +117,7 @@ int __fork()
         if (taskManager.taskPool[childTaskId].state == ZOMBIE) {
             break;
         }
-        childTaskId = (childTaskId + i) % 64;
+        childTaskId = (childTaskId + 1) % 64;
     }
     Task *parent = get_current();
     Task *child = &taskManager.taskPool[childTaskId];
@@ -158,7 +160,9 @@ int __fork()
     taskManager.taskCount ++;
     uart_puts("Task ");
     uart_print_int(parent->id);
-    uart_puts(" called fork\n");
+    uart_puts(" called fork, child is ");
+    uart_print_int(child->id);
+    uart_puts("\n");
     return child->id;
 }
 
@@ -194,6 +198,7 @@ void foo()
         uart_print_int(tmp);
         uart_puts("\n");
         wait(100000000);
+        exit(0);
     }
 }
 
@@ -224,11 +229,6 @@ void test() {
         fork();
         wait(100000);
         fork();
-        // uart_puts("TaskId: ");
-        // uart_print_int(get_taskid());
-        // uart_puts("......cnt: ");
-        // uart_print_int(cnt);
-        // uart_puts("\n");
         while(cnt < 10) {
             uart_puts("TaskId: ");
             uart_print_int(get_taskid());
@@ -269,9 +269,6 @@ void uart_test() {
 void do_exec(void(*func)())
 {
     Task *task = get_current();
-    // uart_puts("do_exec TaskId: ");
-    // uart_print_int(task->id);
-    // uart_puts("\n");
     unsigned long userStack = task->userContext.sp_el0;
     unsigned long userCpuState = 0x0;
     asm volatile("msr sp_el0, %0" :: "r" (userStack));
