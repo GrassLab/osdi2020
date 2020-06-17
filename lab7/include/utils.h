@@ -5,6 +5,6 @@
 #include <stdint.h>
 
 void branchAddr(void *addr);
-void memcpy(uint8_t *dst, uint8_t *src, size_t n);
+void memcpy(uint8_t *dst, const uint8_t *src, size_t n);
 
 #endif
