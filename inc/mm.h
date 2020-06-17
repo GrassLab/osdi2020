@@ -73,9 +73,6 @@ void *obj_allocate(int token);
 void obj_free(void *obj);
 void *kmalloc(unsigned int size);
 void kfree(void * block);
-struct page *__buddy_block_alloc(int order);
-void __buddy_block_free(struct page* block);
-void __init_obj_page(struct page* page, unsigned size);
 #endif //__ASSEMBLER__
 
 #endif//_MM_H */

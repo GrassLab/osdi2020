@@ -37,3 +37,25 @@ void *memcpy(void *dest, const void *src, unsigned long n)
         *tmp++ = *s++;
     return dest;
 }
+
+char *strtok(char *s, const char delim){
+    static char *pos;
+    char* ret;
+    if(s) pos = s;
+    
+    if(*pos == '\0') return 0;
+    // skip leading
+    while(*pos == delim){
+        pos ++;
+    }
+
+    ret = pos;
+    while(*pos != delim && *pos != '\0'){
+        pos ++;
+    }
+    if (*pos != '\0'){
+        *pos = '\0';
+        pos ++;
+    }
+    return ret;
+}
