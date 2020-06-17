@@ -30,12 +30,14 @@ int main ( )
     vfs_read ( b, buf, 100 );
     uart_printf ( ">> %s\n", buf );
 
-    vfs_write ( b, "Hello World\n", 12 );
+    vfs_write ( b, "Hello World.\n", 12 );
+    // vfs_write ( b, "Sample text in sample file.\n", 28 );
     vfs_close ( b );
 
     b = vfs_open ( "test.txt", 0 );
     vfs_read ( b, buf, 100 );
     uart_printf ( ">> %s\n", buf );
+    vfs_close ( b );
 
     // start shell
     shell_start ( );

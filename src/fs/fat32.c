@@ -236,6 +236,8 @@ int fat32_write ( file_t * file, const void * buf, size_t len )
         }
     }
 
+    file_node->size = len;
+
     writeblock ( ( dir_node->cluster - 2 ) * sd_root_bst->logic_sector_per_cluster + sd_root_partition->starting_sector + sd_root_partition->root_sector_abs, dir_entrty );
 
     uart_printf ( "Write to file: %s, size: %d\n", file_node->name, len );
