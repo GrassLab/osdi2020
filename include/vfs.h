@@ -52,7 +52,9 @@ struct vnode_operations {
 
 struct files_struct {
     int count;
-    struct file* fd_array[NR_OPEN_DEFAULT];
+    int next_fd;
+    struct file** fd;
+    struct file* fd_array[NR_OPEN_DEFAULT]; // default array of file objects
 };
 
 extern struct mount* rootfs;

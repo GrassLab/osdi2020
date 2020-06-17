@@ -7,6 +7,7 @@
 #include "schedule.h"
 #include "sys.h"
 #include "mm.h"
+#include "vfs.h"
 
 char *intr_stack;
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
@@ -100,7 +101,23 @@ void sys_remain_page(struct trapframe* trapframe) {
 }
 
 void sys_open(struct trapframe* trapframe) {
-
+    const char* pathname = (char*) trapframe->x[0];
+    int flags = trapframe->x[1];
+    struct file* f = vfs_open(pathname, flags);
+    int fd_num = current_task->files.next_fd;
+    // open files count larger than fd array
+    if (fd_num >= current_task->files.count) {
+        int new_fd_array_size = current_task->files.count + NR_OPEN_DEFAULT;
+        struct file** new_fd_array = (struct file**)kmalloc(sizeof(struct file*) * new_fd_array_size);
+        for (int i = 0; i < current_task->files.count; i++) {
+            new_fd_array[i] = current_task->files.fd[i];
+        }
+        current_task->files.fd = new_fd_array;
+        current_task->files.count = new_fd_array_size;
+    }
+    current_task->files.fd[fd_num] = f;
+    current_task->files.next_fd++;
+    trapframe->x[0] = fd_num;
 }
 
 void sys_close(struct trapframe* trapframe) {

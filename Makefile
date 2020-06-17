@@ -23,7 +23,7 @@ USER_OBJS_FILES += $(USER_ASM:$(USER_DIR)/%.S=$(BUILD_DIR)/user/%_asm.o)
 
 NO_BUILT_IN = -fno-builtin-printf -fno-builtin-memcpy -fno-builtin-strcpy
 CFLAGS = -Wall -Wextra -nostdlib -nostdinc $(NO_BUILT_IN) -Iinclude -Ilib -c #-Werror
-USER_CFLAGS = -Wall -Wextra -nostdlib -nostdinc -fno-zero-initialized-in-bss $(NO_BUILT_IN) -Ilib -c -Werror
+USER_CFLAGS = -Wall -Wextra -nostdlib -nostdinc -fno-zero-initialized-in-bss $(NO_BUILT_IN) -Ilib -c #-Werror
 
 .PHONY: all clean
 

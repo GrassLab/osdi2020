@@ -2,7 +2,14 @@
 // #include "shell.h"
 
 void demo_lab7_ele2() {
-    printf("demo lab7 ele2\n");
+    int a = open("hello", O_CREAT);
+    int b = open("world", O_CREAT);
+    int c = open("hello", O_CREAT);
+    int d = open("world", O_CREAT);
+    printf("fd: %d\n", a);
+    printf("fd: %d\n", b);
+    printf("fd: %d\n", c);
+    printf("fd: %d\n", d);
 }
 
 int main() {

@@ -29,6 +29,8 @@ int fork();
 void exit(int status);
 void printf(char* fmt, ...);
 uint64_t remain_page_num();
+
+#define O_CREAT 1
 int open(const char* pathname, int flags);
 int close(int fd);
 int write(int fd, const void* buf, uint64_t len);
