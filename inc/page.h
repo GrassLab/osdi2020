@@ -3,6 +3,8 @@
 
 #include "mm.h"
 #include "task.h"
+#include "alloc.h"
+#include "pool.h"
 #include <stdint.h>
 #define PAGE_MAX 10000
 typedef enum {
@@ -13,6 +15,8 @@ struct page_t {
     int id;
     PAGE_STATUS status;
     uint64_t *content;
+    struct pool_t* pool;
+    struct buddy_node_t* buddy_node;
 };
 
 extern struct page_t pages[PAGE_MAX];

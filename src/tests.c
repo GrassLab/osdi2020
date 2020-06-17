@@ -1,10 +1,7 @@
 /* #include <stdint.h> */
 
 /* #include "io.h" */
-/* #include "lfb.h" */
-/* #include "mbox.h" */
-/* #include "reset.h" */
-/* #include "shell.h" */
+/* #include "libsyscall.h" */
 /* #include "syscall.h" */
 /* #include "task.h" */
 /* #include "uart.h" */

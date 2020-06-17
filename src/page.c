@@ -5,7 +5,7 @@
 #include "task.h"
 
 struct page_t pages[PAGE_MAX];
-int page_now = 0x160;
+int page_now = 0x230;
 
 struct page_t* page_alloc() {
     struct page_t* page = 0;
