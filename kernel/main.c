@@ -4,6 +4,7 @@
 #include <string.h>
 #include <timer.h>
 #include <syscall.h>
+#include <vfs.h>
 #include "shell.h"
 #include "irq.h"
 
@@ -45,6 +46,25 @@ user_shell ()
   do_exec (_binary_bin_shell_start);
 }
 
+static void
+vfs_test ()
+{
+  char buf[100];
+  struct file *a = vfs_open ("hello", O_CREAT);
+  struct file *b = vfs_open ("world", O_CREAT);
+  vfs_write (a, "Hello ", 6);
+  vfs_write (b, "World!", 6);
+  vfs_close (a);
+  vfs_close (b);
+  b = vfs_open ("hello", 0);
+  a = vfs_open ("world", 0);
+  int sz;
+  sz = vfs_read (b, buf, 100);
+  sz += vfs_read (a, buf + sz, 100);
+  buf[sz] = '\0';
+  uart_puts (buf);		// should be Hello World!
+}
+
 int
 main (int error, char *argv[])
 {
@@ -62,6 +82,9 @@ main (int error, char *argv[])
       uart_puts ("-----------------------------\n");
     }
 
+  rootfs_init ();
+  vfs_test ();
+  task_init ();
   privilege_task_create (idle);
   privilege_task_create (user_shell);
   sys_core_timer_enable ();
