@@ -78,7 +78,7 @@ int tmpfs_create(struct vnode* dir, struct vnode** target, const char* component
 int tmpfs_read(struct file* file, void* buf, uint64_t len) {
     struct tmpfs_internal* file_node = (struct tmpfs_internal*)file->vnode->internal;
     if (file_node->flag != REGULAR_FILE) {
-        uart_printf("Write to non regular file\n");
+        uart_printf("Read on non regular file\n");
         return -1;
     }
 
