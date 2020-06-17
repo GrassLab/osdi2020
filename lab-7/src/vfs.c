@@ -1,4 +1,5 @@
 #include "vfs.h"
+#include "printf.h"
 #include "allocator.h"
 
 int register_filesystem(FileSystem *fs) {
@@ -9,13 +10,13 @@ int register_filesystem(FileSystem *fs) {
     fs->setup_mount(fs, rootfs);
 }
 
-
 int next_component_name(char *path) {
     // return end index of next component name
     // -1 if fail
     for (int i = 0; i < strlen(path); i++) {
-        if (path[i] == '/') return i
+        if (path[i] == '/') return i;
     }
+    return -1;
 }
 
 File* vfs_open(const char *pathname, int flags) {
@@ -27,10 +28,20 @@ File* vfs_open(const char *pathname, int flags) {
     VNode *target;
     // rootVnode->lookup(rootVnode, &target, component_name);
 
-    // int pathnameCount = 0;
+    char pathnameCopy[512];
+    int pathnameIndex = 0;
+    strcpy(pathnameCopy, pathname);
     // int componentNameCount = 0;
     // while (pathname[pathnameCount] != ) {
 
+    // }
+    pathnameIndex = next_component_name(pathname);
+    // while (pathnameIndex != -1) {
+        // printf("%s\n", pathnameCopy+pathnameIndex);
+        pathnameCopy[pathnameIndex] = '\0';
+        pathnameIndex = next_component_name(pathname);
+        // printf("%d\n", pathnameIndex);
+        // printf("%s\n", pathnameCopy+pathnameIndex);
     // }
 
     if (flags == O_CREAT) {

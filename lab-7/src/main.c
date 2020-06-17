@@ -15,6 +15,10 @@ void init_rootfs() {
     register_filesystem(tmpfs);
 }
 
+void test_lab7_req() {
+    vfs_open("/tmp/123.txt", O_CREAT);
+}
+
 int main()
 {
     uart_init();
@@ -23,4 +27,5 @@ int main()
     allocator_init();
     varied_size_init();
     init_rootfs();
+    test_lab7_req();
 }

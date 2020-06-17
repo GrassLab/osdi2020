@@ -9,8 +9,9 @@
 
 typedef struct dentry {
     int flag;
-    char name[DENTRY_NAME_LEN];
     int childCount;
+    char name[DENTRY_NAME_LEN];
+    struct vnode *vnode;
     struct dentry *parentDentry;
     struct dentry *childDentry[MAX_CHILD_DENTRY];
 } Dentry;
@@ -19,7 +20,6 @@ typedef struct tmpfs_node {
     Dentry *dentry;
     char content[TMP_FILE_SIZE];
 } TmpfsNode;
-
 
 void dentry_init(Dentry *dentry, char *name, int flag);
 int tmpsfs_setup_mount();
