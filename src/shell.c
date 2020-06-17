@@ -6,6 +6,7 @@
 #include "reset.h"
 #include "shell.h"
 #include "uart.h"
+#include "utils.h"
 
 #define GET_BOARD_REVISION 0x00010002
 #define REQUEST_CODE 0x00000000
@@ -62,18 +63,6 @@ void get_vc_base() {
     print_s("VC core base size: 0x");
     print_h(mbox[6]);
     print_s("\n");
-}
-
-int strcmp(const char *p1, const char *p2) {
-    const unsigned char *s1 = (const unsigned char *)p1;
-    const unsigned char *s2 = (const unsigned char *)p2;
-    unsigned char c1, c2;
-    do {
-        c1 = (unsigned char)*s1++;
-        c2 = (unsigned char)*s2++;
-        if (c1 == '\0') return c1 - c2;
-    } while (c1 == c2);
-    return c1 - c2;
 }
 
 void read_cmd() {

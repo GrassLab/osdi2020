@@ -8,6 +8,7 @@
 #include "task.h"
 #include "tests.h"
 #include "uart.h"
+#include "vfs.h"
 
 extern volatile unsigned int _boot_start;
 extern uint64_t _end;
@@ -39,21 +40,43 @@ void zombie_killer() {
 }
 
 void foo_kernel() {
-    print_s("\n\n");
-    uint8_t* p8 = kmalloc(sizeof(uint8_t));
-    kfree(p8);
-    uint8_t* p8_2 = kmalloc(sizeof(uint8_t));
-    kfree(p8_2);
+    init_rootfs();
+    char buf[100];
+    struct file* a = vfs_open("hello", O_CREAT);
+    struct file* b = vfs_open("world", O_CREAT);
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World\n", 6);
+    vfs_close(a);
+    vfs_close(b);
+    b = vfs_open("hello", 0);
+    a = vfs_open("world", 0);
+    int sz;
+    sz = vfs_read(b, buf, 100);
+    sz += vfs_read(a, buf + sz, 100);
+    buf[sz] = '\0';
+    print_s(buf);
+    mkdir("dir1");
+    vfs_close(a);
+    vfs_close(b);
 
-    print_s("\n\n");
+    struct file* dir = vfs_open("/", 0);
+    vfs_list(dir);
+    vfs_close(dir);
 
-    uint32_t* p32 = kmalloc(sizeof(uint32_t) * 1024);
-    kfree(p32);
-    uint32_t* p32_2 = kmalloc(sizeof(uint32_t) * 1024);
-    kfree(p32_2);
-    /* do_exec((uint8_t*)&_binary_user_img_start, */
-    /* ((uint64_t)(&_binary_user_img_end) - */
-    /* (uint64_t)(&_binary_user_img_start))); */
+    chdir("dir1");
+    mkdir("dir2");
+
+    dir = vfs_open(".", 0);
+    vfs_list(dir);
+    vfs_close(dir);
+
+    chdir("..");
+
+    dir = vfs_open(".", 0);
+    asm volatile("gg:");
+    vfs_list(dir);
+    vfs_close(dir);
+
     while (1)
         ;
 }

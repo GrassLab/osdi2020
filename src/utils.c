@@ -6,3 +6,37 @@ void *memcpy(void *dest, const void *src, size_t len) {
     while (len--) *d++ = *s++;
     return dest;
 }
+
+int strcmp(const char *p1, const char *p2) {
+    const unsigned char *s1 = (const unsigned char *)p1;
+    const unsigned char *s2 = (const unsigned char *)p2;
+    unsigned char c1, c2;
+    do {
+        c1 = (unsigned char)*s1++;
+        c2 = (unsigned char)*s2++;
+        if (c1 == '\0') return c1 - c2;
+    } while (c1 == c2);
+    return c1 - c2;
+}
+
+char *strcpy(char *destination, const char *source) {
+    // return if no memory is allocated to the destination
+    if (destination == NULL) return NULL;
+
+    // take a pointer pointing to the beginning of destination string
+    char *ptr = destination;
+
+    // copy the C-string pointed by source into the array
+    // pointed by destination
+    while (*source != '\0') {
+        *destination = *source;
+        destination++;
+        source++;
+    }
+
+    // include the terminating null character
+    *destination = '\0';
+
+    // destination is returned by standard strcpy()
+    return ptr;
+}

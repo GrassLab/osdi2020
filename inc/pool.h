@@ -5,7 +5,6 @@
 #define MAX_PROCESSES 5
 #define MAX_POOL 10
 #define POOL_SIZE 1
-#define DEFAULT_POOL 3
 #define MAX_BOOKS 1024 * 4 * 2
 
 struct pool_t {
