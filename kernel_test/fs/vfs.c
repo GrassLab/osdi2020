@@ -1,6 +1,7 @@
 #include "vfs.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "tmpfs.h"
+// #include "../kernel/uart.h"
+// #include "../allocator/obj_allocator.h"
 
 
 
@@ -46,15 +47,17 @@ struct file* vfs_open(const char* pathname, int flags)
     // 3. Create a new file if O_CREAT is specified in flags.
     struct vnode* vnode;
     struct vnode* target;
+    struct dentry* dentry;
+    dentry = rootfs->dentry;
     vnode = rootfs->root;
     // char component_name[NAME_LENGTH];
     // get_component_name(pathname, component_name);
     // printf("component_name: %s\n", component_name);
-    int found = vnode->v_ops->lookup(rootfs->dentry, &target, pathname);
+    int found = vnode->v_ops->lookup(dentry, &target, pathname);
     // printf("found: %d\n", found);
     if (flags == O_CREAT) {
         if (found == 0) { // not found
-            vnode->v_ops->create(rootfs->dentry, &target, pathname);
+            vnode->v_ops->create(dentry, &target, pathname);
         } 
     } else {
         if (found == 0) { // not found
@@ -63,6 +66,7 @@ struct file* vfs_open(const char* pathname, int flags)
     }
     log("create fd.\n");
     struct file* fd = malloc(sizeof(struct file));
+    fd->dentry = dentry;
     fd->vnode = target;
     // printf("0x%x\n", target->f_ops->write);
     fd->f_ops = target->f_ops;
@@ -90,4 +94,31 @@ int vfs_read(struct file* file, void* buf, int len)
     // 2. return read size or error code if an error occurs.
     log("vfs read.\n");
     return file->f_ops->read(file, buf, len);
+}
+
+int vfs_ls(struct file* file)
+{
+    log("vfs ls.\n");
+    struct dentry* dentry;
+    dentry = file->dentry;
+
+    for (int i=0; i<dentry->child_num; i++) {
+        printf("%s\n", dentry->child[i]->name);
+    }
+    return dentry->child_num;
+    return 0;
+}
+
+int vfs_mkdir(const char* pathname)
+{
+    // Creating a directory is almost the same as creating a regular file. 
+    // A VFS should find the parent directory of a newly created directory first. 
+    // If the parent directory is found, 
+    //      call the file system’s mkdir method with the component name to create a new directory.
+    
+}
+
+int vfs_chdir(const char* pathname)
+{
+    return 0;
 }

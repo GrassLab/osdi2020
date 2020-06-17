@@ -1,7 +1,24 @@
 #include "vfs.h"
 #include "tmpfs.h"
+// #include "../kernel/uart.h"
+// #include "../allocator/obj_allocator.h"
 
 extern struct mount* rootfs;
+
+void setup_vnode(struct vnode** vnode)
+{
+    
+    struct vnode* ptr = vnode;
+    printf("%x\n", (*vnode));
+    *vnode = malloc(sizeof(struct vnode));
+    printf("%x\n", (*vnode));
+    ptr->v_ops = malloc(sizeof(struct vnode_operations));
+    ptr->v_ops->lookup = tmpfs_lookup;
+    ptr->v_ops->create = tmpfs_create;
+    ptr->f_ops = malloc(sizeof(struct file_operations));
+    ptr->f_ops->write = tmpfs_write;
+    ptr->f_ops->read = tmpfs_read;
+}
 
 int setup_tmpfs_filesystem()
 {
@@ -24,14 +41,16 @@ int setup_tmpfs_mount(struct filesystem* fs, struct mount* mount)
     tmpfs->fs = fs;
 
     log("set vnode.\n");
+    // setup_vnode(&tmpfs->root);
     tmpfs->root = malloc(sizeof(struct vnode));
-    tmpfs->root->mount = tmpfs;
     tmpfs->root->v_ops = malloc(sizeof(struct vnode_operations));
     tmpfs->root->v_ops->lookup = tmpfs_lookup;
     tmpfs->root->v_ops->create = tmpfs_create;
     tmpfs->root->f_ops = malloc(sizeof(struct file_operations));
     tmpfs->root->f_ops->write = tmpfs_write;
     tmpfs->root->f_ops->read = tmpfs_read;
+    printf("%x\n", tmpfs->root);
+    tmpfs->root->mount = tmpfs;
 
 
     log("set dentry.\n");
@@ -91,6 +110,11 @@ int tmpfs_lookup(struct dentry* dentry, struct vnode** target, const char* compo
 {
     log("tmpfs lookup.\n");
     struct dentry* child;
+    if (strcmp(dentry->name, component_name) == 0) {
+        *target = dentry->vnode;
+        printf("%s\n", component_name);
+        return 1;
+    }
     for (int i=0; i<dentry->child_num; i++)
     {
         child = dentry->child[i];

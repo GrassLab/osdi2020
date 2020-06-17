@@ -9,6 +9,8 @@ struct tmpfs_internal {
     int content_size;
 };
 
+void setup_vnode(struct vnode** vnode);
+void setup_dentry(struct dentry** dentry);
 int setup_tmpfs_filesystem();
 int setup_tmpfs_mount(struct filesystem* fs, struct mount* mount);
 int tmpfs_write(struct file* file, const void* buf, int len);

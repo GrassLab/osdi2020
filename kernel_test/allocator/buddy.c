@@ -1,4 +1,5 @@
 #include "buddy.h"
+#include "../kernel/uart.h"
 
 #define INIT_BITMAP (1 << BUDDY_MAX_ORDER)
 #define BITMAP(order) (1 << order)

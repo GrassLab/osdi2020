@@ -29,5 +29,5 @@ int fixed_free(unsigned long  addr);
 void allocator_view();
 
 
-unsigned long varied_alloc(int size);
-int varied_free(unsigned long addr);
+unsigned long malloc(int size);
+int free(unsigned long addr);

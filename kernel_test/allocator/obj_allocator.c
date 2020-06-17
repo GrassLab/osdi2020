@@ -1,5 +1,6 @@
 #include "buddy.h"
 #include "obj_allocator.h"
+#include "../kernel/uart.h"
 
 /*
  ** Fixed-size object allocator
@@ -132,7 +133,7 @@ int fixed_free(unsigned long addr)
 // Otherwise, 
 //      it rounds up the allocated size to one of the registered allocators and uses the token to the fixed-sized allocator.
 
-unsigned long varied_alloc(int size)
+unsigned long malloc(int size)
 {
     if (size >= 0x1000) {
         int buddy_size = size >> 12; // per page
@@ -155,7 +156,7 @@ unsigned long varied_alloc(int size)
     return 0;
 }
 
-int varied_free(unsigned long addr)
+int free(unsigned long addr)
 {
     // check if this addr is buddy
     if (buddy_free(addr) == 0) {

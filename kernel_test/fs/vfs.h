@@ -2,7 +2,7 @@
 #define DENTRY_MAX_CHILD 0x10
 #define NAME_LENGTH 0x100
 
-#define LOG_MODE 0
+#define LOG_MODE 1
 #define log(msg) if(LOG_MODE==1){printf(msg);}
 
 // typedef int size_t;
@@ -28,6 +28,7 @@ struct dentry {
 };
 
 struct file {
+    struct dentry* dentry;
     struct vnode* vnode;
     int f_pos; // The next read/write position of this file descriptor
     struct file_operations* f_ops;
@@ -60,3 +61,6 @@ struct file* vfs_open(const char* pathname, int flags);
 int vfs_close(struct file* file);
 int vfs_write(struct file* file, const void* buf, int len);
 int vfs_read(struct file* file, void* buf, int len);
+int vfs_ls(struct file* file);
+int mkdir(const char* pathname);
+int chdir(const char* pathname);

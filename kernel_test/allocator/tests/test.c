@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
+// #include <stdio.h>
+// #include <stdlib.h>
 #include "buddy.h"
 #include "obj_allocator.h"
 
@@ -75,34 +75,34 @@ void testcase6()
 {
     buddy_init();
     init_allocator();
-    unsigned long addr1 = varied_alloc(0x4000);
-    unsigned long addr2 = varied_alloc(0x4000);
+    unsigned long addr1 = malloc(0x4000);
+    unsigned long addr2 = malloc(0x4000);
     printf("addr1 = 0x%lx\n", addr1);
     printf("addr2 = 0x%lx\n", addr2);
-    varied_free(addr1);
-    varied_free(addr2);
+    free(addr1);
+    free(addr2);
     buddy_view();
     allocator_view();
 
 }
 
-/*
- ** Varied-size object allocator
- */
-int main()
-{
-    printf("This is demo of buddy system\n");
-    // testcase1();
-    // testcase2();
-    // testcase3();
-    testcase4();
+// /*
+//  ** Varied-size object allocator
+//  */
+// int main()
+// {
+//     printf("This is demo of buddy system\n");
+//     // testcase1();
+//     // testcase2();
+//     // testcase3();
+//     // testcase4();
 
-    // printf("This is demo of Fixed-size object allocator\n");
-    // testcase5();
+//     // printf("This is demo of Fixed-size object allocator\n");
+//     // testcase5();
     
-    // printf("This is demo of Varied-size object allocator\n");
-    // testcase6();
+//     // printf("This is demo of Varied-size object allocator\n");
+//     testcase6();
     
 
-    return 0;
-}
+//     return 0;
+// }

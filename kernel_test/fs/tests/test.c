@@ -1,8 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "vfs.h"
-#include "tmpfs.h"
+// #include "../kernel/uart.h"
 
+#include <stdio.h>
+#include <stdlib.h> 
+
+
+#include "../vfs.h"
+#include "../tmpfs.h"
+
+#define NULL 0
 #define assert(expr) if(!(expr)){printf("assert error!!!\n");} \
 
 void testcase1()
@@ -37,6 +42,19 @@ void testcase2()
     printf("%s\n", buf); // should be Hello World!
 }
 
+void testcase3()
+{
+    log("+++++ testcase3 +++++\n");
+    // create some regular files at root directory
+    struct file* root = vfs_open("/", 0);
+    struct file* a = vfs_open("hello", O_CREAT);
+    struct file* b = vfs_open("world", O_CREAT);
+    // your read directory function
+    // iterate all directory entries and print each file's name.
+    vfs_ls(root);
+}
+
+
 
 int main()
 {
@@ -44,8 +62,9 @@ int main()
 
     setup_tmpfs_filesystem();
     
-    testcase1();
-    testcase2();
+    // testcase1();
+    // testcase2();
+    testcase3();
      
     return 0;
 }
