@@ -105,7 +105,7 @@ void sys_open(struct trapframe* trapframe) {
     int flags = trapframe->x[1];
     struct file* f = vfs_open(pathname, flags);
     int fd_num = current_task->files.next_fd;
-    // open files count larger than fd array
+    // open files more than fd array
     if (fd_num >= current_task->files.count) {
         int new_fd_array_size = current_task->files.count + NR_OPEN_DEFAULT;
         struct file** new_fd_array = (struct file**)kmalloc(sizeof(struct file*) * new_fd_array_size);
@@ -121,7 +121,10 @@ void sys_open(struct trapframe* trapframe) {
 }
 
 void sys_close(struct trapframe* trapframe) {
-
+    int fd_num = (int)trapframe->x[0];
+    struct file* f = current_task->files.fd[fd_num];
+    trapframe->x[0] = vfs_close(f);
+    current_task->files.fd[fd_num] = NULL;
 }
 
 void sys_write(struct trapframe* trapframe) {
