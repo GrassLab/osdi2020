@@ -1,26 +1,26 @@
+#include "timer.h"
 #include "asm.h"
 #include "uart.h"
-#include "timer.h"
 
 const unsigned int interval = 200000;
 unsigned int curVal = 0;
 int core_timer_counter = 0;
 int local_timer_counter = 0;
 
-void timer_init ( void )
+void timer_init(void)
 {
-	curVal = get32(TIMER_CLO);
-	curVal += interval;
-	put32(TIMER_C1, curVal);
+    curVal = get32(TIMER_CLO);
+    curVal += interval;
+    put32(TIMER_C1, curVal);
     uart_puts("timer init\r\n");
 }
 
-void handle_timer_irq( void ) 
+void handle_timer_irq(void)
 {
-	curVal += interval;
-	put32(TIMER_C1, curVal);
-	put32(TIMER_CS, TIMER_CS_M1);
-	uart_puts("Timer interrupt received\n\r");
+    curVal += interval;
+    put32(TIMER_C1, curVal);
+    put32(TIMER_CS, TIMER_CS_M1);
+    uart_puts("Timer interrupt received\n\r");
 }
 
 void core_timer_init()
