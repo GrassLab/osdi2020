@@ -165,26 +165,6 @@ void task_file_op(int ret){
   if(!ret) exit();
 }
 
-void indent(int n){
-  for(int i = 0; i < n * 2; i ++){
-    printf(" ");
-  }
-}
-
-void list_dir(DIR *dir, int lv){
-  dirent *entry;
-  if(!lv) printfmt("{%s}", dir->path);
-  indent(lv);
-  while((entry = vfs_readdir(dir))){
-    indent(lv + 1);
-    printf(entry->type == dirent_dir ?
-        "{%s}" NEWLINE : "<%s>" NEWLINE, entry->name);
-    if(entry->type == dirent_dir){
-      list_dir(dir, lv + 1);
-    }
-  }
-}
-
 void task_read_dir(int ret){
   // create some regular files at root directory
   struct file* root = vfs_open("read_dir_test_file", O_CREAT);

@@ -117,7 +117,7 @@ int tmpfs_setup_mount(
       tmpfs_vop,
       tmpfs_fop,
       tmpfs_dop,
-      newTmpfsDir("", NULL, NULL, NULL));
+      newTmpfsDir("/", NULL, NULL, NULL));
   return 0;
 }
 
@@ -130,8 +130,9 @@ void tmpfs_show_tree(
 
   print_ident(indent);
   printf("{%s}" NEWLINE,
-      *Tmpfsfd(dir_node)->name ?
-      Tmpfsfd(dir_node)->name : "/");
+      Tmpfsfd(dir_node)->name);
+      //*Tmpfsfd(dir_node)->name ?
+      //Tmpfsfd(dir_node)->name : "/");
 
   struct vnode *child = TmpfsfdChild(dir_node);
   while(child){
@@ -259,7 +260,6 @@ DIR *tmpfs_opendir(
     struct vnode *node,
     DIR *dir, const char *pathname){
   dir->path = strdup(pathname); // should use strdup
-  dir->entry.name = NULL;
   dir->entry.type = dirent_none;
   dir->child = NULL;
   dir->dops = tmpfs_dop;
@@ -267,6 +267,7 @@ DIR *tmpfs_opendir(
   if(tmpfs_lookup(node, &target, pathname)){
     //if(target->v_ops->typeof(target) == dirent_dir){
       dir->root = target;
+      dir->entry.name = strdup(Tmpfsfd(target)->name);
       dir->child = TmpfsfdChild(target);
       return dir;
     //}

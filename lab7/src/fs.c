@@ -1,10 +1,11 @@
 #include "fs.h"
+#include "io.h"
 #include "tmpfs.h"
 #include "allocator.h"
 
 #define xp_func(_path, opset, op, ...) \
   *_path == '/' ? rootfs->root->opset->op( \
-      rootfs->root, ## __VA_ARGS__, _path + 1) : \
+      rootfs->root, ## __VA_ARGS__, _path) : \
     current_task->pwd->opset->op( \
       current_task->pwd, ## __VA_ARGS__, _path)
 
@@ -93,6 +94,19 @@ DIR *vfs_opendir(const char *pathname){
   return NULL;
 }
 
+DIR *vfs_opendir_by_node(
+    struct vnode *node,
+    const char *pathname){
+  DIR *dir = (DIR*)kmalloc(sizeof(DIR));
+  if(node->d_ops->opendir(node, dir, pathname)){
+    return dir;
+  }
+  kfree(dir);
+  return NULL;
+}
+
+
+
 dirent *vfs_readdir(DIR *dir){
   return dir->dops->readdir(dir);
 }
@@ -129,3 +143,29 @@ void fs_init(){
   register_filesystem(tmpfs);
   tmpfs->setup_mount(tmpfs, rootfs = newMnt());
 }
+
+void indent(int n){
+  for(int i = 0; i < n * 2; i ++){
+    printf(" ");
+  }
+}
+
+void list_dir(DIR *dir, int lv){
+  dirent *entry;
+  indent(lv);
+  printfmt("{%s}", dir->path);
+  while((entry = vfs_readdir(dir))){
+    if(entry->type == dirent_dir){
+      DIR *subd = vfs_opendir_by_node(
+          dir->root, entry->name);
+      list_dir(subd, lv + 1);
+      vfs_closedir(subd);
+    }
+    else{
+      indent(lv + 1);
+      printf("<%s>" NEWLINE, entry->name);
+    }
+  }
+}
+
+

@@ -73,6 +73,9 @@ extern struct mount *rootfs;
 int register_filesystem(struct filesystem *fs);
 struct file *vfs_open(const char *pathname, int flags);
 DIR *vfs_opendir(const char *pathname);
+DIR *vfs_opendir_by_node(
+    struct vnode *node,
+    const char *pathname);
 dirent *vfs_readdir(DIR *dir);
 void vfs_closedir(DIR *dir);
 int vfs_mkdir(const char *path);
@@ -94,6 +97,8 @@ struct vnode *newVnode(
     struct file_operations *fops, 
     struct directory_operations *dops, 
     void *internal);
+
+void list_dir(DIR *dir, int lv);
 
 #define O_CREAT 0b1
 #define EOF     4

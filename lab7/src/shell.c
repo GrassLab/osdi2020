@@ -85,10 +85,12 @@ int shell_execute(char *cmd, int el) {
   else if(EQS("fs", cmd)){
     vfs_show();
   }
-  else if(EQS("ls", cmd)){
+  else if(strbeg(cmd, "ls")){
+    char *p = cmd + 2;
+    while(*p == ' ') p++;
     int i = 0;
     dirent *entry;
-    DIR *dir = vfs_opendir(".");
+    DIR *dir = vfs_opendir(*p ? p : ".");
     if(dir){
       while((entry = vfs_readdir(dir))){
         printf(entry->type == dirent_dir ?
@@ -96,6 +98,13 @@ int shell_execute(char *cmd, int el) {
             i++, entry->name);
       } 
     }
+    vfs_closedir(dir);
+  }
+  else if(strbeg(cmd, "tree")){
+    char *p = cmd + 4;
+    while(*p == ' ') p++;
+    DIR *dir = vfs_opendir(*p ? p : ".");
+    if(dir){ list_dir(dir, 0); }
     vfs_closedir(dir);
   }
   else if(strbeg(cmd, "cat")){
