@@ -128,11 +128,27 @@ void sys_close(struct trapframe* trapframe) {
 }
 
 void sys_write(struct trapframe* trapframe) {
-
+    int fd_num = (int)trapframe->x[0];
+    char* buf = (char*)trapframe->x[1];
+    uint64_t len = (uint64_t)trapframe->x[2];
+    struct file* f = current_task->files.fd[fd_num];
+    if (f == NULL) {
+        trapframe->x[0] = 0;
+        return;
+    }
+    trapframe->x[0] = vfs_write(f, buf, len);
 }
 
 void sys_read(struct trapframe* trapframe) {
-
+    int fd_num = (int)trapframe->x[0];
+    char* buf = (char*)trapframe->x[1];
+    uint64_t len = (uint64_t)trapframe->x[2];
+    struct file* f = current_task->files.fd[fd_num];
+    if (f == NULL) {
+        trapframe->x[0] = 0;
+        return;
+    }
+    trapframe->x[0] = vfs_read(f, buf, len);
 }
 
 void sys_readdir(struct trapframe* trapframe) {
