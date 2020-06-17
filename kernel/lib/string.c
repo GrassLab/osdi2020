@@ -1,4 +1,4 @@
-#include <stddef.h>
+#include "kernel/lib/types.h"
 #include "kernel/lib/string.h"
 #include "kernel/lib/utils.h"
 
@@ -49,6 +49,21 @@ char *strtok(char *str, const char *delim) {
   static char *last_pos;
   if (str != NULL) {
     last_pos = str;
+  }
+  for (; *last_pos != '\0'; ++last_pos) {
+    int i = 0;
+    for (; i < strlen(delim); ++i) {
+      if (*last_pos == delim[i]) {
+        *last_pos = '\0';
+        break;
+      }
+    }
+    if (i == strlen(delim)) {
+      break;
+    }
+  }
+  if (*last_pos == '\0') {
+    return NULL;
   }
   char *tmp = last_pos;
   for (; *last_pos != '\0'; ++last_pos) {
