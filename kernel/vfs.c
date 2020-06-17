@@ -41,3 +41,11 @@ struct file* vfs_open(const char* pathname, int flags) {
 int vfs_close(struct file* file) {
   buddy_free(&pages[KVIRT_TO_PFN((uint64_t)file)], 0);
 }
+
+int vfs_read(struct file* file, void* buf, size_t len) {
+  file->f_ops->read(file, buf, len);
+}
+
+int vfs_write(struct file* file, const void* buf, size_t len) {
+  file->f_ops->write(file, buf, len);
+}

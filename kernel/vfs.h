@@ -56,7 +56,7 @@ int register_filesystem(struct filesystem* fs);
 
 struct file* vfs_open(const char* pathname, int flags);
 int vfs_close(struct file* file);
-int vfs_write(struct file* file, const void* buf, size_t len);
 int vfs_read(struct file* file, void* buf, size_t len);
+int vfs_write(struct file* file, const void* buf, size_t len);
 
 #endif // KERNEL_VFS_H_

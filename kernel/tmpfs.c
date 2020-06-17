@@ -69,9 +69,31 @@ int tmpfs_create(struct vnode* dir_node, struct vnode** target, const char* comp
 }
 
 int tmpfs_read(struct file* file, void* buf, size_t len) {
+  struct tmpfs_file *f = (struct tmpfs_file *)file->vnode->internal;
+  int nread = 0, pos = file->f_pos;
 
+  if (pos >= f->size) {
+    return -1;
+  }
+  for (; pos < f->size && nread < len; ++pos, ++nread) {
+    ((uint8_t *)buf)[pos] = f->contents[pos];
+  }
+
+  file->f_pos = pos;
+  return nread;
 }
 
 int tmpfs_write(struct file* file, const void* buf, size_t len) {
+  struct tmpfs_file *f = (struct tmpfs_file *)file->vnode->internal;
+  int nwritten = 0, pos = file->f_pos;
 
+  for (; nwritten < len; ++pos, ++nwritten) {
+    f->contents[pos] = ((uint8_t *)buf)[pos];
+  }
+  if (pos > f->size) {
+    f->size = pos;
+  }
+
+  file->f_pos = pos;
+  return nwritten;
 }

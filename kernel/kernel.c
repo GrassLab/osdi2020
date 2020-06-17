@@ -86,7 +86,7 @@ int main(void) {
 //  el1_to_el0();
 //  shell();
 
-  char buf[16];
+  char buf[128];
   mini_uart_getn(true, buf, 2);
   buddy_init();
   for (int i = 0; i < MAX_ORDER; ++i) {
@@ -103,6 +103,7 @@ int main(void) {
   rootfs = (struct mount *)buddy_alloc(0);
   tmpfs_setup_mount(&tmpfs, rootfs);
 
+  /* Test cases for vfs_open() and vfs_close() */
   struct file* a = vfs_open("hello", 0);
   assert(a == NULL);
   a = vfs_open("hello", O_CREAT);
@@ -111,6 +112,21 @@ int main(void) {
   struct file* b = vfs_open("hello", 0);
   assert(b != NULL);
   vfs_close(b);
+
+  /* Test cases for vfs_read() and vfs_write() */
+  a = vfs_open("hello", O_CREAT);
+  b = vfs_open("world", O_CREAT);
+  vfs_write(a, "Hello ", 6);
+  vfs_write(b, "World!", 6);
+  vfs_close(a);
+  vfs_close(b);
+  b = vfs_open("hello", 0);
+  a = vfs_open("world", 0);
+  int sz;
+  sz = vfs_read(b, buf, 100);
+  sz += vfs_read(a, buf + sz, 100);
+  buf[sz] = '\0';
+  printk("%s\n", buf); // should be Hello World!
 
   idle_task_create();
   privilege_task_create(reaper);
