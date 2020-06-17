@@ -21,10 +21,8 @@ struct dentry* tmpfs_create_dentry(struct dentry* parent, const char* name) {
     strcpy(dentry->name, name);
     dentry->parent = parent;
     list_head_init(&dentry->list);
-    if (parent == NULL) {
-        list_head_init(&dentry->childs);
-    }
-    else {
+    list_head_init(&dentry->childs);
+    if (parent != NULL) {
         list_add(&dentry->list, &parent->childs);
     }
     dentry->vnode = tmpfs_create_vnode(dentry);

@@ -164,6 +164,7 @@ void sys_mkdir(struct trapframe* trapframe) {
 
 void sys_chdir(struct trapframe* trapframe) {
     const char* pathname = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_chdir(pathname);
 }
 
 void sys_mount(struct trapframe* trapframe) {

@@ -38,14 +38,36 @@ struct file* create_fd(struct vnode* target) {
     return fd;
 }
 
+void traversal_recursive(struct dentry* node, const char* path, struct vnode** target_node, char* target_path) {
+    // find next /
+    int i = 0;
+    while (path[i]) {
+        if (path[i] == '/') break;
+        target_path[i] = path[i];
+        i++;
+    }
+    target_path[i] = '\0';
+    *target_node = node->vnode;
+    if (!strcmp(target_path, "")) return;
+    // find in node's child
+    struct list_head* p;
+    list_for_each(p, &node->childs) {
+        struct dentry* dent = list_entry(p, struct dentry, list);
+        if (!strcmp(dent->name, target_path)) {
+            traversal_recursive(dent, path + i, target_node, target_path);
+            break;
+        }
+    }
+}
+
 void traversal(const char* pathname, struct vnode** target_node, char* target_path) {
     if (pathname[0] == '/') {  // absolute path
-        *target_node = rootfs->root->vnode;
-        strcpy(target_path, pathname + 1);
+        struct vnode* rootnode = rootfs->root->vnode;
+        traversal_recursive(rootnode->dentry, pathname + 1, target_node, target_path);
     }
     else {  // relative path
-        *target_node = current_task->pwd->vnode;
-        strcpy(target_path, pathname);
+        struct vnode* rootnode = current_task->pwd->vnode;
+        traversal_recursive(rootnode->dentry, pathname, target_node, target_path);
     }
 }
 
@@ -102,7 +124,16 @@ int vfs_mkdir(const char* pathname) {
 }
 
 int vfs_chdir(const char* pathname) {
-
+    struct vnode* target_dir;
+    char path_remain[128];
+    traversal(pathname, &target_dir, path_remain);
+    if (strcmp(path_remain, "")) { // not found
+        return -1;
+    }
+    else {
+        current_task->pwd = target_dir->dentry;
+        return 0;
+    }
 }
 
 int vfs_mount(const char* device, const char* mountpoint, const char* filesystem) {

@@ -25,6 +25,11 @@ void demo_lab7_ele3() {
     mkdir("mnt");
     int root = open("/", 0);
     readdir(root);
+    chdir("mnt");
+    int b = open("world", O_CREAT);
+    readdir(root);
+    int mnt = open("/mnt", 0);
+    readdir(mnt);
 }
 
 int main() {
