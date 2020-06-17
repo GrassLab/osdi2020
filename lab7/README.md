@@ -25,8 +25,8 @@ in my case no, my vnode is bind by component and file
 ### vfs_read
 - [x] `required 3-2` Implement `int vfs_read(struct file* file, void* buf, size_t len)`
 
-- [ ] `question 2` Is EOF pass to the reader by a special character in the reader’s buffer?
-I use f_size to make sure reader will not  
+- [x] `question 2` Is EOF pass to the reader by a special character in the reader’s buffer?
+Yes. If we don't use '\0' to be EOF, when we read and write multiple time. It will cause error.
 
 ### Task’s VFS information
 
