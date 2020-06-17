@@ -395,6 +395,7 @@ void* buddy_alloc(int order) {
         if (free_area[i].nr_free > 0) {
             struct page_t* p = buddy_pop(&free_area[i], order);
             uint64_t page_virt_addr = (p->idx * PAGE_SIZE) | KERNEL_VIRT_BASE;
+            memzero((void*)page_virt_addr, (1 << order) * PAGE_SIZE);
             return (void*)page_virt_addr;
         }
     }

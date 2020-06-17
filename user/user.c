@@ -28,17 +28,24 @@ void demo_lab7_ele3() {
     int mnt = open("/mnt", 0);
     printf("ls root: ");
     readdir(root);
+    printf("ls mnt: ");
+    readdir(mnt);
+    printf("\n");
 
     // chdir
     chdir("mnt");
-    int b = open("world", O_CREAT);
+    open("world", O_CREAT);
     printf("ls mnt: ");
     readdir(mnt);
+    printf("\n");
 
     // ..
-    int c = open("../a", O_CREAT);
+    open("../a", O_CREAT);
+    printf("ls mnt: ");
     readdir(mnt);
+    printf("ls root: ");
     readdir(root);
+    printf("\n");
 }
 
 int main() {
