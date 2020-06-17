@@ -60,7 +60,6 @@ size_t alignSize(size_t size) {
 static uint64_t registSlab(size_t object_size) {
     Slab *slab = getFreeSlab();
     slab->obj_size = alignSize(object_size);
-    slab->next = NULL;
 
     sendStringUART("[Slab] regist object size ");
     sendHexUART(object_size);
