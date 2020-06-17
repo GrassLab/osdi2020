@@ -55,6 +55,7 @@ void foo_kernel() {
     sz += vfs_read(a, buf + sz, 100);
     buf[sz] = '\0';
     print_s(buf);
+
     mkdir("dir1");
     vfs_close(a);
     vfs_close(b);
@@ -73,7 +74,6 @@ void foo_kernel() {
     chdir("..");
 
     dir = vfs_open(".", 0);
-    asm volatile("gg:");
     vfs_list(dir);
     vfs_close(dir);
 

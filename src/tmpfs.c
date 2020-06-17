@@ -104,7 +104,6 @@ int tmpfs_chdir(struct vnode* dir_node, struct vnode** target,
                 const char* component_name) {
     if (!strcmp(component_name, "..")) {
         *target = ((struct fentry*)dir_node->internal)->parent->vnode;
-        asm volatile("ji:");
         return 1;
     } else {
         int ret = dir_node->v_ops->lookup(rootfs->root, target, component_name);
