@@ -351,8 +351,8 @@ void receive_slub(unsigned long physical_addr){
     }
 }
 
-void test(int test_all){
-    // page_t* p = get_pages_from_list(5);
+void buddy_sys_test(){
+        // page_t* p = get_pages_from_list(5);
     // print_buddy_info();
     // printf("------\n");
 
@@ -400,11 +400,9 @@ void test(int test_all){
     // page_t* p2 = get_pages_from_list(1);
     // print_buddy_info();
     // printf("------\n");
+}
 
-    // split_page_to_slub(p, 6);
-    // split_page_to_slub(p2, 8);
-
-    // print_slub_info();
+void test(int test_all){
     unsigned long c1,c2,c3,c4,c5,c6;
     if(test_all)
         c1 = allocate_memory(9000);
@@ -547,7 +545,6 @@ void init_page_sys(){
     print_buddy_info();
     printf("------\n");
     init_kmalloc_caches();
-    // test(1);
-    test(0);
+    test(1);
     print_buddy_info();
 }
