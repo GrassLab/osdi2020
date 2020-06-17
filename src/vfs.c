@@ -38,28 +38,32 @@ struct file* create_fd(struct vnode* target) {
     return fd;
 }
 
-struct file* vfs_open(const char* pathname, int flags) {
-    // 1. Lookup pathname from the root vnode.
-    struct vnode* dir;
-    char path[128];
+void traversal(const char* pathname, struct vnode** target_node, char* target_path) {
     if (pathname[0] == '/') {  // absolute path
-        dir = rootfs->root->vnode;
-        strcpy(path, pathname + 1);
+        *target_node = rootfs->root->vnode;
+        strcpy(target_path, pathname + 1);
     }
     else {  // relative path
-        dir = current_task->pwd->vnode;
-        strcpy(path, pathname);
+        *target_node = current_task->pwd->vnode;
+        strcpy(target_path, pathname);
     }
-    struct vnode* target;
+}
+
+struct file* vfs_open(const char* pathname, int flags) {
+    // 1. Find target_dir node and target_path based on pathname
+    struct vnode* target_dir;
+    char target_path[128];
+    traversal(pathname, &target_dir, target_path);
     // 2. Create a new file descriptor for this vnode if found.
-    if (rootfs->root->vnode->v_ops->lookup(dir, &target, path) == 0) {
-        return create_fd(target);
+    struct vnode* target_file;
+    if (rootfs->root->vnode->v_ops->lookup(target_dir, &target_file, target_path) == 0) {
+        return create_fd(target_file);
     }
     // 3. Create a new file if O_CREAT is specified in flags.
     else {
         if (flags & O_CREAT) {
-            rootfs->root->vnode->v_ops->create(dir, &target, path);
-            return create_fd(target);
+            rootfs->root->vnode->v_ops->create(target_dir, &target_file, target_path);
+            return create_fd(target_file);
         }
         else {
             return NULL;
@@ -87,4 +91,24 @@ int vfs_read(struct file* file, void* buf, uint64_t len) {
 
 int vfs_readdir(struct file* fd) {
     return fd->vnode->v_ops->ls(fd->vnode);
+}
+
+int vfs_mkdir(const char* pathname) {
+    struct vnode* target_dir;
+    char child_name[128];
+    traversal(pathname, &target_dir, child_name);
+    struct vnode* child_dir;
+    return target_dir->v_ops->mkdir(target_dir, &child_dir, child_name);
+}
+
+int vfs_chdir(const char* pathname) {
+
+}
+
+int vfs_mount(const char* device, const char* mountpoint, const char* filesystem) {
+
+}
+
+int vfs_umount(const char* mountpoint) {
+
 }

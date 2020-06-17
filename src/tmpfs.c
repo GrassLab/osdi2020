@@ -36,6 +36,7 @@ int tmpfs_register() {
     tmpfs_v_ops->create = tmpfs_create;
     tmpfs_v_ops->lookup = tmpfs_lookup;
     tmpfs_v_ops->ls = tmpfs_ls;
+    tmpfs_v_ops->mkdir = tmpfs_mkdir;
     tmpfs_f_ops = (struct file_operations*)kmalloc(sizeof(struct file_operations));
     tmpfs_f_ops->read = tmpfs_read;
     tmpfs_f_ops->write = tmpfs_write;
@@ -123,4 +124,17 @@ int tmpfs_write(struct file* file, const void* buf, uint64_t len) {
     }
     dest[i] = EOF;
     return i;
+}
+
+int tmpfs_mkdir(struct vnode* dir, struct vnode** target, const char* component_name) {
+    // create tmpfs internal structure
+    struct tmpfs_internal* dir_node = (struct tmpfs_internal*)kmalloc(sizeof(struct tmpfs_internal));
+    dir_node->flag = DIRECTORY;
+
+    // create child dentry
+    struct dentry* d_child = tmpfs_create_dentry(dir->dentry, component_name);
+    d_child->vnode->internal = (void*)dir_node;
+
+    *target = d_child->vnode;
+    return 0;
 }

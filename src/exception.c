@@ -159,6 +159,7 @@ void sys_readdir(struct trapframe* trapframe) {
 
 void sys_mkdir(struct trapframe* trapframe) {
     const char* pathname = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_mkdir(pathname);
 }
 
 void sys_chdir(struct trapframe* trapframe) {

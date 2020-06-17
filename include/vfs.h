@@ -48,6 +48,7 @@ struct vnode_operations {
     int (*ls)(struct vnode* dir);
     int (*lookup)(struct vnode* dir, struct vnode** target, const char* component_name);
     int (*create)(struct vnode* dir, struct vnode** target, const char* component_name);
+    int (*mkdir)(struct vnode* dir, struct vnode** target, const char* component_name);
 };
 
 struct files_struct {
@@ -66,5 +67,9 @@ int vfs_close(struct file* file);
 int vfs_write(struct file* file, const void* buf, uint64_t len);
 int vfs_read(struct file* file, void* buf, uint64_t len);
 int vfs_readdir(struct file* file);
+int vfs_mkdir(const char* pathname);
+int vfs_chdir(const char* pathname);
+int vfs_mount(const char* device, const char* mountpoint, const char* filesystem);
+int vfs_umount(const char* mountpoint);
 
 #endif // __VFS__
