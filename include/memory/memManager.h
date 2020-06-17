@@ -1,9 +1,6 @@
 #ifndef _MM_H
 #define _MM_H
 
-#include "type.h"
-#include "task/taskStruct.h"
-
 #define VA_START 0xffff000000000000
 
 #define PAGE_MASK			0xfffffffffffff000
@@ -26,9 +23,18 @@
 #define PUD_SHIFT			PAGE_SHIFT + 2*TABLE_SHIFT
 #define PMD_SHIFT			PAGE_SHIFT + TABLE_SHIFT
 
+#ifndef __ASSEMBLER__
+
+#include "type.h"
+#include "task/taskStruct.h"
+
 struct page
 {
     bool used;
+    uint32_t pfn;
+    uint32_t order;
+    struct page* prev;
+    struct page* next;
 };
 
 void memzero(unsigned long src, unsigned long n);
@@ -37,6 +43,6 @@ void setPgd();
 
 uint64_t allocateKernelPage();
 uint64_t allocateUserPage(struct task *task, uint64_t va);
-void freePage(uint64_t p);
 
+#endif
 #endif

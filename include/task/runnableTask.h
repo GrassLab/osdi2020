@@ -5,5 +5,6 @@ void userTask();
 void idleTask();
 void execTask();
 void kernelTask();
+void memTestTask();
 
 #endif

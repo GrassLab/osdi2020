@@ -1,6 +1,7 @@
 .section ".text"
 
 #include "memory/mmConfig.h"
+#include "memory/memManager.h"
 
 .global _start
 .global busyloop
@@ -88,7 +89,8 @@ from_el2_to_el1:
     msr spsr_el2, x0
     adr x0, shell // load exception return address
     msr elr_el2, x0
-    ldr x0, __stack_start // init sp for el1 option 1
+    //ldr x0, __stack_start // init sp for el1 option 1
+    mov x0, #LOW_MEMORY 
     msr sp_el1, x0
     eret // return to EL1
 // from_el1_to_el0:   

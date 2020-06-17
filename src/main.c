@@ -30,20 +30,25 @@
 #include "task/switch.h"
 #include "task/runnableTask.h"
 #include "memory/memManager.h"
+#include "memory/buddy.h"
+#include "memory/memPool.h"
 
 void kernelMain()
 {
     // set up serial console
     uartInit();
+    initBuddy();
+    initMemPool();
+    initTaskPool();
+    memTestTask();
 
-    uartPuts("test message\n");
 
     // for (int i = 0; i < 3; ++i)
     // { // N should > 2
     //     createPrivilegeTask(&kernelTask, 0);
     // }
     // createPrivilegeTask(&zombieReaper, 0);
-    createPrivilegeTask(&execTask, 0);
+    // createPrivilegeTask(&memTestTask, 0);
 
     // Enable core timer
     asm volatile("svc #2");

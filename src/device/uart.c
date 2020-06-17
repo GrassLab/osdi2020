@@ -109,22 +109,6 @@ char uartGetc()
     return r == '\r' ? '\n' : r;
 }
 
-void _sysUartWrite()
-{
-    // uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
-    // uint64_t c = *(uint64_t *)(sp_begin - 32 * 8);
-
-    // uartSend(c);
-}
-
-void _sysUartRead()
-{
-    // uint64_t sp_begin = (uint64_t)&kstack_pool[current->task_id + 1];
-
-    // char c = uartGetc();
-    // *(uint64_t *)(sp_begin - 32 * 8) = c;
-}
-
 /**
  * Receive a character without converting carrige return
  */
@@ -156,6 +140,14 @@ void uartPuts(char *s)
         // uartWrite(*s++);
         uartSend(*s++);
     }
+}
+
+void _sysUartWrite()
+{
+    uint64_t sp_begin = current->kernel_context.ksp_begin;
+    uint64_t c = *(uint64_t *)(sp_begin - 32 * 8);
+
+    uartPuts(c);
 }
 
 /**

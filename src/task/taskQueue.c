@@ -1,7 +1,7 @@
 #include "type.h"
 #include "task/taskStruct.h"
 
-struct task_node task_node_pool[64];
+struct task_node* task_node_pool;
 uint32_t task_node_count = -1;
 struct task_queue tq = {
     .head = 0,
