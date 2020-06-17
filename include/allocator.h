@@ -29,6 +29,7 @@ typedef struct dynamic_allocator
     fixed_allocator_t * byte_64_fixed;
     fixed_allocator_t * byte_128_fixed;
     fixed_allocator_t * byte_256_fixed;
+    fixed_allocator_t * byte_512_fixed;
 
     page_alloc_record_t * page_alloc_list;
 

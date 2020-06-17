@@ -36,7 +36,6 @@ typedef struct file
 
 typedef struct dentry
 {
-    char * name;
     node_attr_flag_t flag;
     vnode_t * vnode;
     int child_amount;

@@ -1,4 +1,4 @@
-#include "tmpfs.h"
+#include "fs/tmpfs.h"
 
 #include "allocator.h"
 #include "string.h"
@@ -25,7 +25,6 @@ void tmpfs_init ( )
 
 int tmpfs_setup_mount ( file_sys_t * fs, mount_t * mount )
 {
-    uart_printf ( "Mount File System: %d\n", fs->name );
     mount->fs = fs;
 
     mount->root = (vnode_t *) kmalloc ( sizeof ( vnode_t ) );
@@ -33,12 +32,14 @@ int tmpfs_setup_mount ( file_sys_t * fs, mount_t * mount )
 
     // set up root dir
     mount->root_dir        = (dentry_t *) kmalloc ( sizeof ( dentry_t ) );
-    mount->root_dir->name  = "/";
     mount->root_dir->vnode = (vnode_t *) kmalloc ( sizeof ( vnode_t ) );
     tmpfs_setup_vnode ( mount->root_dir->vnode, mount );
     mount->root_dir->flag          = DIRECTORY;
     mount->root_dir->child_amount  = 0;
     mount->root_dir->parent_dentry = NULL;
+
+    mount->root_dir->internal                                = (tmpfs_node_t *) kmalloc ( sizeof ( tmpfs_node_t ) );
+    ( (tmpfs_node_t *) ( mount->root_dir->internal ) )->name = "/";
 
     return 0;
 }
@@ -61,7 +62,7 @@ int tmpfs_lookup ( dentry_t * dir, dentry_t ** target, const char * component_na
 
     for ( i = 0; i < dir->child_amount; i++ )
     {
-        if ( strcmp ( dir->child_dentry[i]->name, component_name ) == 0 )
+        if ( strcmp ( ( (tmpfs_node_t *) ( dir->child_dentry[i]->internal ) )->name, component_name ) == 0 )
         {
             ( *target ) = dir->child_dentry[i];
             return 1;
@@ -76,6 +77,7 @@ int tmpfs_create ( dentry_t * dir_node, dentry_t ** target, const char * compone
 {
     int i;
     dentry_t * new_d;
+    tmpfs_node_t * node;
 
     if ( dir_node->child_amount >= MAX_CHILD_DIR )
     {
@@ -85,15 +87,13 @@ int tmpfs_create ( dentry_t * dir_node, dentry_t ** target, const char * compone
     // check if duplicate
     for ( i = 0; i < dir_node->child_amount; i++ )
     {
-        if ( !strcmp ( dir_node->child_dentry[i]->name, component_name ) )
+        if ( strcmp ( ( (tmpfs_node_t *) ( dir_node->child_dentry[i]->internal ) )->name, component_name ) == 0 )
         {
             return -1;
         }
     }
 
-    new_d       = (dentry_t *) kmalloc ( sizeof ( dentry_t ) );
-    new_d->name = (char *) kmalloc ( sizeof ( char ) * ( strlen ( component_name ) + 1 ) );
-    strcpy ( new_d->name, component_name );
+    new_d = (dentry_t *) kmalloc ( sizeof ( dentry_t ) );
 
     new_d->flag  = FILE;
     new_d->vnode = (vnode_t *) kmalloc ( sizeof ( vnode_t ) );
@@ -101,8 +101,11 @@ int tmpfs_create ( dentry_t * dir_node, dentry_t ** target, const char * compone
 
     new_d->parent_dentry = dir_node;
 
-    new_d->internal                                       = (void *) kmalloc ( sizeof ( tmpfs_node_t ) );
-    ( (tmpfs_node_t *) ( new_d->internal ) )->file_length = 0;
+    node              = (tmpfs_node_t *) kmalloc ( sizeof ( tmpfs_node_t ) );
+    node->file_length = 0;
+    node->name        = (char *) kmalloc ( sizeof ( char ) * ( strlen ( component_name ) + 1 ) );
+    strcpy ( node->name, component_name );
+    new_d->internal = node;
 
     dir_node->child_dentry[dir_node->child_amount] = new_d;
     ( dir_node->child_amount )++;
@@ -122,8 +125,6 @@ int tmpfs_write ( file_t * file, const void * buf, size_t len )
     ( file->f_pos ) += len;
     ( ( (tmpfs_node_t *) ( file->dentry->internal ) )->file_length ) += len;
 
-    uart_printf ( "Write to file %s. Current length of file: %d\n", file->dentry->name, file->f_pos );
-
     return 0;
 }
 
@@ -132,13 +133,9 @@ int tmpfs_read ( file_t * file, void * buf, size_t len )
     int readlen;
     size_t filelen = ( ( (tmpfs_node_t *) ( file->dentry->internal ) )->file_length );
 
-    readlen = filelen > file->f_pos + len ? file->f_pos + len : filelen - file->f_pos;
+    readlen = filelen > len ? len : filelen;
 
-    strncpy ( buf, ( (tmpfs_node_t *) ( file->dentry->internal ) )->buffer + file->f_pos, readlen );
-
-    ( file->f_pos ) += readlen;
-
-    uart_printf ( "Read from file %s. Current position: %d\n", file->dentry->name, file->f_pos );
+    strncpy ( buf, ( (tmpfs_node_t *) ( file->dentry->internal ) )->buffer, readlen );
 
     return readlen;
 }
