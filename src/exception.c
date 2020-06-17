@@ -157,6 +157,24 @@ void sys_readdir(struct trapframe* trapframe) {
     trapframe->x[0] = vfs_readdir(f);
 }
 
+void sys_mkdir(struct trapframe* trapframe) {
+    const char* pathname = (char*) trapframe->x[0];
+}
+
+void sys_chdir(struct trapframe* trapframe) {
+    const char* pathname = (char*) trapframe->x[0];
+}
+
+void sys_mount(struct trapframe* trapframe) {
+    const char* device = (char*) trapframe->x[0];
+    const char* mountpoint = (char*) trapframe->x[1];
+    const char* filesystem = (char*) trapframe->x[2];
+}
+
+void sys_umount(struct trapframe* trapframe) {
+    const char* mountpoint = (char*) trapframe->x[0];
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_TASK_ID:
@@ -205,6 +223,22 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_READDIR:
             sys_readdir(trapframe);
+            break;
+
+        case SYS_MKDIR:
+            sys_mkdir(trapframe);
+            break;
+
+        case SYS_CHDIR:
+            sys_chdir(trapframe);
+            break;
+
+        case SYS_MOUNT:
+            sys_mount(trapframe);
+            break;
+
+        case SYS_UMOUNT:
+            sys_umount(trapframe);
             break;
     }
 }
