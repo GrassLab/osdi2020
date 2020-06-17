@@ -28,7 +28,6 @@ int tmpfs_setup_mount(struct filesystem* fs, struct mount* mount) {
   vn->type = VNODE_TYPE_DIR;
   struct tmpfs_dir *dir = (struct tmpfs_dir *)PFN_TO_KVIRT(buddy_alloc(0)->pfn);
   dir->file_nums = 0;
-  dir->d_pos = 0;
   dir->vn = vn;
   vn->internal = dir;
 
@@ -107,10 +106,10 @@ int tmpfs_readdir(struct file* dir, char* buf, size_t len) {
   }
 
   struct tmpfs_dir *d = (struct tmpfs_dir *)dir->vnode->internal;
-  if (d->d_pos >= d->file_nums) {
+  if (dir->d_pos >= d->file_nums) {
     return -1;
   }
-  strcpy(buf, d->files[d->d_pos].name);
-  d->d_pos += 1;
+  strcpy(buf, d->files[dir->d_pos].name);
+  dir->d_pos += 1;
   return 0;
 }

@@ -43,13 +43,13 @@ int vfs_close(struct file* file) {
 }
 
 int vfs_read(struct file* file, void* buf, size_t len) {
-  file->f_ops->read(file, buf, len);
+  return file->f_ops->read(file, buf, len);
 }
 
 int vfs_write(struct file* file, const void* buf, size_t len) {
-  file->f_ops->write(file, buf, len);
+  return file->f_ops->write(file, buf, len);
 }
 
 int vfs_readdir(struct file* dir, char* buf, size_t len) {
-  dir->f_ops->readdir(dir, buf, len);
+  return dir->f_ops->readdir(dir, buf, len);
 }

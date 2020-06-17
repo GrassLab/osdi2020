@@ -22,11 +22,14 @@ struct vnode {
 
 struct file {
   struct vnode* vnode;
-  size_t f_pos; // The next read/write position of this file descriptor
+  union {
+    size_t f_pos; // The next read/write position of this file descriptor
+    size_t d_pos; // The index of next file information to be read
+  };
   struct file_operations* f_ops;
   int flags;
-
 };
+
 struct mount {
   struct filesystem* fs;
   struct vnode* root;
