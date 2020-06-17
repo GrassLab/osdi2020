@@ -68,7 +68,12 @@ void traversal_recursive(struct dentry* node, const char* path, struct vnode** t
     list_for_each(p, &node->childs) {
         struct dentry* dent = list_entry(p, struct dentry, list);
         if (!strcmp(dent->name, target_path)) {
-            traversal_recursive(dent, path + i, target_node, target_path);
+            if (dent->mountpoint != NULL) {
+                traversal_recursive(dent->mountpoint->root, path + i, target_node, target_path);
+            }
+            else if (dent->type == DIRECTORY) {
+                traversal_recursive(dent, path + i, target_node, target_path);
+            }
             break;
         }
     }
@@ -186,9 +191,39 @@ int vfs_mount(const char* device, const char* mountpoint, const char* filesystem
         strcpy(tmpfs->name, device);
         tmpfs->setup_mount = tmpfs_setup_mount;
         tmpfs->setup_mount(tmpfs, mt);
+        mount_dir->dentry->mountpoint = mt;
+        mt->root->mount_parent = mount_dir->dentry;
     }
+
+    return 0;
 }
 
+// error: -1: not directory, -2: not a mount point, -3: not found
 int vfs_umount(const char* mountpoint) {
+    // check mountpoint is valid
+    struct vnode* mount_dir;
+    char path_remain[128];
+    traversal(mountpoint, &mount_dir, path_remain);
+    if (!strcmp(path_remain, "")) {  // found
+        if (mount_dir->dentry->type != DIRECTORY) {
+            return -1;
+        }
+        if (!mount_dir->dentry->mount_parent) {
+            return -2;
+        }
+    }
+    else {
+        return -3;
+    }
 
+    // umount
+    struct list_head *p;
+    list_for_each(p, &mount_dir->dentry->childs) {
+        struct dentry *dentry = list_entry(p, struct dentry, list);
+        list_del(p);
+        kfree(dentry);
+    }
+    mount_dir->dentry->mount_parent->mountpoint = NULL;
+
+    return 0;
 }

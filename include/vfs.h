@@ -33,6 +33,8 @@ struct dentry {
     struct list_head childs;
     struct vnode* vnode;
     int type;
+    struct mount* mountpoint;
+    struct dentry* mount_parent;
 };
 
 struct file {

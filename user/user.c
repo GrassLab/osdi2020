@@ -19,30 +19,26 @@
 // }
 
 void demo_lab7_ele3() {
-    // create mnt
-    int root = open("/", 0);
+    char buf[8];
     mkdir("mnt");
-    int mnt = open("/mnt", 0);
-    printf("ls root: ");
-    readdir(root);
-    printf("ls mnt: ");
-    readdir(mnt);
-    printf("\n");
-
-    // chdir
+    int fd = open("/mnt/a.txt", O_CREAT);
+    write(fd, "Hi", 2);
+    close(fd);
     chdir("mnt");
-    open("world", O_CREAT);
-    printf("ls mnt: ");
-    readdir(mnt);
-    printf("\n");
+    fd = open("./a.txt", 0);
+    read(fd, buf, 2);
+    printf("1: %s\n", buf);
 
-    // ..
-    open("../a", O_CREAT);
-    printf("ls mnt: ");
-    readdir(mnt);
-    printf("ls root: ");
-    readdir(root);
-    printf("\n");
+    chdir("..");
+    mount("tmpfs", "mnt", "tmpfs");
+    fd = open("mnt/a.txt", 0);
+    printf("2: %d\n", fd);
+
+    umount("/mnt");
+    fd = open("/mnt/a.txt", 0);
+    printf("3: %d\n", fd);
+    read(fd, buf, 2);
+    printf("4: %s\n", buf);
 }
 
 int main() {

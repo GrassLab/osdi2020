@@ -198,6 +198,7 @@ void sys_mount(struct trapframe* trapframe) {
 
 void sys_umount(struct trapframe* trapframe) {
     const char* mountpoint = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_umount(mountpoint);
 }
 
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
