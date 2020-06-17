@@ -5,6 +5,8 @@
 #include "list.h"
 
 #define O_CREAT 1
+#define REGULAR_FILE 0
+#define DIRECTORY    1
 #define NR_OPEN_DEFAULT 32
 
 struct mount {
@@ -30,6 +32,7 @@ struct dentry {
     struct list_head list;
     struct list_head childs;
     struct vnode* vnode;
+    int type;
 };
 
 struct file {

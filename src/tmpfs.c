@@ -70,7 +70,6 @@ int tmpfs_lookup(struct vnode* dir, struct vnode** target, const char* component
 int tmpfs_create(struct vnode* dir, struct vnode** target, const char* component_name) {
     // create tmpfs internal structure
     struct tmpfs_internal* file_node = (struct tmpfs_internal*)kmalloc(sizeof(struct tmpfs_internal));
-    file_node->flag = REGULAR_FILE;
 
     // create child dentry
     struct dentry* d_child = tmpfs_create_dentry(dir->dentry, component_name);
@@ -93,10 +92,6 @@ int tmpfs_ls(struct vnode* dir) {
 // file operations
 int tmpfs_read(struct file* file, void* buf, uint64_t len) {
     struct tmpfs_internal* file_node = (struct tmpfs_internal*)file->vnode->internal;
-    if (file_node->flag != REGULAR_FILE) {
-        uart_printf("Read on non regular file\n");
-        return -1;
-    }
 
     char* dest = (char*)buf;
     char* src = &file_node->buf[file->f_pos];
@@ -109,10 +104,6 @@ int tmpfs_read(struct file* file, void* buf, uint64_t len) {
 
 int tmpfs_write(struct file* file, const void* buf, uint64_t len) {
     struct tmpfs_internal* file_node = (struct tmpfs_internal*)file->vnode->internal;
-    if (file_node->flag != REGULAR_FILE) {
-        uart_printf("Write to non regular file\n");
-        return -1;
-    }
 
     char* dest = &file_node->buf[file->f_pos];
     char* src = (char*)buf;
@@ -127,7 +118,6 @@ int tmpfs_write(struct file* file, const void* buf, uint64_t len) {
 int tmpfs_mkdir(struct vnode* dir, struct vnode** target, const char* component_name) {
     // create tmpfs internal structure
     struct tmpfs_internal* dir_node = (struct tmpfs_internal*)kmalloc(sizeof(struct tmpfs_internal));
-    dir_node->flag = DIRECTORY;
 
     // create child dentry
     struct dentry* d_child = tmpfs_create_dentry(dir->dentry, component_name);

@@ -98,7 +98,9 @@ struct file* vfs_open(const char* pathname, int flags) {
     // 3. Create a new file if O_CREAT is specified in flags.
     else {
         if (flags & O_CREAT) {
-            rootfs->root->vnode->v_ops->create(target_dir, &target_file, target_path);
+            int res = rootfs->root->vnode->v_ops->create(target_dir, &target_file, target_path);
+            if (res < 0) return NULL; // error
+            target_file->dentry->type = REGULAR_FILE;
             return create_fd(target_file);
         }
         else {
@@ -114,12 +116,20 @@ int vfs_close(struct file* file) {
 }
 
 int vfs_write(struct file* file, const void* buf, uint64_t len) {
+    if (file->vnode->dentry->type != REGULAR_FILE) {
+        uart_printf("Write to non regular file\n");
+        return -1;
+    }
     // 1. write len byte from buf to the opened file.
     // 2. return written size or error code if an error occurs.
     return file->f_ops->write(file, buf, len);
 }
 
 int vfs_read(struct file* file, void* buf, uint64_t len) {
+    if (file->vnode->dentry->type != REGULAR_FILE) {
+        uart_printf("Read on non regular file\n");
+        return -1;
+    }
     // 1. read min(len, readable file data size) byte to buf from the opened file.
     // 2. return read size or error code if an error occurs.
     return file->f_ops->read(file, buf, len);
@@ -134,7 +144,10 @@ int vfs_mkdir(const char* pathname) {
     char child_name[128];
     traversal(pathname, &target_dir, child_name);
     struct vnode* child_dir;
-    return target_dir->v_ops->mkdir(target_dir, &child_dir, child_name);
+    int res = target_dir->v_ops->mkdir(target_dir, &child_dir, child_name);
+    if (res < 0) return res; // error
+    child_dir->dentry->type = DIRECTORY;
+    return 0;
 }
 
 int vfs_chdir(const char* pathname) {
@@ -150,8 +163,30 @@ int vfs_chdir(const char* pathname) {
     }
 }
 
+// error: -1: not directory, -2: not found
 int vfs_mount(const char* device, const char* mountpoint, const char* filesystem) {
+    // check mountpoint is valid
+    struct vnode* mount_dir;
+    char path_remain[128];
+    traversal(mountpoint, &mount_dir, path_remain);
+    if (!strcmp(path_remain, "")) {  // found
+        if (mount_dir->dentry->type != DIRECTORY) {
+            return -1;
+        }
+    }
+    else {
+        return -2;
+    }
 
+    // mount fs on mountpoint
+    struct mount* mt = (struct mount*)kmalloc(sizeof(struct mount));
+    if (!strcmp(filesystem, "tmpfs")) {
+        struct filesystem* tmpfs = (struct filesystem*)kmalloc(sizeof(struct filesystem));
+        tmpfs->name = (char*)kmalloc(sizeof(char) * strlen(device));
+        strcpy(tmpfs->name, device);
+        tmpfs->setup_mount = tmpfs_setup_mount;
+        tmpfs->setup_mount(tmpfs, mt);
+    }
 }
 
 int vfs_umount(const char* mountpoint) {

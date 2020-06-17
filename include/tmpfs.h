@@ -4,12 +4,9 @@
 #include "vfs.h"
 
 #define EOF (-1)
-#define REGULAR_FILE 0
-#define DIRECTORY    1
 #define TMP_FILE_SIZE 512
 
 struct tmpfs_internal {
-    int flag;
     char buf[TMP_FILE_SIZE];
 };
 
