@@ -1,4 +1,5 @@
 #include "buddy.h"
+#include "../kernel/uart.h"
 
 #define INIT_BITMAP (1 << BUDDY_MAX_ORDER)
 #define BITMAP(order) (1 << order)
@@ -26,7 +27,7 @@ void buddy_view()
 void buddy_init()
 {
     unsigned long init_chunk_addr;
-    init_chunk_addr = malloc(INIT_BITMAP); // the malloc should be replace to get_free_page
+    init_chunk_addr = 0x10000; // the malloc should be replace to get_free_page
     // for (int i=0; i<BUDDY_MAX_ORDER; i++) {
     //     BuddyManager.list[i].number = 0;
     // }
@@ -65,16 +66,16 @@ int buddy_free(unsigned long addr)
     // traverse the same order, and find out the the same addr
     struct buddy_chunk* chunk;
     int order, chunk_idx;
-    for (order=BUDDY_MAX_ORDER; order>=0; order--) {
+    for (order=BUDDY_MAX_ORDER; order>0; order--) {
+        printf("0x%lx\n", BuddyManager.allocate_bitmap);
         if (((BuddyManager.allocate_bitmap >> order) & 1) == 1) {
-            // printf("order:  %d\n", order);
+            printf("order:  %d\n", order);
             for (chunk_idx=0; chunk_idx<BuddyManager.list[order-1].number; chunk_idx++) {
                 chunk = &BuddyManager.list[order-1].chunk[chunk_idx];
-                // printf("chunk addr: 0x%lx\n", chunk->addr);
+                printf("chunk addr: 0x%lx\n", chunk->addr);
                 if ((chunk->addr == addr) & (chunk->state == IN_USE)) {
-                    chunk->state == NOT_IN_USE;
-                    BuddyManager.allocate_bitmap ^= BITMAP(order);
-                    // printf("found chunk\n");
+                    chunk->state = NOT_IN_USE;
+                    printf("chunk number: %d\n", BuddyManager.list[order-1].number);
                     merge_buddy_chunk(order, addr, chunk_idx);
                     return 0;
                 }
@@ -115,7 +116,8 @@ unsigned long get_buddy_chunk(int order)
         chunk = &BuddyManager.list[order-1].chunk[i];
         if (chunk->state == NOT_IN_USE) {
             chunk->state = IN_USE;
-            BuddyManager.allocate_bitmap ^= BITMAP(order);
+            BuddyManager.allocate_bitmap |= BITMAP(order);
+            printf("BuddyManager.allocate_bitmap: 0x%lx\n", BuddyManager.allocate_bitmap);
             return chunk->addr;
         }
 
@@ -127,6 +129,11 @@ void remove_buddy_chunk(int order, int idx)
 {
     BuddyManager.list[order].chunk[idx].addr = 0;
     BuddyManager.list[order].number -= 1;
+    if (BuddyManager.list[order].number == 0) {
+        // printf("BuddyManager.allocate_bitmap: 0x%lx\n", BuddyManager.allocate_bitmap);
+        BuddyManager.allocate_bitmap &= !BITMAP(order+1);
+        // printf("BuddyManager.allocate_bitmap: 0x%lx\n", BuddyManager.allocate_bitmap);
+    }
 }
 
 void put_buddy_chunk(unsigned long addr, int order)
@@ -187,28 +194,43 @@ int split_buddy_chunk(int order)
 
 void merge_buddy_chunk(int order, unsigned long addr, int idx)
 {
+    int merge_flag = 1;
     for (int i=order; i<BUDDY_MAX_ORDER; i++) {
-        // printf("order: %d\n", i);
+        printf("order: %d\n", i);
         unsigned long prev_addr = addr - BITMAP(i);
         unsigned long next_addr = addr + BITMAP(i);
+        printf("chunk addr: 0x%lx\n", addr);
+        printf("prev chunk addr: 0x%lx\n", prev_addr);
+        printf("next chunk addr: 0x%lx\n", next_addr);
+
+        merge_flag = 0;
         for (int j=BuddyManager.list[i-1].number-1; j>=0; j--) {
-            if (BuddyManager.list[i-1].chunk[j].addr == prev_addr) {
+            struct buddy_chunk* chunk = &BuddyManager.list[i-1].chunk[j];
+            printf("chunk addr: 0x%lx, chunk->state: %d\n", chunk->addr, chunk->state);
+            if ((chunk->addr == prev_addr) & (chunk->state == NOT_IN_USE)) {
+                printf("merge chunk addr: 0x%lx\n", addr);
                 printf("merge prev, chunk addr: 0x%lx\n", prev_addr);
                 remove_buddy_chunk(i-1, idx);
                 remove_buddy_chunk(i-1, j);
                 put_buddy_chunk(prev_addr, i);
                 addr = prev_addr;
                 // buddy_view();
+                merge_flag = 1;
                 break;
             }
-            if (BuddyManager.list[i-1].chunk[j].addr == next_addr) {
+            if ((chunk->addr == next_addr) & (chunk->state == NOT_IN_USE)) {
+                printf("merge chunk addr: 0x%lx\n", addr);
                 printf("merge next, chunk addr: 0x%lx\n", prev_addr);
                 remove_buddy_chunk(i-1, idx);
                 remove_buddy_chunk(i-1, j);
                 put_buddy_chunk(addr, i);
                 // buddy_view();
+                merge_flag = 1;
                 break;
             }
+        }
+        if (merge_flag == 0) {
+            return;
         }
     }
 }
