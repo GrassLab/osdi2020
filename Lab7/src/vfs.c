@@ -259,7 +259,7 @@ int vfs_chdir(const char* pathname){
 			else{ //mount on this directory
 				current_dent = mount_fs_table[dent->is_mount]->dentry;
 				printf("### Now current directory %s (mount on %s)\r\n",\
-						current_dent->dname,dent->child_dentry[i]);
+				current_dent->dname,dent->child_dentry[i]);
 			}
 			return 0;
 		}
