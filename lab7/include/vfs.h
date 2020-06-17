@@ -28,7 +28,7 @@ typedef struct mount_t
 typedef struct filesystem_t
 {
     const char *name;
-    int (*setup_mount)(struct filesystem_t *fs, mount_t **mount);
+    int (*setup_mount)(struct filesystem_t *fs, mount_t *mount);
 } filesystem_t;
 
 typedef struct file_operations_t
