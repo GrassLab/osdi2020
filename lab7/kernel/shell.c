@@ -1,22 +1,25 @@
-#include "miniuart.h"
-#include "libc.h"
-#include "mbox.h"
-#include "timer.h"
-#include "framebuffer.h"
 #include "bh.h"
 #include "buddy.h"
+#include "framebuffer.h"
+#include "libc.h"
+#include "mbox.h"
+#include "miniuart.h"
 #include "slab.h"
+#include "timer.h"
 
-
+#include "vfs.h"
 
 void test_buddy() {
   struct buddy *bd = global_bd;
   Buddy.show(bd);
-  unsigned long free_arr[4] = {0,};
+  unsigned long free_arr[4] = {
+      0,
+  };
   for (int i = 0; i < 4; ++i) {
     /* allocate 16 pages */
     struct Pair p = Buddy.alloc(bd, 16);
-    uart_println("alloc [%x to %x] w/ pair {%d, %d}", p.lb, p.ub, bd_phy2n(p.lb), bd_phy2n(p.ub));
+    uart_println("alloc [%x to %x] w/ pair {%d, %d}", p.lb, p.ub,
+                 bd_phy2n(p.lb), bd_phy2n(p.ub));
     free_arr[i] = bd_phy2n(p.lb);
     Buddy.show(bd);
   }
@@ -25,7 +28,6 @@ void test_buddy() {
     Buddy.dealloc(bd, free_arr[i]);
   }
   Buddy.show(bd);
-
 }
 
 struct test_struct {
@@ -34,6 +36,58 @@ struct test_struct {
   int c[10];
 };
 
+uint8_t buf[1024] = {
+    0,
+};
+
+void test_fs() {
+  vfs_mkdir("/mnt");
+  struct file *a = vfs_open("/mnt/hello.txt", O_CREAT);
+
+  uart_println("[[ list file under \"/mnt/\" ]]");
+  uart_println("=============================");
+
+  struct file *root = vfs_open("/mnt", 0);
+
+  uart_println("=============================");
+
+  vfs_write(a, "Hello ", 6);
+
+  vfs_chdir("mnt");
+  struct file *b = vfs_open("./world.txt", O_CREAT);
+  vfs_write(b, "World!", 6);
+
+  vfs_close(a);
+  vfs_close(b);
+
+  vfs_chdir("..");
+
+  a = vfs_open("mnt/hello.txt", 0);
+  b = vfs_open("mnt/world.txt", 0);
+
+  int sz;
+  sz = vfs_read(a, buf, 100);
+  sz += vfs_read(b, buf + sz, 1);
+  sz += vfs_read(b, buf + sz, 2);
+  sz += vfs_read(b, buf + sz, 3);
+  sz += vfs_read(b, buf + sz, 4);
+  buf[sz] = '\0';
+  uart_println("%s", buf); // should be Hello World!
+
+  vfs_open("/mnt", 0);
+
+  uart_println("============= set mount ============");
+  vfs_mount("tmpfs", "mnt", "tmpfs");
+  uart_println("====================================");
+
+  vfs_open("/mnt", 0);
+
+  uart_println("============= umount ============");
+  vfs_umount("mnt");
+  uart_println("=================================");
+
+  vfs_open("/mnt", 0);
+}
 
 void test_slab_example() {
   /* initalize the slab allocator */
@@ -51,7 +105,6 @@ void test_slab_example() {
 
   kfree(i32);
   kfree(u64);
-
 
   /* try to allocate a sizeof(strct member) */
   struct test_struct *a = kalloc(sizeof(struct test_struct));
@@ -87,8 +140,7 @@ void help() {
             "  coretime   Core timer interrupt.\r\n"
             "  localtime  Local timer interrupt.\r\n"
             "  reboot     Reboot.\r\n"
-            "  bhmode     enable bottom half mode.\r\n"
-            );
+            "  bhmode     enable bottom half mode.\r\n");
 }
 
 /* hello: display hello world */
@@ -97,7 +149,7 @@ void hello() { uart_puts("Hello World!\r\n"); }
 /* timestamp: display the "system" timer */
 void get_system_timer() {
   asm volatile("stp x8, x9, [sp, #-16]!");
-  asm volatile("mov x8, #1");   /* 1 for print system time */
+  asm volatile("mov x8, #1"); /* 1 for print system time */
   asm volatile("svc     #0");
   asm volatile("ldp x8, x9, [sp], #16");
   /* syscall to gettimer */
@@ -141,7 +193,8 @@ void reset() {
 void get_current_el() {
   int el;
   asm volatile("mrs %0, CurrentEL\n"
-               "lsr %0, %0, #2" : "=r"(el));
+               "lsr %0, %0, #2"
+               : "=r"(el));
   uart_println("Current exception level: %d", el);
 }
 
@@ -154,14 +207,9 @@ void timer_interrupt() {
   core_timer_enable();
 }
 
-void core_timer_interrupt() {
-  core_timer_enable();
-}
+void core_timer_interrupt() { core_timer_enable(); }
 
-void local_timer_interrupt() {
-  local_timer_init();
-}
-
+void local_timer_interrupt() { local_timer_init(); }
 
 void bottom_half_mode() {
   bh_mod_mask = 1;
@@ -201,7 +249,7 @@ void get_vc_memory() {
 
   /* ====== /Tags begin ====== */
   mbox[2] = MBOX_TAG_GETVCMEM;
-  mbox[3] = 8;                 /* buffer size */
+  mbox[3] = 8; /* buffer size */
   mbox[4] = 0;
   /* 5-6 is reserve for output buffer */
   mbox[5] = 0; /* base address */
@@ -227,7 +275,7 @@ void get_arm_memory() {
 
   /* ====== /Tags begin ====== */
   mbox[2] = MBOX_TAG_GETARMMEM;
-  mbox[3] = 8;                 /* buffer size */
+  mbox[3] = 8; /* buffer size */
   mbox[4] = 0;
   /* 5-6 is reserve for output buffer */
   mbox[5] = 0; /* base address */
@@ -254,19 +302,20 @@ void shell() {
   while (1) {
     if (getcmd(buf, sizeof(buf)) == -1)
       continue;
-    SWITCH_CONTINUE(buf, "help",      help);
-    SWITCH_CONTINUE(buf, "buddy",     test_buddy);
-    SWITCH_CONTINUE(buf, "slab",      test_slab_example);
-    SWITCH_CONTINUE(buf, "hello",     hello);
+    SWITCH_CONTINUE(buf, "help", help);
+    SWITCH_CONTINUE(buf, "buddy", test_buddy);
+    SWITCH_CONTINUE(buf, "slab", test_slab_example);
+    SWITCH_CONTINUE(buf, "fs", test_fs);
+    SWITCH_CONTINUE(buf, "hello", hello);
     SWITCH_CONTINUE(buf, "timestamp", get_system_timer);
-    SWITCH_CONTINUE(buf, "show",      lfb_showpicture);
-    SWITCH_CONTINUE(buf, "reboot",    reset);
-    SWITCH_CONTINUE(buf, "getel",     get_current_el);
-    SWITCH_CONTINUE(buf, "exc",       svc1);
-    SWITCH_CONTINUE(buf, "irq",       timer_interrupt);
-    SWITCH_CONTINUE(buf, "coretime",  core_timer_interrupt);
+    SWITCH_CONTINUE(buf, "show", lfb_showpicture);
+    SWITCH_CONTINUE(buf, "reboot", reset);
+    SWITCH_CONTINUE(buf, "getel", get_current_el);
+    SWITCH_CONTINUE(buf, "exc", svc1);
+    SWITCH_CONTINUE(buf, "irq", timer_interrupt);
+    SWITCH_CONTINUE(buf, "coretime", core_timer_interrupt);
     SWITCH_CONTINUE(buf, "localtime", local_timer_interrupt);
-    SWITCH_CONTINUE(buf, "bhmode",    bottom_half_mode);
+    SWITCH_CONTINUE(buf, "bhmode", bottom_half_mode);
 
     uart_println("[ERR] command `%s` not found", buf);
   }
