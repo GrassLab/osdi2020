@@ -33,4 +33,6 @@ int tmpfs_create(struct vnode* dir_node, struct vnode** target, const char* comp
 int tmpfs_mount(struct filesystem* fs, struct mount* mount);
 int tmpfs_write(struct file* file, const void* buf, size_t len);
 int tmpfs_read(struct file* file, void* buf, size_t len);
+int tmpfs_mkdir(struct vnode* dir_node, const char* component_name);
+int tmpfs_list(struct file* file);
 #endif

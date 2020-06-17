@@ -1,3 +1,4 @@
+#include "io.h"
 #include "pool.h"
 #include "tmpfs.h"
 #include "utils.h"
@@ -73,6 +74,51 @@ int tmpfs_create(struct vnode* dir_node, struct vnode** target,
     return -1;
 }
 
+int tmpfs_mkdir(struct vnode* dir_node, const char* component_name) {
+    for (int i = 0; i < DIR_MAX; i++) {
+        if (((struct fentry*)dir_node->internal)->list[i]->type ==
+            FILE_TYPE_N) {
+            struct fentry* fentry =
+                ((struct fentry*)dir_node->internal)->list[i];
+            strcpy(fentry->name, component_name);
+            fentry->type = FILE_TYPE_D;
+            struct vnode* vnode = kmalloc(sizeof(struct vnode));
+            vnode->v_ops = dir_node->v_ops;
+            vnode->f_ops = dir_node->f_ops;
+            vnode->internal = fentry;
+            init_fentry(fentry, vnode, component_name);
+            for (int i = 0; i < DIR_MAX; i++) {
+                fentry->list[i] =
+                    (struct fentry*)kmalloc(sizeof(struct fentry));
+                fentry->list[i]->type = FILE_TYPE_N;
+                fentry->list[i]->name[0] = 0;
+            }
+
+            return 1;
+        }
+    }
+    return -1;
+}
+
+int tmpfs_list(struct file* file) {
+    int len = 0;
+    if (((struct fentry*)file->vnode->internal)->type == FILE_TYPE_D) {
+        for (int i = 0; i < DIR_MAX; i++) {
+            if (((struct fentry*)file->vnode->internal)->list[i]->type !=
+                FILE_TYPE_N) {
+                len++;
+                struct fentry* fentry =
+                    ((struct fentry*)file->vnode->internal)->list[i];
+                print_s(fentry->name);
+                print_s(" ");
+            }
+        }
+        print_s("\n");
+        return len;
+    }
+    return -1;
+}
+
 int tmpfs_write(struct file* file, const void* buf, size_t len) {
     for (size_t i = 0; i < len; i++) {
         ((struct fentry*)file->vnode->internal)->buf->buffer[file->f_pos++] =
@@ -83,6 +129,7 @@ int tmpfs_write(struct file* file, const void* buf, size_t len) {
     }
     return len;
 }
+
 int tmpfs_read(struct file* file, void* buf, size_t len) {
     size_t ans = 0;
     for (size_t i = 0; i < len; i++) {
@@ -93,6 +140,5 @@ int tmpfs_read(struct file* file, void* buf, size_t len) {
             break;
         }
     }
-    asm volatile("fd:");
     return ans;
 }

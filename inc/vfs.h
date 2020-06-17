@@ -29,6 +29,7 @@ struct filesystem {
 struct file_operations {
   int (*write) (struct file* file, const void* buf, size_t len);
   int (*read) (struct file* file, void* buf, size_t len);
+  int (*list)(struct file* file);
 };
 
 struct vnode_operations {
@@ -37,6 +38,7 @@ struct vnode_operations {
 };
 
 extern struct mount* rootfs;
+extern struct vnode* currentdir;
 extern struct filesystem tmpfs;
 
 void init_rootfs();
@@ -45,5 +47,7 @@ struct file* vfs_open(const char* pathname, int flags);
 int vfs_close(struct file* file);
 int vfs_write(struct file* file, const void* buf, size_t len);
 int vfs_read(struct file* file, void* buf, size_t len);
-int tmpfs_mount(struct filesystem* fs, struct mount* mount);
+int vfs_list(struct file* file);
+int mkdir(const char* pathname);
+int chdir(const char* pathname);
 #endif

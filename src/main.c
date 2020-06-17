@@ -45,7 +45,7 @@ void foo_kernel() {
     struct file* a = vfs_open("hello", O_CREAT);
     struct file* b = vfs_open("world", O_CREAT);
     vfs_write(a, "Hello ", 6);
-    vfs_write(b, "World!", 6);
+    vfs_write(b, "World\n", 6);
     vfs_close(a);
     vfs_close(b);
     b = vfs_open("hello", 0);
@@ -53,9 +53,18 @@ void foo_kernel() {
     int sz;
     sz = vfs_read(b, buf, 100);
     sz += vfs_read(a, buf + sz, 100);
-    asm volatile("mai:");
     buf[sz] = '\0';
     print_s(buf);
+    mkdir("dir1");
+
+    struct file* root = vfs_open("/", 0);
+    vfs_list(root);
+
+    chdir("dir1");
+    mkdir("dir2");
+
+    struct file* dir = vfs_open(".", 0);
+    vfs_list(dir);
 
     while (1)
         ;
