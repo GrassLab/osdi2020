@@ -126,7 +126,10 @@ int shell_execute(char *cmd, int el) {
     while(*b != ' ' && *b) b++;
     if(*b) *b = 0, b++;
     while(*b == ' ') b++;
-    vfs_mount(p, b, "tmpfs");
+    if(*p && *b && vfs_mount(p, b, "tmpfs")){
+      //printfmt("%s mounted to %s", p, b);
+    }
+    else printfmt("mount %s to %s failed", p, b);
   }
   else if(EQS("multilayer", cmd)){
     task_multilayer(1);
@@ -137,7 +140,7 @@ int shell_execute(char *cmd, int el) {
   else if(strbeg(cmd, "umount")){
     char *p = cmd + 6;
     while(*p == ' ') p++;
-    vfs_umount(p);
+    if(!vfs_umount(p)) printfmt("unmount %s failed", p);
   }
   else if(strbeg(cmd, "touch")){
     char *p = cmd + 5;

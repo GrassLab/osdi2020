@@ -139,10 +139,10 @@ void task_varied_aloc(int ret) {
 void task_vnode_op(int ret){
   struct file* a = vfs_open("non_exist", 0);
   assert(a == NULL);
-  a = vfs_open("hello", O_CREAT);
+  a = vfs_open("vnode.txt", O_CREAT);
   assert(a != NULL);
   vfs_close(a);
-  struct file* b = vfs_open("hello", 0);
+  struct file* b = vfs_open("vnode.txt", 0);
   assert(b != NULL);
   vfs_close(b);
   if(!ret) exit();
@@ -201,6 +201,26 @@ void task_multilayer(int ret){
   if(!ret) exit();
 }
 
+void task_setup(int ret){
+
+  FILE *p = vfs_open("setup.txt", O_CREAT);
+  vfs_close(p);
+
+  //vfs_mkdir("mnt");
+  vfs_mkdir("tmp");
+  //FILE* fd = vfs_open("/mnt/a.txt", O_CREAT);
+  //vfs_write(fd, "Hi", 2);
+  //vfs_close(fd);
+  //vfs_chdir("mnt");
+  //fd = vfs_open("./a.txt", 0);
+  //assert(fd);
+  //vfs_chdir("..");
+  vfs_mount("tmpfs", "tmp", "tmpfs");
+  //vfs_umount("/mnt");
+  puts("return");
+  if(!ret) exit();
+}
+
 void kernel_process(){
   puts("kernel process begin...");
   //privilege_task_create(task_1, 0, current_task->priority);
@@ -216,6 +236,7 @@ void kernel_process(){
   //privilege_task_create(task_read_dir, 0, current_task->priority);
   //privilege_task_create(kexec_user_main, 0, current_task->priority);
   //privilege_task_create(task_multilayer, 0, current_task->priority);
+  privilege_task_create(task_setup, 0, current_task->priority);
   privilege_task_create(irq_shell_loop, EL, current_task->priority);
   while(1){ delay(500000); schedule(); }
 }

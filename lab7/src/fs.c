@@ -14,11 +14,11 @@ struct mount *rootfs = NULL;
 
 struct filesystem *regedfs = NULL;
 
-struct mount *newMnt(struct vnode *mp){
+struct mount *newMnt(struct vnode *mp, struct vnode *root){
   struct mount *newmnt =
     (struct mount*)kmalloc(sizeof(struct mount));
   newmnt->mp = mp;
-  newmnt->root = NULL;
+  newmnt->root = root;
   newmnt->fs = NULL;
   return newmnt;
 }
@@ -91,7 +91,7 @@ int vfs_write(struct file *file, const void *buf, size_t len) {
 
 int vfs_read(struct file *file, void *buf, size_t len) {
   // 1. read min(len, readable file data size) byte to buf from the opened file.
-  return file->vnode->f_ops->read(file, buf, len);
+  return file ? file->vnode->f_ops->read(file, buf, len) : 0;
   // 2. return read size or error code if an error occurs.
   return 0;
 }
@@ -133,11 +133,6 @@ void vfs_closedir(DIR *dir){
 
 int vfs_mkdir(const char *path){
   return xp_func(path, d_ops, mkdir);
-  //if(*path == '/')
-  //  return rootfs->root->d_ops->mkdir(
-  //      rootfs->root, path + 1);
-  //return current_task->pwd->d_ops->mkdir(
-  //    current_task->pwd, path);
 }
 
 int vfs_chdir(const char *path){
@@ -157,7 +152,8 @@ int vfs_mount(
   xp_func(mpt, v_ops, lookup, &mpt_vnode);
 
   if(dev_vnode && mpt_vnode){
-    mpt_vnode->mount = newMnt(mpt_vnode);
+    mpt_vnode->mount = newMnt(mpt_vnode, dev_vnode);
+    printfmt("new mount %x", mpt_vnode->mount);
     struct filesystem *newfs = find_fs(fs);
     if(newfs) newfs->setup_mount(newfs, mpt_vnode->mount);
     else return 0;
@@ -166,21 +162,7 @@ int vfs_mount(
 }
 
 int vfs_umount(const char *mpt){
-
-  struct vnode *mpt_vnode = 0;
-  xp_func(mpt, v_ops, lookup, &mpt_vnode);
-  if(mpt_vnode && mpt_vnode->mount){
-    mpt_vnode = mpt_vnode->mount->mp;
-    kfree(mpt_vnode->mount);
-    mpt_vnode->mount = NULL;
-    return 1;
-  }
-  return 0;
-}
-
-void fs_init(){
-  register_filesystem(tmpfs);
-  tmpfs->setup_mount(tmpfs, rootfs = newMnt(NULL));
+  return xp_func(mpt, v_ops, umount);
 }
 
 void indent(int n){
@@ -190,7 +172,11 @@ void indent(int n){
 }
 
 void list_dir(DIR *dir, int lv){
-  if(lv > 5) puts("...");
+  if(lv > 5){
+    indent(lv);
+    puts("...");
+    return;
+  }
   dirent *entry;
   indent(lv);
   printfmt("{%s}", dir->path);
@@ -208,4 +194,7 @@ void list_dir(DIR *dir, int lv){
   }
 }
 
-
+void fs_init(){
+  register_filesystem(tmpfs);
+  tmpfs->setup_mount(tmpfs, rootfs = newMnt(NULL, NULL));
+}

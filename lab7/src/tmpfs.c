@@ -11,7 +11,7 @@ typedef struct TmpfsfdTag{
   enum dirent_type type;
   struct vnode *parent;
   union{
-    char *text; 
+    char *text;
     struct vnode *child;
   };
   struct vnode *next;
@@ -83,7 +83,7 @@ int tmpfs_umount(struct vnode *node, const char *mp);
 struct filesystem *tmpfs = &(struct filesystem){
   .name = "tmpfs",
     .setup_mount = tmpfs_setup_mount,
-    .nextfs = NULL, 
+    .nextfs = NULL,
 };
 
 struct file_operations *tmpfs_fop =
@@ -108,19 +108,6 @@ struct vnode_operations *tmpfs_vop =
   .mount  = tmpfs_mount,
   .umount = tmpfs_umount,
 };
-
-int tmpfs_setup_mount(
-    struct filesystem *fs, struct mount *mount){
-  mount->fs = fs;
-  mount->root = newVnode(
-      mount,
-      tmpfs_vop,
-      tmpfs_fop,
-      tmpfs_dop,
-      newTmpfsDir("/", NULL, NULL, NULL));
-  if(!fs->mnt) fs->mnt = mount;
-  return 0;
-}
 
 void print_ident(int indent){
   while(indent--) printf(" ");
@@ -161,27 +148,33 @@ int tmpfs_lookup(
     struct vnode **target,
     const char *component_name){
   if(*component_name == '/') component_name++;
-  
+
   if(subpath_of(".", component_name)){
     return tmpfs_lookup(
         node, target,
         component_name + strlen("."));
   }
   else if(subpath_of("..", component_name)){
-    //if(node->mount && node->mount->mp){
-    //  return node->mount->mp->v_ops->lookup(
-    //    node->mount->mp, target,
-    //    component_name + strlen("..")
-    //  );
-    //}
-    //else{
+    if(node->mount && node->mount->mp){
+      puts("back from mount");
+      printfmt("mmp <%x>", node->mount->mp);
+      //if(!*(component_name + strlen(".."))){
+      //  *target = node->mount->mp;
+      //  return 1;
+      //}
+      return node->mount->mp->v_ops->lookup(
+        node->mount->mp, target,
+        component_name + strlen("..")
+      );
+    }
+    else{
       struct vnode *parent = Tmpfsfd(node)->parent;
       if(parent)
         return tmpfs_lookup(
             parent, target,
             component_name + strlen(".."));
       else return 0;
-    //}
+    }
   }
   else if(node->mount && node->mount->root != node){
     return node->mount->root->v_ops->lookup(
@@ -197,6 +190,63 @@ int tmpfs_lookup(
   while(child){
     if(subpath_of(Tmpfsfd(child)->name, component_name)){
       return tmpfs_lookup(
+          child, target,
+          component_name + strlen(Tmpfsfd(child)->name));
+    }
+    child = Tmpfsfd(child)->next;
+  }
+  *target = 0;
+  return 0;
+}
+
+int tmpfs_ulookup(
+    struct vnode *node,
+    struct vnode **target,
+    const char *component_name){
+  if(*component_name == '/') component_name++;
+
+  if(subpath_of(".", component_name)){
+    return tmpfs_ulookup(
+        node, target,
+        component_name + strlen("."));
+  }
+  else if(subpath_of("..", component_name)){
+    if(node->mount && node->mount->mp){
+      puts("back from mount");
+      printfmt("mmp <%x>", node->mount->mp);
+      //if(!*(component_name + strlen(".."))){
+      //  *target = node->mount->mp;
+      //  return 1;
+      //}
+      return tmpfs_ulookup(
+        node->mount->mp, target,
+        component_name + strlen("..")
+      );
+    }
+    else{
+      struct vnode *parent = Tmpfsfd(node)->parent;
+      if(parent)
+        return tmpfs_ulookup(
+            parent, target,
+            component_name + strlen(".."));
+      else return 0;
+    }
+  }
+
+  if(!*component_name){
+    *target = node;
+    return 1;
+  }
+
+  if(node->mount && node->mount->root != node){
+    return tmpfs_ulookup(
+        node->mount->root, target, component_name);
+  }
+
+  struct vnode *child = TmpfsfdChild(node);
+  while(child){
+    if(subpath_of(Tmpfsfd(child)->name, component_name)){
+      return tmpfs_ulookup(
           child, target,
           component_name + strlen(Tmpfsfd(child)->name));
     }
@@ -312,6 +362,16 @@ int tmpfs_mount(
 }
 
 int tmpfs_umount(struct vnode *node, const char *mp){
+  struct vnode *mpt_vnode = 0;
+  tmpfs_ulookup(node, &mpt_vnode, mp);
+  if(mpt_vnode && mpt_vnode->mount){
+    mpt_vnode = mpt_vnode->mount->mp;
+    printfmt("root mount %x", (rootfs));
+    printfmt("release mount %x", (mpt_vnode->mount));
+    kfree(mpt_vnode->mount);
+    mpt_vnode->mount = NULL;
+    return 1;
+  }
   return 0;
 }
 
@@ -325,13 +385,18 @@ int tmpfs_mkdir(struct vnode *node, const char *pathname){
     else if(*p == '/'){
       if(name) break;
       else p--;
-    } 
+    }
     else name = 1, p--;
   }
   if(p != path) *p = 0, newp = p + 1, p = path;
   else newp = path, p = path + len;
+  while(*newp == '/') newp++;
 
   struct vnode *target;
+  if(tmpfs_lookup(node, &target, pathname)){
+    // existed directory
+    return 0;
+  }
   if(tmpfs_lookup(node, &target, p)){
     Tmpfsfd(target)->child =  newVnode(
         NULL, tmpfs_vop, tmpfs_fop, tmpfs_dop,
@@ -344,8 +409,25 @@ int tmpfs_mkdir(struct vnode *node, const char *pathname){
 int tmpfs_chdir(struct vnode *node, const char *pathname){
   struct vnode *target;
   if(tmpfs_lookup(node, &target, pathname)){
+    printfmt("pwd <%x>", target);
     current_task->pwd = target;
     return 0;
-  }
+  } else puts("no such file or directory");
   return 1;
+}
+
+int tmpfs_setup_mount(
+    struct filesystem *fs, struct mount *mount){
+  mount->fs = fs;
+  if(!mount->root){
+    mount->root = newVnode(
+        mount,
+        tmpfs_vop,
+        tmpfs_fop,
+        tmpfs_dop,
+        newTmpfsDir("/", NULL, NULL, NULL));
+    Tmpfsfd(mount->root)->parent = mount->root;
+  }
+  if(!fs->mnt) fs->mnt = mount;
+  return 0;
 }

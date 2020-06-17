@@ -91,7 +91,7 @@ int vfs_mount(
     const char *dev, const char *mp, const char *fs);
 int vfs_umount(const char *mp);
 
-struct mount *newMnt(struct vnode *mp);
+struct mount *newMnt(struct vnode *mp, struct vnode *root);
 
 struct vnode *newVnode(
     struct mount *mount,
