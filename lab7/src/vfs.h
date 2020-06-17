@@ -1,0 +1,71 @@
+#ifndef _VFS_Hb
+#define _VFS_H
+
+#include "string.h"
+
+#define O_CREAT 1
+#define       NULL    ((void *)0)
+
+#define DNAME_LEN 256
+#define MAX_CHILD 10
+
+//edge information
+/* Pointer to the inode this entry refers to. */
+struct dentry {
+    int flag;
+    char dname[DNAME_LEN];
+    struct dentry *parent_dentry;
+    struct dentry *child_dentry[MAX_CHILD];
+    struct vnode* vnode;
+    int child_count;
+} dentry;   
+
+
+struct vnode {
+  struct mount* mount;
+  struct vnode_operations* v_ops;
+  struct file_operations* f_ops;
+  void* internal;
+};
+
+struct file {
+  struct vnode* vnode;
+  size_t f_pos; // The next read/write position of this file descriptor
+  struct file_operations* f_ops;
+  int flags;
+};
+	
+struct mount {
+  struct vnode* root;
+  struct dentry* dentry;
+  struct filesystem* fs;
+};
+
+struct filesystem {
+  const char* name;
+  int (*setup_mount)(struct filesystem* fs, struct mount* mount);
+};
+
+struct file_operations {
+  int (*write) (struct file* file, const void* buf, size_t len);
+  int (*read) (struct file* file, void* buf, size_t len);
+};
+
+struct vnode_operations {
+  int (*lookup)(struct dentry* dir, struct vnode** target, const char* component_name);
+  int (*create)(struct dentry* dir, struct vnode** target, const char* component_name);
+  int (*ls)(struct dentry* dir);
+};
+
+struct mount* rootfs;
+struct dentry* current_dent;
+
+void set_dentry(struct dentry *dentry,struct vnode* vnode,const char* str);
+void rootfs_init();
+int register_filesystem(struct filesystem* fs);
+struct file* vfs_open(const char* pathname, int flags);
+int vfs_close(struct file* file);
+int vfs_write(struct file* file, const void* buf, size_t len);
+int vfs_read(struct file* file, void* buf, size_t len);
+
+#endif
