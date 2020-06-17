@@ -55,6 +55,7 @@ enum
 };
 
 mount_t *rootfs;
+mount_t rootfs_location;
 
 
 #endif 

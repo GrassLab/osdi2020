@@ -11,6 +11,7 @@
 #define PM_RSTC ((volatile unsigned int*)(0x3F10001c))
 #define PM_WDOG ((volatile unsigned int*)(0x3F100024))
 #define CMD_NUM 8
+#define size_t unsigned long
 typedef unsigned char           uint8_t;
 
 

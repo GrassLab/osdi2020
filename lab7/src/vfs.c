@@ -1,11 +1,12 @@
 #include "vfs.h"
 
-
 int register_filesystem(filesystem_t *fs)
 {
     // register the file system to the kernel.
     // you can also initialize memory pool of the file system here.
     printf("Mount filesystem name is %s\n", fs->name);
+    rootfs = &rootfs_location;
+    printf("rootfs location is %x\n", &rootfs_location);
     return fs->setup_mount(fs, &rootfs);
 }
 

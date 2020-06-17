@@ -37,6 +37,7 @@
     void init_buddy_sys();
     void init_page_sys();
     unsigned long give_slab(int size);
+    void receive_slub(unsigned long);
     enum {
         NOT_USED,
         USED,

@@ -2,6 +2,7 @@
 #include "config.h"
 
 static int free_page_number = TOTAL_PAGE_NUMBER;
+void receive_slub(unsigned long);
 
 void init_buddy_sys(){
 	for(int i=0;i<MAX_ORDER;i++){
@@ -20,7 +21,6 @@ void print_buddy_info(){
                 // printf("start now buddy used info: %d\n",page->used);
                 // printf("start now buddy addr: %x\n",page->phy_addr);
                 // printf("start now buddy index: %d\n",page->page_index);
-                page_t* next_buddy_end_page = BUDDY_END(page, l);
 
                 page_t* page_next = list_entry((&(BUDDY_END(page, l))->list)->next, page_t ,list);
                 if((&(BUDDY_END(page, l))->list)->next == (&page_buddy[l])){
@@ -100,7 +100,6 @@ unsigned long physical_to_pfn(unsigned long physical_addr){
 
 void give_back_pages(page_t* page , int order){
     int buddy_page_index = page->page_index ^ (1 << order);
-    int is_buddy_bigger_than_self = 0;
     page_t* head_page = page;
     page_t* end_page = NULL;
     page_t* buddy_page = NULL;
@@ -259,7 +258,7 @@ unsigned long give_one_slub(int slub_index){
         printf("&&&&&&&&&&&&&&&&&&&&&&& add to partial page number is %d\n",kmem_cache_arr[slub_index].cache_cpu.page->page_index);
         list_add_tail(&(kmem_cache_arr[slub_index].cache_cpu.page->list),&kmem_cache_arr[slub_index].cache_cpu.partial);
     }
-    return slub;
+    return (unsigned long)slub;
 }
 
 page_t* find_partial_free_slub(int slub_index){
