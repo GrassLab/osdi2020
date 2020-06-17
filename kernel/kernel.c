@@ -6,6 +6,16 @@
 #include "kernel/shell.h"
 #include "kernel/syscall.h"
 #include "kernel/lib/types.h"
+#include "kernel/vfs.h"
+#include "kernel/tmpfs.h"
+
+#define assert(cond)                                                    \
+  do {                                                                  \
+    if (!(cond)) {                                                      \
+      printk("Assertion Fail: %s:%u: %s\n", __FILE__, __LINE__, #cond); \
+      for (;;) {}                                                       \
+    }                                                                   \
+  } while (0)
 
 void delay(int t) {
   for (int i = 0; i < t; ++i) {}
@@ -88,11 +98,19 @@ int main(void) {
       printk("%#x\n", PFN_TO_KVIRT(list_entry(iter, struct page, free_list)->pfn));
     }
   }
-  //struct page *a = buddy_alloc(1);
-  // struct page *b = buddy_alloc(0);
-  //buddy_free(a, 1);
-  // buddy_free(b, 0);
-  //for (;;) {}
+
+  /* Filesystem initialization */
+  rootfs = (struct mount *)buddy_alloc(0);
+  tmpfs_setup_mount(&tmpfs, rootfs);
+
+  struct file* a = vfs_open("hello", 0);
+  assert(a == NULL);
+  a = vfs_open("hello", O_CREAT);
+  assert(a != NULL);
+  vfs_close(a);
+  struct file* b = vfs_open("hello", 0);
+  assert(b != NULL);
+  vfs_close(b);
 
   idle_task_create();
   privilege_task_create(reaper);
