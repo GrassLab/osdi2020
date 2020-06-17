@@ -47,16 +47,13 @@ int main(int argc, char *argv[]) {
 
   tmpfs->setup_mount(tmpfs, rootfs);
 
-  /* create a file */
-#define assert(exp)                                                            \
-  {                                                                            \
-    if (!(exp))                                                                \
-      return -1;                                                               \
-  }
+/*   /\* create a file *\/ */
+/* #define assert(exp)                                                            \ */
+/*   {                                                                            \ */
+/*     if (!(exp))                                                                \ */
+/*       return -1;                                                               \ */
+/*   } */
 
-  uint8_t buf[512] = {
-      0,
-  };
 
   /* struct path *p = path_name_solver("../../"); */
   /* /\* struct path *r = path_name_solver("x/hello/world"); *\/ */
@@ -74,53 +71,63 @@ int main(int argc, char *argv[]) {
   /* uart_println("====================="); */
 
   /* test1 */
-  vfs_mkdir("/mnt");
-  struct file *a = vfs_open("/mnt/hello.txt", O_CREAT);
 
-  uart_println("[[ list file under \"/mnt/\" ]]");
-  uart_println("=============================");
+  /* uint8_t buf[512] = { */
+  /*     0, */
+  /* }; */
+  /* vfs_mkdir("/mnt"); */
+  /* struct file *a = vfs_open("/mnt/hello.txt", O_CREAT); */
 
-  struct file *root = vfs_open("/mnt", 0);
+  /* uart_println("[[ list file under \"/mnt/\" ]]"); */
+  /* uart_println("============================="); */
 
-  uart_println("=============================");
+  /* struct file *root = vfs_open("/mnt", 0); */
 
-  vfs_write(a, "Hello ", 6);
+  /* uart_println("============================="); */
 
-  vfs_chdir("mnt");
-  struct file *b = vfs_open("./world.txt", O_CREAT);
-  vfs_write(b, "World!", 6);
+  /* vfs_write(a, "Hello ", 6); */
 
-  vfs_close(a);
-  vfs_close(b);
+  /* vfs_chdir("mnt"); */
+  /* struct file *b = vfs_open("./world.txt", O_CREAT); */
+  /* vfs_write(b, "World!", 6); */
 
-  vfs_chdir("..");
+  /* vfs_close(a); */
+  /* vfs_close(b); */
 
-  b = vfs_open("mnt/hello.txt", 0);
-  a = vfs_open("mnt/world.txt", 0);
+  /* vfs_chdir(".."); */
 
-  int sz;
-  sz = vfs_read(b, buf, 100);
-  sz += vfs_read(a, buf + sz, 1);
-  sz += vfs_read(a, buf + sz, 2);
-  sz += vfs_read(a, buf + sz, 3);
-  sz += vfs_read(a, buf + sz, 4);
-  buf[sz] = '\0';
-  uart_println("%s\n", buf); // should be Hello World!
+  /* b = vfs_open("mnt/hello.txt", 0); */
+  /* a = vfs_open("mnt/world.txt", 0); */
+
+  /* int sz; */
+  /* sz = vfs_read(b, buf, 100); */
+  /* sz += vfs_read(a, buf + sz, 1); */
+  /* sz += vfs_read(a, buf + sz, 2); */
+  /* sz += vfs_read(a, buf + sz, 3); */
+  /* sz += vfs_read(a, buf + sz, 4); */
+  /* buf[sz] = '\0'; */
+  /* uart_println("%s\n", buf); // should be Hello World! */
 
 
-  vfs_open("/mnt", 0);
+  /* vfs_open("/mnt", 0); */
 
-  uart_println("============= set mount ============");
-  vfs_mount("tmpfs", "mnt", "tmpfs");
-  uart_println("====================================");
+  /* uart_println("============= set mount ============"); */
+  /* vfs_mount("tmpfs", "mnt", "tmpfs"); */
+  /* uart_println("===================================="); */
 
-  vfs_open("/mnt", 0);
+  /* vfs_open("/mnt", 0); */
 
-  uart_println("============= umount ============");
-  vfs_umount("mnt");
-  uart_println("=================================");
+  /* uart_println("============= umount ============"); */
+  /* vfs_umount("mnt"); */
+  /* uart_println("================================="); */
 
-  vfs_open("/mnt", 0);
+  /* vfs_open("/mnt", 0); */
+
+
+
+
+
+
 
   /* /\* create a directory *\/ */
   /* vfs_mkdir("dir"); */

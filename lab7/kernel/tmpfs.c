@@ -40,10 +40,13 @@ struct __tmpfs *tmpfs_new(unsigned long start, unsigned long end) {
 
 unsigned long tmpfs_alloc(struct __tmpfs *self) {
   /* each file is 512 Byte */
-  if (self->base + BLOCK_SIZE < self->end) {
+  uart_println("self->base + BLOCKSIZE : %x and self->end %x",
+               (self->base + BLOCK_SIZE), self->end);
+  if ((self->base + BLOCK_SIZE) < self->end) {
     self->base += BLOCK_SIZE;
     uart_println("[fs] allocated a size of %d byte by tmpfs", BLOCK_SIZE);
-    return self->count++;
+    self->count = self->count + 1;
+    return self->count - 1;
   }
   uart_println("[fs] fails to allocate a size of %d byte by tmpfs", BLOCK_SIZE);
 
@@ -105,6 +108,7 @@ int tmpfs_file_write(struct file *file, const void *buf, size_t len) {
       file->f_pos > file->vnode->size ? file->f_pos : file->vnode->size;
 
   uart_println("  current file size: %d byte", file->vnode->size);
+  uart_println("  current addr: %x", addr + len);
 
   return len;
 }
@@ -121,17 +125,32 @@ int tmpfs_file_read(struct file *file, void *buf, size_t len) {
 
   uart_println("  read from %x to %x", addr, max_addr);
 
-  int size = 0;
 
-  while (addr < max_addr && *(unsigned long *)(addr) != 0) {
-    /* uart_println("meet: %c", *(unsigned long*)(addr)); */
+  int size = 0;
+  while (addr < max_addr) {
+    if (*(char*)(addr) == 0)
+      break;
     size++;
-    *(unsigned long *)buf++ = *(unsigned long *)(addr++);
+    *(char *)(buf++) = *(char *)(addr++);
   }
 
-  /* udpate f_pos */
   file->f_pos += size;
 
+  /* file->f_pos+=size; */
+  /* return size; */
+
+  /* int size = 0; */
+
+  /* while (addr < max_addr && *(unsigned long *)(addr) != 0) { */
+  /*   /\* uart_println("meet: %c", *(unsigned long*)(addr)); *\/ */
+  /*   size++; */
+  /*   *(unsigned long *)buf++ = *(unsigned long *)(addr++); */
+  /* } */
+
+  /* /\* udpate f_pos *\/ */
+  /* file->f_pos += size; */
+
+  /* return size; */
   return size;
 }
 
@@ -164,6 +183,7 @@ int tmpfs_node_create(struct vnode *dir_node, struct vnode **target,
 
   /* create a block */
   unsigned long b = TmpFs.alloc(global_tmpfs);
+  uart_println("------> block id : %d", b);
   internal->blockid = b;
 
   /* create node */
@@ -186,17 +206,27 @@ int tmpfs_node_create(struct vnode *dir_node, struct vnode **target,
 
 int setup_mount(struct filesystem *fs, struct mount *mount) {
   /* new the tmpfs system */
-  extern unsigned long __bss_end;
-  struct __tmpfs *tmpfs = TmpFs.new((unsigned long)&__bss_end, LOW_MEMORY);
+  unsigned long fs_start = 0x100000;
+  unsigned long fs_end = LOW_MEMORY - 1024;
+  struct __tmpfs *tmpfs = TmpFs.new((unsigned long)fs_start, fs_end);
+
+  uart_println("fs start %x -> %x", fs_start, fs_end);
+  /* memzero(fs_start, fs_end-fs_start); */
+
+  /* return 0; */
+
   global_tmpfs = tmpfs;
   if (!tmpfs) {
     uart_println("error while constructing the tmpfs system");
     return -1;
   }
+
   /* create vnode */
   struct vnode *v = kalloc(sizeof(struct vnode));
   v->mount = mount;
   v->internal = kalloc(sizeof(struct tmpfs_node));
+
+  v->v_ops = kalloc(sizeof(struct vnode_operations));
 
   /* vnode implementation */
   v->v_ops->lookup = tmpfs_node_lookup;
