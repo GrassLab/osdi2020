@@ -8,6 +8,8 @@
 #include "mmu/buddy.h"
 #include "mmu/kmalloc.h"
 #include "mmu/slab.h"
+#include "fs/vfs.h"
+#include "fs/tmpfs.h"
 
 void kernel_main(void) {
     initUART();
@@ -22,46 +24,39 @@ void kernel_main(void) {
     sendUART('\n');
 
     gBuddy.construct();
-    gBuddy.show();
-
-    sendStringUART("\nTesting buddy system...\n\n");
-
-    Page *page1 = gBuddy.allocate(0xe4000);
-    Page *page2 = gBuddy.allocate(0xe40);
-    gBuddy.deallocate(page1);
-    gBuddy.deallocate(page2);
-    
-    sendStringUART("\nTesting slab system...\n\n");
     gSlab.init();
-
-    uint64_t token1 = gSlab.regist(56);
-    void *obj1 = gSlab.allocate(token1);
-    void *obj2 = gSlab.allocate(token1);
-
-    uint64_t token2 = gSlab.regist(36);
-    void *obj3 = gSlab.allocate(token2);
-    void *obj4 = gSlab.allocate(token2);
-
-    gSlab.deallocate(obj2);
-    gSlab.deallocate(obj3);
-    gSlab.deallocate(obj1);
-    gSlab.deallocate(obj4);
-
-    sendStringUART("\nTesting kmalloc system...\n\n");
     kmalloc_init();
 
-    void *obj5 = kmalloc(0xadd);
-    void *obj6 = kmalloc(0xadd);
-    void *obj7 = kmalloc(0x3ffff);
-    void *obj8 = kmalloc(0xddaa);
+    // FIXME: shouldn't ignore return value
+    register_filesystem(newTmpFs());
 
-    kfree(obj5);
-    kfree(obj7);
-    kfree(obj6);
-    kfree(obj8);
+    rootfs = kmalloc(sizeof(struct mount));
+    rootfs->fs = get_filesystem("tmpfs");
+    // TODO
+    rootfs->fs->setup_mount(rootfs->fs, rootfs);
 
-    sendStringUART("\nTesting fini of kmalloc and slab...\n\n");
+    struct file *a = vfs_open("hello", 0);
+    if (!(a == NULL)) {
+        sendStringUART("You should not pass!!! (a == NULL)\n");
+        return;
+    }
+    a = vfs_open("hello", O_CREAT);
+    if (!(a != NULL)) {
+        sendStringUART("You should not pass!!! (a != NULL)\n");
+        return;
+    }
+    vfs_close(a);
+    struct file *b = vfs_open("hello", 0);
+    if (!(b != NULL)) {
+        sendStringUART("You should not pass!!! (b != NULL)\n");
+        return;
+    }
+    vfs_close(b);
+    // end TODO
 
+    rootfs->fs->unset_mount(rootfs);
+    kfree(rootfs);
+    unregister_filesystem();
     kmalloc_fini();
     gSlab.fini();
 

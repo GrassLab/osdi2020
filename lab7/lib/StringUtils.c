@@ -1,3 +1,5 @@
+#include "StringUtils.h"
+
 void stripString(char *str) {
     while (*str != '\0') {
         if (*str == '\n') {
@@ -31,4 +33,12 @@ unsigned int getIntegerFromString(const char *str) {
         ++str;
     }
     return value;
+}
+
+size_t strlen(const char *str) {
+    size_t size = 0;
+    while (*str++) {
+        size++;
+    }
+    return size;
 }
