@@ -152,7 +152,9 @@ void sys_read(struct trapframe* trapframe) {
 }
 
 void sys_readdir(struct trapframe* trapframe) {
-
+    int fd_num = (int)trapframe->x[0];
+    struct file* f = current_task->files.fd[fd_num];
+    trapframe->x[0] = vfs_readdir(f);
 }
 
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
