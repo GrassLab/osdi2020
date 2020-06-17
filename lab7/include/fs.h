@@ -11,6 +11,19 @@ struct vnode {
   void *internal;
 };
 
+struct mount {
+  struct vnode *mp;
+  struct vnode *root;
+  struct filesystem *fs;
+};
+
+struct filesystem {
+  const char *name;
+  int (*setup_mount)(struct filesystem *fs, struct mount *mount);
+  struct filesystem *nextfs;
+  struct mount *mnt;
+};
+
 typedef struct file {
   struct vnode *vnode;
   size_t f_pos;
@@ -37,17 +50,6 @@ typedef struct dir{
   dirent entry;  
   struct directory_operations *dops;
 } DIR;
-
-struct mount {
-  struct vnode *root;
-  struct filesystem *fs;
-};
-
-struct filesystem {
-  const char *name;
-  int (*setup_mount)(struct filesystem *fs, struct mount *mount);
-  struct filesystem *nextfs;
-};
 
 struct file_operations {
   int (*write) (struct file *file, const void *buf, size_t len);
@@ -89,7 +91,7 @@ int vfs_mount(
     const char *dev, const char *mp, const char *fs);
 int vfs_umount(const char *mp);
 
-struct mount *newMnt();
+struct mount *newMnt(struct vnode *mp);
 
 struct vnode *newVnode(
     struct mount *mount,

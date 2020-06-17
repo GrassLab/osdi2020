@@ -1,21 +1,25 @@
 #include "fs.h"
 #include "io.h"
 #include "tmpfs.h"
+#include "string.h"
 #include "allocator.h"
 
 #define xp_func(_path, opset, op, ...) \
   *_path == '/' ? rootfs->root->opset->op( \
       rootfs->root, ## __VA_ARGS__, _path) : \
-    current_task->pwd->opset->op( \
-      current_task->pwd, ## __VA_ARGS__, _path)
+      current_task->pwd->opset->op( \
+          current_task->pwd, ## __VA_ARGS__, _path)
 
 struct mount *rootfs = NULL;
 
 struct filesystem *regedfs = NULL;
 
-struct mount *newMnt(){
-  struct mount *newmnt = (struct mount*)kmalloc(sizeof(struct mount));
-  newmnt->root = NULL, newmnt->fs = NULL;
+struct mount *newMnt(struct vnode *mp){
+  struct mount *newmnt =
+    (struct mount*)kmalloc(sizeof(struct mount));
+  newmnt->mp = mp;
+  newmnt->root = NULL;
+  newmnt->fs = NULL;
   return newmnt;
 }
 
@@ -34,6 +38,7 @@ struct vnode *newVnode(
     struct directory_operations *dops, 
     void *internal){
   struct vnode *node = (struct vnode *)kmalloc(sizeof(struct vnode));
+  node->mount = mount;
   node->v_ops = vops;
   node->f_ops = fops;
   node->d_ops = dops;
@@ -50,21 +55,31 @@ int register_filesystem(struct filesystem *fs) {
   return 0;
 }
 
+struct filesystem *find_fs(const char *name){
+  struct filesystem *fs = regedfs;
+  while(fs){
+    if(EQS(fs->name, name)) break;
+    fs = fs->nextfs;
+  }
+  return fs;
+}
+
 struct file *vfs_open(const char *pathname, int flags) {
   // 1. Lookup pathname from the root vnode.
   struct vnode *target = 0;
-  rootfs->root->v_ops->lookup(rootfs->root, &target, pathname);
-  if(target && target->v_ops->typeof(target) != dirent_file) return NULL;
+  xp_func(pathname, v_ops, lookup, &target);
+  if(target && target->v_ops->typeof(target) != dirent_file)
+    return NULL;
   // 2. Create a new file descriptor for this vnode if found.
   if(!target && flags & O_CREAT)
-    rootfs->root->v_ops->create(rootfs->root, &target, pathname);
+    xp_func(pathname, v_ops, create, &target);
   // 3. Create a new file if O_CREAT is specified in flags.
   return newFd(target, flags);
 }
 
 int vfs_close(struct file *file) {
   // 1. release the file descriptor
-  kfree(file);
+  if(file) kfree(file);
   return 0;
 }
 
@@ -90,7 +105,7 @@ DIR *vfs_opendir(const char *pathname){
   if(xp_func(pathname, d_ops, opendir, dir)){
     return dir;
   }
-  kfree(dir);
+  if(dir) kfree(dir);
   return NULL;
 }
 
@@ -101,7 +116,7 @@ DIR *vfs_opendir_by_node(
   if(node->d_ops->opendir(node, dir, pathname)){
     return dir;
   }
-  kfree(dir);
+  if(dir) kfree(dir);
   return NULL;
 }
 
@@ -112,8 +127,8 @@ dirent *vfs_readdir(DIR *dir){
 }
 
 void vfs_closedir(DIR *dir){
-  if(dir->path) kfree(dir->path);
-  kfree(dir);
+  if(dir && dir->path) kfree(dir->path);
+  if(dir) kfree(dir);
 }
 
 int vfs_mkdir(const char *path){
@@ -131,17 +146,41 @@ int vfs_chdir(const char *path){
 
 
 int vfs_mount(
-    const char *dev, const char *mp, const char *fs){
-  return 0;
+    const char *dev, const char *mpt, const char *fs){
+
+  struct vnode *dev_vnode = 0, *mpt_vnode = 0;
+  xp_func(dev, v_ops, lookup, &dev_vnode);
+
+  struct filesystem *devfs = find_fs(dev);
+  if(devfs && devfs->mnt) dev_vnode = devfs->mnt->root;
+
+  xp_func(mpt, v_ops, lookup, &mpt_vnode);
+
+  if(dev_vnode && mpt_vnode){
+    mpt_vnode->mount = newMnt(mpt_vnode);
+    struct filesystem *newfs = find_fs(fs);
+    if(newfs) newfs->setup_mount(newfs, mpt_vnode->mount);
+    else return 0;
+  } else return 0;
+  return 1;
 }
 
-int vfs_umount(const char *mp){
+int vfs_umount(const char *mpt){
+
+  struct vnode *mpt_vnode = 0;
+  xp_func(mpt, v_ops, lookup, &mpt_vnode);
+  if(mpt_vnode && mpt_vnode->mount){
+    mpt_vnode = mpt_vnode->mount->mp;
+    kfree(mpt_vnode->mount);
+    mpt_vnode->mount = NULL;
+    return 1;
+  }
   return 0;
 }
 
 void fs_init(){
   register_filesystem(tmpfs);
-  tmpfs->setup_mount(tmpfs, rootfs = newMnt());
+  tmpfs->setup_mount(tmpfs, rootfs = newMnt(NULL));
 }
 
 void indent(int n){
@@ -151,6 +190,7 @@ void indent(int n){
 }
 
 void list_dir(DIR *dir, int lv){
+  if(lv > 5) puts("...");
   dirent *entry;
   indent(lv);
   printfmt("{%s}", dir->path);

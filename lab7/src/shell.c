@@ -68,7 +68,6 @@ char *shell_read_line(char *ptr, char *buffer) {
   return beg;
 }
 
-#define EQS(xs, ys) (!strcmp(xs, ys))
 int shell_execute(char *cmd, int el) {
   if(EQS("file", cmd)){
     task_file_op(1);
@@ -119,6 +118,26 @@ int shell_execute(char *cmd, int el) {
     else{
       puts("no such file or directory");
     }
+  }
+  else if(strbeg(cmd, "mount")){
+    char *p = cmd + 5, *b = 0;
+    while(*p == ' ') p++;
+    b = p;
+    while(*b != ' ' && *b) b++;
+    if(*b) *b = 0, b++;
+    while(*b == ' ') b++;
+    vfs_mount(p, b, "tmpfs");
+  }
+  else if(EQS("multilayer", cmd)){
+    task_multilayer(1);
+  }
+  else if(EQS("user", cmd)){
+    privilege_task_create(kexec_user_main, 0, current_task->priority);
+  }
+  else if(strbeg(cmd, "umount")){
+    char *p = cmd + 6;
+    while(*p == ' ') p++;
+    vfs_umount(p);
   }
   else if(strbeg(cmd, "touch")){
     char *p = cmd + 5;

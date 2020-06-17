@@ -150,14 +150,14 @@ void task_vnode_op(int ret){
 
 void task_file_op(int ret){
   char buf[128];
-  struct file* a = vfs_open("hello", O_CREAT);
-  struct file* b = vfs_open("world", O_CREAT);
+  struct file* a = vfs_open("file_op_1.txt", O_CREAT);
+  struct file* b = vfs_open("file_op_2.txt", O_CREAT);
   vfs_write(a, "Hello ", 6);
   vfs_write(b, "World!", 6);
   vfs_close(a);
   vfs_close(b);
-  b = vfs_open("hello", 0);
-  a = vfs_open("world", 0);
+  b = vfs_open("file_op_1.txt", 0);
+  a = vfs_open("file_op_2.txt", 0);
   int sz = vfs_read(b, buf, 100);
   sz += vfs_read(a, buf + sz, 100);
   buf[sz] = '\0';
@@ -167,13 +167,37 @@ void task_file_op(int ret){
 
 void task_read_dir(int ret){
   // create some regular files at root directory
-  struct file* root = vfs_open("read_dir_test_file", O_CREAT);
+  struct file* root = vfs_open("read_dir.txt", O_CREAT);
   // your read directory function
   DIR *dir = vfs_opendir("/");
   if(dir) list_dir(dir, 0);
   // iterate all directory entries and print each file's name.
   vfs_closedir(dir);
   vfs_close(root);
+  if(!ret) exit();
+}
+
+void task_multilayer(int ret){
+  char buf[8];
+  vfs_mkdir("mnt");
+  FILE* fd = vfs_open("/mnt/a.txt", O_CREAT);
+  vfs_write(fd, "Hi", 2);
+  vfs_close(fd);
+  vfs_chdir("mnt");
+  fd = vfs_open("./a.txt", 0);
+  assert(fd);
+  vfs_read(fd, buf, 2);
+  assert(strncmp(buf, "Hi", 2) == 0);
+  vfs_chdir("..");
+  vfs_mount("tmpfs", "mnt", "tmpfs");
+  fd = vfs_open("mnt/a.txt", 0);
+  assert(fd == NULL);
+  vfs_umount("/mnt");
+  fd = vfs_open("/mnt/a.txt", 0);
+  assert(fd >= 0);
+  vfs_read(fd, buf, 2);
+  assert(strncmp(buf, "Hi", 2) == 0);
+  puts("done");
   if(!ret) exit();
 }
 
@@ -190,7 +214,8 @@ void kernel_process(){
   //privilege_task_create(task_vnode_op, 0, current_task->priority);
   //privilege_task_create(task_file_op, 0, current_task->priority);
   //privilege_task_create(task_read_dir, 0, current_task->priority);
-  privilege_task_create(kexec_user_main, 0, current_task->priority);
+  //privilege_task_create(kexec_user_main, 0, current_task->priority);
+  //privilege_task_create(task_multilayer, 0, current_task->priority);
   privilege_task_create(irq_shell_loop, EL, current_task->priority);
   while(1){ delay(500000); schedule(); }
 }

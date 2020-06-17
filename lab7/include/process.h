@@ -9,5 +9,7 @@ void task_varied_aloc(int ret);
 void task_vnode_op(int ret);
 void task_file_op(int ret);
 void task_read_dir(int ret);
+void task_multilayer(int ret);
+void kexec_user_main();
 
 #endif
