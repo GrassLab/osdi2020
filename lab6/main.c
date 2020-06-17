@@ -14,17 +14,18 @@ void main()
 {
     uart_init();
     init_memory();
-    // void* test1 = malloc(sizeof(free_area_t));
-    // void* test2 = malloc(sizeof(free_area_t));
-    // void* test3 = malloc(sizeof(free_area_t));
+
+    void* test1 = malloc(sizeof(free_area_t));
+    void* test2 = malloc(sizeof(free_area_t));
+    void* test3 = malloc(sizeof(free_area_t));
     // void *test4 = malloc(sizeof(free_area_t));
     // void *test5 = malloc(sizeof(free_area_t));
     // void *test6 = malloc(sizeof(free_area_t));
     // void *test7 = malloc(sizeof(free_area_t));
 
-    // free_memory(test1);
-    // free_memory(test2);
-    // free_memory(test3);
+    free_memory(test1);
+    free_memory(test2);
+    free_memory(test3);
     // free_memory(test4);
     // free_memory(test5);
     // free_memory(test6);
