@@ -9,12 +9,10 @@
 #include "syscall.h"
 #include "sched.h"
 #include "mm.h"
-#include "vfs.h"
+#include "tmpfs.h"
 
 task_manager_t TaskManager;
-filesystem_t file_sys;
 task_t* current;
-filesystem_t* file_sys_pointer;
 
 void init_uart(){
     uart_init();
@@ -159,10 +157,7 @@ void main()
     // core_timer_enable();
     init_page_sys();
     // idle_task();
-    filesystem_t* file_sys_pointer = &file_sys;
-    file_sys_pointer->name = "tmpfs";
-    register_filesystem(file_sys_pointer);
-
+    tmpfs_init();
     while(1){
         printf("waittt\n");
         delay(100000000);

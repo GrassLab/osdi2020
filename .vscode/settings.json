@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "thread": "c"
+        "thread": "c",
+        "tmpfs.h": "c",
+        "timer.h": "c"
     }
 }
