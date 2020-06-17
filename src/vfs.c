@@ -46,9 +46,23 @@ void traversal_recursive(struct dentry* node, const char* path, struct vnode** t
         target_path[i] = path[i];
         i++;
     }
-    target_path[i] = '\0';
+    target_path[i++] = '\0';
     *target_node = node->vnode;
-    if (!strcmp(target_path, "")) return;
+    // edge cases check
+    if (!strcmp(target_path, "")) {
+        return;
+    }
+    else if (!strcmp(target_path, ".")) {
+        traversal_recursive(node, path + i, target_node, target_path);
+        return;
+    }
+    else if (!strcmp(target_path, "..")) {
+        if (node->parent == NULL) { // root directory
+            return;
+        }
+        traversal_recursive(node->parent, path + i, target_node, target_path);
+        return;
+    }
     // find in node's child
     struct list_head* p;
     list_for_each(p, &node->childs) {

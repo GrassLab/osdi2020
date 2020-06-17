@@ -22,14 +22,23 @@
 // }
 
 void demo_lab7_ele3() {
-    mkdir("mnt");
+    // create mnt
     int root = open("/", 0);
+    mkdir("mnt");
+    int mnt = open("/mnt", 0);
+    printf("ls root: ");
     readdir(root);
+
+    // chdir
     chdir("mnt");
     int b = open("world", O_CREAT);
-    readdir(root);
-    int mnt = open("/mnt", 0);
+    printf("ls mnt: ");
     readdir(mnt);
+
+    // ..
+    int c = open("../a", O_CREAT);
+    readdir(mnt);
+    readdir(root);
 }
 
 int main() {
