@@ -21,7 +21,8 @@ int32_t registerFilesystem(struct filesystem* fs)
 int32_t createFilesystem(const char *fsname)
 {
     struct filesystem *fs = (struct filesystem *)allocDynamic(sizeof(struct filesystem));;
-    copynstr(fsname, fs->name, 256);
+    fs->name = (char *)allocDynamic(NAME_BUFFER_SIZE);
+    copynstr(fsname, fs->name, NAME_BUFFER_SIZE);
     uartPuts("fs name: ");
     uartPuts(fs->name);
     uartPuts("\n");

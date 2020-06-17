@@ -34,7 +34,8 @@ int32_t __vnodeLookup(struct vnode **target, const char *component, vnode_t type
 int32_t mkvnode(struct vnode *parent, struct vnode **target, const char *name, vnode_t type)
 {
     struct vnode *vn = (struct vnode *)allocSlot(parent->mount->fs->vnode_token);
-    copynstr(name, vn->name, 256);
+    vn->name = (char *)allocDynamic(NAME_BUFFER_SIZE);
+    copynstr(name, vn->name, NAME_BUFFER_SIZE);
 
     uartPuts("mkvnode: ");
     uartPuts(name);
@@ -71,9 +72,9 @@ int32_t mkvnode(struct vnode *parent, struct vnode **target, const char *name, v
 
 int32_t tmpfsVnodeCreate(struct vnode *root, struct vnode **target, const char *pathname)
 {
-    char component[256];
+    char component[NAME_BUFFER_SIZE];
     char *p, *cur;
-    copynstr(pathname, component, 256); 
+    copynstr(pathname, component, NAME_BUFFER_SIZE); 
     p = component;
     cur = component;
 
@@ -116,9 +117,9 @@ int32_t tmpfsVnodeCreate(struct vnode *root, struct vnode **target, const char *
 
 int32_t tmpfsVnodeLookup(struct vnode *root, struct vnode **target, const char *pathname)
 {
-    char component[256];
+    char component[NAME_BUFFER_SIZE];
     char *p, *cur;
-    copynstr(pathname, component, 256); 
+    copynstr(pathname, component, NAME_BUFFER_SIZE); 
     p = component;
     cur = component;
 
@@ -159,12 +160,21 @@ int32_t tmpfsVnodeLookup(struct vnode *root, struct vnode **target, const char *
 int32_t tmpfsFileWrite(struct file *file, const void *buf, size_t len)
 {
     struct fcontent *file_content = (struct fcontent *)file->vnode->internal;
-    char *cur_pos = file_content->content + file->f_pos;
+    char *cur_pos;
+    size_t written;
 
-    if ((1024 - file->f_pos) < len)
-        len = 1024 - file->f_pos;
+    if ((file_content->fsize - file->f_pos) < len)
+    {
+        size_t new_fsize = round(file->f_pos + len);
+        char *tmp = file_content->content;
+        file_content->content = (char *)allocDynamic(new_fsize);
+        copynstr(tmp, file_content->content, new_fsize);
+        file_content->fsize = new_fsize;
+        freeDynamic(tmp);
+    }
 
-    size_t written = copynstr((char *)buf, cur_pos, len);
+    cur_pos = file_content->content + file->f_pos;
+    written = copynstr((char *)buf, cur_pos, len);
 
     file->f_pos += written;
 
@@ -175,12 +185,7 @@ int32_t tmpfsFileRead(struct file *file, void *buf, size_t len)
 {
     struct fcontent *file_content = (struct fcontent *)file->vnode->internal;
     char *cur_pos = file_content->content + sizeof(char) * file->f_pos;
-
-    if ((1024 - file->f_pos) < len)
-        len = 1024 - file->f_pos;
-
     size_t read = copynstr(cur_pos, (char *)buf, len);
-
     file->f_pos += read;
 
     return read;

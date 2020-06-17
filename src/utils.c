@@ -1,6 +1,19 @@
 #include "type.h"
 #include "device/uart.h"
 
+size_t round(size_t src)
+{
+    size_t new_size;
+    for (uint32_t i = 0; i < 32; ++i)
+    {
+        new_size = (1 << i);
+        if (src < new_size)
+            return new_size;
+    }
+
+    return 0;
+}
+
 size_t copynstr(const char *src, char *dst, size_t len)
 {
     size_t i;

@@ -4,16 +4,17 @@
 #include "type.h"
 
 #define O_CREAT   00000100
+#define NAME_BUFFER_SIZE 256
 
 typedef enum
 {
     dir = 0,
-    file = 1
+    file
 } vnode_t;
 
 struct vnode 
 {
-    char name[256];
+    char *name;
     struct mount *mount;
     struct vnodeOperations *v_ops;
     struct fileOperations *f_ops;
@@ -37,7 +38,7 @@ struct mount
 
 struct filesystem 
 {
-    char name[256];
+    char *name;
     int32_t vnode_token;
     int32_t file_token;
     int32_t dentry_token;
