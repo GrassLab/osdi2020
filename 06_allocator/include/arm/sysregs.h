@@ -60,35 +60,4 @@
 #define ESR_ELx_EC_SHIFT        26
 #define ESR_ELx_EC_SVC64        0x15
 
-// ***************************************
-// TCR_EL1, Translation Control Register
-// ***************************************
-#define TCR_CONFIG_REGION_48bit (((64 - 48) << 0) | ((64 - 48) << 16))
-#define TCR_CONFIG_4KB          ((0b00 << 14) |  (0b10 << 30))
-#define TCR_CONFIG_DEFAULT      (TCR_CONFIG_REGION_48bit | TCR_CONFIG_4KB)
-
-// ***************************************
-// MAIR_EL1, Memory Attribute Indirection Register
-// ***************************************
-#define MAIR_DEVICE_nGnRnE      0b00000000
-#define MAIR_NORMAL_NOCACHE     0b01000100
-#define MAIR_IDX_DEVICE_nGnRnE  0
-#define MAIR_IDX_NORMAL_NOCACHE 1
-#define MAIR_CONFIG_DEFAULT     (MAIR_DEVICE_nGnRnE << (MAIR_IDX_DEVICE_nGnRnE * 8)) | (MAIR_NORMAL_NOCACHE << (MAIR_IDX_NORMAL_NOCACHE * 8))
-
-// ***************************************
-// TTBR
-// ***************************************
-#define PD_TABLE            0b11
-#define PD_BLOCK            0b01
-#define PD_PAGE             0b11
-#define PD_ACCESS           (1 << 10) 
-
-#define PGD_ATTR            PD_TABLE
-#define PUD_ATTR            PD_TABLE
-#define PMD_ATTR            PD_TABLE
-
-#define NORMAL_MEM_FLAGS    (PD_ACCESS | (MAIR_IDX_NORMAL_NOCACHE << 2) | PD_PAGE)
-#define DEVICE_MEM_FLAGS    (PD_ACCESS | (MAIR_IDX_DEVICE_nGnRnE << 2)  | PD_PAGE)
-
 #endif

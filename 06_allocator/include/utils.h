@@ -2,7 +2,7 @@
 #define _UTILS_H
 
 #define CHECK(ret) \
-    if (!ret) {    \
+    if (!ret) { \
         return -1; \
     }
 
