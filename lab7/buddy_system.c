@@ -1,43 +1,10 @@
+#include "buddy.h"
 #include "uart.h"
-#include "str.h"
-#include "mailbox.h"
-#include "lfb.h"
-#include "exc.h"
-#include "syscall.h"
 
-#define PAGE_SIZE 4096
-
-#define PAGE_POW 9
-#define NUM_PAGE (1<<PAGE_POW)
-#define LINK_LIST_SIZE (16)
-#define ALLOCATED 1
-#define NO_ALLOCATED 0
-#define USAGE 2
-
-typedef struct link_list{
-	unsigned long long pgnum;
-    struct link_list* next;
-    unsigned long long ppow;
-} link_list;
-
-typedef struct obj_struct{
-	unsigned long long obj_size;
-    unsigned long long bitmap_size; //number of bit
-    struct obj_struct* next;
-} obj_struct;
-
-#define REAL_OBJ_PAGE_SIZE (PAGE_SIZE-sizeof(link_list)-sizeof(obj_struct))
-#define REAL_PAGE_SIZE (PAGE_SIZE-sizeof(link_list))
-
-
-/*typedef struct page{
-    char used;
-} page;*/
 
 __attribute__((section(".userspace"))) link_list *all_link[PAGE_POW+1]; //link start array
 __attribute__((section(".userspace"))) obj_struct *obj_list_start; //link start array
 __attribute__((section(".userspace"))) char page_frame[NUM_PAGE][PAGE_SIZE];
-//__attribute__((section(".userspace"))) page all_page[262144];
 
 void link_init()
 {
@@ -146,7 +113,7 @@ char* mmap(unsigned long long size)
 
 int merge_check(link_list* chunk_check)
 {
-    uart_puts("in merge check\r\n");
+    //uart_puts("in merge check\r\n");
     int now_ppow = chunk_check->ppow, gap, merged=0;
     link_list *now, *low, *prev=0, *next_level_tail; //*high
     now = all_link[now_ppow];
@@ -200,17 +167,18 @@ int merge_check(link_list* chunk_check)
     return merged;
 }
 
-void free(void *fre)
+int free(void *fre)
 {
     link_list* chunk_head = (link_list*)((unsigned long long)fre - sizeof(link_list)), *tmp_next;
     chunk_head->next = 0;
-    if(((unsigned long long)chunk_head-(unsigned long long)page_frame)%PAGE_SIZE != 0) return;
-    my_printf("pgnum: %d , now: %x ,next: %x , ppow: %d\r\n", chunk_head->pgnum, (unsigned long long)chunk_head-(unsigned long long)page_frame, (unsigned long long)chunk_head->next, chunk_head->ppow);
+    if(((unsigned long long)chunk_head-(unsigned long long)page_frame)%PAGE_SIZE != 0) return 0;
+    //my_printf("pgnum: %d , now: %x ,next: %x , ppow: %d\r\n", chunk_head->pgnum, (unsigned long long)chunk_head-(unsigned long long)page_frame, (unsigned long long)chunk_head->next, chunk_head->ppow);
     int ppow = chunk_head->ppow;
     if(all_link[ppow] == 0)
     {
         all_link[ppow] = chunk_head;
         all_link[ppow]->next = 0;
+        return 1;
     }
     else
     {
@@ -223,9 +191,11 @@ void free(void *fre)
                 tmp_next = tmp_next->next; 
             }
             tmp_next->next = chunk_head;
+            return 1;
         }
         //my_printf("gap : %d %d\r\n", tmp_next->pgnum, tmp_next->next->pgnum);
     }
+    return 0;
 }
 
 void print_link_header_state()
@@ -374,7 +344,7 @@ _Bool object_free(void* obj)
     unsigned char *bitmap = (unsigned char*)((unsigned long long)obj_dec + sizeof(obj_struct));
     int char_size = (obj_dec->bitmap_size <= 8) ? 1 :  ( (obj_dec->bitmap_size%8 ==0) ? (obj_dec->bitmap_size/8) : ((obj_dec->bitmap_size/8)+1) );
     int idx = (  ((unsigned long long)obj - ((unsigned long long)bitmap + char_size)) / obj_dec->obj_size  );
-    my_printf("idx : %d\r\n", idx);
+    //my_printf("idx : %d\r\n", idx);
     int offset, checked=1;
     for(unsigned int i=0; i < char_size; i++)
     {
@@ -421,7 +391,7 @@ _Bool object_free(void* obj)
         free(obj_dec);
     }
     //my_printf("idx: %d\r\n", idx);
-    return 0;
+    return 1;
 }
 
 void object_logout(int pgnum)
@@ -479,76 +449,15 @@ void* varied_allocate(unsigned long long size)
     }
 }
 
-void varied_free(void *fre)
+int varied_free(void *fre)
 {
-    link_list* chunk_head = (link_list*)((unsigned long long)fre - sizeof(link_list)), *tmp_next;
+    link_list* chunk_head = (link_list*)((unsigned long long)fre - sizeof(link_list));
     if(((unsigned long long)chunk_head-(unsigned long long)page_frame)%PAGE_SIZE != 0)
     {
-        object_free(fre);
+        return object_free(fre);
     }
     else
     {
-        free(fre);
+        return free(fre);
     }
-}
-
-void main()
-{
-    uart_init();
-    link_init();
-
-    //obj test
-    print_link_header_state();
-
-	int a = registe_object(252), b = registe_object(224), c = registe_object(339);
-    char *kk = object_allocate(a), *zz =  object_allocate(b), *yy =  object_allocate(c);
-
-    print_link_header_state();
-    show_obj_link();
-    object_free(kk);
-    show_obj_link();
-    print_link_header_state();
-    object_free(zz);
-    show_obj_link();
-    print_link_header_state();
-    
-    /*object_allocate(a);
-    print_obj_bitmap(a);
-    object_free(kk);
-    print_obj_bitmap(a);*/
-
-
-    //map test
-    /*char *a = mmap(28672), *b = mmap(28672), *c = mmap(28672), *d = mmap(28672), *e = mmap(3000), *f = mmap(61440);
-    char *w = mmap(28672), *x = mmap(28672), *y = mmap(28672), *z = mmap(28672);
-
-    print_link_header_state();
-    free(c);
-    print_link_header_state();
-    free(a);
-    print_link_header_state();
-    free(b);
-    print_link_header_state();
-    free(d);
-    print_link_header_state();
-    
-    free(y);
-    print_link_header_state();
-    free(w);
-    print_link_header_state();
-    free(x);
-    print_link_header_state();
-    free(z);
-    print_link_header_state();
-    free(e);
-    print_link_header_state();
-    free(f);
-    print_link_header_state();*/
-
-    //void *a = varied_allocate(123), *b = varied_allocate(456), *c = varied_allocate(28672), *d = varied_allocate(28672), *e = varied_allocate(3000), *f = varied_allocate(61440);
-    //my_printf("a: 0x%x, b: 0x%x, c: 0x%x, d: 0x%x, e: 0x%x, f: 0x%x\r\n", (unsigned long long)a-(unsigned long long)page_frame, (unsigned long long)b-(unsigned long long)page_frame, (unsigned long long)c-(unsigned long long)page_frame,(unsigned long long)d-(unsigned long long)page_frame,(unsigned long long)e-(unsigned long long)page_frame,(unsigned long long)f-(unsigned long long)page_frame);
-    //uart_hex((unsigned long long)a);
-    //my_printf("a: %x, b: %x\r\n", (unsigned long long)a, (unsigned long long)b);
-	while(1);
-	
 }

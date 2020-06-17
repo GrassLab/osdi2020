@@ -1,6 +1,8 @@
-int my_strcmp(const char *X, const char *Y)
+#include "uart.h"
+int my_strcmp(const char *X, const char *Y, int size)
 {
-	while(*X)
+    int count=0;
+	while(*X && (count < size))
 	{
 		// if characters differ or end of second string is reached
 		if (*X != *Y)
@@ -9,6 +11,7 @@ int my_strcmp(const char *X, const char *Y)
 		// move to next pair of characters
 		X++;
 		Y++;
+        count++;
 	}
 	// return the ASCII difference after converting char* to unsigned char*
 	return *(const unsigned char*)X - *(const unsigned char*)Y;
@@ -93,4 +96,26 @@ long my_atoi(const char* S)
 	}
 
 	return num;
+}
+
+int my_strcpy(char *s1, const char *s2, int size)
+{
+    char *tmp = s1;
+    int count=0;
+	if ((s1 == 0) || (s2 == 0))
+	{
+		return 0;
+	}
+
+	for (; *s2 != '\0'; tmp++, s2++)
+	{
+        if(count >= size) break;
+        //uart_send(*s2);
+		*tmp = *s2;
+        count++;
+	}
+    *tmp=0;
+
+	return 1;
+
 }
