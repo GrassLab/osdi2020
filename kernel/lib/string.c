@@ -50,6 +50,9 @@ char *strtok(char *str, const char *delim) {
   if (str != NULL) {
     last_pos = str;
   }
+  if (*last_pos == '\0') {
+    return NULL;
+  }
   char *tmp = last_pos;
   for (; *last_pos != '\0'; ++last_pos) {
     for (int i = 0; i < strlen(delim); ++i) {
