@@ -48,7 +48,7 @@ struct vnode {
 
 struct vnode_operations {
   int (*lookup)(struct vnode* dir_node, struct vnode** target, const char* component_name);
-  int (*create)(struct vnode* dir_node, struct vnode** target, const char* component_name);
+  int (*create)(struct vnode* dir_node, struct vnode** target, const char* component_name, int type);
 };
 
 void register_filesystem(struct filesystem* fs, char *fs_name);

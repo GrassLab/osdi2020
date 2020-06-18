@@ -58,6 +58,7 @@ void kernel_main()
 	vfs_close(a);
 	vfs_close(b);
 	printf("%s\r\n", buf);
+	
 	vfs_ls("/", REG_DIR);
 	enable_core_timer();
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
