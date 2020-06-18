@@ -12,6 +12,7 @@
 #include "sys.h"
 #include "slab.h"
 #include "vfs.h"
+#include "tmpfs.h"
 
 extern unsigned long user_begin;
 extern unsigned long user_end;
@@ -35,17 +36,20 @@ void kernel_main()
 	irq_vector_init();
 	init_buddy_system();
 	init_obj_allocator();
-	
+	char name[20] = "tmpfs1";
+	struct filesystem *tmpfs_1;
+	setup_tmpfs(&tmpfs_1, name);
+	register_filesystem(tmpfs_1, "tmpfs");
 	init_root_filesystem();
-	mkdir("mnt");
-	struct file* a = vfs_open("hello_k", REG_FILE | O_CREAT);
-	struct file* b = vfs_open("world_k", REG_FILE | O_CREAT); 
+	
+	struct file* a = vfs_open("hello", REG_FILE | O_CREAT);
+	struct file* b = vfs_open("world", REG_FILE | O_CREAT); 
 	vfs_write(a, "Hello ", 6);
 	vfs_write(b, "World!", 6);
 	vfs_close(a);
 	vfs_close(b);
-	b = vfs_open("hello_k", REG_FILE);
-	a = vfs_open("world_k", REG_FILE);
+	b = vfs_open("hello", REG_FILE);
+	a = vfs_open("world", REG_FILE);
 	int sz;
 	char buf[100];
 	sz  = vfs_read(b, buf, 100);
@@ -54,7 +58,6 @@ void kernel_main()
 	vfs_close(a);
 	vfs_close(b);
 	printf("%s\r\n", buf);
-	vfs_open("/", REG_DIR);
 	enable_core_timer();
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
 	

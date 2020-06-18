@@ -51,7 +51,6 @@ struct vnode_operations {
   int (*create)(struct vnode* dir_node, struct vnode** target, const char* component_name);
 };
 
-
 void register_filesystem(struct filesystem* fs, char *fs_name);
 struct file* vfs_open(const char* pathname, int flags);
 int vfs_close(unsigned long file);
