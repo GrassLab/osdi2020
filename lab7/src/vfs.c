@@ -67,6 +67,17 @@ void create_file_vnode(struct vnode *dir_vnode, char *comp_name, struct file *cr
     return;
 }
 
+void iterate_dir(struct directory *dir) {
+    if(dir->head == 0) return 0;
+    struct direntry *iter_entry = dir->head;
+    if(iter_entry == 0) return 0;
+    while(iter_entry != 0) {
+        printf("%s\r\n", ((struct direntry*)iter_entry)->name);
+        iter_entry = iter_entry->next;
+    }
+    return 0;
+}
+
 struct vnode *create_dir_vnode() {
     struct vnode *create_vnode     = obj_allocate(sizeof(struct vnode));
     create_vnode->type             = REG_DIR;
@@ -105,7 +116,12 @@ void init_root_filesystem() {
     struct filesystem *root_fs = filesystem_array[0];
     rootfs_mount = (struct mount *)obj_allocate(sizeof(struct mount));
     root_fs->setup_mount(root_fs, rootfs_mount);
-    
+}
+
+void vfs_ls(const char* pathname, int flags) {
+    struct vnode *root_vnode = rootfs_mount->root;
+    struct directory *start_dir = (struct directory *)root_vnode->internal;
+    iterate_dir(start_dir);
 }
 
 struct file* vfs_open(const char* pathname, int flags) { 
