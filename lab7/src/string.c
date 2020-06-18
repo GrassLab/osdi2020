@@ -60,3 +60,35 @@ void _unsign_arr_to_digit(unsigned num, char* buf, unsigned len){
 	}
 }
 
+char *strcpy(char *dest, const char *src){
+    char *odest = dest;
+    while( (*dest++ = *src++) );
+    return odest;
+}
+
+char *strtok(char *s, const char delim){
+    static char *pos;
+    char* ret;
+	// s is not null, use new data
+	// if not, use static pos(old data, new split location)
+    if(s) pos = s;
+    
+    if(*pos == '\0') return 0;
+    // skip continuous the same delim
+    while(*pos == delim){
+        pos ++;
+    }
+
+	//ret is head
+	//pos is head of next split
+    ret = pos;
+    while(*pos != delim && *pos != '\0'){
+        pos ++;
+    }
+    if (*pos != '\0'){
+        *pos = '\0';
+		//pos is head of next split
+        pos ++;
+    }
+    return ret;
+}

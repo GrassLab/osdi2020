@@ -183,16 +183,16 @@ int slub_size_to_index(int size){
 }
 
 
-unsigned long allocate_memory(int size){
+void* kmalloc(int size){
     if(size > 4096){
         int page_num = size >> 12;
         page_t* p = get_pages_from_list(page_num);
-        return p->phy_addr;
+        return (void*)p->phy_addr;
     }
     return give_slab(size);
 }
 
-void receive_memory(unsigned long physical_addr){
+void kfree(unsigned long physical_addr){
     unsigned long page_frame_number = physical_to_pfn(physical_addr);
     if(page_t_pool[page_frame_number].slub_index != -1){
         receive_slub(physical_addr);
@@ -245,7 +245,7 @@ void init_kmalloc_caches(){
     }
 }
 
-unsigned long give_one_slub(int slub_index){
+void* give_one_slub(int slub_index){
     slub_t* slub = kmem_cache_arr[slub_index].cache_cpu.free_list;
     printf("######################\n");
     // printf("allocate slub addr is: %x\n", slub->phy_addr);
@@ -258,7 +258,7 @@ unsigned long give_one_slub(int slub_index){
         printf("&&&&&&&&&&&&&&&&&&&&&&& add to partial page number is %d\n",kmem_cache_arr[slub_index].cache_cpu.page->page_index);
         list_add_tail(&(kmem_cache_arr[slub_index].cache_cpu.page->list),&kmem_cache_arr[slub_index].cache_cpu.partial);
     }
-    return (unsigned long)slub;
+    return slub;
 }
 
 page_t* find_partial_free_slub(int slub_index){
@@ -287,7 +287,7 @@ page_t* find_partial_free_slub(int slub_index){
     return (page_t*)NULL;
 }
 
-unsigned long give_slab(int size){
+void* give_slab(int size){
     int slub_index = slub_size_to_index(size);
     printf("slub index is %d\n",slub_index);
     if(kmem_cache_arr[slub_index].cache_cpu.free_list == NULL){
@@ -404,100 +404,99 @@ void buddy_sys_test(){
 void test(int test_all){
     unsigned long c1,c2,c3,c4,c5,c6;
     if(test_all)
-        c1 = allocate_memory(9000);
+        c1 = (unsigned long)kmalloc(9000);
 
 
-    unsigned long a = allocate_memory(256);
+    unsigned long a = (unsigned long)kmalloc(256);
 
-    unsigned long a2 = allocate_memory(513);
-    unsigned long a3 = allocate_memory(513);
-    unsigned long a4 = allocate_memory(513);
-
-    if(test_all)
-        receive_memory(c1);
-    if(test_all)
-        c2 = allocate_memory(8000);
-
-    unsigned long a5 = allocate_memory(513);
-    unsigned long a6 = allocate_memory(513);
-
-    receive_memory(a3);
-    receive_memory(a2);
-    receive_memory(a4);
-    receive_memory(a5);
+    unsigned long a2 = (unsigned long)kmalloc(513);
+    unsigned long a3 = (unsigned long)kmalloc(513);
+    unsigned long a4 = (unsigned long)kmalloc(513);
 
     if(test_all)
-        receive_memory(c2);
+        kfree(c1);
+    if(test_all)
+        c2 = (unsigned long)kmalloc(8000);
+
+    unsigned long a5 = (unsigned long)kmalloc(513);
+    unsigned long a6 = (unsigned long)kmalloc(513);
+
+    kfree(a3);
+    kfree(a2);
+    kfree(a4);
+    kfree(a5);
+
+    if(test_all)
+        kfree(c2);
 
 
-    unsigned long b1 = allocate_memory(513);
-    unsigned long b2 = allocate_memory(513);
-    unsigned long b3 = allocate_memory(513);
-    receive_memory(b3);
-    unsigned long b4 = allocate_memory(513);
-    receive_memory(a6);
+    unsigned long b1 = (unsigned long)kmalloc(513);
+    unsigned long b2 = (unsigned long)kmalloc(513);
+    unsigned long b3 = (unsigned long)kmalloc(513);
+    kfree(b3);
+    unsigned long b4 = (unsigned long)kmalloc(513);
+    kfree(a6);
 
-    unsigned long a7 = allocate_memory(513);
-    unsigned long a8 = allocate_memory(513);
-    unsigned long a9 = allocate_memory(513);
-    unsigned long a10 = allocate_memory(513);
-    unsigned long a11 = allocate_memory(513);
+    unsigned long a7 = (unsigned long)kmalloc(513);
+    unsigned long a8 = (unsigned long)kmalloc(513);
+    unsigned long a9 = (unsigned long)kmalloc(513);
+    unsigned long a10 = (unsigned long)kmalloc(513);
+    unsigned long a11 = (unsigned long)kmalloc(513);
 
-    receive_memory(a);
+    kfree(a);
 
-    receive_memory(a8);
-    receive_memory(a7);
+    kfree(a8);
+    kfree(a7);
     
     if(test_all)
-        c3 = allocate_memory(10000);
+        c3 = (unsigned long)kmalloc(10000);
 
-    receive_memory(a9);
-    receive_memory(a10);
+    kfree(a9);
+    kfree(a10);
     
     if(test_all)
-        receive_memory(c3);
+        kfree(c3);
 
-    receive_memory(a11);
+    kfree(a11);
 
     if(test_all)
-        c4 = allocate_memory(15000);
+        c4 = (unsigned long)kmalloc(15000);
 
-    receive_memory(b1);
-    receive_memory(b2);
+    kfree(b1);
+    kfree(b2);
     
     if(test_all)
-        receive_memory(c4);
+        kfree(c4);
 
     if(test_all)
-        c5 = allocate_memory(30000);
+        c5 = (unsigned long)kmalloc(30000);
     if(test_all)
-        c6 = allocate_memory(25000);
+        c6 = (unsigned long)kmalloc(25000);
     
-    receive_memory(b4);
+    kfree(b4);
 
     if(test_all)
-        receive_memory(c5);
+        kfree(c5);
     if(test_all)
-        receive_memory(c6);
+        kfree(c6);
 }
 
 void test2(){
-    unsigned long b3 = allocate_memory(513);
-    receive_memory(b3);
+    unsigned long b3 = (unsigned long)kmalloc(513);
+    kfree(b3);
 
-    unsigned long a7 = allocate_memory(513);
-    receive_memory(a7);
+    unsigned long a7 = (unsigned long)kmalloc(513);
+    kfree(a7);
 
+    unsigned long a8 = (unsigned long)kmalloc(513);
+    unsigned long a9 = (unsigned long)kmalloc(513);
+    unsigned long a10 = (unsigned long)kmalloc(513);
+    unsigned long a11 = (unsigned long)kmalloc(513);
 
-    unsigned long a8 = allocate_memory(513);
-    unsigned long a9 = allocate_memory(513);
-    unsigned long a10 = allocate_memory(513);
-    unsigned long a11 = allocate_memory(513);
-
-    receive_memory(a8);
-    receive_memory(a9);
-    receive_memory(a10);
-    receive_memory(a11);
+    kfree(a8);
+    kfree(a9);
+    kfree(a10);
+    kfree(a11);
 
 }
 
@@ -543,6 +542,10 @@ void init_page_sys(){
     }
     print_buddy_info();
     printf("------\n");
+}
+
+void mem_alloc_init(){
+    init_page_sys();
     init_kmalloc_caches();
     test(1);
     print_buddy_info();
