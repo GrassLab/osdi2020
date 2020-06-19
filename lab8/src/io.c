@@ -1,4 +1,7 @@
 #include "io.h"
+#include "fs.h"
+#include "string.h"
+#include "allocator.h"
 
 #undef __print_as_number
 #define __print_as_number(type)                                                \
@@ -54,4 +57,15 @@ unsigned long long get_nature(char *p, int base, int echo) {
 
 void print_ident(int indent){
   while(indent--) printf(" ");
+}
+
+void fprintf(FILE *fd, char *fmt, ...) {
+  __builtin_va_list args;
+  __builtin_va_start(args, fmt);
+  char *buffer = (char*)kmalloc(256 * sizeof(char));
+  if(fd){
+    vsprintf(buffer, fmt, args);
+    vfs_write(fd, buffer, strlen(buffer));
+  } else vsprintf(0, fmt, args);
+;
 }

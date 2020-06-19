@@ -69,7 +69,25 @@ char *shell_read_line(char *ptr, char *buffer) {
 }
 
 int shell_execute(char *cmd, int el) {
-  if(EQS("file", cmd)){
+  int ret = 0;
+  FILE *fd = stdout;
+  char *e = cmd + strlen(cmd);
+  while(e > cmd){
+    e--;
+    if(*e == '>'){
+      *e = 0;
+      e++;
+      while(*e == ' ') e++;
+      char *p = e;
+      while(*p && !strchr(" \r\t\n", *p)) p++;
+      *p = 0;
+      fd = vfs_open(e, O_CREAT);
+    }
+  }
+  if(strbeg(cmd, "echo")){
+    fprintf(fd, "%s" NEWLINE, cmd + 5);
+  }
+  else if(EQS("file", cmd)){
     task_file_op(1);
   }
   else if(EQS("vnode", cmd)){
@@ -108,12 +126,15 @@ int shell_execute(char *cmd, int el) {
   }
   else if(strbeg(cmd, "cat")){
     char *p = cmd + 3, buf[128];
+    char *b = p + strlen(p);
+    while(b > p && strchr(" \r\t\n", *b)) b--;
+    *(b + 1) = 0;
     while(*p == ' ') p++;
-    FILE *fd = vfs_open(p, 0);
-    if(fd){
-      vfs_read(fd, buf, 100);
-      puts(buf);
-      vfs_close(fd);
+    FILE *cat_fd = vfs_open(p, 0);
+    if(cat_fd){
+      vfs_read(cat_fd, buf, 100);
+      fprintf(fd, buf);
+      vfs_close(cat_fd);
     }
     else{
       puts("no such file or directory");
@@ -181,7 +202,7 @@ int shell_execute(char *cmd, int el) {
   else if (EQS("reboot", cmd)) {
     puts("rebooting...");
     reboot();
-    return -1;
+    ret = -1;
   }
   else if (EQS("exit", cmd) || cmd[0] == 4) {
     //*DISABLE_IRQS_1 = (SYSTEM_TIMER_IRQ_1 | AUX_IRQ_MSK);
@@ -190,7 +211,7 @@ int shell_execute(char *cmd, int el) {
     //__asm__ volatile("mov x8, #2");
     //__asm__ volatile("svc #0");
     //__asm__ volatile("ldp x8, x9, [sp], #16");
-    return -1;
+    ret = -1;
   }
   else if (EQS("clear", cmd)) {
     print("\e[1;1H\e[2J");
@@ -282,9 +303,10 @@ int shell_execute(char *cmd, int el) {
   }
   else if (strlen(cmd)) {
     print("command not found: ", cmd, NEWLINE);
-    return 1;
+    ret = 1;
   }
-  return 0;
+  if(fd) vfs_close(fd);
+  return ret;
 }
 
 char *shell_stuff_line(char c, char **ptr, char *buffer) {

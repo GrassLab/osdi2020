@@ -33,19 +33,21 @@ void parse_filename(const char *name, char *fn, char *ext){
 }
 
 void encode_filename(const char *name, char *code){
+  char *c = code;
   for(int i = 0; i < 8; i++){
     if(*name == '.') break;
     if(*name == ' ') name++;
-    *code = *name;
-    code++, name++;
+    *c = *name;
+    c++, name++;
   }
   while(*name && *name != '.') name++;
+  while(c < code + 8) *c++ = ' ';
   if(*name == '.'){
     name++;
     for(int i = 0; i < 3; i++){
       if(!*name) break;
-      *code = *name;
-      code++, name++;
+      *c = *name;
+      c++, name++;
     }
   }
 }

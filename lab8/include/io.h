@@ -4,6 +4,7 @@
 #include "map.h"
 #include "sprintf.h"
 #include "uart.h"
+#include "fs.h"
 
 #define NEWLINE "\r\n"
 
@@ -54,5 +55,9 @@ int expect(char *s);
 unsigned long long get_nature(char *, int, int);
 
 void print_ident(int indent);
+
+void fprintf(FILE *fd, char *fmt, ...);
+
+#define stdout NULL
 
 #endif
