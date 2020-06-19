@@ -1,6 +1,7 @@
 #include "fs.h"
 #include "io.h"
 #include "tmpfs.h"
+#include "fat32.h"
 #include "string.h"
 #include "allocator.h"
 
@@ -13,6 +14,12 @@
 struct mount *rootfs = NULL;
 
 struct filesystem *regedfs = NULL;
+
+struct vnode *move_mount_root(struct vnode *node){
+  if(node && node->mount && node->mount->root != node)
+    return node->mount->root;
+  return node;
+}
 
 struct mount *newMnt(struct vnode *mp, struct vnode *root){
   struct mount *newmnt =
@@ -68,6 +75,9 @@ struct file *vfs_open(const char *pathname, int flags) {
   // 1. Lookup pathname from the root vnode.
   struct vnode *target = 0;
   xp_func(pathname, v_ops, lookup, &target);
+
+  target = move_mount_root(target);
+
   if(target && target->v_ops->typeof(target) != dirent_file)
     return NULL;
   // 2. Create a new file descriptor for this vnode if found.
@@ -139,30 +149,43 @@ int vfs_chdir(const char *path){
   return xp_func(path, d_ops, chdir);
 }
 
-
 int vfs_mount(
     const char *dev, const char *mpt, const char *fs){
 
   struct vnode *dev_vnode = 0, *mpt_vnode = 0;
   xp_func(dev, v_ops, lookup, &dev_vnode);
 
+  dev_vnode = move_mount_root(dev_vnode);
+
   struct filesystem *devfs = find_fs(dev);
   if(devfs && devfs->mnt) dev_vnode = devfs->mnt->root;
 
   xp_func(mpt, v_ops, lookup, &mpt_vnode);
 
-  if(dev_vnode && mpt_vnode){
+  mpt_vnode = move_mount_root(mpt_vnode);
+
+  if(mpt_vnode){
     mpt_vnode->mount = newMnt(mpt_vnode, dev_vnode);
     printfmt("new mount %x", mpt_vnode->mount);
     struct filesystem *newfs = find_fs(fs);
     if(newfs) newfs->setup_mount(newfs, mpt_vnode->mount);
-    else return 0;
-  } else return 0;
+    else { puts("cannot find fs"); return 0; }
+  } else { puts("cannot find mpt vnode"); return 0; }
   return 1;
 }
 
 int vfs_umount(const char *mpt){
-  return xp_func(mpt, v_ops, umount);
+  struct vnode *mpt_vnode = 0;
+  xp_func(mpt, v_ops, lookup, &mpt_vnode);
+  if(mpt_vnode && mpt_vnode->mount){
+    printfmt("root mount %x", (rootfs));
+    printfmt("release mount %x", (mpt_vnode->mount));
+    kfree(mpt_vnode->mount);
+    mpt_vnode->mount = NULL;
+    return 1;
+  }
+  return 0;
+  //return xp_func(mpt, v_ops, umount);
 }
 
 void indent(int n){
@@ -197,4 +220,20 @@ void list_dir(DIR *dir, int lv){
 void fs_init(){
   register_filesystem(tmpfs);
   tmpfs->setup_mount(tmpfs, rootfs = newMnt(NULL, NULL));
+  register_filesystem(fat32);
+}
+
+int subpath_of(const char *sub, const char *full){
+  while(*sub){
+    if(*full == *sub) full++, sub++;
+    else break;
+  }
+  return (*full == '/' || *full == 0) && *sub == 0;
+}
+
+int exist_slash(const char *path){
+  while(*path)
+    if(*path == '/') return 1;
+    else path++;
+  return 0;
 }

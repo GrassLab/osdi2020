@@ -51,3 +51,7 @@ unsigned long long get_nature(char *p, int base, int echo) {
     putchar(c);
   return n;
 }
+
+void print_ident(int indent){
+  while(indent--) printf(" ");
+}

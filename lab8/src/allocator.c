@@ -67,7 +67,6 @@ unsigned long startup_max_cont_space_left(unsigned long mask){
     end = HIGH_MEMORY;
     beg = startup_addrs[i] + startup_sizes[i];
     if(mask & beg) beg = (~mask & beg) + (mask + 1);
-    printfmt("new beg %x", beg);
     for(int j = 0; j < startup_cur; j++){
       if(startup_addrs[j] > beg && end > startup_addrs[j])
         end = startup_addrs[j];

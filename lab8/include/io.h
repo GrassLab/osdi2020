@@ -53,4 +53,6 @@ define__print_as_number_types();
 int expect(char *s);
 unsigned long long get_nature(char *, int, int);
 
+void print_ident(int indent);
+
 #endif

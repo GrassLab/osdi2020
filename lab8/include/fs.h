@@ -67,8 +67,6 @@ struct vnode_operations {
   int (*lookup)(struct vnode *node, struct vnode **target, const char *component_name);
   int (*create)(struct vnode *node, struct vnode **target, const char *component_name);
   enum dirent_type (*typeof)(struct vnode *node);
-  int (*mount)(struct vnode *node, const char *dev, const char *fs, const char *mp);
-  int (*umount)(struct vnode *node, const char *mp);
 };
 
 extern struct mount *rootfs;
@@ -106,4 +104,7 @@ void list_dir(DIR *dir, int lv);
 #define EOF     4
 
 void fs_init();
+int subpath_of(const char *sub, const char *full);
+int exist_slash(const char *path);
+struct vnode *move_mount_root(struct vnode *node);
 #endif

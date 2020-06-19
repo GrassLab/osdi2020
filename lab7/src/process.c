@@ -202,22 +202,10 @@ void task_multilayer(int ret){
 }
 
 void task_setup(int ret){
-
   FILE *p = vfs_open("setup.txt", O_CREAT);
   vfs_close(p);
-
-  //vfs_mkdir("mnt");
   vfs_mkdir("tmp");
-  //FILE* fd = vfs_open("/mnt/a.txt", O_CREAT);
-  //vfs_write(fd, "Hi", 2);
-  //vfs_close(fd);
-  //vfs_chdir("mnt");
-  //fd = vfs_open("./a.txt", 0);
-  //assert(fd);
-  //vfs_chdir("..");
   vfs_mount("tmpfs", "tmp", "tmpfs");
-  //vfs_umount("/mnt");
-  puts("return");
   if(!ret) exit();
 }
 

@@ -98,7 +98,7 @@ runmini: $(IMG)
 	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
 
 run: $(IMG)
-	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none
+	@$(QEMU) -serial null -serial stdio -M raspi3 -kernel $(IMG) -display none -drive if=sd,file=sfn_nctuos.img,format=raw
 
 runt: stamp.img
 	@$(QEMU) -serial stdio -M raspi3 -kernel stamp.img

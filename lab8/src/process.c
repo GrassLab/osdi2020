@@ -7,6 +7,8 @@
 #include "allocator.h"
 #include "type.h"
 #include "fs.h"
+#include "sdhost.h"
+#include "fat32.h"
 
 void zombie_reaper(int show){
   char msg[20];
@@ -179,21 +181,21 @@ void task_read_dir(int ret){
 
 void task_multilayer(int ret){
   char buf[8];
-  vfs_mkdir("mnt");
-  FILE* fd = vfs_open("/mnt/a.txt", O_CREAT);
+  vfs_mkdir("tmp");
+  FILE* fd = vfs_open("/tmp/a.txt", O_CREAT);
   vfs_write(fd, "Hi", 2);
   vfs_close(fd);
-  vfs_chdir("mnt");
+  vfs_chdir("tmp");
   fd = vfs_open("./a.txt", 0);
   assert(fd);
   vfs_read(fd, buf, 2);
   assert(strncmp(buf, "Hi", 2) == 0);
   vfs_chdir("..");
-  vfs_mount("tmpfs", "mnt", "tmpfs");
-  fd = vfs_open("mnt/a.txt", 0);
+  vfs_mount("tmpfs", "tmp", "tmpfs");
+  fd = vfs_open("tmp/a.txt", 0);
   assert(fd == NULL);
-  vfs_umount("/mnt");
-  fd = vfs_open("/mnt/a.txt", 0);
+  vfs_umount("/tmp");
+  fd = vfs_open("/tmp/a.txt", 0);
   assert(fd >= 0);
   vfs_read(fd, buf, 2);
   assert(strncmp(buf, "Hi", 2) == 0);
@@ -202,22 +204,12 @@ void task_multilayer(int ret){
 }
 
 void task_setup(int ret){
-
-  FILE *p = vfs_open("setup.txt", O_CREAT);
-  vfs_close(p);
-
-  //vfs_mkdir("mnt");
+  vfs_mkdir("mnt");
+  if(!vfs_mount("fat32", "mnt", "fat32"))
+    puts("mount fat32 failed.");
   vfs_mkdir("tmp");
-  //FILE* fd = vfs_open("/mnt/a.txt", O_CREAT);
-  //vfs_write(fd, "Hi", 2);
-  //vfs_close(fd);
-  //vfs_chdir("mnt");
-  //fd = vfs_open("./a.txt", 0);
-  //assert(fd);
-  //vfs_chdir("..");
-  vfs_mount("tmpfs", "tmp", "tmpfs");
-  //vfs_umount("/mnt");
-  puts("return");
+  if(!vfs_mount("tmpfs", "tmp", "tmpfs"))
+    puts("mount tmpfs failed.");
   if(!ret) exit();
 }
 
@@ -230,6 +222,7 @@ void kernel_process(){
   //privilege_task_create(task_buddy_aloc, 0, current_task->priority);
   //privilege_task_create(task_fixed_aloc, 0, current_task->priority);
   //privilege_task_create(task_varied_aloc, 0, current_task->priority);
+  privilege_task_create(irq_shell_loop, EL, current_task->priority);
   privilege_task_create(zombie_reaper, 0, current_task->priority);
   //privilege_task_create(task_vnode_op, 0, current_task->priority);
   //privilege_task_create(task_file_op, 0, current_task->priority);
@@ -237,6 +230,5 @@ void kernel_process(){
   //privilege_task_create(kexec_user_main, 0, current_task->priority);
   //privilege_task_create(task_multilayer, 0, current_task->priority);
   privilege_task_create(task_setup, 0, current_task->priority);
-  privilege_task_create(irq_shell_loop, EL, current_task->priority);
   while(1){ delay(500000); schedule(); }
 }
