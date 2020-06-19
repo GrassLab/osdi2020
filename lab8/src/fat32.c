@@ -249,10 +249,6 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
   struct vnode **iter = &(Fat32fd(dir)->child); 
 
   while(*fentry->filename){
-    printfmt("%s %2x %2x",
-        fentry->filename,
-        fentry->start_hi,
-        fentry->start_lo);
     if(fentry->attr & 0x10){
       *iter = newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
           newFat32File(fentry, dir));

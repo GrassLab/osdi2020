@@ -28,16 +28,15 @@ int main(void) {
   uart_init();
   //lfb_init();
   //lfb_showpicture();
-  if((unsigned long)&_kend >= LOW_MEMORY)
-    puts("[ALERT]LOW_MEMORY is not \"low\" enough, it will overlap with kernel");
+  if((unsigned long)&_kend >= (LOW_MEMORY | VA_START))
+    printfmt("[ALERT] LOW_MEMORY 0x%x is not \"low\" enough, it will overlap with kernel 0x%x",
+        LOW_MEMORY, &_kend);
 
 #ifdef TEST
   puts("");
   ASSERT(bss_all_be() == 0);
   ASSERT((unsigned long long)stack_pointer() < (unsigned long long)0x80000);
 #endif
-
-  puts("HELLO WORLD SUCCESSFULLY");
 
   while (1) {
 
