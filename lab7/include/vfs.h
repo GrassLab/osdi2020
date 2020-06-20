@@ -16,6 +16,7 @@ typedef struct vnode_t
     struct vnode_operations_t *v_ops;
     struct file_operations_t *f_ops;
     void *internal;
+    size_t v_size;
 } vnode_t;
 
 typedef struct file_t

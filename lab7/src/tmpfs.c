@@ -91,6 +91,7 @@ int tmpfs_write(file_t * file, const void * buf, size_t len)
         file_text[file->f_pos++] = buffer[i];
     }
 
+    vnode->v_size = len;
     file_text[i] = EOF;
     return i;
 }
@@ -104,7 +105,7 @@ int tmpfs_read(file_t * file, void * buf, size_t len)
 	char *buffer = (char *)buf;
 	unsigned int i = 0;	
 	for(; i < len; i++){
-		if(file_text[i] != (unsigned char)(EOF)){ 
+		if(i < vnode->v_size){ 
             buffer[i] = file_text[i];
 	    }else{
 			break;
@@ -117,7 +118,7 @@ int tmpfs_read(file_t * file, void * buf, size_t len)
 void list_tmpfs(dentry_t* dir){
 	printf("\n[list file] dir: %s\n", dir->dname);
 	for(int i = 0; i < dir->child_count; i++){
-		printf("File %d: '%s' \r\n",i,dir->child_dentry[i].dname);
+		printf("File %d: '%s' \n", i ,dir->child_dentry[i].dname);
 	}
 	return;
 }
