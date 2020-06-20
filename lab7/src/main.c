@@ -57,7 +57,8 @@ void test_vfs2()
     sz = vfs_read(b, buf, 100);
     sz += vfs_read(a, buf + sz, 100);
     buf[sz] = '\0';
-    printf("%s\n", buf); // should be Hello World!
+    printf("////output is %s\n", buf); // should be Hello World!
+    vfs_list_file("/");
 }
 
 void main()
