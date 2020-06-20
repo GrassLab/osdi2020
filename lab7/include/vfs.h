@@ -23,6 +23,7 @@ typedef struct file_t
     struct vnode_t *vnode;
     size_t f_pos; // The next read/write position of this file descriptor
     struct file_operations_t *f_ops;
+    struct dentry_t* dentry;
     int flags;
 } file_t;
 
@@ -66,6 +67,7 @@ int vfs_write(file_t *file, const void *buf, size_t len);
 int vfs_read(file_t *file, void *buf, size_t len);
 void set_dentry(dentry_t *dentry, vnode_t *vnode, const char* dir_name);
 void rootfs_init();
+void vfs_list_file(char *pathname);
 
 mount_t *rootfs;
 

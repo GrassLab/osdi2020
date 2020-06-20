@@ -17,4 +17,5 @@ int tmpfs_lookup ( dentry_t * dir_node, vnode_t ** target, const char * componen
 int tmpfs_create ( dentry_t * dir_node, vnode_t ** target, const char * component_name );
 int tmpfs_write ( file_t * file, const void * buf, size_t len );
 int tmpfs_read ( file_t * file, void * buf, size_t len );
+void list_tmpfs(dentry_t* dir);
 #endif 

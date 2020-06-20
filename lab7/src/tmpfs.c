@@ -4,11 +4,11 @@
 
 filesystem_t* fs;
 
-int tmpfs_setup_mount (filesystem_t * fs, mount_t * mount );
-int tmpfs_lookup (dentry_t * dir_node, vnode_t ** target, const char * component_name );
-int tmpfs_create (dentry_t * dir_node, vnode_t ** target, const char * component_name );
-int tmpfs_write (file_t * file, const void * buf, size_t len );
-int tmpfs_read (file_t * file, void * buf, size_t len );
+int tmpfs_setup_mount(filesystem_t * fs, mount_t * mount );
+int tmpfs_lookup(dentry_t * dir_node, vnode_t ** target, const char * component_name );
+int tmpfs_create(dentry_t * dir_node, vnode_t ** target, const char * component_name );
+int tmpfs_write(file_t * file, const void * buf, size_t len );
+int tmpfs_read(file_t * file, void * buf, size_t len );
 void list_tmpfs(dentry_t* dir);
 
 void set_tmpfs_vnode(vnode_t * vnode){ 
@@ -35,6 +35,7 @@ int tmpfs_lookup(dentry_t * dir_node, vnode_t ** target, const char * component_
 {
     for(int i = 0; i < dir_node->child_count; i++){
 		if(_strcmp(dir_node->child_dentry[i].dname, component_name) == 0){
+            //filepath is exist
 			*target = dir_node->child_dentry[i].vnode;
 			return 0;
 		}
@@ -49,7 +50,7 @@ int tmpfs_create(dentry_t * dir_node, vnode_t ** target, const char * component_
 
 	int res = tmpfs_lookup(dir_node, target, component_name);
 	if(res != -1){
-		printf("\n[create file] file '%s' already exist.\n", component_name);
+		printf("\n[create a file] but, filename '%s' already exist.\n", component_name);
 		return 0;
 	}
 
@@ -61,14 +62,15 @@ int tmpfs_create(dentry_t * dir_node, vnode_t ** target, const char * component_
 
 	set_dentry(child, vnode, component_name);
 
-	if(dir_node->child_count<MAX_CHILD_NUMBER){
+	if(dir_node->child_count < MAX_CHILD_NUMBER){
+        //put this file or dir into pwd dir
 		dir_node->child_dentry[dir_node->child_count++] = *child;
 	}else{
-		printf("NOT HANDLE THIS RIGHT NOW!\r\n");
+		printf("child file and directory count is too big, we cannot handle\r\n");
 		while(1);
 	}
 
-	printf("\n[create file] %s\r\n", dir_node->child_dentry[(dir_node->child_count)-1].dname);
+	printf("\n***create file success*** %s\r\n", dir_node->child_dentry[(dir_node->child_count)-1].dname);
 
 	*target = vnode;
 	return 0;
@@ -101,11 +103,11 @@ int tmpfs_read(file_t * file, void * buf, size_t len)
 
     tmpfs_node_t *file_node = (tmpfs_node_t *)vnode->internal;
   	char *file_text = file_node->buffer;
-	char *buffer = (char *)buf;
+	char *buf_p = (char *)buf;
 	unsigned int i = 0;	
 	for(; i < len; i++){
 		if(file_text[i] != (unsigned char)(EOF)){ 
-            buffer[i] = file_text[i];
+            buf_p[i] = file_text[i];
 	    }else{
 			break;
 		}
@@ -115,9 +117,9 @@ int tmpfs_read(file_t * file, void * buf, size_t len)
 } 
 
 void list_tmpfs(dentry_t* dir){
-	printf("\n[list file] dir: %s\n", dir->dname);
+	printf("\n[list file] dir location is: %s\n", dir->dname);
 	for(int i = 0; i < dir->child_count; i++){
-		printf("File %d: '%s' \r\n",i,dir->child_dentry[i].dname);
+		printf("File %d: '%s' \r\n", i, dir->child_dentry[i].dname);
 	}
 	return;
 }
