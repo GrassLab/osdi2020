@@ -1,3 +1,6 @@
+#include <sdhost.h>
+#include <string.h>
+#include <varied.h>
 #include "vfs.h"
 #include "fat32.h"
 
@@ -30,9 +33,48 @@ static struct file_operations _f_ops = {.read = read,.write = write };
 static struct vnode_operations *v_ops = &_v_ops;
 static struct file_operations *f_ops = &_f_ops;
 
+static struct fat32_node *
+internal_node_create (struct fat32_node *parent, unsigned int cluster_index)
+{
+  struct fat32_node *new;
+  new = varied_malloc (sizeof (*new));
+  if (new == NULL)
+    return NULL;
+  new->info = parent->info;
+  new->cluster_index = cluster_index;
+  return new;
+}
+
 static int
 setup_mount (struct filesystem *fs, struct mount *mount)
 {
+  // TODO: get device and fat32 offset by parameter
+  char buf[512];
+  struct partition_entry *part1;
+  struct boot_sector *fat32;
+  struct fat32_node init_node;
+  // parse MBR to find first partition entry
+  readblock (0, buf);
+  part1 = (void *) buf;
+  init_node.info.lba = part1->lba;
+  init_node.info.size = part1->size;
+  // parse fat32 BPB
+  readblock (init_node.info.lba, buf);
+  fat32 = (void *) buf;
+  init_node.info.cluster_num_of_root = fat32->cluster_num_of_root;
+  init_node.info.count_of_reserved = fat32->count_of_reserved;
+  init_node.info.num_of_fat = fat32->num_of_fat;
+  init_node.info.sectors_per_fat = fat32->sectors_per_fat;
+
+  mount->fs = fs;
+  mount->root = vnode_create (mount, v_ops, f_ops);
+  if (mount->root == NULL)
+    return 1;
+  mount->root->internal =
+    internal_node_create (&init_node, init_node.info.cluster_num_of_root);
+  if (mount->root->internal == NULL)
+    return 1;
+  return 0;
 }
 
 void
