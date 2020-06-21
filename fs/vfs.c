@@ -109,10 +109,12 @@ rootfs_init ()
 {
   int i;
   // simply init rootfs's filesystem
-  extern void tmpfs_init ();
-  tmpfs_init ();
+  extern void sd_init ();
+  extern void fat32_init ();
+  sd_init ();
+  fat32_init ();
   for (i = 0; i < FS_NUM; ++i)
-    if (!strcmp ("tmpfs", registed_fs[i].name))
+    if (!strcmp ("fat32", registed_fs[i].name))
       break;
   rootfs = varied_malloc (sizeof (*rootfs));
   registed_fs[i].setup_mount (&registed_fs[i], rootfs);
