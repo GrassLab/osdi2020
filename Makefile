@@ -8,6 +8,8 @@ ASM := $(wildcard asm/*/*.S)
 OBJECTS := $(patsubst %.S,%.o,$(ASM)) $(patsubst %.c,%.o,$(SRC))
 CFLAGS = -include include/stackguard.h -Iinclude -Ilib -Iperipheral -Isched -Ikernel -Imm -Wextra -Wall -Ifs
 ASFLAGS =
+QEMU = qemu-system-aarch64
+QEMUFLAGS = -M raspi3 -kernel kernel8.img -serial stdio -drive if=sd,file=./sfn_nctuos.img,format=raw
 
 .PHONY: all clean qemu debug indent
 
@@ -25,14 +27,14 @@ clean:
 	rm -f kernel8.elf kernel8.img $(patsubst %,%~*,$(SRC) $(HEADER)) $(OBJECTS)
 
 qemu: kernel8.img
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
+	$(QEMU) $(QEMUFLAGS)
 
 debug: CFLAGS += -ggdb -Og
 
 debug: ASFLAGS += -ggdb -Og
 
 debug: kernel8.img
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -s -S
+	$(QEMU) $(QEMUFLAGS) -s -S
 
 sd: kernel8.img
 	sudo mount -t vfat $(SDCARD)1 rootfs/
