@@ -97,8 +97,7 @@ create (struct vnode *dir_node, struct vnode **target,
   // TODO: retrieve deleted slot
   ++node->block->size;
   node = new_vnode->internal;
-  memcpy (node->block->name, component_name,
-	  strlen (component_name) + 1);
+  memcpy (node->block->name, component_name, strlen (component_name) + 1);
   *target = new_vnode;
   return 0;
 }
