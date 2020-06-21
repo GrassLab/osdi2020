@@ -37,7 +37,7 @@ debug: kernel8.img
 	$(QEMU) $(QEMUFLAGS) -s -S
 
 sd: kernel8.img
-	sudo mount -t vfat $(SDCARD)1 rootfs/
+	sudo mount -t msdos $(SDCARD)1 rootfs/
 	sudo cp kernel8.img rootfs/kernel8.img
 	sudo umount rootfs
 
