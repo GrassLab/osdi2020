@@ -54,4 +54,7 @@ int vfs_close (struct file *file);
 int vfs_write (struct file *file, const void *buf, size_t len);
 int vfs_read (struct file *file, void *buf, size_t len);
 void rootfs_init ();
+struct vnode *vnode_create (struct mount *mount,
+			    struct vnode_operations *v_ops,
+			    struct file_operations *f_ops);
 #endif /* ifndef VFS */

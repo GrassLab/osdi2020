@@ -104,6 +104,20 @@ vfs_read (struct file *file, void *buf, size_t len)
   return file->f_ops->read (file, buf, len);
 }
 
+struct vnode *
+vnode_create (struct mount *mount, struct vnode_operations *v_ops,
+	      struct file_operations *f_ops)
+{
+  struct vnode *new;
+  new = varied_malloc (sizeof (*new));
+  if (new == NULL)
+    return NULL;
+  new->mount = mount;
+  new->v_ops = v_ops;
+  new->f_ops = f_ops;
+  return new;
+}
+
 void
 rootfs_init ()
 {
