@@ -19,6 +19,11 @@ static int
 lookup (struct vnode *dir_node, struct vnode **target,
 	const char *component_name)
 {
+  struct fat32_node *node;
+
+  node = dir_node->internal;
+  if (node->type != dir_t)
+    return 1;
 }
 
 static int
@@ -34,7 +39,8 @@ static struct vnode_operations *v_ops = &_v_ops;
 static struct file_operations *f_ops = &_f_ops;
 
 static struct fat32_node *
-internal_node_create (struct fat32_node *parent, unsigned int cluster_index)
+internal_node_create (struct fat32_node *parent, unsigned int cluster_index,
+		      enum fat32_type type)
 {
   struct fat32_node *new;
   new = varied_malloc (sizeof (*new));
@@ -42,6 +48,7 @@ internal_node_create (struct fat32_node *parent, unsigned int cluster_index)
     return NULL;
   new->info = parent->info;
   new->cluster_index = cluster_index;
+  new->type = type;
   return new;
 }
 
@@ -71,7 +78,8 @@ setup_mount (struct filesystem *fs, struct mount *mount)
   if (mount->root == NULL)
     return 1;
   mount->root->internal =
-    internal_node_create (&init_node, init_node.info.cluster_num_of_root);
+    internal_node_create (&init_node, init_node.info.cluster_num_of_root,
+			  dir_t);
   if (mount->root->internal == NULL)
     return 1;
   return 0;

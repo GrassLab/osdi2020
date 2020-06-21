@@ -1,6 +1,12 @@
 #ifndef FAT32
 #define FAT32
 
+enum fat32_type
+{
+  dir_t,
+  file_t
+};
+
 struct boot_sector
 {
   char ignore1[0xe];
@@ -33,5 +39,6 @@ struct fat32_node
 {
   struct fat32_info info;
   unsigned int cluster_index;
+  enum fat32_type type;
 };
 #endif /* ifndef FAT32 */
