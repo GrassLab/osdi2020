@@ -45,6 +45,7 @@ fat32_node_dir_entry (struct fat32_node *node,
 		      struct directory_entry *dir_entry)
 {
   struct directory_entry dirs[DIR_LEN];
+  unsigned int offset;
   if (node->dir_index >= DIR_LEN)
     return 1;
   if (node->cluster_index == node->info.cluster_num_of_root)
@@ -52,7 +53,9 @@ fat32_node_dir_entry (struct fat32_node *node,
       dir_entry->size = 0;
       return 0;
     }
-  readblock (node->info.lba + node->dir_entry, dirs);
+  offset = node->info.lba + node->info.count_of_reserved;
+  offset += node->info.num_of_fat * node->info.sectors_per_fat;
+  readblock (offset + node->dir_entry - node->info.cluster_num_of_root, dirs);
   *dir_entry = dirs[node->dir_index];
   return 0;
 }
@@ -65,6 +68,52 @@ write (struct file *file, const void *buf, size_t len)
 static int
 read (struct file *file, void *buf, size_t len)
 {
+  struct fat32_node *node;
+  struct directory_entry dir;
+  size_t valid_len, pos, start_pos, end_pos;
+  unsigned int value, offset;
+  char data[BLOCK_SIZE];
+  node = file->vnode->internal;
+  // type error
+  if (fat32_node_dir_entry (node, &dir))
+    return -1;
+  if (dir.size == 0)
+    return -1;
+  // f_pos at EOF
+  if (file->f_pos >= dir.size)
+    return 0;
+  valid_len = dir.size - file->f_pos;
+  if (len < valid_len)
+    valid_len = len;
+  // traversal all block to find target
+  // find block offset of fat cluster chain
+  value = node->cluster_index;
+  // find offset of data region
+  offset = node->info.lba + node->info.count_of_reserved;
+  offset += node->info.num_of_fat * node->info.sectors_per_fat;
+  pos = 0;
+  while ((value & CHAIN_EOF) != CHAIN_EOF)
+    {
+      if (pos >= file->f_pos + valid_len)
+	break;
+      if (pos + BLOCK_SIZE > file->f_pos)
+	{
+	  start_pos = (pos < file->f_pos) ? file->f_pos : pos;
+	  end_pos = pos + BLOCK_SIZE;
+	  if (end_pos > file->f_pos + valid_len)
+	    end_pos = file->f_pos + valid_len;
+	  // read block
+	  readblock (offset + value - node->info.cluster_num_of_root, data);
+	  // write to user buffer
+	  memcpy (&buf[start_pos - file->f_pos],
+		  &data[start_pos % BLOCK_SIZE], end_pos - start_pos);
+	}
+      value = fat32_cluster_value (&node->info, value);
+      pos += BLOCK_SIZE;
+    }
+  //memcpy (buf, &node->block->data.content[file->f_pos], valid_len);
+  file->f_pos += valid_len;
+  return valid_len;
 }
 
 static int
