@@ -144,6 +144,7 @@ lookup (struct vnode *dir_node, struct vnode **target,
 	{
 	  if (!filename_cmp (&dirs[i], component_name))
 	    {
+	      // TODO: memory leak
 	      new_vnode = vnode_create (dir_node->mount, v_ops, f_ops);
 	      new_vnode->internal = internal_node_create (node,
 							  (dirs[i].start_hi <<
