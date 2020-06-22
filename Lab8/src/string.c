@@ -69,3 +69,21 @@ int strcpy(char *dest, const char *src)
   	dest[c] = '\0';
 	return c;
 }
+
+int strncpy(char *dest, const char *src,int n)
+{
+    int c = 0;
+    
+    while(src[c]!='\0')
+    {
+        dest[c] = src[c];
+	c++;
+
+	if(c>=n)
+		break;
+    }
+
+    dest[c] = '\0';
+
+    return c;
+}

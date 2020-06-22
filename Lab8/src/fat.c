@@ -34,15 +34,14 @@ int fat_getpartition(){
     	printf("ERROR: Wrong partition type %d\r\n",entry1->partition_type);
         return 0;
     }
-    else{
-    	printf("FAT32 with CHS addressing\r\n");
-    }
-
+    
+    printf("### FAT32 with CHS addressing\r\n");
+    
     int block_index = entry1->starting_sector;
-    printf("Block index: %d\r\n",block_index);
+    printf("### Block index: %d\r\n",block_index);
 
     int partition_size = entry1->number_of_sector;
-    printf("Partition size: %d\r\n",partition_size);
+    printf("### Partition size: %d\r\n",partition_size);
 
     //  boot sector of FAT32 partition’s block
     unsigned char partition_block[512];
@@ -50,12 +49,6 @@ int fat_getpartition(){
     
     boot_sec = (boot_sector_t*)kmalloc(sizeof(boot_sec));
     memcpy(boot_sec,partition_block,sizeof(boot_sector_t));
-    /*
-    printf("Sector per fat32: %d \r\n", boot_sec->n_sector_per_fat_32);
-    printf("Number of file allocation table: %d\r\n",boot_sec->n_file_alloc_tabs);
-    printf("Reserved sector: %d \r\n",  boot_sec->n_reserved_sectors);
-    printf("root sector start from: %d \r\n",  (boot_sec->n_sector_per_fat_32 * boot_sec->n_file_alloc_tabs) + boot_sec->n_reserved_sectors);
-    */
     return 1;
 }
 
@@ -80,9 +73,39 @@ int setup_mount_fat32fs(struct filesystem* fs, struct mount* mt){
         // finding root directory
 	unsigned int root_sec = (boot_sec->n_sector_per_fat_32 * boot_sec->n_file_alloc_tabs ) + boot_sec->n_reserved_sectors;
 
-	printf("%d %d\r\n")
 	unsigned char sector[512];
-        readblock (root_sec + entry1->starting_sector, sector);
+        fat32_dir_t *dir = (fat32_dir_t *) sector;	
+
+        readblock (entry1->starting_sector + root_sec, sector);
+
+	printf("### Loading file in root directory\r\n");
+	for (int i = 0; dir[i].name[0] != '\0'; i++ ){
+		struct vnode *child_vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
+ 		set_fat32fs_vnode(child_vnode);
+
+		struct fat32fs_node *child_fat32fs_node = (struct fat32fs_node*)kmalloc(sizeof(struct fat32fs_node)); 
+		strncpy(child_fat32fs_node->ext,dir[i].ext,3);
+		child_fat32fs_node->cluster = ((dir[i].cluster_high) << 16) | ( dir[i].cluster_low );
+		child_fat32fs_node->size = dir[i].size;
+		child_vnode->internal = (void*)child_fat32fs_node;
+
+		struct dentry* child_dent = (struct dentry*)kmalloc(sizeof(struct dentry));
+		char name[9];
+		strncpy(name, dir[i].name,8);
+		set_dentry(child_dent,child_vnode,name);
+		child_dent->parent_dentry = mt->dentry;
+		child_dent->flag = dir[i].attr[0] & 0x10 ? DIRECTORY : REGULAR_FILE;
+		
+
+	 	if(mt->dentry->child_count < MAX_CHILD)
+                  	mt->dentry->child_dentry[mt->dentry->child_count++] = child_dent;
+          	else{
+                  	printf("NOT HANDLE THIS RIGHt NOW!\r\n");
+                  	while(1);
+         	}
+		
+		printf("name: %s, ext: %s\r\n",child_dent->dname,child_fat32fs_node->ext);
+	}
 	return 0;
 }
 /*

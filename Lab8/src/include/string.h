@@ -8,6 +8,7 @@ int itos(unsigned long long num,char* str,int base);
 int get_length(char str[]);
 void reverse_string(char *str);
 int strcpy(char *dest, const char *src);
+int strncpy(char *dest, const char *src,int n);
 
 #endif  /*_STRING_H */
 

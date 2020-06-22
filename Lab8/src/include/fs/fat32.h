@@ -48,6 +48,26 @@ typedef struct boot_sector
     unsigned char fat_name[8];                   // 0x52-0x59
 } __attribute__ ( ( packed ) ) boot_sector_t;
 
+
+typedef struct fat32_dir
+{
+    char name[8];           // 0x0-0x7
+    char ext[3];            // 0x8-0xA
+    char attr[9];           // 0xB-19
+    unsigned short cluster_high;  // 0x14-0x15
+    unsigned int ext_attr;      // 0x16-0x19
+    unsigned short cluster_low;   // 0x1A-0x1B
+    unsigned int size;          // 0x1C-0x1F
+
+} __attribute__ ( ( packed ) ) fat32_dir_t;
+
+struct fat32fs_node{
+    char ext[4];
+
+    unsigned int cluster;
+    unsigned int size;
+}; 
+
 boot_sector_t* boot_sec;
 partition_entry_t *entry1;
 

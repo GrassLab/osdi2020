@@ -18,7 +18,8 @@ struct dentry {
            /* Pointer to the inode this entry refers to. */
            int flag;
 	   char dname[DNAME_LEN];
-           struct vnode* vnode;
+
+	   struct vnode* vnode;
            int child_count;
            struct dentry *parent_dentry;
 	   struct dentry *child_dentry[MAX_CHILD];
