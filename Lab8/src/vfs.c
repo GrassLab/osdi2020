@@ -72,7 +72,7 @@ int register_filesystem(struct filesystem* fs) {
          fat32fs_f_ops = (struct file_operations*)kmalloc(sizeof(struct file_operations));
 	
 
-	 //fat32fs_v_ops->lookup = lookup_fat32fs;
+	 fat32fs_v_ops->lookup = lookup_fat32fs;
          //fat32fs_v_ops->create = create_far32fs;
 	 //fat32fs_v_ops->mkdir = mkdir_fat32fs;
 	 //fat32fs_v_ops->ls = ls_fat32fs;
@@ -203,9 +203,12 @@ struct file* vfs_open(const char* pathname, int flags) {
 }
 
 int vfs_close(struct file* file){
-	printf("### Close file at %x\r\n",file);
-	kfree((unsigned long)file);
-	return 0;
+	if(file!=(struct file*)NULL){
+		printf("### Close file at %x\r\n",file);
+		kfree((unsigned long)file);
+		return 0;
+	}
+	return -1;
 }
 
 int vfs_write(struct file* file, const void* buf, size_t len){

@@ -106,6 +106,11 @@ void kernel_process(){
     }
 }
 
+void test1(){
+	struct file* a = vfs_open("HELLO", 0);
+	vfs_close(a);
+}
+
 
 void kernel_main(void)
 {	
@@ -127,7 +132,8 @@ void kernel_main(void)
     
     allocator_init(); 
     rootfs_init();
-    
+
+    test1();    
     // Here init a task being zombie reaper
     //privilege_task_create(zombie_reaper,1);
     //privilege_task_create(kernel_process, 1); 

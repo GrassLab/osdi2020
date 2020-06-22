@@ -78,4 +78,5 @@ struct file_operations* fat32fs_f_ops;
 
 int fat_getpartition();
 int setup_mount_fat32fs(struct filesystem* fs, struct mount* mt);
+int lookup_fat32fs(struct dentry* dir, struct vnode** target, const char* component_name);
 #endif

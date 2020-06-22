@@ -9,6 +9,7 @@ int get_length(char str[]);
 void reverse_string(char *str);
 int strcpy(char *dest, const char *src);
 int strncpy(char *dest, const char *src,int n);
+int strlen ( const char * s );
 
 #endif  /*_STRING_H */
 

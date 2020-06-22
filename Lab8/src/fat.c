@@ -80,6 +80,9 @@ int setup_mount_fat32fs(struct filesystem* fs, struct mount* mt){
 
 	printf("### Loading file in root directory\r\n");
 	for (int i = 0; dir[i].name[0] != '\0'; i++ ){
+		// For 0xE5, it means that the file was deleted
+		if(dir[i].name[0]==0xE5 ) continue;
+
 		struct vnode *child_vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
  		set_fat32fs_vnode(child_vnode);
 
@@ -112,12 +115,20 @@ int setup_mount_fat32fs(struct filesystem* fs, struct mount* mt){
 void ls_fat32fs(struct dentry* dir){
 
 }
-
+*/
 int lookup_fat32fs(struct dentry* dir, struct vnode** target, \
                  const char* component_name){
-
+	
+	for(int i=0;i<dir->child_count;i++){
+		if(strcmp(dir->child_dentry[i]->dname, component_name)==0){
+                        *target = dir->child_dentry[i]->vnode;
+                        return 0;
+                }
+        }
+	return -1;
 }
 
+/*
 int create_fat32fs(struct dentry* dir, struct vnode** target, \
                   const char* component_name){
 
