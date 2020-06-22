@@ -70,6 +70,44 @@ read (struct file *file, void *buf, size_t len)
 static int
 filename_cmp (struct directory_entry *dir, const char *filename)
 {
+  int name_ind, ext_ind;
+  const char *extname;
+  for (name_ind = 0; name_ind < 8; ++name_ind)
+    {
+      if (filename[name_ind] == '\0')
+	return dir->name[name_ind] != '\x20';
+      if (filename[name_ind] == '.')
+	{
+	  if (dir->name[name_ind] != '\x20')
+	    return 1;
+	  break;
+	}
+      if (filename[name_ind] != dir->name[name_ind])
+	return 1;
+    }
+  if (filename[name_ind] == '\0')
+    return 0;
+  extname = &filename[name_ind + 1];
+  for (ext_ind = 0; ext_ind < 3; ++ext_ind)
+    {
+      if (extname[ext_ind] == '\0')
+	return dir->extension[ext_ind] != '\x20';
+      if (extname[ext_ind] != dir->extension[ext_ind])
+	return 1;
+    }
+  return 0;
+
+  if (dir->name[name_ind] != '\x20')
+    return 1;
+  if (filename[name_ind] == '\0' && dir->name[name_ind] == '\x20'
+      && dir->extension[0] == '\x20')
+    return 0;
+  ++name_ind;
+  for (ext_ind = 0; ext_ind < 3; ++ext_ind)
+    {
+      if (filename[name_ind + ext_ind] == '\0')
+	break;
+    }
 }
 
 static int
@@ -97,7 +135,7 @@ lookup (struct vnode *dir_node, struct vnode **target,
   // find offset of data region
   offset = node->info.lba + node->info.count_of_reserved;
   offset += node->info.num_of_fat * node->info.sectors_per_fat;
-  while ((value & CHAIN_EOF) == CHAIN_EOF)
+  while ((value & CHAIN_EOF) != CHAIN_EOF)
     {
       // read block
       readblock (offset + value - node->info.cluster_num_of_root, dirs);
@@ -108,8 +146,8 @@ lookup (struct vnode *dir_node, struct vnode **target,
 	    {
 	      new_vnode = vnode_create (dir_node->mount, v_ops, f_ops);
 	      new_vnode->internal = internal_node_create (node,
-							  (dirs[i].
-							   start_hi << 16) +
+							  (dirs[i].start_hi <<
+							   16) +
 							  dirs[i].start_lo,
 							  value, i);
 	      *target = new_vnode;
