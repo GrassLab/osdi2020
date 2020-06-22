@@ -3,7 +3,6 @@
 #include "buddy.h"
 #include "uart.h"
 #include "string_util.h"
-#include "task.h"
 
 static struct slab_struct * slab_list;
 static struct malloc_struct * malloc_list;
@@ -29,7 +28,6 @@ uint64_t slab_regist(unsigned bytes)
 
 uint64_t * slab_allocate(uint64_t token)
 {
-  TASK_GUARD();
   for(unsigned bit_array_idx = 0; bit_array_idx < SLAB_USED_BIT_ARRAY_SIZE; ++bit_array_idx)
   {
     uint64_t * ret_ptr;
@@ -57,7 +55,6 @@ uint64_t * slab_allocate(uint64_t token)
       uart_putc('\n');
 #endif
 
-      TASK_UNGUARD();
       return ret_ptr;
     }
   }
@@ -69,7 +66,6 @@ uint64_t * slab_allocate(uint64_t token)
 
 void slab_free(uint64_t token, uint64_t * va)
 {
-  TASK_GUARD();
   uint64_t offset = ((uint64_t)va - (uint64_t)(((struct slab_struct *)token) -> va)) / (((struct slab_struct *)token) -> object_size);
   unsigned bit_array_idx = (unsigned)(offset / 32);
   unsigned bit_array_bit = (unsigned)(offset - (bit_array_idx * 32));
@@ -87,7 +83,6 @@ void slab_free(uint64_t token, uint64_t * va)
   uart_puts(string_buff);
   uart_putc('\n');
 #endif
-  TASK_UNGUARD();
   return;
 }
 
@@ -179,7 +174,6 @@ void slab_insert_slab(struct slab_struct * node)
 
 uint64_t * slab_malloc(unsigned bytes)
 {
-  TASK_GUARD();
   uint64_t * ret_ptr;
   /*Use buddy system for higher volume
    *kmalloc-2k
@@ -269,13 +263,11 @@ uint64_t * slab_malloc(unsigned bytes)
   uart_putc('\n');
 #endif
 
-  TASK_UNGUARD();
   return ret_ptr;
 }
 
 void slab_malloc_free(uint64_t * va)
 {
-  TASK_GUARD();
   struct malloc_struct * cur_node = malloc_list;
   struct malloc_struct * prev_node = 0x0;
 
@@ -316,7 +308,6 @@ void slab_malloc_free(uint64_t * va)
     prev_node = cur_node;
     cur_node = cur_node -> next_ptr;
   }
-  TASK_UNGUARD();
   return;
 }
 

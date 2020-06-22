@@ -45,10 +45,7 @@ EL_dispatcher:
   mov x1, sp
 
   bl exc_dispatcher
-  bl irq_int_enable
 
-.global __sys_fork_child_entry
-__sys_fork_child_entry:
   ldr x3,       [sp, #16 * 16]
   ldp x1, x2,   [sp, #16 * 15]
   msr sp_el0, x3

@@ -1,10 +1,6 @@
 #include "uart.h"
 #include "mailbox.h"
 #include "gpio.h"
-#include "queue.h"
-#include "task.h"
-
-char_queue uart_tx_queue, uart_rx_queue;
 
 void uart_init(void)
 {
@@ -94,102 +90,29 @@ void uart_init(void)
   //*UART_LCRH = 0x70;
 
 
-  /* interrupt occurred when fifo has 1/8 of space */
-  *UART_IFLS = 0;
-
-  /* enable [5] rx [4] tx interrupt, and mask other interrupt */
-  *UART_IMSC = 0x30;
-
   /* reenable cr
    * set bit rxe [9], txe[8], uarten[0]
    * which is 0x301
    */
   *UART_CR = 0x301;
 
-  /* enable interrupt in irq enable 2 */
-  /* uart_int is interrupt 57, 57 = 1 * 32 + 25 */
-  *IRQ_ENABLE_2 = 1 << 25;
-
-  QUEUE_INIT(uart_rx_queue);
-  QUEUE_INIT(uart_tx_queue);
-
-  /* send a null byte to prevent qemu bug*/
-  *UART_DR = 0;
-  /* wait until interrupt raised */
-  while(!CHECK_BIT(*UART_FR, 7)); /* Exit when iterrupt cleared and return txfe[7] should be set and the loop should be break */
-
   uart_puts_blocking("UART init complete\n");
   return;
-}
-
-/* get a character from uart, blocking io */
-char uart_getc(int echo)
-{
-  char c;
-  if(!QUEUE_EMPTY(uart_rx_queue)) /* read from queue first */
-  {
-    c = QUEUE_POP(uart_rx_queue);
-  }
-  else if(!CHECK_BIT(*UART_FR, 4)) /* interrupt not triggered, and queue is empty. If rxfe [4] not set -> have data to read */
-  {
-    /* read will clear the interrupt */
-    c = (char)(*UART_DR);
-  }
-  else
-  {
-    /* enter wait state until interrupt requeue the task */
-    while(QUEUE_EMPTY(uart_rx_queue))
-    {
-      task_start_waiting();
-    }
-    /* ISR store the data in rx_queue */
-    c = QUEUE_POP(uart_rx_queue);
-  }
-  /* Replace \r with \n */
-  if(c == '\r')
-    c = '\n';
-
-  if(echo)
-  {
-    return uart_putc(c);
-  }
-  return c;
 }
 
 /* put a character to uart, blocking io */
 char uart_putc(const char c)
 {
-  if(CHECK_BIT(*UART_FR, 7)) /* If txfe [7] bit is set, fifo is empty */
-  {
-    /* Ready to send */
-
-    if(QUEUE_EMPTY(uart_tx_queue))
-    {
-      *UART_DR = (uint32_t)c;
-    }
-    else
-    {
-      char queue_c = QUEUE_POP(uart_tx_queue);
-      QUEUE_PUSH(uart_tx_queue, c);
-      *UART_DR = (uint32_t)queue_c;
-    }
-  }
-  else /* send in irq */
-  {
-    while(QUEUE_FULL(uart_tx_queue)); /* busy waiting until queue is cleared by isr */
-
-    QUEUE_PUSH(uart_tx_queue, c);
-  }
+  while(!CHECK_BIT(*UART_FR, 7)); /* If txfe [7] bit is set, fifo is empty */
+  *UART_DR = (uint32_t)c;
   return c;
 }
 
 /* Write string to uart, blocking */
 void uart_puts(const char * string)
 {
-  for(unsigned idx = 0; string[idx] != '\0'; ++idx)
-  {
-    uart_putc(string[idx]);
-  }
+  uart_puts_blocking(string);
+  return;
 }
 
 void uart_puts_blocking(const char * string)
@@ -201,38 +124,4 @@ void uart_puts_blocking(const char * string)
     *UART_DR = (uint32_t)string[idx];
   }
 }
-
-/* Write string from uart, blocking, beware size */
-void uart_gets(char * string, char delimiter, unsigned length)
-{
-  unsigned idx = 0;
-  for(; ; ++idx)
-  {
-    if(idx >= length)
-    {
-      break;
-    }
-    string[idx] = uart_getc(1);
-    if(string[idx] == delimiter)
-    {
-      break;
-    }
-  }
-  string[idx + 1] = '\0';
-}
-
-void uart_tx_flush(void)
-{
-  /* keep waiting until all contents are flushed */
-  while(!QUEUE_EMPTY(uart_tx_queue))
-  {
-    /* keep waiting until fifo is empty */
-    while(!CHECK_BIT(*UART_FR, 7));
-    /* flush a character */
-    char queue_c = QUEUE_POP(uart_tx_queue);
-    *UART_DR = (uint32_t)queue_c;
-  }
-  return;
-}
-
 

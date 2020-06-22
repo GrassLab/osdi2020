@@ -30,13 +30,9 @@
 #define IRQ_ENABLE_2 ((uint32_t *)PERIPHERAL_TO_PHYSICAL((INT_REG_BASE + 0x214)))
 
 void uart_init(void);
-char uart_getc(int echo);
 char uart_putc(const char c);
 void uart_puts(const char * string);
 void uart_puts_blocking(const char * string);
-void uart_gets(char * string, char delimiter, unsigned length);
-void uart_getn(char * buffer, unsigned length);
-void uart_tx_flush(void);
 
 #endif
 

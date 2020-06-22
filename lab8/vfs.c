@@ -2,12 +2,13 @@
 #include "string_util.h"
 #include "slab.h"
 #include "uart.h"
-#include "task.h"
 
 static struct vfs_mount_struct * rootfs;
 static struct vfs_vnode_struct * root_vnode;
 static struct vfs_filesystem_struct * fs_list[VFS_MAX_REGISTERED_FS];
 static struct vfs_vnode_struct * mountpoints_vnode[VFS_MAX_MOUNT];
+
+static struct vfs_vnode_struct * single_thread_current_dir_vnode;
 
 int vfs_regist_fs(struct vfs_filesystem_struct * fs)
 {
@@ -48,6 +49,7 @@ void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs)
 
   vfs_setup_mount(fs, &rootfs);
   root_vnode = rootfs -> root;
+  single_thread_current_dir_vnode = root_vnode;
   return;
 }
 
@@ -156,7 +158,7 @@ struct vfs_vnode_struct * vfs_traverse(const char * pathname, int return_closest
   else
   {
     /* relative path */
-    search_vnode = task_get_current_vnode();
+    search_vnode = single_thread_current_dir_vnode;
   }
 
   while(search_start < path_length)
@@ -227,8 +229,8 @@ int vfs_mkdir(struct vfs_vnode_struct * current_dir_vnode, const char * pathname
 int vfs_chdir(struct vfs_vnode_struct * target_dir_vnode)
 {
   /* vfs_free_vnode will ignore vnode return by task_get_current_vnode() */
-  struct vfs_vnode_struct * current_dir_vnode = task_get_current_vnode();
-  task_set_current_vnode(target_dir_vnode);
+  struct vfs_vnode_struct * current_dir_vnode = single_thread_current_dir_vnode;
+  single_thread_current_dir_vnode = target_dir_vnode;
   vfs_free_vnode(current_dir_vnode);
   return 0;
 }
@@ -287,7 +289,7 @@ void vfs_free_vnode(struct vfs_vnode_struct * vnode)
       return;
     }
   }
-  if(vnode != root_vnode && vnode != task_get_current_vnode())
+  if(vnode != root_vnode && vnode != single_thread_current_dir_vnode)
   {
     slab_malloc_free((uint64_t *)vnode);
   }
