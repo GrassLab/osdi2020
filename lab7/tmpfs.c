@@ -197,8 +197,7 @@ int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len)
 {
   struct tmpfs_file_node * file_node = (struct tmpfs_file_node *)(file -> vnode -> internal);
   uint64_t * location = file_node -> location;
-  /* TODO: write_pos should be read_pos */
-  unsigned read_offset = (unsigned)(file -> write_pos);
+  unsigned read_offset = (unsigned)(file -> read_pos);
   int read_length;
   if(len > (file_node -> file_size - read_offset - 1))
   {
