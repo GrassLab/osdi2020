@@ -93,6 +93,7 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
 {
   /* return 0 if node should be free after use, 1 if not */
   struct tmpfs_dir_node * internal_dir_node = (struct tmpfs_dir_node *)(dir_node -> internal);
+  /* TODO: OBSOLETE */
   if(component_name[0] == '/')
   {
     *target = tmpfs_create_vnode(dir_node -> mount, dir_node -> internal, 1);
@@ -111,6 +112,7 @@ int tmpfs_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     return 0;
   }
 
+  /* TODO: Check is_dir */
   /* search file */
   for(int idx = 0; idx < TMPFS_MAX_FILE_IN_DIR; ++idx)
   {
@@ -170,6 +172,7 @@ int tmpfs_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     *target = tmpfs_create_vnode(dir_node -> mount, (void *)file_node, 0);
     return 0;
   }
+  /* TODO: *target = 0; */
   return 0;
 }
 
@@ -194,6 +197,7 @@ int tmpfs_read(struct vfs_file_struct * file, void * buf, size_t len)
 {
   struct tmpfs_file_node * file_node = (struct tmpfs_file_node *)(file -> vnode -> internal);
   uint64_t * location = file_node -> location;
+  /* TODO: write_pos should be read_pos */
   unsigned read_offset = (unsigned)(file -> write_pos);
   int read_length;
   if(len > (file_node -> file_size - read_offset - 1))
@@ -253,6 +257,7 @@ int tmpfs_mkdir(struct vfs_vnode_struct * dir_node, const char * new_dir_name)
       break;
     }
   }
+  /* TODO: max_size check */
   return 0;
 }
 

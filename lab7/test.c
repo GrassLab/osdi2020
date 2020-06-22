@@ -25,6 +25,8 @@ int main(void)
   syscall_close(b);
   syscall_uart_puts("=====\n");
 
+  syscall_uart_puts("syscall_fork()\n");
+  syscall_uart_puts("=====\n");
   if(syscall_fork() == 0)
   {
     syscall_uart_puts("Hi I'm child\n");

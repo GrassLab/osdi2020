@@ -17,13 +17,14 @@ struct vfs_vnode_struct
   struct vfs_mount_struct * mount;
   struct vfs_vnode_operations_struct * v_ops;
   struct vfs_file_operations_struct * f_ops;
-  int is_dir;
+  int is_dir; /* TODO: Impossible case */
   void * internal;
 };
 
 struct vfs_file_struct
 {
   struct vfs_vnode_struct * vnode;
+  /*  TODO: f_pos unifiy update by underlying fs */
   size_t read_pos;
   size_t write_pos;
   struct vfs_file_operations_struct * f_ops;
