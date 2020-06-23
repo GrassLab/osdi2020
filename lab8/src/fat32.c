@@ -44,7 +44,7 @@ void encode_filename(const char *name, char *code){
   while(c < code + 8) *c++ = ' ';
   if(*name == '.'){
     name++;
-    for(int i = 0; i < 3; i++){
+    for(int i = 1; i < 3; i++){
       if(!*name) break;
       *c = *name;
       c++, name++;
@@ -156,7 +156,7 @@ void list_block(char *buffer){
 }
 
 void show_sec(size_t index){
-  char buffer[512]; readblock(index, buffer); list_block(buffer); 
+  char buffer[512]; readblock(index, buffer); list_block(buffer);
 }
 
 typedef struct fat32_info{
@@ -166,9 +166,9 @@ typedef struct fat32_info{
   unsigned long FirstFATSector;     
 } *FAT32_INFO, FAT32_INFO_STR;
 
-FAT32_INFO info;
-struct mbr_partition *pentry;
-struct mbr_bpbFAT32 *bpb;
+FAT32_INFO info = NULL;
+struct mbr_partition *pentry = NULL;
+struct mbr_bpbFAT32 *bpb = NULL;
 
 void fat32_init(){
 
@@ -248,15 +248,17 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
 
   struct vnode **iter = &(Fat32fd(dir)->child); 
 
-  while(*fentry->filename){
-    if(fentry->attr & 0x10){
-      *iter = newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
-          newFat32File(fentry, dir));
+  for(int i = 0; i < 16; i++){
+    if(*fentry->filename){
+      if(fentry->attr & 0x10){
+        *iter = newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
+            newFat32File(fentry, dir));
+      }
+      else{
+        *iter = fat32_build_file(fentry, dir);
+      }
+      iter = &(Fat32fd(*iter)->next);
     }
-    else{
-      *iter = fat32_build_file(fentry, dir);
-    }
-    iter = &(Fat32fd(*iter)->next);
     fentry += 1;
   }
   *iter = NULL;
@@ -526,5 +528,8 @@ int fat32_setup_mount(
     printfmt("fat32 mount on 0x%x", mount->mp);
   }
   if(!fs->mnt) fs->mnt = mount;
+
+  printfmt("sizeof fat %d", sizeof(struct mbr_bpbFAT32));
+  //show_sec(2048);
   return 0;
 }
