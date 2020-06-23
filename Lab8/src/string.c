@@ -75,7 +75,7 @@ int strncpy(char *dest, const char *src,int n)
     int c = 0;
    
     // not a good design to skip space directly here, but I am such a lazy guy...... 
-    while(src[c]!='\0' && src[c] != ' ')
+    while(src[c]!='\0')
     {
         dest[c] = src[c];
 	c++;
@@ -86,6 +86,18 @@ int strncpy(char *dest, const char *src,int n)
 
     dest[c] = '\0';
     return c;
+}
+
+int strcpy_delim(char *dest, const char *src,const char delim){
+
+	int c = 0;
+  	while (src[c] != '\0' && src[c] != delim){
+    		dest[c]	= src[c];
+		c++;
+	}
+  
+  	dest[c] = '\0';
+	return c;
 }
 
 int strlen ( const char * s )

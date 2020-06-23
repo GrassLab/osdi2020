@@ -135,10 +135,11 @@ int write_fat32fs(struct file* file, const void* buf, size_t len){
 int read_fat32fs(struct file* file, void* buf, size_t len){
 	struct fat32fs_node *node = (struct fat32fs_node *)file->vnode->internal;
 	char read_sector_buf[BLOCK_SIZE];
+
 	int cluster = node->cluster;
 
 	// this is the total length we need to read form the start of file
-	int total_len;
+	int total_len = file->f_pos + len;
 	
 	// If the required length is more than what we can actually read
 	// Then set it to the maximum that we can read
@@ -150,39 +151,34 @@ int read_fat32fs(struct file* file, void* buf, size_t len){
 	}
 	
 	// get file allocation table 
-	int fat32[FAT32_ENTRY_PER_BLOCK];
-	
-	char *tmp_buffer = (char*)kmalloc(sizeof(char) * (total_len+1));
-	char *ptr = tmp_buffer;
+	int fat32[FAT32_ENTRY_PER_BLOCK ];	
+	int read_len = 0;
 
-	int iter = 0;
+	char *tmp_buffer = (char*)kmalloc(sizeof(char)*total_len);
 
 	while(cluster>1 && cluster < 0xFFF8){	
 		readblock (root_sec_index + \
 			( cluster - boot_sec->first_cluster ) * boot_sec->logical_sector_per_cluster,\
-	       		read_sector_buf);
+	       		read_sector_buf );
 		
 		if( total_len > BLOCK_SIZE){
-			strncpy (ptr, read_sector_buf, BLOCK_SIZE);
-			ptr += BLOCK_SIZE; 
+			read_len += strncpy (tmp_buffer, read_sector_buf, BLOCK_SIZE);
+			tmp_buffer += BLOCK_SIZE; 
 			total_len -= BLOCK_SIZE;
-			iter++;
-
-			// get the next cluster in chain
-			readblock(boot_sec->n_reserved_sectors + entry1->starting_sector +\
-				(cluster / FAT32_ENTRY_PER_BLOCK ),fat32);
-			cluster = fat32[cluster % FAT32_ENTRY_PER_BLOCK] ;
 		}
 		else{		
-			strncpy (ptr, read_sector_buf, total_len);
+			read_len += strncpy (tmp_buffer, read_sector_buf, total_len);
 			break; 
 		}
 		
+		// get the next cluster in chain
+		readblock(boot_sec->n_reserved_sectors + entry1->starting_sector +\
+				(cluster / FAT32_ENTRY_PER_BLOCK ),fat32);
+		cluster = fat32[cluster % FAT32_ENTRY_PER_BLOCK] ;
 	}
 	
-	int final_len = iter * BLOCK_SIZE + total_len - file->f_pos;	
+	int final_len = read_len - file->f_pos;	
 	strncpy(buf,tmp_buffer + file->f_pos, final_len);
-	
 	file->f_pos += final_len;
 
 	kfree((unsigned long)tmp_buffer);

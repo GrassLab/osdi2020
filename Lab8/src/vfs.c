@@ -78,7 +78,7 @@ int register_filesystem(struct filesystem* fs) {
 	 //fat32fs_v_ops->ls = ls_fat32fs;
 
          //fat32fs_f_ops->write = write_fat32fs;
-         //fat32fs_f_ops->read = read_fat32fs;
+         fat32fs_f_ops->read = read_fat32fs;
   }
   return -1;
 }

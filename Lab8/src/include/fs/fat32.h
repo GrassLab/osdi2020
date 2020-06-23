@@ -1,6 +1,9 @@
 #ifndef _FAT32_H
 #define _FAT32_H
 
+#define BLOCK_SIZE 512
+#define FAT32_ENTRY_PER_BLOCK  (BLOCK_SIZE/sizeof(int))
+
 typedef struct partition_entry
 {
     unsigned char status_flag; //0x0
@@ -79,4 +82,5 @@ struct file_operations* fat32fs_f_ops;
 int fat_getpartition();
 int setup_mount_fat32fs(struct filesystem* fs, struct mount* mt);
 int lookup_fat32fs(struct dentry* dir, struct vnode** target, const char* component_name);
+int read_fat32fs(struct file* file, void* buf, size_t len);
 #endif

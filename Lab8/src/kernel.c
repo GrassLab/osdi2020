@@ -107,7 +107,19 @@ void kernel_process(){
 }
 
 void test1(){
-	struct file* a = vfs_open("HELLO", 0);
+	struct file* a = vfs_open("HELLO", 0);	
+	int sz;
+	char buf[512];
+	sz = vfs_read(a, buf, 5);
+	buf[sz] = '\0';
+	printf("%s\n", buf);
+        printf("total %d\r\n",sz);	
+
+
+	sz = vfs_read(a, buf, 100);
+	buf[sz] = '\0';
+	printf("%s\n", buf);
+        printf("total %d\r\n",sz);	
 	vfs_close(a);
 }
 

@@ -261,11 +261,11 @@ void kfree(unsigned long p){
 
 	//printf("*** free to buddy system\r\n");
 	// else free it to buddy system
-	free_page(p);
+	free_page(virtual_to_physical(p));
 }
 int free_page(unsigned long p){ //input should be physical address
 	unsigned long pfn = physical_to_pfn(p);
-	
+
 	int order = page[pfn].order;
 	for(unsigned int i=pfn; i < ( pfn+(1<<order)); i++){
 		page[i].used = NOT_USED;
