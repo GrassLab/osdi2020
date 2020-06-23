@@ -77,7 +77,8 @@ fat32_node_dir_entry_set (struct fat32_node *node,
   offset += node->info.num_of_fat * node->info.sectors_per_fat;
   readblock (offset + node->dir_entry - node->info.cluster_num_of_root, dirs);
   dirs[node->dir_index] = *dir_entry;
-  writeblock (offset + node->dir_entry - node->info.cluster_num_of_root, dirs);
+  writeblock (offset + node->dir_entry - node->info.cluster_num_of_root,
+	      dirs);
   return 0;
 }
 
@@ -96,6 +97,7 @@ write (struct file *file, const void *buf, size_t len)
     return -1;
   if (dir.size == 0)
     return -1;
+  // TODO: find free cluster for new data
   // block full
   DATA_SIZE = dir.size / BLOCK_SIZE;
   if (dir.size % BLOCK_SIZE)
@@ -126,8 +128,8 @@ write (struct file *file, const void *buf, size_t len)
 	  // read block
 	  readblock (offset + value - node->info.cluster_num_of_root, data);
 	  // modify block
-	  memcpy (&data[start_pos % BLOCK_SIZE],
-		  &buf[start_pos - file->f_pos], end_pos - start_pos);
+	  memcpy (data + (start_pos % BLOCK_SIZE),
+		  buf + (start_pos - file->f_pos), end_pos - start_pos);
 	  // write back
 	  writeblock (offset + value - node->info.cluster_num_of_root, data);
 	}
@@ -183,13 +185,12 @@ read (struct file *file, void *buf, size_t len)
 	  // read block
 	  readblock (offset + value - node->info.cluster_num_of_root, data);
 	  // write to user buffer
-	  memcpy (&buf[start_pos - file->f_pos],
-		  &data[start_pos % BLOCK_SIZE], end_pos - start_pos);
+	  memcpy (buf + (start_pos - file->f_pos),
+		  data + (start_pos % BLOCK_SIZE), end_pos - start_pos);
 	}
       value = fat32_cluster_value (&node->info, value);
       pos += BLOCK_SIZE;
     }
-  //memcpy (buf, &node->block->data.content[file->f_pos], valid_len);
   file->f_pos += valid_len;
   return valid_len;
 }
@@ -291,6 +292,20 @@ static int
 create (struct vnode *dir_node, struct vnode **target,
 	const char *component_name)
 {
+  struct fat32_node *node;
+  struct directory_entry dir;
+
+  // verify node type
+  node = dir_node->internal;
+  if (fat32_node_dir_entry (node, &dir))
+    return 1;
+  // directory check
+  if (dir.size == 0)
+    return 1;
+  if (component_name[0] == '\0')
+    return 1;
+  *target = dir_node;
+  return 1;
 }
 
 static struct fat32_node *
