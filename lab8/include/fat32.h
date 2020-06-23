@@ -64,9 +64,9 @@ struct __attribute__((__packed__)) mbr_bootsel {
 struct __attribute__((__packed__)) mbr_sector {
                    /* Jump instruction to boot code.  */
                    /* Usually 0xE9nnnn or 0xEBnn90 */
-   unsigned char         mbr_jmpboot[3]; 
+   unsigned char         mbr_jmpboot[3];
                    /* OEM name and version */
-   unsigned char         mbr_oemname[8]; 
+   unsigned char         mbr_oemname[8];
    struct mbr_bpbFAT32 mbr_bpb;
                    /* Boot code */
    unsigned char         mbr_bootcode[310];
