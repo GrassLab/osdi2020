@@ -206,12 +206,40 @@ void fat32_init(){
   info->FirstFATSector      = bpb->bpbResSectors + pentry->mbrp_start;
 }
 
+
+#define CLUST_EOFE      0xffffffff      // end of eof cluster range 
+#define FAT32_MASK      0x0fffffff      // mask for FAT32 cluster numbers 
+unsigned long fat32_next_cluster(unsigned long cluster){
+  unsigned long fatOffset = cluster << 2;
+  unsigned long fatMask = FAT32_MASK;
+  unsigned long sector = info->FirstFATSector + (fatOffset / info->BytesPerSector);
+  unsigned long offset = fatOffset % info->BytesPerSector;
+
+  char *buffer = (char*)kmalloc(sizeof(char) * 512);
+  readblock(sector, buffer);
+  unsigned long nextCluster = (*((unsigned long*) &(buffer[offset]))) & fatMask;
+   
+  if (nextCluster == (CLUST_EOFE & fatMask))   
+      nextCluster = 0;   
+  kfree(buffer);
+  return nextCluster;
+}
+
+
+
+
+#define read_entry_ctx(e, ctx) \
+  read_file_ctx((e)->start_lo | ((e)->start_hi << 16), ctx);
+
 char *read_file_ctx(int N, char *buffer){
   unsigned long sector = pentry->mbrp_start;
   sector += bpb->bpbResSectors +  N * bpb->bpbBigFATsecs;
   readblock(info->FirstDataSector, buffer);
   return buffer;
 }
+
+#define write_entry_ctx(e, ctx) \
+  write_file_ctx((e)->start_lo | ((e)->start_hi << 16), ctx);
 
 char *write_file_ctx(int N, char *buffer){
   unsigned long sector = pentry->mbrp_start;
@@ -223,11 +251,13 @@ char *write_file_ctx(int N, char *buffer){
 void append_directory_entry(struct vnode *dir, struct SFN_entry *entry){
   char buffer[512];
   struct SFN_entry *e = &(Fat32fd(dir)->entry);
-  read_file_ctx(e->start_lo | (e->start_hi << 16), buffer);
+
+  read_entry_ctx(e, buffer);
+
   struct SFN_entry *fentry = (struct SFN_entry*)buffer;
   while(*(fentry->filename)) fentry += 1;
   *fentry = *entry;
-  write_file_ctx(e->start_lo | (e->start_hi << 16), buffer);
+  write_entry_ctx(e, buffer);
 }
 
 struct vnode *fat32_build_file(struct SFN_entry *entry, struct vnode *parent){
@@ -242,7 +272,7 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
 
   char *buffer = (char*)kmalloc(sizeof(char) * 512);
 
-  read_file_ctx(entry->start_lo | (entry->start_hi << 16), buffer);
+  read_entry_ctx(entry, buffer);
 
   struct SFN_entry *fentry = (struct SFN_entry*)buffer;
 
@@ -250,10 +280,12 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
 
   while(*fentry->filename){
     if(fentry->attr & 0x10){
+      printfmt("N = %d", (fentry->start_lo + (fentry->start_hi << 16)));
       *iter = newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
           newFat32File(fentry, dir));
     }
     else{
+      printfmt("N = %d", (fentry->start_lo + (fentry->start_hi << 16)));
       *iter = fat32_build_file(fentry, dir);
     }
     iter = &(Fat32fd(*iter)->next);
@@ -389,6 +421,19 @@ int fat32_create(
 
   encode_filename(component_name, code);
 
+  char *ctx = (char*)kmalloc(512 * sizeof(char));
+  struct SFN_entry *entry = &(Fat32fd(dir_node)->entry);
+  read_entry_ctx(entry, ctx);
+  
+
+  struct mbr_bpbFAT32 *bpb = (struct mbr_bpbFAT32*)ctx;
+  // todo: find the next addr for allocate new file
+  //unsigned 
+  //bpb->bpbSectors
+
+
+
+
   struct SFN_entry new_entry = {
     .attr = 0x10, 
     .reserved = 0, .create_ms = 0, .create_hms = 0,
@@ -416,21 +461,21 @@ int fat32_create(
 int fat32_write(struct file *file, const void *buf, size_t len){
   char ctx[512];
   struct SFN_entry *entry = &(Fat32fd(file->vnode)->entry);
-  read_file_ctx(entry->start_lo | (entry->start_hi << 16), ctx);
+  read_entry_ctx(entry, ctx);
   char *pos = ctx + file->f_pos, *ptr = (char*)buf;
   while(len--){
     *pos = *ptr;
     pos++, ptr++;
   }
   *pos = EOF;
-  write_file_ctx(entry->start_lo | (entry->start_hi << 16), ctx);
+  write_entry_ctx(entry, ctx);
   return 0;
 }
 
 int fat32_read(struct file *file, void *buf, size_t len){
   char ctx[512];
   struct SFN_entry *entry = &(Fat32fd(file->vnode)->entry);
-  read_file_ctx(entry->start_lo | (entry->start_hi << 16), ctx);
+  read_entry_ctx(entry, ctx);
   char *pos = ctx + file->f_pos, *ptr = (char*)buf;
   int rlen = 0;
   while(len-- && *pos != EOF){

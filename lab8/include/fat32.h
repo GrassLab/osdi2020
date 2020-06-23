@@ -51,8 +51,6 @@ struct __attribute__((__packed__))  mbr_bpbFAT32 {
   unsigned char     bsFileSysType[8]; /* "FAT32   " */
 }; /* __attribute__((__packed__)); */
 
-/* 446 */
-#define entry_off 0x1be
 #define MBR_PART_COUNT      4   /* Number of partitions in MBR */
 #define MBR_BS_PARTNAMESIZE 8   /* Size of name mbr_bootsel nametab */
 
