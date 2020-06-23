@@ -47,22 +47,22 @@ user_shell ()
 }
 
 static void
-vfs_test ()
+fat32_test ()
 {
-  char buf[100];
-  struct file *a = vfs_open ("hello", O_CREAT);
-  struct file *b = vfs_open ("world", O_CREAT);
-  vfs_write (a, "Hello ", 6);
-  vfs_write (b, "World!", 6);
-  vfs_close (a);
-  vfs_close (b);
-  b = vfs_open ("hello", 0);
-  a = vfs_open ("world", 0);
-  int sz;
-  sz = vfs_read (b, buf, 100);
-  sz += vfs_read (a, buf + sz, 100);
-  buf[sz] = '\0';
-  uart_puts (buf);		// should be Hello World!
+  struct file *a = vfs_open ("TEST", 0);
+  char buf[5];
+  buf[4] = '\0';
+  a->f_pos = 511;
+  vfs_read (a, buf, 4);
+  printf ("pos: %d, value: %s\r\n", (int) a->f_pos, buf);
+  a->f_pos = 511;
+  printf ("modify to: ");
+  do_uart_read ((char *) buf, 4);
+  printf ("%s\r\n", buf);
+  vfs_write (a, buf, 4);
+  a->f_pos = 511;
+  vfs_read (a, buf, 4);
+  printf ("pos: %d, value: %s\r\n", (int) a->f_pos, buf);
 }
 
 int
@@ -83,7 +83,7 @@ main (int error, char *argv[])
     }
 
   rootfs_init ();
-  vfs_test ();
+  fat32_test ();
   task_init ();
   privilege_task_create (idle);
   privilege_task_create (user_shell);

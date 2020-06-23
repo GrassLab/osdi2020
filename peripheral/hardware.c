@@ -62,5 +62,6 @@ hardware_info_memory_size ()
 
   base_addr = (unsigned int *) (msg + 1);
   size = base_addr + 1;
-  return *size;
+  // return *size;
+  return (*size < 1024 * 1024 * 100) ? *size : 1024 * 1024 * 100;
 }
