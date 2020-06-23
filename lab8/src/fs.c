@@ -166,7 +166,9 @@ int vfs_mount(
 
   if(mpt_vnode){
     mpt_vnode->mount = newMnt(mpt_vnode, dev_vnode);
+#if 0
     printfmt("new mount %x", mpt_vnode->mount);
+#endif
     struct filesystem *newfs = find_fs(fs);
     if(newfs) newfs->setup_mount(newfs, mpt_vnode->mount);
     else { puts("cannot find fs"); return 0; }

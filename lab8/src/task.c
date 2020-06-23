@@ -134,8 +134,10 @@ Task *privilege_task_create(void (*func)(), unsigned long arg, unsigned long pri
     p->cpu_ctx.lr = (unsigned long)ret_from_fork;
   }
 
+#if 0
   printf("new task [%d] sp = 0x%x pc = 0x%x" NEWLINE,
       p->pid, p->cpu_ctx.sp, p->cpu_ctx.x19);
+#endif
 
   append_task(p);
   preempt_enable();

@@ -21,7 +21,7 @@ Zone page_allocate(Zone *zoneptr, unsigned long page_number){
     page_number = startup_max_cont_space_left(0) / (PAGE_SIZE);
 
   unsigned long mask = (1 << (MAX_ORDER + PAGE_SHIFT - 1)) - 1;
-  printf("need Pages[%d]" NEWLINE, page_number);
+  startup_log("need Pages[%d]" , page_number);
 
   /* MM_START is imporant */
 #define TOTAL_PA_SIZE (sizeof(Page) * page_number + sizeof(ZoneStr))
@@ -29,7 +29,7 @@ Zone page_allocate(Zone *zoneptr, unsigned long page_number){
 
   unsigned long feasible = startup_max_cont_space_left(mask) / (PAGE_SIZE);
   page_number = MIN(page_number, feasible);
-  printf("final Pages[%d]" NEWLINE, page_number);
+  startup_log("final Pages[%d]" , page_number);
 
   /* if page fragment, then page buddy after it, or put buddy 0x0 */
   *zoneptr = (Zone)(addr + sizeof(Page) * page_number);

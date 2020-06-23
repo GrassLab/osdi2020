@@ -20,16 +20,18 @@ typedef struct Fat32fdTag{
 
 void parse_filename(const char *name, char *fn, char *ext){
   char *p = fn;
-  for(int i = 0; i < 8; i++, p++, name++)
-    if(*name != ' ') *p = *name;
+  for(int i = 0; i < 8; i++, p += p ? 1 : 0, name++)
+    if(*name != ' ' && p) *p = *name;
     else break;
   while(*name == ' ') name++;
-  if(fn == ext) *p++ = '.';
-  else *p = 0, p = ext;
-  for(int i = 0; i < 3; i++, p++, name++)
-    if(*name != ' ' && *name) *p = *name;
+  if(p){
+    if(fn == ext) *p++ = '.';
+    else *p = 0, p = ext;
+  } else p = ext;
+  for(int i = 0; i < 3; i++, p += p ? 1 : 0, name++)
+    if(*name != ' ' && *name && p) *p = *name;
     else break;
-  *p = 0;
+  if(p) *p = 0;
 }
 
 void encode_filename(const char *name, char *code){
@@ -72,8 +74,11 @@ Fat32fd newFat32Dir(
     struct vnode *next
     ){
   Fat32fd new = (Fat32fd)kmalloc(sizeof(Fat32fdStr));
-  new->name = strdup(entry->filename); // todo, release the mem
+  char mstr[16];
+  parse_filename(entry->filename, mstr, NULL);
+  new->name = strdup(mstr); // todo, release the mem
   new->parent = parent;
+  new->entry = *entry;
   new->type = dirent_dir;
   new->child = child;
   new->next = next;
@@ -151,7 +156,7 @@ struct vnode_operations *fat32_vop =
 void list_block(char *buffer){
   for(int i = 0; i < 512; i++)
     printf("%s%2x%s", i % 16 == 0 ? NEWLINE : "",
-        buffer[i], i % 2 ? " " : "");
+        buffer[i], i % 2 ? "  " : " ");
   puts("");
 }
 
@@ -160,6 +165,7 @@ void show_sec(size_t index){
 }
 
 typedef struct fat32_info{
+  char *fat;
   unsigned long FirstDataSector;
   unsigned long SectorsPerCluster;
   unsigned long BytesPerSector;
@@ -170,11 +176,33 @@ FAT32_INFO info = NULL;
 struct mbr_partition *pentry = NULL;
 struct mbr_bpbFAT32 *bpb = NULL;
 
+unsigned long fatClustToSect(unsigned long clust){
+  return ((clust-2) * info->SectorsPerCluster) + info->FirstDataSector;
+}
+
+#define CLUST_EOFE      0xffffffff      // end of eof cluster range
+#define FAT32_MASK      0x0fffffff      // mask for FAT32 cluster numbers
+unsigned long fat32_next_cluster(unsigned long cluster){
+  unsigned long fatOffset = cluster << 2;
+  unsigned long fatMask = FAT32_MASK;
+  unsigned long sector = info->FirstFATSector + (fatOffset / info->BytesPerSector);
+  unsigned long offset = fatOffset % info->BytesPerSector;
+
+  readblock(sector, info->fat);
+  unsigned long nextCluster = (*((unsigned long*) &(info->fat[offset]))) & fatMask;
+  //if (nextCluster == (CLUST_EOFE & fatMask))
+  //    nextCluster = 0;
+  return (nextCluster & 0xFFFFFF8) == 0xFFFFFF8 ? 0 : nextCluster;
+}
+
 void fat32_init(){
 
   info = (FAT32_INFO)kmalloc(sizeof(FAT32_INFO_STR));
 
-  char buffer[512];
+  char *buffer = (char*)kmalloc(512 * sizeof(char));
+
+  info->fat = buffer; // give fat the space for latter use
+
   readblock(0, buffer);
 
   /* use struct here becuase buffer will be replaced */
@@ -204,39 +232,17 @@ void fat32_init(){
   info->SectorsPerCluster   = bpb->bpbSecPerClust;
   info->BytesPerSector      = bpb->bpbBytesPerSec;
   info->FirstFATSector      = bpb->bpbResSectors + pentry->mbrp_start;
-  printfmt("thisFatSetNum = %d", bpb->bpbFATs);
-  show_sec(2);
 }
 
-
-#define CLUST_EOFE      0xffffffff      // end of eof cluster range
-#define FAT32_MASK      0x0fffffff      // mask for FAT32 cluster numbers
-unsigned long fat32_next_cluster(unsigned long cluster){
-  unsigned long fatOffset = cluster << 2;
-  unsigned long fatMask = FAT32_MASK;
-  unsigned long sector = info->FirstFATSector + (fatOffset / info->BytesPerSector);
-  unsigned long offset = fatOffset % info->BytesPerSector;
-
-  char *buffer = (char*)kmalloc(sizeof(char) * 512);
-  readblock(sector, buffer);
-  unsigned long nextCluster = (*((unsigned long*) &(buffer[offset]))) & fatMask;
-
-  if (nextCluster == (CLUST_EOFE & fatMask))
-      nextCluster = 0;
-  kfree(buffer);
-  return nextCluster;
-}
-
-
-
+#define entry_cluster_num(e) \
+  ((e)->start_lo | ((e)->start_hi << 16))
 
 #define read_entry_ctx(e, ctx) \
-  read_file_ctx((e)->start_lo | ((e)->start_hi << 16), ctx);
+  read_file_ctx(entry_cluster_num(e), ctx);
 
 char *read_file_ctx(int N, char *buffer){
-  unsigned long sector = pentry->mbrp_start;
-  sector += bpb->bpbResSectors +  N * bpb->bpbBigFATsecs;
-  readblock(info->FirstDataSector, buffer);
+  // next is 9457
+  readblock(fatClustToSect(N), buffer);
   return buffer;
 }
 
@@ -244,9 +250,7 @@ char *read_file_ctx(int N, char *buffer){
   write_file_ctx((e)->start_lo | ((e)->start_hi << 16), ctx);
 
 char *write_file_ctx(int N, char *buffer){
-  unsigned long sector = pentry->mbrp_start;
-  sector += bpb->bpbResSectors +  N * bpb->bpbBigFATsecs;
-  writeblock(info->FirstDataSector, buffer);
+  writeblock(fatClustToSect(N), buffer);
   return buffer;
 }
 
@@ -272,28 +276,44 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
   struct vnode *dir = newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
       newFat32Dir(entry, parent, NULL, NULL));
 
-  char *buffer = (char*)kmalloc(sizeof(char) * 512);
-
-  read_entry_ctx(entry, buffer);
-
-  struct SFN_entry *fentry = (struct SFN_entry*)buffer;
-
   struct vnode **iter = &(Fat32fd(dir)->child);
 
-  for(int i = 0; i < 16; i++){
-    if(*fentry->filename){
-      if(fentry->attr & 0x10){
-        printfmt("N = %d", (fentry->start_lo + (fentry->start_hi << 16)));
-        *iter = newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
-            newFat32File(fentry, dir));
+  char *buffer = (char*)kmalloc(sizeof(char) * 512);
+
+  int N = entry_cluster_num(entry);
+  unsigned cur_cluster_num = entry_cluster_num(entry);
+  unsigned prev_cluster_num = entry_cluster_num(&Fat32fd(parent)->entry);
+  while(N){
+    read_file_ctx(N, buffer);
+    struct SFN_entry *fentry = (struct SFN_entry*)buffer;
+    for(int i = 0; i < 16; i++, fentry += 1){
+      if(*fentry->filename){
+        if(*fentry->filename == 0xe5){
+            // deleted file
+            //puts("meet deleted file");
+        }
+        else if(fentry->attr & 0x10){
+          if(entry_cluster_num(fentry) == cur_cluster_num){
+            // current directory '.'
+            //puts("meet cur directory");
+          }
+          else if(entry_cluster_num(fentry) == prev_cluster_num
+              || entry_cluster_num(fentry) == 0){
+            // previous directory '..'
+            //puts("meet prev directory");
+          }
+          else{
+            *iter = fat32_build_dir(fentry, dir);
+            iter = &(Fat32fd(*iter)->next);
+          }
+        }
+        else{
+          *iter = fat32_build_file(fentry, dir);
+          iter = &(Fat32fd(*iter)->next);
+        }
       }
-      else{
-        printfmt("N = %d", (fentry->start_lo + (fentry->start_hi << 16)));
-        *iter = fat32_build_file(fentry, dir);
-      }
-      iter = &(Fat32fd(*iter)->next);
     }
-    fentry += 1;
+    N = fat32_next_cluster(N);
   }
   *iter = NULL;
   kfree(buffer);
@@ -308,7 +328,7 @@ struct vnode *fat32_build_root(){
     .reserved = 0, .create_ms = 0, .create_hms = 0,
     .date = 0, .access_date = 0,
     .start_hi = 0, .modify_time = 0, .modify_date = 0,
-    .start_lo = info->FirstDataSector, .size = 0
+    .start_lo = bpb->bpbFATs, .size = 0
   };
   return fat32_build_dir(&root_entry, NULL);
 }
@@ -572,7 +592,5 @@ int fat32_setup_mount(
   }
   if(!fs->mnt) fs->mnt = mount;
 
-  printfmt("sizeof fat %d", sizeof(struct mbr_bpbFAT32));
-  //show_sec(2048);
   return 0;
 }
