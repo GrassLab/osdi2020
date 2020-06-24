@@ -30,7 +30,7 @@ int strlen(char *str){
     return len;
 }
 
-int strEqual(char *str1, char *str2)
+int str_equal(char *str1, char *str2)
 {
     int str1len = strlen(str1);
     int str2len = strlen(str2);

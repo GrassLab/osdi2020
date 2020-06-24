@@ -2,7 +2,7 @@
 #define VFS_H
 
 #define REGULAR_FILE 0 
-#define DIRECTORY
+#define DIRECTORY 1
 #define ROOT_DIR 2
 
 #define O_CREAT 1
@@ -37,6 +37,7 @@ typedef struct file_operations {
 } FileOperations;
 
 typedef struct vnode_operations {
+    int (*ls)(VNode *node);
     int (*lookup)(VNode *dir_node, VNode **target, const char *component_name);
     int (*create)(VNode *dir_node, VNode **target, const char *component_name);
     int (*mkdir)(VNode *dir_node, VNode **target, const char *component_name);
@@ -49,5 +50,7 @@ File* vfs_open(const char *pathname, int flags);
 int vfs_close(File *file);
 int vfs_write(File *file, const void *buf, int len);
 int vfs_read(File *file, void *buf, int len);
+int vfs_ls(VNode *vnode);
+int vfs_mkdir(VNode *dir_node, char *dir_name);
 
 #endif 

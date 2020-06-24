@@ -5,6 +5,7 @@
 #include "memory.h"
 
 #define malloc allocate_memory 
+#define free free_memory 
 #define SLUB_NUMBER_MAX 4096
 #define ALLOCATOR_NUMBER_MAX 128
 #define ALLOCATOR_PAGE_NUMBER_MAX 128

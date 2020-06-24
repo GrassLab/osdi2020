@@ -18,6 +18,7 @@ typedef struct dentry {
 
 typedef struct tmpfs_node {
     Dentry *dentry;
+    int size;
     char content[TMP_FILE_SIZE];
 } TmpfsNode;
 
@@ -29,6 +30,7 @@ int tmpfs_create(VNode *dir_node, VNode **target, const char *component_name);
 int tmpfs_mkdir(VNode *dir_node, VNode **target, const char *component_name);
 int tmpfs_write(File *file, const void *buf, int len);
 int tmpfs_read(File *file, void *buf, int len);
+int tmpfs_ls(VNode *node);
 
 FileSystem *tmpfs;
 
