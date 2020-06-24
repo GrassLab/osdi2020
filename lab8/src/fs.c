@@ -78,8 +78,9 @@ struct file *vfs_open(const char *pathname, int flags) {
 
   target = move_mount_root(target);
 
-  if(target && target->v_ops->typeof(target) != dirent_file)
+  if(target && target->v_ops->typeof(target) != dirent_file){
     return NULL;
+  }
   // 2. Create a new file descriptor for this vnode if found.
   if(!target && flags & O_CREAT)
     xp_func(pathname, v_ops, create, &target);
@@ -141,8 +142,32 @@ void vfs_closedir(DIR *dir){
   if(dir) kfree(dir);
 }
 
-int vfs_mkdir(const char *path){
-  return xp_func(path, d_ops, mkdir);
+int vfs_mkdir(const char *pathname){
+  int len = strlen(pathname), name = 0;
+  char path[len], *p = path + len - 1, *newp = NULL;
+  strcpy(path, pathname);
+  while(p > path){
+    if(*p == ' ') p--;
+    else if(*p == '/'){
+      if(name) break;
+      else p--;
+    }
+    else name = 1, p--;
+  }
+  if(p != path) *p = 0, newp = p + 1, p = path;
+  else newp = path, p = path + len;
+  while(*newp == '/') newp++;
+
+  struct vnode *target;
+  if(xp_func(pathname, v_ops, lookup, &target)){
+    // existed directory
+    return 0;
+  }
+  if(xp_func(p, v_ops, lookup, &target)){
+    target = move_mount_root(target);
+    return target->d_ops->mkdir(target, newp);
+  }
+  return 0;
 }
 
 int vfs_chdir(const char *path){
@@ -225,9 +250,10 @@ void fs_init(){
   register_filesystem(fat32);
 }
 
-int subpath_of(const char *sub, const char *full){
+int subpath_of(const char *sub, const char *full, int (*cmp)(char a, char b)){
   while(*sub){
-    if(*full == *sub) full++, sub++;
+    if(cmp && cmp(*full, *sub)) full++, sub++;
+    else if(*full == *sub) full++, sub++;
     else break;
   }
   return (*full == '/' || *full == 0) && *sub == 0;

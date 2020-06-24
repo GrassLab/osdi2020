@@ -137,7 +137,7 @@ int shell_execute(char *cmd, int el) {
       vfs_close(cat_fd);
     }
     else{
-      puts("no such file or directory");
+      puts("[shell] no such file or directory");
     }
   }
   else if(strbeg(cmd, "mount")){

@@ -1,5 +1,21 @@
 #include "allocator.h"
 
+int isupper(char c){
+  return c >= 'A' && c <= 'Z';
+}
+
+int islower(char c){
+  return c >= 'a' && c <= 'z';
+}
+
+char tolower(char c){
+  return isupper(c) ? c - 'A' + 'a' : c;
+}
+
+char toupper(char c){
+  return islower(c) ? c - 'a' + 'A' : c;
+}
+
 int strcmp(const char *s1, const char *s2) {
   while (*s1 && (*s1 == *s2))
     s1++, s2++;
@@ -7,8 +23,8 @@ int strcmp(const char *s1, const char *s2) {
 }
 
 int strncmp(const char *s1, const char *s2, int n) {
-  while (*s1 && (*s1 == *s2) && n--)
-    s1++, s2++;
+  while (*s1 && (*s1 == *s2) && n)
+    s1++, s2++, n--;
   return n;
 }
 

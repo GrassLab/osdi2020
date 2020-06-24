@@ -136,12 +136,12 @@ int tmpfs_lookup(
     return 1;
   }
 
-  if(subpath_of(".", component_name)){
+  if(subpath_of(".", component_name, NULL)){
     return node->v_ops->lookup(
         node, target,
         component_name + strlen("."));
   }
-  else if(subpath_of("..", component_name)){
+  else if(subpath_of("..", component_name, NULL)){
     if(node->mount && node->mount->mp){
       if(node->mount->root != node){
         struct vnode *parent = Tmpfsfd(node)->parent;
@@ -178,7 +178,7 @@ int tmpfs_lookup(
 
   struct vnode *child = TmpfsfdChild(node);
   while(child){
-    if(subpath_of(Tmpfsfd(child)->name, component_name)){
+    if(subpath_of(Tmpfsfd(child)->name, component_name, NULL)){
       return child->v_ops->lookup(
           child, target,
           component_name + strlen(Tmpfsfd(child)->name));
@@ -203,7 +203,7 @@ int tmpfs_create(
   }
   struct vnode **childptr = &(Tmpfsfd(dir_node)->child);
   while(*childptr){
-    if(subpath_of(Tmpfsfd(*childptr)->name, component_name)){
+    if(subpath_of(Tmpfsfd(*childptr)->name, component_name, NULL)){
       return tmpfs_create(*childptr, target, component_name + strlen(Tmpfsfd(*childptr)->name));
     }
     childptr = &(Tmpfsfd(*childptr)->next);
@@ -280,6 +280,7 @@ enum dirent_type tmpfs_typeof(struct vnode *node){
 }
 
 int tmpfs_mkdir(struct vnode *node, const char *pathname){
+#if 0
   int len = strlen(pathname), name = 0;
   char path[len], *p = path + len - 1, *newp = NULL;
   strcpy(path, pathname);
@@ -302,11 +303,14 @@ int tmpfs_mkdir(struct vnode *node, const char *pathname){
   }
   if(node->v_ops->lookup(node, &target, p)){
     target = move_mount_root(target);
-    Tmpfsfd(target)->child =  newVnode(
+#endif
+    Tmpfsfd(node)->child =  newVnode(
         NULL, tmpfs_vop, tmpfs_fop, tmpfs_dop,
         newTmpfsDir(
-          newp, target, NULL, Tmpfsfd(target)->child));
+          pathname, node, NULL, Tmpfsfd(node)->child));
+#if 0
   }
+#endif
   return 0;
 }
 
@@ -317,7 +321,7 @@ int tmpfs_chdir(struct vnode *node, const char *pathname){
     printfmt("pwd <%x>", target);
     current_task->pwd = target;
     return 0;
-  } else puts("no such file or directory");
+  } else puts("[tmpfs] no such file or directory");
   return 1;
 }
 

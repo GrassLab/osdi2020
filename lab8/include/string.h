@@ -9,5 +9,11 @@ void *memset(void *s, int c, unsigned long n);
 int strbeg(const char *str, char *beg);
 void strcpy(char *dest, const char *src);
 char *strdup(const char *str);
+
+int isupper(char c);
+int islower(char c);
+char tolower(char c);
+char toupper(char c);
+
 #define EQS(xs, ys) (!strcmp(xs, ys))
 #endif
