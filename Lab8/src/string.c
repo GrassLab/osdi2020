@@ -88,10 +88,10 @@ int strncpy(char *dest, const char *src,int n)
     return c;
 }
 
-int strcpy_delim(char *dest, const char *src,const char delim){
+int strcpy_delim(char *dest, const char *src,int len,const char delim){
 
 	int c = 0;
-  	while (src[c] != '\0' && src[c] != delim){
+  	while (src[c] != '\0' && src[c] != delim && len>c){
     		dest[c]	= src[c];
 		c++;
 	}
@@ -99,6 +99,18 @@ int strcpy_delim(char *dest, const char *src,const char delim){
   	dest[c] = '\0';
 	return c;
 }
+
+int strtolower(char *str){
+	int c=0;
+  	
+	while (str[c] != '\0' ){
+    		str[c] = ((str[c] >= 'A' && str[c] <= 'Z') ? str[c] - 'A' + 'a':str[c]);
+		c++;
+	}
+
+	return c;
+}
+
 
 int strlen ( const char * s )
 {
@@ -111,4 +123,10 @@ int strlen ( const char * s )
     }
 
     return i;
+}
+
+char *strcat (char *dest, const char *src)
+{
+  strcpy (dest + strlen (dest), src);
+  return dest;
 }

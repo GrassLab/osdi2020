@@ -148,4 +148,9 @@ int read_tmpfs(struct file* file, void* buf, size_t len){
 
 }
 
-
+// For tmpfs, missing dentry means actually file not exist 
+int load_dent_tmpfs(struct dentry *dent,char *component_name){
+	// just used to make compiler happy
+	printf("%d %s\r\n",dent,component_name);
+	return -1;
+}

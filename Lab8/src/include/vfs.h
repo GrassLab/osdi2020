@@ -65,6 +65,9 @@ struct vnode_operations {
   int (*lookup)(struct dentry* dir, struct vnode** target, const char* component_name);
   int (*create)(struct dentry* dir, struct vnode** target, const char* component_name);
   int (*mkdir)(struct dentry* dir, struct vnode** target, const char *component_name);
+
+  // specific used for fat32: loading the missing dentry on hard disk
+  int (*load_dent)(struct dentry *dent,char *component_name);
 };
 
 struct mount* rootfs;

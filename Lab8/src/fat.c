@@ -48,9 +48,77 @@ void set_fat32fs_vnode(struct vnode* vnode){
          vnode->f_ops = fat32fs_f_ops;
 }
 
+// Function to find all entry under target directory sector
+int load_dent_fat32(struct dentry *dent,char *component_name){
+	int flag = -1;
+	
+	struct fat32fs_node *fat32fs_node = (struct fat32fs_node *)dent->vnode->internal;
+	int cluster = fat32fs_node->cluster;
+
+	unsigned char sector[BLOCK_SIZE];
+        fat32_dir_t *dir = (fat32_dir_t *) sector;	
+
+	readblock (root_sec_index + \
+                     (cluster-boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
+                       sector);
+
+	printf("### Loading file in %s directory\r\n", dent->dname);
+	for (int i = 0; dir[i].name[0] != '\0'; i++ ){
+		// For 0xE5, it means that the file was deleted
+		if(dir[i].name[0]==0xE5 ) continue;
+		
+		char name[9];
+		strtolower(dir[i].name);
+		strcpy_delim(name, dir[i].name,8,' ');
+	
+		char ext[4];
+		strtolower(dir[i].ext);
+		strncpy(ext, dir[i].ext, 3);
+		
+		char* complete_name;
+		if(dir[i].attr[0] & 0x10)
+			complete_name = name;	
+		else	
+			complete_name = strcat(strcat(name,"."),ext);
+
+		if(strcmp(complete_name,component_name) != 0) continue;
+		
+		struct vnode *child_vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
+ 		set_fat32fs_vnode(child_vnode);
+
+		struct fat32fs_node *child_fat32fs_node = (struct fat32fs_node*)kmalloc(sizeof(struct fat32fs_node)); 
+		strncpy(child_fat32fs_node->ext, dir[i].ext, 3);
+		child_fat32fs_node->cluster = ((dir[i].cluster_high) << 16) | ( dir[i].cluster_low );
+		child_fat32fs_node->size = dir[i].size;
+		child_vnode->internal = (void*)child_fat32fs_node;
+
+		struct dentry* child_dent = (struct dentry*)kmalloc(sizeof(struct dentry));
+		set_dentry(child_dent,child_vnode,complete_name);
+		child_dent -> flag =  dir[i].attr[0] & 0x10 ? DIRECTORY : REGULAR_FILE;		
+		child_dent->parent_dentry = dent;
+
+	 	if(dent->child_count < MAX_CHILD)
+                  	dent->child_dentry[dent->child_count++] = child_dent;
+          	else{
+                  	printf("NOT HANDLE THIS RIGHt NOW!\r\n");
+                  	while(1);
+         	}
+		
+		// success loading the target dentry
+		printf("Name: %s, ext: %s\r\n",child_dent->dname,child_fat32fs_node->ext);	
+		flag = 0;	
+		break;	
+	}
+	return flag;
+}
+
 int setup_mount_fat32fs(struct filesystem* fs, struct mount* mt){
 	struct vnode *vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
         set_fat32fs_vnode(vnode);
+
+	struct fat32fs_node *fat32fs_node = (struct fat32fs_node*)kmalloc(sizeof(struct fat32fs_node));
+	fat32fs_node->cluster = boot_sec->first_cluster; // setup for root cluster
+	vnode->internal = (void*)fat32fs_node;
 
 	struct dentry *dentry=(struct dentry*)kmalloc(sizeof(struct dentry));
         set_dentry(dentry,vnode,"/");
@@ -63,42 +131,8 @@ int setup_mount_fat32fs(struct filesystem* fs, struct mount* mt){
         // finding root directory
 	root_sec_index = entry1->starting_sector + (boot_sec->n_sector_per_fat_32 * boot_sec->n_file_alloc_tabs ) + boot_sec->n_reserved_sectors;
 
-	unsigned char sector[BLOCK_SIZE];
-        fat32_dir_t *dir = (fat32_dir_t *) sector;	
+	//load_dent_fat32(mt->dentry,"");
 
-        readblock(root_sec_index, sector);
-
-	printf("### Loading file in root directory\r\n");
-	for (int i = 0; dir[i].name[0] != '\0'; i++ ){
-		// For 0xE5, it means that the file was deleted
-		if(dir[i].name[0]==0xE5 ) continue;
-
-		struct vnode *child_vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
- 		set_fat32fs_vnode(child_vnode);
-
-		struct fat32fs_node *child_fat32fs_node = (struct fat32fs_node*)kmalloc(sizeof(struct fat32fs_node)); 
-		strncpy(child_fat32fs_node->ext,dir[i].ext,3);
-		child_fat32fs_node->cluster = ((dir[i].cluster_high) << 16) | ( dir[i].cluster_low );
-		child_fat32fs_node->size = dir[i].size;
-		child_vnode->internal = (void*)child_fat32fs_node;
-
-		struct dentry* child_dent = (struct dentry*)kmalloc(sizeof(struct dentry));
-		char name[9];
-		strcpy_delim(name, dir[i].name,' ');
-		set_dentry(child_dent,child_vnode,name);
-		child_dent->parent_dentry = mt->dentry;
-		child_dent->flag = dir[i].attr[0] & 0x10 ? DIRECTORY : REGULAR_FILE;
-		
-
-	 	if(mt->dentry->child_count < MAX_CHILD)
-                  	mt->dentry->child_dentry[mt->dentry->child_count++] = child_dent;
-          	else{
-                  	printf("NOT HANDLE THIS RIGHt NOW!\r\n");
-                  	while(1);
-         	}
-		
-		printf("name: %s, ext: %s\r\n",child_dent->dname,child_fat32fs_node->ext);
-	}
 	return 0;
 }
 /*
@@ -150,13 +184,11 @@ int read_fat32fs(struct file* file, void* buf, size_t len){
 	}
 	
 	// get file allocation table 
-	int fat32[FAT32_ENTRY_PER_BLOCK];
-	
+	int fat32[FAT32_ENTRY_PER_BLOCK];	
 	char *tmp_buffer = (char*)kmalloc(sizeof(char) * (total_len+1));
 	char *ptr = tmp_buffer;
 
-	int iter = 0;
-
+	int read_len = 0;
 	while(cluster>1 && cluster < 0xFFF8){	
 		readblock (root_sec_index + \
 			( cluster - boot_sec->first_cluster ) * boot_sec->logical_sector_per_cluster,\
@@ -166,7 +198,7 @@ int read_fat32fs(struct file* file, void* buf, size_t len){
 			strncpy (ptr, read_sector_buf, BLOCK_SIZE);
 			ptr += BLOCK_SIZE; 
 			total_len -= BLOCK_SIZE;
-			iter++;
+			read_len += BLOCK_SIZE;
 
 			// get the next cluster in chain
 			readblock(boot_sec->n_reserved_sectors + entry1->starting_sector +\
@@ -175,16 +207,17 @@ int read_fat32fs(struct file* file, void* buf, size_t len){
 		}
 		else{		
 			strncpy (ptr, read_sector_buf, total_len);
+			read_len += total_len;
 			break; 
 		}
 		
 	}
 	
-	int final_len = iter * BLOCK_SIZE + total_len - file->f_pos;	
-	strncpy(buf,tmp_buffer + file->f_pos, final_len);
+	read_len -= file->f_pos;	
+	strncpy(buf,tmp_buffer + file->f_pos, read_len);
 	
-	file->f_pos += final_len;
+	file->f_pos += read_len;
 
 	kfree((unsigned long)tmp_buffer);
-	return final_len;
+	return read_len;
 }

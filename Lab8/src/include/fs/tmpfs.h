@@ -21,6 +21,7 @@ void ls_tmpfs(struct dentry* dir);
 int lookup_tmpfs(struct dentry* dir, struct vnode** target,const char* component_name);
 int create_tmpfs(struct dentry* dir, struct vnode** target,const char* component_name);
 int mkdir_tmpfs(struct dentry* dir, struct vnode** target, const char *component_name);
+int load_dent_tmpfs(struct dentry *dent,char *component_name);
 
 int write_tmpfs(struct file* file, const void* buf, size_t len);
 int read_tmpfs(struct file* file, void* buf, size_t len);

@@ -61,6 +61,7 @@ int register_filesystem(struct filesystem* fs) {
         tmpfs_v_ops->create = create_tmpfs;
 	tmpfs_v_ops->mkdir = mkdir_tmpfs;
 	tmpfs_v_ops->ls = ls_tmpfs;
+	tmpfs_v_ops->load_dent = load_dent_tmpfs;
 
         tmpfs_f_ops->write = write_tmpfs;
         tmpfs_f_ops->read = read_tmpfs;
@@ -76,6 +77,7 @@ int register_filesystem(struct filesystem* fs) {
          //fat32fs_v_ops->create = create_far32fs;
 	 //fat32fs_v_ops->mkdir = mkdir_fat32fs;
 	 //fat32fs_v_ops->ls = ls_fat32fs;
+	 fat32fs_v_ops->load_dent = load_dent_fat32;
 
          //fat32fs_f_ops->write = write_fat32fs;
          fat32fs_f_ops->read = read_fat32fs;
@@ -101,8 +103,7 @@ int parsing(char* component_name, struct dentry** dent,const char* pathname){
 		if(pathname_count!=0){
 			component_name[name_count] = '\0';
 			name_count = 0;
-			int i = 0;
-			int child_count = (*dent)->child_count;
+			int i,child_count;
 			
 			if(strcmp(component_name,".")==0){
 				//do nothing	
@@ -114,6 +115,10 @@ int parsing(char* component_name, struct dentry** dent,const char* pathname){
 					printf("INVALID PATHNAME!!\r\n");
 			}
 			else{
+				int search_flag = 0;
+SEARCH_AGAIN:
+				i = 0;
+				child_count = (*dent)->child_count;
 				for(;i<child_count;i++){
                   			if(strcmp((*dent)->child_dentry[i]->dname, component_name)==0){
 						int is_mount = (*dent)->child_dentry[i]->is_mount;
@@ -126,9 +131,17 @@ int parsing(char* component_name, struct dentry** dent,const char* pathname){
 						}
 					}
 				}
-				// if can't find
+				// If can't find on memory, 
+				// go to hard disk and make sure that it really exist or not
 				if(i>=child_count){
-			 		printf("### DIRECTORY '%s' NOT FOUND!!\r\n",component_name);
+
+					int ret = (*dent)->vnode->v_ops->load_dent((*dent),component_name);
+			 		if(ret == 0 && search_flag == 0){
+						search_flag = 1;
+						goto SEARCH_AGAIN;
+					}
+					
+					printf("### DIRECTORY '%s' NOT FOUND!!\r\n",component_name);
 					return -1;
 				}
 			}
@@ -185,11 +198,21 @@ struct file* vfs_open(const char* pathname, int flags) {
   }
   else{
 	struct vnode* target;
-	int ret = rootfs->root->v_ops->lookup(dent,&target,component_name); 
+	int ret;
+	int search_flag = 0;
+
+FILE_SEARCH_AGAIN:
+	ret = rootfs->root->v_ops->lookup(dent,&target,component_name); 
         
 	if(ret == -1){
-		if (strcmp(pathname,"/")!=0)
+		if (strcmp(pathname,"/")!=0){
+			int ret2 = dent->vnode->v_ops->load_dent(dent,component_name);
+			if(ret2 == 0 && search_flag == 0){
+				search_flag = 1;
+				goto FILE_SEARCH_AGAIN;
+			}
 			printf("### FILE NOT FOUND!\r\n");
+		}
   		return (struct file*)NULL;
 	}
 	printf("### Found File %s\r\n",pathname);
