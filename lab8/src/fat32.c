@@ -172,7 +172,6 @@ int fat32_setup_mount(struct filesystem* fs, struct mount* mount) {
     return 1;
 }
 
-
 int fat_getpartition(void *buff) {
     sd_root_partition = (fat32_partition_t *)obj_allocate(sizeof(fat32_partition_t));
     unsigned char *mbr = (unsigned char *)buff;
