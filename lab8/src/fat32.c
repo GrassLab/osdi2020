@@ -53,9 +53,11 @@ int fat32_write(struct file* file, const void* buf, int len) {
     struct direntry *iter_entry;
     char dir_entrty[512];
     char write_sector_buf[512];
-    int i;
+    int i = 0;
     file_node = (fat32_node_t *)(file->vnode->internal);
-    memcpy(buf, write_sector_buf, len);
+    for(int i = 0 ; i < len ; i++) {
+        write_sector_buf[i] = *(char *)(((char *)buf)+i);
+    }
     writeblock ((file_node->cluster - 2 ) * sd_root_bst->logic_sector_per_cluster + sd_root_partition->starting_sector + sd_root_partition->root_sector_abs, write_sector_buf);
     // udpate size in directory entry
     dir_node = (fat32_node_t*)(((struct directory *)rootfs_mount->root->internal)->internal);
@@ -63,15 +65,18 @@ int fat32_write(struct file* file, const void* buf, int len) {
     parent_dir = (fat32_dir_t *) dir_entrty;
     iter_entry = ((struct directory *)rootfs_mount->root->internal)->head;
     while(iter_entry != 0) {
-        if (strncmp(parent_dir[i].name, file_node->name, 8) && strncmp(parent_dir[i].ext, file_node->ext, 3)) {
+        if (strncmp(parent_dir[i].name, file_node->name, 8)) {
+            printf("Change the file: %s\r\n", parent_dir[i].name);
+            printf("Change the file size: %d to %d bytes.\r\n", parent_dir[i].size, len);
             parent_dir[i].size = len;
             break;
         }
         iter_entry = iter_entry->next;
+        i += 1;
     }
     file_node->size = len;
     writeblock(( dir_node->cluster - 2 ) * sd_root_bst->logic_sector_per_cluster + sd_root_partition->starting_sector + sd_root_partition->root_sector_abs, dir_entrty);
-    printf( "Write to file: %s, size: %d\r\n", file_node->name, len);
+    printf( "Write to the file: %s,size: %d bytes.\r\n", file_node->name, len);
     return len;
 }
 
@@ -90,7 +95,7 @@ int fat32_read(struct file* file, void* buf, int len) {
     memcpy(read_sector_buf + file->f_pos, buf, len);
     ((char *)buf)[len] = '\0';
     ( file->f_pos ) += len;
-    printf( "Read from file: %s, read_size: %d\r\n", node->name, len );
+    printf( "Read from file: %s,read_size: %d bytes.\r\n", node->name, len );
     return len;
 }
 
@@ -153,7 +158,9 @@ int fat32_setup_mount(struct filesystem* fs, struct mount* mount) {
         node->size    = dir[i].size;
         memcpy(dir[i].name, node->name, 8);
         node->name[8] = '\0';
-        memcpy(dir[i].ext, node->ext, 3);
+        for (int i = 0 ; i < 3 ; i++) {
+            node->ext[i] = dir[i].ext;
+        }
         node->ext[3]  = '\0';
         insert_vnode((struct directory *)mount->root->internal, new_vnode, node->name);
         //set vnode type

@@ -44,18 +44,18 @@ void kernel_main()
 	setup_fat32(&fat32_1, name);
 	register_filesystem(fat32_1, "fat32_fs");
 	init_root_filesystem();
-	// struct file *a = vfs_open("hello", REG_FILE);
-	// if (a != 0) {
-	// 	vfs_write(a, "Hello world!!!", 15);
-	// 	vfs_close(a);
-	// }
-	// struct file *a = vfs_open("hello", REG_FILE);
-	// if (a != 0) {
-	// 	int sz;
-	// 	char buf[100];
-	// 	sz  = vfs_read(a, buf, 100);
-	// 	printf("%s\r\n", buf);
-	// }
+	struct file *a = vfs_open("hello", REG_FILE);
+	if (a != 0) {
+		vfs_write(a, "hello world", 11);
+		vfs_close(a);
+	}
+	a = vfs_open("hello", REG_FILE);
+	if (a != 0) {
+		int sz;
+		char buf[100];
+		sz  = vfs_read(a, buf, 100);
+		printf("%s\r\n", buf);
+	}
 	enable_core_timer();
 	int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
 	
