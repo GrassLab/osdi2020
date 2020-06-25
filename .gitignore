@@ -7,4 +7,5 @@
 *.rd
 *.cpio
 *.cpio_bin
+*.fat32
 
