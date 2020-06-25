@@ -21,8 +21,8 @@ void mbr_get_primary_partition(struct mbr_partition_entry_struct * buf, unsigned
 #pragma GCC diagnostic ignored "-Wconversion"
   buf -> end_c |= block_buf[MBR_FIRST_PARTITION_ENTRY + idx * MBR_PARTITION_ENTRY_SIZE + 7];
 
-  buf -> lba_start = (uint32_t)block_buf[MBR_FIRST_PARTITION_ENTRY + idx * MBR_PARTITION_ENTRY_SIZE + 0x8];
-  buf -> total_sectors = (uint32_t)block_buf[MBR_FIRST_PARTITION_ENTRY + idx * MBR_PARTITION_ENTRY_SIZE + 0xc];
+  buf -> lba_start = *(uint32_t *)(&block_buf[MBR_FIRST_PARTITION_ENTRY + idx * MBR_PARTITION_ENTRY_SIZE + 0x8]);
+  buf -> total_sectors = *(uint32_t *)(&block_buf[MBR_FIRST_PARTITION_ENTRY + idx * MBR_PARTITION_ENTRY_SIZE + 0xc]);
   return;
 }
 
