@@ -87,6 +87,9 @@ boot_rest:
   bl mmu_user_page_table_init
   bl tmpfs_init
   bl sd_init
+  bl fat32_init
+  // Point rootfs to fat32
+  bl vfs_set_rootfs
 
   // In case return, enter low power mode
   b other_core
