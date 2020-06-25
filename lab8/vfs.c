@@ -25,12 +25,6 @@ int vfs_regist_fs(struct vfs_filesystem_struct * fs)
   uart_puts(fs -> name);
   uart_puts(" registered\n");
 
-  /* point to rootfs if tmpfs */
-  if(string_cmp(fs -> name, "tmpfs", 8) != 0)
-  {
-    vfs_set_tmpfs_to_rootfs(fs);
-  }
-
   return 0;
 }
 
@@ -43,7 +37,7 @@ void vfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct 
   return;
 }
 
-void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs)
+void vfs_set_rootfs(struct vfs_filesystem_struct * fs)
 {
   /* WARNING: Currently this function should be called once */
 
