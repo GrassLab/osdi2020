@@ -107,7 +107,7 @@ void kernel_process(){
 }
 
 void test1(){
-	struct file* a = vfs_open("ds.txt", 0);	
+	struct file* a = vfs_open("dir/a.txt", 0);	
 	int sz;
 	char buf[512*4];
 	sz = vfs_read(a, buf, 512*4);
@@ -115,6 +115,15 @@ void test1(){
 	printf("%s\n", buf);
         printf("total %d\r\n",sz);	
 	vfs_close(a);
+	
+	struct file* b = vfs_open("dir/a.txt", 0);	
+	vfs_write(b,"QAQ",100);
+	sz = vfs_read(b, buf, 512*4);
+	buf[sz] = '\0';
+	printf("%s\n", buf);
+        printf("total %d\r\n",sz);	
+	vfs_close(b);
+
 }
 
 

@@ -40,6 +40,9 @@ struct file {
   size_t f_pos; // The next read/write position of this file descriptor
   struct file_operations* f_ops;
   int flags;
+
+  int parent_cluster;
+  char fname[DNAME_LEN];
 };
 	
 #define MOUNT_TABLE_SIZE 8

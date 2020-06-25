@@ -131,8 +131,6 @@ int setup_mount_fat32fs(struct filesystem* fs, struct mount* mt){
         // finding root directory
 	root_sec_index = entry1->starting_sector + (boot_sec->n_sector_per_fat_32 * boot_sec->n_file_alloc_tabs ) + boot_sec->n_reserved_sectors;
 
-	//load_dent_fat32(mt->dentry,"");
-
 	return 0;
 }
 /*
@@ -161,11 +159,88 @@ int create_fat32fs(struct dentry* dir, struct vnode** target, \
 int mkdir_fat32fs(struct dentry* dir, struct vnode** target, const char *component_name){
 
 }
-
-int write_fat32fs(struct file* file, const void* buf, size_t len){
-
-}
 */
+int write_fat32fs(struct file* file, const void* buf, size_t len){
+	struct fat32fs_node *node = (struct fat32fs_node *)file->vnode->internal;
+	char write_sector_buf[BLOCK_SIZE];
+	int cluster = node->cluster;
+	
+	// get file allocation table
+	int fat32[FAT32_ENTRY_PER_BLOCK];
+	
+	int total_len = len;
+
+	if((unsigned int)strlen(buf) < len)
+		total_len = strlen(buf);
+	
+
+	int write_len = 0;
+
+	while(cluster>1 && cluster < 0xFFF8){
+		if(total_len > BLOCK_SIZE){
+			strncpy (write_sector_buf, buf, BLOCK_SIZE);
+			buf += BLOCK_SIZE;
+			total_len -= BLOCK_SIZE;
+			write_len += BLOCK_SIZE;
+		
+			writeblock(root_sec_index + \
+				(cluster-boot_sec->first_cluster )*boot_sec->logical_sector_per_cluster,\
+	       			write_sector_buf);
+		
+		
+			// get the next cluster in chain
+                        readblock(boot_sec->n_reserved_sectors + entry1->starting_sector +\
+                                 (cluster / FAT32_ENTRY_PER_BLOCK ),fat32);
+                        
+			cluster = fat32[cluster % FAT32_ENTRY_PER_BLOCK] ;
+		}
+		else{
+			strncpy (write_sector_buf, buf, total_len);
+			write_len+=total_len;
+
+			writeblock(root_sec_index + \
+				(cluster-boot_sec->first_cluster )*boot_sec->logical_sector_per_cluster,\
+	       			write_sector_buf);
+			break;
+		}
+	}		
+	node->size = write_len;
+
+	// udpate size in directory entry
+	unsigned char sector[BLOCK_SIZE];
+        fat32_dir_t *dir = (fat32_dir_t *) sector;
+    	readblock (root_sec_index + \
+		 (file->parent_cluster - boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
+		 sector);
+
+    	for (int i = 0; dir[i].name[0] != '\0'; i++ ){
+		// For 0xE5, it means that the file was deleted
+		if(dir[i].name[0]==0xE5 || (dir[i].attr[0] & 0x10) ) continue;
+		
+		char name[9];
+		strtolower(dir[i].name);
+		strcpy_delim(name, dir[i].name,8,' ');
+	
+		char ext[4];
+		strtolower(dir[i].ext);
+		strncpy(ext, dir[i].ext, 3);
+		
+		char* complete_name;
+		complete_name = strcat(strcat(name,"."),ext);
+
+       		if (strcmp(file->fname, complete_name)==0){
+            		dir[i].size = write_len;
+			writeblock (root_sec_index + \
+			 	(file->parent_cluster - boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
+				sector);
+
+            		return 0;
+        	}
+	}
+
+	return -1;	
+}
+
 int read_fat32fs(struct file* file, void* buf, size_t len){
 	struct fat32fs_node *node = (struct fat32fs_node *)file->vnode->internal;
 	char read_sector_buf[BLOCK_SIZE];
