@@ -34,6 +34,14 @@ qemu: all
 copy: all
 	sudo mount /dev/sdb1 /mnt/ && sudo cp kernel8.img /mnt/ && sudo umount /mnt
 
+mount:
+	sudo losetup -fP sfn_nctuos.fat32
+	sudo mount -t msdos /dev/loop0p1 /mnt
+
+umount:
+	sudo umount /mnt
+	sudo losetup -d /dev/loop0
+
 .PHONY: qemu_dbg
 qemu_dbg: debug
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -s -S -serial pty -drive if=sd,file=sfn_nctuos.fat32,format=raw
