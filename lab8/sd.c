@@ -135,7 +135,7 @@ static void wait_finish(void)
   while((dbg & SDHOST_DBG_FSM_MASK) != SDHOST_HSTS_DATA);
 }
 
-void readblock(int block_idx, void * buf)
+void sd_readblock(int block_idx, void * buf)
 {
   unsigned * buf_u = (unsigned *)buf;
   int succ = 0;
@@ -168,7 +168,7 @@ void readblock(int block_idx, void * buf)
   wait_finish();
 }
 
-void writeblock(unsigned block_idx, void * buf)
+void sd_writeblock(unsigned block_idx, void * buf)
 {
   unsigned * buf_u = (unsigned *)buf;
   int succ = 0;

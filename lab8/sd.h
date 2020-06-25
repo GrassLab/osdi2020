@@ -74,18 +74,8 @@
 #define SD_GET(io_addr, val) \
   asm volatile("ldr %w0, [%1]" : "=r"(val) : "r"(io_addr) : "memory");
 
-static inline void delay(unsigned long tick);
-static void pin_setup(void);
-static void sdhost_setup(void);
-static int wait_sd(void);
-static int sd_cmd(unsigned cmd, unsigned int arg);
-static int sdcard_setup(void);
-static int wait_fifo(void);
-static void set_block(int size, int cnt);
-static void wait_finish(void);
-
-void readblock(int block_idx, void * buf);
-void writeblock(unsigned block_idx, void * buf);
+void sd_readblock(int block_idx, void * buf);
+void sd_writeblock(unsigned block_idx, void * buf);
 void sd_init(void);
 
 #endif
