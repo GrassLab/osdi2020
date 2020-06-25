@@ -36,7 +36,7 @@ copy: all
 
 .PHONY: qemu_dbg
 qemu_dbg: debug
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -s -S -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -s -S -serial pty -drive if=sd,file=sfn_nctuos.fat32,format=raw
 
 .PHONY: clean
 clean:
