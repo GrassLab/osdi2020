@@ -87,6 +87,7 @@ int fat32_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
   sd_readblock((int)block_idx, sd_buf);
 
 
+  /* TODO: if directory span multiple cluster */
   if((next_fat & 0xffffff8) == 0xffffff8)
   {
     /* end of cluster */
@@ -97,20 +98,21 @@ int fat32_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
   }
 
   unsigned total_entries = fat32_metadata.sectors_per_cluster * FAT32_BYTES_PER_SECTOR / FAT32_FILE_ENTRY_SIZE;
+  struct fat32_file_struct * file_struct = (struct fat32_file_struct *)slab_malloc(sizeof(struct fat32_file_struct));
   for(unsigned entry_idx = 0; entry_idx < total_entries; ++entry_idx)
   {
-    struct fat32_file_struct file_struct;
-    fat32_get_file_entry(&file_struct, sd_buf, entry_idx);
+    fat32_get_file_entry(file_struct, sd_buf, entry_idx);
 
-    if(string_cmp(file_struct.name, component_name, 10) != 0)
+    if(string_cmp(file_struct -> name, component_name, 10) != 0)
     {
 
-      *target = fat32_create_vnode(dir_node -> mount, (void *)(fat32_metadata.fat1_offset + (file_struct.start_of_file * FAT32_BYTES_PER_CLUSTER)), file_struct.is_dir);
+      *target = fat32_create_vnode(dir_node -> mount, (void *)file_struct, file_struct -> is_dir);
       return 0;
     }
   }
 
   /* nothing found */
+  slab_malloc_free((uint64_t *)file_struct);
   *target = 0;
   return 0;
 
