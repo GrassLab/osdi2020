@@ -23,6 +23,8 @@ struct vfs_filesystem_struct * fat32_init(void)
 
   fat32_vnode_ops -> lookup = fat32_lookup;
 
+  fat32_file_ops -> read = fat32_read;
+
   vfs_regist_fs(fs);
 
   return fs;
@@ -117,6 +119,32 @@ int fat32_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
   return 0;
 
 }
+
+int fat32_read(struct vfs_file_struct * file, void * buf, size_t len)
+{
+  struct fat32_file_struct * file_struct = (struct fat32_file_struct *)file -> vnode -> internal;
+  uint8_t sd_buf[512];
+  uint64_t block_idx, block_offset;
+  unsigned read_offset = (unsigned)(file -> read_pos);
+  int read_length;
+
+  if(len > (file_struct -> filesize - read_offset - 1))
+  {
+    read_length = (signed)(file_struct -> filesize - read_offset);
+  }
+  else
+  {
+    read_length = (int)len;
+  }
+
+  fat32_get_sd_block_and_offset(((file_struct -> start_of_file) - FAT32_CLUSTER_DATA_SECTION_OFFSET) * FAT32_BYTES_PER_SECTOR * fat32_metadata.sectors_per_cluster + fat32_metadata.data_offset, &block_idx, &block_offset);
+  sd_readblock((int)block_idx, sd_buf);
+
+  memcopy((const char *)(sd_buf + read_offset), (char *)(buf), (unsigned)read_length);
+  return read_length;
+
+}
+
 
 struct vfs_vnode_struct * fat32_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir)
 {
