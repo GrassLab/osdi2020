@@ -235,7 +235,7 @@ int fat32_get_file_entry(struct fat32_file_struct * file_struct, uint8_t * base,
   file_struct -> start_of_file = (uint32_t)(*(uint16_t *)(base + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_CLUSTER_HIGH_TWO_BYTES_OFFSET)) << 16;
   file_struct -> start_of_file |= *(uint16_t *)(base + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_CLUSTER_LOW_TWO_BYTES_OFFSET);
 
-  file_struct -> filesize = *(uint32_t *)(base + (unsigned)entry_idx + FAT32_FILE_ENTRY_SIZE + FAT32_FILE_SIZE_OFFSET);
+  file_struct -> filesize = *(uint32_t *)(base + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_SIZE_OFFSET);
 
   return 1;
 }
