@@ -12,14 +12,11 @@ void test1()
 {
     struct file* a = vfs_open("hello", 0);
     // assert(a == NULL);
-    printf("a");
     a = vfs_open("hello", O_CREAT);
     // assert(a != NULL);
-    printf("a");
     vfs_close(a);
     struct file* b = vfs_open("hello", 0);
     // assert(b != NULL);
-    printf("a");
     vfs_close(b);
 }
 void test2()
@@ -47,8 +44,9 @@ int kernel_main()
     get_board_info();
     mm_init();
     rootfs_init();
-    printf("ok");
+    printf("\n\n\ntest1\n");
     test1();
+    printf("\n\n\ntest2\n");
     test2();
 
     core_timer_enable();
