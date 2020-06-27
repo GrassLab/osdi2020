@@ -103,11 +103,24 @@ int fat32_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
   struct fat32_file_struct * file_struct = (struct fat32_file_struct *)slab_malloc(sizeof(struct fat32_file_struct));
   for(unsigned entry_idx = 0; entry_idx < total_entries; ++entry_idx)
   {
-    fat32_get_file_entry(file_struct, sd_buf, entry_idx);
-
-    if(string_cmp(file_struct -> name, component_name, 10) != 0)
+    char filename[16];
+    if(fat32_get_file_entry(file_struct, sd_buf, entry_idx) == 0)
     {
+      continue;
+    }
 
+    filename[0] = '\0';
+    string_concat(filename, file_struct -> name);
+    if(string_length(file_struct -> extension) != 0)
+    {
+      string_concat(filename, ".");
+      string_concat(filename, file_struct -> extension);
+    }
+    uart_puts(filename);
+    uart_puts("\n");
+
+    if(string_cmp(filename, component_name, 16) != 0)
+    {
       *target = fat32_create_vnode(dir_node -> mount, (void *)file_struct, file_struct -> is_dir);
       return 0;
     }
@@ -169,6 +182,12 @@ int fat32_get_file_entry(struct fat32_file_struct * file_struct, uint8_t * base,
   /* return 0 if entry is empty, 1 if not empty */
   if(*(base + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE) == 0)
   {
+    /* entry availible */
+    return 0;
+  }
+  if(*(base + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE) == 0xe5)
+  {
+    /*  Entry has been previously erased and/or is available, ignored for now */
     return 0;
   }
 
@@ -178,6 +197,10 @@ int fat32_get_file_entry(struct fat32_file_struct * file_struct, uint8_t * base,
   {
     if((file_struct -> name)[i] == ' ')
     {
+      if(i == 0)
+      {
+        (file_struct -> extension)[0] = '\0';
+      }
       continue;
     }
     (file_struct -> name)[i + 1] = '\0';
@@ -190,6 +213,10 @@ int fat32_get_file_entry(struct fat32_file_struct * file_struct, uint8_t * base,
   {
     if((file_struct -> extension)[i] == ' ')
     {
+      if(i == 0)
+      {
+        (file_struct -> extension)[0] = '\0';
+      }
       continue;
     }
     (file_struct -> extension)[i + 1] = '\0';
