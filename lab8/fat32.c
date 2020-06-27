@@ -116,8 +116,6 @@ int fat32_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
       string_concat(filename, ".");
       string_concat(filename, file_struct -> extension);
     }
-    uart_puts(filename);
-    uart_puts("\n");
 
     if(string_cmp(filename, component_name, 16) != 0)
     {
@@ -150,10 +148,27 @@ int fat32_read(struct vfs_file_struct * file, void * buf, size_t len)
     read_length = (int)len;
   }
 
-  fat32_get_sd_block_and_offset(((file_struct -> start_of_file) - FAT32_CLUSTER_DATA_SECTION_OFFSET) * FAT32_BYTES_PER_SECTOR * fat32_metadata.sectors_per_cluster + fat32_metadata.data_offset, &block_idx, &block_offset);
-  sd_readblock((int)block_idx, sd_buf);
+    int cumulated_length = 0;
+    uint64_t next_file_cluster = file_struct -> start_of_file;
+    while(cumulated_length < read_length)
+    {
+      int read_chunk = read_length - cumulated_length - 512 > 0 ? 512 : read_length - cumulated_length;
+      /*  Read from data_offset */
+      fat32_get_sd_block_and_offset((next_file_cluster - FAT32_CLUSTER_DATA_SECTION_OFFSET) * FAT32_BYTES_PER_SECTOR * fat32_metadata.sectors_per_cluster + fat32_metadata.data_offset, &block_idx, &block_offset);
+      sd_readblock((int)block_idx, sd_buf);
+      memcopy((const char *)(sd_buf + read_offset), (char *)(buf + cumulated_length), (unsigned)read_chunk);
 
-  memcopy((const char *)(sd_buf + read_offset), (char *)(buf), (unsigned)read_length);
+      cumulated_length += read_chunk;
+
+      if((next_file_cluster & 0xffffff8) != 0xffffff8)
+      {
+        /* get the cluster number of next sector */
+        fat32_get_sd_block_and_offset(next_file_cluster * FAT32_BYTES_PER_CLUSTER  + fat32_metadata.fat1_offset, &block_idx, &block_offset);
+        sd_readblock((int)block_idx, sd_buf);
+        next_file_cluster = *(uint32_t *)(sd_buf + block_offset);
+      }
+    }
+
   return read_length;
 
 }
