@@ -2,7 +2,7 @@
 #include "mm.h"
 #include "tmpfs.h"
 #include "printf.h"
-#include "string.h"
+#include "lib/string.h"
 
 void set_dentry(struct dentry *dentry,struct vnode* vnode, const char* str){
     dentry->child_count = 0;

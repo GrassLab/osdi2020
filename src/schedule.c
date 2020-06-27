@@ -5,7 +5,7 @@
 #include "printf.h"
 #include "uart.h"
 #include "sysregs.h"
-#include "string.h"
+#include "lib/string.h"
 
 /*
     get ksp base vs get ksp top

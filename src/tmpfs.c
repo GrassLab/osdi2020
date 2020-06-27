@@ -1,7 +1,7 @@
 #include "vfs.h"
 #include "tmpfs.h"
 #include "mm.h"
-#include "string.h"
+#include "lib/string.h"
 #include "printf.h"
 
 
