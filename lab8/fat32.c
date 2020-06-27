@@ -104,6 +104,8 @@ int fat32_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
   for(unsigned entry_idx = 0; entry_idx < total_entries; ++entry_idx)
   {
     char filename[16];
+    file_struct -> entry_location = (uint64_t)(data_offset + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE);
+
     if(fat32_get_file_entry(file_struct, sd_buf, entry_idx) == 0)
     {
       continue;

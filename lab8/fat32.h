@@ -38,6 +38,7 @@ struct fat32_file_struct
   uint8_t is_dir;
   uint32_t start_of_file;
   uint32_t filesize;
+  uint64_t entry_location;
 };
 
 struct vfs_filesystem_struct * fat32_init(void);
