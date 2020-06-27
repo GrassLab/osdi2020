@@ -39,5 +39,25 @@ void test_init(void)
   uart_puts("---\n");
   vfs_close(plagueis_file);
 
+  uart_puts("open /WHITEBOA.RD\n");
+  struct vfs_file_struct * whiteboard_file = vfs_open("/WHITEBOA.RD", 0);
+  if(whiteboard_file == 0)
+  {
+    uart_puts("Assert whiteboard_file != 0\n");
+    while(1);
+  }
+  uart_puts("---\n");
+
+  uart_puts("write /WHITEBOA.RD with meme\n");
+  size = vfs_write(whiteboard_file, "Roses are red, violets are blue. Unregistered Hypercam 2\n", 57);
+  uart_puts("---\n");
+
+  uart_puts("read /WHITEBOA.RD\n");
+  size = vfs_read(whiteboard_file, buf, 999);
+  buf[size++] = '\0';
+  uart_puts(buf);
+  uart_puts("---\n");
+  vfs_close(whiteboard_file);
+
   return;
 }

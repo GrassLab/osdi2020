@@ -45,10 +45,13 @@ struct vfs_filesystem_struct * fat32_init(void);
 int fat32_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct * mount);
 int fat32_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name);
 int fat32_read(struct vfs_file_struct * file, void * buf, size_t len);
+int fat32_write(struct vfs_file_struct * file, const void * buf, size_t len);
 
 struct vfs_vnode_struct * fat32_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir);
 void fat32_get_sd_block_and_offset(uint64_t location, uint64_t * block, uint64_t * offset);
 int fat32_get_file_entry(struct fat32_file_struct * file_struct, uint8_t * base, unsigned entry_idx);
+uint32_t fat32_find_availible_cluster(void);
+uint32_t fat32_append_cluster(uint64_t entry_base);
 
 #endif
 

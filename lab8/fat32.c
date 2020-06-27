@@ -24,6 +24,7 @@ struct vfs_filesystem_struct * fat32_init(void)
   fat32_vnode_ops -> lookup = fat32_lookup;
 
   fat32_file_ops -> read = fat32_read;
+  fat32_file_ops -> write = fat32_write;
 
   vfs_regist_fs(fs);
 
@@ -175,6 +176,56 @@ int fat32_read(struct vfs_file_struct * file, void * buf, size_t len)
 
 }
 
+int fat32_write(struct vfs_file_struct * file, const void * buf, size_t len)
+{
+  struct fat32_file_struct * file_struct = (struct fat32_file_struct *)file -> vnode -> internal;
+  uint8_t sd_buf[512];
+  uint64_t block_idx, block_offset;
+  unsigned write_offset = (unsigned)(file -> write_pos);
+
+  size_t cumulated_length = 0;
+  uint32_t next_file_cluster = file_struct -> start_of_file;
+
+  while(cumulated_length < len)
+  {
+    size_t write_chunk = len - cumulated_length > 512 ? 512 : len - cumulated_length;
+
+    if((next_file_cluster & 0xfffffff) == 0)
+    {
+      /* acquire a cluster for write */
+      next_file_cluster = fat32_append_cluster(file_struct -> entry_location);
+      file_struct -> start_of_file = next_file_cluster;
+    }
+    /* else write file */
+
+    /* Write to data_offset */
+    fat32_get_sd_block_and_offset((next_file_cluster - FAT32_CLUSTER_DATA_SECTION_OFFSET) * FAT32_BYTES_PER_SECTOR * fat32_metadata.sectors_per_cluster + fat32_metadata.data_offset, &block_idx, &block_offset);
+    memcopy((const char *)(buf + cumulated_length), (char *)(sd_buf + write_offset), (unsigned)write_chunk);
+    sd_writeblock((unsigned)block_idx, sd_buf);
+
+    cumulated_length += write_chunk;
+
+    /* TODO: If filesize is larger than a cluster */
+    //if((next_file_cluster & 0xffffff8) == 0xffffff8)
+    //{
+    //  /* get the cluster number of next sector */
+    //  fat32_get_sd_block_and_offset(next_file_cluster * FAT32_BYTES_PER_CLUSTER + fat32_metadata.fat1_offset, &block_idx, &block_offset);
+    //  sd_readblock((int)block_idx, sd_buf);
+    //  next_file_cluster = *(uint32_t *)(sd_buf + block_offset);
+    //}
+  }
+
+  /* Update filesize */
+  file_struct -> filesize = (uint32_t)cumulated_length;
+
+  fat32_get_sd_block_and_offset(file_struct -> entry_location, &block_idx, &block_offset);
+  sd_readblock((int)block_idx, sd_buf);
+
+  *(uint32_t *)(sd_buf + block_offset + FAT32_FILE_SIZE_OFFSET) = (uint32_t)cumulated_length;
+  sd_writeblock((unsigned)block_idx, sd_buf);
+
+  return (int)cumulated_length;
+}
 
 struct vfs_vnode_struct * fat32_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir)
 {
@@ -255,5 +306,67 @@ int fat32_get_file_entry(struct fat32_file_struct * file_struct, uint8_t * base,
   file_struct -> filesize = *(uint32_t *)(base + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_SIZE_OFFSET);
 
   return 1;
+}
+
+uint32_t fat32_find_availible_cluster(void)
+{
+  uint8_t sd_buf[512];
+  uint64_t block_idx, block_offset;
+
+  for(unsigned fat_sector_idx = 0; fat_sector_idx < fat32_metadata.sectors_per_fat; ++fat_sector_idx)
+  {
+    uint32_t sub_cluster_idx = 0;
+
+    fat32_get_sd_block_and_offset(fat32_metadata.fat1_offset + fat_sector_idx * FAT32_BYTES_PER_SECTOR, &block_idx, &block_offset);
+    sd_readblock((int)block_idx, sd_buf);
+
+    /* ignore the first two reserved cluster in the first fat sector */
+    if(fat_sector_idx == 0)
+    {
+      sub_cluster_idx = 2;
+    }
+
+    for(; sub_cluster_idx < FAT32_BYTES_PER_SECTOR / FAT32_BYTES_PER_CLUSTER; ++sub_cluster_idx)
+    {
+      if(((*(uint32_t *)(sd_buf + sub_cluster_idx * FAT32_BYTES_PER_CLUSTER)) & 0xfffffff) == 0)
+      {
+        /* mark the availible cluster as end of cluster */
+        *(uint32_t *)(sd_buf + sub_cluster_idx * FAT32_BYTES_PER_CLUSTER) = 0xfffffff;
+        sd_writeblock((unsigned)block_idx, sd_buf);
+        return fat_sector_idx * (FAT32_BYTES_PER_SECTOR / FAT32_BYTES_PER_CLUSTER) + sub_cluster_idx;
+      }
+    }
+  }
+  return 0;
+}
+
+uint32_t fat32_append_cluster(uint64_t entry_base)
+{
+  uint8_t sd_buf[512];
+  uint64_t block_idx, block_offset;
+  uint32_t start_of_file;
+  uint32_t new_cluster;
+
+  fat32_get_sd_block_and_offset(entry_base, &block_idx, &block_offset);
+  sd_readblock((int)block_idx, sd_buf);
+
+  start_of_file = (uint32_t)(*(uint16_t *)(sd_buf + block_offset + FAT32_FILE_CLUSTER_HIGH_TWO_BYTES_OFFSET)) << 16;
+  start_of_file |= *(uint16_t *)(sd_buf + block_offset + FAT32_FILE_CLUSTER_LOW_TWO_BYTES_OFFSET);
+
+  new_cluster = fat32_find_availible_cluster();
+
+  if(start_of_file == 0)
+  {
+    *(uint16_t *)(sd_buf + block_offset + FAT32_FILE_CLUSTER_HIGH_TWO_BYTES_OFFSET) = (uint16_t)(new_cluster >> 16);
+    *(uint16_t *)(sd_buf + block_offset + FAT32_FILE_CLUSTER_LOW_TWO_BYTES_OFFSET) = (new_cluster & 0xffff);
+    sd_writeblock((unsigned)block_idx, sd_buf);
+    /* TODO: Update the second fat table */
+
+    return new_cluster;
+  }
+  else
+  {
+    /* [TODO] traverse the list */
+  }
 }
 
