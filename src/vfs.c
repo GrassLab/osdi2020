@@ -56,37 +56,55 @@ int vfs_lookup(struct vnode *vnode, struct vnode **target, const char *component
     return 0;
 }
 
-struct file *vfs_open(const char *pathname, int flags) {
-    struct vnode *target;
-    vfs_lookup(rootfs->root, &target, pathname);
-    if(target == 0)
-        printf("[vfs open] Path component \"%s\" not exist!\n", pathname);
-    // if(flags == O_CREAT){ // create and open file
-    //     struct vnode *target;
-    //     rootfs->root->v_ops->create(rootfs->dentry,&target,pathname);
+void setup_fd(struct file* fd, struct vnode *vnode)
+{
+    fd->vnode = vnode;
+    fd->f_ops = vnode->f_ops;
+    fd->f_pos = 0;
+}
 
-    //     struct file *fd = kmalloc(sizeof(struct file));
-    //     fd->vnode = target;
-    //     fd->f_ops = target->f_ops;
-    //     fd->f_pos = 0;
-    //     return fd;
-    // }else{ // open file
-    //     struct vnode *target;
-    //     int ret = rootfs->root->v_ops->lookup(rootfs->dentry,&target,pathname);
-
-    //     if(ret == -1){
-    //         if (strcmp(pathname,"/")!=0)
-    //             printf("\n[vfs open] file not found!\n");
-    //         return 0; // NULL
-    //     }
-    //     printf("\n[vfs open] filename: %s\n", pathname);
-    //     struct file *fd = kmalloc(sizeof(struct file));
-    //     fd->vnode = target;
-    //     fd->f_ops = target->f_ops;
-    //     fd->f_pos = 0;
-    //     return fd;
-    // }
-    return 0;
+struct file *vfs_open(const char *pathname, int flags)
+{
+    if(pathname[0]!='/'){
+        printf("[vfs open] Currently only support absolute path!\n");
+        return 0;
+    }
+    char *_pathname;
+    if(strlen(pathname) > MAX_PATH_LEN-1){
+        printf("[vfs open] Pathn lenth out of limit!\n");
+        return 0;
+    }else{
+        _pathname = kmalloc(MAX_PATH_LEN);
+        strncpy(_pathname, pathname, MAX_PATH_LEN);
+    }
+    
+    char *component_name = strtok(_pathname, '/');
+    struct vnode *target, *base_dir = rootfs->root;
+    while(component_name){
+        vfs_lookup(base_dir, &target, component_name);
+        if(target){
+            component_name = strtok(0, '/');
+            base_dir = target;
+            continue;
+        }else{
+            if(strtok(0, '/') != 0){
+                printf("[vfs open] Can't open file. Directory \"%s\" not exist!\n", component_name);
+                kfree(_pathname);
+                return 0;
+            }else if(flags != O_CREAT){
+                printf("[vfs open] Can't open file. File not exist!\n", component_name);
+                kfree(_pathname);
+                return 0;
+            }else{
+                base_dir->v_ops->create(base_dir, &target, component_name);
+                break;
+            }
+        }
+    }
+    kfree(_pathname);
+    struct file *fd = kmalloc(sizeof(struct file));
+    setup_fd(fd, target);
+    return fd;
 }
 
 // int vfs_close(struct file *file){

@@ -8,15 +8,28 @@
 #include "uart.h"
 #include "vfs.h"
 
+void assert(int stament, const char *msg)
+{
+    if(stament)
+        return;
+    printf("Assertion False. Msg:%s\n", msg);
+    do_exit(-1);
+}
+
 void test1()
 {
     struct file* a = vfs_open("hello", 0);
-    // assert(a == NULL);
-    // a = vfs_open("hello", O_CREAT);
-    // assert(a != NULL);
+    assert(a == 0, "0");
+    a = vfs_open("/hello", 0);
+    assert(a == 0, "1");
+    a = vfs_open("/dir/hello", 0);
+    assert(a == 0, "2");
+    // a = vfs_open("/hello", O_CREAT);
+    // assert(a != 0, "3");
+    kfree(a);
     // vfs_close(a);
     // struct file* b = vfs_open("hello", 0);
-    // // assert(b != NULL);
+    // assert(b != 0, "4");
     // vfs_close(b);
 }
 // void test2()

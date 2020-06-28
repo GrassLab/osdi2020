@@ -7,8 +7,8 @@
 #define DNAME_LEN 24
 #define NR_CHILD 16 
 #define REGBUFF_SIZE 512
-// #define O_CREAT 1
-// #define MAX_CHILD 8
+#define MAX_PATH_LEN 512
+#define O_CREAT 1
 
 struct dentry {
     char name[DNAME_LEN];
@@ -42,9 +42,9 @@ struct vnode {
 
 struct file {
     struct vnode *vnode;
-    // unsigned f_pos; // The next read/write position of this file descriptor
-    // struct file_operations *f_ops;
-    // int flags;
+    unsigned f_pos; // The next read/write position of this file descriptor
+    struct file_operations *f_ops;
+    // int flags; //rw permision
 };
 
 struct mount {

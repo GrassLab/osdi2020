@@ -1,6 +1,14 @@
 #include "lib/string.h"
 #include "printf.h"
 
+unsigned int strlen(const char *s)
+{
+    int cnt = 0;
+    while(s[cnt] != '\0')
+        cnt ++;
+    return cnt;
+}
+
 int strcmp(const char *s1, const char *s2)
 {
     for(;*s1 && *s1 == *s2; s1++, s2++);
