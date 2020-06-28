@@ -2,12 +2,12 @@
 
 
 #include "mm.h"
+#include "printf.h"
 #include "vfs.h"
 #include "lib/string.h"
-// #include "printf.h"
 
 
-struct vnode_operations tmpfs_v_ops = {lookup_tmpfs, 0};
+struct vnode_operations tmpfs_v_ops = {lookup_tmpfs, create_tmpfs};
 struct file_operations tmpfs_f_ops;
 
 
@@ -17,20 +17,20 @@ void setup_fs_tmpfs(struct filesystem *fs)
     fs->setup_mount = setup_mount_tmpfs;
 }
 
-struct vnode *create_tmpfs_vnode()
+struct vnode *create_tmpfs_vnode(int type)
 {
     struct vnode *vnode = kmalloc(sizeof(struct vnode));
     vnode->mount = 0;//NULL
     vnode->v_ops = &tmpfs_v_ops;
     vnode->f_ops = &tmpfs_f_ops;
     vnode->cache = 0;//NULL
+    vnode->type = type;
     return vnode;
 }
 
 int setup_mount_tmpfs(struct filesystem *fs, struct mount *mnt)
 {
-    struct vnode *vnode = create_tmpfs_vnode();
-    vnode ->type = VNODE_TYPE_DIR;
+    struct vnode *vnode = create_tmpfs_vnode(VNODE_TYPE_DIR);
     mnt->fs= fs;
     mnt->root = vnode;
 
@@ -44,6 +44,27 @@ int lookup_tmpfs(struct vnode *vnode, struct vnode **target, const char *compone
     return 0;
 }
 
+int create_tmpfs(struct vnode *vnode, struct vnode **target, const char *component_name){
+    struct dentry* dentries = vnode->cache->dentries;
+    int free_idx = 0;
+    while(free_idx<NR_CHILD && dentries[free_idx].vnode!=0){
+        free_idx++;
+    }
+    if(free_idx == NR_CHILD){
+        printf("[create tmpfs] Direcotry can only has %d child entries!\n", NR_CHILD);
+        return -1;
+    }
+    // create new node
+    *target = create_tmpfs_vnode(VNODE_TYPE_REG);
+    (*target)->cache = kmalloc(sizeof(struct vnode_cache));
+    (*target)->cache->regbuf[0] = EOF;
+    // add link to parent direcory
+    strncpy(dentries[free_idx].name, component_name, DNAME_LEN);
+    dentries[free_idx].vnode = *target;
+    printf("[create tmpfs] file name: %s. Create success!\n", component_name);
+    return 0;
+}
+
 // void list_tmpfs(struct dentry *dir){
 //     printf("\n[list file] dir: %s\n", dir->dname);
 //     for(int i=0; i<dir->child_count; i++){
@@ -53,36 +74,6 @@ int lookup_tmpfs(struct vnode *vnode, struct vnode **target, const char *compone
 // }
 
 //     return -1;
-// }
-
-// int create_tmpfs(struct dentry *dir, struct vnode **target, const char *component_name){
-//     printf("================= create file =================\n");
-
-//     int res = lookup_tmpfs(dir,target,component_name);
-//     if(res != -1){
-//         printf("\n[create file] file '%s' already exist.\n", component_name);
-//         return 0;
-//     }
-
-//       struct vnode *vnode = kmalloc(sizeof(struct vnode));
-//     set_tmpfs_vnode(vnode); 
-//     vnode->internal = kmalloc(sizeof(struct tmpfs_node));
-
-//     struct dentry *child = kmalloc(sizeof(struct dentry));
-
-//     set_dentry(child,vnode,component_name);
-
-//     if(dir->child_count<MAX_CHILD){
-//         dir->child_dentry[dir->child_count++] = *child;
-//     }else{
-//         printf("NOT HANDLE THIS RIGHt NOW!\r\n");
-//         while(1);
-//     }
-
-//     printf("\n[create file] %s\r\n", dir->child_dentry[(dir->child_count)-1].dname);
-
-//     *target = vnode;
-//     return 0;
 // }
 
 // int write_tmpfs(struct file *file, const void *buf, unsigned len){

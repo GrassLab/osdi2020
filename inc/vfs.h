@@ -77,7 +77,7 @@ void rootfs_init();
 void register_filesystem(struct filesystem *fs);
 int vfs_lookup(struct vnode *vnode, struct vnode **target, const char *component_name);
 struct file *vfs_open(const char *pathname, int flags);
-// int vfs_close(struct file *file);
+int vfs_close(struct file *file);
 // int vfs_read(struct file *file, void *buf, unsigned len);
 // int vfs_write(struct file *file, const void *buf, unsigned len);
 

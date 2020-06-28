@@ -18,17 +18,29 @@ void assert(int stament, const char *msg)
 
 void test1()
 {
-    struct file* a = vfs_open("hello", 0);
+    struct file *b, *a = vfs_open("hello", 0);
     assert(a == 0, "0");
     a = vfs_open("/hello", 0);
     assert(a == 0, "1");
     a = vfs_open("/dir/hello", 0);
     assert(a == 0, "2");
-    // a = vfs_open("/hello", O_CREAT);
-    // assert(a != 0, "3");
-    kfree(a);
-    // vfs_close(a);
-    // struct file* b = vfs_open("hello", 0);
+    a = vfs_open("/hello", O_CREAT);
+    assert(a != 0, "3");
+    b = vfs_open("/hello", O_CREAT);// should open the same file
+    assert(b != 0, "3-1");
+    vfs_close(a);
+    vfs_close(b);
+    char buf[10];
+    for(int i = 1; i<NR_CHILD; i++){
+        sprintf(buf, "/hello%2d",i);
+        a = vfs_open(buf, O_CREAT);
+        assert(a != 0, "3-2");
+        vfs_close(a);
+    }
+    a = vfs_open("/hello16", O_CREAT);//only support limit entries
+    assert(a == 0, "3-3");
+    vfs_close(a);
+    // b = vfs_open("hello", 0);
     // assert(b != 0, "4");
     // vfs_close(b);
 }

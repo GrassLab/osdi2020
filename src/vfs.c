@@ -95,9 +95,10 @@ struct file *vfs_open(const char *pathname, int flags)
                 printf("[vfs open] Can't open file. File not exist!\n", component_name);
                 kfree(_pathname);
                 return 0;
-            }else{
-                base_dir->v_ops->create(base_dir, &target, component_name);
-                break;
+            }else if(base_dir->v_ops->create(base_dir, &target, component_name)){
+                printf("[vfs open] Fail to create file %s!\n", component_name);
+                kfree(_pathname);
+                return 0;
             }
         }
     }
@@ -107,11 +108,11 @@ struct file *vfs_open(const char *pathname, int flags)
     return fd;
 }
 
-// int vfs_close(struct file *file){
-//     printf("\n[vfs close] Close file at %d\n", file);
-//     kfree((void *)file);
-//     return 0;
-// }
+int vfs_close(struct file *file){
+    printf("[vfs close] Close file descriptor @ 0x%X\n", file);
+    kfree((void *)file);
+    return 0;
+}
 
 // int vfs_write(struct file *file, const void *buf, unsigned len){
 //     int x = file->f_ops->write(file,buf,len);

@@ -344,7 +344,7 @@ void *kmalloc(unsigned int size)
     return NULL;
 }
 
-void kfree(void * block)
+void kfree(void *block)
 {
     #ifdef __DEBUG
     printf("[kfree] block@ 0x%X\n", block);
