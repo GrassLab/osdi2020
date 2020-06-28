@@ -184,35 +184,48 @@ int fat32_write(struct vfs_file_struct * file, const void * buf, size_t len)
   unsigned write_offset = (unsigned)(file -> write_pos);
 
   size_t cumulated_length = 0;
-  uint32_t next_file_cluster = file_struct -> start_of_file;
+  uint32_t current_file_cluster = file_struct -> start_of_file;
 
   while(cumulated_length < len)
   {
     size_t write_chunk = len - cumulated_length > 512 ? 512 : len - cumulated_length;
 
-    if((next_file_cluster & 0xfffffff) == 0)
+    if((current_file_cluster & 0xfffffff) == 0)
     {
       /* acquire a cluster for write */
-      next_file_cluster = fat32_append_cluster(file_struct -> entry_location);
-      file_struct -> start_of_file = next_file_cluster;
+      current_file_cluster = fat32_append_cluster(file_struct -> entry_location);
+      file_struct -> start_of_file = current_file_cluster;
     }
+
     /* else write file */
 
     /* Write to data_offset */
-    fat32_get_sd_block_and_offset((next_file_cluster - FAT32_CLUSTER_DATA_SECTION_OFFSET) * FAT32_BYTES_PER_SECTOR * fat32_metadata.sectors_per_cluster + fat32_metadata.data_offset, &block_idx, &block_offset);
+    fat32_get_sd_block_and_offset((current_file_cluster - FAT32_CLUSTER_DATA_SECTION_OFFSET) * FAT32_BYTES_PER_SECTOR * fat32_metadata.sectors_per_cluster + fat32_metadata.data_offset, &block_idx, &block_offset);
     memcopy((const char *)(buf + cumulated_length), (char *)(sd_buf + write_offset), (unsigned)write_chunk);
     sd_writeblock((unsigned)block_idx, sd_buf);
 
     cumulated_length += write_chunk;
 
-    /* TODO: If filesize is larger than a cluster */
-    //if((next_file_cluster & 0xffffff8) == 0xffffff8)
-    //{
-    //  /* get the cluster number of next sector */
-    //  fat32_get_sd_block_and_offset(next_file_cluster * FAT32_BYTES_PER_CLUSTER + fat32_metadata.fat1_offset, &block_idx, &block_offset);
-    //  sd_readblock((int)block_idx, sd_buf);
-    //  next_file_cluster = *(uint32_t *)(sd_buf + block_offset);
-    //}
+    if(cumulated_length < len)
+    {
+      /* get the next cluster */
+      uint32_t next_file_cluster;
+      fat32_get_sd_block_and_offset(fat32_metadata.fat1_offset + current_file_cluster * FAT32_BYTES_PER_CLUSTER, &block_idx, &block_offset);
+      sd_readblock((int)block_idx, sd_buf);
+      next_file_cluster = *(uint32_t *)(sd_buf + block_offset);
+
+      /* there will be next loop, current file is not long enough, find another cluster for write */
+      if((next_file_cluster & 0xffffff8) == 0xffffff8)
+      {
+        current_file_cluster = fat32_append_cluster(file_struct -> entry_location);
+      }
+      else
+      {
+        current_file_cluster = next_file_cluster;
+      }
+    }
+
+    /* TODO: Free the cluster if the file is not that long */
   }
 
   /* Update filesize */
@@ -310,6 +323,8 @@ int fat32_get_file_entry(struct fat32_file_struct * file_struct, uint8_t * base,
 
 uint32_t fat32_find_availible_cluster(void)
 {
+  /* Will mark the availible cluster as end of cluster */
+
   uint8_t sd_buf[512];
   uint64_t block_idx, block_offset;
 
@@ -361,12 +376,32 @@ uint32_t fat32_append_cluster(uint64_t entry_base)
     *(uint16_t *)(sd_buf + block_offset + FAT32_FILE_CLUSTER_LOW_TWO_BYTES_OFFSET) = (new_cluster & 0xffff);
     sd_writeblock((unsigned)block_idx, sd_buf);
     /* TODO: Update the second fat table */
-
-    return new_cluster;
   }
   else
   {
-    /* [TODO] traverse the list */
+    uint64_t prev_block_idx = 0;
+    uint32_t cluster_idx = start_of_file;
+    /* traverse the list */
+    while((cluster_idx & 0xffffff8) != 0xffffff8)
+    {
+      fat32_get_sd_block_and_offset(fat32_metadata.fat1_offset + cluster_idx * FAT32_BYTES_PER_CLUSTER, &block_idx, &block_offset);
+      if(block_idx != prev_block_idx)
+      {
+        prev_block_idx = block_idx;
+        sd_readblock((int)block_idx, sd_buf);
+      }
+      cluster_idx = *(uint32_t *)(sd_buf + block_offset);
+    }
+
+    /* reach the end of list */
+    *(uint32_t *)(sd_buf + block_offset) = new_cluster;
+
+    /* write back */
+    sd_writeblock((unsigned)block_idx, sd_buf);
+
+    /* TODO: Update the second fat table */
   }
+
+  return new_cluster;
 }
 
