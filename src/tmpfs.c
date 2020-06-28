@@ -8,7 +8,7 @@
 
 
 struct vnode_operations tmpfs_v_ops = {lookup_tmpfs, create_tmpfs};
-struct file_operations tmpfs_f_ops;
+struct file_operations tmpfs_f_ops ={read_tmpfs, write_tmpfs};
 
 
 void setup_fs_tmpfs(struct filesystem *fs)
@@ -44,7 +44,8 @@ int lookup_tmpfs(struct vnode *vnode, struct vnode **target, const char *compone
     return 0;
 }
 
-int create_tmpfs(struct vnode *vnode, struct vnode **target, const char *component_name){
+int create_tmpfs(struct vnode *vnode, struct vnode **target, const char *component_name)
+{
     struct dentry* dentries = vnode->cache->dentries;
     int free_idx = 0;
     while(free_idx<NR_CHILD && dentries[free_idx].vnode!=0){
@@ -65,7 +66,37 @@ int create_tmpfs(struct vnode *vnode, struct vnode **target, const char *compone
     return 0;
 }
 
-// void list_tmpfs(struct dentry *dir){
+int read_tmpfs(struct file *file, void *buf, unsigned len)
+{
+    const char *reg_ptr = file->vnode->cache->regbuf + file->f_pos;
+    char *_buf = (char *)buf;
+    unsigned cnt;
+    for(cnt=0; (cnt<len && reg_ptr[cnt] != EOF); cnt++){
+        _buf[cnt] = reg_ptr[cnt];
+    }
+    _buf[cnt] = '\0';
+    printf("[read tmpfs] %d byte(s) read. f_pos %d -> %d\n", cnt, file->f_pos, file->f_pos+cnt);
+    file->f_pos += cnt;
+    return cnt;
+}
+
+int write_tmpfs(struct file *file, const void *buf, unsigned len)
+{
+    char *reg_ptr = file->vnode->cache->regbuf + file->f_pos;
+    const char *_buf = (const char *)buf;
+    unsigned free_size = TMPFS_FILE_SIZE - file->f_pos - 1;
+    unsigned cnt = (free_size<len) ? free_size : len;
+
+    strncpy(reg_ptr, _buf, len);
+    printf("[write tmpfs] %d byte(s) witre. f_pos %d -> %d\n", cnt, file->f_pos, file->f_pos+cnt);
+    file->f_pos += cnt;
+    reg_ptr[file->f_pos] = EOF;
+    return cnt;
+}
+
+
+// void list_tmpfs(struct dentry *dir)
+// {
 //     printf("\n[list file] dir: %s\n", dir->dname);
 //     for(int i=0; i<dir->child_count; i++){
 //         printf("File %d: '%s' \r\n",i,dir->child_dentry[i].dname);
@@ -74,42 +105,4 @@ int create_tmpfs(struct vnode *vnode, struct vnode **target, const char *compone
 // }
 
 //     return -1;
-// }
-
-// int write_tmpfs(struct file *file, const void *buf, unsigned len){
-//     if((file->f_pos)+len > TMPFS_FILE_SIZE){
-//         return -1;
-//     }
-
-//     struct vnode *vnode = file->vnode;
-
-//     char *buffer = (char *)buf;
-//     struct tmpfs_node *file_node = (struct tmpfs_node *)vnode->internal;
-//     char *file_text = file_node->buffer;
-//     unsigned int i=0;
-
-//     for(; i<len; i++){
-//         file_text[file->f_pos++] = buffer[i];
-//     }
-
-//     file_text[i] = EOF;
-//     return i;
-// }
-
-// int read_tmpfs(struct file *file, void *buf, unsigned len){
-//     struct vnode *vnode = file->vnode;
-
-//     struct tmpfs_node *file_node = (struct tmpfs_node *)vnode->internal;
-//       char *file_text = file_node->buffer;
-//     char *buffer = (char *)buf;
-//     unsigned int i=0;
-//     for(; i<len; i++){
-//         if(file_text[i] != (unsigned char)(EOF)){ 
-//             buffer[i] = file_text[i];
-//         }else{
-//             break;
-//         }
-//     }
-
-//     return i;
 // }

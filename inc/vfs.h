@@ -6,8 +6,8 @@
 #define VNODE_TYPE_DIR 1
 #define DNAME_LEN 24
 #define NR_CHILD 16 
-#define REGBUFF_SIZE 512
-#define MAX_PATH_LEN 512
+#define REGBUFF_SIZE 512U
+#define MAX_PATH_LEN 512U
 #define O_CREAT 1
 
 struct dentry {
@@ -59,8 +59,8 @@ struct filesystem {
 };
 
 struct file_operations {
-    // int (*read) (struct file *file, void *buf, unsigned len);
-    // int (*write) (struct file *file, const void *buf, unsigned len);
+    int (*read) (struct file *file, void *buf, unsigned len);
+    int (*write) (struct file *file, const void *buf, unsigned len);
 };
 
 struct vnode_operations {
@@ -78,7 +78,7 @@ void register_filesystem(struct filesystem *fs);
 int vfs_lookup(struct vnode *vnode, struct vnode **target, const char *component_name);
 struct file *vfs_open(const char *pathname, int flags);
 int vfs_close(struct file *file);
-// int vfs_read(struct file *file, void *buf, unsigned len);
-// int vfs_write(struct file *file, const void *buf, unsigned len);
+int vfs_read(struct file *file, void *buf, unsigned len);
+int vfs_write(struct file *file, const void *buf, unsigned len);
 
 #endif

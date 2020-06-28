@@ -71,7 +71,7 @@ struct file *vfs_open(const char *pathname, int flags)
     }
     char *_pathname;
     if(strlen(pathname) > MAX_PATH_LEN-1){
-        printf("[vfs open] Pathn lenth out of limit!\n");
+        printf("[vfs open] Path length out of limit!\n");
         return 0;
     }else{
         _pathname = kmalloc(MAX_PATH_LEN);
@@ -103,25 +103,26 @@ struct file *vfs_open(const char *pathname, int flags)
         }
     }
     kfree(_pathname);
+    if(target->type != VNODE_TYPE_REG)
+        return 0;
     struct file *fd = kmalloc(sizeof(struct file));
     setup_fd(fd, target);
     return fd;
 }
 
-int vfs_close(struct file *file){
+int vfs_close(struct file *file)
+{
     printf("[vfs close] Close file descriptor @ 0x%X\n", file);
     kfree((void *)file);
     return 0;
 }
 
-// int vfs_write(struct file *file, const void *buf, unsigned len){
-//     int x = file->f_ops->write(file,buf,len);
-//     if(x == -1){
-//         printf("\n[vfs write] Exceed max length of file\n");
-//     }
-// 	return x;
-// }
+int vfs_read(struct file *file, void *buf, unsigned len)
+{
+    return file->f_ops->read(file, buf, len);
+}
 
-// int vfs_read(struct file *file, void *buf, unsigned len){
-// 	return file->f_ops->read(file,buf,len);
-// } 
+int vfs_write(struct file *file, const void *buf, unsigned len)
+{
+    return file->f_ops->write(file, buf, len);
+}
