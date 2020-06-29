@@ -3,6 +3,7 @@
 #include "mm.h"
 #include "my_string.h"
 #include "tmpfs.h"
+#include "fat32.h"
 #include "uart0.h"
 #include "util.h"
 #include "schedule.h"
@@ -26,6 +27,10 @@ int register_filesystem(struct filesystem* fs) {
     if (!strcmp(fs->name, "tmpfs")) {
         uart_printf("\n[%f] Register tmpfs", get_timestamp());
         return tmpfs_register();
+    }
+    else if (!strcmp(fs->name, "fat32")) {
+        uart_printf("\n[%f] Register fat32", get_timestamp());
+        return fat32_register();
     }
     return -1;
 }

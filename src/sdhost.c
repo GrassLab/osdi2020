@@ -1,5 +1,5 @@
 #include "sdhost.h"
-#include "uart0.h"
+#include "fat32.h"
 
 static inline void delay(unsigned long tick) {
     while (tick--) {
@@ -172,17 +172,17 @@ void sd_init() {
     pin_setup();
     sdhost_setup();
     sdcard_setup();
+}
 
-    // get FAT32 partition
-    char buf[512];
-    readblock(0, buf);
-    for (int i = 0; i < 512 ;i++) {
-        uart_printf("%d %x\n", i, buf[i]);
-    }
+struct mount* sd_mount() {
+    struct filesystem* fat32 = (struct filesystem*)kmalloc(sizeof(struct filesystem));
+    fat32->name = (char*)kmalloc(sizeof(char) * 6);
+    strcpy(fat32->name, "fat32");
+    fat32->setup_mount = fat32_setup_mount;
+    register_filesystem(fat32);
 
-    // get metadata
-    readblock(0, buf);
-    for (int i = 0; i < 512 ;i++) {
-        uart_printf("%d %x\n", i, buf[i]);
-    }
+    struct mount* sd = (struct mount*)kmalloc(sizeof(struct mount));
+    fat32->setup_mount(fat32, sd);
+
+    return sd;
 }
