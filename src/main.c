@@ -32,7 +32,10 @@ void boot_init() {
     uart_printf("\n[%f] Init RootFS done", get_timestamp());
     sd_init();
     uart_printf("\n[%f] Init SD done", get_timestamp());
-    struct mount* sd = sd_mount();
+    struct mount** sd_mp = sd_mount();
+    for (int i = 0; i < 4; i++) {
+        uart_printf("\n%d: %x", i, sd_mp[i]);
+    }
 
     // Welcome Messages
     // fb_splash();

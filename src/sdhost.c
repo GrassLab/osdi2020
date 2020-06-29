@@ -1,11 +1,11 @@
 #include "sdhost.h"
-#include "fat32.h"
-#include "my_string.h"
-#include "disk.h"
-#include "uart0.h"
-#include "disk.h"
 
-struct disk sdcard;
+#include "fat32.h"
+#include "mbr.h"
+#include "my_string.h"
+#include "uart0.h"
+
+struct mbr_meta sdcard_meta;
 
 static inline void delay(unsigned long tick) {
     while (tick--) {
@@ -180,20 +180,19 @@ void sd_init() {
     sdcard_setup();
 }
 
-struct mount* sd_mount() {
+struct mount** sd_mount() {
     // parse MBR
     char buf[512];
     readblock(0, buf);
-    mbr_parse(&sdcard, buf);
+    mbr_parse(&sdcard_meta, buf);
 
-    struct filesystem* fat32 = (struct filesystem*)kmalloc(sizeof(struct filesystem));
-    fat32->name = (char*)kmalloc(sizeof(char) * 6);
-    strcpy(fat32->name, "fat32");
-    fat32->setup_mount = fat32_setup_mount;
-    register_filesystem(fat32);
+    // mount each partition
+    struct mount** mount_point = (struct mount**)kmalloc(sizeof(struct mount*) * 4);
+    for (int i = 0; i < 4; i++) {
+        struct mbr_partition* p = &sdcard_meta.partition[i];
+        readblock(p->first_sector_idx, buf);
+        mount_point[i] = mbr_mount_router(p->type, buf);
+    }
 
-    struct mount* sd = (struct mount*)kmalloc(sizeof(struct mount));
-    fat32->setup_mount(fat32, sd);
-
-    return sd;
+    return mount_point;
 }
