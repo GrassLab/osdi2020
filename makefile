@@ -33,6 +33,10 @@ clean:
 run:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none
 
+run-lab8:
+	#qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -drive if=sd,file=kernel8.img,format=raw
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -drive if=sd,file=sfn_nctuos.img,format=raw
+
 run-detail:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial stdio
 

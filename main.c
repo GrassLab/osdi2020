@@ -19,6 +19,8 @@
 #include "vfs.h"
 #include "tmpfs.h"
 
+#include "fat32.h"
+
 #define INPUT_BUFFER_SIZE 64
 
 void system_start()
@@ -27,7 +29,7 @@ void system_start()
     uart_print("Raspberry Pi 3B+ is start\n");
     uart_print("-------------------------\n");
     uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 7.3.2\n");
+    uart_print("Version : 8.0.0\n");
     uart_print("-------------------------\n");
     get_board_revision();
     get_vc_memory();
@@ -286,13 +288,8 @@ void test_memory_allocation()
     free_varied_memory(&v_allocator, v3);
 }
 
-/* from lab6 to lab8, just in one thread without VM and interrupt */
-int kernel_main()
+void lab7()
 {
-    uart_init();
-    init_printf(0, putc);
-    system_start();
-
     printf("required 1, 2 test\n");
     filesystem_t fs = tmpfs_filesystem();
     register_filesystem(&fs);
@@ -327,6 +324,24 @@ int kernel_main()
 
     printf("================================\n");
     printf("test finished\nhalt\n");
+}
+
+void lab8_test()
+{
+    fat32_init();
+    printf("================================\n");
+    printf("test finished\nhalt\n");
+}
+
+/* from lab6 to lab8, just in one thread without VM and interrupt */
+int kernel_main()
+{
+    uart_init();
+    init_printf(0, putc);
+    system_start();
+
+    lab8_test();
+
     while (1)
     {
     }
