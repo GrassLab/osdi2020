@@ -1,4 +1,5 @@
 #include "sdhost.h"
+#include "uart0.h"
 
 static inline void delay(unsigned long tick) {
     while (tick--) {
@@ -171,4 +172,17 @@ void sd_init() {
     pin_setup();
     sdhost_setup();
     sdcard_setup();
+
+    // get FAT32 partition
+    char buf[512];
+    readblock(0, buf);
+    for (int i = 0; i < 512 ;i++) {
+        uart_printf("%d %x\n", i, buf[i]);
+    }
+
+    // get metadata
+    readblock(0, buf);
+    for (int i = 0; i < 512 ;i++) {
+        uart_printf("%d %x\n", i, buf[i]);
+    }
 }

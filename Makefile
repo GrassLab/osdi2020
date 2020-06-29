@@ -69,6 +69,9 @@ user_embed.elf: $(USER_OBJS_FILES) $(LIB_OBJS_FILES)
 run: $(BUILD_DIR) kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
 
+sdrun: $(BUILD_DIR) kernel8.img
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -drive if=sd,file=./ta_img/sfn_nctuos.img,format=raw
+
 display: $(BUILD_DIR) kernel8.img
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 

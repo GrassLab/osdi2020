@@ -181,3 +181,8 @@ void demo_lab7_ele1() {
     while (1);
 }
 
+// Lab8
+
+void demo_lab8() {
+    while(1);
+}
