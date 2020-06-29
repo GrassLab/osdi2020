@@ -2,6 +2,12 @@
 /Lab2/build/
 /Lab3/build/
 /Lab4/build/
+/Lab5/build/
+/Lab6/build/
+/Lab7/build/
+/Lab8/build/
 
 *.elf
 *.img
+prog
+rd
