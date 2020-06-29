@@ -23,8 +23,8 @@ void test_init(void)
   uart_puts("\n---\n");
   vfs_close(hello_file);
 
-  uart_puts("open /WHITEBOA.RD\n");
-  struct vfs_file_struct * whiteboard_file = vfs_open("/WHITEBOA.RD", 0);
+  uart_puts("open & create /WHITEBOA.RD\n");
+  struct vfs_file_struct * whiteboard_file = vfs_open("/WHITEBOA.RD", O_CREAT);
   if(whiteboard_file == 0)
   {
     uart_puts("Assert whiteboard_file != 0\n");

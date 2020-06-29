@@ -22,6 +22,7 @@ struct vfs_filesystem_struct * fat32_init(void)
   fs -> setup_mount = fat32_setup_mount;
 
   fat32_vnode_ops -> lookup = fat32_lookup;
+  fat32_vnode_ops -> create = fat32_create;
 
   fat32_file_ops -> read = fat32_read;
   fat32_file_ops -> write = fat32_write;
@@ -238,6 +239,110 @@ int fat32_write(struct vfs_file_struct * file, const void * buf, size_t len)
   sd_writeblock((unsigned)block_idx, sd_buf);
 
   return (int)cumulated_length;
+}
+
+int fat32_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name)
+{
+  /* TODO: Support for multi level search */
+  /* TODO: Create cluster if the current directory cluster is full */
+
+  uint8_t sd_buf[512];
+  uint64_t block_idx, block_offset, data_offset;
+
+  data_offset = ((((uint64_t)(dir_node -> internal) - fat32_metadata.fat1_offset) / FAT32_BYTES_PER_CLUSTER) - FAT32_CLUSTER_DATA_SECTION_OFFSET) * FAT32_BYTES_PER_SECTOR * fat32_metadata.sectors_per_cluster + fat32_metadata.data_offset;
+
+  fat32_get_sd_block_and_offset((uint64_t)data_offset, &block_idx, &block_offset);
+  sd_readblock((int)block_idx, sd_buf);
+
+  unsigned total_entries = fat32_metadata.sectors_per_cluster * FAT32_BYTES_PER_SECTOR / FAT32_FILE_ENTRY_SIZE;
+  struct fat32_file_struct * file_struct = (struct fat32_file_struct *)slab_malloc(sizeof(struct fat32_file_struct));
+  for(unsigned entry_idx = 0; entry_idx < total_entries; ++entry_idx)
+  {
+    file_struct -> entry_location = (uint64_t)(data_offset + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE);
+
+    if(fat32_get_file_entry(file_struct, sd_buf, entry_idx) != 0)
+    {
+      continue;
+    }
+
+    /* empty slot found, fill in the file_struct first */
+
+    /* split the filename into 8.3 */
+    char filename[16];
+    int dot_pos = -1;
+    string_copy(component_name, filename);
+
+    /* Set to uppercase */
+    for(int i = 0; filename[i] != '\0'; ++i)
+    {
+      if('a' <= filename[i] && filename[i] <= 'z')
+      {
+        filename[i] -= 'a' + 'A';
+      }
+    }
+
+    for(int i = 0; i < 12; ++i)
+    {
+      if(filename[i] == '.')
+      {
+        dot_pos = i;
+        filename[i] = '\0';
+        break;
+      }
+    }
+
+    if(dot_pos == -1)
+    {
+      /* no extension */
+      string_copy(filename, file_struct -> name);
+    }
+    else
+    {
+      string_copy(filename, file_struct -> name);
+      string_copy(filename + dot_pos + 1, file_struct -> extension);
+    }
+
+    file_struct -> is_dir = 0;
+    file_struct -> start_of_file = 0;
+    file_struct -> filesize = 0;
+
+    /* Write back entry to disk */
+    /* clear out the entry first */
+    /* 32 bytes = 8 byte * 4 */
+    memzero_8byte((uint64_t *)(sd_buf + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE), 4);
+
+    /* fill in the entry */
+    /* append name and extension with space */
+    string_copy(file_struct -> name, (char *)(sd_buf + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_NAME_OFFSET));
+    for(int i = string_length(file_struct -> name); i < 8; ++i)
+    {
+      *(sd_buf + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_NAME_OFFSET + i) = ' ';
+    }
+
+    string_copy(file_struct -> extension, (char *)(sd_buf + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_EXTENSION_OFFSET));
+    for(int i = string_length(file_struct -> extension); i < 3; ++i)
+    {
+      *(sd_buf + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_EXTENSION_OFFSET + i) = ' ';
+    }
+
+    /* set file attribute to 0 */
+    *(uint8_t *)(sd_buf + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_ATTRIBUTE_OFFSET) = 0;
+
+    /* set start of cluster to 0 */
+    *(uint16_t *)(sd_buf + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_CLUSTER_HIGH_TWO_BYTES_OFFSET) = 0;
+    *(uint16_t *)(sd_buf + (unsigned)entry_idx * FAT32_FILE_ENTRY_SIZE + FAT32_FILE_CLUSTER_LOW_TWO_BYTES_OFFSET) = 0;
+
+    /* write back to sd */
+    sd_writeblock((unsigned)block_idx, sd_buf);
+
+    *target = fat32_create_vnode(dir_node -> mount, (void *)file_struct, file_struct -> is_dir);
+
+    return 0;
+  }
+
+  slab_malloc_free((uint64_t *)file_struct);
+  *target = 0;
+  return 0;
 }
 
 struct vfs_vnode_struct * fat32_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir)

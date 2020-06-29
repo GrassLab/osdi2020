@@ -46,6 +46,7 @@ int fat32_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct
 int fat32_lookup(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name);
 int fat32_read(struct vfs_file_struct * file, void * buf, size_t len);
 int fat32_write(struct vfs_file_struct * file, const void * buf, size_t len);
+int fat32_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** target, const char * component_name);
 
 struct vfs_vnode_struct * fat32_create_vnode(struct vfs_mount_struct * mount, void * internal, int is_dir);
 void fat32_get_sd_block_and_offset(uint64_t location, uint64_t * block, uint64_t * offset);
