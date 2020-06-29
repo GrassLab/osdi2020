@@ -277,6 +277,7 @@ int fat32_create(struct vfs_vnode_struct * dir_node, struct vfs_vnode_struct ** 
     {
       if('a' <= filename[i] && filename[i] <= 'z')
       {
+#pragma GCC diagnostic ignored "-Wconversion"
         filename[i] -= 'a' + 'A';
       }
     }
