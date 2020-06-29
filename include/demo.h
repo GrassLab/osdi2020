@@ -7,4 +7,3 @@ void demo_lab6();
 void demo_lab7_req2();
 void demo_lab7_req3();
 void demo_lab7_ele1();
-void demo_lab7_ele2();

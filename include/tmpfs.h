@@ -7,6 +7,7 @@
 #define TMP_FILE_SIZE 512
 
 struct tmpfs_internal {
+    int size; //TODO
     char buf[TMP_FILE_SIZE];
 };
 

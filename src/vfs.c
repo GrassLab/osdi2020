@@ -57,7 +57,7 @@ void traversal_recursive(struct dentry* node, const char* path, struct vnode** t
         return;
     }
     else if (!strcmp(target_path, "..")) {
-        if (node->parent == NULL) { // root directory
+        if (node->parent == NULL) { // root directory TODO: mountpoint
             return;
         }
         traversal_recursive(node->parent, path + i, target_node, target_path);
@@ -97,13 +97,13 @@ struct file* vfs_open(const char* pathname, int flags) {
     traversal(pathname, &target_dir, target_path);
     // 2. Create a new file descriptor for this vnode if found.
     struct vnode* target_file;
-    if (rootfs->root->vnode->v_ops->lookup(target_dir, &target_file, target_path) == 0) {
+    if (rootfs->root->vnode->v_ops->lookup(target_dir, &target_file, target_path) == 0) { // TODO: target_dir
         return create_fd(target_file);
     }
     // 3. Create a new file if O_CREAT is specified in flags.
     else {
         if (flags & O_CREAT) {
-            int res = rootfs->root->vnode->v_ops->create(target_dir, &target_file, target_path);
+            int res = rootfs->root->vnode->v_ops->create(target_dir, &target_file, target_path); // TODO: target_dir
             if (res < 0) return NULL; // error
             target_file->dentry->type = REGULAR_FILE;
             return create_fd(target_file);
