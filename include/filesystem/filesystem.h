@@ -4,7 +4,22 @@
 #include "type.h"
 
 #define O_CREAT   00000100
+
 #define NAME_BUFFER_SIZE 256
+#define MAX_DIR_CHILD 100
+
+struct dentry
+{
+    struct vnode* vnode;
+    struct vnode** child;
+    size_t child_num;
+};
+
+struct fcontent
+{
+    char *content;
+    size_t fsize;
+};
 
 typedef enum
 {
@@ -20,6 +35,7 @@ struct vnode
     struct fileOperations *f_ops;
     vnode_t type;
     void *internal;
+    void *node_info;
 };
 
 struct file 

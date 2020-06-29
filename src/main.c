@@ -41,7 +41,7 @@ void kernelMain()
     initBuddy();
     initMemPool();
     initTaskPool();
-    createFilesystem("tmpfs");
+    createFilesystem("fat32");
     vfsTask();
 
 

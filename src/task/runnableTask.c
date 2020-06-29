@@ -172,41 +172,41 @@ void vfsTask()
 {
     char buf[512];
     struct file* a = vfsOpen("hello", O_CREAT);
-    struct file* b = vfsOpen("world", O_CREAT);
-    struct file* c = vfsOpen("hello", 0);
-    struct file* d = vfsOpen("test/hello", O_CREAT);
-    struct file* e = vfsOpen("test/hello", 0);
+    // struct file* b = vfsOpen("world", O_CREAT);
+    // struct file* c = vfsOpen("hello", 0);
+    // struct file* d = vfsOpen("test/hello", O_CREAT);
+    // struct file* e = vfsOpen("test/hello", 0);
 
     vfsWrite(a, "Hello ", 6);
-    vfsWrite(b, "World!", 6);
+    // vfsWrite(b, "World!", 6);
 
-    vfsClose(a);
-    vfsClose(b);
-    vfsClose(c);
-    vfsClose(d);
-    vfsClose(e);
+    // vfsClose(a);
+    // vfsClose(b);
+    // vfsClose(c);
+    // vfsClose(d);
+    // vfsClose(e);
 
-    b = vfsOpen("hello", 0);
-    a = vfsOpen("world", 0);
+    a = vfsOpen("hello", 0);
+    // a = vfsOpen("world", 0);
     int sz;
-    sz = vfsRead(b, buf, 100);
-    sz += vfsRead(a, buf + sz, 100);
-    buf[sz] = '\0';
+    sz = vfsRead(a, buf, 100);
+    // sz += vfsRead(a, buf + sz, 100);
+    // buf[sz] = '\0';
 
     uartPuts("read: ");
     uartPuts(buf);
     uartPuts("\n");
 
-    uartPuts("read size: ");
-    uartInt(sz);
-    uartPuts("\n");
+    // uartPuts("read size: ");
+    // uartInt(sz);
+    // uartPuts("\n");
 
-    mkdir("test2");
-    d = vfsOpen("test2/hello", O_CREAT);
-    vfsClose(d);
+    // mkdir("test2");
+    // d = vfsOpen("test2/hello", O_CREAT);
+    // vfsClose(d);
     
-    lsdir("test2");
-    lsdir("/");
+    // lsdir("test2");
+    // lsdir("/");
 
     busyloop();
 }
