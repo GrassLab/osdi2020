@@ -20,18 +20,11 @@ int fat32_register() {
 }
 
 int fat32_setup_mount(struct filesystem* fs, struct mount* mount) {
-    // get FAT32 partition
-    char buf[512];
-    readblock(0, buf);
-    for (int i = 0; i < 512 ;i++) {
-        uart_printf("%d %x\n", i, buf[i]);
-    }
-
     // get metadata
-    readblock(0, buf);
-    for (int i = 0; i < 512 ;i++) {
-        uart_printf("%d %x\n", i, buf[i]);
-    }
+    // readblock(0, buf);
+    // for (int i = 0; i < 512 ;i++) {
+    //     uart_printf("%d %x\n", i, buf[i]);
+    // }
 
     return 0;
 }

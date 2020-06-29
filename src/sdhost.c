@@ -1,5 +1,11 @@
 #include "sdhost.h"
 #include "fat32.h"
+#include "my_string.h"
+#include "disk.h"
+#include "uart0.h"
+#include "disk.h"
+
+struct disk sdcard;
 
 static inline void delay(unsigned long tick) {
     while (tick--) {
@@ -175,6 +181,11 @@ void sd_init() {
 }
 
 struct mount* sd_mount() {
+    // parse MBR
+    char buf[512];
+    readblock(0, buf);
+    mbr_parse(&sdcard, buf);
+
     struct filesystem* fat32 = (struct filesystem*)kmalloc(sizeof(struct filesystem));
     fat32->name = (char*)kmalloc(sizeof(char) * 6);
     strcpy(fat32->name, "fat32");
