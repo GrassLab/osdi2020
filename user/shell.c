@@ -2,9 +2,9 @@
 #include "my_string.h"
 #include "sys.h"
 
-void delay(int period) {
-    while (period--);
-}
+// void delay(int period) {
+//     while (period--);
+// }
 
 // void test_command1() {  // test fork functionality
 //     int cnt = 0;
@@ -26,52 +26,52 @@ void delay(int period) {
 //     }
 // }
 
-void test_command3() {                                          // test page reclaim.
-    printf("Remaining page frames : %d\n", remain_page_num());  // get number of remaining page frames from kernel by system call.
-}
+// void test_command3() {                                          // test page reclaim.
+//     printf("Remaining page frames : %d\n", remain_page_num());  // get number of remaining page frames from kernel by system call.
+// }
 
-void shell_input(char* cmd) {
-    printf("\r# ");
+// void shell_input(char* cmd) {
+//     printf("\r# ");
 
-    int idx = 0;
-    cmd[0] = '\0';
-    char read_buf[2];
-    char c;
-    while (1) {
-        uart_read(read_buf, 1);
-        c = read_buf[0];
-        if (c == '\n') break;
-        else {
-            cmd[idx++] = c;
-            cmd[idx] = '\0';
-        }
-        printf("\r# %s", cmd);
-    }
+//     int idx = 0;
+//     cmd[0] = '\0';
+//     char read_buf[2];
+//     char c;
+//     while (1) {
+//         uart_read(read_buf, 1);
+//         c = read_buf[0];
+//         if (c == '\n') break;
+//         else {
+//             cmd[idx++] = c;
+//             cmd[idx] = '\0';
+//         }
+//         printf("\r# %s", cmd);
+//     }
 
-    printf("\n");
-}
+//     printf("\n");
+// }
 
-void shell_controller(char* cmd) {
-    if (!strcmp(cmd, "")) {
-        return;
-    }
-    else if (!strcmp(cmd, "help")) {
-        printf("help: print all available commands\r\n");
-        printf("hello: print Hello World!\r\n");
-    }
-    else if (!strcmp(cmd, "hello")) {
-        printf("Hello World!\r\n");
-    }
-    // else if (!strcmp(cmd, "test1")) {
-    //     test_command1();
-    // }
-    // else if (!strcmp(cmd, "test2")) {
-    //     test_command2();
-    // }
-    else if (!strcmp(cmd, "test3")) {
-        test_command3();
-    }
-    else {
-        printf("shell: command not found: %s\r\n", cmd);
-    }
-}
+// void shell_controller(char* cmd) {
+//     if (!strcmp(cmd, "")) {
+//         return;
+//     }
+//     else if (!strcmp(cmd, "help")) {
+//         printf("help: print all available commands\r\n");
+//         printf("hello: print Hello World!\r\n");
+//     }
+//     else if (!strcmp(cmd, "hello")) {
+//         printf("Hello World!\r\n");
+//     }
+//     // else if (!strcmp(cmd, "test1")) {
+//     //     test_command1();
+//     // }
+//     // else if (!strcmp(cmd, "test2")) {
+//     //     test_command2();
+//     // }
+//     else if (!strcmp(cmd, "test3")) {
+//         test_command3();
+//     }
+//     else {
+//         printf("shell: command not found: %s\r\n", cmd);
+//     }
+// }

@@ -160,3 +160,21 @@ int strcmp(const char *X, const char *Y) {
     }
     return *(const unsigned char *)X - *(const unsigned char *)Y;
 }
+
+int strcpy(char *dest, const char *src) {
+    int i = 0;
+    while (src[i] != '\0') {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+    return i;
+}
+
+int strlen(const char *str) {
+    const char *s;
+
+    for (s = str; *s; ++s)
+        ;
+    return (s - str);
+}

@@ -13,14 +13,11 @@
 
 #include "typedef.h"
 #include "schedule.h"
+#include "list.h"
 
 enum booking_status {
     AVAL,
     USED,
-};
-
-struct list_head {
-    struct list_head *next, *prev;
 };
 
 struct buddy_t {
@@ -29,10 +26,10 @@ struct buddy_t {
 };
 
 struct page_t {
-    struct list_head list;
     enum booking_status used;
     int order;
     int idx; // debug used
+    struct list_head list;
 };
 
 struct free_list {

@@ -127,7 +127,7 @@ void uart_printf(char* fmt, ...) {
     __builtin_va_list args;
     __builtin_va_start(args, fmt);
 
-    char str[1024];
+    char str[2048];
     my_vsprintf(str, fmt, args);
 
     char* s = &str[0];

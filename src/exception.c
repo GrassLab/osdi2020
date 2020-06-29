@@ -7,6 +7,7 @@
 #include "schedule.h"
 #include "sys.h"
 #include "mm.h"
+#include "vfs.h"
 
 char *intr_stack;
 uint64_t arm_core_timer_jiffies = 0, arm_local_timer_jiffies = 0;
@@ -99,6 +100,107 @@ void sys_remain_page(struct trapframe* trapframe) {
     trapframe->x[0] = remain_page;
 }
 
+void sys_open(struct trapframe* trapframe) {
+    const char* pathname = (char*) trapframe->x[0];
+    int flags = trapframe->x[1];
+    struct file* f = vfs_open(pathname, flags);
+    // open failed
+    if (f == NULL) {
+        trapframe->x[0] = -1;
+        return;
+    }
+    // store fd in task struct
+    int fd_num = current_task->files.next_fd;
+    // open files more than fd array
+    if (fd_num >= current_task->files.count) {
+        int new_fd_array_size = current_task->files.count + NR_OPEN_DEFAULT;
+        struct file** new_fd_array = (struct file**)kmalloc(sizeof(struct file*) * new_fd_array_size);
+        for (int i = 0; i < current_task->files.count; i++) {
+            new_fd_array[i] = current_task->files.fd[i];
+        }
+        current_task->files.fd = new_fd_array;
+        current_task->files.count = new_fd_array_size;
+    }
+    current_task->files.fd[fd_num] = f;
+    current_task->files.next_fd++;
+    trapframe->x[0] = fd_num;
+}
+
+void sys_close(struct trapframe* trapframe) {
+    int fd_num = (int)trapframe->x[0];
+    if (fd_num < 0) {
+        trapframe->x[0] = -1;
+        return;
+    }
+    struct file* f = current_task->files.fd[fd_num];
+    trapframe->x[0] = vfs_close(f);
+    current_task->files.fd[fd_num] = NULL;
+}
+
+void sys_write(struct trapframe* trapframe) {
+    int fd_num = (int)trapframe->x[0];
+    char* buf = (char*)trapframe->x[1];
+    if (fd_num < 0) {
+        trapframe->x[0] = -1;
+        return;
+    }
+    uint64_t len = (uint64_t)trapframe->x[2];
+    struct file* f = current_task->files.fd[fd_num];
+    if (f == NULL) {
+        trapframe->x[0] = 0;
+        return;
+    }
+    trapframe->x[0] = vfs_write(f, buf, len);
+}
+
+void sys_read(struct trapframe* trapframe) {
+    int fd_num = (int)trapframe->x[0];
+    char* buf = (char*)trapframe->x[1];
+    if (fd_num < 0) {
+        trapframe->x[0] = -1;
+        return;
+    }
+    uint64_t len = (uint64_t)trapframe->x[2];
+    struct file* f = current_task->files.fd[fd_num];
+    if (f == NULL) {
+        trapframe->x[0] = 0;
+        return;
+    }
+    trapframe->x[0] = vfs_read(f, buf, len);
+}
+
+void sys_readdir(struct trapframe* trapframe) {
+    int fd_num = (int)trapframe->x[0];
+    if (fd_num < 0) {
+        trapframe->x[0] = -1;
+        return;
+    }
+    struct file* f = current_task->files.fd[fd_num];
+    trapframe->x[0] = vfs_readdir(f);
+}
+
+void sys_mkdir(struct trapframe* trapframe) {
+    const char* pathname = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_mkdir(pathname);
+}
+
+void sys_chdir(struct trapframe* trapframe) {
+    const char* pathname = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_chdir(pathname);
+}
+
+void sys_mount(struct trapframe* trapframe) {
+    const char* device = (char*) trapframe->x[0];
+    const char* mountpoint = (char*) trapframe->x[1];
+    const char* filesystem = (char*) trapframe->x[2];
+    trapframe->x[0] = vfs_mount(device, mountpoint, filesystem);
+}
+
+void sys_umount(struct trapframe* trapframe) {
+    const char* mountpoint = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_umount(mountpoint);
+}
+
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
     switch (sys_call_num) {
         case SYS_GET_TASK_ID:
@@ -127,6 +229,42 @@ void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
 
         case SYS_REMAIN_PAGE:
             sys_remain_page(trapframe);
+            break;
+
+        case SYS_OPEN:
+            sys_open(trapframe);
+            break;
+
+        case SYS_CLOSE:
+            sys_close(trapframe);
+            break;
+
+        case SYS_WRITE:
+            sys_write(trapframe);
+            break;
+
+        case SYS_READ:
+            sys_read(trapframe);
+            break;
+
+        case SYS_READDIR:
+            sys_readdir(trapframe);
+            break;
+
+        case SYS_MKDIR:
+            sys_mkdir(trapframe);
+            break;
+
+        case SYS_CHDIR:
+            sys_chdir(trapframe);
+            break;
+
+        case SYS_MOUNT:
+            sys_mount(trapframe);
+            break;
+
+        case SYS_UMOUNT:
+            sys_umount(trapframe);
             break;
     }
 }
