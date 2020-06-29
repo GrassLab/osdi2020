@@ -73,7 +73,7 @@ int register_filesystem(struct filesystem* fs) {
          fat32fs_f_ops = (struct file_operations*)kmalloc(sizeof(struct file_operations));
 	
 	 fat32fs_v_ops->lookup = lookup_fat32fs;
-         //fat32fs_v_ops->create = create_far32fs;
+         fat32fs_v_ops->create = create_fat32fs;
 	 //fat32fs_v_ops->mkdir = mkdir_fat32fs;
 	 //fat32fs_v_ops->ls = ls_fat32fs;
 	 fat32fs_v_ops->load_dent = load_dent_fat32;
@@ -192,13 +192,8 @@ struct file* vfs_open(const char* pathname, int flags) {
 	struct file* fd = (struct file*)kmalloc(sizeof(struct file));
 	fd->vnode = target;
 	fd->f_ops = target->f_ops;
-	strcpy(fd->fname,component_name);
 	fd->f_pos = 0;
 	
-	// store these info for easy access related info
-	struct fat32fs_node *tmp = (struct fat32fs_node *)dent->vnode->internal;
-	fd->parent_cluster = tmp->cluster;
-	strcpy(fd->fname,component_name);
 	return fd;
   }
   else{
@@ -226,10 +221,6 @@ FILE_SEARCH_AGAIN:
 	fd->f_ops = target->f_ops;
 	fd->f_pos = 0;
 
-	// store these info for easy access related info
-	struct fat32fs_node *tmp = (struct fat32fs_node *)dent->vnode->internal;
-	fd->parent_cluster = tmp->cluster;
-	strcpy(fd->fname,component_name);
 	return fd;
   }
   

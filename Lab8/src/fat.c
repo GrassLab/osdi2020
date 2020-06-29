@@ -66,7 +66,6 @@ int load_dent_fat32(struct dentry *dent,char *component_name){
 	for (int i = 0; dir[i].name[0] != '\0'; i++ ){
 		// For 0xE5, it means that the file was deleted
 		if(dir[i].name[0]==0xE5 ) continue;
-		
 		char name[9];
 		strtolower(dir[i].name);
 		strcpy_delim(name, dir[i].name,8,' ');
@@ -81,6 +80,7 @@ int load_dent_fat32(struct dentry *dent,char *component_name){
 		else	
 			complete_name = strcat(strcat(name,"."),ext);
 
+		printf("%s\r\n",complete_name);
 		if(strcmp(complete_name,component_name) != 0) continue;
 		
 		struct vnode *child_vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
@@ -90,6 +90,8 @@ int load_dent_fat32(struct dentry *dent,char *component_name){
 		strncpy(child_fat32fs_node->ext, dir[i].ext, 3);
 		child_fat32fs_node->cluster = ((dir[i].cluster_high) << 16) | ( dir[i].cluster_low );
 		child_fat32fs_node->size = dir[i].size;
+		child_fat32fs_node->parent_cluster = cluster;
+		strcpy(child_fat32fs_node->name,complete_name);
 		child_vnode->internal = (void*)child_fat32fs_node;
 
 		struct dentry* child_dent = (struct dentry*)kmalloc(sizeof(struct dentry));
@@ -150,12 +152,142 @@ int lookup_fat32fs(struct dentry* dir, struct vnode** target, \
 	return -1;
 }
 
-/*
-int create_fat32fs(struct dentry* dir, struct vnode** target, \
-                  const char* component_name){
-
+/** Bad design, but anyway **/
+int cpy(char *dest, const char *src)
+{
+         int c = 0;
+         while (src[c] != '\0'){
+         	dest[c] = src[c];
+                c++;
+         }
+  
+    	return c;
 }
 
+/****/
+int create_fat32fs(struct dentry* dent, struct vnode** target, \
+                  const char* component_name){
+
+	struct fat32fs_node *fat32fs_node = (struct fat32fs_node *)dent->vnode->internal;
+ 	int cluster = fat32fs_node->cluster;
+
+	struct vnode *vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
+        set_fat32fs_vnode(vnode);
+
+	unsigned char sector[BLOCK_SIZE];
+	fat32_dir_t *dir =  (fat32_dir_t *)sector;
+	readblock (root_sec_index + \
+                       (cluster-boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
+                         sector);
+	
+	// parsing for EXT
+	char name[9];
+	char ext[4];
+	unsigned int i;
+	unsigned int dot = 0;
+	for(i = 0;component_name[i] != '\0';i++){
+		if(component_name[i]=='.'){
+			dot = i;
+			continue;
+		}
+		
+		if(dot==0)
+			name[i] = component_name[i];
+		else
+			ext[i-dot-1] = component_name[i];
+		
+	}
+	
+	name[dot] = '\0';
+	ext[i-dot-1] = '\0';
+
+	// Find an empty entry in the FAT table
+	int fat32[FAT32_ENTRY_PER_BLOCK];
+	int empty_cluster = 0;
+	int find = 0;
+
+	while(1){ // we assume that empty cluster will exist
+		readblock(boot_sec->n_reserved_sectors + entry1->starting_sector +\
+                                  (empty_cluster / FAT32_ENTRY_PER_BLOCK ),fat32);
+
+		for(i=0;i<FAT32_ENTRY_PER_BLOCK;i++){
+			if(fat32[i] == 0){
+				// Now, created file can use only one cluster
+				fat32[i] = 0xFFFF;
+				find = 1;
+				break;
+			}
+		}
+
+ 		if(find==1){
+			writeblock(boot_sec->n_reserved_sectors + entry1->starting_sector +\
+                                  (empty_cluster / FAT32_ENTRY_PER_BLOCK ),fat32);
+			
+			empty_cluster += i;
+			break;
+		}
+		else
+			empty_cluster += FAT32_ENTRY_PER_BLOCK;		
+	}
+	// Find an empty directory entry in the target directory
+	
+	// Note: since the sd driver will read file name as large letter, 
+	// so we need to deal with it...
+	int ent_idx = 0;
+	for (; dir[ent_idx].name[0] != 0; ent_idx++ ){
+		 if(dir[ent_idx].name[0]==0xE5) break;
+                 int c = ((dir[ent_idx].cluster_high) << 16) | ( dir[ent_idx].cluster_low);
+		 readblock(boot_sec->n_reserved_sectors + entry1->starting_sector +\
+                                   (c / FAT32_ENTRY_PER_BLOCK ),fat32);
+	
+		 printf("FAT32: 0x%x\r\n",fat32[(c % FAT32_ENTRY_PER_BLOCK )]);	 
+		 strtolower(dir[ent_idx].name);
+		 strtolower(dir[ent_idx].ext);	
+		 
+		 printf("%d: %s, %d \\ %x\r\n\r\n",ent_idx,dir[ent_idx].name,c,dir[ent_idx].attr[0]); 
+	}
+	
+	printf("empty: %d at %d \r\n",empty_cluster,ent_idx);
+	
+	// set an fat32 directory entry(we just set the needed infomation)
+	memzero((unsigned long)(dir + ent_idx), sizeof(fat32_dir_t));
+	cpy(dir[ent_idx].name,name);
+	cpy(dir[ent_idx].ext,ext);
+	dir[ent_idx].attr[0] = 0x20;
+	dir[ent_idx].cluster_high = empty_cluster >> 16;
+	dir[ent_idx].cluster_low = (empty_cluster<<16) >> 16;
+	// write back to create new file
+	writeblock (root_sec_index + \
+                        (cluster-boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
+                         sector);
+
+	struct fat32fs_node* child_node = (struct fat32fs_node*)kmalloc(sizeof(struct fat32fs_node));
+ 	strcpy(child_node->name,component_name);
+	strcpy(child_node->ext,ext);
+	child_node->size = 0;
+ 	child_node->parent_cluster = cluster;
+	child_node->cluster = empty_cluster;	
+	vnode->internal = (void *)fat32fs_node;
+ 
+ 	struct dentry* child = (struct dentry*)kmalloc(sizeof(struct dentry));
+ 	set_dentry(child,vnode,component_name);
+ 	child->parent_dentry = dent;
+ 	child->flag = REGULAR_FILE;
+ 
+        if(dent->child_count<MAX_CHILD)
+        	dent->child_dentry[dent->child_count++] = child;
+        else{
+     		printf("NOT HANDLE THIS RIGHt NOW!\r\n");
+      		while(1);
+        }
+ 
+        printf("### Create file %s\r\n",dent->child_dentry[dent->child_count-1]->dname);
+ 
+        *target = vnode;
+	
+	return -1;
+}
+/*
 int mkdir_fat32fs(struct dentry* dir, struct vnode** target, const char *component_name){
 
 }
@@ -210,7 +342,7 @@ int write_fat32fs(struct file* file, const void* buf, size_t len){
 	unsigned char sector[BLOCK_SIZE];
         fat32_dir_t *dir = (fat32_dir_t *) sector;
     	readblock (root_sec_index + \
-		 (file->parent_cluster - boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
+		 (node->parent_cluster - boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
 		 sector);
 
     	for (int i = 0; dir[i].name[0] != '\0'; i++ ){
@@ -228,10 +360,10 @@ int write_fat32fs(struct file* file, const void* buf, size_t len){
 		char* complete_name;
 		complete_name = strcat(strcat(name,"."),ext);
 
-       		if (strcmp(file->fname, complete_name)==0){
+       		if (strcmp(node->name, complete_name)==0){
             		dir[i].size = write_len;
 			writeblock (root_sec_index + \
-			 	(file->parent_cluster - boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
+			 	(node->parent_cluster - boot_sec->first_cluster)*boot_sec->logical_sector_per_cluster,\
 				sector);
 
             		return 0;

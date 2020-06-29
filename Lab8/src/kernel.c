@@ -107,7 +107,7 @@ void kernel_process(){
 }
 
 void test1(){
-	struct file* a = vfs_open("dir/a.txt", 0);	
+	struct file* a = vfs_open("dir/myfile.txt", 0);	
 	int sz;
 	char buf[512*4];
 	sz = vfs_read(a, buf, 512*4);
@@ -116,7 +116,7 @@ void test1(){
         printf("total %d\r\n",sz);	
 	vfs_close(a);
 	
-	struct file* b = vfs_open("dir/a.txt", 0);	
+	struct file* b = vfs_open("dir/myfile.txt", 0);	
 	vfs_write(b,"QAQ",100);
 	sz = vfs_read(b, buf, 512*4);
 	buf[sz] = '\0';
@@ -126,6 +126,21 @@ void test1(){
 
 }
 
+void test2(){
+	struct file* a = vfs_open("a.txt", 0);
+	int sz;
+	char buf[512*4];
+	sz = vfs_read(a, buf, 512*4);
+	buf[sz] = '\0';
+	printf("%s\n", buf);
+        printf("total %d\r\n",sz);	
+	vfs_close(a);
+} 
+
+void test3(){
+	struct file* a = vfs_open("open.txt", O_CREAT);	
+	vfs_close(a);
+}
 
 void kernel_main(void)
 {	
@@ -148,7 +163,14 @@ void kernel_main(void)
     allocator_init(); 
     rootfs_init();
 
-    test1();    
+    //printf("\r\n##### Test1 #####\r\n");
+    //test1();
+    //printf("\r\n##### Test2 #####\r\n");
+    //test2();    
+    printf("\r\n##### Test3 #####\r\n");
+    test3();
+
+    // Here init a task being zombie reaper
     // Here init a task being zombie reaper
     //privilege_task_create(zombie_reaper,1);
     //privilege_task_create(kernel_process, 1); 
