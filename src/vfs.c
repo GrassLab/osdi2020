@@ -185,7 +185,20 @@ int vfs_close(struct file *file)
 
 int vfs_read(struct file *file, void *buf, unsigned len)
 {
-    return file->f_ops->read(file, buf, len);
+    if(file->vnode->cache != 0){
+        const char *reg_ptr = file->vnode->cache->regbuf + file->f_pos;
+        char *_buf = (char *)buf;
+        unsigned cnt;
+        for(cnt=0; (cnt<len && reg_ptr[cnt] != EOF); cnt++){
+            _buf[cnt] = reg_ptr[cnt];
+        }
+        _buf[cnt] = '\0';
+        printf("[read fat] %d byte(s) read. f_pos %d -> %d\n", cnt, file->f_pos, file->f_pos+cnt);
+        file->f_pos += cnt;
+        return cnt;
+    }else{
+        return file->f_ops->read(file, buf, len);
+    }
 }
 
 int vfs_write(struct file *file, const void *buf, unsigned len)

@@ -25,6 +25,7 @@ struct vnode *create_tmpfs_vnode(int type)
     vnode->f_ops = &tmpfs_f_ops;
     vnode->cache = 0;//NULL
     vnode->type = type;
+    vnode->internal = 0;//NULL
     return vnode;
 }
 
@@ -75,18 +76,10 @@ int create_tmpfs(struct vnode *vnode, struct vnode **target, const char *compone
 
 int read_tmpfs(struct file *file, void *buf, unsigned len)
 {
-    const char *reg_ptr = file->vnode->cache->regbuf + file->f_pos;
-    char *_buf = (char *)buf;
-    unsigned cnt;
-    for(cnt=0; (cnt<len && reg_ptr[cnt] != EOF); cnt++){
-        _buf[cnt] = reg_ptr[cnt];
-    }
-    _buf[cnt] = '\0';
-    printf("[read tmpfs] %d byte(s) read. f_pos %d -> %d\n", cnt, file->f_pos, file->f_pos+cnt);
-    file->f_pos += cnt;
-    return cnt;
+    printf("[read tmpfs] all context in the cache, should not reach here!\n");
+    return -1;
 }
-
+//TODO
 int write_tmpfs(struct file *file, const void *buf, unsigned len)
 {
     char *reg_ptr = file->vnode->cache->regbuf + file->f_pos;
@@ -100,16 +93,3 @@ int write_tmpfs(struct file *file, const void *buf, unsigned len)
     reg_ptr[file->f_pos] = EOF;
     return cnt;
 }
-
-
-// void list_tmpfs(struct dentry *dir)
-// {
-//     printf("\n[list file] dir: %s\n", dir->dname);
-//     for(int i=0; i<dir->child_count; i++){
-//         printf("File %d: '%s' \r\n",i,dir->child_dentry[i].dname);
-//     }
-//     return;
-// }
-
-//     return -1;
-// }

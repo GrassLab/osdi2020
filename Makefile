@@ -1,5 +1,5 @@
 ARM_GNU = aarch64-linux-gnu
-CFLAGS = -Wall -Werror -g -nostdlib -nostartfiles -ffreestanding -Iinc -mgeneral-regs-only -D__DEBUG
+CFLAGS = -Wall -Werror -g -nostdlib -nostartfiles -ffreestanding -Iinc -mgeneral-regs-only# -D__DEBUG
 # -Wextra 
 S_SRCS = $(wildcard src/*.S)
 C_SRCS = $(wildcard src/*.c)

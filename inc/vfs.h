@@ -9,6 +9,7 @@
 #define REGBUFF_SIZE 512U
 #define MAX_PATH_LEN 512U
 #define O_CREAT 1
+#define EOF (0xff)
 
 struct dentry {
     char name[DNAME_LEN];
@@ -38,6 +39,7 @@ struct vnode {
     struct vnode_operations *v_ops;
     struct file_operations *f_ops;
     struct vnode_cache* cache;
+    void *internal;
 };
 
 struct file {

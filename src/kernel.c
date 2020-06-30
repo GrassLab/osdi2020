@@ -72,7 +72,7 @@ void sdcard_test(){
     char buf[512]={0};
     readblock(0, buf);
     for (int i=0; i<512/4;i++){
-        if(i%8 == 0)
+        if(i%4 == 0)
             printf("\n");
         printf("0x%08x\t", ((long *)buf)[i]);
     }
@@ -86,10 +86,10 @@ int kernel_main()
     mm_init();
     rootfs_init();
     sdcard_test();
-    // printf("\n\n\ntest1\n");
-    // test1();
-    // printf("\n\n\ntest2\n");
-    // test2();
+    printf("\n\n\ntest1\n");
+    test1();
+    printf("\n\n\ntest2\n");
+    test2();
 
     core_timer_enable();
     idle_task();
