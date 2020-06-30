@@ -195,10 +195,15 @@ int vfs_mount(const char* device, const char* mountpoint, const char* filesystem
     mt->dev_name = (char*)kmalloc(sizeof(char) * strlen(device));
     strcpy(mt->dev_name, device);
     if (!strcmp(filesystem, "tmpfs")) {
+        register_filesystem(&tmpfs);
         tmpfs.setup_mount(&tmpfs, mt);
-        mount_dir->dentry->mountpoint = mt;
-        mt->root->mount_parent = mount_dir->dentry;
     }
+    else if (!strcmp(filesystem, "fat32")) {
+        register_filesystem(&fat32);
+        fat32.setup_mount(&fat32, mt);
+    }
+    mount_dir->dentry->mountpoint = mt;
+    mt->root->mount_origin = mount_dir->dentry;
 
     return 0;
 }
@@ -213,7 +218,7 @@ int vfs_umount(const char* mountpoint) {
         if (mount_dir->dentry->type != DIRECTORY) {
             return -1;
         }
-        if (!mount_dir->dentry->mount_parent) {
+        if (!mount_dir->dentry->mount_origin) {
             return -2;
         }
     }
@@ -228,7 +233,7 @@ int vfs_umount(const char* mountpoint) {
         list_del(p);
         kfree(dentry);
     }
-    mount_dir->dentry->mount_parent->mountpoint = NULL;
+    mount_dir->dentry->mount_origin->mountpoint = NULL;
 
     return 0;
 }

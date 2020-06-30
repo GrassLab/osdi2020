@@ -34,15 +34,7 @@ void boot_init() {
     // Mount sdcard on /sdpX
     sd_init();
     uart_printf("\n[%f] Init SD done", get_timestamp());
-    struct mount* sd_mps[4];
-    int err = sd_mount(sd_mps);
-    if (err == 0) { // success
-        for (int i = 0; i < 4; i++) {
-            if (sd_mps[i]) {
-                uart_printf("\n%d: %s", i, sd_mps[i]->fs->name);
-            }
-        }
-    }
+    sd_mount();
 
     // Welcome Messages
     // fb_splash();

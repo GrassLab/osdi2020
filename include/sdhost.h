@@ -83,4 +83,4 @@ extern struct sd_metadata sdcard;
 void sd_init();
 void readblock(int block_idx, void* buf);
 void writeblock(int block_idx, void* buf);
-int sd_mount(struct mount** mps);
+int sd_mount();

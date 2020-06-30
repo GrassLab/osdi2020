@@ -89,9 +89,13 @@ int tmpfs_ls(struct vnode* dir) {
     struct list_head* p = &dir->dentry->childs;
     list_for_each(p, &dir->dentry->childs) {
         struct dentry* dentry = list_entry(p, struct dentry, list);
-        uart_printf("%s ", dentry->name);
+        if (dentry->type == DIRECTORY) {
+            uart_printf("d: %s\n", dentry->name);
+        }
+        else if (dentry->type == REGULAR_FILE) {
+            uart_printf("f: %s\n", dentry->name);
+        }
     }
-    uart_printf("\n");
     return 0;
 }
 

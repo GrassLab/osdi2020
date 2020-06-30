@@ -35,7 +35,7 @@ struct dentry {
     struct vnode* vnode;
     int type;
     struct mount* mountpoint;
-    struct dentry* mount_parent;
+    struct dentry* mount_origin;
 };
 
 struct file {

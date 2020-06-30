@@ -181,8 +181,8 @@ void sd_init() {
     sdcard_setup();
 }
 
-// read MBR and create mount object
-int sd_mount(struct mount** mps) {
+// read MBR and mount partition
+int sd_mount() {
     // read MBR
     char buf[512];
     readblock(0, buf);
@@ -199,7 +199,7 @@ int sd_mount(struct mount** mps) {
     memcpy(&partition[2], buf + 478, sizeof(struct mbr_partition));
     memcpy(&partition[3], buf + 494, sizeof(struct mbr_partition));
 
-    // fill mount objects
+    // mount partition
     for (int i = 0; i < 4; i++) {
         if (partition[i].status_flag != 0) {
             readblock(partition[i].starting_sector, buf);
@@ -212,9 +212,11 @@ int sd_mount(struct mount** mps) {
                 meta->first_cluster_num = boot_sector->root_dir_start_cluster_num;
                 meta->sector_per_cluster = boot_sector->logical_sector_per_cluster;
                 // create FAT32's root directory object
-                mps[i] = (struct mount*)kmalloc(sizeof(struct mount));
-                register_filesystem(&fat32);
-                fat32.setup_mount(&fat32, mps[i]);
+                char mountpoint[8] = "/sdp";
+                mountpoint[4] = i + '0'; // workaround without sprintf
+                mountpoint[5] = 0;
+                vfs_mkdir(mountpoint);
+                vfs_mount("sdcard", mountpoint, "fat32");
             }
         }
     }

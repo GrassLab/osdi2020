@@ -184,5 +184,7 @@ void demo_lab7_ele1() {
 // Lab8
 
 void demo_lab8() {
+    struct file* root = vfs_open("/", 0);
+    vfs_readdir(root);
     while(1);
 }
