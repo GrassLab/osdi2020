@@ -98,4 +98,6 @@ struct __attribute__((__packed__)) SFN_entry {
   unsigned int size;
 };
 
+/* http://www.ntfs.com/fat-filenames.htm */
+
 #endif

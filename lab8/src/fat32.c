@@ -219,7 +219,7 @@ unsigned long fat32_show_next_cluster(unsigned long cluster){
   //unsigned long fatMask = FAT32_MASK;
   unsigned long sector = info->FirstFATSector + (fatOffset / bpb->bpbBytesPerSec);
   show_sec(sector);
-  return 0;  
+  return 0;
 }
 
 #define FAT32_EOC 0x0FFFFFFF
@@ -360,7 +360,7 @@ int append_directory_entry(struct vnode *dir, struct SFN_entry *entry){
 }
 
 int update_file_metadata(struct vnode *node, struct SFN_entry *update_entry){
-  
+
   char *buffer = (char*)kmalloc(512 * sizeof(char));
   read_entry_ctx(&(Fat32fd(node)->entry), buffer);
   struct SFN_entry *entry = &(Fat32fd(node)->entry);
@@ -580,7 +580,7 @@ int fat32_create(
     new_entry.filename[i] = code[i];
 
   printf("filename = %s ", component_name);
-  show_entry_name(new_entry.filename); 
+  show_entry_name(new_entry.filename);
   puts("");
 
   if(append_directory_entry(dir_node, &new_entry))
