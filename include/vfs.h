@@ -12,6 +12,7 @@
 struct mount {
     struct dentry* root;  // root directory
     struct filesystem* fs;
+    char* device;
 };
 
 struct filesystem {

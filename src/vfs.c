@@ -21,12 +21,18 @@ int register_filesystem(struct filesystem* fs) {
     // register the file system to the kernel.
     // you can also initialize memory pool of the file system here.
     if (!strcmp(fs->name, "tmpfs")) {
-        uart_printf("\n[%f] Register tmpfs", get_timestamp());
-        return tmpfs_register();
+        int err = tmpfs_register();
+        if (err == 0) {
+            uart_printf("\n[%f] Register tmpfs", get_timestamp());
+        }
+        return err;
     }
     else if (!strcmp(fs->name, "fat32")) {
-        uart_printf("\n[%f] Register fat32", get_timestamp());
-        return fat32_register();
+        int err = fat32_register();
+        if (err == 0) {
+            uart_printf("\n[%f] Register fat32", get_timestamp());
+        }
+        return err;
     }
     return -1;
 }
@@ -186,6 +192,8 @@ int vfs_mount(const char* device, const char* mountpoint, const char* filesystem
 
     // mount fs on mountpoint
     struct mount* mt = (struct mount*)kmalloc(sizeof(struct mount));
+    mt->device = (char*)kmalloc(sizeof(char) * strlen(device));
+    strcpy(mt->device, device);
     if (!strcmp(filesystem, "tmpfs")) {
         tmpfs.setup_mount(&tmpfs, mt);
         mount_dir->dentry->mountpoint = mt;

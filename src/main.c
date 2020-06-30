@@ -27,14 +27,19 @@ void boot_init() {
     fb_init();
     uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
 
-    // Initialize File System
+    // Initialize rootfs
     rootfs_init();
     uart_printf("\n[%f] Init RootFS done", get_timestamp());
+
+    // Mount sdcard on /sdpX
     sd_init();
     uart_printf("\n[%f] Init SD done", get_timestamp());
-    struct mount** sd_mp = sd_mount();
-    for (int i = 0; i < 4; i++) {
-        uart_printf("\n%d: %x", i, sd_mp[i]);
+    struct mount** sd_mps;
+    int err = sd_mount(sd_mps);
+    if (err == 0) { // success
+        for (int i = 0; i < 4; i++) {
+            uart_printf("\n%d: %x", i, sd_mps[i]);
+        }
     }
 
     // Welcome Messages

@@ -5,8 +5,6 @@
 #include "my_string.h"
 #include "uart0.h"
 
-struct mbr_meta sdcard_meta;
-
 static inline void delay(unsigned long tick) {
     while (tick--) {
         asm volatile("nop");
@@ -180,19 +178,39 @@ void sd_init() {
     sdcard_setup();
 }
 
-struct mount** sd_mount() {
-    // parse MBR
+// read MBR and create mount object
+int sd_mount(struct mount** mps) {
+    // read MBR
     char buf[512];
     readblock(0, buf);
-    mbr_parse(&sdcard_meta, buf);
 
-    // mount each partition
-    struct mount** mount_point = (struct mount**)kmalloc(sizeof(struct mount*) * 4);
-    for (int i = 0; i < 4; i++) {
-        struct mbr_partition* p = &sdcard_meta.partition[i];
-        readblock(p->first_sector_idx, buf);
-        mount_point[i] = mbr_mount_router(p->type, buf);
+    // check boot signature
+    if (buf[510] != 0x55 || buf[511] != 0xAA) {
+        return -1;
     }
 
-    return mount_point;
+    // parse each partition
+    struct mbr_partition partition[4];
+    memcpy(&partition[0], buf + 446, sizeof(struct mbr_partition));
+    memcpy(&partition[1], buf + 462, sizeof(struct mbr_partition));
+    memcpy(&partition[2], buf + 478, sizeof(struct mbr_partition));
+    memcpy(&partition[3], buf + 494, sizeof(struct mbr_partition));
+
+    // create mount objects
+    mps = (struct mount**)kmalloc(sizeof(struct mount*) * 4);
+    for (int i = 0; i < 4; i++) {
+        if (partition[i].status_flag != 0) {
+            readblock(partition[i].starting_sector, buf);
+            // route each filesystem
+            int partition_type = partition[i].partition_type;
+            if (partition_type == 0x0b) {  // FAT32 with CHS addressing
+                struct fat32_boot_sector* boot_sector = (struct fat32_boot_sector*)buf;
+                uart_printf("aa: %d\n",boot_sector->root_dir_start_cluster_num);
+                // register_filesystem(&fat32);
+                // mbr_parse_fat32_bootsector(metadata);
+            }
+        }
+    }
+
+    return 0;
 }
