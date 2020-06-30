@@ -80,7 +80,7 @@ clean:
 	$(RM) *.o *.d $(KERNEL).elf $(KERNEL).img
 
 test: $(KERNEL).img
-	$(EMULATOR) -M raspi3 -kernel $< -display none -serial stdio
+	$(EMULATOR) -M raspi3 -kernel $< -display none -serial stdio -drive if=sd,file=sfn_nctuos.img,format=raw
 
 debug: $(KERNEL).img
 	$(EMULATOR) -M raspi3 -kernel $< -display none -serial stdio -S -s

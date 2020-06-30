@@ -172,7 +172,18 @@ int32_t fatFileWrite(struct file *file, const void *buf, size_t len)
     struct fatDentry *fde = (struct fatDentry *)file->vnode->node_info;
     uint32_t cluster = ((uint32_t)fde->ch)<<16|fde->cl;
 
-    writeblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec, buf);
+    if (file->f_pos + len >= 512)
+        return 0;
+
+    writeblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec + file->f_pos, buf);
+    file->f_pos += len;
+
+    if (file->f_pos + len > fde->size)
+    {
+        struct fatDentry *root_fde = (struct fatDentry *)file->vnode->mount->root->node_info;
+        fde->size = file->f_pos + len;
+        writeblock(root_sec, root_fde);
+    }
 
     return len;
 }
@@ -182,9 +193,27 @@ int32_t fatFileRead(struct file *file, void *buf, size_t len)
     struct fatDentry *fde = (struct fatDentry *)file->vnode->node_info;
     uint32_t cluster = ((uint32_t)fde->ch)<<16|fde->cl;
 
-    readblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec, buf);
+    if (file->f_pos >= fde->size)
+        return 0;
+    
+    readblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec + file->f_pos, buf);
 
-    return len;
+    if ((fde->size - file->f_pos) < len)
+    {
+        *((char *)buf+(fde->size - file->f_pos)) = '\0';
+        file->f_pos = fde->size;
+
+        return fde->size - file->f_pos;
+    }
+    else
+    {
+        *((char *)buf+len) = '\0';
+        file->f_pos += len;
+
+        return len;
+    }  
+
+    return 0;
 }
 
 int32_t fatSetupMount(struct filesystem* fs, struct mount* mount)
