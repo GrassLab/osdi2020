@@ -20,7 +20,7 @@ struct __attribute__((__packed__)) mbr_partition {
      unsigned int    mbrp_size;  /* Partition size in sectors */
  }; /* __attribute__((__packed__)); */
 
-struct __attribute__((__packed__))  mbr_bpbFAT32 {
+struct /*__attribute__((__packed__))*/  mbr_bpbFAT32 {
   unsigned short    bpbBytesPerSec; /* bytes per sector */
   unsigned char     bpbSecPerClust; /* sectors per cluster */
   unsigned short    bpbResSectors;  /* number of reserved sectors */
@@ -97,5 +97,7 @@ struct __attribute__((__packed__)) SFN_entry {
   unsigned short start_lo;
   unsigned int size;
 };
+
+void fat32_init();
 
 #endif

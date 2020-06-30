@@ -12,6 +12,7 @@
 #include "sys.h"
 #include "process.h"
 #include "fs.h"
+#include "fat32.h"
 
 #ifndef WITHOUT_LOADER
 #include "loadimg.h"
@@ -87,6 +88,14 @@ int shell_execute(char *cmd, int el) {
   if(strbeg(cmd, "echo")){
     fprintf(fd, "%s" NEWLINE, cmd + 5);
   }
+  else if(EQS("init", cmd)){
+   fat32_init();
+  }
+  else if(EQS("sdhost", cmd)){
+    vfs_mkdir("mnt");
+    if(!vfs_mount("fat32", "mnt", "fat32"))
+      puts("mount fat32 failed.");
+  }
   else if(EQS("file", cmd)){
     task_file_op(1);
   }
@@ -113,7 +122,7 @@ int shell_execute(char *cmd, int el) {
         printf(entry->type == dirent_dir ?
             "%d. {%s}" NEWLINE : "%d. <%s>" NEWLINE,
             i++, entry->name);
-      } 
+      }
     }
     vfs_closedir(dir);
   }
@@ -190,15 +199,15 @@ int shell_execute(char *cmd, int el) {
 #define str(a) #a
     println("BUILD @ ", xstr(BUILD_STAMP));
 #endif
-  } 
+  }
   else if (EQS("timestamp", cmd)) {
     if(el) timestamp();
     else puts("not support timestamp on el0 currently");
-  } 
+  }
   else if (EQS("sleep", cmd)) {
     if(el) sleep(6);
     else puts("not support sleep on el0 currently");
-  } 
+  }
   else if (EQS("reboot", cmd)) {
     puts("rebooting...");
     reboot();
@@ -263,7 +272,7 @@ int shell_execute(char *cmd, int el) {
       printf("0x%x" NEWLINE, mbox[5]);
     else
       puts("get_board_reversion() failed");
-  } 
+  }
   else if (EQS("vcaddr", cmd)) {
     if (get_vc_memaddr())
       printf("0x%x\n", mbox[5]); // it should be 0xa020d3 for rpi3 b+
@@ -356,7 +365,7 @@ char *shell_stuff_line(char c, char **ptr, char *buffer) {
     while (p < (*ptr) && strchr(" \r\t\n", *p))
       p++;
     (*ptr) = buffer - 1;
-  } 
+  }
   else if ((*ptr) >= buffer + BUFFER_SIZE) {
     puts("buffer size isn't enough... cleared.");
     (*ptr) = buffer - 1;

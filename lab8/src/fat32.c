@@ -188,7 +188,6 @@ typedef struct fat32_info{
 } *FAT32_INFO, FAT32_INFO_STR;
 
 FAT32_INFO info = NULL;
-struct mbr_partition *pentry = NULL;
 struct mbr_bpbFAT32 *bpb = NULL;
 
 unsigned long fatClustToSect(unsigned long clust){
@@ -219,7 +218,7 @@ unsigned long fat32_show_next_cluster(unsigned long cluster){
   //unsigned long fatMask = FAT32_MASK;
   unsigned long sector = info->FirstFATSector + (fatOffset / bpb->bpbBytesPerSec);
   show_sec(sector);
-  return 0;  
+  return 0;
 }
 
 #define FAT32_EOC 0x0FFFFFFF
@@ -267,17 +266,41 @@ void fat32_init(){
   readblock(0, buffer);
 
   /* use struct here becuase buffer will be replaced */
-  pentry = (struct mbr_partition *)kmalloc(sizeof(struct mbr_partition));
-  *pentry = ((struct mbr_sector*)buffer)->mbr_parts[0];
 
-  readblock(pentry->mbrp_start, buffer);
+  printfmt("end reading....");
+
+  show_sec(0);
+
+  printfmt("buffer range %x %x", buffer, buffer + 512);
+
+  int mbrp_start_offset =
+    sizeof(struct mbr_sector)
+    - sizeof(struct mbr_partition) * MBR_PART_COUNT
+    - sizeof(short) + sizeof(char) * 8;
+
+  int mbrp_start = read_le(buffer + mbrp_start_offset, 4);
+  readblock(mbrp_start, buffer);
 
   /* note bpb cannot be used if buffer replaced latter */
   bpb = (struct mbr_bpbFAT32 *)kmalloc(sizeof(struct mbr_bpbFAT32));
 
-  *bpb = ((struct mbr_sector*)buffer)->mbr_bpb;
+  //memcpy((unsigned long)buffer + 11, (unsigned long)bpb, sizeof(struct mbr_bpbFAT32));
+  //*bpb = ((struct mbr_sector*)buffer)->mbr_bpb;
 
-  info->FirstDataSector = pentry->mbrp_start;
+#define read_bpb_entry(buf, bpbptr, entry, offset) \
+  bpbptr->entry = read_le( \
+      buf + offset, \
+      sizeof(bpbptr->entry))
+
+  read_bpb_entry(buffer, bpb, bpbBytesPerSec, 11);
+  read_bpb_entry(buffer, bpb, bpbSecPerClust, 13);
+  read_bpb_entry(buffer, bpb, bpbResSectors, 14);
+  read_bpb_entry(buffer, bpb, bpbFATs, 16);
+  read_bpb_entry(buffer, bpb, bpbFATsecs, 22);
+  read_bpb_entry(buffer, bpb, bpbBigFATsecs, 36);
+  read_bpb_entry(buffer, bpb, bpbRootClust, 44);
+
+  info->FirstDataSector = mbrp_start;
   if(bpb->bpbFATsecs){
     // bpbFATsecs is non-zero and is therefore valid
     info->FirstDataSector +=
@@ -290,7 +313,7 @@ void fat32_init(){
       bpb->bpbResSectors +
       bpb->bpbFATs * bpb->bpbBigFATsecs;
   }
-  info->FirstFATSector      = bpb->bpbResSectors + pentry->mbrp_start;
+  info->FirstFATSector      = bpb->bpbResSectors + mbrp_start;
   //unsigned n = fat32_avail_cluster(0);
   //printfmt("avail is %d", n);
   // 5860 0x16e4
@@ -329,13 +352,13 @@ int append_directory_entry(struct vnode *dir, struct SFN_entry *entry){
     read_file_ctx(N, buffer);
     struct SFN_entry *fentry = (struct SFN_entry*)buffer;
     for(int i = 0; i < 16; i++, fentry += 1){
-        if(*fentry->filename == 0xe5 || *fentry->filename == 0x00){
-          *fentry = *entry;
-          printfmt("pass %x %s", *fentry->filename, fentry->filename);
-          write_file_ctx(N, buffer);
-          kfree(buffer);
-          return 0;
-        } else printfmt("pass %s", fentry->filename);
+      if(*fentry->filename == 0xe5 || *fentry->filename == 0x00){
+        *fentry = *entry;
+        printfmt("pass %x %s", *fentry->filename, fentry->filename);
+        write_file_ctx(N, buffer);
+        kfree(buffer);
+        return 0;
+      } else printfmt("pass %s", fentry->filename);
     }
     prevN = N;
     N = fat32_next_cluster(N, 0);
@@ -347,12 +370,12 @@ int append_directory_entry(struct vnode *dir, struct SFN_entry *entry){
   read_file_ctx(nextN, buffer);
   struct SFN_entry *fentry = (struct SFN_entry*)buffer;
   for(int i = 0; i < 16; i++, fentry += 1){
-      if(*fentry->filename == 0xe5 || *fentry->filename == 0x00){
-        *fentry = *entry;
-        write_file_ctx(nextN, buffer);
-        kfree(buffer);
-        return 0;
-      }
+    if(*fentry->filename == 0xe5 || *fentry->filename == 0x00){
+      *fentry = *entry;
+      write_file_ctx(nextN, buffer);
+      kfree(buffer);
+      return 0;
+    }
   }
   printfmt("append directory failed");
   kfree(buffer);
@@ -360,7 +383,7 @@ int append_directory_entry(struct vnode *dir, struct SFN_entry *entry){
 }
 
 int update_file_metadata(struct vnode *node, struct SFN_entry *update_entry){
-  
+
   char *buffer = (char*)kmalloc(512 * sizeof(char));
   read_entry_ctx(&(Fat32fd(node)->entry), buffer);
   struct SFN_entry *entry = &(Fat32fd(node)->entry);
@@ -580,7 +603,7 @@ int fat32_create(
     new_entry.filename[i] = code[i];
 
   printf("filename = %s ", component_name);
-  show_entry_name(new_entry.filename); 
+  show_entry_name(new_entry.filename);
   puts("");
 
   if(append_directory_entry(dir_node, &new_entry))

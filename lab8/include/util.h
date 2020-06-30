@@ -64,4 +64,6 @@ void show_addr(unsigned long addr);
 
 #define assert(expr) if(!(expr)){ printfmt(xstr(expr) " assertion failed!"); }
 
+unsigned long read_le(char *p, int size);
+
 #endif
