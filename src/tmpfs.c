@@ -5,8 +5,8 @@
 #include "my_string.h"
 #include "uart0.h"
 
-struct vnode_operations* tmpfs_v_ops;
-struct file_operations* tmpfs_f_ops;
+struct vnode_operations* tmpfs_v_ops = NULL;
+struct file_operations* tmpfs_f_ops = NULL;
 
 struct vnode* tmpfs_create_vnode(struct dentry* dentry) {
     struct vnode* vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
@@ -31,7 +31,11 @@ struct dentry* tmpfs_create_dentry(struct dentry* parent, const char* name, int 
     return dentry;
 }
 
+// error code: -1: already register
 int tmpfs_register() {
+    if (tmpfs_v_ops != NULL && tmpfs_f_ops != NULL) {
+        return -1;
+    }
     tmpfs_v_ops = (struct vnode_operations*)kmalloc(sizeof(struct vnode_operations));
     tmpfs_v_ops->create = tmpfs_create;
     tmpfs_v_ops->lookup = tmpfs_lookup;

@@ -4,10 +4,14 @@
 #include "sdhost.h"
 #include "uart0.h"
 
-struct vnode_operations* fat32_v_ops;
-struct file_operations* fat32_f_ops;
+struct vnode_operations* fat32_v_ops = NULL;
+struct file_operations* fat32_f_ops = NULL;
 
+// error code: -1: already register
 int fat32_register() {
+    if (fat32_v_ops != NULL && fat32_f_ops != NULL) {
+        return -1;
+    }
     fat32_v_ops = (struct vnode_operations*)kmalloc(sizeof(struct vnode_operations));
     fat32_v_ops->create = fat32_create;
     fat32_v_ops->lookup = fat32_lookup;

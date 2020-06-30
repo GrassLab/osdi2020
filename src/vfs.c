@@ -7,18 +7,14 @@
 #include "uart0.h"
 #include "util.h"
 #include "schedule.h"
+#include "fs.h"
 
 struct mount* rootfs;
 
 void rootfs_init() {
-    struct filesystem* tmpfs = (struct filesystem*)kmalloc(sizeof(struct filesystem));
-    tmpfs->name = (char*)kmalloc(sizeof(char) * 6);
-    strcpy(tmpfs->name, "tmpfs");
-    tmpfs->setup_mount = tmpfs_setup_mount;
-    register_filesystem(tmpfs);
-
+    register_filesystem(&tmpfs);
     rootfs = (struct mount*)kmalloc(sizeof(struct mount));
-    tmpfs->setup_mount(tmpfs, rootfs);
+    tmpfs.setup_mount(&tmpfs, rootfs);
 }
 
 int register_filesystem(struct filesystem* fs) {
@@ -191,11 +187,7 @@ int vfs_mount(const char* device, const char* mountpoint, const char* filesystem
     // mount fs on mountpoint
     struct mount* mt = (struct mount*)kmalloc(sizeof(struct mount));
     if (!strcmp(filesystem, "tmpfs")) {
-        struct filesystem* tmpfs = (struct filesystem*)kmalloc(sizeof(struct filesystem));
-        tmpfs->name = (char*)kmalloc(sizeof(char) * strlen(device));
-        strcpy(tmpfs->name, device);
-        tmpfs->setup_mount = tmpfs_setup_mount;
-        tmpfs->setup_mount(tmpfs, mt);
+        tmpfs.setup_mount(&tmpfs, mt);
         mount_dir->dentry->mountpoint = mt;
         mt->root->mount_parent = mount_dir->dentry;
     }
