@@ -91,7 +91,7 @@ file_t *vfs_open(const char *pathname, int flags)
 int vfs_close(file_t *file)
 {
     // 1. release the file descriptor
-    printf("\n[vfs close] Close file at %d, name is \n", file, file->dentry->dname);
+    printf("\n[vfs close] Close file at %x, name is %s\n", file, file->dentry->dname);
 	kfree((unsigned long)file);
 	return 0;
 }
@@ -100,7 +100,7 @@ int vfs_write(file_t *file, const void *buf, size_t len)
 {
     // 1. write len byte from buf to the opened file.
     // 2. return written size or error code if an error occurs.
-    int x = file->f_ops->write(file,buf,len);
+    int x = file->f_ops->write(file, buf, len);
     if(x == -1){
         printf("\n[vfs write] Exceed max length of file\n");
     }
@@ -111,5 +111,5 @@ int vfs_read(file_t *file, void *buf, size_t len)
 {
     // 1. read min(len, readable file data size) byte to buf from the opened file.
     // 2. return read size or error code if an error occurs.
-    return file->f_ops->read(file,buf,len);
+    return file->f_ops->read(file, buf, len);
 }
