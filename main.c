@@ -328,7 +328,7 @@ void lab7()
 
 void lab8_test()
 {
-    fat32_init();
+    fat32_mount();
     printf("================================\n");
     printf("test finished\nhalt\n");
 }
