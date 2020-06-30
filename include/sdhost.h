@@ -74,12 +74,6 @@
                  : "r"(io_addr)  \
                  : "memory");
 
-struct sd_metadata {
-    void* internal;
-};
-
-extern struct sd_metadata sdcard;
-
 void sd_init();
 void readblock(int block_idx, void* buf);
 void writeblock(int block_idx, void* buf);

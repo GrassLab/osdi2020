@@ -38,14 +38,27 @@ struct fat32_boot_sector {
     uint8_t fat_system_type[8];                 // 0x52-0x59
 } __attribute__((packed));
 
+struct fat32_dirent {
+    uint8_t name[8];        // 0x0-0x7
+    uint8_t ext[3];         // 0x8-0xA
+    uint8_t attr[9];        // 0xB-0x13
+    uint16_t cluster_high;  // 0x14-0x15
+    uint32_t ext_attr;      // 0x16-0x19
+    uint16_t cluster_low;   // 0x1A-0x1B
+    uint32_t size;          // 0x1C-0x1F
+} __attribute__((packed));
+
 struct fat32_metadata {
-    uint32_t first_cluster_num;
+    uint32_t root_sector_idx;
+    uint32_t first_cluster;
     uint8_t sector_per_cluster;
 };
 
 struct fat32_internal {
-
+    uint32_t cluster_num;
 };
+
+extern struct fat32_metadata fat32_metadata;
 
 int fat32_register();
 int fat32_setup_mount(struct filesystem* fs, struct mount* mount);

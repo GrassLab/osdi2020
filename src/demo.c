@@ -186,5 +186,7 @@ void demo_lab7_ele1() {
 void demo_lab8() {
     struct file* root = vfs_open("/", 0);
     vfs_readdir(root);
+
+    struct file* a = vfs_open("/sdp0/a", O_CREAT);
     while(1);
 }

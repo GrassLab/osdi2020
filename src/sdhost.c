@@ -5,8 +5,7 @@
 #include "mbr.h"
 #include "my_string.h"
 #include "uart0.h"
-
-struct sd_metadata sdcard;
+#include "vfs.h"
 
 static inline void delay(unsigned long tick) {
     while (tick--) {
@@ -192,33 +191,36 @@ int sd_mount() {
         return -1;
     }
 
-    // parse each partition
-    struct mbr_partition partition[4];
-    memcpy(&partition[0], buf + 446, sizeof(struct mbr_partition));
-    memcpy(&partition[1], buf + 462, sizeof(struct mbr_partition));
-    memcpy(&partition[2], buf + 478, sizeof(struct mbr_partition));
-    memcpy(&partition[3], buf + 494, sizeof(struct mbr_partition));
+    // parse first partition only
+    struct mbr_partition p1;
+    memcpy(&p1, buf + 446, sizeof(struct mbr_partition));
 
     // mount partition
-    for (int i = 0; i < 4; i++) {
-        if (partition[i].status_flag != 0) {
-            readblock(partition[i].starting_sector, buf);
-            // route each filesystem
-            if (partition[i].partition_type == 0x0b) {  // FAT32 with CHS addressing
-                struct fat32_boot_sector* boot_sector = (struct fat32_boot_sector*)buf;
-                // store metadata in kernel object
-                sdcard.internal = kmalloc(sizeof(struct fat32_metadata));
-                struct fat32_metadata* meta = (struct fat32_metadata*)sdcard.internal;
-                meta->first_cluster_num = boot_sector->root_dir_start_cluster_num;
-                meta->sector_per_cluster = boot_sector->logical_sector_per_cluster;
-                // create FAT32's root directory object
-                char mountpoint[8] = "/sdp";
-                mountpoint[4] = i + '0'; // workaround without sprintf
-                mountpoint[5] = 0;
-                vfs_mkdir(mountpoint);
-                vfs_mount("sdcard", mountpoint, "fat32");
-            }
-        }
+    readblock(p1.starting_sector, buf);
+    // route each filesystem
+    if (p1.partition_type == 0x0b) {  // FAT32 with CHS addressing
+        // create FAT32's root directory object
+        char mountpoint[8] = "/sdp0";
+        vfs_mkdir(mountpoint);
+        vfs_mount("sdcard", mountpoint, "fat32");
+
+        // store metadata
+        struct fat32_boot_sector* boot_sector = (struct fat32_boot_sector*)buf;
+        fat32_metadata.root_sector_idx = p1.starting_sector +
+                                         boot_sector->n_sectors_per_fat_32 * boot_sector->n_file_alloc_tabs +
+                                         boot_sector->n_reserved_sectors;
+        fat32_metadata.first_cluster = boot_sector->root_dir_start_cluster_num;
+        fat32_metadata.sector_per_cluster = boot_sector->logical_sector_per_cluster;
+
+        // get mount node
+        struct vnode* mount_dir;
+        char path_remain[128];
+        traversal(mountpoint, &mount_dir, path_remain);
+
+        // fill internal data of mount node
+        struct fat32_internal* root_internal = (struct fat32_internal*)kmalloc(sizeof(struct fat32_internal));
+        root_internal->cluster_num = boot_sector->root_dir_start_cluster_num;
+        mount_dir->internal = root_internal;
     }
 
     return 0;

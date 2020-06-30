@@ -66,6 +66,7 @@ struct files_struct {
 
 extern struct mount* rootfs;
 
+void traversal(const char* pathname, struct vnode** target_node, char* target_path);
 void rootfs_init();
 int register_filesystem(struct filesystem* fs);
 struct file* vfs_open(const char* pathname, int flags);

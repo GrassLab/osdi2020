@@ -6,6 +6,8 @@
 #include "uart0.h"
 #include "vfs.h"
 
+struct fat32_metadata fat32_metadata;
+
 struct vnode_operations* fat32_v_ops = NULL;
 struct file_operations* fat32_f_ops = NULL;
 
@@ -55,9 +57,12 @@ int fat32_setup_mount(struct filesystem* fs, struct mount* mount) {
 }
 
 int fat32_lookup(struct vnode* dir, struct vnode** target, const char* component_name) {
+    uart_printf("%s\n", component_name);
+    return 0;
 }
 
 int fat32_create(struct vnode* dir, struct vnode** target, const char* component_name) {
+    return 0;
 }
 
 int fat32_ls(struct vnode* dir) {
