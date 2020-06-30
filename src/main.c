@@ -38,7 +38,9 @@ void boot_init() {
     int err = sd_mount(sd_mps);
     if (err == 0) { // success
         for (int i = 0; i < 4; i++) {
-            uart_printf("\n%d: %x", i, sd_mps[i]);
+            if (sd_mps[i]) {
+                uart_printf("\n%d: %s", i, sd_mps[i]->fs->name);
+            }
         }
     }
 

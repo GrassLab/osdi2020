@@ -182,7 +182,7 @@ void sd_init() {
 }
 
 // read MBR and create mount object
-int sd_mount(struct mount* mps[4]) {
+int sd_mount(struct mount** mps) {
     // read MBR
     char buf[512];
     readblock(0, buf);
@@ -212,6 +212,7 @@ int sd_mount(struct mount* mps[4]) {
                 meta->first_cluster_num = boot_sector->root_dir_start_cluster_num;
                 meta->sector_per_cluster = boot_sector->logical_sector_per_cluster;
                 // create FAT32's root directory object
+                mps[i] = (struct mount*)kmalloc(sizeof(struct mount));
                 register_filesystem(&fat32);
                 fat32.setup_mount(&fat32, mps[i]);
             }

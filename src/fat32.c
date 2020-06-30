@@ -1,11 +1,36 @@
-#include "vfs.h"
 #include "fat32.h"
+
 #include "mm.h"
+#include "my_string.h"
 #include "sdhost.h"
 #include "uart0.h"
+#include "vfs.h"
 
 struct vnode_operations* fat32_v_ops = NULL;
 struct file_operations* fat32_f_ops = NULL;
+
+struct vnode* fat32_create_vnode(struct dentry* dentry) {
+    struct vnode* vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
+    vnode->dentry = dentry;
+    vnode->f_ops = fat32_f_ops;
+    vnode->v_ops = fat32_v_ops;
+    return vnode;
+}
+
+struct dentry* fat32_create_dentry(struct dentry* parent, const char* name, int type) {
+    struct dentry* dentry = (struct dentry*)kmalloc(sizeof(struct dentry));
+    strcpy(dentry->name, name);
+    dentry->parent = parent;
+    list_head_init(&dentry->list);
+    list_head_init(&dentry->childs);
+    if (parent != NULL) {
+        list_add(&dentry->list, &parent->childs);
+    }
+    dentry->vnode = fat32_create_vnode(dentry);
+    dentry->mountpoint = NULL;
+    dentry->type = type;
+    return dentry;
+}
 
 // error code: -1: already register
 int fat32_register() {
@@ -24,36 +49,26 @@ int fat32_register() {
 }
 
 int fat32_setup_mount(struct filesystem* fs, struct mount* mount) {
-    // get metadata
-    // readblock(0, buf);
-    // for (int i = 0; i < 512 ;i++) {
-    //     uart_printf("%d %x\n", i, buf[i]);
-    // }
-
+    mount->fs = fs;
+    mount->root = fat32_create_dentry(NULL, "/", DIRECTORY);
     return 0;
 }
 
 int fat32_lookup(struct vnode* dir, struct vnode** target, const char* component_name) {
-    
 }
 
 int fat32_create(struct vnode* dir, struct vnode** target, const char* component_name) {
-
 }
 
 int fat32_ls(struct vnode* dir) {
-
 }
 
 int fat32_mkdir(struct vnode* dir, struct vnode** target, const char* component_name) {
-
 }
 
 // file operations
 int fat32_read(struct file* file, void* buf, uint64_t len) {
-
 }
 
 int fat32_write(struct file* file, const void* buf, uint64_t len) {
-
 }
