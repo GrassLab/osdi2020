@@ -1,7 +1,8 @@
 #include "vfs.h"
 #include "mm.h"
 #include "tmpfs.h"
-
+#include "sd.h"
+#include "fat32.h"
 
 // register the file system to the kernel.
 // you can also initialize memory pool of the file system here.
@@ -19,20 +20,45 @@ int register_filesystem(filesystem_t *fs)
 
         return 0;
     }
+    else if(strcmp(fs->name,"fat32")==0){
+        fat32fs_v_ops = (vnode_operations_t*)kmalloc(sizeof(vnode_operations_t));
+        fat32fs_f_ops = (file_operations_t*)kmalloc(sizeof(file_operations_t));
+	
+	    fat32fs_v_ops->lookup = lookup_fat32fs;
+        fat32fs_v_ops->create = create_fat32fs;
+        fat32fs_v_ops->load_dent = load_dent_fat32;
+
+        fat32fs_f_ops->write = write_fat32fs;
+        fat32fs_f_ops->read = read_fat32fs;
+  }
     return -1;
 }
 
 // setting file system for root fs
 void rootfs_init(){
+    sd_init();
+    fat_getpartition();
+    // char buf[512];
+    // _memset(buff, 512, '0');
+    // readblock(0, buf);
+    // for (int i=0; i<512;i++){
+    //     if(i%8 == 0)
+    //         printf("\n");
+    //     printf("%x", buf[i]);
+    // }
+
     filesystem_t *fs = (filesystem_t*)kmalloc(sizeof(filesystem_t));
     fs->name = "tmpfs";
     fs->setup_mount = tmpfs_setup_mount;
 
-    register_filesystem(fs);
+    filesystem_t *fat32_fs = (filesystem_t*)kmalloc(sizeof(filesystem_t));
+ 	fat32_fs->name = "fat32";
+ 	fat32_fs->setup_mount = setup_mount_fat32fs;
+	register_filesystem(fat32_fs);
 
     // setup root file sysystem
     mount_t *mt = (mount_t*)kmalloc(sizeof(mount_t));
-    fs->setup_mount(fs, mt);
+    fat32_fs->setup_mount(fat32_fs, mt);
 
     rootfs = mt;
 }
@@ -53,10 +79,10 @@ void vfs_list_file(char *pathname){
     }
 }
 
-file_t* create_file(vnode_t* target, dentry_t* new_dentry){
+file_t* create_file(vnode_t* target){
     file_t* fd = (file_t*)kmalloc(sizeof(file_t));
     // fd->vnode = target;
-    fd->dentry = new_dentry;
+    fd->dentry = NULL;
     fd->f_ops = target->f_ops;
     fd->f_pos = 0;
     return fd;
@@ -70,14 +96,13 @@ file_t *vfs_open(const char *pathname, int flags)
     
     // create and open file
     vnode_t* target;
-    dentry_t* new_dentry;
     if(flags == O_CREAT){ 
-        rootfs->root->v_ops->create(rootfs->dentry, &target, pathname, &new_dentry);
+        rootfs->root->v_ops->create(rootfs->dentry, &target, pathname);
 
         //create file struct
-        return create_file(target, new_dentry);
+        return create_file(target);
     }else{ // open file
-        int ret = rootfs->root->v_ops->lookup(rootfs->dentry, &target, pathname, &new_dentry);
+        int ret = rootfs->root->v_ops->lookup(rootfs->dentry, &target, pathname);
 
         if(ret == -1){
             if (_strcmp(pathname, "/") != 0)
@@ -85,7 +110,7 @@ file_t *vfs_open(const char *pathname, int flags)
             return (file_t*)0; // NULL
         }
         printf("\n[vfs open] filename is: %s\n", pathname);
-        return create_file(target, new_dentry);
+        return create_file(target);
     }
 }
 int vfs_close(file_t *file)

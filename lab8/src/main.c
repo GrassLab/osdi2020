@@ -10,7 +10,6 @@
 #include "sched.h"
 #include "mm.h"
 #include "vfs.h"
-#include "stdlib.h"
 
 task_manager_t TaskManager;
 task_t* current;
@@ -67,10 +66,8 @@ void main()
     init_uart();
     init_printf(0, putc);
 
-    sd_init();
-
-    // mem_alloc_init();
-    // rootfs_init();
+    mem_alloc_init();
+    rootfs_init();
     // printf("rootfs init finish\n");
     // test_vfs1();
     // test_vfs2();

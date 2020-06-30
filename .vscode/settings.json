@@ -3,6 +3,9 @@
         "thread": "c",
         "tmpfs.h": "c",
         "timer.h": "c",
-        "mm.h": "c"
+        "mm.h": "c",
+        "syscall.h": "c",
+        "system_error": "cpp",
+        "typeinfo": "c"
     }
 }

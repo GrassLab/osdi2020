@@ -38,7 +38,7 @@ run:
 
 run_excp:
 	make all
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -d int -drive if=sd,file=sfn_nctuos.img,format=raw
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio -display none -d int -drive if=sd,file=./sfn_nctuos.img,format=raw
 
 pipe:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial  pipe:/tmp/guest -S -s

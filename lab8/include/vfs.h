@@ -10,6 +10,13 @@ enum
     O_CREAT = 1
 };
 
+enum
+{
+    REGULAR_FILE,
+    DIRECTORY,
+    ROOT_DIR,
+};
+
 typedef struct vnode_t
 {
     struct mount_t *mount;
@@ -34,6 +41,7 @@ typedef struct dentry_t
     struct vnode_t* vnode;
     int child_count;
     struct dentry_t* child_dentry;
+    int flag;
 } dentry_t; 
 
 typedef struct mount_t
