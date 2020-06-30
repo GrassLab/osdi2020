@@ -45,10 +45,10 @@ kernel8.img: build_dir $(OBJ_FILES) user_program
 .PHONY: clean run runasm runpty gdb 
 
 clean:
-	rm -rf $(BUILD_DIR) *.img user_code/*.o user_code/*.elf user_code/*.img user_program
+	rm -rf $(BUILD_DIR) kernel8.img user_code/*.o user_code/*.elf user_code/*.img user_program
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -drive if=sd,file=./sfn_nctuos.img,format=raw
 
 runpty:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial pty

@@ -7,7 +7,9 @@
 #include "buddy.h"
 #include "slab.h"
 #include "tmpfs.h"
+#include "fat32.h"
 #include "vfs.h"
+#include "sdhost.h"
 
 #define size_t unsigned int
 #define NULL ((void *)0)

@@ -156,11 +156,13 @@ void main(){
 
 
     // buddy_init(PAGING_PAGES);
-
+    sd_init();
     uart_puts("R1 R2 test\n\n");
 
-    filesystem fs = tmpfs_filesystem();
+
+    filesystem fs = fat32_filesystem();
     register_filesystem(&fs);
+    
 
     uart_puts("-----------------------\n");
 
@@ -168,7 +170,7 @@ void main(){
     // assert(a == NULL);
 
     uart_puts("-----------------------\n");
-
+    /*
     a = vfs_open("hello", O_CREAT);
     // assert(a != NULL);
     vfs_close(a);
@@ -222,6 +224,6 @@ void main(){
     uart_puts("buf: ");
     uart_puts(buf);
     uart_puts("\n");
-        
+    */
     shell();
 }	
