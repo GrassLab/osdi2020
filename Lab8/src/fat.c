@@ -80,7 +80,6 @@ int load_dent_fat32(struct dentry *dent,char *component_name){
 		else	
 			complete_name = strcat(strcat(name,"."),ext);
 
-		printf("%s\r\n",complete_name);
 		if(strcmp(complete_name,component_name) != 0) continue;
 		
 		struct vnode *child_vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
@@ -240,14 +239,12 @@ int create_fat32fs(struct dentry* dent, struct vnode** target, \
 		 readblock(boot_sec->n_reserved_sectors + entry1->starting_sector +\
                                    (c / FAT32_ENTRY_PER_BLOCK ),fat32);
 	
-		 printf("FAT32: 0x%x\r\n",fat32[(c % FAT32_ENTRY_PER_BLOCK )]);	 
 		 strtolower(dir[ent_idx].name);
 		 strtolower(dir[ent_idx].ext);	
 		 
-		 printf("%d: %s, %d \\ %x\r\n\r\n",ent_idx,dir[ent_idx].name,c,dir[ent_idx].attr[0]); 
 	}
 	
-	printf("empty: %d at %d \r\n",empty_cluster,ent_idx);
+	printf("Create new file at cluster: %d ,entry %d \r\n",empty_cluster,ent_idx);
 	
 	// set an fat32 directory entry(we just set the needed infomation)
 	memzero((unsigned long)(dir + ent_idx), sizeof(fat32_dir_t));

@@ -127,7 +127,7 @@ void test1(){
 }
 
 void test2(){
-	struct file* a = vfs_open("a.txt", 0);
+	struct file* a = vfs_open("open.txt", 0);
 	int sz;
 	char buf[512*4];
 	sz = vfs_read(a, buf, 512*4);
@@ -139,6 +139,14 @@ void test2(){
 
 void test3(){
 	struct file* a = vfs_open("open.txt", O_CREAT);	
+	int sz;
+	char buf[512*4];	
+	vfs_write(a,"open and write it",100);
+        sz = vfs_read(a, buf, 512*4);
+        buf[sz] = '\0';
+        printf("%s\n", buf);
+        printf("total %d\r\n",sz);
+
 	vfs_close(a);
 }
 
@@ -165,10 +173,10 @@ void kernel_main(void)
 
     //printf("\r\n##### Test1 #####\r\n");
     //test1();
-    //printf("\r\n##### Test2 #####\r\n");
-    //test2();    
-    printf("\r\n##### Test3 #####\r\n");
-    test3();
+    printf("\r\n##### Test2 #####\r\n");
+    test2();    
+    //printf("\r\n##### Test3 #####\r\n");
+    //test3();
 
     // Here init a task being zombie reaper
     // Here init a task being zombie reaper

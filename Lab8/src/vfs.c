@@ -182,9 +182,19 @@ struct file* vfs_open(const char* pathname, int flags) {
 	struct vnode* target;
 	// Since we don't implement directory in root now
 	// Just naive find/create file from root entry
-	int ret = rootfs->root->v_ops->lookup(dent,&target,component_name); 
-  	if(ret == -1){
-		rootfs->root->v_ops->create(dent,&target,component_name);	
+	int ret;
+	int search_flag = 0;	
+CREAT_FILE_SEARCH_AGAIN: 
+	ret = rootfs->root->v_ops->lookup(dent,&target,component_name); 
+	
+	if(ret == -1){
+		int ret2 = dent->vnode->v_ops->load_dent(dent,component_name);
+   		if(ret2 == 0 && search_flag == 0){
+                	search_flag = 1;
+                        goto CREAT_FILE_SEARCH_AGAIN;
+                }
+		else
+			rootfs->root->v_ops->create(dent,&target,component_name);	
 	}
 	else{
 		printf("### TRY TO CREATE FILE '%s' BUT EXIST!!\r\n",pathname);
