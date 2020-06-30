@@ -83,7 +83,7 @@ struct __attribute__((__packed__)) mbr_sector {
 }; /* __attribute__((__packed__)); */
 
 /* http://www.c-jump.com/CIS24/Slides/FAT/F01_0180_sfn.htm */
-struct __attribute__((__packed__)) SFN_entry {
+struct /*__attribute__((__packed__))*/ SFN_entry {
   char filename[11];
   unsigned char attr;
   unsigned char reserved;
@@ -98,6 +98,17 @@ struct __attribute__((__packed__)) SFN_entry {
   unsigned int size;
 };
 
+struct unpacked_mbr_bpbFAT32 {
+  unsigned short    bpbBytesPerSec; /* bytes per sector */
+  unsigned char     bpbSecPerClust; /* sectors per cluster */
+  unsigned short    bpbResSectors;  /* number of reserved sectors */
+  unsigned char     bpbFATs;    /* number of FATs */
+  unsigned short    bpbFATsecs; /* number of sectors per FAT */
+  unsigned int    bpbBigFATsecs;  /* like bpbFATsecs for FAT32 */
+  unsigned int    bpbRootClust;   /* start cluster for root directory */
+};
+
 /* http://www.ntfs.com/fat-filenames.htm */
+void fat32_init();
 
 #endif

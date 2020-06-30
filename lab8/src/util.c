@@ -24,3 +24,18 @@ int *show_sp(){
 void show_addr(unsigned long addr){
   printfmt("addr = 0x%x", addr);
 }
+
+unsigned long read_le(char *p, int size){
+  unsigned long ret = 0;
+  for(int i = 0; i < size; i++, p++){
+    ret += *p << i * 8;
+  }
+  return ret;
+}
+
+void write_le(char *p, unsigned long v, int size){
+  while(size--){
+    *p = v & 0xFF;
+    p++, v >>= 8;
+  }
+}

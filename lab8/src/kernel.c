@@ -23,6 +23,19 @@ char *_kend, *_kbeg;
 
 #include "mm.h"
 
+//void disable_aligned_check(){
+//  unsigned long long flag;
+//  __asm__ volatile("mrs %0, sctlr_el1" : "=r"(flag));
+//  printfmt("%x el1 aligned check %d", flag, flag & 0b1000);
+//  flag &= ~(0b1010);
+//  flag |= 0b1 << 6;
+//  //flag |= 0b1 << 28;
+//  printfmt("%x el1 aligned check %d", flag, flag & 0b1000);
+//  __asm__ volatile("msr sctlr_el1, %0" ::"r"(flag));
+//  __asm__ volatile("mrs %0, sctlr_el1" : "=r"(flag));
+//  printfmt("%x el1 aligned check %d", flag, flag & 0b1000);
+//}
+
 int main(void) {
 
   uart_init();
@@ -76,8 +89,8 @@ int main(void) {
 
 #if zonealoc
     zone_init(page_allocate(&buddy_zone, 0ul));
-    fs_init();
     sd_init();
+    fs_init();
 #elif ! defined(zonealoc)
 #endif
 

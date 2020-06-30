@@ -128,7 +128,7 @@ gdb:
 	$(ARMGNU)-gdb -x debug/cmd.gdb
 
 update:
-	sudo mount /dev/sdc1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt
+	sudo mount -t msdos /dev/sdb1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt
 
 clean :
 	rm -rf *$(BUILD_DIR) kernel8.img stamp.img kernel8.elf
@@ -136,3 +136,12 @@ clean :
 format:
 	clang-format -i src/*.c
 	clang-format -i include/*.h
+
+mount:
+	sudo losetup -fP sfn_nctuos.img
+	sudo mount -t msdos /dev/loop0p1 /mnt
+
+umount:
+	sudo umount /mnt
+	sudo losetup -d /dev/loop0
+

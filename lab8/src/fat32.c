@@ -188,8 +188,7 @@ typedef struct fat32_info{
 } *FAT32_INFO, FAT32_INFO_STR;
 
 FAT32_INFO info = NULL;
-struct mbr_partition *pentry = NULL;
-struct mbr_bpbFAT32 *bpb = NULL;
+struct unpacked_mbr_bpbFAT32 *bpb = NULL;
 
 unsigned long fatClustToSect(unsigned long clust){
   return ((clust-2) * bpb->bpbSecPerClust) + info->FirstDataSector;
@@ -267,17 +266,52 @@ void fat32_init(){
   readblock(0, buffer);
 
   /* use struct here becuase buffer will be replaced */
-  pentry = (struct mbr_partition *)kmalloc(sizeof(struct mbr_partition));
-  *pentry = ((struct mbr_sector*)buffer)->mbr_parts[0];
 
-  readblock(pentry->mbrp_start, buffer);
+  int mbrp_start_offset =
+    sizeof(struct mbr_sector)
+    - sizeof(struct mbr_partition) * MBR_PART_COUNT
+    - sizeof(short) + sizeof(char) * 8;
+
+  int mbrp_start = read_le(buffer + mbrp_start_offset, 4);
+
+  printfmt("start is %d", mbrp_start);
+
+  readblock(mbrp_start, buffer);
 
   /* note bpb cannot be used if buffer replaced latter */
-  bpb = (struct mbr_bpbFAT32 *)kmalloc(sizeof(struct mbr_bpbFAT32));
+  bpb = (struct unpacked_mbr_bpbFAT32 *)kmalloc(sizeof(struct unpacked_mbr_bpbFAT32));
 
-  *bpb = ((struct mbr_sector*)buffer)->mbr_bpb;
+  //memcpy((unsigned long)buffer + 11, (unsigned long)bpb, sizeof(struct mbr_bpbFAT32));
+  //*bpb = ((struct mbr_sector*)buffer)->mbr_bpb;
 
-  info->FirstDataSector = pentry->mbrp_start;
+#define read_bpb_entry(buf, bpbptr, entry, offset) \
+  bpbptr->entry = read_le( \
+      buf + offset, \
+      sizeof(bpbptr->entry))
+
+  read_bpb_entry(buffer, bpb, bpbBytesPerSec, 11);
+  read_bpb_entry(buffer, bpb, bpbSecPerClust, 13);
+  read_bpb_entry(buffer, bpb, bpbResSectors , 14);
+  read_bpb_entry(buffer, bpb, bpbFATs       , 16);
+  read_bpb_entry(buffer, bpb, bpbFATsecs    , 22);
+  read_bpb_entry(buffer, bpb, bpbBigFATsecs , 36);
+  read_bpb_entry(buffer, bpb, bpbRootClust  , 44);
+
+#if 0
+#define check(entry) \
+  if(bpb->entry != ((struct mbr_sector*)buffer)->mbr_bpb.entry) \
+    puts(str(entry) "not the same");
+
+check(bpbBytesPerSec);
+check(bpbSecPerClust);
+check(bpbResSectors );
+check(bpbFATs       );
+check(bpbFATsecs    );
+check(bpbBigFATsecs );
+check(bpbRootClust  );
+#endif
+
+  info->FirstDataSector = mbrp_start;
   if(bpb->bpbFATsecs){
     // bpbFATsecs is non-zero and is therefore valid
     info->FirstDataSector +=
@@ -290,11 +324,11 @@ void fat32_init(){
       bpb->bpbResSectors +
       bpb->bpbFATs * bpb->bpbBigFATsecs;
   }
-  info->FirstFATSector      = bpb->bpbResSectors + pentry->mbrp_start;
+  info->FirstFATSector      = bpb->bpbResSectors + mbrp_start;
   //unsigned n = fat32_avail_cluster(0);
   //printfmt("avail is %d", n);
   // 5860 0x16e4
-  //show_sec(fatClustToSect(0x16e4));
+  show_sec(0);
 }
 
 #define entry_cluster_num(e) \
@@ -321,21 +355,54 @@ void show_entry_name(char *s){
     printf("%c", s[i]);
 }
 
+void read_sfn_entry(char *p, struct SFN_entry *entry){
+  for(int i = 0; i < 11; i++, p++)
+    entry->filename[i] = *p;
+  entry->attr = *p, p++;
+  entry->reserved = *p, p++;
+  entry->create_ms = *p, p++;
+  entry->create_hms  = read_le(p, sizeof(entry->create_hms ));
+  entry->date        = read_le(p, sizeof(entry->date       ));
+  entry->access_date = read_le(p, sizeof(entry->access_date));
+  entry->start_hi    = read_le(p, sizeof(entry->start_hi   ));
+  entry->modify_time = read_le(p, sizeof(entry->modify_time));
+  entry->modify_date = read_le(p, sizeof(entry->modify_date));
+  entry->start_lo    = read_le(p, sizeof(entry->start_lo   ));
+  entry->size        = read_le(p, sizeof(entry->size   ));
+}
+
+void write_sfn_entry(char *p, struct SFN_entry *entry){
+  for(int i = 0; i < 11; i++, p++)
+    *p = entry->filename[i];
+  *p = entry->attr, p++;
+  *p = entry->reserved, p++;
+  *p = entry->create_ms, p++;
+  write_le(p, entry->create_hms , sizeof(entry->create_hms ));
+  write_le(p, entry->date       , sizeof(entry->date       ));
+  write_le(p, entry->access_date, sizeof(entry->access_date));
+  write_le(p, entry->start_hi   , sizeof(entry->start_hi   ));
+  write_le(p, entry->modify_time, sizeof(entry->modify_time));
+  write_le(p, entry->modify_date, sizeof(entry->modify_date));
+  write_le(p, entry->start_lo   , sizeof(entry->start_lo   ));
+  write_le(p, entry->size       , sizeof(entry->size   ));
+}
+
 int append_directory_entry(struct vnode *dir, struct SFN_entry *entry){
   char *buffer = (char*)kmalloc(sizeof(char) * 512);
   struct SFN_entry *e = &(Fat32fd(dir)->entry);
   int N = entry_cluster_num(e), prevN = 0;
   while(N){
     read_file_ctx(N, buffer);
-    struct SFN_entry *fentry = (struct SFN_entry*)buffer;
-    for(int i = 0; i < 16; i++, fentry += 1){
-        if(*fentry->filename == 0xe5 || *fentry->filename == 0x00){
-          *fentry = *entry;
-          printfmt("pass %x %s", *fentry->filename, fentry->filename);
-          write_file_ctx(N, buffer);
-          kfree(buffer);
-          return 0;
-        } else printfmt("pass %s", fentry->filename);
+    struct SFN_entry fentry;
+    for(int i = 0; i < 16; i++){
+      read_sfn_entry(buffer + i * 32, &fentry);
+      if(*fentry.filename == 0xe5 || *fentry.filename == 0x00){
+        write_sfn_entry(buffer + i * 32, entry);
+        //printfmt("pass %x %s", *fentry.filename, fentry.filename);
+        write_file_ctx(N, buffer);
+        kfree(buffer);
+        return 0;
+      } //else printfmt("pass %s", fentry.filename);
     }
     prevN = N;
     N = fat32_next_cluster(N, 0);
@@ -345,14 +412,15 @@ int append_directory_entry(struct vnode *dir, struct SFN_entry *entry){
   unsigned nextN = fat32_avail_cluster(FAT32_EOC);
   fat32_next_cluster(prevN, nextN);
   read_file_ctx(nextN, buffer);
-  struct SFN_entry *fentry = (struct SFN_entry*)buffer;
-  for(int i = 0; i < 16; i++, fentry += 1){
-      if(*fentry->filename == 0xe5 || *fentry->filename == 0x00){
-        *fentry = *entry;
-        write_file_ctx(nextN, buffer);
-        kfree(buffer);
-        return 0;
-      }
+  struct SFN_entry fentry;
+  for(int i = 0; i < 16; i++){
+    read_sfn_entry(buffer + i * 32, &fentry);
+    if(*fentry.filename == 0xe5 || *fentry.filename == 0x00){
+      write_sfn_entry(buffer + i * 32, entry);
+      write_file_ctx(nextN, buffer);
+      kfree(buffer);
+      return 0;
+    }
   }
   printfmt("append directory failed");
   kfree(buffer);
@@ -367,10 +435,11 @@ int update_file_metadata(struct vnode *node, struct SFN_entry *update_entry){
   int N = entry_cluster_num(entry);
   while(N){
     read_file_ctx(N, buffer);
-    struct SFN_entry *fentry = (struct SFN_entry*)buffer;
-    for(int i = 0; i < 16; i++, fentry += 1){
-      if(!strncmp(fentry->filename, update_entry->filename, 11)){
-        *fentry = *update_entry;
+    struct SFN_entry fentry;
+    for(int i = 0; i < 16; i++){
+      read_sfn_entry(buffer + i * 32, &fentry);
+      if(!strncmp(fentry.filename, update_entry->filename, 11)){
+        write_sfn_entry(buffer + i * 32, update_entry);
         write_file_ctx(N, buffer);
         kfree(buffer);
         return 0;
@@ -384,7 +453,7 @@ int update_file_metadata(struct vnode *node, struct SFN_entry *update_entry){
 }
 
 struct vnode *fat32_build_file(struct SFN_entry *entry, struct vnode *parent){
-  //printfmt("file N - %d", entry_cluster_num(entry));
+  printfmt("file N - %d", entry_cluster_num(entry));
   return newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
       newFat32File(entry, parent));
 }
@@ -400,34 +469,43 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
 
   int N = entry_cluster_num(entry);
   unsigned cur_cluster_num = entry_cluster_num(entry);
-  unsigned prev_cluster_num = entry_cluster_num(&Fat32fd(parent)->entry);
+
+  // qemu miss the bug v
+  // if(!parent) puts("bug");
+
+  unsigned prev_cluster_num =
+    parent ? entry_cluster_num(&Fat32fd(parent)->entry) : 0;
+
+  printfmt("N = %d", N);
+
   while(N){
-    //printfmt("dir N - %d", N);
+    printfmt("dir N - %d", N);
     read_file_ctx(N, buffer);
-    struct SFN_entry *fentry = (struct SFN_entry*)buffer;
-    for(int i = 0; i < 16; i++, fentry += 1){
-      if(*fentry->filename){
-        if(*fentry->filename == 0xe5){
+    struct SFN_entry fentry;
+    for(int i = 0; i < 16; i++){
+      read_sfn_entry(buffer + i * 32, &fentry);
+      if(*fentry.filename){
+        if(*fentry.filename == 0xe5){
           // deleted file
           //puts("meet deleted file");
         }
-        else if(fentry->attr & 0x10){
-          if(entry_cluster_num(fentry) == cur_cluster_num){
+        else if(fentry.attr & 0x10){
+          if(entry_cluster_num(&fentry) == cur_cluster_num){
             // current directory '.'
             //puts("meet cur directory");
           }
-          else if(entry_cluster_num(fentry) == prev_cluster_num
-              || entry_cluster_num(fentry) == 0){
+          else if(entry_cluster_num(&fentry) == prev_cluster_num
+              || entry_cluster_num(&fentry) == 0){
             // previous directory '..'
             //puts("meet prev directory");
           }
           else{
-            *iter = fat32_build_dir(fentry, dir);
+            *iter = fat32_build_dir(&fentry, dir);
             iter = &(Fat32fd(*iter)->next);
           }
         }
         else{
-          *iter = fat32_build_file(fentry, dir);
+          *iter = fat32_build_file(&fentry, dir);
           iter = &(Fat32fd(*iter)->next);
         }
       }
@@ -442,14 +520,30 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
 /* http://www.c-jump.com/CIS24/Slides/FAT/F01_0180_sfn.htm */
 struct vnode *fat32_build_root(){
   fat32_init();
-  struct SFN_entry root_entry = {
+  printfmt("rooclust %d", bpb->bpbRootClust);
+  struct SFN_entry *root_entry = /*{
     .filename = "/", .attr = 0x10,
     .reserved = 0, .create_ms = 0, .create_hms = 0,
     .date = 0, .access_date = 0,
     .start_hi = 0, .modify_time = 0, .modify_date = 0,
     .start_lo = bpb->bpbRootClust, .size = 0
-  };
-  return fat32_build_dir(&root_entry, NULL);
+  };*/ (struct SFN_entry *)kmalloc(sizeof(struct SFN_entry));
+  root_entry->filename[0] = '/';
+  root_entry->filename[1] = 0;
+  root_entry->attr = 0x10;
+  root_entry->reserved = 0;
+  root_entry->create_ms = 0;
+  root_entry->create_hms = 0;
+  root_entry->date = 0;
+  root_entry->access_date = 0;
+  root_entry->modify_date = 0;
+  root_entry->start_hi = 0;
+  root_entry->modify_time = 0;
+  root_entry->modify_date = 0;
+  root_entry->start_lo = bpb->bpbRootClust;
+  root_entry->size = 0;
+  struct vnode *rtn = fat32_build_dir(root_entry, NULL);
+  return rtn;
 }
 
 /* vfs impl below */
