@@ -39,7 +39,7 @@ Allocator *find_allocator(int size) {
 
 Slub* find_empty_slub() {
     for (int i = 0; i < SLUB_NUMBER_MAX; i++) {
-        if (slubs[i].used == SLUB_NOT_USED && slubs[i].objectSize == 0) {
+        if (slubs[i].used == SLUB_NOT_USED) {
             return &slubs[i];
         }
     }
@@ -49,14 +49,13 @@ Slub* find_empty_slub() {
 Page* find_page_by_slub(Slub *slub) {
     Allocator *allocator = find_allocator(slub->objectSize);
     while (slub != NULL) {
-        for (int i = 0;  i < allocator->pageCount; i++) {
+        for (int i = 0;  i <= allocator->pageCount; i++) {
             if (slub->address == ((allocator->pages)[i])->physicalAddr) {
                 return (allocator->pages)[i];
             }
         }
         slub = slub->prev;
     }
-    return NULL;
 }
 
 void allocator_register(int size) {
@@ -83,7 +82,7 @@ Slub* allocate_object(int size) {
             slub->used = SLUB_USED;
             Page *page = find_page_by_slub(slub);
             // printf("[object allocate] page index: %d\n", page->index);
-            // printf("[object allocate] object size: %x\n", slub->objectSize);
+            // printf("[object allocate] object size: %d\n", slub->objectSize);
             // printf("[object allocate] address: %x\n", slub->address);
             return slub;
         }
@@ -154,7 +153,7 @@ void free_object(Slub *slub) {
         slub = slub->next;
     }
     
-    printf("[page free] page index: %d\n", page->index);
+    // printf("[page free] page index: %d\n", page->index);
     free_page(page);
 }
 

@@ -56,6 +56,8 @@ int main()
     allocator_init();
     varied_size_init();
     init_rootfs();
-    // test_lab7_req1();
+    printf("\n--- require 1 start ---\n\n");
+    test_lab7_req1();
+    printf("\n--- require 2 start ---\n\n");
     test_lab7_req2();
 }
