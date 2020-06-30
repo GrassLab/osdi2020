@@ -220,7 +220,7 @@ char sys_read()
 {
 	return uart_getc();
 }
-
+#define O_CREAT 0xdeadbeaf
 void sys_write(int num, char *c)
 {
 	uart_puts(c);
@@ -259,8 +259,10 @@ int main()
 {
 	init();
 	setup_tmpfs_filesystem();
+	struct file *null = vfs_open("hello", 0);
+	print(null == NULL ? "NULL\n" : "NOT NULL\n");
 
-	struct file *file = vfs_open("hello", 0xdeadbeaf);
+	struct file *file = vfs_open("hello", O_CREAT);
 	print(file == NULL ? "NULL\n" : "NOT NULL\n");
 	char *hello = "hello";
 	vfs_write(file, hello, 6);

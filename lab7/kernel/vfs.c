@@ -19,8 +19,7 @@ struct file *vfs_open(const char *pathname, int flags)
 	if (found == 0 && flags == O_CREAT) {
 		vnode->v_ops->create(rootfs->dentry, &target, pathname);
 	} else if (found == 0) {
-		struct file *fd;
-		return fd;
+		return NULL;
 	}
 	struct file *fd = &fd_create;
 	fd->vnode = target;

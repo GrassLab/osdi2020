@@ -41,11 +41,9 @@ int setup_tmpfs_mount(struct filesystem *fs, struct mount *mount)
 
 int tmpfs_write(struct file *file, const void *buf, int len)
 {
-	print("tmpfs write\n");
 	struct vnode *vnode = file->vnode;
 	struct tmpfs_internal *internal = vnode->internal;
 	if (internal->type != FILE) {
-		print("haha");
 		return -1;
 	}
 	strncpy(internal->content, buf, len);
@@ -57,7 +55,6 @@ int tmpfs_read(struct file *file, void *buf, int len)
 	struct vnode *vnode = file->vnode;
 	struct tmpfs_internal *internal = vnode->internal;
 	if (internal->type != FILE) {
-		print("Read directory.\n");
 		return -1;
 	}
 	strncpy(buf, internal->content, len);
@@ -100,6 +97,7 @@ int tmpfs_create(struct dentry *dentry, struct vnode **target,
 	struct dentry *child = &child_create;
 	child->vnode = vnode;
 	child->parent = dentry;
+
 	dentry->child[dentry->count++] = child;
 	child->count = 0;
 	strcpy(child->name, component_name);
