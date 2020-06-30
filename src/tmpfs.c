@@ -41,11 +41,17 @@ int lookup_tmpfs(struct vnode *vnode, struct vnode **target, const char *compone
 {
     vnode->cache = kmalloc(sizeof(struct vnode_cache));
     memset(vnode->cache, 0U, sizeof(struct vnode_cache));
+    *target = 0;
     return 0;
 }
 
 int create_tmpfs(struct vnode *vnode, struct vnode **target, const char *component_name)
 {
+    if(vnode->type != VNODE_TYPE_DIR){
+        printf("[create tmpfs] Parent-node is not a directory!\n");
+        *target = 0;
+        return -1;
+    }
     struct dentry* dentries = vnode->cache->dentries;
     int free_idx = 0;
     while(free_idx<NR_CHILD && dentries[free_idx].vnode!=0){
@@ -53,6 +59,7 @@ int create_tmpfs(struct vnode *vnode, struct vnode **target, const char *compone
     }
     if(free_idx == NR_CHILD){
         printf("[create tmpfs] Direcotry can only has %d child entries!\n", NR_CHILD);
+        *target = 0;
         return -1;
     }
     // create new node

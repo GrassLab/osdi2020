@@ -26,6 +26,7 @@ void test1()
     assert(a == 0, "2");
     a = vfs_open("/hello", O_CREAT);
     assert(a != 0, "3");
+    printf("1");
     b = vfs_open("/hello", O_CREAT);// should open the same file
     assert(b != 0, "3-1");
     vfs_close(a);
@@ -61,6 +62,8 @@ void test2()
     sz += vfs_read(a, buf + sz, 100-sz);
     buf[sz] = '\0';
     printf("%s\n", buf); // should be Hello World!
+
+    vfs_ls("/");
 }
 
 int kernel_main()
