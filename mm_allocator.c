@@ -10,7 +10,7 @@ typedef struct mem_page_t
     unsigned char c[PAGE_SIZE];
 } mem_page_t;
 
-mem_page_t mem_pages[1024];
+mem_page_t mem_pages[8];
 
 typedef struct page_t
 {
@@ -18,7 +18,7 @@ typedef struct page_t
     int used;
 } page_t;
 
-page_t page_table[1024];
+page_t page_table[8];
 
 typedef struct buddy_t
 {
@@ -28,7 +28,7 @@ typedef struct buddy_t
     unsigned long pa;
 } buddy_t;
 
-buddy_t buddy_pool[1024];
+buddy_t buddy_pool[8];
 
 // 0: 4KB
 // 1: 8KB

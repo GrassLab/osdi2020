@@ -1,8 +1,8 @@
 #ifndef _SDHOST_H_
 #define _SDHOST_H_
+#include "gpio.h"
 // mmio
 #define KVA 0x0000000000000000
-#define MMIO_BASE (KVA + 0x3f000000)
 
 // SD card command
 #define GO_IDLE_STATE 0
