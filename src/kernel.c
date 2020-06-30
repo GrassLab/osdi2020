@@ -3,6 +3,7 @@
 #include "mm.h"
 #include "printf.h"
 #include "schedule.h"
+#include "sdcard.h"
 #include "svc.h"
 #include "timer.h"
 #include "uart.h"
@@ -66,6 +67,17 @@ void test2()
     vfs_ls("/");
 }
 
+void sdcard_test(){ 
+    sd_init();
+    char buf[512]={0};
+    readblock(0, buf);
+    for (int i=0; i<512/4;i++){
+        if(i%8 == 0)
+            printf("\n");
+        printf("0x%08x\t", ((long *)buf)[i]);
+    }
+}
+
 int kernel_main()
 {
     uart_init();
@@ -73,11 +85,11 @@ int kernel_main()
     get_board_info();
     mm_init();
     rootfs_init();
-
-    printf("\n\n\ntest1\n");
-    test1();
-    printf("\n\n\ntest2\n");
-    test2();
+    sdcard_test();
+    // printf("\n\n\ntest1\n");
+    // test1();
+    // printf("\n\n\ntest2\n");
+    // test2();
 
     core_timer_enable();
     idle_task();

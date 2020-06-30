@@ -31,7 +31,7 @@ clean:
 
 .PHONY: run
 run: kernel8.img
-	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio
+	@qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -drive if=sd,file=./sfn_nctuos.img,format=raw
 
 .PHONY: debug
 debug: kernel8.img
