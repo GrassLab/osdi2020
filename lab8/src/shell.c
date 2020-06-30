@@ -139,7 +139,7 @@ int shell_execute(char *cmd, int el) {
     while(*p == ' ') p++;
     FILE *cat_fd = vfs_open(p, 0);
     if(cat_fd){
-      vfs_read(cat_fd, buf, 100);
+      buf[vfs_read(cat_fd, buf, 100)] = 0;
       fprintf(fd, buf);
       vfs_close(cat_fd);
     }

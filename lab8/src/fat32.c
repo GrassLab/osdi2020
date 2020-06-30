@@ -328,7 +328,7 @@ check(bpbRootClust  );
   //unsigned n = fat32_avail_cluster(0);
   //printfmt("avail is %d", n);
   // 5860 0x16e4
-  show_sec(0);
+  //show_sec(0);
 }
 
 #define entry_cluster_num(e) \
@@ -356,19 +356,24 @@ void show_entry_name(char *s){
 }
 
 void read_sfn_entry(char *p, struct SFN_entry *entry){
+
   for(int i = 0; i < 11; i++, p++)
     entry->filename[i] = *p;
   entry->attr = *p, p++;
   entry->reserved = *p, p++;
   entry->create_ms = *p, p++;
-  entry->create_hms  = read_le(p, sizeof(entry->create_hms ));
-  entry->date        = read_le(p, sizeof(entry->date       ));
-  entry->access_date = read_le(p, sizeof(entry->access_date));
-  entry->start_hi    = read_le(p, sizeof(entry->start_hi   ));
-  entry->modify_time = read_le(p, sizeof(entry->modify_time));
-  entry->modify_date = read_le(p, sizeof(entry->modify_date));
-  entry->start_lo    = read_le(p, sizeof(entry->start_lo   ));
-  entry->size        = read_le(p, sizeof(entry->size   ));
+#define read_entry(attr) \
+  entry->attr  = read_le(p, sizeof(entry->attr)), \
+  p += sizeof(entry->attr)
+  read_entry(create_hms);
+  read_entry(date);
+  read_entry(access_date);
+  read_entry(start_hi);
+  read_entry(modify_time);
+  read_entry(modify_date);
+  read_entry(start_lo);
+  read_entry(size);
+#undef read_entry
 }
 
 void write_sfn_entry(char *p, struct SFN_entry *entry){
@@ -377,14 +382,17 @@ void write_sfn_entry(char *p, struct SFN_entry *entry){
   *p = entry->attr, p++;
   *p = entry->reserved, p++;
   *p = entry->create_ms, p++;
-  write_le(p, entry->create_hms , sizeof(entry->create_hms ));
-  write_le(p, entry->date       , sizeof(entry->date       ));
-  write_le(p, entry->access_date, sizeof(entry->access_date));
-  write_le(p, entry->start_hi   , sizeof(entry->start_hi   ));
-  write_le(p, entry->modify_time, sizeof(entry->modify_time));
-  write_le(p, entry->modify_date, sizeof(entry->modify_date));
-  write_le(p, entry->start_lo   , sizeof(entry->start_lo   ));
-  write_le(p, entry->size       , sizeof(entry->size   ));
+#define write_entry(attr) \
+  write_le(p, entry->attr , sizeof(entry->attr)); \
+  p += sizeof(entry->attr)
+  write_entry(create_hms );
+  write_entry(date       );
+  write_entry(access_date);
+  write_entry(start_hi   );
+  write_entry(modify_time);
+  write_entry(modify_date);
+  write_entry(start_lo   );
+  write_entry(size       );
 }
 
 int append_directory_entry(struct vnode *dir, struct SFN_entry *entry){
@@ -453,7 +461,7 @@ int update_file_metadata(struct vnode *node, struct SFN_entry *update_entry){
 }
 
 struct vnode *fat32_build_file(struct SFN_entry *entry, struct vnode *parent){
-  printfmt("file N - %d", entry_cluster_num(entry));
+  //printfmt("file N - %d", entry_cluster_num(entry));
   return newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
       newFat32File(entry, parent));
 }
@@ -476,10 +484,10 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
   unsigned prev_cluster_num =
     parent ? entry_cluster_num(&Fat32fd(parent)->entry) : 0;
 
-  printfmt("N = %d", N);
+  //printfmt("N = %d", N);
 
   while(N){
-    printfmt("dir N - %d", N);
+    //printfmt("dir N - %d", N);
     read_file_ctx(N, buffer);
     struct SFN_entry fentry;
     for(int i = 0; i < 16; i++){
@@ -520,7 +528,7 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
 /* http://www.c-jump.com/CIS24/Slides/FAT/F01_0180_sfn.htm */
 struct vnode *fat32_build_root(){
   fat32_init();
-  printfmt("rooclust %d", bpb->bpbRootClust);
+  //printfmt("rooclust %d", bpb->bpbRootClust);
   struct SFN_entry *root_entry = /*{
     .filename = "/", .attr = 0x10,
     .reserved = 0, .create_ms = 0, .create_hms = 0,
@@ -599,14 +607,13 @@ int fat32_lookup(
             component_name
             );
       }
-
     }
     else{
       struct vnode *parent = Fat32fd(node)->parent;
       if(parent)
         return parent->v_ops->lookup(
             parent, target,
-            component_name);
+            component_name + strlen(".."));
       else return 0;
     }
   }

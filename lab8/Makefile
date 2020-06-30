@@ -128,7 +128,7 @@ gdb:
 	$(ARMGNU)-gdb -x debug/cmd.gdb
 
 update:
-	sudo mount -t msdos /dev/sdb1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt
+	sudo mount -t msdos /dev/mmcblk0p1 /mnt && sudo cp $(IMG) /mnt ; sudo umount /mnt
 
 clean :
 	rm -rf *$(BUILD_DIR) kernel8.img stamp.img kernel8.elf

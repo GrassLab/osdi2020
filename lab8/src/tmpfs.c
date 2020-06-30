@@ -149,7 +149,7 @@ int tmpfs_lookup(
             parent, target,
             component_name + strlen("..")
             );
-      } 
+      }
       else{
         return node->mount->mp->v_ops->lookup(
             node->mount->mp, target,
