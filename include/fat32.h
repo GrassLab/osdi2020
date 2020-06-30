@@ -38,6 +38,15 @@ struct fat32_boot_sector {
     uint8_t fat_system_type[8];                 // 0x52-0x59
 } __attribute__((packed));
 
+struct fat32_metadata {
+    uint32_t first_cluster_num;
+    uint8_t sector_per_cluster;
+};
+
+struct fat32_internal {
+
+};
+
 int fat32_register();
 int fat32_setup_mount(struct filesystem* fs, struct mount* mount);
 

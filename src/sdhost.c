@@ -1,9 +1,12 @@
 #include "sdhost.h"
 
 #include "fat32.h"
+#include "fs.h"
 #include "mbr.h"
 #include "my_string.h"
 #include "uart0.h"
+
+struct sd_metadata sdcard;
 
 static inline void delay(unsigned long tick) {
     while (tick--) {
@@ -179,7 +182,7 @@ void sd_init() {
 }
 
 // read MBR and create mount object
-int sd_mount(struct mount** mps) {
+int sd_mount(struct mount* mps[4]) {
     // read MBR
     char buf[512];
     readblock(0, buf);
@@ -196,18 +199,21 @@ int sd_mount(struct mount** mps) {
     memcpy(&partition[2], buf + 478, sizeof(struct mbr_partition));
     memcpy(&partition[3], buf + 494, sizeof(struct mbr_partition));
 
-    // create mount objects
-    mps = (struct mount**)kmalloc(sizeof(struct mount*) * 4);
+    // fill mount objects
     for (int i = 0; i < 4; i++) {
         if (partition[i].status_flag != 0) {
             readblock(partition[i].starting_sector, buf);
             // route each filesystem
-            int partition_type = partition[i].partition_type;
-            if (partition_type == 0x0b) {  // FAT32 with CHS addressing
+            if (partition[i].partition_type == 0x0b) {  // FAT32 with CHS addressing
                 struct fat32_boot_sector* boot_sector = (struct fat32_boot_sector*)buf;
-                uart_printf("aa: %d\n",boot_sector->root_dir_start_cluster_num);
-                // register_filesystem(&fat32);
-                // mbr_parse_fat32_bootsector(metadata);
+                // store metadata in kernel object
+                sdcard.internal = kmalloc(sizeof(struct fat32_metadata));
+                struct fat32_metadata* meta = (struct fat32_metadata*)sdcard.internal;
+                meta->first_cluster_num = boot_sector->root_dir_start_cluster_num;
+                meta->sector_per_cluster = boot_sector->logical_sector_per_cluster;
+                // create FAT32's root directory object
+                register_filesystem(&fat32);
+                fat32.setup_mount(&fat32, mps[i]);
             }
         }
     }

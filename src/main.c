@@ -34,7 +34,7 @@ void boot_init() {
     // Mount sdcard on /sdpX
     sd_init();
     uart_printf("\n[%f] Init SD done", get_timestamp());
-    struct mount** sd_mps;
+    struct mount* sd_mps[4];
     int err = sd_mount(sd_mps);
     if (err == 0) { // success
         for (int i = 0; i < 4; i++) {

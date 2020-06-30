@@ -192,8 +192,8 @@ int vfs_mount(const char* device, const char* mountpoint, const char* filesystem
 
     // mount fs on mountpoint
     struct mount* mt = (struct mount*)kmalloc(sizeof(struct mount));
-    mt->device = (char*)kmalloc(sizeof(char) * strlen(device));
-    strcpy(mt->device, device);
+    mt->dev_name = (char*)kmalloc(sizeof(char) * strlen(device));
+    strcpy(mt->dev_name, device);
     if (!strcmp(filesystem, "tmpfs")) {
         tmpfs.setup_mount(&tmpfs, mt);
         mount_dir->dentry->mountpoint = mt;
