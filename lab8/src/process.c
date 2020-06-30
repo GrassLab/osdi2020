@@ -204,6 +204,9 @@ void task_multilayer(int ret){
 }
 
 void task_setup(int ret){
+  vfs_mkdir("mnt");
+    if(!vfs_mount("fat32", "mnt", "fat32"))
+      puts("mount fat32 failed.");
   vfs_mkdir("tmp");
   if(!vfs_mount("tmpfs", "tmp", "tmpfs"))
     puts("mount tmpfs failed.");

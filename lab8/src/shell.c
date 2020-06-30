@@ -91,11 +91,9 @@ int shell_execute(char *cmd, int el) {
   else if(EQS("init", cmd)){
    fat32_init();
   }
-  else if(EQS("sdhost", cmd)){
-    vfs_mkdir("mnt");
-    if(!vfs_mount("fat32", "mnt", "fat32"))
-      puts("mount fat32 failed.");
-  }
+  //else if(EQS("sdhost", cmd)){
+
+  //}
   else if(EQS("file", cmd)){
     task_file_op(1);
   }
