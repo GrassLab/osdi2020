@@ -1,5 +1,5 @@
 #include "vfs.h"
-#include "tmpfs.h"
+#include "fat32.h"
 #include "printf.h"
 #include "allocator.h"
 

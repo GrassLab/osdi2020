@@ -28,10 +28,16 @@ master:
 	eret				
 
 el1_start:
-	ldr	x0, =__bss_start
-    ldr x1, =__bss_size
+	adr	x0, __bss_start
+	adr	x1, __bss_end
+	sub	x1, x1, x0
 	bl 	memzero
 	mov	sp, #EL1_LOW_MEMORY
+
+	// disable exception of access SIMD register in EL1(for printf)
+	mrs x0, CPACR_EL1
+    orr x0, x0, #(3 << 20)
+    msr CPACR_EL1, x0
 
 	adr x0, exception_table		// load VBAR_EL1 with virtual
 	msr	vbar_el1, x0		// vector table address

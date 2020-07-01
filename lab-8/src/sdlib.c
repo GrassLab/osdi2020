@@ -1,4 +1,5 @@
 #include "sdlib.h"
+#include "printf.h"
 
 static inline void delay(unsigned long tick) {
   while (tick--) {
