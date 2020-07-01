@@ -7,6 +7,7 @@
 #include "vfs.h"
 #include "lib/string.h"
 
+char file_name[] = "BOOTCODE.BIN";
 
 struct vnode_operations fat_v_ops = {lookup_fat, create_fat};
 struct file_operations fat_f_ops = {read_fat, write_fat};
@@ -58,7 +59,7 @@ void setup_fs_fat(struct filesystem *fs)
     fs->setup_mount = setup_mount_fat;
 }
 
-struct vnode *create_fat_vnode(int type, unsigned int first_cluster)
+struct vnode *create_fat_vnode(int type, unsigned int first_cluster, unsigned int size)
 {
     struct vnode *vnode = kmalloc(sizeof(struct vnode));
     vnode->mount = 0;//NULL
@@ -68,13 +69,15 @@ struct vnode *create_fat_vnode(int type, unsigned int first_cluster)
     vnode->type = type;
     vnode->internal = kmalloc(sizeof(struct fat_internal));
     ((struct fat_internal *)vnode->internal)->first_cluster = first_cluster;
+    ((struct fat_internal *)vnode->internal)->size = size;
+
     return vnode;
 }
 
 int setup_mount_fat(struct filesystem *fs, struct mount *mnt)
 {
     fat_getpartition();
-    struct vnode *vnode = create_fat_vnode(VNODE_TYPE_DIR, 0);
+    struct vnode *vnode = create_fat_vnode(VNODE_TYPE_DIR, 0, 0);
 
     mnt->fs= fs;
     mnt->root = vnode;
@@ -82,7 +85,6 @@ int setup_mount_fat(struct filesystem *fs, struct mount *mnt)
     return 0;
 }
 
-//TODO fat
 int lookup_fat(struct vnode *vnode, struct vnode **target, const char *component_name)
 {
     *target = 0;
@@ -96,14 +98,15 @@ int lookup_fat(struct vnode *vnode, struct vnode **target, const char *component
     unsigned char sector[BLOCK_SIZE];
     struct fat_dir *dir = (struct fat_dir *)sector;
     // we assume all object only use 1 block, and need not to checkout fat
-    readblock(data_sec_idx + internal->first_cluster*boot_sec->sector_per_cluster, sector);
+    readblock(data_sec_idx + internal->first_cluster, sector);
+    // readblock(data_sec_idx + internal->first_cluster*boot_sec->sector_per_cluster, sector);
     for(int cnt=0; dir->name[0]!='\0'; dir++){
         if(dir->name[0]==0xE5 || dir->attr[0]==0xF) //0x00 Entry never used, 0xe5 File is deleted
             continue;
         //cache vnode
         int type = dir->name[0]=='.' ? VNODE_TYPE_DIR : VNODE_TYPE_REG;
-        unsigned int first_cluster = ((unsigned int)dir->cluster_high)<<16 | dir->cluster_low;
-        dentries[cnt].vnode = create_fat_vnode(type, first_cluster);
+        unsigned int first_cluster = (((unsigned int)dir->cluster_high)<<16 | dir->cluster_low)-1;
+        dentries[cnt].vnode = create_fat_vnode(type, first_cluster, dir->size);
         //cache name
         int i;
         for(i=0; i<8; i++){
@@ -144,7 +147,7 @@ int create_fat(struct vnode *vnode, struct vnode **target, const char *component
         return -1;
     }
     // create new node
-    *target = create_fat_vnode(VNODE_TYPE_REG, 0);// TODO
+    *target = create_fat_vnode(VNODE_TYPE_REG, 0, 0);// TODO
     (*target)->cache = kmalloc(sizeof(struct vnode_cache));
     (*target)->cache->regbuf[0] = EOF;
     // add link to parent direcory
@@ -157,17 +160,21 @@ int create_fat(struct vnode *vnode, struct vnode **target, const char *component
 //TODO fat EOF
 int read_fat(struct file *file, void *buf, unsigned len)
 {
+    file->vnode->cache = kmalloc(sizeof(struct vnode_cache));
+    memset(file->vnode->cache, 0U, sizeof(struct vnode_cache));
     struct fat_internal* internal = file->vnode->internal;
     // cache regular file
     char *_regbuf = (char *)file->vnode->cache->regbuf;
     // we assume all object only use 1 block, and need not to checkout fat
-    readblock(data_sec_idx + internal->first_cluster*boot_sec->sector_per_cluster, _regbuf);
-    _regbuf[511]=EOF;
+    readblock(data_sec_idx + internal->first_cluster, _regbuf);
+    // readblock(data_sec_idx + internal->first_cluster*boot_sec->sector_per_cluster, _regbuf);
+    // _regbuf[internal->size]=EOF;
     file->f_pos = 0;
 
     char *_buf = (char *)buf;
     unsigned cnt;
-    for(cnt=0; (cnt<len && _regbuf[cnt] != EOF); cnt++){
+    // for(cnt=0; (cnt<len && _regbuf[cnt] != EOF); cnt++){
+    for(cnt=0; (cnt<len && cnt != (internal->size<REGBUFF_SIZE ?internal->size : REGBUFF_SIZE)); cnt++){
         _buf[cnt] = _regbuf[cnt];
     }
     _buf[cnt] = '\0';
@@ -176,16 +183,55 @@ int read_fat(struct file *file, void *buf, unsigned len)
     return cnt;
 }
 
+// TODO dirty_fat
 int write_fat(struct file *file, const void *buf, unsigned len)
 {
-    char *reg_ptr = file->vnode->cache->regbuf + file->f_pos;
-    const char *_buf = (const char *)buf;
-    unsigned free_size = FAT_FILE_SIZE - file->f_pos - 1;
-    unsigned cnt = (free_size<len) ? free_size : len;
+    if(file->vnode->cache == 0){
+        printf("[write fat] cache is empty, nothing to write!\n");
+        return 0;
+    }
 
-    strncpy(reg_ptr, _buf, len);
-    printf("[write fat] %d byte(s) witre. f_pos %d -> %d\n", cnt, file->f_pos, file->f_pos+cnt);
-    file->f_pos += cnt;
-    reg_ptr[file->f_pos] = EOF;
+    // printf("%dxxxxx\n%dxxxxx\n%dxxxxx\n", boot_sec->sector_per_cluster, entry1->starting_sector , boot_sec->nr_reserved_sectors);
+    struct fat_internal* internal = file->vnode->internal;
+    char *_regbuf = (char *)file->vnode->cache->regbuf;
+    // we assume all object only use 1 block, and need not to checkout fat
+    // writeblock(data_sec_idx + internal->first_cluster*boot_sec->sector_per_cluster, _regbuf);
+    writeblock(data_sec_idx + internal->first_cluster, _regbuf);
+
+    unsigned cnt = (len<BLOCK_SIZE) ? len : BLOCK_SIZE;
+
+    unsigned char sector[BLOCK_SIZE];
+    struct fat_dir *dir = (struct fat_dir *)sector;
+    // we assume all object only use 1 block, and need not to checkout fat
+
+    // readblock(data_sec_idx + internal->first_cluster*boot_sec->sector_per_cluster, sector);
+    readblock(data_sec_idx + internal->first_cluster, sector);
+    for(int cnt=0; dir->name[0]!='\0'; dir++){
+        if(dir->name[0]==0xE5 || dir->attr[0]==0xF) //0x00 Entry never used, 0xe5 File is deleted
+            continue;
+        //cache name
+        char _name[13]={0};
+        int i;
+        for(i=0; i<8; i++){
+            if(dir->name[i] == ' ')
+                break;
+            _name[i] = dir->name[i];
+        }
+        _name[i] = '.';
+        _name[i+1] = dir->ext[0];
+        _name[i+2] = dir->ext[1];
+        _name[i+3] = dir->ext[2];
+        _name[i+4] = '\0';
+
+        if(strcmp(_name, file_name) == 0)
+            dir->size = cnt;
+
+        cnt++;
+    }
+    // update size
+    writeblock(data_sec_idx + internal->first_cluster, sector);
+
+
+    printf("[write fat] cache write backed (%d bytes)\n", cnt);
     return cnt;
 }

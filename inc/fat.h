@@ -62,7 +62,7 @@ struct fat_dir{
                                                 // 0x10 file create time date
                                                 // 0x12 last access date
     unsigned short  cluster_high;               // 0x14
-    short            ext_attr[2];                // 0x16 time last write
+    short            ext_attr[2];               // 0x16 time last write
                                                 // 0x18 date last write
     unsigned short  cluster_low;                // 0x1a
     unsigned int    size;                       // 0x1c
@@ -71,11 +71,12 @@ struct fat_dir{
 
 struct fat_internal{
     unsigned int first_cluster;
+    unsigned int size;
 };
 
 int fat_getpartition();
 void setup_fs_fat(struct filesystem *fs);
-struct vnode *create_fat_vnode(int type, unsigned int first_cluster);
+struct vnode *create_fat_vnode(int type, unsigned int first_cluster, unsigned int size);
 int setup_mount_fat(struct filesystem *fs, struct mount *mount);
 int lookup_fat(struct vnode *vnode, struct vnode **target,const char *component_name);
 int create_fat(struct vnode *vnode, struct vnode **target,const char *component_name);

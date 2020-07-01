@@ -39,20 +39,35 @@ void test1()
 
 void test2()
 {
-    char buf[100];
-    struct file* a = vfs_open("/hello", O_CREAT);
-    struct file* b = vfs_open("/world", O_CREAT);
-    vfs_write(a, "Hello ", 6);
-    vfs_write(b, "World!", 6);
-    vfs_close(a);
-    vfs_close(b);
-    b = vfs_open("/hello", 0);
-    a = vfs_open("/world", 0);
+    // struct file* a = vfs_open("/hello", O_CREAT);
+    // struct file* b = vfs_open("/world", O_CREAT);
+    // vfs_write(a, "Hello ", 6);
+    // vfs_write(b, "World!", 6);
+    // vfs_close(a);
+    // vfs_close(b);
+    // b = vfs_open("/hello", 0);
+    // a = vfs_open("/world", 0);
+    // int sz;
+    // sz = vfs_read(b, buf, 100);
+    // sz += vfs_read(a, buf + sz, 100-sz);
+    // buf[sz] = '\0';
+    // printf("%s\n", buf); // should be Hello World!
+
+
+    char buf[33];
     int sz;
-    sz = vfs_read(b, buf, 100);
-    sz += vfs_read(a, buf + sz, 100-sz);
-    buf[sz] = '\0';
-    printf("%s\n", buf); // should be Hello World!
+
+    // struct file* a = vfs_open("/ABC.TXT",0);
+    struct file* a = vfs_open("/BOOTCODE.BIN", 0);
+    sz = vfs_read(a, buf, 33);
+    printf("read size: %d\n%x\n",sz,*((unsigned int *)buf));
+    vfs_write(a, "Hello ", 6);
+    sz = vfs_read(a, buf, 33);
+    printf("read size: %d\n%s\n",sz,buf);
+    vfs_write(a, "World ", 6);
+    sz = vfs_read(a, buf, 33);
+    printf("read size: %d\n%s\n",sz,buf);
+    vfs_close(a);
 
     vfs_ls("/");
 }
@@ -76,8 +91,8 @@ int kernel_main()
     mm_init();
     rootfs_init();
     // sdcard_test();
-    printf("\n\n\ntest1\n");
-    test1();
+    // printf("\n\n\ntest1\n");
+    // test1();
     printf("\n\n\ntest2\n");
     test2();
 

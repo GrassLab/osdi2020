@@ -205,5 +205,17 @@ int vfs_read(struct file *file, void *buf, unsigned len)
 
 int vfs_write(struct file *file, const void *buf, unsigned len)
 {
-    return file->f_ops->write(file, buf, len);
+    if(file->vnode->cache == 0){
+        file->vnode->cache = kmalloc(sizeof(struct vnode_cache));
+        memset(file->vnode->cache, 0U, sizeof(struct vnode_cache));
+    }
+    char *reg_ptr = file->vnode->cache->regbuf;
+    unsigned cnt = (len<FAT_FILE_SIZE) ? len : FAT_FILE_SIZE;
+
+    strncpy(reg_ptr, buf, cnt);
+    printf("[write fat] %d byte(s) witre. f_pos %d -> %d\n", cnt, file->f_pos, 0);
+    file->f_pos = 0;
+    reg_ptr[cnt] = EOF;
+    file->f_ops->write(file, buf, len);
+    return cnt;
 }
