@@ -30,17 +30,25 @@ void init_lfb(){
 
 void test_vfs1()
 {
-    file_t* a = vfs_open("hello", 0);
+    char buf[100];
+    //0049600
+    file_t* a = vfs_open("KERNEL8.IMG", 0);
     // assert(a == NULL);
-    printf("a");
-    a = vfs_open("hello", O_CREAT);
+    // a = vfs_open("hello", O_CREAT);
     // assert(a != NULL);
-    printf("a");
-    vfs_close(a);
-    file_t* b = vfs_open("hello", 0);
+    int sz;
+    sz = vfs_read(a, buf, 100);
+
+    for(int i = 0; i < sz; i++){
+        printf("%c", buf[i]);
+    }
+    printf("\n");
+
+
+    // vfs_close(a);
+    // file_t* b = vfs_open("hello", 0);
     // assert(b != NULL);
-    printf("a");
-    vfs_close(b);
+    // vfs_close(b);
 }
 void test_vfs2()
 {
@@ -58,7 +66,7 @@ void test_vfs2()
     sz += vfs_read(a, buf + sz, 100);
     buf[sz] = '\0';
     printf("////output is %s\n", buf); // should be Hello World!
-    vfs_list_file("/");
+    // vfs_list_file("/");
 }
 
 void main()
@@ -69,7 +77,7 @@ void main()
     mem_alloc_init();
     rootfs_init();
     // printf("rootfs init finish\n");
-    // test_vfs1();
+    test_vfs1();
     // test_vfs2();
     // idle_task();
     while(1){

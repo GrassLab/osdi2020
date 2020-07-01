@@ -1,88 +1,69 @@
-#ifndef _FAT32_H
-#define _FAT32_H
+#ifndef FAT32
+#define FAT32
+#include "config.h"
+
+struct directory_entry
+{
+  char name[8];			    // 0x00
+  char extension[3];		// 0x08
+  char ignore1[9];		    // 0x0b
+  unsigned short start_hi;	// 0x14
+  char ignore2[4];		    // 0x16
+  unsigned short start_lo;	// 0x1a
+  unsigned int size;		// 0x1c
+} __attribute__ ((packed));
+
+struct boot_sector
+{
+  char ignore1[0xe];
+  unsigned short count_of_reserved;	//0xe
+  unsigned char fat_num;	        // 0x10
+  char ignore2[0x13];
+  unsigned int sectors_num_per_fat;	// 0x24
+  char ignore3[4];
+  unsigned int root_clstr_index;	// 0x2c
+} __attribute__ ((packed));
+
+struct partition_entry
+{
+  char ignore[0x1c6];
+  unsigned int logical_block_address;
+  unsigned int size;
+} __attribute__ ((packed));
+
+struct fat32_info
+{
+  unsigned int logical_block_address;
+  unsigned int size;
+  unsigned short count_of_reserved;
+  unsigned char fat_num;
+  unsigned int sectors_num_per_fat;
+  unsigned int root_clstr_index;
+};
+
+struct fat32_node
+{
+  struct fat32_info info;
+  unsigned int cluster_index;
+  unsigned int dir_entry;
+  unsigned int dir_index;
+};
+
+
+typedef struct directory_entry directory_entry_t;
+typedef struct boot_sector boot_sector_t;
+typedef struct partition_entry partition_entry_t;
+typedef struct fat32_info fat32_info_t;
+typedef struct fat32_node fat32_node_t;
+
+void fat32_init();
+void fat32_ls(vnode_t *node);
+filesystem_t *fat32_fs;
 
 #define BLOCK_SIZE 512
-#define FAT32_ENTRY_PER_BLOCK  (BLOCK_SIZE/sizeof(int))
+#define CHAIN_LENGTH (BLOCK_SIZE/sizeof(unsigned int))
+// #define CHAIN_EOF 0xffffff8
+#define CHAIN_EOF 0xfffffff
+#define DIR_LEN (BLOCK_SIZE/sizeof(struct directory_entry))
 
-typedef struct partition_entry
-{
-    unsigned char status_flag;             //0x0
-    unsigned char partition_begin_head;    //0x1
-    unsigned short partition_begin_sector; //0x2-0x3
-    unsigned char partition_type;          //0x4
-    unsigned char partition_end_head;      //0x5
-    unsigned short partition_end_sector;   //0x6-0x7
-    unsigned int starting_sector;          //0x8-0xB
-    unsigned int number_of_sector;         //0xC-0xF
-
-} partition_entry_t;
-
-typedef struct boot_sector
-{
-    char jump[3];                              // 0x0
-    char oem[8];                               // 0x3
-    unsigned short bytes_per_logical_sector;   // 0xB 0xC
-    unsigned char logical_sector_per_cluster;  // 0xD
-    unsigned short n_reserved_sectors;         // 0xE
-    unsigned char n_file_alloc_tabs;           // 0x10
-    unsigned short n_root_dir_entries;         // 0x11-0x12
-    unsigned short n_logical_sectors_16;       // 0x13-0x14
-    unsigned char media_descriptor;            // 0x15
-    unsigned short logical_sector_per_fat;     // 0x16-0x17
-    unsigned short physical_sector_per_track;  // 0x18-0x19
-    unsigned short n_heads;                    // 0x1A-0x1B
-    unsigned int n_hidden_sectors;             // 0x1C-0x1F
-    unsigned int n_sectors_32;                 // 0x20-0x23
-    unsigned int n_sector_per_fat_32;          // 0x24-0x27
-    unsigned short mirror_flag;                // 0x28-0x29
-    unsigned short version;                    // 0x2A-0x2B
-    unsigned int first_cluster;                // 0x2C-0x2F
-    unsigned short info;                       // 0x30-0x31
-    
-    unsigned short num_of_backupboot_sector;   // 0x32-0x33
-    unsigned int reserved[3];                  // 0x34--0x3F
-    unsigned char logical_dirve_num;           // 0x40
-    unsigned char unused;                      // 0x41
-    unsigned char extend_signature;            // 0x42
-    
-
-    unsigned int serial_number;                // 0x43-0x46
-    unsigned char volume_name[11];             // 0x47-0x51
-    unsigned char fat_name[8];                 // 0x52-0x59
-} __attribute__ ( ( packed ) ) boot_sector_t;
-
-
-typedef struct fat32_dir
-{
-    char name[8];                              // 0x0-0x7
-    char ext[3];                               // 0x8-0xA
-    char attr[9];                              // 0xB-19
-    unsigned short cluster_high;               // 0x14-0x15
-    unsigned int ext_attr;                     // 0x16-0x19
-    unsigned short cluster_low;                // 0x1A-0x1B
-    unsigned int size;                         // 0x1C-0x1F
-
-} __attribute__ ( ( packed ) ) fat32_dir_t;
-
-typedef struct fat32fs_node{
-    unsigned int parent_cluster;
-    char name[32];
-    char ext[4];
-    unsigned int cluster;
-    unsigned int size;
-}fat32fs_node_t; 
-
-boot_sector_t* boot_sector_;
-partition_entry_t *entry1;
-filesystem_t *fat32fs; 
-vnode_operations_t* fat32fs_v_ops;
-file_operations_t* fat32fs_f_ops;
-int fat_getpartition();
-int setup_mount_fat32fs(filesystem_t* fs, mount_t* mt);
-// int lookup_fat32fs(struct dentry* dir, struct vnode** target, const char* component_name);
-int create_fat32fs(dentry_t* dir, vnode_t** target, const char* component_name);
-// int write_fat32fs(struct file* file, const void* buf, size_t len);
-// int read_fat32fs(struct file* file, void* buf, size_t len);
-
-int load_dent_fat32(struct dentry *dent,char *component_name);
-#endif
+#endif /* ifndef FAT32 */
