@@ -3,35 +3,63 @@
 #include "my_string.h"
 #include "sys_call.h"
 #include "vfs.h"
+#include "tmpfs.h"
 
 struct task_struct task[64] __attribute__((aligned(16u)));
 char kstack_pool[64][4096] __attribute__((aligned(16u)));
 char ustack_pool[64][4096] __attribute__((aligned(16u)));
 struct run_queue runqueue = {.start = 0, .end = 0, .size = 0};
 
-char tmpfs_pool[8192] __attribute__((aligned(16u)));
+struct filesystem tmpfs_fs = {.name = "tmpfs"};
+struct vnode_operations tmpfs_vnode_op = {.lookup = tmpfs_lookup, .create = tmpfs_create};
+struct vnode tmpfs_root = {.valid = 1, .type = 0, .v_ops = &tmpfs_vnode_op, .internal = &dir_pool[0]};
+struct mount tmpfs_mount = {.root = &tmpfs_root, .fs = &tmpfs_fs};
 
 int reschedule = 0;
 
 int kernel_init(){
     uart_init();
 
-    uart_puts("Init Kernel...\n");
+    //uart_puts("Init Kernel...\n");
+    uart_puts("Init File System...\n");
 
-    struct filesystem tmpfs = {.name = "tmpfs"};
+    dir_pool[0].valid = 1;
 
-    /*task[0].valid = 1;
-    task[0].id = 0;
-    task[0].kstack_top = kstack_pool[1];
-    task[0].x29 = kstack_pool[1];
-    task[0].x30 = (unsigned long long)&init;*/
-    //unsigned long long ptr = (unsigned long long) &task[0];
-    //asm volatile("msr tpidr_el1, %0" : "=r"(ptr));
-    //privilege_task_create(init);
+    struct filesystem *fs = &tmpfs_fs;
 
-    //context_switch(&task[0]);
-    //init();
+    register_filesystem(fs);
 
+    tmpfs_root.type = 0;
+
+    rootfs = &tmpfs_mount;
+
+    uart_puts("Registered file system: ");
+    uart_puts(fs_list[0]);
+    uart_puts("\n");
+    uart_puts("\n");
+
+    uart_puts("Root file system: ");
+    uart_puts(rootfs->fs->name);
+    uart_puts("\n");
+
+    struct file* a = vfs_open("hello", 0);
+    if (a == 0) uart_puts("a == NULL\n");
+    a = vfs_open("hello", O_CREAT);
+    if (a != 0) {
+        uart_puts("Filename: ");
+        uart_puts(((struct tmpfs_file_struct*)a->vnode->internal)->name);
+        uart_puts("\n");
+    }
+    vfs_close(a);
+    struct file* b = vfs_open("hello", 0);
+    if (b != 0) {
+        uart_puts("Filename: ");
+        uart_puts(((struct tmpfs_file_struct*)b->vnode->internal)->name);
+        uart_puts("\n");
+    }
+    vfs_close(b);
+
+    while(1);
     return 0;
 }
 
