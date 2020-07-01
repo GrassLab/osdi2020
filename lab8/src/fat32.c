@@ -24,24 +24,6 @@ int fat32_node_dir_entry(fat32_node_t *node, directory_entry_t *dir_entry)
 	return 0;
 }
 
-int fat32_node_dir_entry_set(fat32_node_t *node, directory_entry_t *dir_entry)
-{
-	directory_entry_t dirs[DIR_LEN];
-	unsigned int offset;
-	if(node->dir_index >= DIR_LEN){
-		return 1;
-	}
-	if(node->cluster_index == node->info.root_clstr_index){
-		dir_entry->size = 0;
-		return 0;
-	}
-	offset = calculated_offset(node);
-	readblock(offset + node->dir_entry - node->info.root_clstr_index, dirs);
-	dirs[node->dir_index] = *dir_entry;
-	writeblock(offset + node->dir_entry - node->info.root_clstr_index, dirs);
-	return 0;
-}
-
 int write(file_t *file, const void *buf, size_t len)
 {
 	fat32_node_t *node;
@@ -110,7 +92,7 @@ int filename_cmp(directory_entry_t *dir, const char *filename)
 		return 0;
 	}
 	extname = &filename[name_index + 1];
-	//compare with extind
+	//compare with ext
 	for(ext_index = 0; ext_index < 3; ++ext_index){
 		if(extname[ext_index] == '\0'){
 			return dir->extension[ext_index] != '\x20';
