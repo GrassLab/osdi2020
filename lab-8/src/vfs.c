@@ -11,6 +11,7 @@ int register_filesystem(FileSystem *fs) {
     rootfs = (Mount *) malloc(sizeof(Mount));
     rootfs->fs = fs;
     fs->setup_mount(fs, rootfs);
+    return 1;
 }
 
 File* vfs_open(const char *pathname, int flags) {
@@ -19,7 +20,6 @@ File* vfs_open(const char *pathname, int flags) {
     // 3. Create a new file if O_CREAT is specified in flags.
 
     VNode *rootVnode = rootfs->root;
-    VNode *tmpVnode = rootVnode;
     VNode *target;
 
     int result = rootVnode->v_ops->lookup(rootVnode, &target, pathname);

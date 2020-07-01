@@ -54,9 +54,9 @@ void exception_handler(unsigned long sp)
         asm volatile ("mrs %0, spsr_el2" : "=r" (spsr));
         asm volatile ("mrs %0, far_el2" : "=r" (far));
     }
-    ec = esr >> (32-6);
-    iss = esr & (0xffffff);
-    retaddr = elr;
+    // ec = esr >> (32-6);
+    // iss = esr & (0xffffff);
+    // retaddr = elr;
 
     asm volatile ("mrs %0, sp_el0" : "=r" (sp_el0));
     asm volatile ("mrs %0, elr_el1" : "=r" (elr_el1));

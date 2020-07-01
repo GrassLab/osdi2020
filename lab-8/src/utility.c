@@ -6,42 +6,6 @@
 #define PM_RSTS       ((volatile unsigned int*)(0x3F100020))
 #define PM_WDOG       ((volatile unsigned int*)(0x3F100024))
 
-void printPowerOnMessage() {
-    uart_puts("    ...        *                        *       *\n \
-      ...   *         * ..   ...                        *\n \
- *      ...        *           *            *\n \
-          ...               ...                          *\n \
-            ..                            *\n \
-    *        ..        *                       *\n \
-           __##____              *                      *\n \
-  *    *  /  ##  ****                   *\n \
-         /        ****               *         *  X   *\n \
-   *    /        ******     *                    XXX      *\n \
-       /___________*****          *             XXXXX\n \
-        |            ***               *       XXXXXXX   X\n \
-    *   | ___        |                    *   XXXXXXXX  XXX\n \
-  *     | | |   ___  | *       *             XXXXXXXXXXXXXXX\n \
-        | |_|   | |  ****             *           X   XXXXXXX\n \
-    *********** | | *******      *                X      X\n \
-************************************************************\n");
-}
-
-void printDebugPowerOnMessage()
-{
-    uart_puts("               /|___\n \
-             ///|   ))\n \
-           /////|   )))\n \
-         ///////|    )))\n \
-       /////////|     )))\n \
-     ///////////|     ))))\n \
-   /////////////|     )))\n \
-  //////////////|    )))\n \
-////////////////|___)))\n \
-  ______________|________\n \
-  \                    /\n \
-~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-}
-
 void setRegister(unsigned int address, unsigned int value)
 {
     *(volatile unsigned int*)(address) = value;

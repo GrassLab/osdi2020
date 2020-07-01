@@ -3,7 +3,6 @@
 #include "printf.h"
 #include "vfs.h"
 #include "string.h"
-#include "utility.h"
 #include "allocator.h"
 
 #define BLOCK_SIZE 512
@@ -24,7 +23,7 @@ static FileOperations _f_ops = {
 static VNodeOperations *v_ops = &_v_ops;
 static FileOperations *f_ops = &_f_ops;
 
-static print_block(int blockIndex) {
+void print_block(int blockIndex) {
     char buf[512] = {0};
     readblock(blockIndex, buf);
     for (int i = 0; i < 512; i++) {
@@ -171,6 +170,7 @@ int fat32_write(File *file, const void *buf, int len) {
         clusterIndex = find_fat32_cluster_index(&fnode->info, clusterIndex);
         if (len == 0) break;
     }
+    return 1;
 }
 
 int fat32_read(File *file, void *buf, int len) {
@@ -195,6 +195,7 @@ int fat32_read(File *file, void *buf, int len) {
         if (len == 0) break;
     }
     // print_block(offset + clusterIndex - fnode->info.clusterNumOfRoot);
+    return 1;
 }
 
 int fat32_ls(VNode *node) {
@@ -211,16 +212,16 @@ int fat32_ls(VNode *node) {
     readblock(blockIndex, dirs);
 
     for (int i = 0; i < DIR_LEN; i++) {
-        if (!str_equal(&dirs[i], "")) {
+        if (!str_equal( dirs[i].name, "")) {
             printf(" - %s\n", dirs[i].name);
         }
     }
+    return 1;
 }
 
 int fat32_lookup(VNode *dir_node, VNode **target, const char *component_name) {
     printf("[lookup]\n");
     Fat32Node *fat32_node = dir_node->internal;
-    Fat32Dentry *dentry = (Fat32Dentry *) fat32_node->dentry;
     Fat32Dentry dirs[DIR_LEN];
 
     int blockIndex = 
@@ -249,9 +250,9 @@ int fat32_lookup(VNode *dir_node, VNode **target, const char *component_name) {
 }
 
 int fat32_create(VNode *dir_node, VNode **target, const char *component_name) {
-
+    return 1;
 }
 
 int fat32_mkdir(VNode *dir_node, VNode **target, const char *component_name) {
-
+    return 1;
 }

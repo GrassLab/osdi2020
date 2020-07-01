@@ -1,4 +1,5 @@
 #include "mailbox.h"
+#include "uart.h"
 #include "gpio.h"
 
 /* mailbox message buffer */

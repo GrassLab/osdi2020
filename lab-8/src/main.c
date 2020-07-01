@@ -26,6 +26,7 @@ void test_lab8_req1() {
     for (int i = 0 ; i < 540; i++) {
         printf("%c", buf[i]);
     }
+    printf("\n");
 }
 
 void test_lab8_req2() {
@@ -37,6 +38,7 @@ void test_lab8_req2() {
     for (int i = 0 ; i < 100; i++) {
         printf("%c", buf[i]);
     }
+    printf("\n");
 }
 
 void test_lab8_req3() {

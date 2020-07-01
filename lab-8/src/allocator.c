@@ -80,7 +80,7 @@ Slub* allocate_object(int size) {
     while(slub != NULL) {
         if (slub->used == SLUB_NOT_USED) {
             slub->used = SLUB_USED;
-            Page *page = find_page_by_slub(slub);
+            // Page *page = find_page_by_slub(slub);
             // printf("[object allocate] page index: %d\n", page->index);
             // printf("[object allocate] object size: %d\n", slub->objectSize);
             // printf("[object allocate] address: %x\n", slub->address);
