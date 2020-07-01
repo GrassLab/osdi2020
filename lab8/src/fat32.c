@@ -151,6 +151,10 @@ int fat32_write (struct file_t *file, const void *buf, size_t len)
     dirs[node->dir_index].size = start_pos+i;
     writeblock (offset_g + node->dir_entry - node->info.cluster_num_of_root, dirs);
     writeblock (offset, wbuf);
+    uart_puts(dirs[node->dir_index].name);
+    uart_puts("\n");
+    uart_send_int(dirs[node->dir_index].size);
+    uart_puts("\n");
 
 }
 
@@ -220,7 +224,7 @@ int fat32_lookup (struct vnode_t *dir_node, struct vnode_t **target,
 
     unsigned int value = node->cluster_index;
     unsigned int offset = offset_g;
-    readblock (offset + value - node->info.cluster_num_of_root, dirs);
+    readblock (offset+ node->cluster_index - node->info.cluster_num_of_root, dirs);
     for (int i = 0; i < DIR_LEN; ++i){
         // uart_puts(dirs[i].name);
         // uart_puts("\n");
