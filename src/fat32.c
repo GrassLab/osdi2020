@@ -11,6 +11,15 @@ struct fat32_metadata fat32_metadata;
 struct vnode_operations* fat32_v_ops = NULL;
 struct file_operations* fat32_f_ops = NULL;
 
+static uint32_t get_cluster_blk_idx(uint32_t cluster_idx) {
+    return fat32_metadata.data_region_blk_idx +
+           (cluster_idx - fat32_metadata.first_cluster) * fat32_metadata.sector_per_cluster;
+}
+
+static uint32_t get_fat_blk_idx(uint32_t cluster_idx) {
+    return fat32_metadata.fat_region_blk_idx + (cluster_idx / FAT_ENTRY_PER_BLOCK);
+}
+
 struct vnode* fat32_create_vnode(struct dentry* dentry) {
     struct vnode* vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
     vnode->dentry = dentry;
@@ -89,10 +98,8 @@ int fat32_mkdir(struct vnode* dir, struct vnode** target, const char* component_
 int fat32_load_dentry(struct dentry* dir, char* component_name) {
     // read first block of cluster
     struct fat32_internal* dir_internal = (struct fat32_internal*)dir->vnode->internal;
-    uint32_t target_blk = fat32_metadata.root_sector_idx +
-                          (dir_internal->cluster_num - fat32_metadata.first_cluster) * fat32_metadata.sector_per_cluster;
-    uint8_t sector[512];
-    readblock(target_blk, sector);
+    uint8_t sector[BLOCK_SIZE];
+    readblock(get_cluster_blk_idx(dir_internal->cluster_num), sector);
 
     // parse
     struct fat32_dirent* sector_dirent = (struct fat32_dirent*)sector;
@@ -119,17 +126,17 @@ int fat32_load_dentry(struct dentry* dir, char* component_name) {
         }
         filename[len++] = 0;
         // create dirent
-        uint8_t file_attr = sector_dirent[i].attr[0];
         struct dentry* dentry;
-        if (file_attr == 0x10) { // directory
+        if (sector_dirent[i].attr == 0x10) {  // directory
             dentry = fat32_create_dentry(dir, filename, DIRECTORY);
         }
-        else { // file
+        else {  // file
             dentry = fat32_create_dentry(dir, filename, REGULAR_FILE);
         }
         // create fat32 internal
         struct fat32_internal* child_internal = (struct fat32_internal*)kmalloc(sizeof(struct fat32_internal));
         child_internal->cluster_num = ((sector_dirent[i].cluster_high) << 16) | (sector_dirent[i].cluster_low);
+        child_internal->size = sector_dirent[i].size;
         dentry->vnode->internal = child_internal;
     }
     return 0;
@@ -137,6 +144,26 @@ int fat32_load_dentry(struct dentry* dir, char* component_name) {
 
 // file operations
 int fat32_read(struct file* file, void* buf, uint64_t len) {
+    struct fat32_internal* file_node = (struct fat32_internal*)file->vnode->internal;
+    uint32_t f_pos_ori = file->f_pos;
+    uint32_t current_cluster = file_node->cluster_num;
+    uint32_t remain_len = len;
+    int fat[FAT_ENTRY_PER_BLOCK];
+
+    while (remain_len > 0 && current_cluster >= fat32_metadata.first_cluster && current_cluster != EOC) {
+        uart_printf("read cluster: %x\n", current_cluster);
+        readblock(get_cluster_blk_idx(current_cluster), buf + file->f_pos);
+        file->f_pos += (remain_len < BLOCK_SIZE) ? remain_len : BLOCK_SIZE;
+        remain_len -= BLOCK_SIZE;
+
+        // update cluster number from FAT
+        if (remain_len > 0) {
+            readblock(get_fat_blk_idx(current_cluster), fat);
+            current_cluster = fat[current_cluster % FAT_ENTRY_PER_BLOCK];
+        }
+    }
+
+    return file->f_pos - f_pos_ori;
 }
 
 int fat32_write(struct file* file, const void* buf, uint64_t len) {

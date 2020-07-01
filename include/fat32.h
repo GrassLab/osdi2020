@@ -1,6 +1,10 @@
 #include "typedef.h"
 #include "vfs.h"
 
+#define BLOCK_SIZE 512
+#define FAT_ENTRY_PER_BLOCK (BLOCK_SIZE / sizeof(int))
+#define EOC 0xFFFFFFF
+
 // Ref: https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system#Bootsector
 struct fat32_boot_sector {
     char jump[3];  // 0x0
@@ -39,23 +43,31 @@ struct fat32_boot_sector {
 } __attribute__((packed));
 
 struct fat32_dirent {
-    uint8_t name[8];        // 0x0-0x7
-    uint8_t ext[3];         // 0x8-0xA
-    uint8_t attr[9];        // 0xB-0x13
-    uint16_t cluster_high;  // 0x14-0x15
-    uint32_t ext_attr;      // 0x16-0x19
-    uint16_t cluster_low;   // 0x1A-0x1B
-    uint32_t size;          // 0x1C-0x1F
+    uint8_t name[8];            // 0x0-0x7
+    uint8_t ext[3];             // 0x8-0xA
+    uint8_t attr;               // 0xB
+    uint8_t reserved;           // 0xC
+    uint8_t create_time[3];     // 0xD-0xF
+    uint16_t create_date;       // 0x10-0x11
+    uint16_t last_access_date;  // 0x12-0x13
+    uint16_t cluster_high;      // 0x14-0x15
+    uint32_t ext_attr;          // 0x16-0x19
+    uint16_t cluster_low;       // 0x1A-0x1B
+    uint32_t size;              // 0x1C-0x1F
 } __attribute__((packed));
 
 struct fat32_metadata {
-    uint32_t root_sector_idx;
+    uint32_t fat_region_blk_idx;
+    uint32_t n_fat;
+    uint32_t sector_per_fat;
+    uint32_t data_region_blk_idx;
     uint32_t first_cluster;
     uint8_t sector_per_cluster;
 };
 
 struct fat32_internal {
     uint32_t cluster_num;
+    uint32_t size;
 };
 
 extern struct fat32_metadata fat32_metadata;

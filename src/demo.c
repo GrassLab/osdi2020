@@ -187,6 +187,13 @@ void demo_lab8() {
     struct file* root = vfs_open("/", 0);
     vfs_readdir(root);
 
-    struct file* a = vfs_open("/sdp1/BOOTCODE.BIN", O_CREAT);
+    struct file* a = vfs_open("/sdp1/KERNEL8.IMG", 0);
+    char buf[512];
+    int sz;
+    sz = vfs_read(a, buf, 4096);
+    for (int i = 0; i < sz; i++) {
+        uart_printf("%c ", buf[i]);
+    }
+
     while(1);
 }

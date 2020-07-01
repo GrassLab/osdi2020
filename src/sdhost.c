@@ -93,7 +93,7 @@ static int sdcard_setup() {
     sd_cmd(SEND_RELATIVE_ADDR, 0);
     get(SDHOST_RESP0, tmp);
     sd_cmd(SELECT_CARD, tmp);
-    sd_cmd(SET_BLOCKLEN, 512);
+    sd_cmd(SET_BLOCKLEN, BLOCK_SIZE);
     return 0;
 }
 
@@ -129,7 +129,7 @@ void readblock(int block_idx, void* buf) {
         block_idx <<= 9;
     }
     do {
-        set_block(512, 1);
+        set_block(BLOCK_SIZE, 1);
         sd_cmd(READ_SINGLE_BLOCK | SDHOST_READ, block_idx);
         for (int i = 0; i < 128; ++i) {
             wait_fifo();
@@ -155,7 +155,7 @@ void writeblock(int block_idx, void* buf) {
         block_idx <<= 9;
     }
     do {
-        set_block(512, 1);
+        set_block(BLOCK_SIZE, 1);
         sd_cmd(WRITE_SINGLE_BLOCK | SDHOST_WRITE, block_idx);
         for (int i = 0; i < 128; ++i) {
             wait_fifo();
@@ -183,7 +183,7 @@ void sd_init() {
 // read MBR and mount partition
 int sd_mount() {
     // read MBR
-    char buf[512];
+    char buf[BLOCK_SIZE];
     readblock(0, buf);
 
     // check boot signature
@@ -206,9 +206,12 @@ int sd_mount() {
 
         // store metadata
         struct fat32_boot_sector* boot_sector = (struct fat32_boot_sector*)buf;
-        fat32_metadata.root_sector_idx = p1.starting_sector +
-                                         boot_sector->n_sectors_per_fat_32 * boot_sector->n_file_alloc_tabs +
-                                         boot_sector->n_reserved_sectors;
+        fat32_metadata.data_region_blk_idx = p1.starting_sector +
+                                             boot_sector->n_sectors_per_fat_32 * boot_sector->n_file_alloc_tabs +
+                                             boot_sector->n_reserved_sectors;
+        fat32_metadata.fat_region_blk_idx = p1.starting_sector + boot_sector->n_reserved_sectors;
+        fat32_metadata.n_fat = boot_sector->n_file_alloc_tabs;
+        fat32_metadata.sector_per_fat = boot_sector->n_sectors_per_fat_32;
         fat32_metadata.first_cluster = boot_sector->root_dir_start_cluster_num;
         fat32_metadata.sector_per_cluster = boot_sector->logical_sector_per_cluster;
 
