@@ -171,25 +171,26 @@ void memTestTask()
 void vfsTask()
 {
     char buf[512];
-    struct file* a = vfsOpen("hello", O_CREAT);
+    struct file* a = vfsOpen("HELLO", O_CREAT);
     // struct file* b = vfsOpen("world", O_CREAT);
     // struct file* c = vfsOpen("hello", 0);
     // struct file* d = vfsOpen("test/hello", O_CREAT);
     // struct file* e = vfsOpen("test/hello", 0);
 
     vfsWrite(a, "Hello ", 6);
+    vfsWrite(a, "Hello ", 6);
     // vfsWrite(b, "World!", 6);
 
-    // vfsClose(a);
+    vfsClose(a);
     // vfsClose(b);
     // vfsClose(c);
     // vfsClose(d);
     // vfsClose(e);
 
-    a = vfsOpen("hello", 0);
+    a = vfsOpen("HELLO", 0);
     // a = vfsOpen("world", 0);
     int sz;
-    sz = vfsRead(a, buf, 100);
+    sz = vfsRead(a, buf, 12);
     // sz += vfsRead(a, buf + sz, 100);
     // buf[sz] = '\0';
 

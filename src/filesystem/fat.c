@@ -43,13 +43,19 @@ void concateName(char *name, char *ext, char *ret)
     {
         if (*(name+i) == '\0' || *(name+i) == ' ')
             break;
+
         *(ret+i) = *(name+i);
     }
 
-    if ((*ext) != '\0')
+    if ((*ext) == '\0' || (*ext) == ' ')
+    {
+        *(ret+i) = '\0';
+        return;
+    }
+    else
     {
         *(ret+i) = '.';
-        ++i;
+        i++;
     }
 
     for (size_t j = 0; j < 3; ++j)
@@ -58,6 +64,8 @@ void concateName(char *name, char *ext, char *ret)
             break;
         *(ret+i+j) = *(ext+j);
     }
+
+    return;
 }
 
 void getPartition()
@@ -90,7 +98,7 @@ void fatmkvnode(struct fatDentry *fde, struct vnode *root)
     
     concateName(fde->name, fde->ext, vn->name);
     uartPuts("mkvnode: ");
-    uartPuts(fde->name);
+    uartPuts(vn->name);
     uartPuts("\n");
     vn->mount = root->mount;
     vn->v_ops = root->v_ops;
@@ -178,10 +186,10 @@ int32_t fatFileWrite(struct file *file, const void *buf, size_t len)
     writeblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec + file->f_pos, buf);
     file->f_pos += len;
 
-    if (file->f_pos + len > fde->size)
+    if (file->f_pos > fde->size)
     {
         struct fatDentry *root_fde = (struct fatDentry *)file->vnode->mount->root->node_info;
-        fde->size = file->f_pos + len;
+        fde->size = file->f_pos;
         writeblock(root_sec, root_fde);
     }
 
@@ -195,7 +203,7 @@ int32_t fatFileRead(struct file *file, void *buf, size_t len)
 
     if (file->f_pos >= fde->size)
         return 0;
-    
+
     readblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec + file->f_pos, buf);
 
     if ((fde->size - file->f_pos) < len)
