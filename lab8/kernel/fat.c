@@ -164,7 +164,7 @@ int fat_lookup(struct vnode *dir_node, struct vnode **target,
     for (int i = 0; i < DIR_LEN; ++i) {
       dirs[i].name = (char *)(d + i * 32);
       dirs[i].cluster_hi = fat_read_member(d + i * 32 + 0x14, 2);
-      dirs[i].cluster_lo = fat_read_member(d + i * 23 + 0x1a, 2);
+      dirs[i].cluster_lo = fat_read_member(d + i * 32 + 0x1a, 2);
       dirs[i].size = fat_read_member(d + i * 32 + 0x1c, 4);
 
       uart_println("[fat under current dir] %s", dirs[i].name);

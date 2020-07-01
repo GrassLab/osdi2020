@@ -10,7 +10,7 @@
 #include "vfs.h"
 
 void fat32_test() {
-  const char *filename = "FILEC";
+  const char *filename = "TEST";
   struct file *a = vfs_open(filename, 0);
   char buf[10];
 
