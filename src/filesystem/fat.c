@@ -1,4 +1,5 @@
 #include "type.h"
+#include "utils.h"
 #include "device/uart.h"
 #include "filesystem/filesystem.h"
 #include "filesystem/sddriver.h"
@@ -106,7 +107,10 @@ void fatmkvnode(struct fatDentry *fde, struct vnode *root)
     vn->type = file;
 
     struct fcontent *fc = (struct fcontent *)allocSlot(root->mount->fs->fcontent_token);
-    fc->content = (char *)allocDynamic(512);
+    uint32_t cluster = ((uint32_t)fde->ch)<<16|fde->cl;
+    // fc->content = (char *)allocDynamic(512);
+    // readblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec, fc->content);
+    
     fc->fsize = 512;
     vn->internal = fc;
     vn->node_info = fde;
@@ -177,14 +181,22 @@ int32_t fatListDir(struct vnode *root, const char *pathname)
 
 int32_t fatFileWrite(struct file *file, const void *buf, size_t len)
 {
+    char *file_content;
+    char *cur_pos;
+    size_t written;
     struct fatDentry *fde = (struct fatDentry *)file->vnode->node_info;
     uint32_t cluster = ((uint32_t)fde->ch)<<16|fde->cl;
 
     if (file->f_pos + len >= 512)
         return 0;
 
-    writeblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec + file->f_pos, buf);
-    file->f_pos += len;
+    file_content = allocDynamic(512);
+    readblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec, file_content);
+    cur_pos = file_content + file->f_pos;
+
+    written = copynstr((char *)buf, cur_pos, len);
+    writeblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec, file_content);
+    file->f_pos += written;
 
     if (file->f_pos > fde->size)
     {
@@ -193,35 +205,28 @@ int32_t fatFileWrite(struct file *file, const void *buf, size_t len)
         writeblock(root_sec, root_fde);
     }
 
-    return len;
+    freeDynamic(file_content);
+
+    return written;
 }
 
 int32_t fatFileRead(struct file *file, void *buf, size_t len)
 {
+    char *file_content;
+    char *cur_pos;
+    size_t read;
     struct fatDentry *fde = (struct fatDentry *)file->vnode->node_info;
     uint32_t cluster = ((uint32_t)fde->ch)<<16|fde->cl;
 
-    if (file->f_pos >= fde->size)
-        return 0;
+    file_content = allocDynamic(512);
+    readblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec, file_content);
+    cur_pos = file_content + file->f_pos;
+    read = copynstr(cur_pos, (char *)buf, len);
+    file->f_pos += read;
 
-    readblock((cluster-2) * boot_mbr->sectors_per_cluster + root_sec + file->f_pos, buf);
+    freeDynamic(file_content);
 
-    if ((fde->size - file->f_pos) < len)
-    {
-        *((char *)buf+(fde->size - file->f_pos)) = '\0';
-        file->f_pos = fde->size;
-
-        return fde->size - file->f_pos;
-    }
-    else
-    {
-        *((char *)buf+len) = '\0';
-        file->f_pos += len;
-
-        return len;
-    }  
-
-    return 0;
+    return read;
 }
 
 int32_t fatSetupMount(struct filesystem* fs, struct mount* mount)

@@ -190,7 +190,7 @@ void vfsTask()
     a = vfsOpen("HELLO", 0);
     // a = vfsOpen("world", 0);
     int sz;
-    sz = vfsRead(a, buf, 12);
+    sz = vfsRead(a, buf, 100);
     // sz += vfsRead(a, buf + sz, 100);
     // buf[sz] = '\0';
 
@@ -198,9 +198,9 @@ void vfsTask()
     uartPuts(buf);
     uartPuts("\n");
 
-    // uartPuts("read size: ");
-    // uartInt(sz);
-    // uartPuts("\n");
+    uartPuts("read size: ");
+    uartInt(sz);
+    uartPuts("\n");
 
     // mkdir("test2");
     // d = vfsOpen("test2/hello", O_CREAT);
