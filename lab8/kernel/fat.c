@@ -5,6 +5,15 @@
 #include "slab.h"
 #include "vfs.h"
 
+struct fat32_node {
+  unsigned int cluster_index;
+  char dir_entry;
+  char dir_index;
+  struct partition_entry *p;
+  struct boot_sector *b;
+
+} ;
+
 unsigned long fat_read_member(char *f, unsigned int s) {
   unsigned long ret = 0;
   for (int i = 0; i < s; ++i, f++) {
@@ -238,12 +247,12 @@ static int setup_mount(struct filesystem *fs, struct mount *mount) {
 
 
 
-  struct fat32_node *new =  kalloc(512);
+  struct fat32_node *new =  kalloc(sizeof(struct fat32_node));
   new->p = parten;
   new->b = bootsc;
   new->cluster_index = bootsc->root_dir_cluster;
 
-  uart_println("%d %d", new->dir_entry, new->dir_index);
+  uart_println("%x %x", &new->dir_entry, &new->dir_index);
 
   new->dir_entry = 0;
   new->dir_index = 0;

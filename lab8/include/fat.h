@@ -27,13 +27,7 @@ struct directory_entry {
   uint32_t size;       // 0x1c
 };
 
-struct fat32_node {
-  unsigned int cluster_index;
-  unsigned int dir_entry;
-  unsigned int dir_index;
-  struct partition_entry *p;
-  struct boot_sector *b;
-};
+
 
 struct filesystem *create_fat32();
 
