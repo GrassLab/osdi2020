@@ -488,7 +488,7 @@ char *parse_long_filename(char *ptr, char *beg){
     *p = *(ptr + 9), p++;
     *p = *(ptr + 10), p++;
     for(int i = 14; i < 22; i++)
-    *p = *(ptr + i), p++;
+      *p = *(ptr + i), p++;
     *p = *(ptr + 24), p++;
     *p = *(ptr + 25), p++;
     for(int i = 28; i < 32; i++)
