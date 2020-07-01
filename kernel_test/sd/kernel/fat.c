@@ -8,6 +8,21 @@ extern unsigned char _end;
 static unsigned int partitionlba = 0;
 
 typedef struct {
+    char            code_area[446]; // 0x0 ~ 0x1BD
+    char            partition_table[64]; // 0x1BE ~ 0x1FD
+    char            signature[2]; // 0x1FE ~ 0x1FF
+} __attribute__((packed)) mbr_t;
+
+typedef struct {
+    char            boot_indicator;
+    char            CHS_start[3];
+    char            descriptor;
+    char            CHS_end[3];
+    unsigned int    start_sector;
+    unsigned int    partition_size;
+} __attribute__((packed)) partition_t;
+
+typedef struct {
     char            jmp[3];
     char            oem[8]; 
     unsigned char   bps[2];   // byte per sector  
@@ -24,7 +39,7 @@ typedef struct {
 } __attribute__((packed)) bpb_t;
 
 typedef struct {
-     unsigned int cluster[0x100];
+     unsigned int cluster[0x80];
 } __attribute__((packed)) fat_t;
 
 
@@ -49,6 +64,8 @@ typedef struct {
 
 typedef struct {
     int dentry_num;
+    char mbr[512];
+    partition_t *partition_entry[4];
     char partition1[512];
     unsigned long partition1_sector;
     char root_dir[512];
@@ -59,23 +76,57 @@ typedef struct {
 
 fat_manager FAT_MANAGER;
 
+void sector_debug(char *buf){
+    // debugging
+    for (int i=0; i<512; i++) {
+        printf("%x ", buf[i]);
+        if ((i % 0x10) == 0xf) {
+            printf("\n");
+        }
+    }
+}
+
+int fat_get_mbr()
+{
+    mbr_t *mbr = (mbr_t*)&FAT_MANAGER.mbr;
+    readblock(0, &FAT_MANAGER.mbr);
+
+    sector_debug((char*)&FAT_MANAGER.mbr);
+
+
+    partition_t *par;
+    int i;
+    for (i=0; i<4; i++) {
+        par = (partition_t*)mbr->partition_table + i;
+        if (par->boot_indicator == 0x80) {
+            if (par->descriptor == 0xb) {
+                printf("partition%d: FAT32\n", i+1);
+            } else {
+                printf("partition%d: UNKNOWN\n", i+1);
+            }
+            // printf("start_sector: %x\n", par->boot_indicator);
+            // printf("start_sector: %x\n", par->start_sector);
+            FAT_MANAGER.partition_entry[i] = par;
+        } else {
+            break;
+        }
+    }
+    if (i == 0) {
+        return -1;
+    }
+    printf("start_sector: %d\n", FAT_MANAGER.partition_entry[0]->start_sector);
+    return 1;
+}
+
 int fat_get_partition()
 {
     bpb_t *bpb = (bpb_t*)&FAT_MANAGER.partition1;
-    char *buf = &FAT_MANAGER.partition1;
     FAT_MANAGER.partition1_sector = 2048;
     readblock(FAT_MANAGER.partition1_sector, &FAT_MANAGER.partition1);
     // printf("%s\n", bpb->fs_format);
     FAT_MANAGER.fat1_sector = FAT_MANAGER.partition1_sector + bpb->reserve_sector;
     FAT_MANAGER.root_dir_sector = FAT_MANAGER.fat1_sector + bpb->fat_sector*2;
 
-    // debugging
-    for (int i=0; i<0x100; i++) {
-        printf("%x", buf[i]);
-        if ((i % 0x10) == 0xf) {
-            printf("\n");
-        }
-    }
     printf("bpb->reserve_sector: %d\n", bpb->reserve_sector);
     printf("bpb->fat_sector: %d\n", bpb->fat_sector);
     printf("fat1_sector: %d\n", FAT_MANAGER.fat1_sector);
@@ -130,18 +181,21 @@ int fat_setup_mount()
     3. Get the root directory cluster number and create a FAT32’s root directory object.
     */
     printf("+++ fat setup mount +++\n");
+    // fat_get_mbr();
     fat_get_partition();
+    // fat_get_fat_table();
     fat_get_root_dir();
+    return 0;
 }
 
-void fat_get_fat()
+void fat_get_fat_table()
 {
-    unsigned int *fat_entry = (unsigned int*)&_end;
+    fat_t *fat_entry = (unsigned int*)&_end;
     readblock(FAT_MANAGER.fat1_sector, &_end); // get fat1's sector
-    printf("fat_entry[0]: %x\n", fat_entry[0]);
-    printf("fat_entry[1]: %x\n", fat_entry[1]);
-    printf("fat_entry[2]: %x\n", fat_entry[2]);
-    printf("fat_entry[3]: %x\n", fat_entry[3]);
+    printf("fat_entry[0]: %x\n", &fat_entry->cluster[0]);
+    printf("fat_entry[1]: %x\n", &fat_entry->cluster[1]);
+    printf("fat_entry[2]: %x\n", &fat_entry->cluster[2]);
+    printf("fat_entry[3]: %x\n", &fat_entry->cluster[3]);
 }
 
 int fat_lookup(const char* name, const char* ext)
@@ -176,21 +230,14 @@ void fat_read_file()
     printf("fat start cluster: %x\n", file->fat_begin);
     printf("file content sector: %d\n", file->file_content_sector);
     
-    char *buf = (char*)&_end;
     for (int i=0; i<2; i++) {
         readblock(file->file_content_sector+i, &_end);
-        // debugging
-        for (int i=0; i<0x200; i++) {
-            printf("%x", buf[i]);
-            if ((i % 0x10) == 0xf) {
-                printf("\n");
-            }
-        }
+        sector_debug((char*)&_end);
     }
     return;
 }
 
-char write_data[512] = "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ";
+char write_data[512] = "AA";
 
 void fat_write_file()
 {
@@ -204,7 +251,7 @@ void fat_write_file()
     
     
     writeblock(file->file_content_sector, &write_data);
-    file->dentry->size = 0x20;
+    file->dentry->size = 0x2;
     writeblock(FAT_MANAGER.root_dir_sector, &FAT_MANAGER.root_dir);
     
     return;

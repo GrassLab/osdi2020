@@ -11,9 +11,9 @@ void main()
     sd_init();
     
     fat_setup_mount();
+    fat_lookup("AAA","TXT");
     fat_write_file();
     fat_read_file();
-    fat_lookup("AAA","TXT");
 
 
     // echo everything back
