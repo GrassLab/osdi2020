@@ -44,10 +44,12 @@ void print_block(int block)
                 uart_puts(".");
                 break;
             default:
-                if (buf[i + j] < 32)
-                    uart_puts(" ");
+
+                if (buf[i + j] < 32 || buf[i + j] > 126){
+                    uart_send(" ");
+                }
                 else{
-                    uart_puts("*");
+                    uart_send((char)buf[i + j]);
                 }                    
             }
         }
@@ -70,17 +72,6 @@ struct fat32_node * internal_node_create (struct fat32_node *parent, unsigned in
     return new;
 }
 
-unsigned int fat32_cluster_value (struct fat32_info *info, unsigned int index)
-{
-  unsigned int offset;
-  unsigned int fat[CHAIN_LEN];
-
-  // find FAT
-  offset = info->lba + info->count_of_reserved;
-  offset += index / CHAIN_LEN;
-  readblock (offset, fat);
-  return fat[index % CHAIN_LEN];
-}
 
 filesystem fat32_filesystem(){
     filesystem fs;
@@ -114,14 +105,13 @@ int fat32_setup_mount(struct filesystem_t *fs, struct mount_t **mount){
 
     // parse MBR to find first partition entry
     readblock (0, buf);
-    // print_block(0);
+    
     part1 = (void *) buf;
     init_node.info.lba = part1->lba;
     init_node.info.size = part1->size;
     
     // parse fat32 BPB
     readblock (init_node.info.lba, buf);
-    // print_block(init_node.info.lba);
     fat32 = (void *) buf;
     init_node.info.cluster_num_of_root = fat32->cluster_num_of_root;
     init_node.info.count_of_reserved = fat32->count_of_reserved;
@@ -130,10 +120,38 @@ int fat32_setup_mount(struct filesystem_t *fs, struct mount_t **mount){
 
     fat32_root.internal = internal_node_create (&init_node, init_node.info.cluster_num_of_root, 0, 0);
 
+    offset_g = init_node.info.lba + fat32->count_of_reserved + fat32->num_of_fat * fat32->sectors_per_fat;
     return 0;
 }
 int fat32_write (struct file_t *file, const void *buf, size_t len)
 {
+    uart_puts("fat32 write!\nTrying to write:\n```\n");
+    uart_puts(buf);
+    uart_puts("\n```\n");
+    char wbuf[BLOCK_SIZE];
+    struct fat32_node *node = file->vnode->internal;
+
+    struct directory_entry dirs[DIR_LEN];
+    readblock (offset_g + node->dir_entry - node->info.cluster_num_of_root, dirs);
+    uart_puts(dirs[node->dir_index].name);
+    uart_puts("\n");
+    uart_send_int(dirs[node->dir_index].size);
+    uart_puts("\n");
+
+    int start_pos = dirs[node->dir_index].size;
+    unsigned int offset = offset_g + node->cluster_index - node->info.cluster_num_of_root;    
+    readblock(offset, wbuf);
+    int i=0;
+    for (i = 0; i < len; i++)
+    {   
+        if(((char*)buf)[i]=='\0')
+            break;
+        wbuf[start_pos + i] = ((char*)buf)[i];
+    }
+    dirs[node->dir_index].size = start_pos+i;
+    writeblock (offset_g + node->dir_entry - node->info.cluster_num_of_root, dirs);
+    writeblock (offset, wbuf);
+
 }
 
 int fat32_read (struct file_t *file, void *buf, size_t len)
@@ -144,9 +162,14 @@ int fat32_read (struct file_t *file, void *buf, size_t len)
     char data[BLOCK_SIZE];
     offset = offset_g + node->cluster_index - node->info.cluster_num_of_root;
     readblock(offset, data);
+    
+    struct directory_entry dirs[DIR_LEN];
+    readblock (offset_g + node->dir_entry - node->info.cluster_num_of_root, dirs);
+    int file_size = dirs[node->dir_index].size;
+
     int i=0;
     for(i=0;i<len;i++){
-        if(data[i]=='\0')
+        if(data[i]=='\0' || i>=file_size)
             break;
         ((char*)buf)[i] = data[i];
     }
@@ -190,38 +213,33 @@ int fat32_lookup (struct vnode_t *dir_node, struct vnode_t **target,
     uart_puts("fat32 lookup!\nlookup for file: ");
     uart_puts(component_name);
     uart_puts("\n");
-    struct vnode *new_vnode;
     struct fat32_node *node;
-    struct directory_entry dir;
     struct directory_entry dirs[DIR_LEN];
-    unsigned int offset;
-    unsigned int value;
-    unsigned int i;
 
     node = dir_node->internal;
 
-    value = node->cluster_index;
-    offset = node->info.lba + node->info.count_of_reserved + node->info.num_of_fat * node->info.sectors_per_fat;
-    offset_g = offset;
-    
-    while((value & CHAIN_EOF) != CHAIN_EOF){
-        readblock (offset + value - node->info.cluster_num_of_root, dirs);
-        for (i = 0; i < DIR_LEN; ++i){
-            // compare filename
-            if(compare_file(dirs[i].name, dirs[i].extension, component_name)){
-                struct vnode_t *new;
-                new = var_alloc (sizeof (*new));
-                new->mount = &dir_node->mount;
-                new->v_ops = &v_ops;
-                new->f_ops = &f_ops;
-                new->internal = internal_node_create (node,(dirs[i].start_hi <<16) +dirs[i].start_lo,value, i);
-                *target = new;
-	            return 1;
-            }            
+    unsigned int value = node->cluster_index;
+    unsigned int offset = offset_g;
+    readblock (offset + value - node->info.cluster_num_of_root, dirs);
+    for (int i = 0; i < DIR_LEN; ++i){
+        // uart_puts(dirs[i].name);
+        // uart_puts("\n");
+        // uart_send_int(dirs[i].size);
+        // uart_puts("\n");
+        // compare filename
+        if(compare_file(dirs[i].name, dirs[i].extension, component_name)){
+            struct vnode_t *new;
+            new = var_alloc (sizeof (*new));
+            new->mount = &dir_node->mount;
+            new->v_ops = &v_ops;
+            new->f_ops = &f_ops;
+            new->internal = internal_node_create (node,(dirs[i].start_hi <<16) +dirs[i].start_lo,value, i);
+            *target = new;
+            return 1;
+        }            
 
-        }
-        value = fat32_cluster_value (&node->info, value);
     }
+    
 
     return 0;
 }

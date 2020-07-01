@@ -154,33 +154,72 @@ void main(){
     // uart_send_int(PAGING_PAGES);
     // uart_puts("\n");
 
-
+    char buf[32];
+    int sz;
     buddy_init(PAGING_PAGES);    
     init_all_allocator();
     init_var_allocator();
     sd_init();
-    uart_puts("R1 R2 test\n\n");
 
+    uart_puts("\nfat32 test\n\n");
 
     filesystem fs = fat32_filesystem();
     register_filesystem(&fs);
     
     uart_puts("-----------------------\n");
 
-    file* fail = vfs_open("hello", O_OPEN);
+    // file* fail = vfs_open("hello", O_OPEN);
+
+    // uart_puts("-----------------------\n");
+
+    // file* a = vfs_open("hello.txt", O_OPEN);
+    
+    // uart_puts("-----------------------\n");
+
+    // file* test = vfs_open("test.txt", O_OPEN);
+    
+    // uart_puts("-----------------------\n");
+
+    
+    
+    // sz = vfs_read(a, buf, 100);
+    // uart_puts("```\n");
+    // uart_puts(buf);
+    // uart_puts("```\n");
+    // uart_puts("-----------------------\n");
+
+    // sz = vfs_read(test, buf, 100);
+    // uart_puts("```\n");
+    // uart_puts(buf);
+    // uart_puts("```\n");
+    // uart_puts("-----------------------\n");
+
+    file* file_to_w = vfs_open("write.txt", O_OPEN);
 
     uart_puts("-----------------------\n");
 
-    file* a = vfs_open("hello.txt", O_OPEN);
+    vfs_write(file_to_w, "HELLL\n", 6);
+
+    uart_puts("-----------------------\n");
+
+    sz = vfs_read(file_to_w, buf, 100);
+    uart_puts("```\n");
+    uart_puts(buf);
+    uart_puts("\n```\n");
+
+    uart_puts("-----------------------\n");
+
+    vfs_write(file_to_w, "Line 2\n", 7);
+
+    uart_puts("-----------------------\n");
+
+    sz = vfs_read(file_to_w, buf, 100);
+    uart_puts("```\n");
+    uart_puts(buf);
+    uart_puts("\n```\n");
     
     uart_puts("-----------------------\n");
 
-    char buf[32];
-    int sz;
-    sz = vfs_read(a, buf, 100);
-    uart_puts(buf);
-    uart_puts("\n");
-    uart_puts("-----------------------\n");
     /*
     a = vfs_open("hello", O_CREAT);
     // assert(a != NULL);
