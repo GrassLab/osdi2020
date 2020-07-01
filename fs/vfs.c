@@ -104,15 +104,31 @@ vfs_read (struct file *file, void *buf, size_t len)
   return file->f_ops->read (file, buf, len);
 }
 
+struct vnode *
+vnode_create (struct mount *mount, struct vnode_operations *v_ops,
+	      struct file_operations *f_ops)
+{
+  struct vnode *new;
+  new = varied_malloc (sizeof (*new));
+  if (new == NULL)
+    return NULL;
+  new->mount = mount;
+  new->v_ops = v_ops;
+  new->f_ops = f_ops;
+  return new;
+}
+
 void
 rootfs_init ()
 {
   int i;
   // simply init rootfs's filesystem
-  extern void tmpfs_init ();
-  tmpfs_init ();
+  extern void sd_init ();
+  extern void fat32_init ();
+  sd_init ();
+  fat32_init ();
   for (i = 0; i < FS_NUM; ++i)
-    if (!strcmp ("tmpfs", registed_fs[i].name))
+    if (!strcmp ("fat32", registed_fs[i].name))
       break;
   rootfs = varied_malloc (sizeof (*rootfs));
   registed_fs[i].setup_mount (&registed_fs[i], rootfs);

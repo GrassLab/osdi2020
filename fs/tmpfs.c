@@ -7,7 +7,8 @@ static struct vnode_operations *v_ops = &_v_ops;
 static struct file_operations _f_ops;
 static struct file_operations *f_ops = &_f_ops;
 
-static struct vnode *vnode_create (struct mount *mount, enum tmpfs_type type);
+static struct vnode *internal_vnode_create (struct mount *mount,
+					    enum tmpfs_type type);
 
 static int
 write (struct file *file, const void *buf, size_t len)
@@ -90,21 +91,20 @@ create (struct vnode *dir_node, struct vnode **target,
   if (node->block->size >= SUBNODE_LEN)
     return 1;
   i = node->block->size;
-  new_vnode = vnode_create (dir_node->mount, file_t);
+  new_vnode = internal_vnode_create (dir_node->mount, file_t);
   if (new_vnode == NULL)
     return 1;
   node->block->data.nodes[i] = new_vnode->internal;
   // TODO: retrieve deleted slot
   ++node->block->size;
   node = new_vnode->internal;
-  memcpy (node->block->name, component_name,
-	  strlen (component_name) + 1);
+  memcpy (node->block->name, component_name, strlen (component_name) + 1);
   *target = new_vnode;
   return 0;
 }
 
 static struct vnode *
-vnode_create (struct mount *mount, enum tmpfs_type type)
+internal_vnode_create (struct mount *mount, enum tmpfs_type type)
 {
   struct vnode *new_node;
   struct tmpfs_node *internal;
@@ -132,7 +132,7 @@ static int
 setup_mount (struct filesystem *fs, struct mount *mount)
 {
   mount->fs = fs;
-  mount->root = vnode_create (mount, dir_t);
+  mount->root = internal_vnode_create (mount, dir_t);
   if (mount->root == NULL)
     return 1;
   return 0;
