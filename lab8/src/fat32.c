@@ -74,6 +74,19 @@ Fat32fd newFat32File(struct SFN_entry *entry, struct vnode *parent){
   return new;
 }
 
+Fat32fd newFat32LongFile(char *name, struct SFN_entry *entry, struct vnode *parent){
+  Fat32fd new = (Fat32fd)kmalloc(sizeof(Fat32fdStr));
+  new->entry = *entry;
+  char mstr[12];
+  parse_filename(new->entry.filename, mstr, mstr);
+  new->name = name; // todo, release the mem
+  new->parent = parent;
+  new->type = dirent_file;
+  new->text = NULL;
+  new->next = NULL;
+  return new;
+}
+
 Fat32fd newFat32Dir(
     struct SFN_entry *entry,
     struct vnode *parent,
@@ -300,15 +313,15 @@ void fat32_init(){
 #if 0
 #define check(entry) \
   if(bpb->entry != ((struct mbr_sector*)buffer)->mbr_bpb.entry) \
-    puts(str(entry) "not the same");
+  puts(str(entry) "not the same");
 
-check(bpbBytesPerSec);
-check(bpbSecPerClust);
-check(bpbResSectors );
-check(bpbFATs       );
-check(bpbFATsecs    );
-check(bpbBigFATsecs );
-check(bpbRootClust  );
+  check(bpbBytesPerSec);
+  check(bpbSecPerClust);
+  check(bpbResSectors );
+  check(bpbFATs       );
+  check(bpbFATsecs    );
+  check(bpbBigFATsecs );
+  check(bpbRootClust  );
 #endif
 
   info->FirstDataSector = mbrp_start;
@@ -466,6 +479,44 @@ struct vnode *fat32_build_file(struct SFN_entry *entry, struct vnode *parent){
       newFat32File(entry, parent));
 }
 
+char *parse_long_filename(char *ptr, char *beg){
+  char name[128];
+  char *p = name;
+  while(ptr != beg){
+    for(int i = 1; i < 7; i++)
+      *p = *(ptr + i), p++;
+    *p = *(ptr + 9), p++;
+    *p = *(ptr + 10), p++;
+    for(int i = 14; i < 22; i++)
+    *p = *(ptr + i), p++;
+    *p = *(ptr + 24), p++;
+    *p = *(ptr + 25), p++;
+    for(int i = 28; i < 32; i++)
+      *p = *(ptr + i), p++;
+    ptr -= 32;
+  }
+  *p = 0;
+  printfmt("filename is %s", name);
+  return strdup(name);
+}
+
+struct vnode *fat32_build_long_file(char *beg, struct vnode *parent){
+  char *ptr = beg;
+  while(*(ptr + 11) & 0x0f) ptr += 32;
+  struct SFN_entry fentry;
+  read_sfn_entry(ptr, &fentry);
+  struct vnode *rtn = newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
+      newFat32LongFile(parse_long_filename(ptr - 32, beg), &fentry, parent));
+}
+
+int ignore_long_file(char *buffer, int i){
+  while(i < 16){
+    if((*buffer + i * 32 + 11) & 0x0f) i++;
+    else break;
+  }
+  return i;
+}
+
 struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
 
   struct vnode *dir = newVnode(NULL, fat32_vop, fat32_fop, fat32_dop,
@@ -512,6 +563,12 @@ struct vnode *fat32_build_dir(struct SFN_entry *entry, struct vnode *parent){
             iter = &(Fat32fd(*iter)->next);
           }
         }
+        else if((fentry.attr & 0x0f) == 0x0f){
+          /* long file name */
+          //puts("long file");
+          //*iter = fat32_build_long_file(buffer + i * 32, dir);
+          //i = ignore_long_file(buffer, i);
+        }
         else{
           *iter = fat32_build_file(&fentry, dir);
           iter = &(Fat32fd(*iter)->next);
@@ -530,13 +587,13 @@ struct vnode *fat32_build_root(){
   fat32_init();
   //printfmt("rooclust %d", bpb->bpbRootClust);
   struct SFN_entry *root_entry = /*{
-    .filename = "/", .attr = 0x10,
-    .reserved = 0, .create_ms = 0, .create_hms = 0,
-    .date = 0, .access_date = 0,
-    .start_hi = 0, .modify_time = 0, .modify_date = 0,
-    .start_lo = bpb->bpbRootClust, .size = 0
-  };*/ (struct SFN_entry *)kmalloc(sizeof(struct SFN_entry));
-  root_entry->filename[0] = '/';
+                                   .filename = "/", .attr = 0x10,
+                                   .reserved = 0, .create_ms = 0, .create_hms = 0,
+                                   .date = 0, .access_date = 0,
+                                   .start_hi = 0, .modify_time = 0, .modify_date = 0,
+                                   .start_lo = bpb->bpbRootClust, .size = 0
+                                   };*/ (struct SFN_entry *)kmalloc(sizeof(struct SFN_entry));
+    root_entry->filename[0] = '/';
   root_entry->filename[1] = 0;
   root_entry->attr = 0x10;
   root_entry->reserved = 0;
