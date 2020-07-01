@@ -58,8 +58,22 @@ int fat32_setup_mount(struct filesystem* fs, struct mount* mount) {
 }
 
 int fat32_lookup(struct vnode* dir, struct vnode** target, const char* component_name) {
-    struct fat32_internal* dir_internal = (struct fat32_internal*)dir->internal;
-    return 0;
+    // component_name is empty, return dir vnode
+    if (!strcmp(component_name, "")) {
+        *target = dir;
+        return 0;
+    }
+    // search component_name in dir
+    struct list_head* p = &dir->dentry->childs;
+    list_for_each(p, &dir->dentry->childs) {
+        struct dentry* dentry = list_entry(p, struct dentry, list);
+        if (!strcmp(dentry->name, component_name)) {
+            *target = dentry->vnode;
+            return 0;
+        }
+    }
+    *target = NULL;
+    return -1;
 }
 
 int fat32_create(struct vnode* dir, struct vnode** target, const char* component_name) {
