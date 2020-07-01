@@ -4,7 +4,7 @@ LD = $(TOOLCHAIN_PREFIX)ld
 OBJCP = $(TOOLCHAIN_PREFIX)objcopy
 QEMU = qemu-system-aarch64
 LDSCRIPT = kernel/linker.ld
-LDFLAGS = -nostartfiles
+LDFLAGS = -nostartfiles -no_unaligned_access
 CFLAGS = -Wall -O2 -fPIC -ffreestanding -nostdlib -nostartfiles -Iinclude -Iperipheral -mgeneral-regs-only
 
 PeriDir   = peripheral

@@ -12,8 +12,19 @@
 #include "tmpfs.h"
 #include "vfs.h"
 
+void disable_aligned_check() {
+  unsigned long long flag;
+  __asm__ volatile("mrs %0, sctlr_el1" : "=r"(flag));
+  flag &= ~(0b1010);
+  flag |= 0b1 << 6;
+  /* // flag |= 0b1 << 28; */
+  __asm__ volatile("msr sctlr_el1, %0" ::"r"(flag));
+  __asm__ volatile("mrs %0, sctlr_el1" : "=r"(flag));
+
+}
 
 int main(int argc, char *argv[]) {
+
   bh_mod_mask = 0;
 
   /* initialize uart with default clock & baud rate */
@@ -21,7 +32,6 @@ int main(int argc, char *argv[]) {
 
   /* initialize framebuffer */
   lfb_init();
-
 
   /* create the buddy system */
 
@@ -50,7 +60,6 @@ int main(int argc, char *argv[]) {
   /* } */
 
   /* tmpfs->setup_mount(tmpfs, rootfs); */
-
 
   /* initialize the sd card */
   sd_init();

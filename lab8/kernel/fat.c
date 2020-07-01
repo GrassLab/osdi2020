@@ -5,6 +5,14 @@
 #include "slab.h"
 #include "vfs.h"
 
+unsigned long fat_read_member(char *f, unsigned int s) {
+  unsigned long ret = 0;
+  for (int i = 0; i < s; ++i, f++) {
+    ret += *f << i * 8;
+  }
+  return ret;
+}
+
 static unsigned int get_data_region_offset(unsigned int index,
                                            struct fat32_node *node) {
   unsigned int offset = (node->p->lba + node->b->count_of_reserved +
@@ -128,6 +136,7 @@ int fat_lookup(struct vnode *dir_node, struct vnode **target,
                const char *component_name) {
   uart_println("[fat] lookup pathanme %s", component_name);
 
+  char *d = kalloc(512);
   struct directory_entry dirs[DIR_LEN];
   struct fat32_node *node = dir_node->internal;
 
@@ -136,12 +145,20 @@ int fat_lookup(struct vnode *dir_node, struct vnode **target,
        index = cluster_next_index(node, index)) {
 
     uart_println("[fat] cluster index start at %d", index);
+
     /* reterive dir entries */
+    readblock(get_data_region_offset(index, node), d);
     readblock(get_data_region_offset(index, node), dirs);
+
 
     /* search */
     for (int i = 0; i < DIR_LEN; ++i) {
-      uart_println("[fat under current dir] %s", dirs[i]);
+      dirs[i].name = (char *)(d + i * 32);
+      dirs[i].cluster_hi = fat_read_member(d + i * 32 + 0x14, 2);
+      dirs[i].cluster_lo = fat_read_member(d + i * 23 + 0x1a, 2);
+      dirs[i].size = fat_read_member(d + i * 32 + 0x1c, 4);
+
+      uart_println("[fat under current dir] %s", dirs[i].name);
 
       if (filename_cmp(&dirs[i], component_name) == 0) {
 
@@ -155,7 +172,7 @@ int fat_lookup(struct vnode *dir_node, struct vnode **target,
 
         /* return the target */
         *target = v;
-        uart_println("[fat] found target %s", dirs[i].extension);
+        uart_println("[fat] found target %s", dirs[i].name);
 
         return 0;
       }
@@ -164,21 +181,45 @@ int fat_lookup(struct vnode *dir_node, struct vnode **target,
   return -1;
 }
 
-struct partition_entry *fat_getpartition() {
-  struct partition_entry *p = kalloc(sizeof(struct partition_entry));
+struct partition_entry *parts[10];
+struct boot_sector *bootscs[10];
+
+char *fat_getpartition() {
+  char *p = kalloc(512);
   readblock(0, p);
   return p;
 }
 
-struct boot_sector *fat_getbootsector(unsigned int lba) {
-  struct boot_sector *b = kalloc(sizeof(struct boot_sector));
+char  *fat_getbootsector(unsigned int lba) {
+  char *b = kalloc(512);
   readblock(lba, b);
   return b;
 }
 
+
 static int setup_mount(struct filesystem *fs, struct mount *mount) {
-  struct partition_entry *parten = fat_getpartition();
-  struct boot_sector *bootsc = fat_getbootsector(parten->lba);
+  char *p = fat_getpartition();
+  struct partition_entry *parten = kalloc(sizeof(struct partition_entry));
+  parten->lba = fat_read_member(p + 0x1c6, 4);
+  uart_println("lba: %d", parten->lba);
+
+  /* uart_println("%x, %x", p+0x1c6, &parten->lba); */
+
+  char *b = fat_getbootsector(parten->lba);
+  struct boot_sector *bootsc = kalloc(sizeof(struct boot_sector));
+  bootsc->sector_per_clus   = fat_read_member(b + 0xd,  1);
+  bootsc->count_of_reserved = fat_read_member(b + 0xe,  2);
+  bootsc->num_of_fat        = fat_read_member(b + 0x10, 1);
+  bootsc->sectors_per_fat   = fat_read_member(b + 0x24, 4);
+  bootsc->root_dir_cluster  = fat_read_member(b + 0x2c, 4);
+
+
+  uart_println("sector per cluster: %d", bootsc->sector_per_clus);
+  uart_println("count of reserved : %d", bootsc->count_of_reserved);
+  uart_println("num of fat        : %d", bootsc->num_of_fat);
+  uart_println("sectors per fat   : %d", bootsc->sectors_per_fat);
+  uart_println("root dir cluster  : %d", bootsc->root_dir_cluster);
+  /* struct partition_entry *parten = fat_getpartition(); */
 
   struct fat32_node init_node; /* info and cluster index */
   init_node.p = parten;
@@ -194,8 +235,22 @@ static int setup_mount(struct filesystem *fs, struct mount *mount) {
   v->parent = v;
   v->is_dir = 1;
   v->basename = "/";
-  v->internal =
-      create_internal_node(&init_node, init_node.b->root_dir_cluster, 0, 0);
+
+
+
+  struct fat32_node *new =  kalloc(512);
+  new->p = parten;
+  new->b = bootsc;
+  new->cluster_index = bootsc->root_dir_cluster;
+
+  uart_println("%d %d", new->dir_entry, new->dir_index);
+
+  new->dir_entry = 0;
+  new->dir_index = 0;
+
+  v->internal = new;
+  /* v->internal = */
+  /*     create_internal_node(&init_node, init_node.b->root_dir_cluster, 0, 0); */
 
   /* setup mount */
   mount->fs = fs;

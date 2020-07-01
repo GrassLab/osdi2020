@@ -70,8 +70,6 @@ el1_entry:
     msr     elr_el1, x0
 
 
-
-
     // from el1 to el0
     eret
 
