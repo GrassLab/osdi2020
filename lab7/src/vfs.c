@@ -6,6 +6,8 @@
 
 static struct mount *rootfs_mount;
 static struct directory *current_dir; 
+static struct filesystem *filesystem_array[10];
+static char *filesystem_name[10];
 
 int strcmp_eq(char *str1, char *str2) {
     while (1) {
@@ -49,143 +51,70 @@ struct vnode* entry_file_find(struct directory *dir, const char *comp_name) {
     return 0;
 }
 
-struct vnode* entry_dir_find(struct directory *dir, char *comp_name) {
-    if(dir->head == 0) return 0;
-    struct direntry *iter_entry = dir->head;
-    if(iter_entry == 0) return 0;
-    while(iter_entry != 0) {
-        if((iter_entry->entry->type == REG_DIR) && strcmp_eq(((struct direntry*)iter_entry)->name, comp_name)) {
-            return iter_entry->entry;
-        }
-        iter_entry = iter_entry->next;
-    }
-    return 0;
-}
-
 int setup_mount(struct filesystem* fs, struct mount* mount) {
     mount->fs = fs;
     return 1;
 }
 
-void create_file_vnode(struct file *create_file) {
-    struct vnode *create_vnode     = obj_allocate(sizeof(struct vnode));
-    create_vnode->type             = REG_FILE;
-    create_vnode->internal         = (struct block*)get_free_pages(1);
-    *(int *)create_vnode->internal = 0; // set the file size
+void create_file_vnode(struct vnode *dir_vnode, char *comp_name, struct file *create_file) {
+    struct vnode *create_vnode;
+    dir_vnode->v_ops->create(dir_vnode, &create_vnode, comp_name, REG_FILE);
     create_file->f_pos     = 0;
     create_file->vnode = create_vnode;
     return;
 }
 
-struct vnode *create_dir_vnode() {
-    struct vnode *create_vnode     = obj_allocate(sizeof(struct vnode));
-    create_vnode->type             = REG_DIR;
-    create_vnode->internal         = obj_allocate(sizeof(struct directory));
-    return create_vnode;
-}
-
 void iterate_dir(struct directory *dir) {
+    if(dir->head == 0) return 0;
     struct direntry *iter_entry = dir->head;
+    if(iter_entry == 0) return 0;
     while(iter_entry != 0) {
-        printf("%s\r\n", iter_entry->name);
+        printf("%s\r\n", ((struct direntry*)iter_entry)->name);
         iter_entry = iter_entry->next;
     }
-}
-
-void insert_vnode(struct directory *dir, struct vnode *in_vnode, char *name) {
-    struct direntry *create_entry = obj_allocate(sizeof(struct direntry));
-    create_entry->name = obj_allocate(sizeof(char) * 10);
-    strcpy(create_entry->name, name);
-    create_entry->entry = in_vnode;
-    if(dir->head == 0) {
-        dir->head = create_entry;
-        dir->head->next = 0;
-        dir->tail = dir->head;
-    }
-    else {
-        dir->tail->next = create_entry;
-        dir->tail = dir->tail->next;
-        dir->tail->next = 0;
-    }
-}
-
-struct directory *find_dir(const char* pathname) {
-    if(pathname == 0) return 0;
-    char path_name_buff[20];
-    struct directory *ret_dir;
-    if(pathname[0] == '/') {
-        // root dir
-        ret_dir = (struct directory *)rootfs_mount->root->internal;
-        if(pathname[1] == '\0') return ret_dir;
-        int index = 1;
-        index = strcpy(path_name_buff, &pathname[index]);
-        while(1) {
-            struct vnode *find_vnode = entry_dir_find(ret_dir, path_name_buff);
-            if (find_vnode == 0) {
-                return ret_dir;
-            }
-            ret_dir = (struct directory *)find_vnode->internal;
-            index = strcpy(path_name_buff, &pathname[index]);
-        }
-    }
-    else {
-        // current dir
-        return current_dir;
-    }
+    return 0;
 }
 
 void register_filesystem(struct filesystem* fs, char *fs_name) {
   // register the file system to the kernel.
   // you can also initialize memory pool of the file system here.
-    fs->name = obj_allocate(sizeof(char) * 10);
-    strcpy(fs->name, fs_name);
-    fs->setup_mount = setup_mount;
+    filesystem_array[0] = fs;
+    filesystem_name[0]  = fs_name;
+    return;
 }
 
-void init_root_filesystem()
-{
+void init_root_filesystem() {
     // init vnode
     // mount the vnode 
-    struct vnode *root_vnode   = obj_allocate(sizeof(struct vnode));
-    // root vnode is directory 
-    root_vnode->type           = REG_DIR;
-    root_vnode->internal       = obj_allocate(sizeof(struct directory));
-    current_dir = (struct directory*)root_vnode->internal;
-    struct filesystem *root_fs = obj_allocate(sizeof(struct filesystem));
-    // register file system
-    register_filesystem(root_fs, "root_fs");
+    struct filesystem *root_fs = filesystem_array[0];
+    rootfs_mount = (struct mount *)obj_allocate(sizeof(struct mount));
+    root_fs->setup_mount(root_fs, rootfs_mount);
+}
 
-    rootfs_mount = obj_allocate(sizeof(struct mount));
-    rootfs_mount->root = root_vnode;
-    int setup = root_fs->setup_mount(root_fs, rootfs_mount);
-    if(setup == 0) printf("Error register root fs\r\n");
+void vfs_ls(const char* pathname, int flags) {
+    struct vnode *root_vnode = rootfs_mount->root;
+    struct directory *start_dir = (struct directory *)root_vnode->internal;
+    iterate_dir(start_dir);
 }
 
 struct file* vfs_open(const char* pathname, int flags) { 
-    //only regular file
     struct vnode *root_vnode = rootfs_mount->root;
     struct file  *ret_file   = obj_allocate(sizeof(struct file)); // file descriptor
+    struct vnode *find_vnode = 0;
+    struct vnode *create_vnode = 0;
+
     if(root_vnode == 0) return 0;
-    if((flags & REG_DIR) > 0) {
-        struct directory *start_dir = find_dir(pathname);
-        iterate_dir(start_dir);
-        return 0;
-    }
     if((flags & REG_FILE) > 0) {
         // find the vnode
-        struct directory *start_dir = find_dir(pathname);
-        char dir_name[20];
-        int index = 0;
-        struct vnode *find_vnode = entry_file_find(start_dir, pathname); 
-
+        root_vnode->v_ops->lookup(root_vnode, &find_vnode, pathname);
         if (find_vnode == 0 && (flags & O_CREAT) == 0) {
             // doesn't find the vnode
             return 0;
         }
         else if (find_vnode == 0 && (flags & O_CREAT) > 0) {
-            create_file_vnode(ret_file);
-            // insert vnode to dir
-            insert_vnode(start_dir, ret_file->vnode, pathname);
+            root_vnode->v_ops->create(root_vnode, &create_vnode, pathname, REG_FILE);
+            ret_file->f_pos = 0;
+            ret_file->vnode = create_vnode;
         }
         else{
             ret_file->vnode = find_vnode;
@@ -202,36 +131,12 @@ int vfs_close(unsigned long file) {
 }
 
 int vfs_write(struct file* file, const void* buf, int len) {
-    // get the offset
-    int f_pos = file->f_pos;
-    int *file_size = (int *)(file->vnode->internal);
-    memcpy((unsigned long)buf, (unsigned long)file->vnode->internal + sizeof(int) + f_pos, len);
-    file->f_pos += len;
-    if(*file_size < file->f_pos) {
-        *file_size = file->f_pos;
-    }
-    return 1;
+    return file->vnode->f_ops->write(file, buf, len);
 }
 
 int vfs_read(struct file* file, void* buf, int len) {
-    int f_pos = file->f_pos;
-    int *file_size = (int *)(file->vnode->internal);
-    if((f_pos + len) >= *file_size) {
-        len = *file_size - f_pos;
-    }
-    memcpy((unsigned long)file->vnode->internal + sizeof(int) + f_pos, (unsigned long)buf, len);
-    file->f_pos += len;
-    return len;
+    return file->vnode->f_ops->read(file, buf, len);
 }
-
-int mkdir(const char* pathname) {
-    struct directory *start_dir = (struct directory *)find_dir(pathname);
-    // allocate vnode
-    struct vnode *new_vnode  = create_dir_vnode();
-    insert_vnode(start_dir, new_vnode, pathname);
-    return 1;
-}
-
 
 int user_open(const char* pathname, int flags) {
     // find a empty file descriptor in user task
@@ -272,7 +177,6 @@ void user_close(int file_index) {
     if(file_descriptor == 0) return -1;
     vfs_close(file_descriptor);
     current->file_desp[file_index] = 0;
-
     return;
 }
 

@@ -48,9 +48,8 @@ struct vnode {
 
 struct vnode_operations {
   int (*lookup)(struct vnode* dir_node, struct vnode** target, const char* component_name);
-  int (*create)(struct vnode* dir_node, struct vnode** target, const char* component_name);
+  int (*create)(struct vnode* dir_node, struct vnode** target, const char* component_name, int type);
 };
-
 
 void register_filesystem(struct filesystem* fs, char *fs_name);
 struct file* vfs_open(const char* pathname, int flags);
@@ -61,4 +60,5 @@ int user_open(const char* pathname, int flags);
 int user_read(int file_index,void* buf, int len);
 void user_write(int file_index, const void* buf, int len);
 void user_close(int file_index);
+void vfs_ls(const char* pathname, int flags);
 #endif  /*_VFS_H */
