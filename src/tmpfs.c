@@ -28,6 +28,7 @@ int tmpfs_mount(struct filesystem* fs, struct mount* mount) {
     dentry->list[i] = (struct dentry*)fixed_obj_allocate(d_token);
     dentry->list[i]->type = NONE;
     dentry->list[i]->name[0] = 'N';
+    dentry->list[i]->name[1] = '\0';
   }
 
   root->v_ops = tmpfs_v_ops;
@@ -81,6 +82,7 @@ int tmpfs_write(struct file* file, const void* buf, unsigned long len) {
   }
 
 }
+
 int tmpfs_read(struct file* file, void* buf, unsigned long len) {
   unsigned long size = 0;
   struct dentry* internal = (struct dentry*)file->vnode->internal;
@@ -90,4 +92,45 @@ int tmpfs_read(struct file* file, void* buf, unsigned long len) {
       break;
   }
   return size;
+}
+
+void tmpfs_ls(struct vnode* dir_node, const char* component_name, const char* parent_name) {
+  char* dentryname = ((struct dentry*)dir_node->internal)->name;
+  char* parentname = parent_name;
+  strcat(parentname, dentryname);
+  for (int i = 0; i < DIR_MAX; i++) {
+    struct dentry* internal = ((struct dentry*)dir_node->internal)->list[i];
+    if (internal->type == DICTIONARY)
+      tmpfs_ls(internal->vnode, component_name, parentname);
+    else {
+      char* filename = internal->name;
+      uart_puts(component_name);
+      uart_puts(parentname);
+      uart_puts(filename);
+      uart_puts("\n");
+    }
+  }
+}
+
+void tmpfs_mkdir(struct vnode* dir_node, const char* component_name) {
+  struct dentry* dentry = (struct dentry*)fixed_obj_allocate(d_token);
+  struct vnode* vnode = (struct vnode*)fixed_obj_allocate(v_token);
+  struct vnode* root= (struct vnode*)fixed_obj_allocate(v_token);
+  vnode->v_ops = tmpfs_v_ops;
+  vnode->f_ops = tmpfs_f_ops;
+
+  dentry->type = DICTIONARY;
+  dentry->vnode = vnode;
+
+  init_dentry(dentry, vnode, "/");
+  for (int i = 0; i < DIR_MAX; i++) {
+    dentry->list[i] = (struct dentry*)fixed_obj_allocate(d_token);
+    dentry->list[i]->type = NONE;
+    dentry->list[i]->name[0] = 'N';
+  }
+
+  root->v_ops = tmpfs_v_ops;
+  root->f_ops = tmpfs_f_ops;
+  root->internal = (void*)dentry;
+
 }

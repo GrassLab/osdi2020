@@ -85,3 +85,14 @@ int vfs_read(struct file* file, void* buf, unsigned long len) {
   return file->f_ops->read(file, buf, len);
 }
 
+void vfs_ls(const char* component_name) {
+  char *empty = "", *name;
+  int len = strlen(component_name);
+  name = component_name;
+  *(name + len - 1) = '\0';
+  tmpfs_ls(rootfs->root, name, empty);
+}
+
+void vfs_mkdir(const char* component_name) {
+  tmpfs_mkdir(rootfs->root, component_name);
+}
