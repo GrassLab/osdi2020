@@ -9,27 +9,12 @@ file_operations_t _f_ops = {.read = read,.write = write };
 vnode_operations_t *v_ops = &_v_ops;
 file_operations_t *f_ops = &_f_ops;
 
-unsigned int fat32_cluster_value(fat32_info_t *info, unsigned int index)
-{
-	unsigned int offset;
-	//total chain_length = 512/4
-	unsigned int fat[CHAIN_LENGTH];
-
-    // find FAT
-	offset = info->logical_block_address + info->count_of_reserved + (index / CHAIN_LENGTH);
-	readblock(offset, fat);
-	return fat[index % CHAIN_LENGTH];
-}
-
 //using fat32 node to get dir entry
 int fat32_node_dir_entry(fat32_node_t *node, directory_entry_t *dir_entry)
 {
 	directory_entry_t dirs[DIR_LEN];
 	unsigned int offset;
-	if(node->dir_index >= DIR_LEN)
-		return 1;
-	if(node->cluster_index == node->info.root_clstr_index)
-	{
+	if(node->cluster_index == node->info.root_clstr_index){
 		dir_entry->size = 0;
 		return 0;
 	}
@@ -43,18 +28,17 @@ int fat32_node_dir_entry_set(fat32_node_t *node, directory_entry_t *dir_entry)
 {
 	directory_entry_t dirs[DIR_LEN];
 	unsigned int offset;
-	if(node->dir_index >= DIR_LEN)
+	if(node->dir_index >= DIR_LEN){
 		return 1;
-	if(node->cluster_index == node->info.root_clstr_index)
-	{
+	}
+	if(node->cluster_index == node->info.root_clstr_index){
 		dir_entry->size = 0;
 		return 0;
 	}
 	offset = calculated_offset(node);
 	readblock(offset + node->dir_entry - node->info.root_clstr_index, dirs);
 	dirs[node->dir_index] = *dir_entry;
-	writeblock(offset + node->dir_entry - node->info.root_clstr_index,
-			dirs);
+	writeblock(offset + node->dir_entry - node->info.root_clstr_index, dirs);
 	return 0;
 }
 
@@ -62,14 +46,14 @@ int write(file_t *file, const void *buf, size_t len)
 {
 	fat32_node_t *node;
 	directory_entry_t dir;
-	unsigned int value, offset;
 	char data[BLOCK_SIZE];
 	node = file->vnode->internal;
-	if(fat32_node_dir_entry(node, &dir))
+	if(fat32_node_dir_entry(node, &dir)){
 		return -1;
+	}
 	printf("this file size is %d\n",dir.size);
-	value = node->cluster_index;
-	offset = calculated_offset(node);
+	unsigned int value = node->cluster_index;
+	unsigned int offset = calculated_offset(node);
 	readblock(offset + value - node->info.root_clstr_index, data);
 	_memcpy(buf ,data + (file->f_pos % BLOCK_SIZE),  len);
 	writeblock(offset + value - node->info.root_clstr_index, data);
@@ -79,21 +63,20 @@ int write(file_t *file, const void *buf, size_t len)
 	printf("\n");
 	file->f_pos += len;
 	return len;
-
 }
 
 int read(file_t *file, void *buf, size_t len)
 {
 	fat32_node_t *node;
 	directory_entry_t dir;
-	unsigned int value, offset;
 	char data[BLOCK_SIZE];
 	node = file->vnode->internal;
-	if(fat32_node_dir_entry(node, &dir))
+	if(fat32_node_dir_entry(node, &dir)){
 		return -1;
+	}
 	printf("this file size is %d\n",dir.size);
-	value = node->cluster_index;
-	offset = calculated_offset(node);
+	unsigned int value = node->cluster_index;
+	unsigned int offset = calculated_offset(node);
 	readblock(offset + value - node->info.root_clstr_index, data);
 	for(int i = 0; i < len; i++){
 		printf("%c", data[i + file->f_pos]);
@@ -106,43 +89,47 @@ int read(file_t *file, void *buf, size_t len)
 
 int filename_cmp(directory_entry_t *dir, const char *filename)
 {
-	int name_ind, ext_ind;
+	int name_index, ext_index;
 	const char *extname;
 	//compare with filename
-	for(name_ind = 0; name_ind < 8; ++name_ind)
-	{
-		if(filename[name_ind] == '\0')
-			return dir->name[name_ind] != '\x20';
-		if(filename[name_ind] == '.')
-		{
-			if(dir->name[name_ind] != '\x20')
+	for(name_index = 0; name_index < 8; ++name_index){
+		if(filename[name_index] == '\0'){
+			return dir->name[name_index] != '\x20';
+		}
+		if(filename[name_index] == '.'){
+			if(dir->name[name_index] != '\x20'){
 				return 1;
+			}
 			break;
 		}
-		if(filename[name_ind] != dir->name[name_ind])
+		if(filename[name_index] != dir->name[name_index]){
 			return 1;
+		}
 	}
-	if(filename[name_ind] == '\0')
+	if(filename[name_index] == '\0'){
 		return 0;
-	extname = &filename[name_ind + 1];
+	}
+	extname = &filename[name_index + 1];
 	//compare with extind
-	for(ext_ind = 0; ext_ind < 3; ++ext_ind)
-	{
-		if(extname[ext_ind] == '\0')
-			return dir->extension[ext_ind] != '\x20';
-		if(extname[ext_ind] != dir->extension[ext_ind])
+	for(ext_index = 0; ext_index < 3; ++ext_index){
+		if(extname[ext_index] == '\0'){
+			return dir->extension[ext_index] != '\x20';
+		}
+		if(extname[ext_index] != dir->extension[ext_index]){
 			return 1;
+		}
 	}
 	return 0;
 
-	if(dir->name[name_ind] != '\x20')
+	if(dir->name[name_index] != '\x20'){
 		return 1;
-	if(filename[name_ind] == '\0' && dir->name[name_ind] == '\x20'&& dir->extension[0] == '\x20')
+	}
+	if(filename[name_index] == '\0' && dir->name[name_index] == '\x20'&& dir->extension[0] == '\x20'){
 		return 0;
-	++name_ind;
-	for(ext_ind = 0; ext_ind < 3; ++ext_ind)
-	{
-		if(filename[name_ind + ext_ind] == '\0')
+	}
+	name_index++;
+	for(ext_index = 0; ext_index < 3; ++ext_index){
+		if(filename[name_index + ext_index] == '\0')
 			break;
 	}
 }
@@ -156,54 +143,28 @@ unsigned int calculated_offset(fat32_node_t *node){
 int lookup(vnode_t *dir_node, vnode_t **target, const char *component_name)
 {
 	vnode_t *new_vnode;
-	fat32_node_t *node;
 	directory_entry_t dir;
 	directory_entry_t dirs[DIR_LEN];
-	unsigned int offset;
-	unsigned int value;
-	unsigned int i;
 
-	node = dir_node->internal;
-	if(fat32_node_dir_entry(node, &dir))
+	fat32_node_t *node = dir_node->internal;
+	if(fat32_node_dir_entry(node, &dir)){
 		return 1;
-	if(dir.size != 0)
-		return 1;
-	value = node->cluster_index;
-	offset = calculated_offset(node);
-	while((value & CHAIN_EOF) != CHAIN_EOF)
-    {
-    	readblock(offset + value - node->info.root_clstr_index, dirs);
-    	for(i = 0; i < DIR_LEN; ++i)
-		{
-			if(!filename_cmp(&dirs[i], component_name))
-			{
-				new_vnode = vnode_create(dir_node->mount, v_ops, f_ops);
-				new_vnode->internal = internal_node_create(node, (dirs[i].start_hi <<16) + dirs[i].start_lo, value, i);
-				*target = new_vnode;
-				return 0;
-			}
+	}
+	unsigned int value = node->cluster_index;
+	unsigned int offset = calculated_offset(node);
+	readblock(offset + value - node->info.root_clstr_index, dirs);
+	for(unsigned int i = 0; i < DIR_LEN; ++i){
+		if(!filename_cmp(&dirs[i], component_name)){
+			new_vnode = vnode_create(dir_node->mount, v_ops, f_ops);
+			new_vnode->internal = internal_node_create(node, (dirs[i].start_hi << 16) + dirs[i].start_lo, value, i);
+			*target = new_vnode;
+			return 0;
 		}
-      	value = fat32_cluster_value(&node->info, value);
-    }
-  return 1;
+	}
+  	return 1;
 }
 
-int create(vnode_t *dir_node, vnode_t **target,
-	const char *component_name)
-{
-	fat32_node_t *node;
-	directory_entry_t dir;
-
-	// verify node type
-	node = dir_node->internal;
-	if(fat32_node_dir_entry(node, &dir))
-		return 1;
-	// directory check
-	if(dir.size == 0)
-		return 1;
-	if(component_name[0] == '\0')
-		return 1;
-	*target = dir_node;
+int create(vnode_t *dir_node, vnode_t **target, const char *component_name){
 	return 1;
 }
 
@@ -211,8 +172,9 @@ fat32_node_t *internal_node_create(fat32_node_t *parent, unsigned int cluster_in
 {
 	fat32_node_t *new;
 	new = (fat32_node_t*)kmalloc(sizeof(fat32_node_t));
-	if(new == NULL)
+	if(new == NULL){
 		return NULL;
+	}
 	new->info = parent->info;
 	new->cluster_index = cluster_index;
 	new->dir_entry = dir_entry;
@@ -241,8 +203,9 @@ int setup_mount(filesystem_t *fs, mount_t *mount)
 	mount->fs = fs;
 	mount->root = vnode_create(mount, v_ops, f_ops);
 	mount->root->internal = internal_node_create(&init_node, init_node.info.root_clstr_index, 0, 0);
-	if(mount->root->internal == NULL)
+	if(mount->root->internal == NULL){
 		return -1;
+	}
 	return 0;
 }
 
@@ -258,7 +221,7 @@ void fat32_ls(vnode_t *node){
         			fat32_node->info.root_clstr_index;
     readblock(blockIndex, dirs);
 
-    for (int i = 0; i < DIR_LEN; i++) {
+    for(int i = 0; i < DIR_LEN; i++){
         printf("%s\n", dirs[i].name);
     }
 }

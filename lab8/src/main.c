@@ -52,7 +52,7 @@ void test_vfs1()
     printf("\n");
     vfs_close(a);
     a = vfs_open("KERNEL8.IMG", 0);
-    vfs_write(a, "Kittyy ", 6);
+    vfs_write(a, "ssshhh ", 6);
     vfs_close(a);
 
     a = vfs_open("KERNEL8.IMG", 0);
