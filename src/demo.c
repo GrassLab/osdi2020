@@ -187,17 +187,17 @@ void demo_lab8() {
     struct file* root = vfs_open("/", 0);
     vfs_readdir(root);
 
-    struct file* a = vfs_open("/sdp1/KERNEL8.IMG", 0);
-    struct file* b = vfs_open("/sdp1/KERNEL8.IMG", 0);
-    struct file* c = vfs_open("/sdp1/KERNEL8.IMG", 0);
-    struct file* write_demo = vfs_open("/sdp1/KERNEL8.IMG", 0);
-    struct file* restore = vfs_open("/sdp1/KERNEL8.IMG", 0);
+    struct file* a = vfs_open("/sdp1/A.TXT", 0);
+    struct file* b = vfs_open("/sdp1/A.TXT", 0);
+    struct file* c = vfs_open("/sdp1/A.TXT", 0);
+    struct file* write_demo = vfs_open("/sdp1/A.TXT", 0);
+    struct file* restore = vfs_open("/sdp1/A.TXT", 0);
 
     char bak[512], buf[512];
     int sz;
     sz = vfs_read(a, bak, 512);
     for (int i = 0; i < sz; i++) {
-        uart_printf("%x ", bak[i]);
+        uart_printf("%c", bak[i]);
     }
 
     uart_printf("\n\n---\n\n");
@@ -205,16 +205,16 @@ void demo_lab8() {
     vfs_write(write_demo, "ABCD", 4);
     sz = vfs_read(b, buf, 512);
     for (int i = 0; i < sz; i++) {
-        uart_printf("%x ", buf[i]);
+        uart_printf("%c", buf[i]);
     }
 
-    uart_printf("\n\n---\n\n");
+    // uart_printf("\n\n---\n\n");
 
-    vfs_write(restore, bak, 512);
-    sz = vfs_read(c, buf, 512);
-    for (int i = 0; i < sz; i++) {
-        uart_printf("%x ", buf[i]);
-    }
+    // vfs_write(restore, bak, 512);
+    // sz = vfs_read(c, buf, 512);
+    // for (int i = 0; i < sz; i++) {
+    //     uart_printf("%x ", buf[i]);
+    // }
 
     while(1);
 }

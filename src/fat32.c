@@ -161,7 +161,7 @@ int fat32_read(struct file* file, void* buf, uint64_t len) {
     int fat[FAT_ENTRY_PER_BLOCK];
 
     while (remain_len > 0 && current_cluster >= fat32_metadata.first_cluster && current_cluster != EOC) {
-        readblock(get_cluster_blk_idx(current_cluster), buf + file->f_pos);
+        readblock(get_cluster_blk_idx(current_cluster), buf + file->f_pos); // NEED FIX: buf
         file->f_pos += (remain_len < BLOCK_SIZE) ? remain_len : BLOCK_SIZE;
         remain_len -= BLOCK_SIZE;
 
@@ -216,6 +216,8 @@ int fat32_write(struct file* file, const void* buf, uint64_t len) {
             current_cluster = fat[current_cluster % FAT_ENTRY_PER_BLOCK];
         }
     }
+
+    // TODO: last block also need to handle remainder
 
     // update file size
     if (file->f_pos > file_node->size) {
