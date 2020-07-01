@@ -172,8 +172,14 @@ void main(){
     uart_puts("-----------------------\n");
 
     file* a = vfs_open("hello.txt", O_OPEN);
-    // assert(a == NULL);
     
+    uart_puts("-----------------------\n");
+
+    char buf[32];
+    int sz;
+    sz = vfs_read(a, buf, 100);
+    uart_puts(buf);
+    uart_puts("\n");
     uart_puts("-----------------------\n");
     /*
     a = vfs_open("hello", O_CREAT);

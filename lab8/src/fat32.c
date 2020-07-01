@@ -11,6 +11,8 @@ vnode fat32_root;
 file_operations f_ops;
 vnode_operations v_ops;
 
+int offset_g=0;
+
 void print_block(int block)
 {
     char buf[512];
@@ -136,6 +138,21 @@ int fat32_write (struct file_t *file, const void *buf, size_t len)
 
 int fat32_read (struct file_t *file, void *buf, size_t len)
 {
+    uart_puts("fat32 read!\n");
+    struct fat32_node *node = file->vnode->internal;
+    unsigned int value, offset;
+    char data[BLOCK_SIZE];
+    offset = offset_g + node->cluster_index - node->info.cluster_num_of_root;
+    readblock(offset, data);
+    int i=0;
+    for(i=0;i<len;i++){
+        if(data[i]=='\0')
+            break;
+        ((char*)buf)[i] = data[i];
+    }
+    ((char*)buf)[i]='\0';
+    return i;
+
 }
 
 char lower2upper(char s){
@@ -185,7 +202,7 @@ int fat32_lookup (struct vnode_t *dir_node, struct vnode_t **target,
 
     value = node->cluster_index;
     offset = node->info.lba + node->info.count_of_reserved + node->info.num_of_fat * node->info.sectors_per_fat;
-
+    offset_g = offset;
     
     while((value & CHAIN_EOF) != CHAIN_EOF){
         readblock (offset + value - node->info.cluster_num_of_root, dirs);
