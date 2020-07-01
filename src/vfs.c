@@ -1,5 +1,6 @@
 #include "vfs.h"
 
+#include "fat.h"
 #include "mm.h"
 #include "printf.h"
 #include "lib/string.h"
@@ -14,7 +15,8 @@ void rootfs_init()
 {
     // register tmpfs as rootfs
     struct filesystem *fs = kmalloc(sizeof(struct filesystem));
-    setup_fs_tmpfs(fs);
+    setup_fs_fat(fs);
+    // setup_fs_tmpfs(fs);
     register_filesystem(fs);
 
     // mount rootfs

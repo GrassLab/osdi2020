@@ -9,7 +9,7 @@
 
 
 struct vnode_operations fat_v_ops = {lookup_fat, create_fat};
-struct file_operations fat_f_ops;// ={read_fat, write_fat};
+struct file_operations fat_f_ops = {read_fat, write_fat};
 
 partition_entry_t *entry1;
 boot_sector_t *boot_sec;
@@ -116,6 +116,9 @@ int lookup_fat(struct vnode *vnode, struct vnode **target, const char *component
         dentries[cnt].name[i+2] = dir->ext[1];
         dentries[cnt].name[i+3] = dir->ext[2];
         dentries[cnt].name[i+4] = '\0';
+
+        if(strcmp(dentries[cnt].name, component_name) == 0)
+            *target = dentries[cnt].vnode;
 
         cnt++;
     }
