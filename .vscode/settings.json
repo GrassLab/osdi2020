@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "uart.h": "c"
+        "uart.h": "c",
+        "random": "c"
     }
 }

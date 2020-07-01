@@ -41,10 +41,12 @@ void zombie_killer() {
 
 void foo_kernel() {
     init_rootfs();
-
+    struct file* fixup = vfs_open("FIXUP.DAT", 0);
+    char buf[512];
+    int oo = vfs_read(fixup, buf, 512);
+    asm volatile("foo1:");
     while (1)
         ;
-    char buf[100];
     struct file* a = vfs_open("hello", O_CREAT);
     struct file* b = vfs_open("world", O_CREAT);
     vfs_write(a, "Hello ", 6);

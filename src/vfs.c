@@ -14,13 +14,8 @@ void init_rootfs() {
     rootfs = kmalloc(sizeof(struct mount));
     fatfs.name = "fatfs";
     register_filesystem(&fatfs);
-    asm volatile("fat:");
     fatfs.setup_mount(&fatfs, rootfs);
-    // tmpfs.name = "tmpfs";
-    // register_filesystem(&tmpfs);
-
-    // tmpfs.setup_mount(&tmpfs, rootfs);
-    // currentdir = rootfs->root;
+    currentdir = rootfs->root;
 }
 
 int register_filesystem(struct filesystem* fs) {
@@ -41,6 +36,12 @@ int register_filesystem(struct filesystem* fs) {
         asm volatile("fatf:");
         sd_init();
         fs->setup_mount = fatfs_mount;
+        fatfs_v_ops = kmalloc(sizeof(struct file_operations));
+        fatfs_f_ops = kmalloc(sizeof(struct file_operations));
+        fatfs_v_ops->lookup = fatfs_lookup;
+        // fatfs_f_ops->write = fatfs_write;
+        fatfs_f_ops->read = fatfs_read;
+        // fatfs_f_ops->list = fatfs_list;
         return 1;
     }
     return -1;
@@ -65,7 +66,6 @@ struct file* vfs_open(const char* pathname, int flags) {
         fd->f_ops = target->f_ops;
         fd->f_pos = 0;
     } else if (flags == O_CREAT) {
-        asm volatile("cre:");
         int ret = currentdir->v_ops->lookup(currentdir, &target, pathname);
         if (ret == -1) {
             currentdir->v_ops->create(currentdir, &target, pathname);

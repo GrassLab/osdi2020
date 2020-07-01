@@ -1,6 +1,7 @@
+#include "tmpfs.h"
+
 #include "io.h"
 #include "pool.h"
-#include "tmpfs.h"
 #include "utils.h"
 #include "vfs.h"
 
@@ -31,7 +32,6 @@ int tmpfs_mount(struct filesystem* fs, struct mount* mount) {
     }
 
     mount->root = vnode;
-    /* mount->root->internal = (void*)fentry; */
     return 1;
 }
 
