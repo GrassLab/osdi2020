@@ -39,7 +39,7 @@ int register_filesystem(struct filesystem* fs) {
         fatfs_v_ops = kmalloc(sizeof(struct file_operations));
         fatfs_f_ops = kmalloc(sizeof(struct file_operations));
         fatfs_v_ops->lookup = fatfs_lookup;
-        // fatfs_f_ops->write = fatfs_write;
+        fatfs_f_ops->write = fatfs_write;
         fatfs_f_ops->read = fatfs_read;
         // fatfs_f_ops->list = fatfs_list;
         return 1;
@@ -78,7 +78,6 @@ struct file* vfs_open(const char* pathname, int flags) {
         }
     } else {
         int ret = currentdir->v_ops->lookup(currentdir, &target, pathname);
-        asm volatile("op:");
         if (ret == -1) {
             print_s("File not found!!\n");
         } else {

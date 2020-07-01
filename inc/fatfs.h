@@ -64,6 +64,7 @@ struct fatentry {
     char name[15];
     unsigned int cluster_id;
     FILE_TYPE type;
+    int name_len;
     struct vnode* vnode;
     struct fatentry* list[DIR_MAX];
     struct fatentry* parent;
@@ -76,6 +77,8 @@ extern struct vnode_operations* fatfs_v_ops;
 extern int fat_base;
 extern int sectors_per_cluster;
 extern int first_data_sector;
+extern int root_sector;
+extern struct fat_root* fat_root;
 extern struct file_operations* fatfs_f_ops;
 extern struct vnode_operations* fatfs_v_ops;
 
