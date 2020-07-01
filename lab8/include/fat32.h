@@ -2,6 +2,18 @@
 #define _FAT32_H_
 
 #include "tools.h"
+struct directory_entry
+{
+  char name[8];			// 0x00
+  char extension[3];		// 0x08
+  char ignore1[9];		// 0x0b
+  unsigned short start_hi;	// 0x14
+  char ignore2[4];		// 0x16
+  unsigned short start_lo;	// 0x1a
+  unsigned int size;		// 0x1c
+} __attribute__ ((packed));
+
+
 struct boot_sector
 {
   char ignore1[0xe];
@@ -34,6 +46,8 @@ struct fat32_node
 {
   struct fat32_info info;
   unsigned int cluster_index;
+  unsigned int dir_entry;
+  unsigned int dir_index;
 };
 struct filesystem_t fat32_filesystem();
 

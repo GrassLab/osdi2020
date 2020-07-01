@@ -155,7 +155,9 @@ void main(){
     // uart_puts("\n");
 
 
-    // buddy_init(PAGING_PAGES);
+    buddy_init(PAGING_PAGES);    
+    init_all_allocator();
+    init_var_allocator();
     sd_init();
     uart_puts("R1 R2 test\n\n");
 
@@ -163,12 +165,15 @@ void main(){
     filesystem fs = fat32_filesystem();
     register_filesystem(&fs);
     
+    uart_puts("-----------------------\n");
+
+    file* fail = vfs_open("hello", O_OPEN);
 
     uart_puts("-----------------------\n");
 
-    file* a = vfs_open("hello", O_OPEN);
+    file* a = vfs_open("hello.txt", O_OPEN);
     // assert(a == NULL);
-
+    
     uart_puts("-----------------------\n");
     /*
     a = vfs_open("hello", O_CREAT);

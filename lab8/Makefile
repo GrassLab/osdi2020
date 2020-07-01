@@ -60,7 +60,7 @@ rundis:
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial stdio
 
 rungdb:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -S -gdb tcp::1234
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial stdio -drive if=sd,file=./sfn_nctuos.img,format=raw -S -gdb tcp::1234
 
 gdb:
 	aarch64-linux-gnu-gdb build/kernel8.elf

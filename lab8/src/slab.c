@@ -8,10 +8,12 @@ void init_all_allocator(){
 }
 int init_allocator(int size){
     for(int i=0;i<NUM_ALLOCATOR;i++){
-        if(allocator_used[i]==0){      
+        if(allocator_used[i]==0){   
+            /*   
             uart_puts("[Slab]New Allocator for size:");
             uart_send_int(size);
             uart_puts("\n");  
+            */
             allocator_pool[i].len = 0;
             allocator_pool[i].size = size;
             allocator_pool[i].chunk_head = 0;
@@ -19,7 +21,7 @@ int init_allocator(int size){
             return i;
         }        
     }
-    uart_puts("[Slab]Init Allocator fail!\n");           
+    //uart_puts("[Slab]Init Allocator fail!\n");           
     return -1;
 }
 void show_allocator(int allocator_id){
@@ -32,12 +34,14 @@ void show_allocator(int allocator_id){
         uart_puts("[Slab]Allocator null!\n");           
         return;
     }
+    
     uart_puts("[Slab]Allocator Number: ");  
     uart_send_int(allocator_id);         
     uart_puts("\n");
     uart_puts("[Slab]Len: ");  
     uart_send_int(allocator_pool[allocator_id].len);         
     uart_puts("\n");
+    
     
     chunk* head = allocator_pool[allocator_id].chunk_head;    
 
@@ -114,8 +118,8 @@ void free_alloc(int allocator_id, int addr){
 }
 
 void init_var_allocator(){
-    uart_puts("[Slab]init_var_alloc!\n");   
-    int sizes[] = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
+    //uart_puts("[Slab]init_var_alloc!\n");   
+    int sizes[] = {8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
     int num = 10;
     for(int i=0;i<num;i++){
         init_allocator(sizes[i]);
@@ -142,6 +146,7 @@ int var_alloc(int size){
         uart_puts("[Slab]Can't find suitable Allocator!\n"); 
         return -1;
     }
+    /*
     uart_puts("[Slab]Find Allocator for size: ");   
     uart_send_int(size);
     uart_puts(" in: ");   
@@ -149,6 +154,7 @@ int var_alloc(int size){
     uart_puts(" Allocator id: ");   
     uart_send_int(alloc_id);        
     uart_puts("\n");
+    */
     // int ret = 0;
     int ret = alloc(alloc_id);
         

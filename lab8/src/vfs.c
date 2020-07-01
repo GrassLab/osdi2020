@@ -65,7 +65,7 @@ file *vfs_open(const char *pathname, int flags)
     else{
         uart_puts("vfs open O_OPEN\n");
         ret_val = rootfs->root->v_ops->lookup(rootfs->root, &target, pathname);
-        if (ret_val >= 0)
+        if (ret_val)
             find_null(&filee, target);
         else
             uart_puts("return NULL\n");

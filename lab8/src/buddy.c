@@ -48,11 +48,11 @@ void buddy_init(int num_pages){
     }
 }
 int buddy_alloc(int size){
-    
+    /*
     uart_puts("[Buddy]Allocate for size: ");
     uart_send_int(size);
     uart_puts("\n");
-
+    */
     if(size > (1<<MAX_ORDER-1)){
         uart_puts("[Buddy]Can't handle such size!");
         uart_puts("\n");
@@ -86,7 +86,7 @@ int buddy_alloc(int size){
         temp->page_frame_number = big_page_num+big_page_size;
         temp->next = 0;
         head->next = temp;
-
+        /*
         uart_puts("[Buddy]Split for order: ");
         uart_send_int(remain_order);
         uart_puts(" in: ");
@@ -94,6 +94,7 @@ int buddy_alloc(int size){
         uart_puts(" and: ");
         uart_send_int(big_page_num+big_page_size);
         uart_puts("\n");
+        */
     }
     //return page
     if(order<MAX_ORDER && buddy_pool[order].len>0){
@@ -102,6 +103,7 @@ int buddy_alloc(int size){
         
         buddy_pool[order].page = head->next;
         buddy_pool[order].len--;
+        /*
         uart_puts("[Buddy]Allocate success in: ");
         uart_send_int(ret_page);
         uart_puts(" physical address: ");
@@ -109,6 +111,7 @@ int buddy_alloc(int size){
         uart_puts(" size: ");
         uart_send_int((1<<order));
         uart_puts("\n");
+        */
         return ret_page;
     }
     uart_puts("[Buddy]Unknown error!");
