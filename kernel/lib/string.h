@@ -11,5 +11,6 @@ char *strcpy(char *dest, const char *src);
 size_t strlen(const char *s);
 char *strtrim(char *s);
 char *strtok(char *str, const char *delim);
+char *strcat(char *dest, const char *src);
 
 #endif // KERNEL_LIB_STRING_H_

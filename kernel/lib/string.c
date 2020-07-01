@@ -77,3 +77,10 @@ char *strtok(char *str, const char *delim) {
   }
   return tmp;
 }
+
+char *strcat(char *dest, const char *src) {
+  size_t slen = strlen(src);
+  for (size_t i = strlen(dest), j = 0; j < slen; ++i, ++j) {
+    dest[i] = src[j];
+  }
+}
