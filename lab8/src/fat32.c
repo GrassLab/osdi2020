@@ -3,23 +3,13 @@
 #include "fat32.h"
 #include "mm.h"
 
-static int write(file_t *file, const void *buf, size_t len);
-static int read(file_t *file, void *buf, size_t len);
-static int create(vnode_t *dir_node, vnode_t **target, const char *component_name);
-static int lookup(vnode_t *dir_node, vnode_t **target, const char *component_name);
-static fat32_node_t *internal_node_create(fat32_node_t *parent,
-										unsigned int cluster_index,
-										unsigned int dir_entry,
-										unsigned int dir_index);
+vnode_operations_t _v_ops = {.create = create,.lookup = lookup };
+file_operations_t _f_ops = {.read = read,.write = write };
 
-static vnode_operations_t _v_ops = {.create = create,.lookup = lookup };
-static file_operations_t _f_ops = {.read = read,.write = write };
+vnode_operations_t *v_ops = &_v_ops;
+file_operations_t *f_ops = &_f_ops;
 
-static vnode_operations_t *v_ops = &_v_ops;
-static file_operations_t *f_ops = &_f_ops;
-static unsigned int calculated_offset(fat32_node_t *node);
-
-static unsigned int fat32_cluster_value(fat32_info_t *info, unsigned int index)
+unsigned int fat32_cluster_value(fat32_info_t *info, unsigned int index)
 {
 	unsigned int offset;
 	//total chain_length = 512/4
@@ -32,7 +22,7 @@ static unsigned int fat32_cluster_value(fat32_info_t *info, unsigned int index)
 }
 
 //using fat32 node to get dir entry
-static int fat32_node_dir_entry(fat32_node_t *node, directory_entry_t *dir_entry)
+int fat32_node_dir_entry(fat32_node_t *node, directory_entry_t *dir_entry)
 {
 	directory_entry_t dirs[DIR_LEN];
 	unsigned int offset;
@@ -49,7 +39,7 @@ static int fat32_node_dir_entry(fat32_node_t *node, directory_entry_t *dir_entry
 	return 0;
 }
 
-static int fat32_node_dir_entry_set(fat32_node_t *node, directory_entry_t *dir_entry)
+int fat32_node_dir_entry_set(fat32_node_t *node, directory_entry_t *dir_entry)
 {
 	directory_entry_t dirs[DIR_LEN];
 	unsigned int offset;
@@ -68,74 +58,10 @@ static int fat32_node_dir_entry_set(fat32_node_t *node, directory_entry_t *dir_e
 	return 0;
 }
 
-static int write(file_t *file, const void *buf, size_t len)
-{
-    fat32_node_t *node = file->vnode->internal;
-	directory_entry_t dir;
-	size_t valid_len, pos, start_pos, end_pos;
-	unsigned int value, offset;
-	unsigned int data_size;
-	char data[BLOCK_SIZE];
-	// type error
-	if(fat32_node_dir_entry(node, &dir))
-		return -1;
-
-	printf("this file size is %d\n",dir.size);
-	if(dir.size == 0)
-		return -1;
-	// TODO: find free cluster for new data
-	// block full
-	data_size = dir.size / BLOCK_SIZE;
-	if(dir.size % BLOCK_SIZE)
-		data_size++;
-	data_size *= BLOCK_SIZE;
-	if(file->f_pos >= data_size)
-		return 0;
-	valid_len = data_size - file->f_pos;
-	if(len < valid_len)
-		valid_len = len;
-	// traversal all block to find target
-	// find block offset of fat cluster chain
-	value = node->cluster_index;
-	// find offset of data region
-	offset = calculated_offset(node);
-	pos = 0;
-	while((value & CHAIN_EOF) != CHAIN_EOF)
-	{
-		if(pos >= file->f_pos + valid_len)
-			break;
-		if(pos + BLOCK_SIZE > file->f_pos)
-		{
-			start_pos =(pos < file->f_pos) ? file->f_pos : pos;
-			end_pos = pos + BLOCK_SIZE;
-			if(end_pos > file->f_pos + valid_len)
-				end_pos = file->f_pos + valid_len;
-			// read block
-			readblock(offset + value - node->info.root_clstr_index, data);
-			// modify block
-			_memcpy(buf +(start_pos - file->f_pos), 
-					data +(start_pos % BLOCK_SIZE),
-					end_pos - start_pos);
-			// write back
-			writeblock(offset + value - node->info.root_clstr_index, data);
-		}
-		value = fat32_cluster_value(&node->info, value);
-		pos += BLOCK_SIZE;
-	}
-	file->f_pos += valid_len;
-	if(dir.size < file->f_pos)
-	{
-		dir.size = file->f_pos;
-		fat32_node_dir_entry_set(node, &dir);
-	}
-	return valid_len;
-}
-
-static int read(file_t *file, void *buf, size_t len)
+int write(file_t *file, const void *buf, size_t len)
 {
 	fat32_node_t *node;
 	directory_entry_t dir;
-	size_t pos, start_pos, end_pos;
 	unsigned int value, offset;
 	char data[BLOCK_SIZE];
 	node = file->vnode->internal;
@@ -144,21 +70,45 @@ static int read(file_t *file, void *buf, size_t len)
 	printf("this file size is %d\n",dir.size);
 	value = node->cluster_index;
 	offset = calculated_offset(node);
-	pos = file->f_pos;
 	readblock(offset + value - node->info.root_clstr_index, data);
-	for(int i = 0; i < 100; i++){
-		printf("%c", data[i]);
+	_memcpy(buf ,data + (file->f_pos % BLOCK_SIZE),  len);
+	writeblock(offset + value - node->info.root_clstr_index, data);
+	for(int i = 0; i < len; i++){
+		printf("%c", data[i + file->f_pos]);
 	}
 	printf("\n");
-	_memcpy(data +(file->f_pos % BLOCK_SIZE), buf, end_pos - file->f_pos);
+	file->f_pos += len;
+	return len;
+
+}
+
+int read(file_t *file, void *buf, size_t len)
+{
+	fat32_node_t *node;
+	directory_entry_t dir;
+	unsigned int value, offset;
+	char data[BLOCK_SIZE];
+	node = file->vnode->internal;
+	if(fat32_node_dir_entry(node, &dir))
+		return -1;
+	printf("this file size is %d\n",dir.size);
+	value = node->cluster_index;
+	offset = calculated_offset(node);
+	readblock(offset + value - node->info.root_clstr_index, data);
+	for(int i = 0; i < len; i++){
+		printf("%c", data[i + file->f_pos]);
+	}
+	printf("\n");
+	_memcpy(data +(file->f_pos % BLOCK_SIZE), buf, len);
 	file->f_pos += len;
 	return len;
 }
 
-static int filename_cmp(directory_entry_t *dir, const char *filename)
+int filename_cmp(directory_entry_t *dir, const char *filename)
 {
 	int name_ind, ext_ind;
 	const char *extname;
+	//compare with filename
 	for(name_ind = 0; name_ind < 8; ++name_ind)
 	{
 		if(filename[name_ind] == '\0')
@@ -175,6 +125,7 @@ static int filename_cmp(directory_entry_t *dir, const char *filename)
 	if(filename[name_ind] == '\0')
 		return 0;
 	extname = &filename[name_ind + 1];
+	//compare with extind
 	for(ext_ind = 0; ext_ind < 3; ++ext_ind)
 	{
 		if(extname[ext_ind] == '\0')
@@ -196,13 +147,13 @@ static int filename_cmp(directory_entry_t *dir, const char *filename)
 	}
 }
 
-static unsigned int calculated_offset(fat32_node_t *node){
+unsigned int calculated_offset(fat32_node_t *node){
 	return node->info.logical_block_address + 
 			node->info.count_of_reserved + 
 			node->info.fat_num * node->info.sectors_num_per_fat;
 } 
 
-static int lookup(vnode_t *dir_node, vnode_t **target, const char *component_name)
+int lookup(vnode_t *dir_node, vnode_t **target, const char *component_name)
 {
 	vnode_t *new_vnode;
 	fat32_node_t *node;
@@ -237,7 +188,7 @@ static int lookup(vnode_t *dir_node, vnode_t **target, const char *component_nam
   return 1;
 }
 
-static int create(vnode_t *dir_node, vnode_t **target,
+int create(vnode_t *dir_node, vnode_t **target,
 	const char *component_name)
 {
 	fat32_node_t *node;
@@ -256,7 +207,7 @@ static int create(vnode_t *dir_node, vnode_t **target,
 	return 1;
 }
 
-static fat32_node_t *internal_node_create(fat32_node_t *parent, unsigned int cluster_index, unsigned int dir_entry, unsigned int dir_index)
+fat32_node_t *internal_node_create(fat32_node_t *parent, unsigned int cluster_index, unsigned int dir_entry, unsigned int dir_index)
 {
 	fat32_node_t *new;
 	new = (fat32_node_t*)kmalloc(sizeof(fat32_node_t));
@@ -269,7 +220,7 @@ static fat32_node_t *internal_node_create(fat32_node_t *parent, unsigned int clu
 	return new;
 }
 
-static int setup_mount(filesystem_t *fs, mount_t *mount)
+int setup_mount(filesystem_t *fs, mount_t *mount)
 {
 	char buf[512];
 	partition_entry_t *first_partition;

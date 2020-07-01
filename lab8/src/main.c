@@ -44,7 +44,31 @@ void test_vfs1()
     }
     printf("\n");
 
+    sz = vfs_read(a, buf, 100);
 
+    for(int i = 0; i < sz; i++){
+        printf("%c", buf[i]);
+    }
+    printf("\n");
+    vfs_close(a);
+    a = vfs_open("KERNEL8.IMG", 0);
+    vfs_write(a, "Kittyy ", 6);
+    vfs_close(a);
+
+    a = vfs_open("KERNEL8.IMG", 0);
+    sz = vfs_read(a, buf, 100);
+
+    for(int i = 0; i < sz; i++){
+        printf("%c", buf[i]);
+    }
+    printf("\n");
+
+    sz = vfs_read(a, buf, 100);
+
+    for(int i = 0; i < sz; i++){
+        printf("%c", buf[i]);
+    }
+    printf("\n");
     // vfs_close(a);
     // file_t* b = vfs_open("hello", 0);
     // assert(b != NULL);

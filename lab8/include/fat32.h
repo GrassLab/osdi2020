@@ -16,7 +16,7 @@ struct directory_entry
 struct boot_sector
 {
   char ignore1[0xe];
-  unsigned short count_of_reserved;	//0xe
+  unsigned short count_of_reserved;	// 0xe
   unsigned char fat_num;	        // 0x10
   char ignore2[0x13];
   unsigned int sectors_num_per_fat;	// 0x24
@@ -66,4 +66,16 @@ filesystem_t *fat32_fs;
 #define CHAIN_EOF 0xfffffff
 #define DIR_LEN (BLOCK_SIZE/sizeof(struct directory_entry))
 
-#endif /* ifndef FAT32 */
+
+int write(file_t *file, const void *buf, size_t len);
+int read(file_t *file, void *buf, size_t len);
+int create(vnode_t *dir_node, vnode_t **target, const char *component_name);
+int lookup(vnode_t *dir_node, vnode_t **target, const char *component_name);
+fat32_node_t *internal_node_create(fat32_node_t *parent,
+                                    unsigned int cluster_index,
+                                    unsigned int dir_entry,
+                                    unsigned int dir_index);
+
+unsigned int calculated_offset(fat32_node_t *node);
+
+#endif 
