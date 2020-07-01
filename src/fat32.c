@@ -99,13 +99,19 @@ int fat32_load_dentry(struct dentry* dir, char* component_name) {
     // read first block of cluster
     struct fat32_internal* dir_internal = (struct fat32_internal*)dir->vnode->internal;
     uint8_t sector[BLOCK_SIZE];
-    readblock(get_cluster_blk_idx(dir_internal->cluster_num), sector);
+    uint32_t dirent_cluster = get_cluster_blk_idx(dir_internal->first_cluster);
+    readblock(dirent_cluster, sector);
 
     // parse
     struct fat32_dirent* sector_dirent = (struct fat32_dirent*)sector;
 
     // load all children under dentry
+    int found = -1;
     for (int i = 0; sector_dirent[i].name[0] != '\0'; i++) {
+        // special value
+        if (sector_dirent[i].name[0] == 0xE5) {
+            continue;
+        }
         // get filename
         char filename[13];
         int len = 0;
@@ -125,6 +131,9 @@ int fat32_load_dentry(struct dentry* dir, char* component_name) {
             filename[len++] = c;
         }
         filename[len++] = 0;
+        if (!strcmp(filename, component_name)) {
+            found = 0;
+        }
         // create dirent
         struct dentry* dentry;
         if (sector_dirent[i].attr == 0x10) {  // directory
@@ -135,23 +144,23 @@ int fat32_load_dentry(struct dentry* dir, char* component_name) {
         }
         // create fat32 internal
         struct fat32_internal* child_internal = (struct fat32_internal*)kmalloc(sizeof(struct fat32_internal));
-        child_internal->cluster_num = ((sector_dirent[i].cluster_high) << 16) | (sector_dirent[i].cluster_low);
+        child_internal->first_cluster = ((sector_dirent[i].cluster_high) << 16) | (sector_dirent[i].cluster_low);
+        child_internal->dirent_cluster = dirent_cluster;
         child_internal->size = sector_dirent[i].size;
         dentry->vnode->internal = child_internal;
     }
-    return 0;
+    return found;
 }
 
 // file operations
 int fat32_read(struct file* file, void* buf, uint64_t len) {
     struct fat32_internal* file_node = (struct fat32_internal*)file->vnode->internal;
-    uint32_t f_pos_ori = file->f_pos;
-    uint32_t current_cluster = file_node->cluster_num;
-    uint32_t remain_len = len;
+    uint64_t f_pos_ori = file->f_pos;
+    uint32_t current_cluster = file_node->first_cluster;
+    int remain_len = len;
     int fat[FAT_ENTRY_PER_BLOCK];
 
     while (remain_len > 0 && current_cluster >= fat32_metadata.first_cluster && current_cluster != EOC) {
-        uart_printf("read cluster: %x\n", current_cluster);
         readblock(get_cluster_blk_idx(current_cluster), buf + file->f_pos);
         file->f_pos += (remain_len < BLOCK_SIZE) ? remain_len : BLOCK_SIZE;
         remain_len -= BLOCK_SIZE;
@@ -167,4 +176,67 @@ int fat32_read(struct file* file, void* buf, uint64_t len) {
 }
 
 int fat32_write(struct file* file, const void* buf, uint64_t len) {
+    struct fat32_internal* file_node = (struct fat32_internal*)file->vnode->internal;
+    uint64_t f_pos_ori = file->f_pos;
+    int fat[FAT_ENTRY_PER_BLOCK];
+    char write_buf[BLOCK_SIZE];
+
+    // traversal to target cluster using f_pos
+    uint32_t current_cluster = file_node->first_cluster;
+    int remain_offset = file->f_pos;
+    while (remain_offset > 0 && current_cluster >= fat32_metadata.first_cluster && current_cluster != EOC) {
+        remain_offset -= BLOCK_SIZE;
+        if (remain_offset > 0) {
+            readblock(get_fat_blk_idx(current_cluster), fat);
+            current_cluster = fat[current_cluster % FAT_ENTRY_PER_BLOCK];
+        }
+    }
+
+    // write first block, handle f_pos
+    int buf_idx, f_pos_offset = file->f_pos % BLOCK_SIZE;
+    readblock(get_cluster_blk_idx(current_cluster), write_buf);
+    for (buf_idx = 0; buf_idx < BLOCK_SIZE - f_pos_offset && buf_idx < len; buf_idx++) {
+        write_buf[buf_idx + f_pos_offset] = ((char*)buf)[buf_idx];
+    }
+    writeblock(get_cluster_blk_idx(current_cluster), write_buf);
+    file->f_pos += buf_idx;
+
+    // write complete block
+    int remain_len = len - buf_idx;
+    while (remain_len > 0 && current_cluster >= fat32_metadata.first_cluster && current_cluster != EOC) {
+        // write block
+        writeblock(get_cluster_blk_idx(current_cluster), buf + buf_idx);
+        file->f_pos += (remain_len < BLOCK_SIZE) ? remain_len : BLOCK_SIZE;
+        remain_len -= BLOCK_SIZE;
+        buf_idx += BLOCK_SIZE;
+
+        // update cluster number from FAT
+        if (remain_len > 0) {
+            readblock(get_fat_blk_idx(current_cluster), fat);
+            current_cluster = fat[current_cluster % FAT_ENTRY_PER_BLOCK];
+        }
+    }
+
+    // update file size
+    if (file->f_pos > file_node->size) {
+        file_node->size = file->f_pos;
+
+        // update directory entry
+        uint8_t sector[BLOCK_SIZE];
+        readblock(file_node->dirent_cluster, sector);
+        struct fat32_dirent* sector_dirent = (struct fat32_dirent*)sector;
+        for (int i = 0; sector_dirent[i].name[0] != '\0'; i++) {
+            // special value
+            if (sector_dirent[i].name[0] == 0xE5) {
+                continue;
+            }
+            // find target file directory entry
+            if (((sector_dirent[i].cluster_high) << 16) | (sector_dirent[i].cluster_low) == file_node->first_cluster) {
+                sector_dirent[i].size = (uint32_t)file->f_pos;
+            }
+        }
+        writeblock(file_node->dirent_cluster, sector);
+    }
+
+    return file->f_pos - f_pos_ori;
 }

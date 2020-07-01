@@ -76,5 +76,5 @@
 
 void sd_init();
 void readblock(int block_idx, void* buf);
-void writeblock(int block_idx, void* buf);
+void writeblock(int block_idx, const void* buf);
 int sd_mount();

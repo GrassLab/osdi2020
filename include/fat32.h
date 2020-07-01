@@ -66,7 +66,8 @@ struct fat32_metadata {
 };
 
 struct fat32_internal {
-    uint32_t cluster_num;
+    uint32_t first_cluster;
+    uint32_t dirent_cluster;
     uint32_t size;
 };
 

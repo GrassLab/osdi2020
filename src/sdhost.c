@@ -148,7 +148,7 @@ void readblock(int block_idx, void* buf) {
     wait_finish();
 }
 
-void writeblock(int block_idx, void* buf) {
+void writeblock(int block_idx, const void* buf) {
     unsigned int* buf_u = (unsigned int*)buf;
     int succ = 0;
     if (!is_hcs) {
@@ -222,7 +222,7 @@ int sd_mount() {
 
         // fill internal data of mount node
         struct fat32_internal* root_internal = (struct fat32_internal*)kmalloc(sizeof(struct fat32_internal));
-        root_internal->cluster_num = boot_sector->root_dir_start_cluster_num;
+        root_internal->first_cluster = boot_sector->root_dir_start_cluster_num;
         mount_dir->internal = root_internal;
     }
 
