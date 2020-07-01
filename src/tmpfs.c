@@ -41,6 +41,7 @@ int tmpfs_register() {
     tmpfs_v_ops->lookup = tmpfs_lookup;
     tmpfs_v_ops->ls = tmpfs_ls;
     tmpfs_v_ops->mkdir = tmpfs_mkdir;
+    tmpfs_v_ops->load_dentry = tmpfs_load_dentry;
     tmpfs_f_ops = (struct file_operations*)kmalloc(sizeof(struct file_operations));
     tmpfs_f_ops->read = tmpfs_read;
     tmpfs_f_ops->write = tmpfs_write;
@@ -135,4 +136,11 @@ int tmpfs_mkdir(struct vnode* dir, struct vnode** target, const char* component_
 
     *target = d_child->vnode;
     return 0;
+}
+
+int tmpfs_load_dentry(struct dentry* dir, char* component_name) {
+    // dummy for compiler
+    dir = dir;
+    component_name = component_name;
+    return -1;
 }

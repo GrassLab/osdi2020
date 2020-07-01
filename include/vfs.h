@@ -55,6 +55,7 @@ struct vnode_operations {
     int (*lookup)(struct vnode* dir, struct vnode** target, const char* component_name);
     int (*create)(struct vnode* dir, struct vnode** target, const char* component_name);
     int (*mkdir)(struct vnode* dir, struct vnode** target, const char* component_name);
+    int (*load_dentry)(struct dentry* dir, char *component_name);
 };
 
 struct files_struct {

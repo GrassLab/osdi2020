@@ -72,6 +72,7 @@ void traversal_recursive(struct dentry* node, const char* path, struct vnode** t
     }
     // find in node's child
     struct list_head* p;
+    int found = 0;
     list_for_each(p, &node->childs) {
         struct dentry* dent = list_entry(p, struct dentry, list);
         if (!strcmp(dent->name, target_path)) {
@@ -81,7 +82,15 @@ void traversal_recursive(struct dentry* node, const char* path, struct vnode** t
             else if (dent->type == DIRECTORY) {
                 traversal_recursive(dent, path + i, target_node, target_path);
             }
+            found = 1;
             break;
+        }
+    }
+    // not found in vnode tree, then try to load dentry in real hard disk
+    if (!found) {
+        int ret = node->vnode->v_ops->load_dentry(node, target_path);
+        if (ret == 0) { // load success, traversal again
+            traversal_recursive(node, path, target_node, target_path);
         }
     }
 }

@@ -44,6 +44,7 @@ int fat32_register() {
     fat32_v_ops->lookup = fat32_lookup;
     fat32_v_ops->ls = fat32_ls;
     fat32_v_ops->mkdir = fat32_mkdir;
+    fat32_v_ops->load_dentry = fat32_load_dentry;
     fat32_f_ops = (struct file_operations*)kmalloc(sizeof(struct file_operations));
     fat32_f_ops->read = fat32_read;
     fat32_f_ops->write = fat32_write;
@@ -57,7 +58,7 @@ int fat32_setup_mount(struct filesystem* fs, struct mount* mount) {
 }
 
 int fat32_lookup(struct vnode* dir, struct vnode** target, const char* component_name) {
-    uart_printf("%s\n", component_name);
+    struct fat32_internal* dir_internal = (struct fat32_internal*)dir->internal;
     return 0;
 }
 
@@ -69,6 +70,55 @@ int fat32_ls(struct vnode* dir) {
 }
 
 int fat32_mkdir(struct vnode* dir, struct vnode** target, const char* component_name) {
+}
+
+int fat32_load_dentry(struct dentry* dir, char* component_name) {
+    // read first block of cluster
+    struct fat32_internal* dir_internal = (struct fat32_internal*)dir->vnode->internal;
+    uint32_t target_blk = fat32_metadata.root_sector_idx +
+                          (dir_internal->cluster_num - fat32_metadata.first_cluster) * fat32_metadata.sector_per_cluster;
+    uint8_t sector[512];
+    readblock(target_blk, sector);
+
+    // parse
+    struct fat32_dirent* sector_dirent = (struct fat32_dirent*)sector;
+
+    // load all children under dentry
+    for (int i = 0; sector_dirent[i].name[0] != '\0'; i++) {
+        // get filename
+        char filename[13];
+        int len = 0;
+        for (int j = 0; j < 8; j++) {
+            char c = sector_dirent[i].name[j];
+            if (c == ' ') {
+                break;
+            }
+            filename[len++] = c;
+        }
+        filename[len++] = '.';
+        for (int j = 0; j < 3; j++) {
+            char c = sector_dirent[i].ext[j];
+            if (c == ' ') {
+                break;
+            }
+            filename[len++] = c;
+        }
+        filename[len++] = 0;
+        // create dirent
+        uint8_t file_attr = sector_dirent[i].attr[0];
+        struct dentry* dentry;
+        if (file_attr == 0x10) { // directory
+            dentry = fat32_create_dentry(dir, filename, DIRECTORY);
+        }
+        else { // file
+            dentry = fat32_create_dentry(dir, filename, REGULAR_FILE);
+        }
+        // create fat32 internal
+        struct fat32_internal* child_internal = (struct fat32_internal*)kmalloc(sizeof(struct fat32_internal));
+        child_internal->cluster_num = ((sector_dirent[i].cluster_high) << 16) | (sector_dirent[i].cluster_low);
+        dentry->vnode->internal = child_internal;
+    }
+    return 0;
 }
 
 // file operations

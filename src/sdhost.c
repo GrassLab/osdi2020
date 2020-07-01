@@ -200,7 +200,7 @@ int sd_mount() {
     // route each filesystem
     if (p1.partition_type == 0x0b) {  // FAT32 with CHS addressing
         // create FAT32's root directory object
-        char mountpoint[8] = "/sdp0";
+        char mountpoint[8] = "/sdp1";
         vfs_mkdir(mountpoint);
         vfs_mount("sdcard", mountpoint, "fat32");
 

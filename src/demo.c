@@ -187,6 +187,6 @@ void demo_lab8() {
     struct file* root = vfs_open("/", 0);
     vfs_readdir(root);
 
-    struct file* a = vfs_open("/sdp0/a", O_CREAT);
+    struct file* a = vfs_open("/sdp1/BOOTCODE.BIN", O_CREAT);
     while(1);
 }

@@ -19,6 +19,7 @@ int tmpfs_lookup(struct vnode* dir, struct vnode** target, const char* component
 int tmpfs_create(struct vnode* dir, struct vnode** target, const char* component_name);
 int tmpfs_ls(struct vnode* dir);
 int tmpfs_mkdir(struct vnode* dir, struct vnode** target, const char* component_name);
+int tmpfs_load_dentry(struct dentry* dir, char* component_name);
 
 // file operations
 int tmpfs_read(struct file* file, void* buf, uint64_t len);
