@@ -8,6 +8,8 @@
 #include "task.h"
 #include "mm_allocator.h"
 #include "vfs.h"
+#include "fat32.h"
+#include "sd_driver.h"
 
 void reset(int tick);
 void cancel_reset();

@@ -42,5 +42,7 @@ tty:
 	$(QEMU) -M raspi3 -kernel $(IMG) -display none -serial "pty"
 debug:
 	$(QEMU) -M raspi3 -kernel $(IMG) -display none -serial "pty" -S -s
+sddebug:
+	$(QEMU) -M raspi3 -kernel $(IMG) -display none -serial "pty" -S -s -drive if=sd,file=sfn_nctuos.img,format=raw
 sd:
 	$(QEMU) -M raspi3 -kernel $(IMG) -display none -serial stdio -drive if=sd,file=sfn_nctuos.img,format=raw

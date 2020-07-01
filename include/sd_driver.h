@@ -1,8 +1,8 @@
-#ifndef _SDHOST_H_
-#define _SDHOST_H_
+#ifndef _SD_DRIVER_H_
+#define _SD_DRIVER_H_
 
 // mmio
-#define KVA 0xffff000000000000
+#define KVA 0x0
 #define MMIO_BASE (KVA + 0x3f000000)
 
 // SD card command
@@ -74,7 +74,7 @@
 #define get(io_addr, val) \
   asm volatile("ldr %w0, [%1]" : "=r"(val) : "r"(io_addr) : "memory");
 
-static inline void delay(unsigned long tick);
+static void tick_delay(unsigned long tick);
 static void pin_setup();
 static void sdhost_setup();
 static int wait_sd();

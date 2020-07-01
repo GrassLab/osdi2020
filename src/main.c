@@ -7,10 +7,13 @@ void main() {
   init_buddy_system();
   char *osdi = "OSDI Welcome\n";
   uart_puts(osdi);
-  uart_getc();
+  //uart_getc();
 
   init_rootfs();
+  //uart_puts(osdi);
+  fat32_init();
 
+  /*
   char buf[100];
   struct file* a = vfs_open("hello", 0);
   a = vfs_open("hello", O_CREAT);
@@ -28,6 +31,7 @@ void main() {
   uart_puts(buf);
   uart_puts("\n");
   vfs_ls("/");
+  */
 
   for(;;) {
     put_shell();
