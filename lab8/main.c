@@ -4,49 +4,60 @@
 #include "uart.h"
 #include "util.h"
 #include "vfs.h"
+#include "fat.h"
 
 void main()
 {
-    sd_init();
     uart_init();
-    
-    init_memory();
-    
+    fat32_mount();
 
-    uart_puts("r1/2 test\r\n");
-    filesystem_t fs = tmpfs_filesystem();
-    register_filesystem(&fs);
+    fat32_lookup(fat32_root, "file", ((void *)0));
+    uart_puts("\n");
+    fat32_readfile(fat32_root, "START.ELF");
 
-    file_t* a = vfs_open("hello", O_OPEN);
-    if ((int)a != 0) {
-        uart_puts("test 1 fail\r\n");
+    char buf[32] = {0};
+    char wbuf[16] = {0};
+    int len = 10;
+    int rvalue = 0;
+    //const char test_filename[] = "TEST.TXT";
+    const char test_filename[] = "START.ELF";
+
+    uart_puts("Open ");
+    uart_puts(test_filename);
+    uart_puts(" and read 3 char:\n\r");
+    rvalue = fat32_read(fat32_root, test_filename, buf, 0, len);
+    buf[len] = '\0';
+    if (rvalue == 0)
+    {
+        uart_puts("Read From file: ");
+        uart_puts(buf);
+        uart_puts("\r\n");
     }
+    uart_puts("===\n\r");
 
-    a = vfs_open("hello", O_CREAT);
-    if ((int)a == 0) {
-        uart_puts("test 2 fail\r\n");
+     uart_puts("Open ");
+     uart_puts(test_filename);
+    uart_puts(" and write 3 char:\n\r");
+    wbuf[0] = 'A';
+    wbuf[1] = 'A';
+    wbuf[2] = 'A';
+    rvalue = fat32_write(fat32_root, test_filename, wbuf, 0, 3);
+    wbuf[3] = '\0';
+    if (rvalue == 0)
+    {
+        uart_puts("Write to file\n\r");
     }
+    uart_puts("===\n\r");
 
-    vfs_close(a);
-    file_t* b = vfs_open("hello", O_OPEN);
-
-    uart_puts("================================\r\n");
-    uart_puts("r3 test\r\n");
-    char buf[32];
-    a = vfs_open("hello", O_OPEN);
-    b = vfs_open("world", O_CREAT);
-    b = vfs_open("world", O_OPEN);
-
-    vfs_write(a, "Hello ", 6);
-    vfs_write(b, "World!", 6);
-    vfs_close(a);
-    vfs_close(b);
-    b = vfs_open("hello", O_OPEN);
-    a = vfs_open("world", O_OPEN);
-
-    int sz;
-    sz = vfs_read(b, buf, 100);
-    sz += vfs_read(a, buf + sz, 100);
-    buf[sz] = '\0';
-    uart_puts(buf);
+     uart_puts("Open ");
+     uart_puts(test_filename);
+    uart_puts(" and read 3 char:\n\r");
+    fat32_read(fat32_root, test_filename, buf, 0, len);
+    buf[len] = '\0';
+    if (rvalue == 0)
+    {
+        uart_puts("Read From file: ");
+        uart_puts(buf);
+        uart_puts("\r\n");
+    }
 }
