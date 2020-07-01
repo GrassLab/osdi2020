@@ -12,15 +12,15 @@ kernel/%.o: kernel/%.c
 allocator/%.o: allocator/%.c
 	$(ARMGNU)-gcc $(CFLAGS) -c $< -o $@
 
-fs/%.o: fs/%.c
-	$(ARMGNU)-gcc $(CFLAGS) -c $< -o $@
+# fs/%.o: fs/%.c
+# 	$(ARMGNU)-gcc $(CFLAGS) -c $< -o $@
 
 KERNEL = $(wildcard kernel/*.c)
 ALLOCATOR = $(wildcard allocator/*.c)
-FS = $(wildcard fs/*.c)
+# FS = $(wildcard fs/*.c)
 OBJS = $(KERNEL:kernel/%.c=kernel/%.o)
 OBJS += $(ALLOCATOR:allocator/%.c=allocator/%.o)
-OBJS += $(FS:fs/%.c=fs/%.o)
+# OBJS += $(FS:fs/%.c=fs/%.o)
 
 kernel8.img: kernel/start.o $(OBJS)
 	$(ARMGNU)-ld -nostdlib -nostartfiles kernel/start.o $(OBJS) -T kernel/link.ld -o kernel8.elf

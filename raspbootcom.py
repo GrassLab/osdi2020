@@ -52,8 +52,10 @@ logger.setLevel(logging.DEBUG)
 '''
 get kernel image size
 '''
-KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/osdi2020/kernel8.img"
-#KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/raspi3-tutorial/05_uart0/kernel8.img"
+# KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/KERNEL8.IMG"
+# KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/osdi2020/kernel8.img"
+# KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/raspi3-tutorial/0C_directory/kernel8.img"
+KERNEL_IMG_PATH = "/media/sf_Documents/OSDI/osdi2020/kernel_test/sd/kernel/kernel8.img"
 KERNEL_IMG_SIZE = os.stat(KERNEL_IMG_PATH).st_size
 
 def send_size(s, kernel_size):
