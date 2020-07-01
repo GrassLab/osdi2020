@@ -7,8 +7,11 @@
 
 void main()
 {
+    sd_init();
     uart_init();
+    
     init_memory();
+    
 
     uart_puts("r1/2 test\r\n");
     filesystem_t fs = tmpfs_filesystem();

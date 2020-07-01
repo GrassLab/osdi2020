@@ -1,9 +1,7 @@
 #ifndef _SD_H
 #define _SD_H
 
-// mmio
-#define KVA 0xffff000000000000
-#define MMIO_BASE (KVA + 0x3f000000)
+#include "base.h"
 
 // SD card command
 #define GO_IDLE_STATE 0
