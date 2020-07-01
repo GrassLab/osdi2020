@@ -41,6 +41,9 @@ void zombie_killer() {
 
 void foo_kernel() {
     init_rootfs();
+
+    while (1)
+        ;
     char buf[100];
     struct file* a = vfs_open("hello", O_CREAT);
     struct file* b = vfs_open("world", O_CREAT);

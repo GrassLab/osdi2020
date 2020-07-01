@@ -1,20 +1,26 @@
+#include "vfs.h"
+
+#include "fatfs.h"
 #include "io.h"
 #include "pool.h"
+#include "sdhost.h"
 #include "tmpfs.h"
 #include "utils.h"
-#include "vfs.h"
 struct mount* rootfs;
-struct filesystem tmpfs;
+struct filesystem tmpfs, fatfs;
 struct vnode* currentdir;
 
 void init_rootfs() {
     rootfs = kmalloc(sizeof(struct mount));
-    tmpfs.name = "tmpfs";
-    tmpfs.setup_mount = tmpfs_mount;
-    register_filesystem(&tmpfs);
+    fatfs.name = "fatfs";
+    register_filesystem(&fatfs);
+    asm volatile("fat:");
+    fatfs.setup_mount(&fatfs, rootfs);
+    // tmpfs.name = "tmpfs";
+    // register_filesystem(&tmpfs);
 
-    tmpfs.setup_mount(&tmpfs, rootfs);
-    currentdir = rootfs->root;
+    // tmpfs.setup_mount(&tmpfs, rootfs);
+    // currentdir = rootfs->root;
 }
 
 int register_filesystem(struct filesystem* fs) {
@@ -30,6 +36,11 @@ int register_filesystem(struct filesystem* fs) {
         tmpfs_f_ops->write = tmpfs_write;
         tmpfs_f_ops->read = tmpfs_read;
         tmpfs_f_ops->list = tmpfs_list;
+        return 1;
+    } else if (!strcmp(fs->name, "fatfs")) {
+        asm volatile("fatf:");
+        sd_init();
+        fs->setup_mount = fatfs_mount;
         return 1;
     }
     return -1;

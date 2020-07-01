@@ -44,11 +44,11 @@ clean:
 	rm -f $(BDIR)/*.asmo $(BDIR)/*.o kernel8.elf kernel8.img rd prog user/user.o user/user_lib.o user.img user.elf
 
 run: all
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio -drive if=sd,file=sfn_nctuos.img,format=raw
 
 tty: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial "pty"
 
 debug: all
-	terminator -e "qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio -s -S" --new-tab
+	terminator -e "qemu-system-aarch64 -M raspi3 -kernel kernel8.img -serial null -serial mon:stdio -s -S -drive if=sd,file=sfn_nctuos.img,format=raw" --new-tab
 	terminator -e "aarch64-linux-gnu-gdb -x debug.txt" --new-tab
