@@ -72,8 +72,8 @@ void getPartition()
 {
     unsigned char *buf = (unsigned char *)allocDynamic(512);
     readblock(0, buf);
-        
-    partition_start = buf[0x1C6] + (buf[0x1C7]<<8) + (buf[0x1C8]<<16) + (buf[0x1C9]<<24);
+
+    partition_start = *((uint32_t *)(buf+0x1C6));    
     readblock(partition_start, buf);
 
     boot_mbr = (struct fatBoot *)buf;
