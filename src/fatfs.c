@@ -5,7 +5,7 @@
 #include "sdhost.h"
 #include "vfs.h"
 
-int fat_base = 2048;
+int fat_base;
 int sectors_per_cluster;
 int first_data_sector;
 int root_sector;
@@ -24,6 +24,10 @@ int get_first_sector(int cluster) {
 }
 
 int fatfs_mount(struct filesystem* fs, struct mount* mount) {
+    struct mbr* mbr = kmalloc(sizeof(char) * 512);
+    readblock(0, (char*)mbr);
+    fat_base = mbr->entry[0].addr;
+    asm volatile("mbr:");
     struct fat_BS* fat_boot = kmalloc(sizeof(struct fat_BS));
     readblock(fat_base, (char*)fat_boot);
 

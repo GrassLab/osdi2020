@@ -54,6 +54,17 @@ struct fat_root {
 #define TMP_BUF_SIZE 512
 #include "vfs.h"
 
+struct mbr_entry {
+    char b[8];
+    unsigned short addr;
+    char c[6];
+};
+
+struct mbr {
+    char b[0x1BE];
+    struct mbr_entry entry[4];
+};
+
 struct fatfs_buf {
     int flag;
     size_t size;

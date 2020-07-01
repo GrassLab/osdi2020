@@ -42,13 +42,13 @@ void zombie_killer() {
 void foo_kernel() {
     init_rootfs();
     struct file* fixup = vfs_open("BOOTCODE.BIN", 0);
-    vfs_write(fixup, "ab\0cde\0", 7);
+    vfs_write(fixup, "ab\0cd\0", 6);
     vfs_close(fixup);
 
     fixup = vfs_open("BOOTCODE.BIN", 0);
     char buf[10], buf2[10];
     vfs_read(fixup, buf, 3);
-    vfs_read(fixup, buf2, 4);
+    vfs_read(fixup, buf2, 3);
     print_s(buf);
     print_s(buf2);
     print_s("\n");
