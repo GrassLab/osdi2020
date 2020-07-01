@@ -22,8 +22,8 @@ void test_lab8_req1() {
     vfs_ls(rootfs->root);
     char buf[1024] = {0};
     File *file = vfs_open("START.ELF", 0);
-    vfs_read(file, buf, 500);
-    for (int i = 0 ; i < 500; i++) {
+    vfs_read(file, buf, 540);
+    for (int i = 0 ; i < 540; i++) {
         printf("%c", buf[i]);
     }
 }
@@ -39,6 +39,20 @@ void test_lab8_req2() {
     }
 }
 
+void test_lab8_req3() {
+    File *file = vfs_open("START.ELF", 0);
+    char str[600] = {0};
+    char buf[1024] = {0};
+    for (int i = 0; i < 600; i++) {
+        str[i] = 'C';
+    }
+    vfs_write(file, str, 600);
+    vfs_read(file, buf, 700);
+    for (int i = 0 ; i < 700; i++) {
+        printf("%c", buf[i]);
+    }
+}
+
 int main()
 {
     uart_init();
@@ -49,4 +63,5 @@ int main()
     init_rootfs();
     test_lab8_req1();
     test_lab8_req2();
+    test_lab8_req3();
 }

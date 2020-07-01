@@ -120,7 +120,6 @@ void fat32_setup_mount(FileSystem *fs, Mount *mount) {
     BootSector *fat32;
     Fat32Node *init_node = (Fat32Node *) malloc(sizeof(Fat32Node));
     VNode *vnode = (VNode *) malloc(sizeof(VNode));
-    print_block(0);
     readblock(0, buf);
     part1 = (void *) buf;
     init_node->info.lba = part1->lba;
@@ -154,19 +153,20 @@ int fat32_write(File *file, const void *buf, int len) {
 
     char data[BLOCK_SIZE];
     int size = dir->size;
-    int startPosition = file->f_pos;
+    int blocks = 0;
 
-    if (startPosition + len > size) {
-        dir->size = startPosition + len;
+    if (file->f_pos + len > size) {
+        dir->size = file->f_pos + len;
         set_fat32_dentry(fnode, dir);
     }
 
     while ((clusterIndex & CHAIN_EOF) != CHAIN_EOF) {
         readblock(offset + clusterIndex - fnode->info.clusterNumOfRoot, data);
         for (int i = 0; i < BLOCK_SIZE; i++) {
-            data[i] = ((char *)buf)[i];
+            data[i] = ((char *)buf)[blocks * BLOCK_SIZE + i];
             if (--len == 0) break;
         }
+        blocks ++;
         writeblock (offset + clusterIndex - fnode->info.clusterNumOfRoot, data);
         clusterIndex = find_fat32_cluster_index(&fnode->info, clusterIndex);
         if (len == 0) break;
@@ -182,18 +182,17 @@ int fat32_read(File *file, void *buf, int len) {
     offset += fnode->info.fatNum * fnode->info.sectorsPerFat;
 
     char data[BLOCK_SIZE];
-    int size = dir->size;
-    int startPosition = file->f_pos;
-    int endPosition = (size-startPosition > len) ? file->f_pos + len : size;
+    int blocks = 0;
 
     while ((clusterIndex & CHAIN_EOF) != CHAIN_EOF) {
         readblock(offset + clusterIndex - fnode->info.clusterNumOfRoot, data);
-        for (int i = 0; i < endPosition - startPosition; i++) {
-            ((char *)buf)[i] = data[i];
+        for (int i = 0; i < BLOCK_SIZE; i++) {
+            ((char *)buf)[blocks * BLOCK_SIZE + i] = data[i];
+            if (--len == 0) break;
         }
+        blocks ++;
         clusterIndex = find_fat32_cluster_index(&fnode->info, clusterIndex);
-        startPosition += BLOCK_SIZE;
-        if (startPosition > endPosition) break;
+        if (len == 0) break;
     }
     // print_block(offset + clusterIndex - fnode->info.clusterNumOfRoot);
 }
