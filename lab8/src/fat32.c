@@ -87,7 +87,7 @@ int fat32_setup_mount(struct filesystem_t *fs, struct mount_t **mount){
     struct fat32_node init_node;
     fat32_mount.root = &fat32_root;
     fat32_mount.fs = fs;
-
+    
     *mount = &fat32_mount;
 
     f_ops.write = fat32_write;
@@ -102,14 +102,15 @@ int fat32_setup_mount(struct filesystem_t *fs, struct mount_t **mount){
 
     char buf[512];
     
-
+    
     // parse MBR to find first partition entry
-    readblock (0, buf);
-    
-    part1 = (void *) buf;
-    init_node.info.lba = part1->lba;
-    init_node.info.size = part1->size;
-    
+    // readblock (0, buf);
+    // uart_puts("1\n");
+    // part1 = (struct partition_entry *) buf;
+    // init_node.info.lba = part1->lba;
+    // init_node.info.size = part1->size;
+
+    init_node.info.lba = 2048;
     // parse fat32 BPB
     readblock (init_node.info.lba, buf);
     fat32 = (void *) buf;
@@ -117,7 +118,6 @@ int fat32_setup_mount(struct filesystem_t *fs, struct mount_t **mount){
     init_node.info.count_of_reserved = fat32->count_of_reserved;
     init_node.info.num_of_fat = fat32->num_of_fat;
     init_node.info.sectors_per_fat = fat32->sectors_per_fat;
-
     fat32_root.internal = internal_node_create (&init_node, init_node.info.cluster_num_of_root, 0, 0);
 
     offset_g = init_node.info.lba + fat32->count_of_reserved + fat32->num_of_fat * fat32->sectors_per_fat;

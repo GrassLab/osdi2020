@@ -168,31 +168,31 @@ void main(){
     
     uart_puts("-----------------------\n");
 
-    // file* fail = vfs_open("hello", O_OPEN);
+    file* fail = vfs_open("hello", O_OPEN);
 
-    // uart_puts("-----------------------\n");
+    uart_puts("-----------------------\n");
 
-    // file* a = vfs_open("hello.txt", O_OPEN);
+    file* a = vfs_open("hello.txt", O_OPEN);
     
-    // uart_puts("-----------------------\n");
+    uart_puts("-----------------------\n");
 
-    // file* test = vfs_open("test.txt", O_OPEN);
+    file* test = vfs_open("test.txt", O_OPEN);
     
-    // uart_puts("-----------------------\n");
+    uart_puts("-----------------------\n");
 
     
     
-    // sz = vfs_read(a, buf, 100);
-    // uart_puts("```\n");
-    // uart_puts(buf);
-    // uart_puts("```\n");
-    // uart_puts("-----------------------\n");
+    sz = vfs_read(a, buf, 100);
+    uart_puts("```\n");
+    uart_puts(buf);
+    uart_puts("```\n");
+    uart_puts("-----------------------\n");
 
-    // sz = vfs_read(test, buf, 100);
-    // uart_puts("```\n");
-    // uart_puts(buf);
-    // uart_puts("```\n");
-    // uart_puts("-----------------------\n");
+    sz = vfs_read(test, buf, 100);
+    uart_puts("```\n");
+    uart_puts(buf);
+    uart_puts("```\n");
+    uart_puts("-----------------------\n");
 
     file* file_to_w = vfs_open("write.txt", O_OPEN);
 
@@ -220,6 +220,7 @@ void main(){
     
     uart_puts("-----------------------\n");
 
+    // lab7
     /*
     a = vfs_open("hello", O_CREAT);
     // assert(a != NULL);
