@@ -39,7 +39,7 @@ Allocator *find_allocator(int size) {
 
 Slub* find_empty_slub() {
     for (int i = 0; i < SLUB_NUMBER_MAX; i++) {
-        if (slubs[i].used == SLUB_NOT_USED) {
+        if (slubs[i].used == SLUB_NOT_USED && slubs[i].objectSize == 0) {
             return &slubs[i];
         }
     }
@@ -49,7 +49,7 @@ Slub* find_empty_slub() {
 Page* find_page_by_slub(Slub *slub) {
     Allocator *allocator = find_allocator(slub->objectSize);
     while (slub != NULL) {
-        for (int i = 0;  i <= allocator->pageCount; i++) {
+        for (int i = 0;  i < allocator->pageCount; i++) {
             if (slub->address == ((allocator->pages)[i])->physicalAddr) {
                 return (allocator->pages)[i];
             }

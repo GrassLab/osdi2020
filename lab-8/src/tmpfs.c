@@ -1,4 +1,5 @@
 #include "tmpfs.h"
+#include "string.h"
 #include "vfs.h"
 #include "allocator.h"
 #include "printf.h"
