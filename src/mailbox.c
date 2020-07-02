@@ -1,5 +1,5 @@
 #include "mailbox.h"
-#include "string.h"
+#include "lib/string.h"
 #include "uart.h"
 #include "printf.h"
 

@@ -62,8 +62,8 @@ struct page *__buddy_block_alloc(int order)
         return 0;
     }
     
-    printf("[buddy allocate] order: %d\tsize: %d\n", order, 1<<order);
     #ifdef __DEBUG
+    printf("[buddy allocate] order: %d\tsize: %d\n", order, 1<<order);
     uart_puts("\tbefore\n");
     dump_buddy();
     #endif//__DEBUG
@@ -84,14 +84,16 @@ struct page *__buddy_block_alloc(int order)
             struct page* buddy = &bookkeep[buddy_pfn];
             buddy->order = ord_ext;
             list_add_tail(&buddy->list, &buddy_freelist[ord_ext]);
+        #ifndef __DEBUG
+        }
+        #else
             printf("\tfree redundant(PFN:%d, Order:%d)\n", buddy->pfn, buddy->order);
         }
         printf("\tallocated block(PFN:%d, Order:%d)\n", to_alloc->pfn, to_alloc->order);
-        #ifdef __DEBUG   
         uart_puts("\tafter\n");
         dump_buddy();
-        #endif//__DEBUG
         uart_puts("[buddy allocate] **done**\n\n");
+        #endif//__DEBUG
         return to_alloc;
     }
     uart_puts("[__buddy_block_alloc] No free space!\n");
@@ -102,8 +104,9 @@ void __buddy_block_free(struct page* block)
 {
     long buddy_pfn, lbuddy_pfn, rbuddy_pfn;
     struct page *buddy, *lbuddy, *rbuddy;
-    printf("[buddy free] **start**\n\tblock(PFN:%d, Order:%d)\n", block->pfn, block->order);
+    
     #ifdef __DEBUG
+    printf("[buddy free] **start**\n\tblock(PFN:%d, Order:%d)\n", block->pfn, block->order);
     uart_puts("before\n");
     dump_buddy();
     #endif//__DEBUG
@@ -130,8 +133,8 @@ void __buddy_block_free(struct page* block)
     #ifdef __DEBUG
     uart_puts("after\n");
     dump_buddy();
-    #endif//__DEBUG
     uart_puts("[buddy free] **done**\n\n");
+    #endif//__DEBUG
 }
 
 void __init_obj_alloc(struct obj_alloc *alloc, unsigned int size)
@@ -341,7 +344,7 @@ void *kmalloc(unsigned int size)
     return NULL;
 }
 
-void kfree(void * block)
+void kfree(void *block)
 {
     #ifdef __DEBUG
     printf("[kfree] block@ 0x%X\n", block);

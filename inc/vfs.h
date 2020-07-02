@@ -2,63 +2,86 @@
 #define _VFS_H
 
 
+#define VNODE_TYPE_REG 0
+#define VNODE_TYPE_DIR 1
+#define DNAME_LEN 24
+#define NR_CHILD 16 
+#define REGBUFF_SIZE 512U
+#define MAX_PATH_LEN 512U
 #define O_CREAT 1
-
-#define DNAME_LEN 32
-#define MAX_CHILD 8
+#define EOF (0xff)
 
 struct dentry {
-    // Pointer to the inode this entry refers to.
-    char dname[DNAME_LEN];
-    struct vnode* vnode;
-    int child_count;
-    struct dentry *child_dentry;
-}dentry;   
+    char name[DNAME_LEN];
+    struct vnode *vnode;
+};
 
+// struct dcache {
+//     struct dentry[NR_CHILD];
+//     // maybe link to an other cache
+// };
+
+// struct fcache {
+//     char buf[REGBUFF_SIZE];
+//     // maybe link to another buf
+// };
+
+struct vnode_cache{
+    union{
+        struct dentry dentries[NR_CHILD];
+        char regbuf[REGBUFF_SIZE];
+    };
+};
 
 struct vnode {
-    struct mount* mount;
-    struct vnode_operations* v_ops;
-    struct file_operations* f_ops;
-    void* internal;
+    int type;
+    struct mount *mount;// fs mount on this vnode
+    struct vnode_operations *v_ops;
+    struct file_operations *f_ops;
+    struct vnode_cache* cache;
+    void *internal;
 };
 
 struct file {
-    struct vnode* vnode;
+    struct vnode *vnode;
     unsigned f_pos; // The next read/write position of this file descriptor
-    struct file_operations* f_ops;
-    int flags;
+    struct file_operations *f_ops;
+    // int flags; //rw permision
 };
 
 struct mount {
-    struct vnode* root;
-    struct dentry* dentry;
-    struct filesystem* fs;
+    struct vnode *root;
+    struct filesystem *fs;
 };
 
 struct filesystem {
-    const char* name;
-    int (*setup_mount)(struct filesystem* fs, struct mount* mount);
+    const char *name;
+    int (*setup_mount)(struct filesystem *fs, struct mount *mount);
+    struct filesystem *next;
 };
 
 struct file_operations {
-    int (*write) (struct file* file, const void* buf, unsigned len);
-    int (*read) (struct file* file, void* buf, unsigned len);
+    int (*read) (struct file *file, void *buf, unsigned len);
+    int (*write) (struct file *file, const void *buf, unsigned len);
 };
 
 struct vnode_operations {
-    int (*lookup)(struct dentry* dir, struct vnode** target, const char* component_name);
-    int (*create)(struct dentry* dir, struct vnode** target, const char* component_name);
+    int (*lookup)(struct vnode *vnode, struct vnode **target, const char *component_name);
+    int (*create)(struct vnode *vnode, struct vnode **target, const char *component_name);
 };
 
-struct mount* rootfs;
+struct filesystem_manager {
+    int nr_fs;
+    struct filesystem *list;
+};
 
-void set_dentry(struct dentry *dentry,struct vnode* vnode,const char* str);
 void rootfs_init();
-int register_filesystem(struct filesystem* fs);
-struct file* vfs_open(const char* pathname, int flags);
-int vfs_close(struct file* file);
-int vfs_write(struct file* file, const void* buf, unsigned len);
-int vfs_read(struct file* file, void* buf, unsigned len);
+void register_filesystem(struct filesystem *fs);
+int vfs_lookup(struct vnode *vnode, struct vnode **target, const char *component_name);
+void vfs_ls(const char *pathname);
+struct file *vfs_open(const char *pathname, int flags);
+int vfs_close(struct file *file);
+int vfs_read(struct file *file, void *buf, unsigned len);
+int vfs_write(struct file *file, const void *buf, unsigned len);
 
 #endif
