@@ -13,6 +13,7 @@
 #include "tmpfs.h"
 #include "vfs.h"
 #include <string.h>
+#include "sdhost.h"
 
 void local_timer_handler();
 void core_timer_handler();
@@ -255,23 +256,46 @@ void init()
 }
 
 void jmp_to_el0();
+
+void fat32_test()
+{
+	print("start fat32 test\n");
+	fat32_init();
+	struct file *a = vfs_open("hello", 0);
+	print("read file a");
+	char buf[5];
+	buf[4] = '\0';
+	a->f_pos = 511;
+	vfs_read(a, buf, 4);
+	print("pos: %d, value: %s\r\n", (int)a->f_pos, buf);
+	a->f_pos = 511;
+	print("modify to: ");
+	char buf_mod[5] = "hell";
+	print("%s\r\n", buf_mod);
+	vfs_write(a, buf_mod, 4);
+	a->f_pos = 511;
+	vfs_read(a, buf, 4);
+	print("pos: %d, value: %s\r\n", (int)a->f_pos, buf);
+}
 int main()
 {
 	init();
-	setup_tmpfs_filesystem();
-	struct file *null = vfs_open("hello", 0);
-	print(null == NULL ? "NULL\n" : "NOT NULL\n");
+	sd_init();
+	fat32_test();
+	// setup_tmpfs_filesystem();
+	// struct file *null = vfs_open("hello", 0);
+	// print(null == NULL ? "NULL\n" : "NOT NULL\n");
 
-	struct file *file = vfs_open("hello", O_CREAT);
-	print(file == NULL ? "NULL\n" : "NOT NULL\n");
-	char *hello = "hello";
-	vfs_write(file, hello, 6);
-	vfs_close(file);
-	file = vfs_open("hello", 0);
-	char buf[0x100];
-	int size = vfs_read(file, buf, 6);
-	buf[size] = '\0';
-	print("RES: %s\n", buf);
+	// struct file *file = vfs_open("hello", O_CREAT);
+	// print(file == NULL ? "NULL\n" : "NOT NULL\n");
+	// char *hello = "hello";
+	// vfs_write(file, hello, 6);
+	// vfs_close(file);
+	// file = vfs_open("hello", 0);
+	// char buf[0x100];
+	// int size = vfs_read(file, buf, 6);
+	// buf[size] = '\0';
+	// print("RES: %s\n", buf);
 
 	// uint64_t *allocate_pages[0x20];
 	// for (int i = 0; i < 0x20; i++) {
