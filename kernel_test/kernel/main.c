@@ -1,8 +1,6 @@
 #include "uart.h"
-// #include "../allocator/test.h"
-// #include "../fs/test.h"
-#include "../fs/vfs.h"
-#include "../fs/tmpfs.h"
+// #include "../fs/vfs.h"
+// #include "../fs/tmpfs.h"
 #include "../allocator/buddy.h"
 #include "../allocator/obj_allocator.h"
 
@@ -30,49 +28,49 @@ void uart_test()
 #define NULL 0
 #define assert(expr) if(!(expr)){printf("assert error!!!\n");} \
 
-void testcase1()
-{
-    log("+++++ testcase1 +++++\n");
-    struct file* a = vfs_open("hello", 0);
-    assert(a == NULL);
-    a = vfs_open("hello", O_CREAT);
-    assert(a != NULL);
-    vfs_close(a);
-    struct file* b = vfs_open("hello", 0);
-    assert(b != NULL);
-    vfs_close(b);
-}
+// void testcase1()
+// {
+//     log("+++++ testcase1 +++++\n");
+//     struct file* a = vfs_open("hello", 0);
+//     assert(a == NULL);
+//     a = vfs_open("hello", O_CREAT);
+//     assert(a != NULL);
+//     vfs_close(a);
+//     struct file* b = vfs_open("hello", 0);
+//     assert(b != NULL);
+//     vfs_close(b);
+// }
 
-void testcase2()
-{
-    log("+++++ testcase2 +++++\n");
-    char buf[0x1000];
-    struct file* a = vfs_open("hello", O_CREAT);
-    struct file* b = vfs_open("world", O_CREAT);
-    vfs_write(a, "Hello ", 6);
-    vfs_write(b, "World!", 6);
-    vfs_close(a);
-    vfs_close(b);
-    b = vfs_open("hello", 0);
-    a = vfs_open("world", 0);
-    int sz;
-    sz = vfs_read(b, buf, 100);
-    sz += vfs_read(a, buf + sz, 100);
-    buf[sz] = '\0';
-    printf("%s\n", buf); // should be Hello World!
-}
+// void testcase2()
+// {
+//     log("+++++ testcase2 +++++\n");
+//     char buf[0x1000];
+//     struct file* a = vfs_open("hello", O_CREAT);
+//     struct file* b = vfs_open("world", O_CREAT);
+//     vfs_write(a, "Hello ", 6);
+//     vfs_write(b, "World!", 6);
+//     vfs_close(a);
+//     vfs_close(b);
+//     b = vfs_open("hello", 0);
+//     a = vfs_open("world", 0);
+//     int sz;
+//     sz = vfs_read(b, buf, 100);
+//     sz += vfs_read(a, buf + sz, 100);
+//     buf[sz] = '\0';
+//     printf("%s\n", buf); // should be Hello World!
+// }
 
-void testcase3()
-{
-    log("+++++ testcase3 +++++\n");
-    // create some regular files at root directory
-    struct file* root = vfs_open("/", 0);
-    struct file* a = vfs_open("hello", O_CREAT);
-    struct file* b = vfs_open("world", O_CREAT);
-    // your read directory function
-    // iterate all directory entries and print each file's name.
-    vfs_ls(root);
-}
+// void testcase3()
+// {
+//     log("+++++ testcase3 +++++\n");
+//     // create some regular files at root directory
+//     struct file* root = vfs_open("/", 0);
+//     struct file* a = vfs_open("hello", O_CREAT);
+//     struct file* b = vfs_open("world", O_CREAT);
+//     // your read directory function
+//     // iterate all directory entries and print each file's name.
+//     vfs_ls(root);
+// }
 
 void testcase4()
 {
@@ -106,15 +104,15 @@ void testcase5()
 
 void testcase6()
 {
-    printf("sizeof(struct file): %d\n", sizeof(struct file));
-    unsigned long addr1 = malloc(sizeof(struct file));
+    printf("sizeof(struct file): %d\n", 0x28);
+    unsigned long addr1 = malloc(0x28);
     // unsigned long addr2 = malloc(0x4000);
     printf("addr1 = 0x%lx\n", addr1);
     // printf("addr2 = 0x%lx\n", addr2);
     free(addr1);
     // free(addr2);
     // buddy_view();
-    allocator_view();
+    // allocator_view();
 
 }
 
@@ -130,7 +128,7 @@ void main()
     printf("Hello %s!\n", "hank0438");
     // printf("hex: 0x%x\n", &_end);
 
-    log("This is demo of Varied-size object allocator\n");
+    printf("This is demo of Varied-size object allocator\n");
     testcase6();
 
     // log("This is demo of VFS!\n");

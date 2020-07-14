@@ -115,7 +115,24 @@ int vfs_mkdir(const char* pathname)
     // A VFS should find the parent directory of a newly created directory first. 
     // If the parent directory is found, 
     //      call the file system’s mkdir method with the component name to create a new directory.
+    log("vfs mkdir.\n");
+    struct vnode* vnode;
+    struct vnode* target;
+    struct dentry* dentry;
+    dentry = rootfs->dentry;
+    vnode = rootfs->root;
+    int found = vnode->v_ops->lookup(dentry, &target, pathname);
+    // printf("found: %d\n", found);
+    vnode->v_ops->create(dentry, &target, pathname);
     
+    log("create fd.\n");
+    struct file* fd = malloc(sizeof(struct file));
+    fd->dentry = dentry;
+    fd->vnode = target;
+    // printf("0x%x\n", target->f_ops->write);
+    fd->f_ops = target->f_ops;
+    fd->f_pos = 0;
+    return fd;
 }
 
 int vfs_chdir(const char* pathname)

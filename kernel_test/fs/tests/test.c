@@ -8,7 +8,7 @@
 #include "../tmpfs.h"
 
 #define NULL 0
-#define assert(expr) if(!(expr)){printf("assert error!!!\n");} \
+#define assert(expr) if(!(expr)){printf("assert error!!!\n");} 
 
 void testcase1()
 {

@@ -54,6 +54,8 @@ struct file_operations {
 struct vnode_operations {
     int (*lookup)(struct dentry* dentry, struct vnode** target, const char* component_name);
     int (*create)(struct dentry* dentry, struct vnode** target, const char* component_name);
+    int (*mkdir)(struct dentry* dentry, struct vnode** target, const char* component_name);
+    int (*chdir)(struct dentry* dentry, struct vnode** target, const char* component_name);
 };
 
 int register_filesystem(struct filesystem* fs) ;

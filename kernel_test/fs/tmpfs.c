@@ -46,6 +46,8 @@ int setup_tmpfs_mount(struct filesystem* fs, struct mount* mount)
     tmpfs->root->v_ops = malloc(sizeof(struct vnode_operations));
     tmpfs->root->v_ops->lookup = tmpfs_lookup;
     tmpfs->root->v_ops->create = tmpfs_create;
+    // tmpfs->root->v_ops->mkdir = tmpfs_mkdir;
+    // tmpfs->root->v_ops->chdir = tmpfs_chdir;
     tmpfs->root->f_ops = malloc(sizeof(struct file_operations));
     tmpfs->root->f_ops->write = tmpfs_write;
     tmpfs->root->f_ops->read = tmpfs_read;
