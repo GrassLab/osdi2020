@@ -9,7 +9,7 @@
 #include "syscall.h"
 #include "sched.h"
 #include "mm.h"
-#include "tmpfs.h"
+#include "vfs.h"
 
 task_manager_t TaskManager;
 task_t* current;
@@ -28,136 +28,50 @@ void init_lfb(){
     lfb_showpicture();
 }
 
-void print(){
-    while (1){
-        printf("---\n");
-        printf("111\n");
-        delay(100000000);
-        if(current->counter <= 0){
-            schedule();
-        }
-    }
+void test_vfs1()
+{
+    file_t* a = vfs_open("hello", 0);
+    // assert(a == NULL);
+    printf("a");
+    a = vfs_open("hello", O_CREAT);
+    // assert(a != NULL);
+    printf("a");
+    vfs_close(a);
+    file_t* b = vfs_open("hello", 0);
+    // assert(b != NULL);
+    printf("a");
+    vfs_close(b);
 }
-
-void print2(){
-    while (1){
-        printf("---\n");
-        printf("222\n");
-        delay(100000000);
-
-        if(current->counter <= 0){
-            schedule();
-        }
-    }
-}
-
-void print3(){
-    while (1){
-        printf("---\n");
-        printf("333\n");
-        delay(100000000);
-
-        if(current->counter <= 0){
-            schedule();
-        }
-    }
-}
-
-void func(){
-    int cnt = 1;
-    while(1){
-        printf("---\n");
-        printf("user loop\n");
-        printf("kernel stack location: %x\n",current->cpu_context.sp);
-        printf("user stack location: %x\n",current->user_context.sp_el0);
-        printf("taskid: %d\n", get_taskid());
-        printf("user loop cnt: %d, address of cnt: %d\n", cnt, &cnt);
-
-        cnt++;
-        // printf("---\n");
-
-        delay(10000000);
-    }
-}
-
-void func2(){
-    int cnt = 1;
-    while(1){
-        printf("---\n");
-        printf("user loop2\n");
-        printf("kernel stack location: %x\n",current->cpu_context.sp);
-        printf("user stack location: %x\n",current->user_context.sp_el0);
-        printf("taskid: %d\n", get_taskid());
-        printf("user loop cnt: %d, address of cnt: %d\n", cnt, &cnt);
-        cnt++;
-
-        delay(10000000);
-    }
-}
-
-void foo(){
-    int tmp = 5;
-    printf("Task %d after exec, tmp address 0x%x, tmp value %d\n", get_taskid(), &tmp, tmp);
-    exit(0);
-}
-
-void test_fork(){
-    int cnt = 1;
-    printf("ready for fork\n");
-    if (fork() == 0) {
-        fork();
-        delay(100000);
-        fork();
-        while(cnt < 10) {
-            printf("Task id: %d, cnt: %d\n", get_taskid(), cnt);
-            delay(100000);
-            ++cnt;
-        }
-        exit(0);
-        printf("Should not be printed\n");
-    } else {
-        printf("Task %d before exec, cnt address 0x%x, cnt value %d\n", get_taskid(), &cnt, cnt);
-        exec(foo);
-    }
-}
-
-
-void user_task2(){
-    do_exec(func2);
-}
-
-void user_task(){
-    do_exec(func);
-}
-
-void exec_fork(){
-    do_exec(test_fork);
+void test_vfs2()
+{
+    char buf[100];
+    file_t* a = vfs_open("hello", O_CREAT);
+    file_t* b = vfs_open("world", O_CREAT);
+    vfs_write(a, "Hello ", 6);
+    vfs_write(b, "World!", 6);
+    vfs_close(a);
+    vfs_close(b);
+    b = vfs_open("hello", 0);
+    a = vfs_open("world", 0);
+    int sz;
+    sz = vfs_read(b, buf, 100);
+    sz += vfs_read(a, buf + sz, 100);
+    buf[sz] = '\0';
+    printf("////output is %s\n", buf); // should be Hello World!
+    vfs_list_file("/");
 }
 
 void main()
 {
     init_uart();
-        // init_lfb();
     init_printf(0, putc);
 
-    // init_task_manager();
-
-
-    // task_t* new_task1 = privilege_task_create((unsigned long)&print);
-    // task_t* new_task2 = privilege_task_create((unsigned long)&print2);
-    // task_t* new_task3 = privilege_task_create((unsigned long)&print3);
-    // task_t* new_task4 = privilege_task_create((unsigned long)&user_task);
-    // task_t* new_task5 = privilege_task_create((unsigned long)&user_task2);
-    // privilege_task_create((unsigned long)&exec_fork);
-
-    // shell();
-
-    // enable_interrupt_controller();
-	// enable_irq();
-    // core_timer_enable();
-    init_page_sys();
+    mem_alloc_init();
+    rootfs_init();
+    printf("rootfs init finish\n");
+    test_vfs1();
+    test_vfs2();
     // idle_task();
-    tmpfs_init();
     while(1){
         printf("waittt\n");
         delay(100000000);

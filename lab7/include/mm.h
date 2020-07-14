@@ -36,7 +36,11 @@
     void memzero(unsigned long src, unsigned long n);
     void init_buddy_sys();
     void init_page_sys();
-    unsigned long give_slab(int size);
+    void* give_slab(int size);
+    void* kmalloc(int size);
+    void kfree(unsigned long physical_addr);
+    void mem_alloc_init();
+
     enum {
         NOT_USED,
         USED,
