@@ -63,7 +63,7 @@ struct vfs_vnode_operations_struct
 
 int vfs_regist_fs(struct vfs_filesystem_struct * fs);
 void vfs_setup_mount(struct vfs_filesystem_struct * fs, struct vfs_mount_struct ** mount);
-void vfs_set_tmpfs_to_rootfs(struct vfs_filesystem_struct * fs);
+void vfs_set_rootfs(struct vfs_filesystem_struct * fs);
 void vfs_mount(struct vfs_vnode_struct * mountpoint, struct vfs_mount_struct * mount);
 void vfs_umount(struct vfs_vnode_struct * mountpoint, const char * mountpoint_token);
 struct vfs_file_struct * vfs_open(const char * pathname, int flags);

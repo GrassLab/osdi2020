@@ -86,10 +86,11 @@ boot_rest:
   bl buddy_init
   bl mmu_user_page_table_init
   bl tmpfs_init
-  bl ramfs_init
-  bl procfs_init
-
-  bl scheduler_init
+  bl sd_init
+  bl fat32_init
+  // Point rootfs to fat32
+  bl vfs_set_rootfs
+  bl test_init
 
   // In case return, enter low power mode
   b other_core

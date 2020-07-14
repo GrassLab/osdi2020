@@ -254,6 +254,7 @@ int task_set_fd(struct vfs_file_struct * file)
 
 struct vfs_file_struct * task_get_vfs_file(int fd)
 {
+  /* TODO: check fd */
   uint64_t current_task_id = task_get_current_task_id();
   return kernel_task_pool[TASK_ID_TO_IDX(current_task_id)].fd[fd];
 }
