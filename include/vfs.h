@@ -5,11 +5,14 @@
 #include "list.h"
 
 #define O_CREAT 1
+#define REGULAR_FILE 0
+#define DIRECTORY    1
 #define NR_OPEN_DEFAULT 32
 
 struct mount {
     struct dentry* root;  // root directory
     struct filesystem* fs;
+    char* dev_name;
 };
 
 struct filesystem {
@@ -30,6 +33,9 @@ struct dentry {
     struct list_head list;
     struct list_head childs;
     struct vnode* vnode;
+    int type;
+    struct mount* mountpoint;
+    struct dentry* mount_origin;
 };
 
 struct file {
@@ -48,6 +54,8 @@ struct vnode_operations {
     int (*ls)(struct vnode* dir);
     int (*lookup)(struct vnode* dir, struct vnode** target, const char* component_name);
     int (*create)(struct vnode* dir, struct vnode** target, const char* component_name);
+    int (*mkdir)(struct vnode* dir, struct vnode** target, const char* component_name);
+    int (*load_dentry)(struct dentry* dir, char *component_name);
 };
 
 struct files_struct {
@@ -59,6 +67,7 @@ struct files_struct {
 
 extern struct mount* rootfs;
 
+void traversal(const char* pathname, struct vnode** target_node, char* target_path);
 void rootfs_init();
 int register_filesystem(struct filesystem* fs);
 struct file* vfs_open(const char* pathname, int flags);
@@ -66,5 +75,9 @@ int vfs_close(struct file* file);
 int vfs_write(struct file* file, const void* buf, uint64_t len);
 int vfs_read(struct file* file, void* buf, uint64_t len);
 int vfs_readdir(struct file* file);
+int vfs_mkdir(const char* pathname);
+int vfs_chdir(const char* pathname);
+int vfs_mount(const char* device, const char* mountpoint, const char* filesystem);
+int vfs_umount(const char* mountpoint);
 
 #endif // __VFS__

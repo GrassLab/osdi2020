@@ -4,11 +4,10 @@
 #include "vfs.h"
 
 #define EOF (-1)
-#define REGULAR_FILE 0
 #define TMP_FILE_SIZE 512
 
 struct tmpfs_internal {
-    int flag;
+    int size; //TODO
     char buf[TMP_FILE_SIZE];
 };
 
@@ -19,6 +18,8 @@ int tmpfs_setup_mount(struct filesystem* fs, struct mount* mount);
 int tmpfs_lookup(struct vnode* dir, struct vnode** target, const char* component_name);
 int tmpfs_create(struct vnode* dir, struct vnode** target, const char* component_name);
 int tmpfs_ls(struct vnode* dir);
+int tmpfs_mkdir(struct vnode* dir, struct vnode** target, const char* component_name);
+int tmpfs_load_dentry(struct dentry* dir, char* component_name);
 
 // file operations
 int tmpfs_read(struct file* file, void* buf, uint64_t len);

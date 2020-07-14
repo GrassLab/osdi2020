@@ -5,8 +5,8 @@
 #include "my_string.h"
 #include "uart0.h"
 
-struct vnode_operations* tmpfs_v_ops;
-struct file_operations* tmpfs_f_ops;
+struct vnode_operations* tmpfs_v_ops = NULL;
+struct file_operations* tmpfs_f_ops = NULL;
 
 struct vnode* tmpfs_create_vnode(struct dentry* dentry) {
     struct vnode* vnode = (struct vnode*)kmalloc(sizeof(struct vnode));
@@ -16,26 +16,32 @@ struct vnode* tmpfs_create_vnode(struct dentry* dentry) {
     return vnode;
 }
 
-struct dentry* tmpfs_create_dentry(struct dentry* parent, const char* name) {
+struct dentry* tmpfs_create_dentry(struct dentry* parent, const char* name, int type) {
     struct dentry* dentry = (struct dentry*)kmalloc(sizeof(struct dentry));
     strcpy(dentry->name, name);
     dentry->parent = parent;
     list_head_init(&dentry->list);
-    if (parent == NULL) {
-        list_head_init(&dentry->childs);
-    }
-    else {
+    list_head_init(&dentry->childs);
+    if (parent != NULL) {
         list_add(&dentry->list, &parent->childs);
     }
     dentry->vnode = tmpfs_create_vnode(dentry);
+    dentry->mountpoint = NULL;
+    dentry->type = type;
     return dentry;
 }
 
+// error code: -1: already register
 int tmpfs_register() {
+    if (tmpfs_v_ops != NULL && tmpfs_f_ops != NULL) {
+        return -1;
+    }
     tmpfs_v_ops = (struct vnode_operations*)kmalloc(sizeof(struct vnode_operations));
     tmpfs_v_ops->create = tmpfs_create;
     tmpfs_v_ops->lookup = tmpfs_lookup;
     tmpfs_v_ops->ls = tmpfs_ls;
+    tmpfs_v_ops->mkdir = tmpfs_mkdir;
+    tmpfs_v_ops->load_dentry = tmpfs_load_dentry;
     tmpfs_f_ops = (struct file_operations*)kmalloc(sizeof(struct file_operations));
     tmpfs_f_ops->read = tmpfs_read;
     tmpfs_f_ops->write = tmpfs_write;
@@ -44,7 +50,7 @@ int tmpfs_register() {
 
 int tmpfs_setup_mount(struct filesystem* fs, struct mount* mount) {
     mount->fs = fs;
-    mount->root = tmpfs_create_dentry(NULL, "/");
+    mount->root = tmpfs_create_dentry(NULL, "/", DIRECTORY);
     return 0;
 }
 
@@ -71,10 +77,9 @@ int tmpfs_lookup(struct vnode* dir, struct vnode** target, const char* component
 int tmpfs_create(struct vnode* dir, struct vnode** target, const char* component_name) {
     // create tmpfs internal structure
     struct tmpfs_internal* file_node = (struct tmpfs_internal*)kmalloc(sizeof(struct tmpfs_internal));
-    file_node->flag = REGULAR_FILE;
 
     // create child dentry
-    struct dentry* d_child = tmpfs_create_dentry(dir->dentry, component_name);
+    struct dentry* d_child = tmpfs_create_dentry(dir->dentry, component_name, REGULAR_FILE);
     d_child->vnode->internal = (void*)file_node;
 
     *target = d_child->vnode;
@@ -85,19 +90,19 @@ int tmpfs_ls(struct vnode* dir) {
     struct list_head* p = &dir->dentry->childs;
     list_for_each(p, &dir->dentry->childs) {
         struct dentry* dentry = list_entry(p, struct dentry, list);
-        uart_printf("%s ", dentry->name);
+        if (dentry->type == DIRECTORY) {
+            uart_printf("d: %s\n", dentry->name);
+        }
+        else if (dentry->type == REGULAR_FILE) {
+            uart_printf("f: %s\n", dentry->name);
+        }
     }
-    uart_printf("\n");
     return 0;
 }
 
 // file operations
 int tmpfs_read(struct file* file, void* buf, uint64_t len) {
     struct tmpfs_internal* file_node = (struct tmpfs_internal*)file->vnode->internal;
-    if (file_node->flag != REGULAR_FILE) {
-        uart_printf("Read on non regular file\n");
-        return -1;
-    }
 
     char* dest = (char*)buf;
     char* src = &file_node->buf[file->f_pos];
@@ -110,10 +115,6 @@ int tmpfs_read(struct file* file, void* buf, uint64_t len) {
 
 int tmpfs_write(struct file* file, const void* buf, uint64_t len) {
     struct tmpfs_internal* file_node = (struct tmpfs_internal*)file->vnode->internal;
-    if (file_node->flag != REGULAR_FILE) {
-        uart_printf("Write to non regular file\n");
-        return -1;
-    }
 
     char* dest = &file_node->buf[file->f_pos];
     char* src = (char*)buf;
@@ -123,4 +124,23 @@ int tmpfs_write(struct file* file, const void* buf, uint64_t len) {
     }
     dest[i] = EOF;
     return i;
+}
+
+int tmpfs_mkdir(struct vnode* dir, struct vnode** target, const char* component_name) {
+    // create tmpfs internal structure
+    struct tmpfs_internal* dir_node = (struct tmpfs_internal*)kmalloc(sizeof(struct tmpfs_internal));
+
+    // create child dentry
+    struct dentry* d_child = tmpfs_create_dentry(dir->dentry, component_name, DIRECTORY);
+    d_child->vnode->internal = (void*)dir_node;
+
+    *target = d_child->vnode;
+    return 0;
+}
+
+int tmpfs_load_dentry(struct dentry* dir, char* component_name) {
+    // dummy for compiler
+    dir = dir;
+    component_name = component_name;
+    return -1;
 }

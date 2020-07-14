@@ -6,6 +6,7 @@
 #include "mm.h"
 #include "exception.h"
 #include "vfs.h"
+#include "sdhost.h"
 
 void boot_init() {
     // Get the amount of RAM
@@ -26,9 +27,14 @@ void boot_init() {
     fb_init();
     uart_printf("\n[%f] Init Frame Buffer done", get_timestamp());
 
-    // Initialize File System
+    // Initialize rootfs
     rootfs_init();
     uart_printf("\n[%f] Init RootFS done", get_timestamp());
+
+    // Mount sdcard on /sdpX
+    sd_init();
+    uart_printf("\n[%f] Init SD done", get_timestamp());
+    sd_mount();
 
     // Welcome Messages
     // fb_splash();

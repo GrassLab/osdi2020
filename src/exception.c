@@ -104,6 +104,12 @@ void sys_open(struct trapframe* trapframe) {
     const char* pathname = (char*) trapframe->x[0];
     int flags = trapframe->x[1];
     struct file* f = vfs_open(pathname, flags);
+    // open failed
+    if (f == NULL) {
+        trapframe->x[0] = -1;
+        return;
+    }
+    // store fd in task struct
     int fd_num = current_task->files.next_fd;
     // open files more than fd array
     if (fd_num >= current_task->files.count) {
@@ -122,6 +128,10 @@ void sys_open(struct trapframe* trapframe) {
 
 void sys_close(struct trapframe* trapframe) {
     int fd_num = (int)trapframe->x[0];
+    if (fd_num < 0) {
+        trapframe->x[0] = -1;
+        return;
+    }
     struct file* f = current_task->files.fd[fd_num];
     trapframe->x[0] = vfs_close(f);
     current_task->files.fd[fd_num] = NULL;
@@ -130,6 +140,10 @@ void sys_close(struct trapframe* trapframe) {
 void sys_write(struct trapframe* trapframe) {
     int fd_num = (int)trapframe->x[0];
     char* buf = (char*)trapframe->x[1];
+    if (fd_num < 0) {
+        trapframe->x[0] = -1;
+        return;
+    }
     uint64_t len = (uint64_t)trapframe->x[2];
     struct file* f = current_task->files.fd[fd_num];
     if (f == NULL) {
@@ -142,6 +156,10 @@ void sys_write(struct trapframe* trapframe) {
 void sys_read(struct trapframe* trapframe) {
     int fd_num = (int)trapframe->x[0];
     char* buf = (char*)trapframe->x[1];
+    if (fd_num < 0) {
+        trapframe->x[0] = -1;
+        return;
+    }
     uint64_t len = (uint64_t)trapframe->x[2];
     struct file* f = current_task->files.fd[fd_num];
     if (f == NULL) {
@@ -153,26 +171,34 @@ void sys_read(struct trapframe* trapframe) {
 
 void sys_readdir(struct trapframe* trapframe) {
     int fd_num = (int)trapframe->x[0];
+    if (fd_num < 0) {
+        trapframe->x[0] = -1;
+        return;
+    }
     struct file* f = current_task->files.fd[fd_num];
     trapframe->x[0] = vfs_readdir(f);
 }
 
 void sys_mkdir(struct trapframe* trapframe) {
     const char* pathname = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_mkdir(pathname);
 }
 
 void sys_chdir(struct trapframe* trapframe) {
     const char* pathname = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_chdir(pathname);
 }
 
 void sys_mount(struct trapframe* trapframe) {
     const char* device = (char*) trapframe->x[0];
     const char* mountpoint = (char*) trapframe->x[1];
     const char* filesystem = (char*) trapframe->x[2];
+    trapframe->x[0] = vfs_mount(device, mountpoint, filesystem);
 }
 
 void sys_umount(struct trapframe* trapframe) {
     const char* mountpoint = (char*) trapframe->x[0];
+    trapframe->x[0] = vfs_umount(mountpoint);
 }
 
 void sys_call_router(uint64_t sys_call_num, struct trapframe* trapframe) {
