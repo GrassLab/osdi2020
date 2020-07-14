@@ -35,10 +35,10 @@ kernel8.img: $(OBJS)
 	aarch64-linux-gnu-objcopy -O binary kernel8.elf $@
 
 run:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial pty
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -serial null -serial pty -drive if=sd,file=sfn_nctuos.img,format=raw
 
 debug:
-	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s -serial null -serial stdio
+	qemu-system-aarch64 -M raspi3 -kernel kernel8.img -display none -S -s -serial null -serial stdio -drive if=sd,file=sfn_nctuos.img,format=raw
 
 clean:
 	@rm -rf $(OBJS) $(USER_OBJS) kernel8.* user_shell*
