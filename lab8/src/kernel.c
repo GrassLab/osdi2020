@@ -4,34 +4,38 @@
 #include "sys_call.h"
 #include "vfs.h"
 #include "tmpfs.h"
+#include "sd_driver.h"
 
 struct task_struct task[64] __attribute__((aligned(16u)));
 char kstack_pool[64][4096] __attribute__((aligned(16u)));
 char ustack_pool[64][4096] __attribute__((aligned(16u)));
 struct run_queue runqueue = {.start = 0, .end = 0, .size = 0};
 
-struct filesystem tmpfs_fs = {.name = "tmpfs"};
-struct vnode_operations tmpfs_vnode_op = {.lookup = tmpfs_lookup, .create = tmpfs_create};
-struct vnode tmpfs_root = {.valid = 1, .type = 0, .v_ops = &tmpfs_vnode_op, .internal = &dir_pool[0]};
-struct mount tmpfs_mount = {.root = &tmpfs_root, .fs = &tmpfs_fs};
+struct filesystem fat32_fs = {.name = "FAT32"};
+//struct vnode_operations tmpfs_vnode_op = {.lookup = tmpfs_lookup, .create = tmpfs_create};
+struct vnode fat32_root = {.valid = 1, .type = 0};
+struct mount fat32_mount = {.root = &fat32_root, .fs = &fat32_fs};
+
+int root_dir_num;
 
 int reschedule = 0;
 
 int kernel_init(){
+    sd_init();
     uart_init();
 
     //uart_puts("Init Kernel...\n");
     uart_puts("Init File System...\n");
 
-    dir_pool[0].valid = 1;
+    //dir_pool[0].valid = 1;
 
-    struct filesystem *fs = &tmpfs_fs;
+    struct filesystem *fs = &fat32_fs;
 
     register_filesystem(fs);
 
-    tmpfs_root.type = 0;
+    fat32_root.type = 0;
 
-    rootfs = &tmpfs_mount;
+    rootfs = &fat32_mount;
 
     uart_puts("Registered file system: ");
     uart_puts(fs_list[0]);
@@ -42,7 +46,7 @@ int kernel_init(){
     uart_puts(rootfs->fs->name);
     uart_puts("\n");
 
-    struct file* a = vfs_open("hello", 0);
+    /*struct file* a = vfs_open("hello", 0);
     if (a == 0) uart_puts("a == NULL\n");
     a = vfs_open("hello", O_CREAT);
     if (a != 0) {
@@ -57,7 +61,19 @@ int kernel_init(){
         uart_puts(((struct tmpfs_file_struct*)b->vnode->internal)->name);
         uart_puts("\n");
     }
-    vfs_close(b);
+    vfs_close(b);*/
+    char buf[512];
+    readblock(2048, buf);
+    //uart_puts(buf);
+    //uart_puts("\n");
+
+    root_dir_num = *(unsigned int*)(buf + 44);
+    char res[10];
+    uart_puts("root directory cluster number: ");
+    unsign_itoa(root_dir_num, res);
+    uart_puts(res);
+    uart_puts("\n");
+    
 
     while(1);
     return 0;

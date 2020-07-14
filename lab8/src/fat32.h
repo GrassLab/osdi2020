@@ -1,10 +1,10 @@
-#ifndef TMPFS
-#define TMPFS
+#ifndef FAT32
+#define FAT32
 #include "vfs.h"
-#define TMPFS_FILE_NUM 100
-#define TMPFS_DIR_NUM 100
+#define FAT32_FILE_NUM 100
+#define FAT32_DIR_NUM 100
 
-struct tmpfs_file_struct{
+struct fat32_file_struct{
     char name[100];
     char *ptr;
     struct tmpfs_dir_struct *dir;
