@@ -41,41 +41,18 @@ void zombie_killer() {
 
 void foo_kernel() {
     init_rootfs();
-    char buf[100];
-    struct file* a = vfs_open("hello", O_CREAT);
-    struct file* b = vfs_open("world", O_CREAT);
-    vfs_write(a, "Hello ", 6);
-    vfs_write(b, "World\n", 6);
-    vfs_close(a);
-    vfs_close(b);
-    b = vfs_open("hello", 0);
-    a = vfs_open("world", 0);
-    int sz;
-    sz = vfs_read(b, buf, 100);
-    sz += vfs_read(a, buf + sz, 100);
-    buf[sz] = '\0';
+    struct file* fixup = vfs_open("BOOTCODE.BIN", 0);
+    vfs_write(fixup, "ab\0cd\0", 6);
+    vfs_close(fixup);
+
+    fixup = vfs_open("BOOTCODE.BIN", 0);
+    char buf[10], buf2[10];
+    vfs_read(fixup, buf, 3);
+    vfs_read(fixup, buf2, 3);
     print_s(buf);
-    mkdir("dir1");
-    vfs_close(a);
-    vfs_close(b);
-
-    struct file* dir = vfs_open("/", 0);
-    vfs_list(dir);
-    vfs_close(dir);
-
-    chdir("dir1");
-    mkdir("dir2");
-
-    dir = vfs_open(".", 0);
-    vfs_list(dir);
-    vfs_close(dir);
-
-    chdir("..");
-
-    dir = vfs_open(".", 0);
-    asm volatile("gg:");
-    vfs_list(dir);
-    vfs_close(dir);
+    print_s(buf2);
+    print_s("\n");
+    vfs_close(fixup);
 
     while (1)
         ;

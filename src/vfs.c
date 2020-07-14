@@ -1,19 +1,20 @@
+#include "vfs.h"
+
+#include "fatfs.h"
 #include "io.h"
 #include "pool.h"
+#include "sdhost.h"
 #include "tmpfs.h"
 #include "utils.h"
-#include "vfs.h"
 struct mount* rootfs;
-struct filesystem tmpfs;
+struct filesystem tmpfs, fatfs;
 struct vnode* currentdir;
 
 void init_rootfs() {
     rootfs = kmalloc(sizeof(struct mount));
-    tmpfs.name = "tmpfs";
-    tmpfs.setup_mount = tmpfs_mount;
-    register_filesystem(&tmpfs);
-
-    tmpfs.setup_mount(&tmpfs, rootfs);
+    fatfs.name = "fatfs";
+    register_filesystem(&fatfs);
+    fatfs.setup_mount(&fatfs, rootfs);
     currentdir = rootfs->root;
 }
 
@@ -30,6 +31,17 @@ int register_filesystem(struct filesystem* fs) {
         tmpfs_f_ops->write = tmpfs_write;
         tmpfs_f_ops->read = tmpfs_read;
         tmpfs_f_ops->list = tmpfs_list;
+        return 1;
+    } else if (!strcmp(fs->name, "fatfs")) {
+        asm volatile("fatf:");
+        sd_init();
+        fs->setup_mount = fatfs_mount;
+        fatfs_v_ops = kmalloc(sizeof(struct file_operations));
+        fatfs_f_ops = kmalloc(sizeof(struct file_operations));
+        fatfs_v_ops->lookup = fatfs_lookup;
+        fatfs_f_ops->write = fatfs_write;
+        fatfs_f_ops->read = fatfs_read;
+        // fatfs_f_ops->list = fatfs_list;
         return 1;
     }
     return -1;
@@ -54,7 +66,6 @@ struct file* vfs_open(const char* pathname, int flags) {
         fd->f_ops = target->f_ops;
         fd->f_pos = 0;
     } else if (flags == O_CREAT) {
-        asm volatile("cre:");
         int ret = currentdir->v_ops->lookup(currentdir, &target, pathname);
         if (ret == -1) {
             currentdir->v_ops->create(currentdir, &target, pathname);
@@ -67,7 +78,6 @@ struct file* vfs_open(const char* pathname, int flags) {
         }
     } else {
         int ret = currentdir->v_ops->lookup(currentdir, &target, pathname);
-        asm volatile("op:");
         if (ret == -1) {
             print_s("File not found!!\n");
         } else {

@@ -1,7 +1,8 @@
+#include "page.h"
+
 #include <stdint.h>
 
 #include "io.h"
-#include "page.h"
 #include "task.h"
 
 struct page_t pages[PAGE_MAX];
