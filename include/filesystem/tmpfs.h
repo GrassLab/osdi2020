@@ -4,21 +4,6 @@
 #include "type.h"
 #include "filesystem/filesystem.h"
 
-#define MAX_DIR_CHILD 100
-
-struct dentry
-{
-    struct vnode* vnode;
-    struct vnode** child;
-    size_t child_num;
-};
-
-struct fcontent
-{
-    char *content;
-    size_t fsize;
-};
-
 int32_t tmpfsSetupMount(struct filesystem* fs, struct mount* mount);
 
 #endif

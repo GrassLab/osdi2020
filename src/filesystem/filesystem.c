@@ -2,6 +2,7 @@
 #include "memory/memPool.h"
 #include "filesystem/filesystem.h"
 #include "filesystem/tmpfs.h"
+#include "filesystem/fat.h"
 #include "device/uart.h"
 
 struct mount *rootfs;
@@ -33,6 +34,8 @@ int32_t createFilesystem(const char *fsname)
 
     if (strcmp(fsname, "tmpfs")) 
         fs->setup_mount = tmpfsSetupMount;
+    else if (strcmp(fsname, "fat32"))
+        fs->setup_mount = fatSetupMount;
 
     registerFilesystem(fs);
 }
