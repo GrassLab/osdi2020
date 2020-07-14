@@ -1,0 +1,8 @@
+tmpfs.c:20:    for(int i = 0; i < dir->child_count; i++){
+tmpfs.c:21:        uart_puts(dir->child_dentry[i]->dname);       
+tmpfs.c:28:    for(int i = 0; i < dir->child_count; i++){
+tmpfs.c:29:        if(strcmp(dir->child_dentry[i]->dname, component_name) == 0){
+tmpfs.c:30:            *target = dir->child_dentry[i]->vnode;
+tmpfs.c:51:    if(dir->child_count < MAX_CHILD)
+tmpfs.c:52:        dir->child_dentry[dir->child_count++] = child;
+tmpfs.c:62:    uart_puts(dir->child_dentry[dir->child_count-1]->dname);
