@@ -145,6 +145,63 @@ void uart_hex(unsigned int d) {
     }
 }
 
+void uart_shex(unsigned int d) {
+    unsigned int n;
+    int c, zero_flag = 1;
+    if (d < 0x10)
+      uart_send('0');
+    if (d == 0) {
+      uart_send('0');
+      return;
+    }
+    for(c=28;c>=0;c-=4) {
+
+        // get highest tetrad
+        n=(d>>c)&0xF;
+
+        if (zero_flag) {
+          if (n == 0)
+            continue;
+          zero_flag = 0;
+        }
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n+=n>9?0x37:0x30;
+
+        uart_send(n);
+    }
+}
+
+void uart_addr(unsigned int d) {
+    unsigned int n;
+    int c, zero_flag = 1;
+    uart_puts("0x");
+    if (d < 0x10)
+      uart_puts("000");
+    else if (d < 0x100)
+      uart_puts("00");
+    else if (d < 0x1000)
+      uart_puts("0");
+    if (d == 0) {
+      uart_send('0');
+      return;
+    }
+    for(c=28;c>=0;c-=4) {
+
+        // get highest tetrad
+        n=(d>>c)&0xF;
+
+        if (zero_flag) {
+          if (n == 0)
+            continue;
+          zero_flag = 0;
+        }
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n+=n>9?0x37:0x30;
+
+        uart_send(n);
+    }
+}
+
 void uart_flush() {
     while (!(*UART0_FR& 0x10)) {
         *UART0_DR;

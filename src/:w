@@ -1,0 +1,69 @@
+#include "fat32.h"
+
+static fat32_metadata_t fat32_meta;
+
+void print_fat32_block(int block) {
+  char buf[512];
+  uart_puts("Start:\n");
+  readblock(block, &buf);
+
+  for (int i = 0; i < 512; i += 16) {
+    uart_addr(i + block * 512);
+    uart_puts(": ");
+    for (int j = 0; j < 16; j += 4) {
+      uart_shex((buf[i + j]));
+      uart_shex((buf[i + j + 1]));
+      uart_send(' ');
+    }
+    /*
+    for (int j = 0; j < 16; j++) {
+      switch (buf[i + j]) {
+      case '\n':
+        uart_puts("\\n");
+        break;
+      case '\r':
+        uart_puts("\\r");
+        break;
+      case 0:
+        uart_puts(".");
+        break;
+      default:
+        if (buf[i + j] < 32)
+          uart_puts(" ");
+        else
+          uart_shex((buf[i + j]));
+      }
+    }
+    */
+    uart_puts("\n\r");
+  }
+  uart_puts("============================\n\r");
+}
+
+void get_fat32_partition() {
+  char but[512];
+  int lba = 2048, size = 0;
+  print_fat32_block(0);
+
+  boot_sector_t b;
+  readblock(lba, &b);
+  print_block(lba);
+
+  //fat32_memcpy((char *)&b, (char *)&buf, 512);
+
+  uart_puts("cluster_num_of_root: ");
+  uart_hex(b.cluster_num_of_root);
+  uart_send('\n');
+  uart_puts("count_of_reserved: ");
+  uart_hex(b.count_of_reserved);
+  uart_puts("sectors_per_fat: ");
+  uart_hex(b.sectors_per_fat);
+  uart_puts("num_of_fat: ");
+  uart_hex(b.num_of_fat);
+}
+
+void fat32_init() {
+  sd_init();
+  get_fat32_partition();
+}
+

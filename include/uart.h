@@ -10,6 +10,8 @@ char uart_getc();
 char uart_getb();
 void uart_puts(char *s);
 void uart_hex(unsigned int d);
+void uart_shex(unsigned int d);
+void uart_addr(unsigned int d);
 void uart_flush();
 
 #endif

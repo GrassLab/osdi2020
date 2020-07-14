@@ -39,9 +39,9 @@ char *strcpy(char *destination, const char *source) {
   // copy the C-string pointed by source into the array
   // pointed by destination
   while (*source != '\0') {
-      *destination = *source;
-      destination++;
-      source++;
+    *destination = *source;
+    destination++;
+    source++;
   }
 
   // include the terminating null character
@@ -49,6 +49,23 @@ char *strcpy(char *destination, const char *source) {
 
   // destination is returned by standard strcpy()
   return ptr;
+}
+
+int *strlen(const char *ch) {
+  int len = 0;
+  while ( *ch != '\0') {
+    len++;
+    ch++;
+  }
+  return len;
+}
+
+void *strcat(char *dest, const char *src) {
+  int dest_len = strlen(dest), src_len = strlen(src);
+  for (int num = dest_len; num < dest_len + src_len; num++) {
+    *(dest + num) = *(src + num - dest_len);
+  }
+  *(dest + dest_len + src_len) = '\0';
 }
 
 void put_shell() {
