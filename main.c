@@ -19,16 +19,19 @@
 #include "vfs.h"
 #include "tmpfs.h"
 
+#include "system.h"
+#include "fat32.h"
+
 #define INPUT_BUFFER_SIZE 64
 
 void system_start()
 {
-    uart_print("-------------------------\n");
-    uart_print("Raspberry Pi 3B+ is start\n");
-    uart_print("-------------------------\n");
-    uart_print("Author  : Hsu, Po-Chun\n");
-    uart_print("Version : 7.3.2\n");
-    uart_print("-------------------------\n");
+    uart_print("-------------------------\n\r");
+    uart_print("Raspberry Pi 3B+ is start\n\r");
+    uart_print("-------------------------\n\r");
+    uart_print("Author  : Hsu, Po-Chun\n\r");
+    uart_print("Version : 8.2.?\n\r");
+    uart_print("-------------------------\n\r");
     get_board_revision();
     get_vc_memory();
     /*
@@ -286,13 +289,8 @@ void test_memory_allocation()
     free_varied_memory(&v_allocator, v3);
 }
 
-/* from lab6 to lab8, just in one thread without VM and interrupt */
-int kernel_main()
+void lab7()
 {
-    uart_init();
-    init_printf(0, putc);
-    system_start();
-
     printf("required 1, 2 test\n");
     filesystem_t fs = tmpfs_filesystem();
     register_filesystem(&fs);
@@ -327,6 +325,66 @@ int kernel_main()
 
     printf("================================\n");
     printf("test finished\nhalt\n");
+}
+
+void lab8_test()
+{
+    fat32_mount();
+
+    fat32_lookup(fat32_root, "file", ((void *)0));
+    printf("\n");
+    fat32_readfile(fat32_root, "START.ELF");
+
+    char buf[32] = {0};
+    char wbuf[16] = {0};
+    int len = 10;
+    int rvalue = 0;
+    //const char test_filename[] = "TEST.TXT";
+    const char test_filename[] = "START.ELF";
+
+    printf("Open %s and read 3 char:\n\r", test_filename);
+    rvalue = fat32_read(fat32_root, test_filename, buf, 0, len);
+    buf[len] = '\0';
+    if (rvalue == 0)
+    {
+        printf("Read From file: %s\n\r", buf);
+    }
+    printf("===\n\r");
+
+    printf("Open %s and write 3 char:\n\r", test_filename);
+    wbuf[0] = 'A';
+    wbuf[1] = 'A';
+    wbuf[2] = 'A';
+    rvalue = fat32_write(fat32_root, test_filename, wbuf, 0, 3);
+    wbuf[3] = '\0';
+    if (rvalue == 0)
+    {
+        printf("Write to file\n\r");
+    }
+    printf("===\n\r");
+
+    printf("Open %s and read 3 char:\n\r", test_filename);
+    fat32_read(fat32_root, test_filename, buf, 0, len);
+    buf[len] = '\0';
+    if (rvalue == 0)
+    {
+        printf("Read From file: %s\n\r", buf);
+    }
+
+    printf("================================\n\r");
+    printf("test finished\n\rhalt\n\r");
+    reset(0);
+}
+
+/* from lab6 to lab8, just in one thread without VM and interrupt */
+int kernel_main()
+{
+    uart_init();
+    init_printf(0, putc);
+    system_start();
+
+    lab8_test();
+
     while (1)
     {
     }

@@ -69,6 +69,10 @@ void exc_handler(unsigned long type)
         break;
     case 0b100101:
         uart_puts("Data abort, same EL");
+        reset(0);
+        while (1)
+        {
+        }
         break;
     case 0b100110:
         uart_puts("Stack alignment fault");
@@ -228,6 +232,10 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         break;
     case 0b100101:
         uart_puts("Data abort, same EL\n");
+        reset(0);
+        while (1)
+        {
+        }
         break;
     case 0b100110:
         uart_puts("Stack alignment fault");
@@ -261,9 +269,11 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
     }
 
     // page fault handler
-    if ((esr >> 26 == 0b100101) || ( esr >> 26 == 0b100100)){
+    if ((esr >> 26 == 0b100101) || (esr >> 26 == 0b100100))
+    {
         printf("FAR_EL1: ");
-        asm volatile("mrs %0, FAR_EL1" :"=r"(address));
+        asm volatile("mrs %0, FAR_EL1"
+                     : "=r"(address));
         uart_send_hex(address >> 32);
         uart_send_hex(address);
         uart_send('\n');
@@ -281,7 +291,6 @@ void synchronous_handler(unsigned long x0, unsigned long x1, unsigned long x2, u
         {
         }
     }
-
 }
 
 void irq_handler()
